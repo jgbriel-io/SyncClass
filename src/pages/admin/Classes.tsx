@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -27,14 +27,42 @@ import {
   useClassLogs,
   useClassLogsSummary,
   useCreateClassLog,
+  useCreateClassLogWithFinancial,
   useUpdateClassLog,
   useDeleteClassLog,
   ClassLogInsert,
   ClassLogWithStudent,
+  ClassLogWithFinancialData,
 } from "@/hooks/useClassLogs";
 
 function formatDate(dateString: string): string {
   return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+}
+
+function getPaymentStatusVariant(status: string | null): "success" | "warning" | "destructive" {
+  switch (status) {
+    case "pago":
+      return "success";
+    case "pendente":
+      return "warning";
+    case "atrasado":
+      return "destructive";
+    default:
+      return "warning";
+  }
+}
+
+function getPaymentStatusLabel(status: string | null): string {
+  switch (status) {
+    case "pago":
+      return "Pago";
+    case "pendente":
+      return "Pendente";
+    case "atrasado":
+      return "Atrasado";
+    default:
+      return "Pendente";
+  }
 }
 
 export default function ClassesPage() {
@@ -47,6 +75,7 @@ export default function ClassesPage() {
   const { data: logs = [], isLoading, error } = useClassLogs();
   const { data: summary } = useClassLogsSummary();
   const createLog = useCreateClassLog();
+  const createLogWithFinancial = useCreateClassLogWithFinancial();
   const updateLog = useUpdateClassLog();
   const deleteLog = useDeleteClassLog();
 
@@ -75,6 +104,14 @@ export default function ClassesPage() {
     }
   };
 
+  const handleCreateWithFinancial = (data: ClassLogWithFinancialData) => {
+    createLogWithFinancial.mutate(data, {
+      onSuccess: () => {
+        setIsFormOpen(false);
+      },
+    });
+  };
+
   const handleEdit = (log: ClassLogWithStudent) => {
     setSelectedLog(log);
     setIsFormOpen(true);
@@ -101,6 +138,8 @@ export default function ClassesPage() {
       ? ((summary.totalPresent / summary.totalClasses) * 100).toFixed(0)
       : "0"
     : "0";
+
+  const isMutating = createLog.isPending || createLogWithFinancial.isPending || updateLog.isPending;
 
   return (
     <AdminLayout>
@@ -205,12 +244,28 @@ export default function ClassesPage() {
                         >
                           {log.attendance ? "Presente" : "Ausente"}
                         </StatusBadge>
+                        {/* Badge de cobrança */}
+                        {log.financial_records && (
+                          <StatusBadge
+                            variant={getPaymentStatusVariant(log.financial_records.status)}
+                            className="flex items-center gap-1"
+                          >
+                            <Receipt className="h-3 w-3" />
+                            {getPaymentStatusLabel(log.financial_records.status)}
+                          </StatusBadge>
+                        )}
                       </div>
                       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="h-4 w-4" />
                           {formatDate(log.class_date)}
                         </span>
+                        {log.financial_records && (
+                          <span className="flex items-center gap-1.5 text-xs">
+                            <Receipt className="h-3.5 w-3.5" />
+                            R$ {log.financial_records.amount.toFixed(2).replace(".", ",")}
+                          </span>
+                        )}
                       </div>
                       {log.feedback && (
                         <p className="text-sm text-muted-foreground max-w-xl">
@@ -282,7 +337,8 @@ export default function ClassesPage() {
           }}
           classLog={selectedLog}
           onSubmit={handleCreateOrUpdate}
-          isLoading={createLog.isPending || updateLog.isPending}
+          onSubmitWithFinancial={handleCreateWithFinancial}
+          isLoading={isMutating}
         />
 
         {/* Delete Confirmation Dialog */}
@@ -294,6 +350,11 @@ export default function ClassesPage() {
                 Tem certeza que deseja excluir o registro de aula de{" "}
                 <strong>{logToDelete?.students?.name}</strong> do dia{" "}
                 <strong>{logToDelete ? formatDate(logToDelete.class_date) : ""}</strong>?
+                {logToDelete?.financial_records && (
+                  <span className="block mt-2 text-warning">
+                    ⚠️ Esta aula possui uma cobrança vinculada que também será afetada.
+                  </span>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
