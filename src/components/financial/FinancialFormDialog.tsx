@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -21,10 +23,12 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
+import { useAvailableClassLogsForStudent } from "@/hooks/useClassLogs";
 import { FinancialRecordInsert } from "@/hooks/useFinancialRecords";
 
 const financialSchema = z.object({
   student_id: z.string().min(1, "Selecione um aluno"),
+  class_log_id: z.string().optional(),
   amount: z.string().min(1, "Informe o valor"),
   due_date: z.string().min(1, "Informe a data de vencimento"),
   description: z.string().optional(),
@@ -39,6 +43,10 @@ interface FinancialFormDialogProps {
   isLoading: boolean;
 }
 
+function formatClassLogDate(dateString: string): string {
+  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+}
+
 export function FinancialFormDialog({
   open,
   onOpenChange,
@@ -46,7 +54,11 @@ export function FinancialFormDialog({
   isLoading,
 }: FinancialFormDialogProps) {
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [selectedClassLogId, setSelectedClassLogId] = useState<string>("");
   const { data: students = [], isLoading: loadingStudents } = useStudents();
+  const { data: availableClassLogs = [], isLoading: loadingClassLogs } = useAvailableClassLogsForStudent(
+    selectedStudentId || null
+  );
 
   const {
     register,
@@ -62,14 +74,22 @@ export function FinancialFormDialog({
     if (!open) {
       reset();
       setSelectedStudentId("");
+      setSelectedClassLogId("");
     }
   }, [open, reset]);
+
+  // Reset class log when student changes
+  useEffect(() => {
+    setSelectedClassLogId("");
+    setValue("class_log_id", "");
+  }, [selectedStudentId, setValue]);
 
   const handleFormSubmit = (data: FinancialFormData) => {
     const amount = parseFloat(data.amount.replace(/[^\d,.-]/g, "").replace(",", "."));
     
     onSubmit({
       student_id: data.student_id,
+      class_log_id: data.class_log_id && data.class_log_id !== "none" ? data.class_log_id : null,
       amount: amount,
       due_date: data.due_date,
       description: data.description || null,
@@ -80,6 +100,11 @@ export function FinancialFormDialog({
   const handleStudentChange = (value: string) => {
     setSelectedStudentId(value);
     setValue("student_id", value);
+  };
+
+  const handleClassLogChange = (value: string) => {
+    setSelectedClassLogId(value);
+    setValue("class_log_id", value === "none" ? undefined : value);
   };
 
   // Filter only active students
@@ -114,6 +139,41 @@ export function FinancialFormDialog({
             <input type="hidden" {...register("student_id")} />
             {errors.student_id && (
               <p className="text-sm text-destructive">{errors.student_id.message}</p>
+            )}
+          </div>
+
+          {/* Class Log Select */}
+          <div className="space-y-2">
+            <Label>Aula Vinculada (opcional)</Label>
+            <Select
+              value={selectedClassLogId}
+              onValueChange={handleClassLogChange}
+              disabled={!selectedStudentId || loadingClassLogs}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={
+                  !selectedStudentId 
+                    ? "Selecione um aluno primeiro" 
+                    : loadingClassLogs 
+                      ? "Carregando aulas..." 
+                      : "Selecione uma aula (opcional)"
+                } />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem aula vinculada</SelectItem>
+                {availableClassLogs.map((log) => (
+                  <SelectItem key={log.id} value={log.id}>
+                    {formatClassLogDate(log.class_date)}
+                    {log.attendance === false && " (Falta)"}
+                    {log.grade && ` - Nota: ${log.grade}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedStudentId && availableClassLogs.length === 0 && !loadingClassLogs && (
+              <p className="text-xs text-muted-foreground">
+                Nenhuma aula disponível para vincular (todas já têm cobrança ou não há aulas cadastradas)
+              </p>
             )}
           </div>
 

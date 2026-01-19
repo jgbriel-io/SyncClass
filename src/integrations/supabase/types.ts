@@ -58,6 +58,7 @@ export type Database = {
       financial_records: {
         Row: {
           amount: number
+          class_log_id: string | null
           created_at: string | null
           description: string | null
           due_date: string
@@ -69,6 +70,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          class_log_id?: string | null
           created_at?: string | null
           description?: string | null
           due_date: string
@@ -80,6 +82,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          class_log_id?: string | null
           created_at?: string | null
           description?: string | null
           due_date?: string
@@ -90,6 +93,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "financial_records_class_log_id_fkey"
+            columns: ["class_log_id"]
+            isOneToOne: true
+            referencedRelation: "class_logs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "financial_records_student_id_fkey"
             columns: ["student_id"]

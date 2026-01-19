@@ -36,6 +36,40 @@ export function useClassLogs() {
   });
 }
 
+// Buscar aulas de um aluno específico que ainda não têm cobrança vinculada
+export function useAvailableClassLogsForStudent(studentId: string | null) {
+  return useQuery({
+    queryKey: ["available_class_logs", studentId],
+    queryFn: async () => {
+      if (!studentId) return [];
+
+      // Buscar todas as aulas do aluno
+      const { data: classLogs, error: classLogsError } = await supabase
+        .from("class_logs")
+        .select("*")
+        .eq("student_id", studentId)
+        .order("class_date", { ascending: false });
+
+      if (classLogsError) throw classLogsError;
+
+      // Buscar IDs de aulas que já têm cobrança
+      const { data: financialRecords, error: financialError } = await supabase
+        .from("financial_records")
+        .select("class_log_id")
+        .eq("student_id", studentId)
+        .not("class_log_id", "is", null);
+
+      if (financialError) throw financialError;
+
+      const usedClassLogIds = new Set(financialRecords?.map(r => r.class_log_id) || []);
+
+      // Filtrar aulas disponíveis (sem cobrança)
+      return classLogs?.filter(log => !usedClassLogIds.has(log.id)) || [];
+    },
+    enabled: !!studentId,
+  });
+}
+
 export function useClassLogsSummary() {
   return useQuery({
     queryKey: ["class_logs_summary"],
