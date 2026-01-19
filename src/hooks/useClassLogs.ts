@@ -11,6 +11,22 @@ export interface ClassLogWithStudent extends ClassLog {
   students: {
     name: string;
   } | null;
+  financial_records: {
+    id: string;
+    status: "pendente" | "pago" | "atrasado" | null;
+    amount: number;
+    due_date: string;
+  } | null;
+}
+
+export interface ClassLogWithFinancialData {
+  classLog: ClassLogInsert;
+  createFinancial: boolean;
+  financialData?: {
+    amount: number;
+    due_date: string;
+    description?: string;
+  };
 }
 
 export function useClassLogs() {
@@ -23,6 +39,12 @@ export function useClassLogs() {
           *,
           students (
             name
+          ),
+          financial_records (
+            id,
+            status,
+            amount,
+            due_date
           )
         `)
         .order("class_date", { ascending: false });
@@ -133,6 +155,64 @@ export function useCreateClassLog() {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
       toast.success("Aula registrada com sucesso!");
+    },
+    onError: (error) => {
+      console.error("Error creating class log:", error);
+      toast.error("Erro ao registrar aula. Tente novamente.");
+    },
+  });
+}
+
+export function useCreateClassLogWithFinancial() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ classLog, createFinancial, financialData }: ClassLogWithFinancialData) => {
+      // Primeiro cria a aula
+      const { data: createdLog, error: logError } = await supabase
+        .from("class_logs")
+        .insert(classLog)
+        .select()
+        .single();
+
+      if (logError) {
+        throw logError;
+      }
+
+      // Se deve criar cobrança, cria vinculada à aula
+      if (createFinancial && financialData) {
+        const { error: financialError } = await supabase
+          .from("financial_records")
+          .insert({
+            student_id: classLog.student_id,
+            class_log_id: createdLog.id,
+            amount: financialData.amount,
+            due_date: financialData.due_date,
+            description: financialData.description || `Aula do dia ${classLog.class_date}`,
+            status: "pendente",
+          });
+
+        if (financialError) {
+          // Se falhar ao criar cobrança, ainda retorna a aula criada
+          console.error("Error creating financial record:", financialError);
+          toast.error("Aula criada, mas erro ao criar cobrança.");
+          return createdLog;
+        }
+      }
+
+      return createdLog;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["available_class_logs"] });
+      
+      if (variables.createFinancial) {
+        toast.success("Aula e cobrança registradas com sucesso!");
+      } else {
+        toast.success("Aula registrada com sucesso!");
+      }
     },
     onError: (error) => {
       console.error("Error creating class log:", error);

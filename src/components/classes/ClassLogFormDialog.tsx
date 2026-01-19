@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -20,9 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Receipt } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
-import { ClassLogInsert, ClassLogWithStudent } from "@/hooks/useClassLogs";
+import { ClassLogInsert, ClassLogWithStudent, ClassLogWithFinancialData } from "@/hooks/useClassLogs";
 
 const classLogSchema = z.object({
   student_id: z.string().min(1, "Selecione um aluno"),
@@ -30,6 +31,11 @@ const classLogSchema = z.object({
   attendance: z.boolean(),
   grade: z.string().optional(),
   feedback: z.string().max(1000, "Feedback deve ter no máximo 1000 caracteres").optional(),
+  // Campos de cobrança
+  createFinancial: z.boolean().optional(),
+  financial_amount: z.string().optional(),
+  financial_due_date: z.string().optional(),
+  financial_description: z.string().optional(),
 });
 
 type ClassLogFormData = z.infer<typeof classLogSchema>;
@@ -39,6 +45,7 @@ interface ClassLogFormDialogProps {
   onOpenChange: (open: boolean) => void;
   classLog?: ClassLogWithStudent | null;
   onSubmit: (data: ClassLogInsert) => void;
+  onSubmitWithFinancial?: (data: ClassLogWithFinancialData) => void;
   isLoading: boolean;
 }
 
@@ -47,10 +54,12 @@ export function ClassLogFormDialog({
   onOpenChange,
   classLog,
   onSubmit,
+  onSubmitWithFinancial,
   isLoading,
 }: ClassLogFormDialogProps) {
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [attendance, setAttendance] = useState(true);
+  const [createFinancial, setCreateFinancial] = useState(false);
   const { data: students = [], isLoading: loadingStudents } = useStudents();
 
   const {
@@ -64,24 +73,37 @@ export function ClassLogFormDialog({
     resolver: zodResolver(classLogSchema),
     defaultValues: {
       attendance: true,
+      createFinancial: false,
     },
   });
+
+  const classDate = watch("class_date");
 
   useEffect(() => {
     if (open && classLog) {
       setSelectedStudentId(classLog.student_id);
       setAttendance(classLog.attendance ?? true);
+      setCreateFinancial(false);
       setValue("student_id", classLog.student_id);
       setValue("class_date", classLog.class_date);
       setValue("attendance", classLog.attendance ?? true);
       setValue("grade", classLog.grade?.toString() || "");
       setValue("feedback", classLog.feedback || "");
+      setValue("createFinancial", false);
     } else if (!open) {
       reset();
       setSelectedStudentId("");
       setAttendance(true);
+      setCreateFinancial(false);
     }
   }, [open, classLog, reset, setValue]);
+
+  // Auto-fill due date when class date changes
+  useEffect(() => {
+    if (classDate && createFinancial) {
+      setValue("financial_due_date", classDate);
+    }
+  }, [classDate, createFinancial, setValue]);
 
   const handleFormSubmit = (data: ClassLogFormData) => {
     let grade: number | null = null;
@@ -92,13 +114,32 @@ export function ClassLogFormDialog({
       }
     }
 
-    onSubmit({
+    const classLogData: ClassLogInsert = {
       student_id: data.student_id,
       class_date: data.class_date,
       attendance: data.attendance,
       grade: data.attendance ? grade : null,
       feedback: data.feedback?.trim() || null,
-    });
+    };
+
+    // Se está criando cobrança junto
+    if (createFinancial && onSubmitWithFinancial && data.financial_amount && data.financial_due_date) {
+      const amount = parseFloat(data.financial_amount.replace(",", "."));
+      if (!isNaN(amount) && amount > 0) {
+        onSubmitWithFinancial({
+          classLog: classLogData,
+          createFinancial: true,
+          financialData: {
+            amount,
+            due_date: data.financial_due_date,
+            description: data.financial_description?.trim() || undefined,
+          },
+        });
+        return;
+      }
+    }
+
+    onSubmit(classLogData);
   };
 
   const handleStudentChange = (value: string) => {
@@ -114,13 +155,21 @@ export function ClassLogFormDialog({
     }
   };
 
+  const handleCreateFinancialChange = (checked: boolean) => {
+    setCreateFinancial(checked);
+    setValue("createFinancial", checked);
+    if (checked && classDate) {
+      setValue("financial_due_date", classDate);
+    }
+  };
+
   // Filter only active students
   const activeStudents = students.filter((s) => s.status === "ativo");
   const isEditing = !!classLog;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Registro" : "Registrar Aula"}</DialogTitle>
         </DialogHeader>
@@ -208,6 +257,69 @@ export function ClassLogFormDialog({
             )}
           </div>
 
+          {/* Create Financial Checkbox - only for new records */}
+          {!isEditing && onSubmitWithFinancial && (
+            <>
+              <div className="flex items-center space-x-3 rounded-lg border border-dashed p-4 bg-muted/30">
+                <Checkbox
+                  id="createFinancial"
+                  checked={createFinancial}
+                  onCheckedChange={(checked) => handleCreateFinancialChange(checked === true)}
+                />
+                <div className="flex items-center gap-2">
+                  <Receipt className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="createFinancial" className="cursor-pointer font-medium">
+                    Criar cobrança para esta aula
+                  </Label>
+                </div>
+              </div>
+
+              {/* Financial Fields - show when checkbox is checked */}
+              {createFinancial && (
+                <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
+                  <h4 className="font-medium text-sm flex items-center gap-2">
+                    <Receipt className="h-4 w-4" />
+                    Dados da Cobrança
+                  </h4>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="financial_amount">Valor (R$) *</Label>
+                      <Input
+                        id="financial_amount"
+                        type="text"
+                        placeholder="100,00"
+                        {...register("financial_amount")}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="financial_due_date">Vencimento *</Label>
+                      <Input
+                        id="financial_due_date"
+                        type="date"
+                        {...register("financial_due_date")}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="financial_description">Descrição</Label>
+                    <Input
+                      id="financial_description"
+                      type="text"
+                      placeholder="Aula de piano - Janeiro"
+                      {...register("financial_description")}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Se não preenchido, será "Aula do dia [data]"
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
             <Button
@@ -226,6 +338,8 @@ export function ClassLogFormDialog({
                 </>
               ) : isEditing ? (
                 "Salvar Alterações"
+              ) : createFinancial ? (
+                "Registrar Aula e Cobrança"
               ) : (
                 "Registrar Aula"
               )}
