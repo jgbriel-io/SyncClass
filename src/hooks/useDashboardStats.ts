@@ -1,0 +1,195 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { startOfMonth, endOfMonth, format, subMonths } from "date-fns";
+
+interface DashboardStats {
+  activeStudents: number;
+  inactiveStudents: number;
+  overdueCount: number;
+  newStudentsThisMonth: number;
+  classesThisMonth: number;
+}
+
+interface UpcomingPayment {
+  id: string;
+  studentName: string;
+  amount: number;
+  dueDate: string;
+}
+
+interface Birthday {
+  id: string;
+  name: string;
+  birthDate: string;
+}
+
+interface MonthlyNewStudents {
+  month: string;
+  count: number;
+}
+
+export function useDashboardStats() {
+  return useQuery({
+    queryKey: ["dashboard_stats"],
+    queryFn: async () => {
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+
+      // Get students stats
+      const { data: students, error: studentsError } = await supabase
+        .from("students")
+        .select("id, status, created_at");
+
+      if (studentsError) throw studentsError;
+
+      const activeStudents = students?.filter((s) => s.status === "ativo").length || 0;
+      const inactiveStudents = students?.filter((s) => s.status === "inativo").length || 0;
+      const newStudentsThisMonth = students?.filter((s) => {
+        const createdAt = new Date(s.created_at || "");
+        return createdAt >= monthStart && createdAt <= monthEnd;
+      }).length || 0;
+
+      // Get overdue payments count
+      const today = format(now, "yyyy-MM-dd");
+      const { data: overdueRecords, error: overdueError } = await supabase
+        .from("financial_records")
+        .select("id")
+        .neq("status", "pago")
+        .lt("due_date", today);
+
+      if (overdueError) throw overdueError;
+      const overdueCount = overdueRecords?.length || 0;
+
+      // Get classes this month
+      const { data: classLogs, error: classesError } = await supabase
+        .from("class_logs")
+        .select("id")
+        .gte("class_date", format(monthStart, "yyyy-MM-dd"))
+        .lte("class_date", format(monthEnd, "yyyy-MM-dd"));
+
+      if (classesError) throw classesError;
+      const classesThisMonth = classLogs?.length || 0;
+
+      return {
+        activeStudents,
+        inactiveStudents,
+        overdueCount,
+        newStudentsThisMonth,
+        classesThisMonth,
+      } as DashboardStats;
+    },
+  });
+}
+
+export function useUpcomingPayments() {
+  return useQuery({
+    queryKey: ["upcoming_payments"],
+    queryFn: async () => {
+      const today = new Date();
+      const nextWeek = new Date(today);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+
+      const { data, error } = await supabase
+        .from("financial_records")
+        .select(`
+          id,
+          amount,
+          due_date,
+          students (
+            name
+          )
+        `)
+        .neq("status", "pago")
+        .gte("due_date", format(today, "yyyy-MM-dd"))
+        .lte("due_date", format(nextWeek, "yyyy-MM-dd"))
+        .order("due_date", { ascending: true })
+        .limit(5);
+
+      if (error) throw error;
+
+      return (data || []).map((record) => ({
+        id: record.id,
+        studentName: record.students?.name || "—",
+        amount: Number(record.amount),
+        dueDate: record.due_date,
+      })) as UpcomingPayment[];
+    },
+  });
+}
+
+export function useBirthdaysThisMonth() {
+  return useQuery({
+    queryKey: ["birthdays_this_month"],
+    queryFn: async () => {
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1; // 1-12
+
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, name, birth_date")
+        .eq("status", "ativo")
+        .not("birth_date", "is", null);
+
+      if (error) throw error;
+
+      // Filter by birth month
+      const birthdays = (data || [])
+        .filter((student) => {
+          if (!student.birth_date) return false;
+          const birthMonth = new Date(student.birth_date + "T00:00:00").getMonth() + 1;
+          return birthMonth === currentMonth;
+        })
+        .map((student) => ({
+          id: student.id,
+          name: student.name,
+          birthDate: student.birth_date!,
+        }))
+        .sort((a, b) => {
+          const dayA = new Date(a.birthDate + "T00:00:00").getDate();
+          const dayB = new Date(b.birthDate + "T00:00:00").getDate();
+          return dayA - dayB;
+        })
+        .slice(0, 5);
+
+      return birthdays as Birthday[];
+    },
+  });
+}
+
+export function useNewStudentsByMonth() {
+  return useQuery({
+    queryKey: ["new_students_by_month"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("created_at")
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      // Group by month (last 6 months)
+      const now = new Date();
+      const months: MonthlyNewStudents[] = [];
+
+      for (let i = 5; i >= 0; i--) {
+        const monthDate = subMonths(now, i);
+        const monthStart = startOfMonth(monthDate);
+        const monthEnd = endOfMonth(monthDate);
+        const monthLabel = format(monthDate, "MMM", { locale: undefined });
+
+        const count = (data || []).filter((student) => {
+          const createdAt = new Date(student.created_at || "");
+          return createdAt >= monthStart && createdAt <= monthEnd;
+        }).length;
+
+        months.push({
+          month: monthLabel,
+          count,
+        });
+      }
+
+      return months;
+    },
+  });
+}

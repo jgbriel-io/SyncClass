@@ -1,0 +1,356 @@
+import { useState, useMemo } from "react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+import { Search, Loader2, Eye, TrendingUp, TrendingDown } from "lucide-react";
+import { useStudentsWithStats } from "@/hooks/useStudentDetails";
+import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
+
+const ITEMS_PER_PAGE = 10;
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+}
+
+export default function StudentOverviewPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const { data: students = [], isLoading, error } = useStudentsWithStats();
+
+  const filteredStudents = useMemo(() => {
+    return students.filter((student) => {
+      const matchesSearch = student.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesStatus =
+        statusFilter === "all" || student.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [students, searchQuery, statusFilter]);
+
+  const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
+  const paginatedStudents = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredStudents.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredStudents, currentPage]);
+
+  const handleViewStudent = (studentId: string) => {
+    setSelectedStudentId(studentId);
+    setSheetOpen(true);
+  };
+
+  // Reset to page 1 when filters change
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Visão Geral dos Alunos
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Planilha completa com todos os dados dos alunos
+          </p>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="ativo">Ativos</SelectItem>
+              <SelectItem value="inativo">Inativos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+
+        {/* Error state */}
+        {error && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+            <p className="text-destructive">
+              Erro ao carregar dados. Tente novamente.
+            </p>
+          </div>
+        )}
+
+        {/* Table */}
+        {!isLoading && !error && (
+          <>
+            <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="w-[200px]">Aluno</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Aulas</TableHead>
+                      <TableHead className="text-center">Frequência</TableHead>
+                      <TableHead className="text-center">Média</TableHead>
+                      <TableHead className="text-right">Pago</TableHead>
+                      <TableHead className="text-right">Pendente</TableHead>
+                      <TableHead className="text-right">Atrasado</TableHead>
+                      <TableHead className="text-center w-[80px]">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedStudents.map((student) => {
+                      const hasOverdue = student.stats.totalOverdue > 0;
+                      const lowAttendance =
+                        student.stats.attendanceRate !== null &&
+                        student.stats.attendanceRate < 75;
+
+                      return (
+                        <TableRow
+                          key={student.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                                <span className="text-sm font-medium text-accent-foreground">
+                                  {student.name.charAt(0)}
+                                </span>
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-sm truncate">
+                                  {student.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {student.email || student.phone || "—"}
+                                </p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <StatusBadge
+                              variant={
+                                student.status === "ativo" ? "success" : "default"
+                              }
+                            >
+                              {student.status === "ativo" ? "Ativo" : "Inativo"}
+                            </StatusBadge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-sm font-medium">
+                              {student.stats.totalClasses}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              {student.stats.attendanceRate !== null ? (
+                                <>
+                                  {lowAttendance ? (
+                                    <TrendingDown className="h-3.5 w-3.5 text-rose-500" />
+                                  ) : (
+                                    <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                                  )}
+                                  <span
+                                    className={`text-sm font-medium ${
+                                      lowAttendance
+                                        ? "text-rose-600"
+                                        : "text-emerald-600"
+                                    }`}
+                                  >
+                                    {student.stats.attendanceRate.toFixed(0)}%
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">
+                                  —
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {student.stats.averageGrade !== null ? (
+                              <span
+                                className={`text-sm font-medium ${
+                                  student.stats.averageGrade >= 7
+                                    ? "text-emerald-600"
+                                    : student.stats.averageGrade >= 5
+                                    ? "text-amber-600"
+                                    : "text-rose-600"
+                                }`}
+                              >
+                                {student.stats.averageGrade.toFixed(1)}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">
+                                —
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className="text-sm text-emerald-600 font-medium">
+                              {formatCurrency(student.stats.totalPaid)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className="text-sm text-amber-600 font-medium">
+                              {formatCurrency(student.stats.totalPending)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span
+                              className={`text-sm font-medium ${
+                                hasOverdue ? "text-rose-600" : "text-muted-foreground"
+                              }`}
+                            >
+                              {formatCurrency(student.stats.totalOverdue)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewStudent(student.id)}
+                              title="Ver detalhes"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              {filteredStudents.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  {students.length === 0
+                    ? "Nenhum aluno cadastrado ainda"
+                    : "Nenhum aluno encontrado com esses filtros"}
+                </div>
+              )}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage((p) => Math.max(1, p - 1));
+                      }}
+                      className={
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(page);
+                          }}
+                          isActive={currentPage === page}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  )}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage((p) => Math.min(totalPages, p + 1));
+                      }}
+                      className={
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+
+            {/* Results info */}
+            <p className="text-sm text-muted-foreground text-center">
+              Mostrando {paginatedStudents.length} de {filteredStudents.length}{" "}
+              alunos
+            </p>
+          </>
+        )}
+
+        {/* Detail Sheet */}
+        <StudentDetailSheet
+          studentId={selectedStudentId}
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+        />
+      </div>
+    </AdminLayout>
+  );
+}
