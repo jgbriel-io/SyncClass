@@ -30,7 +30,7 @@ import {
   useCreateFinancialRecord,
   useMarkAsPaid,
   FinancialRecordInsert,
-  FinancialRecordWithStudent,
+  FinancialRecordWithRelations,
 } from "@/hooks/useFinancialRecords";
 
 type PaymentStatus = "pendente" | "atrasado" | "pago";
@@ -63,7 +63,7 @@ function formatDateTime(dateString: string): string {
 }
 
 // Calculate actual status based on due_date
-function getActualStatus(record: FinancialRecordWithStudent): PaymentStatus {
+function getActualStatus(record: FinancialRecordWithRelations): PaymentStatus {
   if (record.status === "pago") return "pago";
   
   const today = new Date();
@@ -79,7 +79,7 @@ export default function FinancialPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [confirmPaymentId, setConfirmPaymentId] = useState<string | null>(null);
-  const [recordToConfirm, setRecordToConfirm] = useState<FinancialRecordWithStudent | null>(null);
+  const [recordToConfirm, setRecordToConfirm] = useState<FinancialRecordWithRelations | null>(null);
 
   const { data: records = [], isLoading, error } = useFinancialRecords();
   const { data: summary } = useFinancialSummary();
@@ -110,7 +110,7 @@ export default function FinancialPage() {
     });
   };
 
-  const openConfirmPayment = (record: FinancialRecordWithStudent) => {
+  const openConfirmPayment = (record: FinancialRecordWithRelations) => {
     setRecordToConfirm(record);
     setConfirmPaymentId(record.id);
   };
@@ -248,6 +248,9 @@ export default function FinancialPage() {
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Aluno
                     </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
+                      Aula Vinculada
+                    </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden sm:table-cell">
                       Descrição
                     </th>
@@ -275,6 +278,15 @@ export default function FinancialPage() {
                         <p className="font-medium text-sm">
                           {record.students?.name || "—"}
                         </p>
+                      </td>
+                      <td className="px-6 py-4 hidden lg:table-cell">
+                        {record.class_logs ? (
+                          <p className="text-sm text-muted-foreground">
+                            {formatDate(record.class_logs.class_date)}
+                          </p>
+                        ) : (
+                          <span className="text-sm text-muted-foreground/50">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 hidden sm:table-cell">
                         <p className="text-sm text-muted-foreground">

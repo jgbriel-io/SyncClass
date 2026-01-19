@@ -7,9 +7,16 @@ export type FinancialRecord = Tables<"financial_records">;
 export type FinancialRecordInsert = TablesInsert<"financial_records">;
 export type FinancialRecordUpdate = TablesUpdate<"financial_records">;
 
-export interface FinancialRecordWithStudent extends FinancialRecord {
+export interface FinancialRecordWithRelations extends FinancialRecord {
   students: {
     name: string;
+  } | null;
+  class_logs: {
+    id: string;
+    class_date: string;
+    attendance: boolean | null;
+    grade: number | null;
+    feedback: string | null;
   } | null;
 }
 
@@ -23,6 +30,13 @@ export function useFinancialRecords() {
           *,
           students (
             name
+          ),
+          class_logs (
+            id,
+            class_date,
+            attendance,
+            grade,
+            feedback
           )
         `)
         .order("due_date", { ascending: false });
@@ -31,7 +45,7 @@ export function useFinancialRecords() {
         throw error;
       }
 
-      return data as FinancialRecordWithStudent[];
+      return data as FinancialRecordWithRelations[];
     },
   });
 }
