@@ -1,3 +1,20 @@
+    // Função para formatar automaticamente para valor monetário (ex: 123 -> 123,00)
+    function autoFormatNumber(e: React.ChangeEvent<HTMLInputElement>) {
+      let value = e.target.value.replace(/[^\d]/g, "");
+      if (!value) value = "0";
+      value = value.replace(/^0+(?!$)/, "");
+      let formatted = value;
+      if (value.length > 2) {
+        formatted = value.slice(0, value.length - 2) + "," + value.slice(-2);
+      } else if (value.length === 2) {
+        formatted = "0," + value;
+      } else if (value.length === 1) {
+        formatted = "0,0" + value;
+      }
+      e.target.value = formatted;
+      if (onChange) onChange(e);
+    }
+
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -21,6 +38,13 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
     // Detecta se é campo de data customizado
     const isDateText = type === 'text' && (props['inputMode'] === 'numeric' && (props['pattern'] === "^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$" || props['pattern'] === "^\\d{2}/\\d{2}/\\d{4}$"));
 
+    // Detecta se é campo de valor numérico (apenas para ids e names comuns de valor)
+    const isNumberValue = type === 'text' && (
+      ['amount', 'financial_amount', 'valor', 'preco', 'price', 'mensalidade', 'pagamento'].some(
+        k => (props['id'] || '').toLowerCase().includes(k) || (props['name'] || '').toLowerCase().includes(k)
+      )
+    );
+
     return (
       <input
         type={type}
@@ -29,7 +53,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className,
         )}
         ref={ref}
-        onChange={isDateText ? autoFormatDate : onChange}
+        onChange={isDateText ? autoFormatDate : isNumberValue ? autoFormatNumber : onChange}
         {...props}
       />
     );
