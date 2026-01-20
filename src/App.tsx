@@ -1,3 +1,12 @@
+import TeachersPage from "./pages/admin/Teachers";
+            <Route
+              path="/admin/teachers"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <TeachersPage />
+                </ProtectedRoute>
+              }
+            />
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,7 +19,7 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import StudentsPage from "./pages/admin/Students";
 import StudentOverviewPage from "./pages/admin/StudentOverview";
-import UserLinksPage from "./pages/admin/UserLinks";
+import UsersPage from "./pages/admin/Users";
 import FinancialPage from "./pages/admin/Financial";
 import ClassesPage from "./pages/admin/Classes";
 import StudentHome from "./pages/student/StudentHome";
@@ -88,10 +97,10 @@ const App = () => (
               }
             />
             <Route
-              path="/admin/user-links"
+              path="/admin/users"
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
-                  <UserLinksPage />
+                  <UsersPage />
                 </ProtectedRoute>
               }
             />

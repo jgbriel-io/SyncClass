@@ -1,8 +1,18 @@
 import { useState } from "react";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -38,68 +48,31 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { StatCard } from "@/components/ui/stat-card";
 
-export default function UserLinksPage() {
+export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<ProfileWithRole | null>(null);
-  const [unlinkDialogOpen, setUnlinkDialogOpen] = useState(false);
-  const [profileToUnlink, setProfileToUnlink] = useState<ProfileWithRole | null>(null);
-
   const { data: profiles = [], isLoading, error } = useAllProfiles();
-  const linkStudent = useLinkStudentToProfile();
-  const unlinkStudent = useUnlinkStudentFromProfile();
-
-  // Stats
   const totalUsers = profiles.length;
-  const linkedUsers = profiles.filter(p => p.student_id).length;
-  const unlinkedUsers = profiles.filter(p => !p.student_id).length;
-
   const filteredProfiles = profiles.filter((profile) => {
-    const matchesSearch =
-      (profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
-      (profile.student_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
-    
-    const isLinked = !!profile.student_id;
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "linked" && isLinked) ||
-      (statusFilter === "unlinked" && !isLinked);
-    
-    return matchesSearch && matchesStatus;
+    if (!searchQuery.trim()) return true;
+    return (profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
   });
 
-  const handleLink = (profile: ProfileWithRole) => {
-    setSelectedProfile(profile);
-    setLinkDialogOpen(true);
-  };
+  // Estado para editar/excluir
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<ProfileWithRole | null>(null);
+  const [editName, setEditName] = useState("");
 
-  const handleLinkSubmit = (profileId: string, studentId: string) => {
-    linkStudent.mutate(
-      { profileId, studentId },
-      {
-        onSuccess: () => {
-          setLinkDialogOpen(false);
-          setSelectedProfile(null);
-        },
-      }
-    );
+  // TODO: Substituir por mutation real
+  const handleEditUser = () => {
+    // Aqui você faria a mutation para atualizar o nome do usuário
+    setEditDialogOpen(false);
+    setSelectedProfile(null);
   };
-
-  const handleUnlinkConfirm = () => {
-    if (profileToUnlink) {
-      unlinkStudent.mutate(profileToUnlink.id, {
-        onSuccess: () => {
-          setUnlinkDialogOpen(false);
-          setProfileToUnlink(null);
-        },
-      });
-    }
-  };
-
-  const openUnlinkDialog = (profile: ProfileWithRole) => {
-    setProfileToUnlink(profile);
-    setUnlinkDialogOpen(true);
+  const handleDeleteUser = () => {
+    // Aqui você faria a mutation para deletar o usuário
+    setDeleteDialogOpen(false);
+    setSelectedProfile(null);
   };
 
   return (
@@ -107,30 +80,18 @@ export default function UserLinksPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Vínculos de Usuários</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Usuários</h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie a vinculação entre usuários do sistema e alunos cadastrados
+            Gerencie os usuários do sistema
           </p>
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-1">
           <StatCard
             title="Total de Usuários"
             value={totalUsers}
             icon={Users}
-          />
-          <StatCard
-            title="Usuários Vinculados"
-            value={linkedUsers}
-            icon={UserCheck}
-            className="border-l-green-500"
-          />
-          <StatCard
-            title="Aguardando Vínculo"
-            value={unlinkedUsers}
-            icon={UserX}
-            className="border-l-amber-500"
           />
         </div>
 
@@ -145,16 +106,6 @@ export default function UserLinksPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="linked">Vinculados</SelectItem>
-              <SelectItem value="unlinked">Não vinculados</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Loading state */}
@@ -183,14 +134,8 @@ export default function UserLinksPage() {
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Usuário
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
-                      Aluno Vinculado
-                    </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
                       Data de Cadastro
-                    </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                      Status
                     </th>
                     <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Ações
@@ -217,16 +162,6 @@ export default function UserLinksPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 hidden md:table-cell">
-                        {profile.student_name ? (
-                          <div className="flex items-center gap-2">
-                            <Link2 className="h-4 w-4 text-primary" />
-                            <span className="text-sm">{profile.student_name}</span>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
-                        )}
-                      </td>
                       <td className="px-6 py-4 hidden lg:table-cell">
                         <span className="text-sm text-muted-foreground">
                           {profile.created_at
@@ -234,14 +169,8 @@ export default function UserLinksPage() {
                             : "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge
-                          variant={profile.student_id ? "success" : "warning"}
-                        >
-                          {profile.student_id ? "Vinculado" : "Pendente"}
-                        </StatusBadge>
-                      </td>
                       <td className="px-6 py-4 text-right">
+                        {/* Ações futuras: editar/excluir usuário */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -249,20 +178,19 @@ export default function UserLinksPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {!profile.student_id ? (
-                              <DropdownMenuItem onClick={() => handleLink(profile)}>
-                                <Link2 className="h-4 w-4 mr-2" />
-                                Vincular a Aluno
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => openUnlinkDialog(profile)}
-                              >
-                                <Unlink className="h-4 w-4 mr-2" />
-                                Remover Vínculo
-                              </DropdownMenuItem>
-                            )}
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedProfile(profile);
+                              setEditName(profile.full_name || "");
+                              setEditDialogOpen(true);
+                            }}>
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => {
+                              setSelectedProfile(profile);
+                              setDeleteDialogOpen(true);
+                            }}>
+                              Excluir
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
@@ -281,52 +209,49 @@ export default function UserLinksPage() {
           </div>
         )}
 
-        {/* Link Dialog */}
-        <LinkStudentDialog
-          open={linkDialogOpen}
-          onOpenChange={(open) => {
-            setLinkDialogOpen(open);
-            if (!open) setSelectedProfile(null);
-          }}
-          profile={selectedProfile}
-          onSubmit={handleLinkSubmit}
-          isLoading={linkStudent.isPending}
-        />
+        {/* Modal Editar Usuário */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Usuário</DialogTitle>
+              <DialogDescription>Altere o nome do usuário abaixo:</DialogDescription>
+            </DialogHeader>
+            <Input
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              placeholder="Nome do usuário"
+              autoFocus
+            />
+            <DialogFooter>
+              <DialogClose asChild>
+                <button className="btn" type="button">Cancelar</button>
+              </DialogClose>
+              <button className="btn btn-primary" type="button" onClick={handleEditUser} disabled={!editName.trim()}>
+                Salvar
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-        {/* Unlink Confirmation Dialog */}
-        <AlertDialog open={unlinkDialogOpen} onOpenChange={setUnlinkDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Remover vínculo</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja remover o vínculo entre o usuário{" "}
-                <strong>{profileToUnlink?.full_name}</strong> e o aluno{" "}
-                <strong>{profileToUnlink?.student_name}</strong>?
-                <br /><br />
-                O usuário perderá acesso aos dados do aluno no portal.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={unlinkStudent.isPending}>
-                Cancelar
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleUnlinkConfirm}
-                disabled={unlinkStudent.isPending}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {unlinkStudent.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Removendo...
-                  </>
-                ) : (
-                  "Remover Vínculo"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {/* Modal Excluir Usuário */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Excluir Usuário</DialogTitle>
+              <DialogDescription>
+                Tem certeza que deseja excluir o usuário <strong>{selectedProfile?.full_name}</strong>? Esta ação não pode ser desfeita.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose asChild>
+                <button className="btn" type="button">Cancelar</button>
+              </DialogClose>
+              <button className="btn btn-destructive" type="button" onClick={handleDeleteUser}>
+                Excluir
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
