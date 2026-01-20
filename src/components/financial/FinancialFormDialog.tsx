@@ -217,7 +217,6 @@ export function FinancialFormDialog({
               placeholder="dd/mm/aaaa"
               {...register("due_date")}
             />
-            <span className="text-xs text-muted-foreground">Formato: dd/mm/aaaa</span>
             {errors.due_date && (
               <p className="text-sm text-destructive">{errors.due_date.message}</p>
             )}

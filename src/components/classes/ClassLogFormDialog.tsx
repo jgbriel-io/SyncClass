@@ -228,7 +228,6 @@ export function ClassLogFormDialog({
               placeholder="dd/mm/aaaa"
               {...register("class_date")}
             />
-            <span className="text-xs text-muted-foreground">Formato: dd/mm/aaaa</span>
             {errors.class_date && (
               <p className="text-sm text-destructive">{errors.class_date.message}</p>
             )}
@@ -326,7 +325,6 @@ export function ClassLogFormDialog({
                         placeholder="dd/mm/aaaa"
                         {...register("financial_due_date")}
                       />
-                      <span className="text-xs text-muted-foreground">Formato: dd/mm/aaaa</span>
                     </div>
                   </div>
 
