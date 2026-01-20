@@ -25,27 +25,25 @@ export function useUsers() {
   return useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      // Get all profiles (which have user_id)
+      // Buscar perfis
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select(`
-          *,
-          user_roles (
-            id,
-            user_id,
-            role
-          )
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (profilesError) throw profilesError;
 
-      // Get auth user info for each profile
-      // Note: We can't list all users without Admin API, so we'll work with profiles
-      // For email, we'll need to fetch from auth.users via a function or use the profile data
+      // Buscar roles
+      const { data: roles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("*");
+
+      if (rolesError) throw rolesError;
+
+      // Combinar perfis e roles
       return (profiles || []).map(profile => ({
         id: profile.user_id,
-        email: "", // Will be fetched separately if needed
+        email: "", // Preencher se necessário
         created_at: profile.created_at || "",
         profile: {
           id: profile.id,
@@ -54,10 +52,8 @@ export function useUsers() {
           student_id: profile.student_id,
           created_at: profile.created_at,
         },
-        role: Array.isArray(profile.user_roles) && profile.user_roles.length > 0
-          ? profile.user_roles[0]
-          : null,
-      })) as UserWithProfile[];
+        role: roles?.find(r => r.user_id === profile.user_id) || null,
+      }));
     },
   });
 }
@@ -113,8 +109,6 @@ export function useCreateUser() {
         .upsert({
           user_id: authData.user.id,
           role: role,
-        }, {
-          onConflict: "user_id",
         });
 
       if (roleError) {
@@ -153,8 +147,6 @@ export function useUpdateUserRole() {
         .upsert({
           user_id: userId,
           role: role,
-        }, {
-          onConflict: "user_id",
         });
 
       if (error) throw error;

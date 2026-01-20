@@ -51,6 +51,7 @@ export type Database = {
           id: string
           student_id: string
           updated_at: string | null
+          teacher_id: string | null
         }
         Insert: {
           attendance?: boolean | null
@@ -61,6 +62,7 @@ export type Database = {
           id?: string
           student_id: string
           updated_at?: string | null
+          teacher_id?: string | null
         }
         Update: {
           attendance?: boolean | null
@@ -71,6 +73,7 @@ export type Database = {
           id?: string
           student_id?: string
           updated_at?: string | null
+          teacher_id?: string | null
         }
         Relationships: [
           {
@@ -186,6 +189,7 @@ export type Database = {
           phone: string | null
           status: Database["public"]["Enums"]["student_status"] | null
           updated_at: string | null
+          teacher_id: string | null
         }
         Insert: {
           birth_date?: string | null
@@ -198,6 +202,7 @@ export type Database = {
           phone?: string | null
           status?: Database["public"]["Enums"]["student_status"] | null
           updated_at?: string | null
+          teacher_id?: string | null
         }
         Update: {
           birth_date?: string | null
@@ -210,6 +215,7 @@ export type Database = {
           phone?: string | null
           status?: Database["public"]["Enums"]["student_status"] | null
           updated_at?: string | null
+          teacher_id?: string | null
         }
         Relationships: []
       }

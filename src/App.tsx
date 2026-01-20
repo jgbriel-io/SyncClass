@@ -1,3 +1,24 @@
+// import removido: TeacherPanel
+import StudentPanel from "./pages/StudentPanel";
+            {/* Painel do Professor */}
+            <Route
+              path="/teachers"
+              element={
+                <ProtectedRoute allowedRoles={["professor"]}>
+                  <TeacherHome />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Painel do Aluno */}
+            <Route
+              path="/students"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentPanel />
+                </ProtectedRoute>
+              }
+            />
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,11 +34,16 @@ import StudentOverviewPage from "./pages/admin/StudentOverview";
 import UsersPage from "./pages/admin/Users";
 import FinancialPage from "./pages/admin/Financial";
 import ClassesPage from "./pages/admin/Classes";
-import TeachersPage from "./pages/admin/Teachers";
+// import removido: TeachersPage de admin/Teachers
 import StudentHome from "./pages/student/StudentHome";
 import StudentHistory from "./pages/student/StudentHistory";
 import StudentFinancial from "./pages/student/StudentFinancial";
 import NotFound from "./pages/NotFound";
+import TeachersPage from "./pages/TeachersPage";
+import AdminTeachersPage from "./pages/admin/Teachers";
+import TeacherHome from "./pages/teacher/TeacherHome";
+import TeacherStudentsPage from "./pages/teacher/TeacherStudents";
+import TeacherClassesPage from "./pages/teacher/TeacherClasses";
 
 const queryClient = new QueryClient();
 
@@ -100,7 +126,33 @@ const App = () => (
               path="/admin/teachers"
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
-                  <TeachersPage />
+                  <AdminTeachersPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teacher Routes - Protected */}
+            <Route
+              path="/teacher"
+              element={
+                <ProtectedRoute allowedRoles={["professor"]}>
+                  <TeacherHome />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/students"
+              element={
+                <ProtectedRoute allowedRoles={["professor"]}>
+                  <TeacherStudentsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/classes"
+              element={
+                <ProtectedRoute allowedRoles={["professor"]}>
+                  <TeacherClassesPage />
                 </ProtectedRoute>
               }
             />

@@ -8,6 +8,7 @@ export type ClassLogInsert = TablesInsert<"class_logs">;
 export type ClassLogUpdate = TablesUpdate<"class_logs">;
 
 export interface ClassLogWithStudent extends ClassLog {
+  title?: string | null;
   students: {
     name: string;
   } | null;
@@ -29,11 +30,11 @@ export interface ClassLogWithFinancialData {
   };
 }
 
-export function useClassLogs() {
+export function useClassLogs(teacherId?: string) {
   return useQuery({
-    queryKey: ["class_logs"],
+    queryKey: ["class_logs", teacherId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("class_logs")
         .select(`
           *,
@@ -49,10 +50,14 @@ export function useClassLogs() {
         `)
         .order("class_date", { ascending: false });
 
+      if (teacherId) {
+        query = query.eq("teacher_id", teacherId);
+      }
+
+      const { data, error } = await query;
       if (error) {
         throw error;
       }
-
       return data as ClassLogWithStudent[];
     },
   });

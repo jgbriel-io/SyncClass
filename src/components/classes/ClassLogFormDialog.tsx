@@ -63,6 +63,7 @@ interface ClassLogFormDialogProps {
   onOpenChange: (open: boolean) => void;
   classLog?: ClassLogWithStudent | null;
   onSubmit: (data: ClassLogInsert) => void;
+  teacherId?: string;
   onSubmitWithFinancial?: (data: ClassLogWithFinancialData) => void;
   isLoading: boolean;
 }
@@ -74,7 +75,8 @@ export function ClassLogFormDialog({
   onSubmit,
   onSubmitWithFinancial,
   isLoading,
-}: ClassLogFormDialogProps) {
+  teacherId,
+}: ClassLogFormDialogProps & { teacherId?: string }) {
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [attendance, setAttendance] = useState(true);
   const [createFinancial, setCreateFinancial] = useState(false);
@@ -139,6 +141,7 @@ export function ClassLogFormDialog({
       attendance: data.attendance,
       grade: data.attendance ? grade : null,
       feedback: data.feedback?.trim() || null,
+      teacher_id: teacherId || null,
     };
 
     // Se está criando cobrança junto
