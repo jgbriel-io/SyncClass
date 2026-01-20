@@ -42,6 +42,7 @@ const classLogSchema = z.object({
     .min(1, "Informe a data da aula")
     .regex(dateRegex, "Formato deve ser dd/mm/aaaa")
     .refine(isValidDateString, { message: "Data inválida" }),
+  title: z.string().optional(),
   attendance: z.boolean(),
   grade: z.string().optional(),
   feedback: z.string().max(1000, "Feedback deve ter no máximo 1000 caracteres").optional(),
@@ -134,6 +135,7 @@ export function ClassLogFormDialog({
     const classLogData: ClassLogInsert = {
       student_id: data.student_id,
       class_date: data.class_date,
+      title: data.title?.trim() || null,
       attendance: data.attendance,
       grade: data.attendance ? grade : null,
       feedback: data.feedback?.trim() || null,
@@ -216,6 +218,16 @@ export function ClassLogFormDialog({
             )}
           </div>
 
+          {/* Título da Aula */}
+          <div className="space-y-2">
+            <Label htmlFor="title">Título da Aula</Label>
+            <Input
+              id="title"
+              type="text"
+              placeholder="Ex: Revisão de escalas maiores"
+              {...register("title")}
+            />
+          </div>
           {/* Class Date */}
           <div className="space-y-2">
             <Label htmlFor="class_date">Data da Aula *</Label>
@@ -223,7 +235,7 @@ export function ClassLogFormDialog({
               id="class_date"
               type="text"
               inputMode="numeric"
-              pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
+              pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$"
               maxLength={10}
               placeholder="dd/mm/aaaa"
               {...register("class_date")}

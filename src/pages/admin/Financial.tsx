@@ -323,7 +323,11 @@ export default function FinancialPage() {
                       <td className="px-6 py-4 hidden lg:table-cell">
                         {record.class_logs ? (
                           <p className="text-sm text-muted-foreground">
-                            {formatDate(record.class_logs.class_date)}
+                            {record.students?.name}
+                            {" + "}
+                            {record.class_logs.title?.trim()
+                              ? record.class_logs.title
+                              : formatDate(record.class_logs.class_date)}
                           </p>
                         ) : (
                           <span className="text-sm text-muted-foreground/50">—</span>
