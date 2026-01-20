@@ -26,11 +26,25 @@ import { useStudents } from "@/hooks/useStudents";
 import { useAvailableClassLogsForStudent } from "@/hooks/useClassLogs";
 import { FinancialRecordInsert } from "@/hooks/useFinancialRecords";
 
+const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+function isValidDateString(value: string) {
+  if (!dateRegex.test(value)) return false;
+  const [day, month, year] = value.split("/").map(Number);
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
 const financialSchema = z.object({
   student_id: z.string().min(1, "Selecione um aluno"),
   class_log_id: z.string().optional(),
   amount: z.string().min(1, "Informe o valor"),
-  due_date: z.string().min(1, "Informe a data de vencimento"),
+  due_date: z.string()
+    .min(1, "Informe a data de vencimento")
+    .regex(dateRegex, "Formato deve ser dd/mm/aaaa")
+    .refine(isValidDateString, { message: "Data inválida" }),
   description: z.string().optional(),
 });
 
@@ -196,9 +210,14 @@ export function FinancialFormDialog({
             <Label htmlFor="due_date">Data de Vencimento *</Label>
             <Input
               id="due_date"
-              type="date"
+              type="text"
+              inputMode="numeric"
+              pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
+              maxLength={10}
+              placeholder="dd/mm/aaaa"
               {...register("due_date")}
             />
+            <span className="text-xs text-muted-foreground">Formato: dd/mm/aaaa</span>
             {errors.due_date && (
               <p className="text-sm text-destructive">{errors.due_date.message}</p>
             )}

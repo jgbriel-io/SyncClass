@@ -25,16 +25,33 @@ import { Loader2, Receipt } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
 import { ClassLogInsert, ClassLogWithStudent, ClassLogWithFinancialData } from "@/hooks/useClassLogs";
 
+const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+function isValidDateString(value: string) {
+  if (!dateRegex.test(value)) return false;
+  const [day, month, year] = value.split("/").map(Number);
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
 const classLogSchema = z.object({
   student_id: z.string().min(1, "Selecione um aluno"),
-  class_date: z.string().min(1, "Informe a data da aula"),
+  class_date: z.string()
+    .min(1, "Informe a data da aula")
+    .regex(dateRegex, "Formato deve ser dd/mm/aaaa")
+    .refine(isValidDateString, { message: "Data inválida" }),
   attendance: z.boolean(),
   grade: z.string().optional(),
   feedback: z.string().max(1000, "Feedback deve ter no máximo 1000 caracteres").optional(),
   // Campos de cobrança
   createFinancial: z.boolean().optional(),
   financial_amount: z.string().optional(),
-  financial_due_date: z.string().optional(),
+  financial_due_date: z.string().optional().refine(
+    (val) => !val || (dateRegex.test(val) && isValidDateString(val)),
+    { message: "Data inválida" }
+  ),
   financial_description: z.string().optional(),
 });
 
@@ -204,9 +221,14 @@ export function ClassLogFormDialog({
             <Label htmlFor="class_date">Data da Aula *</Label>
             <Input
               id="class_date"
-              type="date"
+              type="text"
+              inputMode="numeric"
+              pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
+              maxLength={10}
+              placeholder="dd/mm/aaaa"
               {...register("class_date")}
             />
+            <span className="text-xs text-muted-foreground">Formato: dd/mm/aaaa</span>
             {errors.class_date && (
               <p className="text-sm text-destructive">{errors.class_date.message}</p>
             )}
@@ -297,9 +319,14 @@ export function ClassLogFormDialog({
                       <Label htmlFor="financial_due_date">Vencimento *</Label>
                       <Input
                         id="financial_due_date"
-                        type="date"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
+                        maxLength={10}
+                        placeholder="dd/mm/aaaa"
                         {...register("financial_due_date")}
                       />
+                      <span className="text-xs text-muted-foreground">Formato: dd/mm/aaaa</span>
                     </div>
                   </div>
 
