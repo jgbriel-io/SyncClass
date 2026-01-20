@@ -1,2 +1,502 @@
-import UsersPage from "./UserLinks";
-export default UsersPage;
+import { useState } from "react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Search, Plus, Loader2, Shield, User, Link2, Unlink } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { UserFormDialog } from "@/components/users/UserFormDialog";
+import {
+  useUsers,
+  useCreateUser,
+  useUpdateUserRole,
+  useUpdateUserProfile,
+  useDeleteUser,
+  useLinkUserToStudent,
+  useUnlinkUserFromStudent,
+  UserWithProfile,
+} from "@/hooks/useUsers";
+import { useStudents } from "@/hooks/useStudents";
+import { useTeachers } from "@/hooks/useTeachers";
+import { StatusBadge } from "@/components/ui/status-badge";
+
+export default function UsersPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null);
+  const [linkType, setLinkType] = useState<"student" | "teacher" | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
+
+  const { data: users = [], isLoading, error } = useUsers();
+  const { data: students = [] } = useStudents();
+  const { data: teachers = [] } = useTeachers();
+  const createUser = useCreateUser();
+  const updateRole = useUpdateUserRole();
+  const updateProfile = useUpdateUserProfile();
+  const deleteUser = useDeleteUser();
+  const linkToStudent = useLinkUserToStudent();
+  const unlinkFromStudent = useUnlinkUserFromStudent();
+
+  const filteredUsers = users.filter((user) => {
+    const name = user.profile?.full_name || "";
+    const email = user.email || "";
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      name.toLowerCase().includes(searchLower) ||
+      email.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const handleCreateOrUpdate = (data: {
+    email: string;
+    password?: string;
+    fullName: string;
+    role: "admin" | "student";
+  }) => {
+    if (selectedUser) {
+      // Update existing user
+      if (data.password) {
+        // Update password via admin API
+        // Note: Supabase Admin API doesn't have a direct password update
+        // You might need to use resetPasswordForEmail or handle this differently
+        console.warn("Password update not implemented via admin API");
+      }
+      
+      updateProfile.mutate(
+        {
+          userId: selectedUser.id,
+          fullName: data.fullName,
+        },
+        {
+          onSuccess: () => {
+            updateRole.mutate(
+              {
+                userId: selectedUser.id,
+                role: data.role,
+              },
+              {
+                onSuccess: () => {
+                  setIsFormOpen(false);
+                  setSelectedUser(null);
+                },
+              }
+            );
+          },
+        }
+      );
+    } else {
+      // Create new user
+      createUser.mutate(
+        {
+          email: data.email,
+          password: data.password || "",
+          fullName: data.fullName,
+          role: data.role,
+        },
+        {
+          onSuccess: () => {
+            setIsFormOpen(false);
+          },
+        }
+      );
+    }
+  };
+
+  const handleLinkStudent = () => {
+    if (selectedUser && selectedStudentId) {
+      linkToStudent.mutate(
+        {
+          userId: selectedUser.id,
+          studentId: selectedStudentId,
+        },
+        {
+          onSuccess: () => {
+            setIsLinkDialogOpen(false);
+            setSelectedUser(null);
+            setSelectedStudentId("");
+          },
+        }
+      );
+    }
+  };
+
+  const handleUnlinkStudent = (userId: string) => {
+    unlinkFromStudent.mutate(userId);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (selectedUser) {
+      deleteUser.mutate(selectedUser.id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setSelectedUser(null);
+        },
+      });
+    }
+  };
+
+  const openLinkDialog = (user: UserWithProfile, type: "student" | "teacher") => {
+    setSelectedUser(user);
+    setLinkType(type);
+    setIsLinkDialogOpen(true);
+  };
+
+  // Get available students (not linked to any user)
+  const linkedStudentIds = new Set(
+    users
+      .map((u) => u.profile?.student_id)
+      .filter((id): id is string => !!id)
+  );
+  const availableStudents = students.filter(
+    (s) => !linkedStudentIds.has(s.id)
+  );
+
+  const getRoleVariant = (role: string | null) => {
+    switch (role) {
+      case "admin":
+        return "destructive";
+      case "student":
+        return "success";
+      default:
+        return "warning";
+    }
+  };
+
+  const getRoleLabel = (role: string | null) => {
+    switch (role) {
+      case "admin":
+        return "Administrador";
+      case "student":
+        return "Aluno";
+      default:
+        return "Sem privilégio";
+    }
+  };
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Usuários</h1>
+            <p className="text-muted-foreground mt-1">
+              Gerencie usuários, privilégios e vínculos
+            </p>
+          </div>
+          <Button onClick={() => {
+            setSelectedUser(null);
+            setIsFormOpen(true);
+          }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Usuário
+          </Button>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou email..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+
+        {/* Error state */}
+        {error && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+            <p className="text-destructive">
+              Erro ao carregar usuários. Tente novamente.
+            </p>
+          </div>
+        )}
+
+        {/* Table */}
+        {!isLoading && !error && (
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                      Usuário
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                      Privilégio
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
+                      Vínculo
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
+                      Cadastro
+                    </th>
+                    <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filteredUsers.map((user) => {
+                    const linkedStudent = user.profile?.student_id
+                      ? students.find((s) => s.id === user.profile?.student_id)
+                      : null;
+
+                    return (
+                      <tr
+                        key={user.id}
+                        className="hover:bg-muted/30 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                              <span className="text-sm font-medium text-accent-foreground">
+                                {user.profile?.full_name?.charAt(0) || user.email.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm truncate">
+                                {user.profile?.full_name || "Sem nome"}
+                              </p>
+                              {user.email && (
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {user.email}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusBadge variant={getRoleVariant(user.role?.role)}>
+                            {getRoleLabel(user.role?.role)}
+                          </StatusBadge>
+                        </td>
+                        <td className="px-6 py-4 hidden lg:table-cell">
+                          {linkedStudent ? (
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">{linkedStudent.name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 hidden md:table-cell">
+                          <span className="text-sm text-muted-foreground">
+                            {user.created_at
+                              ? format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })
+                              : "—"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setIsFormOpen(true);
+                              }}
+                            >
+                              Editar
+                            </Button>
+                            {!linkedStudent && user.role?.role === "student" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openLinkDialog(user, "student")}
+                              >
+                                <Link2 className="h-4 w-4 mr-1" />
+                                Vincular Aluno
+                              </Button>
+                            )}
+                            {linkedStudent && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleUnlinkStudent(user.id)}
+                              >
+                                <Unlink className="h-4 w-4 mr-1" />
+                                Desvincular
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              Excluir
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {filteredUsers.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                {users.length === 0
+                  ? "Nenhum usuário cadastrado ainda"
+                  : "Nenhum usuário encontrado com esses filtros"}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Create/Edit User Dialog */}
+        <UserFormDialog
+          open={isFormOpen}
+          onOpenChange={(open) => {
+            setIsFormOpen(open);
+            if (!open) setSelectedUser(null);
+          }}
+          user={selectedUser}
+          onSubmit={handleCreateOrUpdate}
+          isLoading={createUser.isPending || updateRole.isPending || updateProfile.isPending}
+        />
+
+        {/* Link Dialog */}
+        <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                Vincular {linkType === "student" ? "Aluno" : "Professor"}
+              </DialogTitle>
+            </DialogHeader>
+            {linkType === "student" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Selecione o aluno</label>
+                  <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um aluno" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableStudents.map((student) => (
+                        <SelectItem key={student.id} value={student.id}>
+                          {student.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsLinkDialogOpen(false);
+                      setSelectedStudentId("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleLinkStudent}
+                    disabled={!selectedStudentId || linkToStudent.isPending}
+                  >
+                    {linkToStudent.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Vinculando...
+                      </>
+                    ) : (
+                      "Vincular"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+            {linkType === "teacher" && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  A funcionalidade de vincular professores ainda não está disponível.
+                  É necessário adicionar uma coluna user_id na tabela teachers.
+                </p>
+                <div className="flex justify-end">
+                  <Button variant="outline" onClick={() => setIsLinkDialogOpen(false)}>
+                    Fechar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o usuário{" "}
+                <strong>{selectedUser?.profile?.full_name || selectedUser?.email}</strong>?
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteUser.isPending}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                disabled={deleteUser.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteUser.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  "Excluir"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </AdminLayout>
+  );
+}
