@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useUndoFinancialPayment } from "@/hooks/useFinancialRecords";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,9 +30,18 @@ import {
   useFinancialSummary,
   useCreateFinancialRecord,
   useMarkAsPaid,
+  useUpdateFinancialRecord,
+  useDeleteFinancialRecord,
   FinancialRecordInsert,
   FinancialRecordWithRelations,
 } from "@/hooks/useFinancialRecords";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
 type PaymentStatus = "pendente" | "atrasado" | "pago";
 
@@ -75,16 +85,22 @@ function getActualStatus(record: FinancialRecordWithRelations): PaymentStatus {
 }
 
 export default function FinancialPage() {
+    const undoPayment = useUndoFinancialPayment();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [confirmPaymentId, setConfirmPaymentId] = useState<string | null>(null);
   const [recordToConfirm, setRecordToConfirm] = useState<FinancialRecordWithRelations | null>(null);
+  const [recordToEdit, setRecordToEdit] = useState<FinancialRecordWithRelations | null>(null);
+  const [recordToDelete, setRecordToDelete] = useState<FinancialRecordWithRelations | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { data: records = [], isLoading, error } = useFinancialRecords();
   const { data: summary } = useFinancialSummary();
   const createRecord = useCreateFinancialRecord();
   const markAsPaid = useMarkAsPaid();
+  const updateRecord = useUpdateFinancialRecord();
+  const deleteRecord = useDeleteFinancialRecord();
 
   // Add actual status to records
   const recordsWithActualStatus = records.map((record) => ({
@@ -108,6 +124,28 @@ export default function FinancialPage() {
         setIsFormOpen(false);
       },
     });
+  };
+
+  const handleEditRecord = (data: FinancialRecordInsert) => {
+    if (recordToEdit) {
+      updateRecord.mutate({ id: recordToEdit.id, ...data }, {
+        onSuccess: () => {
+          setIsFormOpen(false);
+          setRecordToEdit(null);
+        },
+      });
+    }
+  };
+
+  const handleDeleteRecord = () => {
+    if (recordToDelete) {
+      deleteRecord.mutate(recordToDelete.id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setRecordToDelete(null);
+        },
+      });
+    }
   };
 
   const openConfirmPayment = (record: FinancialRecordWithRelations) => {
@@ -309,21 +347,62 @@ export default function FinancialPage() {
                         </StatusBadge>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {record.actualStatus !== "pago" ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8"
-                            onClick={() => openConfirmPayment(record)}
-                          >
-                            <Check className="h-3.5 w-3.5 mr-1.5" />
-                            Baixar
-                          </Button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            Pago em {record.paid_at ? formatDateTime(record.paid_at) : "—"}
-                          </span>
-                        )}
+                        <div className="flex items-center justify-end gap-2">
+                          {record.actualStatus !== "pago" ? (
+                            <>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => {
+                                    setIsFormOpen(true);
+                                    setRecordToEdit(record);
+                                  }}>
+                                    <Pencil className="h-4 w-4 mr-2" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => {
+                                      setRecordToDelete(record);
+                                      setDeleteDialogOpen(true);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Excluir
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              <Button
+                                size="sm"
+                                className="h-8 bg-[#25D366] text-white hover:bg-[#1ebe57] border-none"
+                                onClick={() => openConfirmPayment(record)}
+                              >
+                                <Check className="h-3.5 w-3.5 mr-1.5" />
+                                Confirmar
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              size="sm"
+                              className="h-8 bg-yellow-400 text-white font-semibold hover:bg-yellow-500 border-none shadow"
+                              disabled={undoPayment.isPending}
+                              onClick={() => undoPayment.mutate(record.id)}
+                            >
+                              {undoPayment.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Desfazendo...
+                                </>
+                              ) : (
+                                "Desfazer Cobrança"
+                              )}
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -343,10 +422,45 @@ export default function FinancialPage() {
         {/* Create Form Dialog */}
         <FinancialFormDialog
           open={isFormOpen}
-          onOpenChange={setIsFormOpen}
-          onSubmit={handleCreateRecord}
-          isLoading={createRecord.isPending}
+          onOpenChange={(open) => {
+            setIsFormOpen(open);
+            if (!open) setRecordToEdit(null);
+          }}
+          onSubmit={recordToEdit ? handleEditRecord : handleCreateRecord}
+          isLoading={createRecord.isPending || updateRecord.isPending}
+          initialData={recordToEdit}
         />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir a cobrança de {recordToDelete?.students?.name} no valor de <strong>{recordToDelete ? formatCurrency(Number(recordToDelete.amount)) : ""}</strong>? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteRecord.isPending}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteRecord}
+                disabled={deleteRecord.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteRecord.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  "Excluir"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Confirm Payment Dialog */}
         <AlertDialog

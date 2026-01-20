@@ -55,6 +55,7 @@ interface FinancialFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: FinancialRecordInsert) => void;
   isLoading: boolean;
+  initialData?: any;
 }
 
 function formatClassLogDate(dateString: string): string {
@@ -66,6 +67,7 @@ export function FinancialFormDialog({
   onOpenChange,
   onSubmit,
   isLoading,
+  initialData,
 }: FinancialFormDialogProps) {
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [selectedClassLogId, setSelectedClassLogId] = useState<string>("");
@@ -84,13 +86,25 @@ export function FinancialFormDialog({
     resolver: zodResolver(financialSchema),
   });
 
+
   useEffect(() => {
     if (!open) {
       reset();
       setSelectedStudentId("");
       setSelectedClassLogId("");
+    } else if (initialData) {
+      // Preenche o formulário com os dados da cobrança para edição
+      setSelectedStudentId(initialData.student_id || "");
+      setSelectedClassLogId(initialData.class_log_id || "");
+      reset({
+        student_id: initialData.student_id || "",
+        class_log_id: initialData.class_log_id || "",
+        amount: initialData.amount ? String(initialData.amount).replace('.', ',') : "",
+        due_date: initialData.due_date ? format(new Date(initialData.due_date + "T00:00:00"), "dd/MM/yyyy") : "",
+        description: initialData.description || "",
+      });
     }
-  }, [open, reset]);
+  }, [open, reset, initialData]);
 
   // Reset class log when student changes
   useEffect(() => {
@@ -249,6 +263,8 @@ export function FinancialFormDialog({
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Salvando...
                 </>
+              ) : initialData ? (
+                "Salvar Alterações"
               ) : (
                 "Criar Cobrança"
               )}
