@@ -97,17 +97,16 @@ export function useCreateFinancialRecord() {
 
   return useMutation({
     mutationFn: async (record: FinancialRecordInsert) => {
-      const { data, error } = await supabase
+      // Avoid relying on RETURNING/select() here; depending on RLS policies,
+      // the insert can succeed while the returning row is not selectable,
+      // which makes the UX look like "nothing happened".
+      const { error } = await supabase
         .from("financial_records")
-        .insert(record)
-        .select()
-        .single();
+        .insert(record);
 
       if (error) {
         throw error;
       }
-
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
@@ -116,7 +115,9 @@ export function useCreateFinancialRecord() {
     },
     onError: (error) => {
       console.error("Error creating financial record:", error);
-      toast.error("Erro ao criar cobrança. Tente novamente.");
+      toast.error(
+        `Erro ao criar cobrança. ${error instanceof Error ? error.message : "Tente novamente."}`
+      );
     },
   });
 }
