@@ -199,7 +199,10 @@ export default function FinancialPage() {
               Gerencie cobranças e pagamentos
             </p>
           </div>
-          <Button onClick={() => setIsFormOpen(true)}>
+          <Button onClick={() => {
+            setRecordToEdit(null);
+            setIsFormOpen(true);
+          }}>
             <Plus className="h-4 w-4 mr-2" />
             Nova Cobrança
           </Button>
@@ -358,8 +361,8 @@ export default function FinancialPage() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => {
-                                    setIsFormOpen(true);
                                     setRecordToEdit(record);
+                                    setIsFormOpen(true);
                                   }}>
                                     <Pencil className="h-4 w-4 mr-2" />
                                     Editar
@@ -428,7 +431,7 @@ export default function FinancialPage() {
           }}
           onSubmit={recordToEdit ? handleEditRecord : handleCreateRecord}
           isLoading={createRecord.isPending || updateRecord.isPending}
-          initialData={recordToEdit}
+          initialData={recordToEdit || null}
         />
 
         {/* Delete Confirmation Dialog */}

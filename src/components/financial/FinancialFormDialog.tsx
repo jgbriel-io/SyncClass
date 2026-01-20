@@ -92,8 +92,16 @@ export function FinancialFormDialog({
       reset();
       setSelectedStudentId("");
       setSelectedClassLogId("");
-    } else if (initialData) {
-      // Preenche o formulário com os dados da cobrança para edição
+    } else if (open && !initialData) {
+      // Nova cobrança: limpa tudo ao abrir
+      reset();
+      setSelectedStudentId("");
+      setSelectedClassLogId("");
+    }
+  }, [open, reset, initialData]);
+
+  useEffect(() => {
+    if (open && initialData) {
       setSelectedStudentId(initialData.student_id || "");
       setSelectedClassLogId(initialData.class_log_id || "");
       reset({
@@ -104,7 +112,7 @@ export function FinancialFormDialog({
         description: initialData.description || "",
       });
     }
-  }, [open, reset, initialData]);
+  }, [open, initialData, reset]);
 
   // Reset class log when student changes
   useEffect(() => {
@@ -142,7 +150,7 @@ export function FinancialFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nova Cobrança</DialogTitle>
+          <DialogTitle>{initialData ? 'Editar Cobrança' : 'Nova Cobrança'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Student Select */}
