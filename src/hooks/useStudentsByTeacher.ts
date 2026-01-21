@@ -7,14 +7,15 @@ export type Student = Tables<"students">;
 export type StudentInsert = TablesInsert<"students">;
 export type StudentUpdate = TablesUpdate<"students">;
 
-export function useStudentsByTeacher(teacherId: string) {
+export function useStudentsByTeacher() {
+  // RLS garante que o professor veja apenas seus próprios alunos,
+  // e o admin veja todos os alunos.
   return useQuery({
-    queryKey: ["students", teacherId],
+    queryKey: ["students", "by-teacher"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
         .select("*")
-        .eq("teacher_id", teacherId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Student[];
@@ -22,20 +23,24 @@ export function useStudentsByTeacher(teacherId: string) {
   });
 }
 
-export function useCreateStudentForTeacher(teacherId: string) {
+export function useCreateStudentForTeacher() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (student: Omit<StudentInsert, "teacher_id">) => {
+      // Descobre o teacher_id do usuário logado via função SQL
+      const { data: teacherId, error: teacherError } = await supabase.rpc("get_my_teacher_id");
+      if (teacherError) throw teacherError;
+
       const { data, error } = await supabase
         .from("students")
-        .insert({ ...student, teacher_id: teacherId })
+        .insert({ ...student, teacher_id: teacherId as string | null })
         .select()
         .single();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students", teacherId] });
+      queryClient.invalidateQueries({ queryKey: ["students", "by-teacher"] });
       toast.success("Aluno cadastrado com sucesso!");
     },
     onError: (error) => {

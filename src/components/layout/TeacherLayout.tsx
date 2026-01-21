@@ -3,6 +3,8 @@ import {
   Home,
   Users,
   BookOpen,
+  CreditCard,
+  BarChart2,
   Menu,
 } from "lucide-react";
 import {
@@ -19,8 +21,10 @@ const TeacherLayout = ({ children }: { children: React.ReactNode }) => {
 
   const navItems = [
     { to: "/teacher", icon: <Home className="h-4 w-4" />, label: "Início" },
-    { to: "/teacher/students", icon: <Users className="h-4 w-4" />, label: "Meus Alunos" },
-    { to: "/teacher/classes", icon: <BookOpen className="h-4 w-4" />, label: "Minhas Aulas" },
+    { to: "/teacher/students", icon: <Users className="h-4 w-4" />, label: "Alunos" },
+    { to: "/teacher/classes", icon: <BookOpen className="h-4 w-4" />, label: "Aulas" },
+    { to: "/teacher/financial", icon: <CreditCard className="h-4 w-4" />, label: "Cobranças" },
+    { to: "/teacher/overview", icon: <BarChart2 className="h-4 w-4" />, label: "Visão Geral" },
   ];
 
   return (

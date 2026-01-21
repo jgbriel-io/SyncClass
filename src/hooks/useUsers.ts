@@ -11,12 +11,13 @@ export interface UserWithProfile {
     user_id: string;
     full_name: string | null;
     student_id: string | null;
+    teacher_id?: string | null;
     created_at: string | null;
   } | null;
   role: {
     id: string;
     user_id: string;
-    role: "admin" | "student";
+    role: "admin" | "student" | "teacher";
   } | null;
 }
 
@@ -50,6 +51,7 @@ export function useUsers() {
           user_id: profile.user_id,
           full_name: profile.full_name,
           student_id: profile.student_id,
+          teacher_id: (profile as any).teacher_id ?? null,
           created_at: profile.created_at,
         },
         role: roles?.find(r => r.user_id === profile.user_id) || null,
@@ -74,7 +76,7 @@ export function useCreateUser() {
       email: string;
       password: string;
       fullName: string;
-      role: "admin" | "student";
+      role: "admin" | "student" | "teacher";
     }) => {
       // Create user via signUp (will trigger profile creation)
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -91,15 +93,65 @@ export function useCreateUser() {
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
 
-      // Update profile name if needed
+      // Update profile name and link to domain entity (student/teacher) if needed
+      const userId = authData.user.id;
+
+      // Ensure profile exists and update name
       if (fullName) {
         const { error: profileError } = await supabase
           .from("profiles")
           .update({ full_name: fullName })
-          .eq("user_id", authData.user.id);
+          .eq("user_id", userId);
 
         if (profileError) {
           console.error("Error updating profile:", profileError);
+        }
+      }
+
+      // Create domain entity based on role and link profile
+      if (role === "student") {
+        const { data: student, error: studentError } = await supabase
+          .from("students")
+          .insert({
+            name: fullName || email,
+            email,
+          } as any)
+          .select()
+          .single();
+
+        if (studentError) {
+          console.error("Error creating student record:", studentError);
+        } else if (student) {
+          const { error: linkError } = await supabase
+            .from("profiles")
+            .update({ student_id: student.id })
+            .eq("user_id", userId);
+
+          if (linkError) {
+            console.error("Error linking profile to student:", linkError);
+          }
+        }
+      } else if (role === "teacher") {
+        const { data: teacher, error: teacherError } = await supabase
+          .from("teachers")
+          .insert({
+            name: fullName || email,
+            email,
+          } as any)
+          .select()
+          .single();
+
+        if (teacherError) {
+          console.error("Error creating teacher record:", teacherError);
+        } else if (teacher) {
+          const { error: linkError } = await supabase
+            .from("profiles")
+            .update({ teacher_id: teacher.id })
+            .eq("user_id", userId);
+
+          if (linkError) {
+            console.error("Error linking profile to teacher:", linkError);
+          }
         }
       }
 
@@ -107,7 +159,7 @@ export function useCreateUser() {
       const { error: roleError } = await supabase
         .from("user_roles")
         .upsert({
-          user_id: authData.user.id,
+          user_id: userId,
           role: role,
         });
 
@@ -140,7 +192,7 @@ export function useUpdateUserRole() {
       role,
     }: {
       userId: string;
-      role: "admin" | "student";
+      role: "admin" | "student" | "teacher";
     }) => {
       const { error } = await supabase
         .from("user_roles")
@@ -278,24 +330,16 @@ export function useLinkUserToTeacher() {
       userId: string;
       teacherId: string;
     }) => {
-      // First, check if teachers table has user_id column
-      // If not, we might need to add it via migration
-      // For now, we'll update the teacher record with user_id if the column exists
       const { error } = await supabase
-        .from("teachers")
-        .update({ user_id: userId } as any)
-        .eq("id", teacherId);
+        .from("profiles")
+        .update({ teacher_id: teacherId })
+        .eq("user_id", userId);
 
-      if (error) {
-        // If column doesn't exist, we'll need to handle it differently
-        // For now, just log the error
-        console.warn("Could not link user to teacher - user_id column may not exist:", error);
-        throw new Error("A tabela teachers não possui coluna user_id. É necessário criar uma migração.");
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Usuário vinculado ao professor com sucesso!");
     },
     onError: (error: any) => {
@@ -326,6 +370,31 @@ export function useUnlinkUserFromStudent() {
     onError: (error: any) => {
       console.error("Error unlinking user from student:", error);
       toast.error("Erro ao remover vínculo. Tente novamente.");
+    },
+  });
+}
+
+// Unlink user from teacher
+export function useUnlinkUserFromTeacher() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ teacher_id: null })
+        .eq("user_id", userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      toast.success("Vínculo de professor removido com sucesso!");
+    },
+    onError: (error: any) => {
+      console.error("Error unlinking user from teacher:", error);
+      toast.error("Erro ao remover vínculo de professor. Tente novamente.");
     },
   });
 }

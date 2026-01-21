@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,63 +7,33 @@ import { GraduationCap, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-type AuthMode = "login" | "signup";
-
 export default function Login() {
-  const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, signUp, role } = useAuth();
+  const { signIn, role } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      if (mode === "login") {
-        const { error } = await signIn(email, password);
-        if (error) {
-          if (error.message.includes("Invalid login credentials")) {
-            toast.error("Email ou senha incorretos");
-          } else if (error.message.includes("Email not confirmed")) {
-            toast.error("Email não confirmado. Verifique sua caixa de entrada.");
-          } else {
-            toast.error(error.message);
-          }
-          setIsLoading(false);
-          return;
+      const { error } = await signIn(email, password);
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Email ou senha incorretos");
+        } else if (error.message.includes("Email not confirmed")) {
+          toast.error("Email não confirmado. Verifique sua caixa de entrada.");
+        } else {
+          toast.error(error.message);
         }
-        toast.success("Login realizado com sucesso!");
-        // Role-based redirect will happen via AuthContext
-      } else {
-        if (!fullName.trim()) {
-          toast.error("Por favor, informe seu nome completo");
-          setIsLoading(false);
-          return;
-        }
-        
-        if (password.length < 6) {
-          toast.error("A senha deve ter pelo menos 6 caracteres");
-          setIsLoading(false);
-          return;
-        }
-
-        const { error } = await signUp(email, password, fullName);
-        if (error) {
-          if (error.message.includes("already registered")) {
-            toast.error("Este email já está cadastrado");
-          } else {
-            toast.error(error.message);
-          }
-          setIsLoading(false);
-          return;
-        }
-        toast.success("Conta criada com sucesso! Você já pode acessar.");
+        setIsLoading(false);
+        return;
       }
+      toast.success("Login realizado com sucesso!");
+      // Role-based redirect will happen via AuthContext
     } catch (error) {
       toast.error("Ocorreu um erro. Tente novamente.");
       setIsLoading(false);
@@ -129,34 +99,16 @@ export default function Login() {
           </div>
 
           <div className="space-y-2 text-center lg:text-left">
-            <h2 className="text-2xl font-semibold tracking-tight">
-              {mode === "login" ? "Bem-vindo de volta" : "Crie sua conta"}
-            </h2>
-            <p className="text-muted-foreground">
-              {mode === "login"
-                ? "Entre com suas credenciais para acessar"
-                : "Preencha os dados para se cadastrar"}
-            </p>
+                <h2 className="text-2xl font-semibold tracking-tight">
+                  Bem-vindo de volta
+                </h2>
+                <p className="text-muted-foreground">
+                  Entre com suas credenciais para acessar
+                </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
-              {mode === "signup" && (
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Nome completo</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="Seu nome completo"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    className="h-11"
-                    disabled={isLoading}
-                  />
-                </div>
-              )}
-
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -204,45 +156,15 @@ export default function Login() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {mode === "login" ? "Entrando..." : "Criando conta..."}
+                  Entrando...
                 </>
-              ) : mode === "login" ? (
-                "Entrar"
               ) : (
-                "Criar conta"
+                "Entrar"
               )}
             </Button>
           </form>
 
-          <div className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {mode === "login" ? (
-                <>
-                  Não tem uma conta?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setMode("signup")}
-                    className="text-primary hover:underline font-medium"
-                    disabled={isLoading}
-                  >
-                    Cadastre-se
-                  </button>
-                </>
-              ) : (
-                <>
-                  Já tem uma conta?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setMode("login")}
-                    className="text-primary hover:underline font-medium"
-                    disabled={isLoading}
-                  >
-                    Faça login
-                  </button>
-                </>
-              )}
-            </p>
-          </div>
+          {/* Sem cadastro público: contas são criadas pelo administrador. */}
         </div>
       </div>
     </div>

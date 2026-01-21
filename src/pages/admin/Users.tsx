@@ -37,6 +37,8 @@ import {
   useDeleteUser,
   useLinkUserToStudent,
   useUnlinkUserFromStudent,
+  useLinkUserToTeacher,
+  useUnlinkUserFromTeacher,
   UserWithProfile,
 } from "@/hooks/useUsers";
 import { useStudents } from "@/hooks/useStudents";
@@ -62,6 +64,8 @@ export default function UsersPage() {
   const deleteUser = useDeleteUser();
   const linkToStudent = useLinkUserToStudent();
   const unlinkFromStudent = useUnlinkUserFromStudent();
+    const linkToTeacher = useLinkUserToTeacher();
+    const unlinkFromTeacher = useUnlinkUserFromTeacher();
 
   const filteredUsers = users.filter((user) => {
     const name = user.profile?.full_name || "";
@@ -77,7 +81,7 @@ export default function UsersPage() {
     email: string;
     password?: string;
     fullName: string;
-    role: "admin" | "student";
+    role: "admin" | "student" | "teacher";
   }) => {
     if (selectedUser) {
       // Update existing user
@@ -150,6 +154,28 @@ export default function UsersPage() {
     unlinkFromStudent.mutate(userId);
   };
 
+  const handleLinkTeacher = () => {
+    if (selectedUser && selectedTeacherId) {
+      linkToTeacher.mutate(
+        {
+          userId: selectedUser.id,
+          teacherId: selectedTeacherId,
+        },
+        {
+          onSuccess: () => {
+            setIsLinkDialogOpen(false);
+            setSelectedUser(null);
+            setSelectedTeacherId("");
+          },
+        }
+      );
+    }
+  };
+
+  const handleUnlinkTeacher = (userId: string) => {
+    unlinkFromTeacher.mutate(userId);
+  };
+
   const handleDeleteConfirm = () => {
     if (selectedUser) {
       deleteUser.mutate(selectedUser.id, {
@@ -177,12 +203,23 @@ export default function UsersPage() {
     (s) => !linkedStudentIds.has(s.id)
   );
 
+  const linkedTeacherIds = new Set(
+    users
+      .map((u) => (u.profile as any)?.teacher_id)
+      .filter((id): id is string => !!id)
+  );
+  const availableTeachers = teachers.filter(
+    (t) => !linkedTeacherIds.has(t.id)
+  );
+
   const getRoleVariant = (role: string | null) => {
     switch (role) {
       case "admin":
         return "destructive";
       case "student":
         return "success";
+      case "teacher":
+        return "info";
       default:
         return "warning";
     }
@@ -194,6 +231,8 @@ export default function UsersPage() {
         return "Administrador";
       case "student":
         return "Aluno";
+      case "teacher":
+        return "Professor";
       default:
         return "Sem privilégio";
     }
@@ -277,6 +316,9 @@ export default function UsersPage() {
                     const linkedStudent = user.profile?.student_id
                       ? students.find((s) => s.id === user.profile?.student_id)
                       : null;
+                    const linkedTeacher = (user.profile as any)?.teacher_id
+                      ? teachers.find((t) => t.id === (user.profile as any).teacher_id)
+                      : null;
 
                     return (
                       <tr
@@ -308,10 +350,20 @@ export default function UsersPage() {
                           </StatusBadge>
                         </td>
                         <td className="px-6 py-4 hidden lg:table-cell">
-                          {linkedStudent ? (
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">{linkedStudent.name}</span>
+                          {linkedStudent || linkedTeacher ? (
+                            <div className="flex flex-col gap-1">
+                              {linkedStudent && (
+                                <div className="flex items-center gap-2">
+                                  <User className="h-4 w-4 text-muted-foreground" />
+                                  <span className="text-sm">Aluno: {linkedStudent.name}</span>
+                                </div>
+                              )}
+                              {linkedTeacher && (
+                                <div className="flex items-center gap-2">
+                                  <Shield className="h-4 w-4 text-muted-foreground" />
+                                  <span className="text-sm">Professor: {linkedTeacher.name}</span>
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <span className="text-sm text-muted-foreground">—</span>
@@ -354,6 +406,26 @@ export default function UsersPage() {
                               >
                                 <Unlink className="h-4 w-4 mr-1" />
                                 Desvincular
+                              </Button>
+                            )}
+                            {!linkedTeacher && user.role?.role === "teacher" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openLinkDialog(user, "teacher")}
+                              >
+                                <Link2 className="h-4 w-4 mr-1" />
+                                Vincular Professor
+                              </Button>
+                            )}
+                            {linkedTeacher && user.role?.role === "teacher" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleUnlinkTeacher(user.id)}
+                              >
+                                <Unlink className="h-4 w-4 mr-1" />
+                                Desvincular Professor
                               </Button>
                             )}
                             <Button
@@ -450,13 +522,43 @@ export default function UsersPage() {
             )}
             {linkType === "teacher" && (
               <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  A funcionalidade de vincular professores ainda não está disponível.
-                  É necessário adicionar uma coluna user_id na tabela teachers.
-                </p>
-                <div className="flex justify-end">
-                  <Button variant="outline" onClick={() => setIsLinkDialogOpen(false)}>
-                    Fechar
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Selecione o professor</label>
+                  <Select value={selectedTeacherId} onValueChange={setSelectedTeacherId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um professor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTeachers.map((teacher) => (
+                        <SelectItem key={teacher.id} value={teacher.id}>
+                          {teacher.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsLinkDialogOpen(false);
+                      setSelectedTeacherId("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleLinkTeacher}
+                    disabled={!selectedTeacherId || linkToTeacher.isPending}
+                  >
+                    {linkToTeacher.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Vinculando...
+                      </>
+                    ) : (
+                      "Vincular"
+                    )}
                   </Button>
                 </div>
               </div>

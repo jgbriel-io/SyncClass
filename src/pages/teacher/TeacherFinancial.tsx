@@ -1,0 +1,487 @@
+import { useState } from "react";
+import TeacherLayout from "@/components/layout/TeacherLayout";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Search, Plus, Check, Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { FinancialFormDialog } from "@/components/financial/FinancialFormDialog";
+import {
+  useFinancialRecords,
+  useFinancialSummary,
+  useCreateFinancialRecord,
+  useMarkAsPaid,
+  useUpdateFinancialRecord,
+  useDeleteFinancialRecord,
+  FinancialRecordInsert,
+  FinancialRecordWithRelations,
+  useUndoFinancialPayment,
+} from "@/hooks/useFinancialRecords";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+
+type PaymentStatus = "pendente" | "atrasado" | "pago";
+
+const statusLabels: Record<PaymentStatus, string> = {
+  pendente: "Pendente",
+  atrasado: "Atrasado",
+  pago: "Pago",
+};
+
+const statusVariants: Record<PaymentStatus, "warning" | "destructive" | "success"> = {
+  pendente: "warning",
+  atrasado: "destructive",
+  pago: "success",
+};
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+}
+
+function formatDate(dateString: string): string {
+  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+}
+
+// Calculate actual status based on due_date
+function getActualStatus(record: FinancialRecordWithRelations): PaymentStatus {
+  if (record.status === "pago") return "pago";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dueDate = new Date(record.due_date + "T00:00:00");
+
+  if (dueDate < today) return "atrasado";
+  return "pendente";
+}
+
+const TeacherFinancialPage = () => {
+  const undoPayment = useUndoFinancialPayment();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [confirmPaymentId, setConfirmPaymentId] = useState<string | null>(null);
+  const [recordToConfirm, setRecordToConfirm] = useState<FinancialRecordWithRelations | null>(null);
+  const [recordToEdit, setRecordToEdit] = useState<FinancialRecordWithRelations | null>(null);
+  const [recordToDelete, setRecordToDelete] = useState<FinancialRecordWithRelations | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // RLS garante que o professor veja apenas cobranças dos seus alunos
+  const { data: records = [], isLoading, error } = useFinancialRecords();
+  const { data: summary } = useFinancialSummary();
+  const createRecord = useCreateFinancialRecord();
+  const markAsPaid = useMarkAsPaid();
+  const updateRecord = useUpdateFinancialRecord();
+  const deleteRecord = useDeleteFinancialRecord();
+
+  // Add actual status to records
+  const recordsWithActualStatus = records.map((record) => ({
+    ...record,
+    actualStatus: getActualStatus(record),
+  }));
+
+  const filteredRecords = recordsWithActualStatus.filter((record) => {
+    const studentName = record.students?.name || "";
+    const matchesSearch = studentName
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || record.actualStatus === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleCreateRecord = (data: FinancialRecordInsert) => {
+    createRecord.mutate(data, {
+      onSuccess: () => {
+        setIsFormOpen(false);
+      },
+    });
+  };
+
+  const handleEditRecord = (data: FinancialRecordInsert) => {
+    if (recordToEdit) {
+      updateRecord.mutate({ id: recordToEdit.id, ...data }, {
+        onSuccess: () => {
+          setIsFormOpen(false);
+          setRecordToEdit(null);
+        },
+      });
+    }
+  };
+
+  const handleDeleteRecord = () => {
+    if (recordToDelete) {
+      deleteRecord.mutate(recordToDelete.id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setRecordToDelete(null);
+        },
+      });
+    }
+  };
+
+  const openConfirmPayment = (record: FinancialRecordWithRelations) => {
+    setRecordToConfirm(record);
+    setConfirmPaymentId(record.id);
+  };
+
+  const handleConfirmPayment = () => {
+    if (confirmPaymentId) {
+      markAsPaid.mutate(confirmPaymentId, {
+        onSuccess: () => {
+          setConfirmPaymentId(null);
+          setRecordToConfirm(null);
+        },
+      });
+    }
+  };
+
+  // Calculate summary with actual status
+  const actualSummary = {
+    totalPending: 0,
+    totalPaid: 0,
+    totalOverdue: 0,
+    countPending: 0,
+    countPaid: 0,
+    countOverdue: 0,
+  };
+
+  recordsWithActualStatus.forEach((record) => {
+    const amount = Number(record.amount) || 0;
+    if (record.actualStatus === "pago") {
+      actualSummary.totalPaid += amount;
+      actualSummary.countPaid++;
+    } else if (record.actualStatus === "atrasado") {
+      actualSummary.totalOverdue += amount;
+      actualSummary.countOverdue++;
+    } else {
+      actualSummary.totalPending += amount;
+      actualSummary.countPending++;
+    }
+  });
+
+  return (
+    <TeacherLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Cobranças</h1>
+            <p className="text-muted-foreground mt-1">
+              Crie cobranças únicas ou vinculadas às aulas dos seus alunos.
+            </p>
+          </div>
+          <Button onClick={() => {
+            setRecordToEdit(null);
+            setIsFormOpen(true);
+          }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Cobrança
+          </Button>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-lg border bg-card p-4 shadow-card">
+            <p className="text-sm text-muted-foreground">A receber</p>
+            <p className="text-2xl font-semibold mt-1">
+              {formatCurrency(actualSummary.totalPending)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {actualSummary.countPending} cobrança{actualSummary.countPending !== 1 && "s"} pendente{actualSummary.countPending !== 1 && "s"}
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card p-4 shadow-card">
+            <p className="text-sm text-muted-foreground">Recebido</p>
+            <p className="text-2xl font-semibold mt-1 text-success">
+              {formatCurrency(actualSummary.totalPaid)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {actualSummary.countPaid} pagamento{actualSummary.countPaid !== 1 && "s"}
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card p-4 shadow-card">
+            <p className="text-sm text-muted-foreground">Em atraso</p>
+            <p className="text-2xl font-semibold mt-1 text-destructive">
+              {formatCurrency(actualSummary.totalOverdue)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {actualSummary.countOverdue} cobrança{actualSummary.countOverdue !== 1 && "s"} em atraso
+            </p>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por aluno..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="pendente">Pendentes</SelectItem>
+              <SelectItem value="atrasado">Atrasados</SelectItem>
+              <SelectItem value="pago">Pagos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+
+        {/* Error state */}
+        {error && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+            <p className="text-destructive">
+              Erro ao carregar cobranças. Tente novamente.
+            </p>
+          </div>
+        )}
+
+        {/* Table */}
+        {!isLoading && !error && (
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                      Aluno
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                      Valor
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                      Vencimento
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
+                      Status
+                    </th>
+                    <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filteredRecords.map((record) => {
+                    const actualStatus = record.actualStatus as PaymentStatus;
+                    return (
+                      <tr key={record.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm">
+                              {record.students?.name || "Aluno removido"}
+                            </span>
+                            {record.class_logs && (
+                              <span className="text-xs text-muted-foreground">
+                                Aula {formatDate(record.class_logs.class_date)}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {formatCurrency(Number(record.amount) || 0)}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {formatDate(record.due_date)}
+                        </td>
+                        <td className="px-6 py-4 hidden md:table-cell">
+                          <StatusBadge variant={statusVariants[actualStatus]}>
+                            {statusLabels[actualStatus]}
+                          </StatusBadge>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {actualStatus !== "pago" ? (
+                                <DropdownMenuItem
+                                  onClick={() => openConfirmPayment(record)}
+                                >
+                                  <Check className="h-4 w-4 mr-2" />
+                                  Marcar como pago
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  onClick={() => undoPayment.mutate(record.id)}
+                                >
+                                  Desfazer pagamento
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setRecordToEdit(record);
+                                  setIsFormOpen(true);
+                                }}
+                              >
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => {
+                                  setRecordToDelete(record);
+                                  setDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {filteredRecords.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                {records.length === 0
+                  ? "Nenhuma cobrança cadastrada ainda para seus alunos"
+                  : "Nenhuma cobrança encontrada com esses filtros"}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Create/Edit Financial Dialog */}
+        <FinancialFormDialog
+          open={isFormOpen}
+          onOpenChange={(open) => {
+            setIsFormOpen(open);
+            if (!open) setRecordToEdit(null);
+          }}
+          onSubmit={recordToEdit ? handleEditRecord : handleCreateRecord}
+          isLoading={
+            createRecord.isPending ||
+            updateRecord.isPending
+          }
+          initialData={recordToEdit}
+        />
+
+        {/* Confirm Payment Dialog */}
+        <AlertDialog
+          open={!!confirmPaymentId}
+          onOpenChange={(open) => {
+            if (!open) {
+              setConfirmPaymentId(null);
+              setRecordToConfirm(null);
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar pagamento</AlertDialogTitle>
+              <AlertDialogDescription>
+                Confirmar o pagamento da cobrança do aluno {" "}
+                <strong>{recordToConfirm?.students?.name}</strong> no valor de {" "}
+                <strong>{
+                  recordToConfirm
+                    ? formatCurrency(Number(recordToConfirm.amount) || 0)
+                    : ""
+                }</strong>?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                disabled={markAsPaid.isPending}
+              >
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmPayment}
+                disabled={markAsPaid.isPending}
+              >
+                {markAsPaid.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Confirmando...
+                  </>
+                ) : (
+                  "Confirmar"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir esta cobrança?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteRecord.isPending}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteRecord}
+                disabled={deleteRecord.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteRecord.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  "Excluir"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </TeacherLayout>
+  );
+};
+
+export default TeacherFinancialPage;

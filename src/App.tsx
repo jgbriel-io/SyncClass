@@ -1,24 +1,3 @@
-// import removido: TeacherPanel
-import StudentPanel from "./pages/StudentPanel";
-            {/* Painel do Professor */}
-            <Route
-              path="/teachers"
-              element={
-                <ProtectedRoute allowedRoles={["professor"]}>
-                  <TeacherHome />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Painel do Aluno */}
-            <Route
-              path="/students"
-              element={
-                <ProtectedRoute allowedRoles={["student"]}>
-                  <StudentPanel />
-                </ProtectedRoute>
-              }
-            />
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -38,12 +17,14 @@ import ClassesPage from "./pages/admin/Classes";
 import StudentHome from "./pages/student/StudentHome";
 import StudentHistory from "./pages/student/StudentHistory";
 import StudentFinancial from "./pages/student/StudentFinancial";
+import StudentPanel from "./pages/StudentPanel";
 import NotFound from "./pages/NotFound";
-import TeachersPage from "./pages/TeachersPage";
 import AdminTeachersPage from "./pages/admin/Teachers";
 import TeacherHome from "./pages/teacher/TeacherHome";
 import TeacherStudentsPage from "./pages/teacher/TeacherStudents";
-import TeacherClassesPage from "./pages/teacher/TeacherClasses";
+import TeacherFinancialPage from "./pages/teacher/TeacherFinancial";
+import TeacherOverviewPage from "./pages/teacher/TeacherOverview";
+import TeacherPedagogicalPage from "./pages/teacher/TeacherPedagogical";
 
 const queryClient = new QueryClient();
 
@@ -133,9 +114,17 @@ const App = () => (
 
             {/* Teacher Routes - Protected */}
             <Route
+              path="/teachers"
+              element={
+                <ProtectedRoute allowedRoles={["teacher"]}>
+                  <TeacherHome />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/teacher"
               element={
-                <ProtectedRoute allowedRoles={["professor"]}>
+                <ProtectedRoute allowedRoles={["teacher"]}>
                   <TeacherHome />
                 </ProtectedRoute>
               }
@@ -143,21 +132,45 @@ const App = () => (
             <Route
               path="/teacher/students"
               element={
-                <ProtectedRoute allowedRoles={["professor"]}>
+                <ProtectedRoute allowedRoles={["teacher"]}>
                   <TeacherStudentsPage />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/teacher/classes"
+              path="/teacher/overview"
               element={
-                <ProtectedRoute allowedRoles={["professor"]}>
-                  <TeacherClassesPage />
+                <ProtectedRoute allowedRoles={["teacher"]}>
+                  <TeacherOverviewPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/financial"
+              element={
+                <ProtectedRoute allowedRoles={["teacher"]}>
+                  <TeacherFinancialPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/pedagogical"
+              element={
+                <ProtectedRoute allowedRoles={["teacher"]}>
+                  <TeacherPedagogicalPage />
                 </ProtectedRoute>
               }
             />
 
             {/* Student Routes - Protected */}
+            <Route
+              path="/students"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentPanel />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/student"
               element={

@@ -25,7 +25,7 @@ const userSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").optional(),
   fullName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  role: z.enum(["admin", "student"]),
+  role: z.enum(["admin", "student", "teacher"]),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
@@ -38,7 +38,7 @@ interface UserFormDialogProps {
     email: string;
     password?: string;
     fullName: string;
-    role: "admin" | "student";
+    role: "admin" | "student" | "teacher";
   }) => void;
   isLoading: boolean;
 }
@@ -50,7 +50,7 @@ export function UserFormDialog({
   onSubmit,
   isLoading,
 }: UserFormDialogProps) {
-  const [selectedRole, setSelectedRole] = useState<"admin" | "student">("student");
+  const [selectedRole, setSelectedRole] = useState<"admin" | "student" | "teacher">("student");
 
   const {
     register,
@@ -98,8 +98,8 @@ export function UserFormDialog({
   };
 
   const handleRoleChange = (value: string) => {
-    setSelectedRole(value as "admin" | "student");
-    setValue("role", value as "admin" | "student");
+    setSelectedRole(value as "admin" | "student" | "teacher");
+    setValue("role", value as "admin" | "student" | "teacher");
   };
 
   return (
@@ -165,6 +165,7 @@ export function UserFormDialog({
               <SelectContent>
                 <SelectItem value="admin">Administrador</SelectItem>
                 <SelectItem value="student">Aluno</SelectItem>
+                <SelectItem value="teacher">Professor</SelectItem>
               </SelectContent>
             </Select>
             <input type="hidden" {...register("role")} />
