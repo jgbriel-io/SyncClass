@@ -1,10 +1,10 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { 
-  Users, 
-  AlertCircle, 
-  Calendar, 
-  TrendingUp, 
+import {
+  Users,
+  AlertCircle,
+  Calendar,
+  TrendingUp,
   Loader2,
   ArrowUpRight,
   ArrowDownRight,
@@ -12,7 +12,6 @@ import {
   GraduationCap,
   Clock,
   ChevronRight,
-  Link2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -273,19 +272,7 @@ export default function AdminDashboard() {
                     <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </Link>
                   
-                  <Link
-                    to="/admin/user-links"
-                    className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                  >
-                    <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center">
-                      <Link2 className="h-4 w-4 text-accent-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <p>Vincular Usuário</p>
-                      <p className="text-xs text-muted-foreground">Conecte usuários a alunos</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
+                  {/* Ação de "Vincular Usuário" removida conforme solicitado */}
                 </div>
               </div>
             </div>
