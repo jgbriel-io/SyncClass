@@ -85,9 +85,28 @@ export function useCreateUser() {
       fullName: string;
       role: "admin" | "student" | "teacher";
     }) => {
+      const normalizedEmail = email.trim().toLowerCase();
+
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("email", normalizedEmail)
+        .maybeSingle();
+
+      if (profileCheckError) {
+        console.error("Error checking email uniqueness (profiles):", profileCheckError);
+        throw new Error("Erro ao validar email. Tente novamente.");
+      }
+
+      if (existingProfile) {
+        throw new Error(
+          "Já existe uma conta com esse email. Use a aba Usuários para vincular ou editar essa conta."
+        );
+      }
+
       // Create user via signUp (will trigger profile creation)
       const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: {
           data: {

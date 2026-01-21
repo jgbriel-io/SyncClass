@@ -37,6 +37,8 @@ import {
   StudentInsert,
 } from "@/hooks/useStudents";
 import { useCreateAuthUserForStudent } from "@/hooks/useUsers";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const originLabels: Record<string, string> = {
   indicacao: "Indicação",
@@ -78,32 +80,58 @@ export default function StudentsPage() {
   });
 
   const handleCreateOrUpdate = (data: StudentInsert) => {
-    if (selectedStudent) {
-      updateStudent.mutate(
-        { id: selectedStudent.id, ...data },
-        {
-          onSuccess: () => {
-            setIsFormOpen(false);
-            setSelectedStudent(null);
-          },
-        }
-      );
-    } else {
-      createStudent.mutate(data, {
-        onSuccess: (createdStudent) => {
-          setIsFormOpen(false);
+    const run = async () => {
+      const normalizedEmail = (data as any).email?.trim().toLowerCase();
 
-          // Cria automaticamente a conta de acesso para o aluno recém-cadastrado
-          if (createdStudent && createdStudent.email) {
-            createStudentUser.mutate({
-              studentId: createdStudent.id,
-              email: createdStudent.email,
-              fullName: createdStudent.name,
-            });
+      if (!selectedStudent && normalizedEmail) {
+        const { data: existingProfile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .ilike("email", normalizedEmail)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Error checking email uniqueness for student:", profileError);
+          toast.error("Erro ao validar email. Tente novamente.");
+          return;
+        }
+
+        if (existingProfile) {
+          toast.error(
+            "Já existe uma conta com esse email. Use a aba Usuários para vincular esse aluno à conta existente."
+          );
+          return;
+        }
+      }
+
+      if (selectedStudent) {
+        updateStudent.mutate(
+          { id: selectedStudent.id, ...data },
+          {
+            onSuccess: () => {
+              setIsFormOpen(false);
+              setSelectedStudent(null);
+            },
           }
-        },
-      });
-    }
+        );
+      } else {
+        createStudent.mutate(data, {
+          onSuccess: (createdStudent) => {
+            setIsFormOpen(false);
+
+            if (createdStudent && createdStudent.email) {
+              createStudentUser.mutate({
+                studentId: createdStudent.id,
+                email: createdStudent.email,
+                fullName: createdStudent.name,
+              });
+            }
+          },
+        });
+      }
+    };
+
+    void run();
   };
 
   const handleEdit = (student: Student) => {

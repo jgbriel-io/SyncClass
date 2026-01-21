@@ -19,6 +19,8 @@ import {
   Teacher,
 } from "@/hooks/useTeachers";
 import { useCreateAuthUserForTeacher } from "@/hooks/useUsers";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function TeachersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,32 +40,58 @@ export default function TeachersPage() {
   });
 
   const handleCreateOrUpdate = (data: any) => {
-    if (selectedTeacher) {
-      updateTeacher.mutate(
-        { id: selectedTeacher.id, ...data },
-        {
-          onSuccess: () => {
-            setIsFormOpen(false);
-            setSelectedTeacher(null);
-          },
-        }
-      );
-    } else {
-      createTeacher.mutate(data, {
-        onSuccess: (createdTeacher) => {
-          setIsFormOpen(false);
+    const run = async () => {
+      const normalizedEmail = (data as any).email?.trim().toLowerCase();
 
-          // Cria automaticamente a conta de acesso para o professor recém-cadastrado
-          if (createdTeacher && createdTeacher.email) {
-            createTeacherUser.mutate({
-              teacherId: createdTeacher.id,
-              email: createdTeacher.email,
-              fullName: createdTeacher.name,
-            });
+      if (!selectedTeacher && normalizedEmail) {
+        const { data: existingProfile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .ilike("email", normalizedEmail)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Error checking email uniqueness for teacher:", profileError);
+          toast.error("Erro ao validar email. Tente novamente.");
+          return;
+        }
+
+        if (existingProfile) {
+          toast.error(
+            "Já existe uma conta com esse email. Use a aba Usuários para vincular esse professor à conta existente."
+          );
+          return;
+        }
+      }
+
+      if (selectedTeacher) {
+        updateTeacher.mutate(
+          { id: selectedTeacher.id, ...data },
+          {
+            onSuccess: () => {
+              setIsFormOpen(false);
+              setSelectedTeacher(null);
+            },
           }
-        },
-      });
-    }
+        );
+      } else {
+        createTeacher.mutate(data, {
+          onSuccess: (createdTeacher) => {
+            setIsFormOpen(false);
+
+            if (createdTeacher && createdTeacher.email) {
+              createTeacherUser.mutate({
+                teacherId: createdTeacher.id,
+                email: createdTeacher.email,
+                fullName: createdTeacher.name,
+              });
+            }
+          },
+        });
+      }
+    };
+
+    void run();
   };
 
   const handleEdit = (teacher: Teacher) => {
