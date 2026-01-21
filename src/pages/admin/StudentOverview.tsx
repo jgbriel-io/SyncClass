@@ -29,6 +29,8 @@ import { Button } from "@/components/ui/button";
 import { Search, Loader2, Eye, TrendingUp, TrendingDown } from "lucide-react";
 import { useStudentsWithStats } from "@/hooks/useStudentDetails";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
+import { useClassLogs } from "@/hooks/useClassLogs";
+import { useFinancialRecords } from "@/hooks/useFinancialRecords";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -39,7 +41,7 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export default function StudentOverviewPage() {
+function StudentOverviewPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,6 +49,8 @@ export default function StudentOverviewPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const { data: students = [], isLoading, error } = useStudentsWithStats();
+  const { data: classLogs = [] } = useClassLogs();
+  const { data: financialRecords = [] } = useFinancialRecords();
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
@@ -341,6 +345,123 @@ export default function StudentOverviewPage() {
               Mostrando {paginatedStudents.length} de {filteredStudents.length}{" "}
               alunos
             </p>
+
+            {/* Planilha mensal similar à visão do professor */}
+            <div className="mt-8 border rounded-lg overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-muted/50 border-b">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aluno</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Cidade</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Valor/hora</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas/semana</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas/mês</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Prev. mensal</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Dia pagamento</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Status pagto (mês)</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas devidas (mês)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStudents.map((student) => {
+                    const hourlyRate = (student as any).hourly_rate as number | null;
+                    const classesPerWeek = (student as any).classes_per_week as number | null;
+                    const payDay = (student as any).pay_day as number | null;
+                    const city = (student as any).city as string | null;
+
+                    const totalMonthlyClasses = classesPerWeek ? classesPerWeek * 4 : 0;
+                    const expectedMonthlyAmount =
+                      hourlyRate && totalMonthlyClasses
+                        ? hourlyRate * totalMonthlyClasses
+                        : 0;
+
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = now.getMonth();
+                    const monthStart = new Date(year, month, 1);
+                    const monthEnd = new Date(year, month + 1, 0);
+
+                    const classesThisMonth = classLogs.filter(
+                      (log) =>
+                        log.student_id === student.id &&
+                        new Date(log.class_date + "T00:00:00") >= monthStart &&
+                        new Date(log.class_date + "T00:00:00") <= monthEnd
+                    ).length;
+
+                    const classesOwed = Math.max(
+                      (totalMonthlyClasses || 0) - classesThisMonth,
+                      0
+                    );
+
+                    const recordsThisMonth = financialRecords.filter(
+                      (rec) =>
+                        rec.student_id === student.id &&
+                        new Date(rec.due_date + "T00:00:00") >= monthStart &&
+                        new Date(rec.due_date + "T00:00:00") <= monthEnd
+                    );
+
+                    const lastRecord =
+                      recordsThisMonth.length > 0
+                        ? recordsThisMonth[recordsThisMonth.length - 1]
+                        : null;
+
+                    const paymentStatusLabel = lastRecord
+                      ? lastRecord.status === "pago"
+                        ? "Pago"
+                        : lastRecord.status === "atrasado"
+                        ? "Atrasado"
+                        : "Pendente"
+                      : "—";
+
+                    return (
+                      <tr key={student.id} className="border-b last:border-0">
+                        <td className="px-4 py-2 whitespace-nowrap">{student.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{city || "—"}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {hourlyRate
+                            ? new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(hourlyRate)
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {classesPerWeek ?? "—"}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {totalMonthlyClasses || "—"}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {expectedMonthlyAmount
+                            ? new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(expectedMonthlyAmount)
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {payDay ?? "—"}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {paymentStatusLabel}
+                        </td>
+                        <td className="px-4 py-2 text-center">{classesOwed}</td>
+                      </tr>
+                    );
+                  })}
+                  {filteredStudents.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={9}
+                        className="px-4 py-6 text-center text-muted-foreground"
+                      >
+                        Nenhum aluno encontrado para esta planilha.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
 
@@ -354,3 +475,5 @@ export default function StudentOverviewPage() {
     </AdminLayout>
   );
 }
+
+export default StudentOverviewPage;

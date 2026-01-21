@@ -45,6 +45,14 @@ const originLabels: Record<string, string> = {
   outro: "Outro",
 };
 
+function formatCurrency(value: number | null | undefined): string {
+  if (!value && value !== 0) return "—";
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(Number(value));
+}
+
 export default function StudentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -185,6 +193,18 @@ export default function StudentsPage() {
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
                       Origem
                     </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell">
+                      Cidade
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell">
+                      Valor/hora
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
+                      Aulas/semana
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
+                      Dia pagto
+                    </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Status
                     </th>
@@ -235,6 +255,26 @@ export default function StudentsPage() {
                           {student.origin
                             ? originLabels[student.origin] || student.origin
                             : "—"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 hidden xl:table-cell">
+                        <span className="text-sm text-muted-foreground">
+                          {student.city || "—"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 hidden xl:table-cell">
+                        <span className="text-sm text-muted-foreground">
+                          {formatCurrency((student as any).hourly_rate as number | null)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 hidden 2xl:table-cell">
+                        <span className="text-sm text-muted-foreground">
+                          {(student as any).classes_per_week ?? "—"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 hidden 2xl:table-cell">
+                        <span className="text-sm text-muted-foreground">
+                          {(student as any).pay_day ?? "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4">

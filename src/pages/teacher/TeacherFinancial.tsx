@@ -289,6 +289,9 @@ const TeacherFinancialPage = () => {
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Valor
                     </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
+                      Método
+                    </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Vencimento
                     </th>
@@ -319,6 +322,9 @@ const TeacherFinancialPage = () => {
                         </td>
                         <td className="px-6 py-4 text-sm">
                           {formatCurrency(Number(record.amount) || 0)}
+                        </td>
+                        <td className="px-6 py-4 text-sm hidden md:table-cell">
+                          {record.payment_method || "—"}
                         </td>
                         <td className="px-6 py-4 text-sm">
                           {formatDate(record.due_date)}

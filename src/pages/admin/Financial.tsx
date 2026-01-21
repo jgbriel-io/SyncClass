@@ -298,6 +298,9 @@ export default function FinancialPage() {
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Valor
                     </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
+                      Método
+                    </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
                       Vencimento
                     </th>
@@ -341,6 +344,11 @@ export default function FinancialPage() {
                       <td className="px-6 py-4">
                         <p className="font-semibold text-sm">
                           {formatCurrency(Number(record.amount))}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4 hidden lg:table-cell">
+                        <p className="text-sm text-muted-foreground">
+                          {record.payment_method || "—"}
                         </p>
                       </td>
                       <td className="px-6 py-4 hidden md:table-cell">

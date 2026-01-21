@@ -1,12 +1,16 @@
 import TeacherLayout from "@/components/layout/TeacherLayout";
-import { useClassLogsSummary } from "@/hooks/useClassLogs";
-import { useFinancialSummary } from "@/hooks/useFinancialRecords";
+import { useClassLogs, useClassLogsSummary } from "@/hooks/useClassLogs";
+import { useFinancialRecords, useFinancialSummary } from "@/hooks/useFinancialRecords";
+import { useStudentsByTeacher } from "@/hooks/useStudentsByTeacher";
 import { Loader2 } from "lucide-react";
 
 const TeacherOverviewPage = () => {
   // RLS garante que os resumos considerem apenas dados dos alunos do professor
   const { data: classSummary, isLoading: loadingClasses } = useClassLogsSummary();
   const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary();
+  const { data: students = [] } = useStudentsByTeacher();
+  const { data: classLogs = [] } = useClassLogs();
+  const { data: financialRecords = [] } = useFinancialRecords();
 
   const isLoading = loadingClasses || loadingFinancial;
 
@@ -77,6 +81,123 @@ const TeacherOverviewPage = () => {
                   {financialSummary?.countOverdue || 0}
                 </p>
               </div>
+            </div>
+
+            {/* Planilha por aluno (campos da planilha do cliente) */}
+            <div className="mt-8 border rounded-lg overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-muted/50 border-b">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aluno</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Cidade</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Valor/hora</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas/semana</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas/mês</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Prev. mensal</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Dia pagamento</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Status pagto (mês)</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas devidas (mês)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((student) => {
+                    const hourlyRate = (student as any).hourly_rate as number | null;
+                    const classesPerWeek = (student as any).classes_per_week as number | null;
+                    const payDay = (student as any).pay_day as number | null;
+                    const city = (student as any).city as string | null;
+
+                    const totalMonthlyClasses = classesPerWeek ? classesPerWeek * 4 : 0;
+                    const expectedMonthlyAmount =
+                      hourlyRate && totalMonthlyClasses
+                        ? hourlyRate * totalMonthlyClasses
+                        : 0;
+
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = now.getMonth();
+                    const monthStart = new Date(year, month, 1);
+                    const monthEnd = new Date(year, month + 1, 0);
+
+                    const classesThisMonth = classLogs.filter(
+                      (log) =>
+                        log.student_id === student.id &&
+                        new Date(log.class_date + "T00:00:00") >= monthStart &&
+                        new Date(log.class_date + "T00:00:00") <= monthEnd
+                    ).length;
+
+                    const classesOwed = Math.max(
+                      (totalMonthlyClasses || 0) - classesThisMonth,
+                      0
+                    );
+
+                    const recordsThisMonth = financialRecords.filter(
+                      (rec) =>
+                        rec.student_id === student.id &&
+                        new Date(rec.due_date + "T00:00:00") >= monthStart &&
+                        new Date(rec.due_date + "T00:00:00") <= monthEnd
+                    );
+
+                    const lastRecord =
+                      recordsThisMonth.length > 0
+                        ? recordsThisMonth[recordsThisMonth.length - 1]
+                        : null;
+
+                    const paymentStatusLabel = lastRecord
+                      ? lastRecord.status === "pago"
+                        ? "Pago"
+                        : lastRecord.status === "atrasado"
+                        ? "Atrasado"
+                        : "Pendente"
+                      : "—";
+
+                    return (
+                      <tr key={student.id} className="border-b last:border-0">
+                        <td className="px-4 py-2 whitespace-nowrap">{student.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{city || "—"}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {hourlyRate
+                            ? new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(hourlyRate)
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {classesPerWeek ?? "—"}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {totalMonthlyClasses || "—"}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {expectedMonthlyAmount
+                            ? new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(expectedMonthlyAmount)
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {payDay ?? "—"}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {paymentStatusLabel}
+                        </td>
+                        <td className="px-4 py-2 text-center">{classesOwed}</td>
+                      </tr>
+                    );
+                  })}
+                  {students.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={9}
+                        className="px-4 py-6 text-center text-muted-foreground"
+                      >
+                        Nenhum aluno cadastrado ainda.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </>
         )}

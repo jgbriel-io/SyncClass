@@ -94,6 +94,7 @@ export type Database = {
           due_date: string
           id: string
           paid_at: string | null
+          payment_method: string | null
           status: Database["public"]["Enums"]["payment_status"] | null
           student_id: string
           updated_at: string | null
@@ -106,6 +107,7 @@ export type Database = {
           due_date: string
           id?: string
           paid_at?: string | null
+          payment_method?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
           student_id: string
           updated_at?: string | null
@@ -118,6 +120,7 @@ export type Database = {
           due_date?: string
           id?: string
           paid_at?: string | null
+          payment_method?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
           student_id?: string
           updated_at?: string | null
@@ -180,12 +183,16 @@ export type Database = {
       students: {
         Row: {
           birth_date: string | null
+          city: string | null
+          classes_per_week: number | null
           cpf: string | null
           created_at: string | null
           email: string | null
+          hourly_rate: number | null
           id: string
           name: string
           origin: Database["public"]["Enums"]["student_origin"] | null
+          pay_day: number | null
           phone: string | null
           status: Database["public"]["Enums"]["student_status"] | null
           updated_at: string | null
@@ -193,12 +200,16 @@ export type Database = {
         }
         Insert: {
           birth_date?: string | null
+          city?: string | null
+          classes_per_week?: number | null
           cpf?: string | null
           created_at?: string | null
           email?: string | null
+          hourly_rate?: number | null
           id?: string
           name: string
           origin?: Database["public"]["Enums"]["student_origin"] | null
+          pay_day?: number | null
           phone?: string | null
           status?: Database["public"]["Enums"]["student_status"] | null
           updated_at?: string | null
@@ -206,12 +217,16 @@ export type Database = {
         }
         Update: {
           birth_date?: string | null
+          city?: string | null
+          classes_per_week?: number | null
           cpf?: string | null
           created_at?: string | null
           email?: string | null
+          hourly_rate?: number | null
           id?: string
           name?: string
           origin?: Database["public"]["Enums"]["student_origin"] | null
+          pay_day?: number | null
           phone?: string | null
           status?: Database["public"]["Enums"]["student_status"] | null
           updated_at?: string | null

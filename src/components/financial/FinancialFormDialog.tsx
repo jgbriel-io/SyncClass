@@ -45,6 +45,7 @@ const financialSchema = z.object({
     .min(1, "Informe a data de vencimento")
     .regex(dateRegex, "Formato deve ser dd/mm/aaaa")
     .refine(isValidDateString, { message: "Data inválida" }),
+  payment_method: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -128,6 +129,7 @@ export function FinancialFormDialog({
       class_log_id: data.class_log_id && data.class_log_id !== "none" ? data.class_log_id : null,
       amount: amount,
       due_date: data.due_date,
+      payment_method: data.payment_method || null,
       description: data.description || null,
       status: "pendente",
     });
@@ -253,6 +255,26 @@ export function FinancialFormDialog({
               rows={2}
               {...register("description")}
             />
+          </div>
+
+          {/* Payment Method */}
+          <div className="space-y-2">
+            <Label htmlFor="payment_method">Método de Pagamento</Label>
+            <Select
+              value={undefined}
+              onValueChange={(value) => setValue("payment_method", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione (opcional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pix">PIX</SelectItem>
+                <SelectItem value="cartao">Cartão</SelectItem>
+                <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                <SelectItem value="transferencia">Transferência</SelectItem>
+                <SelectItem value="outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Actions */}
