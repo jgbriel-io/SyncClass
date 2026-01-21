@@ -54,6 +54,7 @@ const classLogSchema = z.object({
     { message: "Data inválida" }
   ),
   financial_description: z.string().optional(),
+  financial_payment_method: z.string().optional(),
 });
 
 type ClassLogFormData = z.infer<typeof classLogSchema>;
@@ -155,6 +156,7 @@ export function ClassLogFormDialog({
             amount,
             due_date: data.financial_due_date,
             description: data.financial_description?.trim() || undefined,
+            payment_method: data.financial_payment_method || null,
           },
         });
         return;
@@ -191,7 +193,7 @@ export function ClassLogFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Registro" : "Registrar Aula"}</DialogTitle>
         </DialogHeader>
@@ -238,7 +240,7 @@ export function ClassLogFormDialog({
               id="class_date"
               type="text"
               inputMode="numeric"
-              pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$"
+              pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
               maxLength={10}
               placeholder="dd/mm/aaaa"
               {...register("class_date")}
@@ -335,7 +337,7 @@ export function ClassLogFormDialog({
                         id="financial_due_date"
                         type="text"
                         inputMode="numeric"
-                        pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
+                        pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
                         maxLength={10}
                         placeholder="dd/mm/aaaa"
                         {...register("financial_due_date")}
@@ -354,6 +356,24 @@ export function ClassLogFormDialog({
                     <p className="text-xs text-muted-foreground">
                       Se não preenchido, será "Aula do dia [data]"
                     </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="financial_payment_method">Método de Pagamento</Label>
+                    <Select
+                      onValueChange={(value) => setValue("financial_payment_method", value as any)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione (opcional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pix">PIX</SelectItem>
+                        <SelectItem value="cartao">Cartão</SelectItem>
+                        <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                        <SelectItem value="transferencia">Transferência</SelectItem>
+                        <SelectItem value="outro">Outro</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               )}

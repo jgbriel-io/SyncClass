@@ -1,10 +1,12 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 import { Teacher, TeacherInsert } from "@/hooks/useTeachers";
 
 const teacherSchema = z.object({
@@ -34,6 +36,7 @@ export function TeacherFormDialog({
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<TeacherFormData>({
     resolver: zodResolver(teacherSchema),
@@ -52,37 +55,106 @@ export function TeacherFormDialog({
     });
   }, [teacher, reset]);
 
+  const handleFormSubmit = (data: TeacherFormData) => {
+    // Normaliza campos opcionais vazios para undefined
+    const payload: TeacherInsert = {
+      name: data.name,
+      email: data.email || undefined,
+      phone: data.phone || undefined,
+    } as TeacherInsert;
+
+    onSubmit(payload);
+  };
+
+  const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+
+    let masked = digits;
+    if (digits.length > 2) masked = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    if (digits.length > 6) masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+
+    setValue("phone", masked, { shouldValidate: true });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle>{teacher ? "Editar Professor" : "Novo Professor"}</DialogTitle>
+          <DialogTitle>
+            {teacher ? "Editar Professor" : "Cadastrar Novo Professor"}
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Input {...register("name")} placeholder="Nome" autoFocus disabled={isLoading} />
-            {errors.name?.message && <span className="text-destructive text-xs">{errors.name.message}</span>}
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2 space-y-2">
+              <Label htmlFor="name">Nome completo *</Label>
+              <Input
+                id="name"
+                placeholder="Nome do professor"
+                autoFocus
+                disabled={isLoading}
+                {...register("name")}
+              />
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="email@exemplo.com"
+                disabled={isLoading}
+                {...register("email")}
+              />
+              {typeof errors.email?.message === "string" && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefone</Label>
+              <Input
+                id="phone"
+                type="text"
+                inputMode="numeric"
+                maxLength={15}
+                placeholder="(00) 00000-0000"
+                disabled={isLoading}
+                {...register("phone")}
+                onChange={handlePhoneChange}
+              />
+              {typeof errors.phone?.message === "string" && (
+                <p className="text-sm text-destructive">{errors.phone.message}</p>
+              )}
+            </div>
           </div>
-          <div>
-            <Input {...register("email")} placeholder="Email" disabled={isLoading} />
-            {typeof errors.email?.message === 'string' && (
-              <span className="text-destructive text-xs">{errors.email.message}</span>
-            )}
-          </div>
-          <div>
-            <Input {...register("phone")} placeholder="Telefone" disabled={isLoading} />
-            {typeof errors.phone?.message === 'string' && (
-              <span className="text-destructive text-xs">{errors.phone.message}</span>
-            )}
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={isLoading}>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {teacher ? "Salvar" : "Cadastrar"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : teacher ? (
+                "Salvar alterações"
+              ) : (
+                "Cadastrar"
+              )}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

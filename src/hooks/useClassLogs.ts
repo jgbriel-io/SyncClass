@@ -27,6 +27,7 @@ export interface ClassLogWithFinancialData {
     amount: number;
     due_date: string;
     description?: string;
+    payment_method?: string | null;
   };
 }
 
@@ -194,6 +195,7 @@ export function useCreateClassLogWithFinancial() {
             amount: financialData.amount,
             due_date: financialData.due_date,
             description: financialData.description || `Aula do dia ${classLog.class_date}`,
+            payment_method: financialData.payment_method || null,
             status: "pendente",
           });
 

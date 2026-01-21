@@ -160,7 +160,7 @@ export default function TeachersPage() {
 
         {/* Modal de exclusão */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent>
+          <DialogContent aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>Excluir Professor</DialogTitle>
             </DialogHeader>

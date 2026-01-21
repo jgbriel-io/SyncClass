@@ -1,23 +1,26 @@
-    // Função para formatar automaticamente para valor monetário (ex: 123 -> 123,00)
-    function autoFormatNumber(e: React.ChangeEvent<HTMLInputElement>) {
-      let value = e.target.value.replace(/[^\d]/g, "");
-      if (!value) value = "0";
-      value = value.replace(/^0+(?!$)/, "");
-      let formatted = value;
-      if (value.length > 2) {
-        formatted = value.slice(0, value.length - 2) + "," + value.slice(-2);
-      } else if (value.length === 2) {
-        formatted = "0," + value;
-      } else if (value.length === 1) {
-        formatted = "0,0" + value;
-      }
-      e.target.value = formatted;
-      if (onChange) onChange(e);
-    }
-
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+
+// Função para formatar automaticamente para valor monetário (ex: 123 -> 123,00)
+function autoFormatNumber(
+  e: React.ChangeEvent<HTMLInputElement>,
+  originalOnChange?: React.ChangeEventHandler<HTMLInputElement>,
+) {
+  let value = e.target.value.replace(/[^\d]/g, "");
+  if (!value) value = "0";
+  value = value.replace(/^0+(?!$)/, "");
+  let formatted = value;
+  if (value.length > 2) {
+    formatted = value.slice(0, value.length - 2) + "," + value.slice(-2);
+  } else if (value.length === 2) {
+    formatted = "0," + value;
+  } else if (value.length === 1) {
+    formatted = "0,0" + value;
+  }
+  e.target.value = formatted;
+  if (originalOnChange) originalOnChange(e);
+}
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, onChange, ...props }, ref) => {
@@ -53,7 +56,11 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className,
         )}
         ref={ref}
-        onChange={isDateText ? autoFormatDate : isNumberValue ? autoFormatNumber : onChange}
+        onChange={isDateText
+          ? autoFormatDate
+          : isNumberValue
+          ? (e) => autoFormatNumber(e, onChange)
+          : onChange}
         {...props}
       />
     );

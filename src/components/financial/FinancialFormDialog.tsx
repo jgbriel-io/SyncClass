@@ -150,7 +150,7 @@ export function FinancialFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{initialData ? 'Editar Cobrança' : 'Nova Cobrança'}</DialogTitle>
         </DialogHeader>
@@ -236,7 +236,7 @@ export function FinancialFormDialog({
               id="due_date"
               type="text"
               inputMode="numeric"
-              pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
+              pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
               maxLength={10}
               placeholder="dd/mm/aaaa"
               {...register("due_date")}
