@@ -35,12 +35,12 @@ interface AdminLayoutProps {
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { name: "Alunos", href: "/admin/students", icon: Users },
-  { name: "Professores", href: "/admin/teachers", icon: Users },
   { name: "Visão Geral", href: "/admin/students/overview", icon: ClipboardList },
-  { name: "Usuários", href: "/admin/users", icon: Link2 },
-  { name: "Financeiro", href: "/admin/financial", icon: CreditCard },
+  { name: "Alunos", href: "/admin/students", icon: Users },
   { name: "Pedagógico", href: "/admin/classes", icon: BookOpen },
+  { name: "Financeiro", href: "/admin/financial", icon: CreditCard },
+  { name: "Professores", href: "/admin/teachers", icon: Users },
+  { name: "Usuários", href: "/admin/users", icon: Link2 },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {

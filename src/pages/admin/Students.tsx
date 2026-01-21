@@ -36,6 +36,7 @@ import {
   Student,
   StudentInsert,
 } from "@/hooks/useStudents";
+import { useCreateAuthUserForStudent } from "@/hooks/useUsers";
 
 const originLabels: Record<string, string> = {
   indicacao: "Indicação",
@@ -65,6 +66,7 @@ export default function StudentsPage() {
   const createStudent = useCreateStudent();
   const updateStudent = useUpdateStudent();
   const deleteStudent = useDeleteStudent();
+  const createStudentUser = useCreateAuthUserForStudent();
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch = student.name
@@ -88,8 +90,17 @@ export default function StudentsPage() {
       );
     } else {
       createStudent.mutate(data, {
-        onSuccess: () => {
+        onSuccess: (createdStudent) => {
           setIsFormOpen(false);
+
+          // Cria automaticamente a conta de acesso para o aluno recém-cadastrado
+          if (createdStudent && createdStudent.email) {
+            createStudentUser.mutate({
+              studentId: createdStudent.id,
+              email: createdStudent.email,
+              fullName: createdStudent.name,
+            });
+          }
         },
       });
     }

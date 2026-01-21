@@ -108,53 +108,6 @@ export function useCreateUser() {
         }
       }
 
-      // Create domain entity based on role and link profile
-      if (role === "student") {
-        const { data: student, error: studentError } = await supabase
-          .from("students")
-          .insert({
-            name: fullName || email,
-            email,
-          } as any)
-          .select()
-          .single();
-
-        if (studentError) {
-          console.error("Error creating student record:", studentError);
-        } else if (student) {
-          const { error: linkError } = await supabase
-            .from("profiles")
-            .update({ student_id: student.id })
-            .eq("user_id", userId);
-
-          if (linkError) {
-            console.error("Error linking profile to student:", linkError);
-          }
-        }
-      } else if (role === "teacher") {
-        const { data: teacher, error: teacherError } = await supabase
-          .from("teachers")
-          .insert({
-            name: fullName || email,
-            email,
-          } as any)
-          .select()
-          .single();
-
-        if (teacherError) {
-          console.error("Error creating teacher record:", teacherError);
-        } else if (teacher) {
-          const { error: linkError } = await supabase
-            .from("profiles")
-            .update({ teacher_id: teacher.id })
-            .eq("user_id", userId);
-
-          if (linkError) {
-            console.error("Error linking profile to teacher:", linkError);
-          }
-        }
-      }
-
       // Update role (admin can do this via RLS policy)
       const { error: roleError } = await supabase
         .from("user_roles")
@@ -395,6 +348,158 @@ export function useUnlinkUserFromTeacher() {
     onError: (error: any) => {
       console.error("Error unlinking user from teacher:", error);
       toast.error("Erro ao remover vínculo de professor. Tente novamente.");
+    },
+  });
+}
+
+// Create auth user and link to an existing student
+export function useCreateAuthUserForStudent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      studentId,
+      email,
+      fullName,
+    }: {
+      studentId: string;
+      email: string;
+      fullName: string;
+    }) => {
+      // Simple random password generator (8-10 chars)
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+      const length = 10;
+      let password = "";
+      for (let i = 0; i < length; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Failed to create user");
+
+      const userId = authData.user.id;
+
+      // Link profile to existing student and update name
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ full_name: fullName, student_id: studentId })
+        .eq("user_id", userId);
+
+      if (profileError) {
+        console.error("Error linking profile to student:", profileError);
+      }
+
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .upsert({
+          user_id: userId,
+          role: "student" as any,
+        });
+
+      if (roleError) {
+        console.error("Error setting student role:", roleError);
+      }
+
+      return { user: authData.user, password };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      toast.success(
+        `Conta criada para o aluno. Senha inicial: ${result.password}`
+      );
+    },
+    onError: (error: any) => {
+      console.error("Error creating auth user for student:", error);
+      toast.error(
+        error.message || "Erro ao criar conta de acesso para o aluno."
+      );
+    },
+  });
+}
+
+// Create auth user and link to an existing teacher
+export function useCreateAuthUserForTeacher() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      teacherId,
+      email,
+      fullName,
+    }: {
+      teacherId: string;
+      email: string;
+      fullName: string;
+    }) => {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+      const length = 10;
+      let password = "";
+      for (let i = 0; i < length; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Failed to create user");
+
+      const userId = authData.user.id;
+
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ full_name: fullName, teacher_id: teacherId })
+        .eq("user_id", userId);
+
+      if (profileError) {
+        console.error("Error linking profile to teacher:", profileError);
+      }
+
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .upsert({
+          user_id: userId,
+          role: "teacher" as any,
+        });
+
+      if (roleError) {
+        console.error("Error setting teacher role:", roleError);
+      }
+
+      return { user: authData.user, password };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      toast.success(
+        `Conta criada para o professor. Senha inicial: ${result.password}`
+      );
+    },
+    onError: (error: any) => {
+      console.error("Error creating auth user for teacher:", error);
+      toast.error(
+        error.message || "Erro ao criar conta de acesso para o professor."
+      );
     },
   });
 }

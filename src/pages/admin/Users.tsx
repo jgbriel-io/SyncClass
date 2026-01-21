@@ -219,7 +219,7 @@ export default function UsersPage() {
       case "student":
         return "success";
       case "teacher":
-        return "info";
+        return "default";
       default:
         return "warning";
     }
@@ -313,6 +313,7 @@ export default function UsersPage() {
                 </thead>
                 <tbody className="divide-y">
                   {filteredUsers.map((user) => {
+                    const role = (user.role?.role as string | null) ?? null;
                     const linkedStudent = user.profile?.student_id
                       ? students.find((s) => s.id === user.profile?.student_id)
                       : null;
@@ -345,8 +346,8 @@ export default function UsersPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <StatusBadge variant={getRoleVariant(user.role?.role)}>
-                            {getRoleLabel(user.role?.role)}
+                          <StatusBadge variant={getRoleVariant(role)}>
+                            {getRoleLabel(role)}
                           </StatusBadge>
                         </td>
                         <td className="px-6 py-4 hidden lg:table-cell">
@@ -388,7 +389,7 @@ export default function UsersPage() {
                             >
                               Editar
                             </Button>
-                            {!linkedStudent && user.role?.role === "student" && (
+                            {!linkedStudent && role === "student" && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -408,7 +409,7 @@ export default function UsersPage() {
                                 Desvincular
                               </Button>
                             )}
-                            {!linkedTeacher && user.role?.role === "teacher" && (
+                            {!linkedTeacher && role === "teacher" && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -418,7 +419,7 @@ export default function UsersPage() {
                                 Vincular Professor
                               </Button>
                             )}
-                            {linkedTeacher && user.role?.role === "teacher" && (
+                            {linkedTeacher && role === "teacher" && (
                               <Button
                                 variant="outline"
                                 size="sm"

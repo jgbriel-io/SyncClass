@@ -18,6 +18,7 @@ import {
   useDeleteTeacher,
   Teacher,
 } from "@/hooks/useTeachers";
+import { useCreateAuthUserForTeacher } from "@/hooks/useUsers";
 
 export default function TeachersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,6 +31,7 @@ export default function TeachersPage() {
   const createTeacher = useCreateTeacher();
   const updateTeacher = useUpdateTeacher();
   const deleteTeacher = useDeleteTeacher();
+  const createTeacherUser = useCreateAuthUserForTeacher();
 
   const filteredTeachers = teachers.filter((teacher) => {
     return teacher.name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -48,8 +50,17 @@ export default function TeachersPage() {
       );
     } else {
       createTeacher.mutate(data, {
-        onSuccess: () => {
+        onSuccess: (createdTeacher) => {
           setIsFormOpen(false);
+
+          // Cria automaticamente a conta de acesso para o professor recém-cadastrado
+          if (createdTeacher && createdTeacher.email) {
+            createTeacherUser.mutate({
+              teacherId: createdTeacher.id,
+              email: createdTeacher.email,
+              fullName: createdTeacher.name,
+            });
+          }
         },
       });
     }
