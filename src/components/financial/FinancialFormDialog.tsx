@@ -37,6 +37,25 @@ function isValidDateString(value: string) {
     date.getDate() === day
   );
 }
+
+function brDateToIso(value: string): string {
+  const [day, month, year] = value.split("/");
+  return `${year}-${month}-${day}`;
+}
+
+function maskDate(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+
+  if (digits.length <= 2) {
+    return digits;
+  }
+
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
 const financialSchema = z.object({
   student_id: z.string().min(1, "Selecione um aluno"),
   class_log_id: z.string().optional(),
@@ -128,7 +147,7 @@ export function FinancialFormDialog({
       student_id: data.student_id,
       class_log_id: data.class_log_id && data.class_log_id !== "none" ? data.class_log_id : null,
       amount: amount,
-      due_date: data.due_date,
+      due_date: brDateToIso(data.due_date),
       payment_method: data.payment_method || null,
       description: data.description || null,
       status: "pendente",
@@ -236,10 +255,13 @@ export function FinancialFormDialog({
               id="due_date"
               type="text"
               inputMode="numeric"
-              pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
               maxLength={10}
               placeholder="dd/mm/aaaa"
               {...register("due_date")}
+              onChange={(e) => {
+                const masked = maskDate(e.target.value);
+                setValue("due_date", masked, { shouldValidate: true });
+              }}
             />
             {errors.due_date && (
               <p className="text-sm text-destructive">{errors.due_date.message}</p>

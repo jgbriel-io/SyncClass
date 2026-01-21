@@ -36,6 +36,25 @@ function isValidDateString(value: string) {
     date.getDate() === day
   );
 }
+
+function brDateToIso(value: string): string {
+  const [day, month, year] = value.split("/");
+  return `${year}-${month}-${day}`;
+}
+
+function maskDate(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+
+  if (digits.length <= 2) {
+    return digits;
+  }
+
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
 const classLogSchema = z.object({
   student_id: z.string().min(1, "Selecione um aluno"),
   class_date: z.string()
@@ -137,7 +156,7 @@ export function ClassLogFormDialog({
 
     const classLogData: ClassLogInsert = {
       student_id: data.student_id,
-      class_date: data.class_date,
+      class_date: brDateToIso(data.class_date),
       title: data.title?.trim() || null,
       attendance: data.attendance,
       grade: data.attendance ? grade : null,
@@ -154,7 +173,7 @@ export function ClassLogFormDialog({
           createFinancial: true,
           financialData: {
             amount,
-            due_date: data.financial_due_date,
+            due_date: brDateToIso(data.financial_due_date),
             description: data.financial_description?.trim() || undefined,
             payment_method: data.financial_payment_method || null,
           },
@@ -240,10 +259,13 @@ export function ClassLogFormDialog({
               id="class_date"
               type="text"
               inputMode="numeric"
-              pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
               maxLength={10}
               placeholder="dd/mm/aaaa"
               {...register("class_date")}
+              onChange={(e) => {
+                const masked = maskDate(e.target.value);
+                setValue("class_date", masked, { shouldValidate: true });
+              }}
             />
             {errors.class_date && (
               <p className="text-sm text-destructive">{errors.class_date.message}</p>
@@ -337,10 +359,13 @@ export function ClassLogFormDialog({
                         id="financial_due_date"
                         type="text"
                         inputMode="numeric"
-                        pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
                         maxLength={10}
                         placeholder="dd/mm/aaaa"
                         {...register("financial_due_date")}
+                        onChange={(e) => {
+                          const masked = maskDate(e.target.value);
+                          setValue("financial_due_date", masked, { shouldValidate: true });
+                        }}
                       />
                     </div>
                   </div>

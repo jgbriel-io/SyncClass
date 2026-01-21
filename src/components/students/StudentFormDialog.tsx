@@ -39,6 +39,20 @@ function brDateToIso(value: string): string {
   return `${year}-${month}-${day}`;
 }
 
+function maskDate(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+
+  if (digits.length <= 2) {
+    return digits;
+  }
+
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
 function maskCPF(value: string): string {
   // Remove tudo que não é dígito
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -291,10 +305,13 @@ export function StudentFormDialog({
                 id="birth_date"
                 type="text"
                 inputMode="numeric"
-                pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
                 maxLength={10}
                 placeholder="dd/mm/aaaa"
                 {...register("birth_date")}
+                onChange={(e) => {
+                  const masked = maskDate(e.target.value);
+                  setValue("birth_date", masked, { shouldValidate: true });
+                }}
                 disabled={isLoading}
               />
               {errors.birth_date && (
@@ -339,7 +356,7 @@ export function StudentFormDialog({
             <div className="space-y-2">
               <Label htmlFor="hourly_rate">Valor por hora</Label>
               <Input
-                id="hourly_rate"
+                id="hourly_rate_valor"
                 type="text"
                 placeholder="Ex: 120,00"
                 {...register("hourly_rate")}

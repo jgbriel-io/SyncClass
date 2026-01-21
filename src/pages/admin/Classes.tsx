@@ -39,6 +39,13 @@ function formatDate(dateString: string): string {
   return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
 }
 
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 function getPaymentStatusVariant(status: string | null): "success" | "warning" | "destructive" {
   switch (status) {
     case "pago":
@@ -263,7 +270,7 @@ export default function ClassesPage() {
                         {log.financial_records && (
                           <span className="flex items-center gap-1.5 text-xs">
                             <Receipt className="h-3.5 w-3.5" />
-                            R$ {log.financial_records.amount.toFixed(2).replace(".", ",")}
+                            R$ {formatCurrency(log.financial_records.amount)}
                           </span>
                         )}
                       </div>
