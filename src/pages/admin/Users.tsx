@@ -324,6 +324,7 @@ export default function UsersPage() {
                     const displayName = (user.profile?.full_name || "").trim() || "(sem nome)";
                     const avatarLetter = displayName.replace(/[^A-Za-zÀ-ÿ0-9]/g, "").charAt(0).toUpperCase() || "?";
                     const subtitle = user.email || getRoleLabel(role);
+                    const isActive = user.profile?.active ?? true;
 
                     return (
                       <tr
@@ -346,13 +347,25 @@ export default function UsersPage() {
                                   {subtitle}
                                 </p>
                               )}
+                              {!isActive && (
+                                <p className="text-[11px] text-amber-600 mt-0.5">
+                                  Conta desativada
+                                </p>
+                              )}
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <StatusBadge variant={getRoleVariant(role)}>
-                            {getRoleLabel(role)}
-                          </StatusBadge>
+                          <div className="flex flex-col gap-1">
+                            <StatusBadge variant={getRoleVariant(role)}>
+                              {getRoleLabel(role)}
+                            </StatusBadge>
+                            {!isActive && (
+                              <span className="text-[11px] text-muted-foreground">
+                                Desativado
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 hidden lg:table-cell">
                           {linkedStudent || linkedTeacher ? (
@@ -442,7 +455,7 @@ export default function UsersPage() {
                                 setDeleteDialogOpen(true);
                               }}
                             >
-                              Excluir
+                              {isActive ? "Desativar" : "Já desativado"}
                             </Button>
                           </div>
                         </td>

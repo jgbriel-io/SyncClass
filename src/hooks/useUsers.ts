@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { toast } from "sonner";
 
 export interface UserWithProfile {
@@ -10,8 +11,11 @@ export interface UserWithProfile {
     id: string;
     user_id: string;
     full_name: string | null;
+    email?: string | null;
     student_id: string | null;
     teacher_id?: string | null;
+    role?: "admin" | "student" | "teacher" | null;
+    active?: boolean | null;
     created_at: string | null;
   } | null;
   role: {
@@ -44,14 +48,17 @@ export function useUsers() {
       // Combinar perfis e roles
       return (profiles || []).map(profile => ({
         id: profile.user_id,
-        email: "", // Preencher se necessário
+        email: (profile as any).email || "",
         created_at: profile.created_at || "",
         profile: {
           id: profile.id,
           user_id: profile.user_id,
           full_name: profile.full_name,
+          email: (profile as any).email ?? null,
           student_id: profile.student_id,
           teacher_id: (profile as any).teacher_id ?? null,
+          active: (profile as any).active ?? true,
+          role: (profile as any).role ?? null,
           created_at: profile.created_at,
         },
         role: roles?.find(r => r.user_id === profile.user_id) || null,
@@ -79,7 +86,7 @@ export function useCreateUser() {
       role: "admin" | "student" | "teacher";
     }) => {
       // Create user via signUp (will trigger profile creation)
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
         email,
         password,
         options: {
@@ -96,11 +103,11 @@ export function useCreateUser() {
       // Update profile name and link to domain entity (student/teacher) if needed
       const userId = authData.user.id;
 
-      // Ensure profile exists and update name
+      // Ensure profile exists and update name/role copy
       if (fullName) {
         const { error: profileError } = await supabase
           .from("profiles")
-          .update({ full_name: fullName })
+          .update({ full_name: fullName, role })
           .eq("user_id", userId);
 
         if (profileError) {
@@ -155,6 +162,16 @@ export function useUpdateUserRole() {
         });
 
       if (error) throw error;
+
+      // Keep profile role copy in sync for easier inspection
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ role })
+        .eq("user_id", userId);
+
+      if (profileError) {
+        console.error("Error updating profile role copy:", profileError);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -207,31 +224,18 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      // Delete role first
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", userId);
-
-      if (roleError) {
-        console.error("Error deleting role:", roleError);
-      }
-
-      // Delete profile (this will cascade if configured)
-      const { error: profileError } = await supabase
+      // Soft delete: mark profile as inactive instead of removing records
+      const { error } = await supabase
         .from("profiles")
-        .delete()
+        .update({ active: false })
         .eq("user_id", userId);
 
-      if (profileError) throw profileError;
-
-      // Note: The auth user will still exist but won't be accessible
-      // For production, create an Edge Function to fully delete the user
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success("Usuário removido com sucesso!");
+      toast.success("Usuário desativado com sucesso!");
     },
     onError: (error: any) => {
       console.error("Error deleting user:", error);
@@ -374,7 +378,7 @@ export function useCreateAuthUserForStudent() {
         password += chars.charAt(Math.floor(Math.random() * chars.length));
       }
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
         email,
         password,
         options: {
@@ -393,7 +397,7 @@ export function useCreateAuthUserForStudent() {
       // Link profile to existing student and update name
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ full_name: fullName, student_id: studentId })
+        .update({ full_name: fullName, student_id: studentId, role: "student" })
         .eq("user_id", userId);
 
       if (profileError) {
@@ -422,9 +426,16 @@ export function useCreateAuthUserForStudent() {
     },
     onError: (error: any) => {
       console.error("Error creating auth user for student:", error);
-      toast.error(
-        error.message || "Erro ao criar conta de acesso para o aluno."
-      );
+      const message = String(error?.message || "").toLowerCase();
+      if (message.includes("already")) {
+        toast.error(
+          "Já existe uma conta com esse email. Use a aba Usuários para vincular esse aluno à conta existente."
+        );
+      } else {
+        toast.error(
+          error.message || "Erro ao criar conta de acesso para o aluno."
+        );
+      }
     },
   });
 }
@@ -450,7 +461,7 @@ export function useCreateAuthUserForTeacher() {
         password += chars.charAt(Math.floor(Math.random() * chars.length));
       }
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
         email,
         password,
         options: {
@@ -468,7 +479,7 @@ export function useCreateAuthUserForTeacher() {
 
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ full_name: fullName, teacher_id: teacherId })
+        .update({ full_name: fullName, teacher_id: teacherId, role: "teacher" })
         .eq("user_id", userId);
 
       if (profileError) {
@@ -497,9 +508,16 @@ export function useCreateAuthUserForTeacher() {
     },
     onError: (error: any) => {
       console.error("Error creating auth user for teacher:", error);
-      toast.error(
-        error.message || "Erro ao criar conta de acesso para o professor."
-      );
+      const message = String(error?.message || "").toLowerCase();
+      if (message.includes("already")) {
+        toast.error(
+          "Já existe uma conta com esse email. Use a aba Usuários para vincular esse professor à conta existente."
+        );
+      } else {
+        toast.error(
+          error.message || "Erro ao criar conta de acesso para o professor."
+        );
+      }
     },
   });
 }
