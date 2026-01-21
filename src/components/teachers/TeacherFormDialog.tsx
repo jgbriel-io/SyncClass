@@ -11,8 +11,16 @@ import { Teacher, TeacherInsert } from "@/hooks/useTeachers";
 
 const teacherSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
-  email: z.string().email("Email inválido").max(255).optional().or(z.literal("").transform(() => undefined)),
-  phone: z.string().max(20).optional().or(z.literal("").transform(() => undefined)),
+  email: z
+    .string()
+    .min(1, "Email é obrigatório")
+    .email("Email inválido")
+    .max(255),
+  phone: z
+    .string()
+    .max(20)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
 });
 
 type TeacherFormData = z.infer<typeof teacherSchema>;
@@ -59,7 +67,7 @@ export function TeacherFormDialog({
     // Normaliza campos opcionais vazios para undefined
     const payload: TeacherInsert = {
       name: data.name,
-      email: data.email || undefined,
+      email: data.email,
       phone: data.phone || undefined,
     } as TeacherInsert;
 
@@ -102,7 +110,7 @@ export function TeacherFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"

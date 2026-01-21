@@ -102,7 +102,11 @@ const studentSchema = z.object({
     .min(14, "Telefone inválido")
     .max(15, "Telefone inválido")
     .regex(phoneRegex, "Formato deve ser (00) 00000-0000"),
-  email: z.string().email("Email inválido").max(255),
+  email: z
+    .string()
+    .min(1, "Email é obrigatório")
+    .email("Email inválido")
+    .max(255),
   hourly_rate: z.string().optional().nullable(),
   classes_per_week: z
     .string()

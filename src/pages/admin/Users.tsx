@@ -321,6 +321,10 @@ export default function UsersPage() {
                       ? teachers.find((t) => t.id === (user.profile as any).teacher_id)
                       : null;
 
+                    const displayName = (user.profile?.full_name || "").trim() || "(sem nome)";
+                    const avatarLetter = displayName.replace(/[^A-Za-zÀ-ÿ0-9]/g, "").charAt(0).toUpperCase() || "?";
+                    const subtitle = user.email || getRoleLabel(role);
+
                     return (
                       <tr
                         key={user.id}
@@ -330,16 +334,16 @@ export default function UsersPage() {
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                               <span className="text-sm font-medium text-accent-foreground">
-                                {user.profile?.full_name?.charAt(0) || user.email.charAt(0).toUpperCase()}
+                                {avatarLetter}
                               </span>
                             </div>
                             <div className="min-w-0">
                               <p className="font-medium text-sm truncate">
-                                {user.profile?.full_name || "Sem nome"}
+                                {displayName}
                               </p>
-                              {user.email && (
+                              {subtitle && (
                                 <p className="text-xs text-muted-foreground truncate">
-                                  {user.email}
+                                  {subtitle}
                                 </p>
                               )}
                             </div>
