@@ -346,6 +346,7 @@ export default function ClassesPage() {
           onSubmit={handleCreateOrUpdate}
           onSubmitWithFinancial={handleCreateWithFinancial}
           isLoading={isMutating}
+          enableTeacherSelection
         />
 
         {/* Delete Confirmation Dialog */}

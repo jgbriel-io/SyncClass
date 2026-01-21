@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Receipt } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
+import { useTeachers } from "@/hooks/useTeachers";
 import { ClassLogInsert, ClassLogWithStudent, ClassLogWithFinancialData } from "@/hooks/useClassLogs";
 
 const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
@@ -86,6 +87,7 @@ interface ClassLogFormDialogProps {
   teacherId?: string;
   onSubmitWithFinancial?: (data: ClassLogWithFinancialData) => void;
   isLoading: boolean;
+  enableTeacherSelection?: boolean;
 }
 
 export function ClassLogFormDialog({
@@ -96,11 +98,15 @@ export function ClassLogFormDialog({
   onSubmitWithFinancial,
   isLoading,
   teacherId,
-}: ClassLogFormDialogProps & { teacherId?: string }) {
+  enableTeacherSelection,
+}: ClassLogFormDialogProps & { teacherId?: string; enableTeacherSelection?: boolean }) {
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>(teacherId || "");
+  const [teacherError, setTeacherError] = useState<string | null>(null);
   const [attendance, setAttendance] = useState(true);
   const [createFinancial, setCreateFinancial] = useState(false);
   const { data: students = [], isLoading: loadingStudents } = useStudents();
+  const { data: teachers = [], isLoading: loadingTeachers } = useTeachers();
 
   const {
     register,
@@ -122,6 +128,10 @@ export function ClassLogFormDialog({
   useEffect(() => {
     if (open && classLog) {
       setSelectedStudentId(classLog.student_id);
+      if (enableTeacherSelection && classLog.teacher_id) {
+        setSelectedTeacherId(classLog.teacher_id as string);
+        setTeacherError(null);
+      }
       setAttendance(classLog.attendance ?? true);
       setCreateFinancial(false);
       setValue("student_id", classLog.student_id);
@@ -133,8 +143,10 @@ export function ClassLogFormDialog({
     } else if (!open) {
       reset();
       setSelectedStudentId("");
+      setSelectedTeacherId(teacherId || "");
       setAttendance(true);
       setCreateFinancial(false);
+      setTeacherError(null);
     }
   }, [open, classLog, reset, setValue]);
 
@@ -146,6 +158,11 @@ export function ClassLogFormDialog({
   }, [classDate, createFinancial, setValue]);
 
   const handleFormSubmit = (data: ClassLogFormData) => {
+    // Se a tela exige seleção de professor (admin), bloqueia sem professor
+    if (enableTeacherSelection && !selectedTeacherId) {
+      setTeacherError("Selecione um professor");
+      return;
+    }
     let grade: number | null = null;
     if (data.grade && data.attendance) {
       const parsed = parseFloat(data.grade.replace(",", "."));
@@ -154,6 +171,8 @@ export function ClassLogFormDialog({
       }
     }
 
+    const effectiveTeacherId = teacherId || (enableTeacherSelection ? selectedTeacherId || null : null);
+
     const classLogData: ClassLogInsert = {
       student_id: data.student_id,
       class_date: brDateToIso(data.class_date),
@@ -161,7 +180,7 @@ export function ClassLogFormDialog({
       attendance: data.attendance,
       grade: data.attendance ? grade : null,
       feedback: data.feedback?.trim() || null,
-      teacher_id: teacherId || null,
+      teacher_id: effectiveTeacherId,
     };
 
     // Se está criando cobrança junto
@@ -217,6 +236,35 @@ export function ClassLogFormDialog({
           <DialogTitle>{isEditing ? "Editar Registro" : "Registrar Aula"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          {/* Teacher Select - only when enabled (admin) */}
+          {enableTeacherSelection && (
+            <div className="space-y-2">
+              <Label>Professor *</Label>
+              <Select
+                value={selectedTeacherId}
+                onValueChange={(value) => {
+                  setSelectedTeacherId(value);
+                  setTeacherError(null);
+                }}
+                disabled={loadingTeachers || isEditing}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um professor (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teachers.map((teacher) => (
+                    <SelectItem key={teacher.id} value={teacher.id}>
+                      {teacher.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {teacherError && (
+                <p className="text-sm text-destructive">{teacherError}</p>
+              )}
+            </div>
+          )}
+
           {/* Student Select */}
           <div className="space-y-2">
             <Label>Aluno *</Label>

@@ -65,18 +65,25 @@ export function useClassLogs(teacherId?: string) {
 }
 
 // Buscar aulas de um aluno específico que ainda não têm cobrança vinculada
-export function useAvailableClassLogsForStudent(studentId: string | null) {
+// Opcionalmente pode filtrar por professor (para telas de admin)
+export function useAvailableClassLogsForStudent(studentId: string | null, teacherId?: string) {
   return useQuery({
-    queryKey: ["available_class_logs", studentId],
+    queryKey: ["available_class_logs", studentId, teacherId],
     queryFn: async () => {
       if (!studentId) return [];
 
-      // Buscar todas as aulas do aluno
-      const { data: classLogs, error: classLogsError } = await supabase
+      // Buscar todas as aulas do aluno (e, se informado, do professor)
+      let classLogsQuery = supabase
         .from("class_logs")
         .select("*")
         .eq("student_id", studentId)
         .order("class_date", { ascending: false });
+
+      if (teacherId) {
+        classLogsQuery = classLogsQuery.eq("teacher_id", teacherId);
+      }
+
+      const { data: classLogs, error: classLogsError } = await classLogsQuery;
 
       if (classLogsError) throw classLogsError;
 

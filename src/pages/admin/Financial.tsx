@@ -327,13 +327,15 @@ export default function FinancialPage() {
                         {record.class_logs ? (
                           <p className="text-sm text-muted-foreground">
                             {record.students?.name}
-                            {" + "}
+                            {" | "}
                             {record.class_logs.title?.trim()
                               ? record.class_logs.title
                               : formatDate(record.class_logs.class_date)}
                           </p>
                         ) : (
-                          <span className="text-sm text-muted-foreground/50">—</span>
+                          <span className="text-sm text-muted-foreground/70">
+                            Sem aula vinculada
+                          </span>
                         )}
                       </td>
                       <td className="px-6 py-4 hidden sm:table-cell">
@@ -444,6 +446,7 @@ export default function FinancialPage() {
           onSubmit={recordToEdit ? handleEditRecord : handleCreateRecord}
           isLoading={createRecord.isPending || updateRecord.isPending}
           initialData={recordToEdit || null}
+          enableTeacherSelection
         />
 
         {/* Delete Confirmation Dialog */}

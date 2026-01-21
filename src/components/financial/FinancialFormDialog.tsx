@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
+import { useTeachers } from "@/hooks/useTeachers";
 import { useAvailableClassLogsForStudent } from "@/hooks/useClassLogs";
 import { FinancialRecordInsert } from "@/hooks/useFinancialRecords";
 
@@ -76,6 +77,7 @@ interface FinancialFormDialogProps {
   onSubmit: (data: FinancialRecordInsert) => void;
   isLoading: boolean;
   initialData?: any;
+  enableTeacherSelection?: boolean;
 }
 
 function formatClassLogDate(dateString: string): string {
@@ -88,12 +90,17 @@ export function FinancialFormDialog({
   onSubmit,
   isLoading,
   initialData,
+  enableTeacherSelection,
 }: FinancialFormDialogProps) {
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [selectedClassLogId, setSelectedClassLogId] = useState<string>("");
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
+  const [teacherError, setTeacherError] = useState<string | null>(null);
   const { data: students = [], isLoading: loadingStudents } = useStudents();
+  const { data: teachers = [], isLoading: loadingTeachers } = useTeachers();
   const { data: availableClassLogs = [], isLoading: loadingClassLogs } = useAvailableClassLogsForStudent(
-    selectedStudentId || null
+    selectedStudentId || null,
+    enableTeacherSelection ? (selectedTeacherId || undefined) : undefined
   );
 
   const {
@@ -112,11 +119,15 @@ export function FinancialFormDialog({
       reset();
       setSelectedStudentId("");
       setSelectedClassLogId("");
+      setSelectedTeacherId("");
+      setTeacherError(null);
     } else if (open && !initialData) {
       // Nova cobrança: limpa tudo ao abrir
       reset();
       setSelectedStudentId("");
       setSelectedClassLogId("");
+      setSelectedTeacherId("");
+      setTeacherError(null);
     }
   }, [open, reset, initialData]);
 
@@ -141,6 +152,12 @@ export function FinancialFormDialog({
   }, [selectedStudentId, setValue]);
 
   const handleFormSubmit = (data: FinancialFormData) => {
+    // Para admin, professor é obrigatório
+    if (enableTeacherSelection && !selectedTeacherId) {
+      setTeacherError("Selecione um professor");
+      return;
+    }
+
     const amount = parseFloat(data.amount.replace(/[^\d,.-]/g, "").replace(",", "."));
     
     onSubmit({
@@ -174,6 +191,35 @@ export function FinancialFormDialog({
           <DialogTitle>{initialData ? 'Editar Cobrança' : 'Nova Cobrança'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          {/* Teacher Select - only when enabled (admin) */}
+          {enableTeacherSelection && (
+            <div className="space-y-2">
+              <Label>Professor *</Label>
+              <Select
+                value={selectedTeacherId}
+                onValueChange={(value) => {
+                  setSelectedTeacherId(value);
+                  setTeacherError(null);
+                }}
+                disabled={loadingTeachers}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um professor (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teachers.map((teacher) => (
+                    <SelectItem key={teacher.id} value={teacher.id}>
+                      {teacher.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {teacherError && (
+                <p className="text-sm text-destructive">{teacherError}</p>
+              )}
+            </div>
+          )}
+
           {/* Student Select */}
           <div className="space-y-2">
             <Label>Aluno *</Label>
