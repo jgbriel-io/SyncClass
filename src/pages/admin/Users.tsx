@@ -25,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Plus, Loader2, Shield, User, Link2, Unlink } from "lucide-react";
+import { Search, Plus, Loader2, Shield, User, Link2, Unlink, MoreHorizontal } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
@@ -44,6 +44,12 @@ import {
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { StatusBadge } from "@/components/ui/status-badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -297,7 +303,7 @@ export default function UsersPage() {
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Usuário
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 w-[140px]">
                       Privilégio
                     </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
@@ -355,8 +361,8 @@ export default function UsersPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1">
+                        <td className="px-6 py-4 w-[140px]">
+                          <div className="flex flex-col gap-1 items-start">
                             <StatusBadge variant={getRoleVariant(role)}>
                               {getRoleLabel(role)}
                             </StatusBadge>
@@ -395,69 +401,65 @@ export default function UsersPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setIsFormOpen(true);
-                              }}
-                            >
-                              Editar
-                            </Button>
-                            {!linkedStudent && role === "student" && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
                               <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openLinkDialog(user, "student")}
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
                               >
-                                <Link2 className="h-4 w-4 mr-1" />
-                                Vincular Aluno
+                                <MoreHorizontal className="h-4 w-4" />
                               </Button>
-                            )}
-                            {linkedStudent && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUnlinkStudent(user.id)}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setIsFormOpen(true);
+                                }}
                               >
-                                <Unlink className="h-4 w-4 mr-1" />
-                                Desvincular
-                              </Button>
-                            )}
-                            {!linkedTeacher && role === "teacher" && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openLinkDialog(user, "teacher")}
+                                Editar
+                              </DropdownMenuItem>
+                              {role === "student" && !linkedStudent && (
+                                <DropdownMenuItem
+                                  onClick={() => openLinkDialog(user, "student")}
+                                >
+                                  Vincular aluno
+                                </DropdownMenuItem>
+                              )}
+                              {linkedStudent && (
+                                <DropdownMenuItem
+                                  onClick={() => handleUnlinkStudent(user.id)}
+                                >
+                                  Desvincular aluno
+                                </DropdownMenuItem>
+                              )}
+                              {role === "teacher" && !linkedTeacher && (
+                                <DropdownMenuItem
+                                  onClick={() => openLinkDialog(user, "teacher")}
+                                >
+                                  Vincular professor
+                                </DropdownMenuItem>
+                              )}
+                              {role === "teacher" && linkedTeacher && (
+                                <DropdownMenuItem
+                                  onClick={() => handleUnlinkTeacher(user.id)}
+                                >
+                                  Desvincular professor
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                className="text-destructive focus:bg-destructive/10"
+                                disabled={!isActive}
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setDeleteDialogOpen(true);
+                                }}
                               >
-                                <Link2 className="h-4 w-4 mr-1" />
-                                Vincular Professor
-                              </Button>
-                            )}
-                            {linkedTeacher && role === "teacher" && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUnlinkTeacher(user.id)}
-                              >
-                                <Unlink className="h-4 w-4 mr-1" />
-                                Desvincular Professor
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setDeleteDialogOpen(true);
-                              }}
-                            >
-                              {isActive ? "Desativar" : "Já desativado"}
-                            </Button>
-                          </div>
+                                {isActive ? "Desativar" : "Já desativado"}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                     );

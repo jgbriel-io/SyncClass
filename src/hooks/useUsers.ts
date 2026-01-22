@@ -46,23 +46,30 @@ export function useUsers() {
       if (rolesError) throw rolesError;
 
       // Combinar perfis e roles
-      return (profiles || []).map(profile => ({
-        id: profile.user_id,
-        email: (profile as any).email || "",
-        created_at: profile.created_at || "",
-        profile: {
-          id: profile.id,
-          user_id: profile.user_id,
-          full_name: profile.full_name,
-          email: (profile as any).email ?? null,
-          student_id: profile.student_id,
-          teacher_id: (profile as any).teacher_id ?? null,
-          active: (profile as any).active ?? true,
-          role: (profile as any).role ?? null,
-          created_at: profile.created_at,
-        },
-        role: roles?.find(r => r.user_id === profile.user_id) || null,
-      }));
+      return (profiles || []).map(profile => {
+        const roleRow = (roles || []).find((r: any) => r.user_id === profile.user_id) as any | undefined;
+
+        const emailFromProfile = (profile as any).email as string | null | undefined;
+        const emailFromRole = roleRow?.email as string | null | undefined;
+
+        return {
+          id: profile.user_id,
+          email: emailFromProfile || emailFromRole || "",
+          created_at: profile.created_at || "",
+          profile: {
+            id: profile.id,
+            user_id: profile.user_id,
+            full_name: profile.full_name,
+            email: emailFromProfile ?? emailFromRole ?? null,
+            student_id: profile.student_id,
+            teacher_id: (profile as any).teacher_id ?? null,
+            active: (profile as any).active ?? true,
+            role: (profile as any).role ?? null,
+            created_at: profile.created_at,
+          },
+          role: (roleRow as any) || null,
+        } as UserWithProfile;
+      });
     },
   });
 }
@@ -126,7 +133,7 @@ export function useCreateUser() {
       if (fullName) {
         const { error: profileError } = await supabase
           .from("profiles")
-          .update({ full_name: fullName, role })
+          .update({ full_name: fullName, role, email: normalizedEmail })
           .eq("user_id", userId);
 
         if (profileError) {
@@ -140,6 +147,8 @@ export function useCreateUser() {
         .upsert({
           user_id: userId,
           role: role,
+          full_name: fullName,
+          email: normalizedEmail,
         });
 
       if (roleError) {
@@ -416,7 +425,7 @@ export function useCreateAuthUserForStudent() {
       // Link profile to existing student and update name
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ full_name: fullName, student_id: studentId, role: "student" })
+        .update({ full_name: fullName, student_id: studentId, role: "student", email })
         .eq("user_id", userId);
 
       if (profileError) {
@@ -428,6 +437,8 @@ export function useCreateAuthUserForStudent() {
         .upsert({
           user_id: userId,
           role: "student" as any,
+          full_name: fullName,
+          email,
         });
 
       if (roleError) {
@@ -498,7 +509,7 @@ export function useCreateAuthUserForTeacher() {
 
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ full_name: fullName, teacher_id: teacherId, role: "teacher" })
+        .update({ full_name: fullName, teacher_id: teacherId, role: "teacher", email })
         .eq("user_id", userId);
 
       if (profileError) {
@@ -510,6 +521,8 @@ export function useCreateAuthUserForTeacher() {
         .upsert({
           user_id: userId,
           role: "teacher" as any,
+          full_name: fullName,
+          email,
         });
 
       if (roleError) {
