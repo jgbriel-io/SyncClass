@@ -120,39 +120,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: error as Error };
     }
 
-    // Create profile and assign student role after signup
-    if (data.user) {
-      try {
-        // Create profile
-        const { error: profileError } = await supabase.from("profiles").insert({
-          user_id: data.user.id,
-          full_name: fullName,
-        });
-
-        if (profileError) {
-          console.error("Error creating profile:", profileError);
-        }
-
-        // Assign student role by default
-        const { error: roleError } = await supabase.from("user_roles").insert({
-          user_id: data.user.id,
-          role: "student",
-        });
-
-        if (roleError) {
-          console.error("Error assigning role:", roleError);
-        }
-
-        // Fetch the role immediately after creation to update state
-        const userRole = await fetchUserRole(data.user.id);
-        setRole(userRole);
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error in post-signup setup:", err);
-        setIsLoading(false);
-      }
-    }
-
     return { error: null };
   };
 
