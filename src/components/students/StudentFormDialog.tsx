@@ -21,6 +21,10 @@ import {
 } from "@/components/ui/select";
 import { Loader2, CalendarIcon } from "lucide-react";
 import { Student, StudentInsert } from "@/hooks/useStudents";
+import { BR_STATES, fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib/br-locations";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronsUpDown } from "lucide-react";
 
 const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
 function isValidDateString(value: string) {
@@ -93,6 +97,7 @@ const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 
 const studentSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
+  state: z.string().max(2).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
   cpf: z.string()
     .min(14, "CPF inválido")
@@ -150,17 +155,24 @@ export function StudentFormDialog({
   const [selectedStatus, setSelectedStatus] = useState<string>(
     student?.status || "ativo"
   );
+  const [selectedState, setSelectedState] = useState<string>((student as any)?.state || "");
+  const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
+  const [statePopoverOpen, setStatePopoverOpen] = useState(false);
+  const [cities, setCities] = useState<BrCityOption[]>([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
     defaultValues: {
       name: student?.name || "",
+      state: (student as any)?.state || "",
       city: (student as any)?.city || "",
       cpf: student?.cpf 
         ? (student.cpf.includes(".") ? student.cpf : maskCPF(student.cpf))
@@ -184,6 +196,8 @@ export function StudentFormDialog({
     },
   });
 
+  const watchedCity = watch("city") || "";
+
   useEffect(() => {
     if (student) {
       // Formata CPF se vier sem formatação do banco
@@ -198,9 +212,18 @@ export function StudentFormDialog({
       
       reset({
         name: student.name,
+        state: (student as any)?.state || "",
+        city: (student as any)?.city || "",
         cpf: formattedCPF,
         phone: formattedPhone,
         email: student.email || "",
+        hourly_rate: (student as any)?.hourly_rate
+          ? String((student as any).hourly_rate).replace(".", ",")
+          : "",
+        classes_per_week: (student as any)?.classes_per_week
+          ? String((student as any).classes_per_week)
+          : "",
+        pay_day: (student as any)?.pay_day ? String((student as any).pay_day) : "",
         origin: student.origin || undefined,
         status: student.status || "ativo",
         birth_date: student.birth_date
@@ -209,20 +232,43 @@ export function StudentFormDialog({
       });
       setSelectedOrigin(student.origin || "");
       setSelectedStatus(student.status || "ativo");
+      setSelectedState((student as any)?.state || "");
     } else {
       reset({
         name: "",
+        state: "",
+        city: "",
         cpf: "",
         phone: "",
         email: "",
+        hourly_rate: "",
+        classes_per_week: "",
+        pay_day: "",
         origin: undefined,
         status: "ativo",
         birth_date: null,
       });
       setSelectedOrigin("");
       setSelectedStatus("ativo");
+      setSelectedState("");
     }
   }, [student, reset]);
+
+  useEffect(() => {
+    const loadCities = async () => {
+      if (!selectedState) {
+        setCities([]);
+        return;
+      }
+
+      setIsLoadingCities(true);
+      const result = await fetchIbgeCitiesByUf(selectedState as BrStateCode);
+      setCities(result);
+      setIsLoadingCities(false);
+    };
+
+    void loadCities();
+  }, [selectedState]);
 
   const handleFormSubmit = (data: StudentFormData) => {
     const hourlyRateNumber = data.hourly_rate
@@ -237,6 +283,7 @@ export function StudentFormDialog({
 
     onSubmit({
       name: data.name,
+      state: selectedState || null,
       city: data.city || null,
       cpf: data.cpf,
       phone: data.phone,
@@ -247,7 +294,7 @@ export function StudentFormDialog({
       hourly_rate: hourlyRateNumber,
       classes_per_week: classesPerWeekNumber,
       pay_day: payDayNumber,
-    });
+    } as any);
   };
 
   return (
@@ -274,13 +321,104 @@ export function StudentFormDialog({
             </div>
 
             <div className="sm:col-span-2 space-y-2">
-              <Label htmlFor="city">Cidade</Label>
-              <Input
-                id="city"
-                placeholder="Cidade do aluno"
-                {...register("city")}
-                disabled={isLoading}
-              />
+              <Label>Estado e cidade</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Estado (UF)</Label>
+                  <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between"
+                        disabled={isLoading}
+                      >
+                        {(() => {
+                          const current = BR_STATES.find((st) => st.code === selectedState);
+                          if (current) return `${current.code} - ${current.name}`;
+                          return "Selecione UF";
+                        })()}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[260px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Buscar estado ou UF..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhum estado encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {BR_STATES.map((st) => (
+                              <CommandItem
+                                key={st.code}
+                                value={`${st.code} ${st.name}`}
+                                onSelect={() => {
+                                  setSelectedState(st.code);
+                                  setValue("state", st.code, { shouldValidate: true });
+                                  // limpar cidade quando trocar de estado
+                                  setValue("city", "", { shouldValidate: true });
+                                  setStatePopoverOpen(false);
+                                }}
+                              >
+                                <span className="mr-2 font-mono text-xs">{st.code}</span>
+                                <span>{st.name}</span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="sm:col-span-2 space-y-1">
+                  <Label className="text-xs text-muted-foreground">Cidade</Label>
+                  <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between"
+                        disabled={!selectedState || isLoading || isLoadingCities}
+                      >
+                        {(() => {
+                          const cityValue = watchedCity;
+                          const current = cities.find((c) => c.value === cityValue);
+                          if (current) return current.label;
+                          if (cityValue) return cityValue;
+                          if (isLoadingCities) return "Carregando cidades...";
+                          return selectedState
+                            ? "Selecione a cidade"
+                            : "Selecione uma UF primeiro";
+                        })()}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[280px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Buscar cidade..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
+                          <CommandGroup>
+                            {cities.map((city) => (
+                              <CommandItem
+                                key={city.value}
+                                value={city.label}
+                                onSelect={() => {
+                                  setValue("city", city.value, { shouldValidate: true });
+                                  setCityPopoverOpen(false);
+                                }}
+                              >
+                                {city.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">

@@ -425,6 +425,7 @@ export default function UsersPage() {
                     const avatarLetter = displayName.replace(/[^A-Za-zÀ-ÿ0-9]/g, "").charAt(0).toUpperCase() || "?";
                     const subtitle = user.email || getRoleLabel(role);
                     const isActive = user.profile?.active ?? true;
+                    const lastUpdatedAt = (user.profile as any)?.updated_at as string | null | undefined;
 
                     return (
                       <tr
@@ -488,11 +489,18 @@ export default function UsersPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 hidden md:table-cell">
-                          <span className="text-sm text-muted-foreground">
-                            {user.created_at
-                              ? format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })
-                              : "—"}
-                          </span>
+                          <div className="flex flex-col text-xs text-muted-foreground">
+                            <span>
+                              {user.created_at
+                                ? `Criado em ${format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })}`
+                                : "—"}
+                            </span>
+                            {lastUpdatedAt && (
+                              <span className="mt-0.5">
+                                {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-right">
                           <DropdownMenu>

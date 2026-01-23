@@ -34,6 +34,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Search, Plus, MoreHorizontal, Phone, Mail, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
 import {
   useStudents,
@@ -292,7 +294,10 @@ export default function StudentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {filteredStudents.map((student) => (
+                  {filteredStudents.map((student) => {
+                    const lastUpdatedAt = (student as any).updated_at as string | null | undefined;
+
+                    return (
                     <tr
                       key={student.id}
                       className="hover:bg-muted/30 transition-colors"
@@ -311,6 +316,11 @@ export default function StudentsPage() {
                             <p className="text-xs text-muted-foreground truncate">
                               {student.cpf || "—"}
                             </p>
+                            {lastUpdatedAt && (
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -393,7 +403,7 @@ export default function StudentsPage() {
                         </DropdownMenu>
                       </td>
                     </tr>
-                  ))}
+                  );})}
                 </tbody>
               </table>
             </div>

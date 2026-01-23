@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -237,6 +239,7 @@ export default function TeachersPage() {
                 {filteredTeachers.map((teacher) => {
                   const status =
                     ((teacher as any).status as string | null) ?? "ativo";
+                  const lastUpdatedAt = (teacher as any).updated_at as string | null | undefined;
 
                   return (
                     <tr
@@ -244,9 +247,16 @@ export default function TeachersPage() {
                       className="hover:bg-muted/30 transition-colors"
                     >
                       <td className="px-6 py-4">
-                        <span className="font-medium text-sm">
-                          {teacher.name}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">
+                            {teacher.name}
+                          </span>
+                          {lastUpdatedAt && (
+                            <span className="text-[11px] text-muted-foreground mt-0.5">
+                              {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm">{teacher.email || "—"}</span>

@@ -230,7 +230,10 @@ export default function ClassesPage() {
         {/* Timeline */}
         {!isLoading && !error && (
           <div className="space-y-4">
-            {filteredLogs.map((log, index) => (
+            {filteredLogs.map((log, index) => {
+              const lastUpdatedAt = (log as any).updated_at as string | null | undefined;
+
+              return (
               <div
                 key={log.id}
                 className="relative rounded-lg border bg-card p-6 shadow-card animate-slide-up"
@@ -271,6 +274,11 @@ export default function ClassesPage() {
                           <span className="flex items-center gap-1.5 text-xs">
                             <Receipt className="h-3.5 w-3.5" />
                             R$ {formatCurrency(log.financial_records.amount)}
+                          </span>
+                        )}
+                        {lastUpdatedAt && (
+                          <span className="flex items-center gap-1.5 text-xs">
+                            {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
                           </span>
                         )}
                       </div>
@@ -323,7 +331,7 @@ export default function ClassesPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            );})}
 
             {filteredLogs.length === 0 && (
               <div className="text-center py-12 text-muted-foreground rounded-lg border bg-card">

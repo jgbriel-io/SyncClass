@@ -17,6 +17,7 @@ export interface UserWithProfile {
     role?: "admin" | "student" | "teacher" | null;
     active?: boolean | null;
     created_at: string | null;
+    updated_at?: string | null;
   } | null;
   role: {
     id: string;
@@ -66,6 +67,7 @@ export function useUsers() {
             active: (profile as any).active ?? true,
             role: (profile as any).role ?? null,
             created_at: profile.created_at,
+            updated_at: (profile as any).updated_at ?? null,
           },
           role: (roleRow as any) || null,
         } as UserWithProfile;
