@@ -301,7 +301,7 @@ export default function UsersPage() {
       case "student":
         return "success";
       case "teacher":
-        return "default";
+        return "info";
       default:
         return "warning";
     }
@@ -405,13 +405,21 @@ export default function UsersPage() {
                 </thead>
                 <tbody className="divide-y">
                   {filteredUsers.map((user) => {
-                    const role = (user.role?.role as string | null) ?? null;
                     const linkedStudent = user.profile?.student_id
                       ? students.find((s) => s.id === user.profile?.student_id)
                       : null;
                     const linkedTeacher = (user.profile as any)?.teacher_id
                       ? teachers.find((t) => t.id === (user.profile as any).teacher_id)
                       : null;
+
+                    const storedRole = (user.role?.role as string | null) ?? null;
+                    const role = storedRole === "admin"
+                      ? "admin"
+                      : linkedTeacher
+                      ? "teacher"
+                      : linkedStudent
+                      ? "student"
+                      : storedRole;
 
                     const displayName = (user.profile?.full_name || "").trim() || "(sem nome)";
                     const avatarLetter = displayName.replace(/[^A-Za-zÀ-ÿ0-9]/g, "").charAt(0).toUpperCase() || "?";

@@ -261,7 +261,22 @@ export function useUpdateUserRole() {
 
       if (error) throw error;
 
-      // Keep profile role copy in sync for easier inspection
+      // Get current profile to know email, name and links
+      const { data: profile, error: profileFetchError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, student_id, teacher_id, role")
+        .eq("user_id", userId)
+        .single();
+
+      if (profileFetchError) {
+        console.error("Error fetching profile for role update:", profileFetchError);
+        throw profileFetchError;
+      }
+
+      const fullName = (profile.full_name as string | null) ?? "";
+      const normalizedEmail = (profile.email as string | null | undefined)?.trim().toLowerCase();
+
+      // Keep profile role copy in sync
       const { error: profileError } = await supabase
         .from("profiles")
         .update({ role })
@@ -269,6 +284,57 @@ export function useUpdateUserRole() {
 
       if (profileError) {
         console.error("Error updating profile role copy:", profileError);
+      }
+
+      // When switching to student/teacher, ensure there is a corresponding domain record linked
+      if (role === "student") {
+        if (!profile.student_id && normalizedEmail) {
+          const { data: student, error: studentError } = await supabase
+            .from("students")
+            .insert({
+              name: fullName || normalizedEmail,
+              email: normalizedEmail,
+            })
+            .select("id")
+            .single();
+
+          if (studentError) {
+            console.error("Error creating student when updating role:", studentError);
+          } else if (student?.id) {
+            const { error: linkError } = await supabase
+              .from("profiles")
+              .update({ student_id: student.id })
+              .eq("user_id", userId);
+
+            if (linkError) {
+              console.error("Error linking profile to created student on role update:", linkError);
+            }
+          }
+        }
+      } else if (role === "teacher") {
+        if (!profile.teacher_id && normalizedEmail) {
+          const { data: teacher, error: teacherError } = await supabase
+            .from("teachers")
+            .insert({
+              name: fullName || normalizedEmail,
+              email: normalizedEmail,
+            })
+            .select("id")
+            .single();
+
+          if (teacherError) {
+            console.error("Error creating teacher when updating role:", teacherError);
+          } else if (teacher?.id) {
+            const { error: linkError } = await supabase
+              .from("profiles")
+              .update({ teacher_id: teacher.id })
+              .eq("user_id", userId);
+
+            if (linkError) {
+              console.error("Error linking profile to created teacher on role update:", linkError);
+            }
+          }
+        }
       }
     },
     onSuccess: () => {

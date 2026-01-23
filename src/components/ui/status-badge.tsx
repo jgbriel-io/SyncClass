@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type StatusVariant = "success" | "warning" | "destructive" | "default";
+type StatusVariant = "success" | "warning" | "destructive" | "default" | "info";
 
 interface StatusBadgeProps {
   variant: StatusVariant;
@@ -13,6 +13,7 @@ const variantStyles: Record<StatusVariant, string> = {
   warning: "bg-warning-muted text-warning border-warning/20",
   destructive: "bg-destructive-muted text-destructive border-destructive/20",
   default: "bg-muted text-muted-foreground border-border",
+  info: "bg-blue-50 text-blue-600 border-blue-200",
 };
 
 export function StatusBadge({ variant, children, className }: StatusBadgeProps) {
@@ -30,7 +31,8 @@ export function StatusBadge({ variant, children, className }: StatusBadgeProps) 
           variant === "success" && "bg-success",
           variant === "warning" && "bg-warning",
           variant === "destructive" && "bg-destructive",
-          variant === "default" && "bg-muted-foreground"
+          variant === "default" && "bg-muted-foreground",
+          variant === "info" && "bg-blue-500"
         )}
       />
       {children}
