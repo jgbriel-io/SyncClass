@@ -21,6 +21,7 @@ import {
   XCircle,
   AlertCircle,
   TrendingUp,
+  MapPin,
 } from "lucide-react";
 import { useStudentDetails } from "@/hooks/useStudentDetails";
 
@@ -125,92 +126,173 @@ export function StudentDetailSheet({
             <TabsContent value="info" className="flex-1 overflow-auto m-0">
               <ScrollArea className="h-full">
                 <div className="p-6 space-y-6">
-                  {/* Stats Cards */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg border bg-card p-4">
-                      <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                        <TrendingUp className="h-4 w-4" />
-                        Frequência
-                      </div>
-                      <p className="text-2xl font-bold">
-                        {student.stats.attendanceRate.toFixed(0)}%
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {student.stats.presentClasses}/{student.stats.totalClasses} aulas
-                      </p>
-                    </div>
-                    <div className="rounded-lg border bg-card p-4">
-                      <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                        <BookOpen className="h-4 w-4" />
-                        Média
-                      </div>
-                      <p className="text-2xl font-bold">
-                        {student.stats.averageGrade > 0
-                          ? student.stats.averageGrade.toFixed(1)
-                          : "—"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Nota geral
-                      </p>
-                    </div>
-                  </div>
+                  {(() => {
+                    const hourlyRate = (student as any).hourly_rate as number | null | undefined;
+                    const classesPerWeek = (student as any).classes_per_week as number | null | undefined;
+                    const weeklyTotal =
+                      hourlyRate != null && classesPerWeek != null
+                        ? hourlyRate * classesPerWeek
+                        : null;
+                    const payDay = (student as any).pay_day as number | null | undefined;
+                    const city = (student as any).city as string | null | undefined;
+                    const state = (student as any).state as string | null | undefined;
+                    const createdAt = student.created_at as string | null | undefined;
+                    const updatedAt = (student as any).updated_at as string | null | undefined;
 
-                  {/* Personal Info */}
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-medium text-muted-foreground">
-                      Informações Pessoais
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                          <User className="h-4 w-4 text-muted-foreground" />
+                    return (
+                      <>
+                        {/* Stats Cards */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="rounded-lg border bg-card p-4">
+                            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                              <TrendingUp className="h-4 w-4" />
+                              Frequência
+                            </div>
+                            <p className="text-2xl font-bold">
+                              {student.stats.attendanceRate.toFixed(0)}%
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {student.stats.presentClasses}/{student.stats.totalClasses} aulas
+                            </p>
+                          </div>
+                          <div className="rounded-lg border bg-card p-4">
+                            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                              <BookOpen className="h-4 w-4" />
+                              Média
+                            </div>
+                            <p className="text-2xl font-bold">
+                              {student.stats.averageGrade > 0
+                                ? student.stats.averageGrade.toFixed(1)
+                                : "—"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Nota geral</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">CPF</p>
-                          <p className="text-sm font-medium">{student.cpf || "—"}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Email</p>
-                          <p className="text-sm font-medium">{student.email || "—"}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Telefone</p>
-                          <p className="text-sm font-medium">{student.phone || "—"}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Data de Nascimento</p>
-                          <p className="text-sm font-medium">
-                            {student.birth_date ? formatDate(student.birth_date) : "—"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Origin */}
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">
-                      Origem
-                    </h3>
-                    <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-accent text-accent-foreground text-sm">
-                      {student.origin ? originLabels[student.origin] || student.origin : "Não informado"}
-                    </div>
-                  </div>
+                        {/* Informações Pessoais */}
+                        <div className="space-y-4 mt-4">
+                          <h3 className="text-sm font-medium text-muted-foreground">
+                            Informações Pessoais
+                          </h3>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">CPF</p>
+                                <p className="text-sm font-medium">{student.cpf || "—"}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                                <Mail className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Email</p>
+                                <p className="text-sm font-medium">{student.email || "—"}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                                <Phone className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Telefone</p>
+                                <p className="text-sm font-medium">{student.phone || "—"}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Data de Nascimento</p>
+                                <p className="text-sm font-medium">
+                                  {student.birth_date ? formatDate(student.birth_date) : "—"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Localização */}
+                        <div className="space-y-3 mt-4">
+                          <h3 className="text-sm font-medium text-muted-foreground">
+                            Localização
+                          </h3>
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Cidade / UF</p>
+                              <p className="text-sm font-medium">
+                                {city || state
+                                  ? `${city || "—"}${state ? ` - ${state}` : ""}`
+                                  : "—"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Informações de Aula / Financeiro */}
+                        <div className="space-y-3 mt-4">
+                          <h3 className="text-sm font-medium text-muted-foreground">
+                            Plano de aulas e cobrança
+                          </h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-lg border bg-card p-3">
+                              <p className="text-xs text-muted-foreground mb-1">Valor por hora</p>
+                              <p className="text-sm font-semibold">
+                                {hourlyRate != null ? formatCurrency(hourlyRate) : "—"}
+                              </p>
+                            </div>
+                            <div className="rounded-lg border bg-card p-3">
+                              <p className="text-xs text-muted-foreground mb-1">Aulas por semana</p>
+                              <p className="text-sm font-semibold">
+                                {classesPerWeek != null ? classesPerWeek : "—"}
+                              </p>
+                            </div>
+                            <div className="rounded-lg border bg-card p-3">
+                              <p className="text-xs text-muted-foreground mb-1">Total semanal</p>
+                              <p className="text-sm font-semibold">
+                                {weeklyTotal != null ? formatCurrency(weeklyTotal) : "—"}
+                              </p>
+                            </div>
+                            <div className="rounded-lg border bg-card p-3">
+                              <p className="text-xs text-muted-foreground mb-1">Dia de pagamento</p>
+                              <p className="text-sm font-semibold">
+                                {payDay != null ? payDay : "—"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Datas de cadastro */}
+                        <div className="space-y-1 mt-4 text-xs text-muted-foreground">
+                          {createdAt && (
+                            <p>Cadastro em {formatDate(createdAt)}</p>
+                          )}
+                          {updatedAt && (
+                            <p>Última edição em {formatDate(updatedAt)}</p>
+                          )}
+                        </div>
+
+                        {/* Origem */}
+                        <div className="space-y-2 mt-6">
+                          <h3 className="text-sm font-medium text-muted-foreground">
+                            Origem
+                          </h3>
+                          <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-accent text-accent-foreground text-sm">
+                            {student.origin
+                              ? originLabels[student.origin] || student.origin
+                              : "Não informado"}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </ScrollArea>
             </TabsContent>

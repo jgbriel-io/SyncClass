@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Plus, MoreHorizontal, Phone, Mail, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
@@ -48,6 +48,10 @@ import {
 import { useCreateAuthUserForStudent } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTeachers } from "@/hooks/useTeachers";
+import { useFinancialRecords } from "@/hooks/useFinancialRecords";
+import { useClassLogs } from "@/hooks/useClassLogs";
+import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 
 const originLabels: Record<string, string> = {
   indicacao: "Indicação",
@@ -76,12 +80,112 @@ export default function StudentsPage() {
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
 
   const { data: students = [], isLoading, error } = useStudents();
+  const { data: teachers = [] } = useTeachers();
+  const { data: financialRecords = [] } = useFinancialRecords();
+  const { data: classLogs = [] } = useClassLogs();
   const createStudent = useCreateStudent();
   const updateStudent = useUpdateStudent();
   const deleteStudent = useDeleteStudent();
   const createStudentUser = useCreateAuthUserForStudent();
+
+  const teacherMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    teachers.forEach((t: any) => {
+      if (t.id && t.name) {
+        map[t.id] = t.name as string;
+      }
+    });
+    return map;
+  }, [teachers]);
+
+  type InternalFinancialStatus = "none" | "pago" | "pendente" | "atrasado";
+
+  const financialStatusByStudent = useMemo(() => {
+    const statusMap: Record<
+      string,
+      { status: InternalFinancialStatus; label: string; variant: "default" | "success" | "warning" | "destructive" }
+    > = {};
+
+    const getPriority = (status: InternalFinancialStatus): number => {
+      switch (status) {
+        case "atrasado":
+          return 3;
+        case "pendente":
+          return 2;
+        case "pago":
+          return 1;
+        default:
+          return 0;
+      }
+    };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    financialRecords.forEach((record: any) => {
+      const studentId = record.student_id as string | undefined;
+      if (!studentId) return;
+
+      // Deriva status real considerando due_date
+      let actualStatus: InternalFinancialStatus;
+      if (record.status === "pago") {
+        actualStatus = "pago";
+      } else {
+        const dueDate = new Date(String(record.due_date) + "T00:00:00");
+        actualStatus = dueDate < today ? "atrasado" : "pendente";
+      }
+
+      const current = statusMap[studentId]?.status ?? "none";
+      if (getPriority(actualStatus) <= getPriority(current)) {
+        return;
+      }
+
+      let label = "Sem cobranças";
+      let variant: "default" | "success" | "warning" | "destructive" = "default";
+      if (actualStatus === "pago") {
+        label = "Em dia";
+        variant = "success";
+      } else if (actualStatus === "pendente") {
+        label = "Pendente";
+        variant = "warning";
+      } else if (actualStatus === "atrasado") {
+        label = "Em atraso";
+        variant = "destructive";
+      }
+
+      statusMap[studentId] = { status: actualStatus, label, variant };
+    });
+
+    return statusMap;
+  }, [financialRecords]);
+  const lastClassDateByStudent = useMemo(() => {
+    const map: Record<string, string> = {};
+
+    (classLogs as any[]).forEach((log) => {
+      const studentId = log.student_id as string | undefined;
+      const classDate = log.class_date as string | undefined;
+      // Considera apenas aulas em que o aluno esteve presente
+      if (!studentId || !classDate || !log.attendance) return;
+
+      const current = map[studentId];
+      if (!current) {
+        map[studentId] = classDate;
+        return;
+      }
+
+      const currentDate = new Date(current + "T00:00:00");
+      const newDate = new Date(classDate + "T00:00:00");
+      if (newDate > currentDate) {
+        map[studentId] = classDate;
+      }
+    });
+
+    return map;
+  }, [classLogs]);
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch = student.name
@@ -267,14 +371,8 @@ export default function StudentsPage() {
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Aluno
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
-                      Contato
-                    </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
-                      Origem
-                    </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell">
-                      Cidade
+                      Professor
                     </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell">
                       Valor/hora
@@ -288,8 +386,11 @@ export default function StudentsPage() {
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
                       Dia pagto
                     </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell">
+                      Financeiro
+                    </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                      Status
+                      Última aula
                     </th>
                     <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Ações
@@ -306,6 +407,25 @@ export default function StudentsPage() {
                         ? hourlyRate * classesPerWeek
                         : null;
 
+                    const teacherName = (student as any).teacher_id
+                      ? teacherMap[(student as any).teacher_id as string] || "—"
+                      : "—";
+
+                    const lastClassDateRaw = lastClassDateByStudent[student.id];
+                    const daysWithoutClass = lastClassDateRaw
+                      ? (() => {
+                          const last = new Date(lastClassDateRaw + "T00:00:00");
+                          const today = new Date();
+                          // zera horário para comparar só data
+                          last.setHours(0, 0, 0, 0);
+                          today.setHours(0, 0, 0, 0);
+                          const diffMs = today.getTime() - last.getTime();
+                          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                          return diffDays < 0 ? 0 : diffDays;
+                        })()
+                      : null;
+                    const financialStatus = financialStatusByStudent[student.id];
+
                     return (
                     <tr
                       key={student.id}
@@ -319,54 +439,52 @@ export default function StudentsPage() {
                             </span>
                           </div>
                           <div className="min-w-0">
-                            <p className="font-medium text-sm truncate">
-                              {student.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {student.cpf || "—"}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm truncate">
+                                {student.name}
+                              </p>
+                              <StatusBadge
+                                variant={
+                                  student.status === "ativo" ? "success" : "default"
+                                }
+                              >
+                                {student.status === "ativo" ? "Ativo" : "Inativo"}
+                              </StatusBadge>
+                            </div>
                             {lastUpdatedAt && (
                               <p className="text-[11px] text-muted-foreground mt-0.5">
                                 {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
                               </p>
                             )}
+                            <div className="mt-1">
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="px-0 h-5 text-xs"
+                                onClick={() => {
+                                  setDetailStudentId(student.id);
+                                  setDetailSheetOpen(true);
+                                }}
+                              >
+                                Ver detalhes
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 hidden md:table-cell">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Mail className="h-3.5 w-3.5" />
-                            <span className="truncate max-w-[180px]">
-                              {student.email || "—"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Phone className="h-3.5 w-3.5" />
-                            {student.phone || "—"}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 hidden lg:table-cell">
-                        <span className="text-sm text-muted-foreground">
-                          {student.origin
-                            ? originLabels[student.origin] || student.origin
-                            : "—"}
+                      <td className="px-6 py-4 hidden xl:table-cell">
+                        <span className="text-sm text-muted-foreground truncate max-w-[160px] inline-block">
+                          {teacherName}
                         </span>
                       </td>
                       <td className="px-6 py-4 hidden xl:table-cell">
                         <span className="text-sm text-muted-foreground">
-                          {student.city || "—"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 hidden xl:table-cell">
-                        <span className="text-sm text-muted-foreground">
-                          {formatCurrency((student as any).hourly_rate as number | null)}
+                          {formatCurrency(hourlyRate)}
                         </span>
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell">
                         <span className="text-sm text-muted-foreground">
-                          {(student as any).classes_per_week ?? "—"}
+                          {classesPerWeek ?? "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell">
@@ -379,14 +497,28 @@ export default function StudentsPage() {
                           {(student as any).pay_day ?? "—"}
                         </span>
                       </td>
+                      <td className="px-6 py-4 hidden xl:table-cell">
+                        {financialStatus ? (
+                          <StatusBadge variant={financialStatus.variant}>
+                            {financialStatus.label}
+                          </StatusBadge>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Sem cobranças</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4">
-                        <StatusBadge
-                          variant={
-                            student.status === "ativo" ? "success" : "default"
-                          }
-                        >
-                          {student.status === "ativo" ? "Ativo" : "Inativo"}
-                        </StatusBadge>
+                        <div className="space-y-0.5">
+                          <span className="text-sm text-muted-foreground block">
+                            {lastClassDateRaw
+                              ? format(new Date(lastClassDateRaw + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR })
+                              : "—"}
+                          </span>
+                          {daysWithoutClass !== null && (
+                            <span className="text-[11px] text-muted-foreground block">
+                              {daysWithoutClass} dia{daysWithoutClass === 1 ? "" : "s"} sem aula
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <DropdownMenu>
@@ -430,6 +562,12 @@ export default function StudentsPage() {
             )}
           </div>
         )}
+
+        <StudentDetailSheet
+          studentId={detailStudentId}
+          open={detailSheetOpen}
+          onOpenChange={setDetailSheetOpen}
+        />
 
         {/* Generated Password Dialog for student account */}
         <Dialog
