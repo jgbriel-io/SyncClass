@@ -283,6 +283,9 @@ export default function StudentsPage() {
                       Aulas/semana
                     </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
+                      Total semanal
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
                       Dia pagto
                     </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
@@ -296,6 +299,12 @@ export default function StudentsPage() {
                 <tbody className="divide-y">
                   {filteredStudents.map((student) => {
                     const lastUpdatedAt = (student as any).updated_at as string | null | undefined;
+                    const hourlyRate = (student as any).hourly_rate as number | null | undefined;
+                    const classesPerWeek = (student as any).classes_per_week as number | null | undefined;
+                    const weeklyTotal =
+                      hourlyRate != null && classesPerWeek != null
+                        ? hourlyRate * classesPerWeek
+                        : null;
 
                     return (
                     <tr
@@ -358,6 +367,11 @@ export default function StudentsPage() {
                       <td className="px-6 py-4 hidden 2xl:table-cell">
                         <span className="text-sm text-muted-foreground">
                           {(student as any).classes_per_week ?? "—"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 hidden 2xl:table-cell">
+                        <span className="text-sm text-muted-foreground">
+                          {formatCurrency(weeklyTotal)}
                         </span>
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell">
