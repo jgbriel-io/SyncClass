@@ -87,7 +87,10 @@ export function useDeleteStudent() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("students").delete().eq("id", id);
+      const { error } = await supabase
+        .from("students")
+        .update({ status: "inativo" })
+        .eq("id", id);
 
       if (error) {
         throw error;
@@ -95,11 +98,11 @@ export function useDeleteStudent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
-      toast.success("Aluno removido com sucesso!");
+      toast.success("Aluno desativado com sucesso!");
     },
     onError: (error) => {
       console.error("Error deleting student:", error);
-      toast.error("Erro ao remover aluno. Tente novamente.");
+      toast.error("Erro ao desativar aluno. Tente novamente.");
     },
   });
 }

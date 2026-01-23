@@ -95,11 +95,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    return { error: error as Error | null };
+    if (error) {
+      return { error: error as Error };
+    }
+
+    const authenticatedUser = data?.user ?? data?.session?.user ?? null;
+
+    if (authenticatedUser) {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("active")
+        .eq("user_id", authenticatedUser.id)
+        .single();
+
+      if (!profileError && profile && profile.active === false) {
+        await supabase.auth.signOut();
+        return {
+          error: new Error(
+            "Sua conta está inativa. Entre em contato com a secretaria."
+          ),
+        };
+      }
+    }
+
+    return { error: null };
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {

@@ -9,7 +9,22 @@ import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { TeacherFormDialog } from "@/components/teachers/TeacherFormDialog";
 import {
   useTeachers,
@@ -24,10 +39,15 @@ import { toast } from "sonner";
 
 export default function TeachersPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("ativo");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState("");
+  const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
+  const [passwordCopied, setPasswordCopied] = useState(false);
 
   const { data: teachers = [], isLoading, error } = useTeachers();
   const createTeacher = useCreateTeacher();
@@ -36,7 +56,13 @@ export default function TeachersPage() {
   const createTeacherUser = useCreateAuthUserForTeacher();
 
   const filteredTeachers = teachers.filter((teacher) => {
-    return teacher.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    const name = (teacher.name ?? "").toLowerCase();
+    const matchesSearch = name.includes(searchQuery.toLowerCase());
+
+    const status = ((teacher as any).status as string | null) ?? "ativo";
+    const matchesStatus = statusFilter === "all" || status === statusFilter;
+
+    return matchesSearch && matchesStatus;
   });
 
   const handleCreateOrUpdate = (data: any) => {
@@ -51,7 +77,10 @@ export default function TeachersPage() {
           .maybeSingle();
 
         if (profileError) {
-          console.error("Error checking email uniqueness for teacher:", profileError);
+          console.error(
+            "Error checking email uniqueness for teacher:",
+            profileError
+          );
           toast.error("Erro ao validar email. Tente novamente.");
           return;
         }
@@ -80,11 +109,23 @@ export default function TeachersPage() {
             setIsFormOpen(false);
 
             if (createdTeacher && createdTeacher.email) {
-              createTeacherUser.mutate({
-                teacherId: createdTeacher.id,
-                email: createdTeacher.email,
-                fullName: createdTeacher.name,
-              });
+              createTeacherUser.mutate(
+                {
+                  teacherId: createdTeacher.id,
+                  email: createdTeacher.email,
+                  fullName: createdTeacher.name,
+                },
+                {
+                  onSuccess: (result) => {
+                    if (result?.password) {
+                      setGeneratedPassword(result.password);
+                      setShowGeneratedPassword(false);
+                      setPasswordCopied(false);
+                      setIsPasswordDialogOpen(true);
+                    }
+                  },
+                }
+              );
             }
           },
         });
@@ -99,24 +140,55 @@ export default function TeachersPage() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    if (teacherToDelete) {
+  const handleStatusChangeConfirm = () => {
+    if (!teacherToDelete) return;
+
+    const status = ((teacherToDelete as any).status as string | null) ?? "ativo";
+    const isActive = status === "ativo";
+
+    if (isActive) {
+      // Soft deactivate (status -> inativo)
       deleteTeacher.mutate(teacherToDelete.id, {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setTeacherToDelete(null);
         },
       });
+    } else {
+      // Reactivate (status -> ativo)
+      updateTeacher.mutate(
+        { id: teacherToDelete.id, status: "ativo" as any },
+        {
+          onSuccess: () => {
+            setDeleteDialogOpen(false);
+            setTeacherToDelete(null);
+          },
+        }
+      );
     }
   };
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Professores</h1>
-          <p className="text-muted-foreground mt-1">Gerencie os professores do sistema</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Professores</h1>
+            <p className="text-muted-foreground mt-1">
+              Gerencie os professores do sistema
+            </p>
+          </div>
+          <Button
+            onClick={() => {
+              setSelectedTeacher(null);
+              setIsFormOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" /> Novo Professor
+          </Button>
         </div>
+
+        {/* Filtros */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -127,9 +199,16 @@ export default function TeachersPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" /> Novo Professor
-          </Button>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="ativo">Ativos</SelectItem>
+              <SelectItem value="inativo">Inativos</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         {/* Table */}
         <div className="rounded-lg border bg-card shadow-card overflow-hidden">
@@ -146,33 +225,84 @@ export default function TeachersPage() {
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                     Telefone
                   </th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                    Status
+                  </th>
                   <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                     Ações
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filteredTeachers.map((teacher) => (
-                  <tr key={teacher.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <span className="font-medium text-sm">{teacher.name}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm">{teacher.email || "—"}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm">{teacher.phone || "—"}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 mr-2" onClick={() => handleEdit(teacher)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setTeacherToDelete(teacher); setDeleteDialogOpen(true); }}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredTeachers.map((teacher) => {
+                  const status =
+                    ((teacher as any).status as string | null) ?? "ativo";
+
+                  return (
+                    <tr
+                      key={teacher.id}
+                      className="hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <span className="font-medium text-sm">
+                          {teacher.name}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm">{teacher.email || "—"}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm">{teacher.phone || "—"}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge
+                          variant={
+                            status === "inativo" ? "default" : "success"
+                          }
+                        >
+                          {status === "inativo" ? "Inativo" : "Ativo"}
+                        </StatusBadge>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleEdit(teacher)}
+                            >
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className={
+                                status === "ativo"
+                                  ? "text-destructive focus:text-destructive"
+                                  : "focus:text-primary"
+                              }
+                              onClick={() => {
+                                setTeacherToDelete(teacher);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              {status === "ativo" && (
+                                <Trash2 className="h-4 w-4 mr-2" />
+                              )}
+                              {status === "ativo" ? "Desativar" : "Reativar professor"}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -197,19 +327,142 @@ export default function TeachersPage() {
           isLoading={createTeacher.isPending || updateTeacher.isPending}
         />
 
-        {/* Modal de exclusão */}
+        {/* Modal de senha gerada para professor */}
+        <Dialog
+          open={isPasswordDialogOpen}
+          onOpenChange={(open) => {
+            setIsPasswordDialogOpen(open);
+            if (!open && generatedPassword) {
+              toast.success("Conta criada para o professor.");
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Senha criada para o professor</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Guarde esta senha com segurança. Ela não será exibida novamente.
+              </p>
+
+              <div className="space-y-2">
+                <Label>Senha temporária</Label>
+                <div className="relative">
+                  <Input
+                    type={showGeneratedPassword ? "text" : "password"}
+                    value={generatedPassword}
+                    readOnly
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGeneratedPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showGeneratedPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-between gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={async () => {
+                    if (!generatedPassword) return;
+                    try {
+                      await navigator.clipboard.writeText(generatedPassword);
+                      setPasswordCopied(true);
+                      setTimeout(() => setPasswordCopied(false), 2000);
+                    } catch (err) {
+                      console.error("Erro ao copiar senha: ", err);
+                    }
+                  }}
+                >
+                  {passwordCopied ? (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copiar senha
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  className="flex-1"
+                  onClick={() => setIsPasswordDialogOpen(false)}
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de confirmação de status (desativar/reativar) */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent aria-describedby={undefined}>
             <DialogHeader>
-              <DialogTitle>Excluir Professor</DialogTitle>
+              <DialogTitle>
+                {(((teacherToDelete as any)?.status as string | null) ??
+                "ativo") === "ativo"
+                  ? "Confirmar desativação"
+                  : "Confirmar reativação"}
+              </DialogTitle>
             </DialogHeader>
-            <p>Tem certeza que deseja excluir o professor <strong>{teacherToDelete?.name}</strong>? Esta ação não pode ser desfeita.</p>
-            <DialogFooter>
-              <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)} disabled={deleteTeacher.isPending}>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {(((teacherToDelete as any)?.status as string | null) ??
+              "ativo") === "ativo" ? (
+                <>
+                  Tem certeza que deseja desativar o professor{" "}
+                  <strong>{teacherToDelete?.name}</strong>? Ele será removido da
+                  lista de ativos, mas poderá ser visualizado em "Inativos".
+                </>
+              ) : (
+                <>
+                  Tem certeza que deseja reativar o professor{" "}
+                  <strong>{teacherToDelete?.name}</strong>? Ele voltará para a
+                  lista de ativos e terá o acesso reativado.
+                </>
+              )}
+            </p>
+            <DialogFooter className="mt-4">
+              <Button
+                variant="ghost"
+                onClick={() => setDeleteDialogOpen(false)}
+                disabled={deleteTeacher.isPending || updateTeacher.isPending}
+              >
                 Cancelar
               </Button>
-              <Button variant="destructive" onClick={handleDeleteConfirm} disabled={deleteTeacher.isPending}>
-                Excluir
+              <Button
+                variant="destructive"
+                onClick={handleStatusChangeConfirm}
+                disabled={deleteTeacher.isPending || updateTeacher.isPending}
+              >
+                {deleteTeacher.isPending || updateTeacher.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {(((teacherToDelete as any)?.status as string | null) ??
+                    "ativo") === "ativo"
+                      ? "Desativando..."
+                      : "Reativando..."}
+                  </>
+                ) : (((teacherToDelete as any)?.status as string | null) ??
+                    "ativo") === "ativo" ? (
+                  "Desativar"
+                ) : (
+                  "Reativar"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

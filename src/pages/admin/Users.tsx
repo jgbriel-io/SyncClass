@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Plus, Loader2, Shield, User, Link2, Unlink, MoreHorizontal } from "lucide-react";
+import { Search, Plus, Loader2, Shield, User, Link2, Unlink, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
@@ -35,14 +36,15 @@ import {
   useUpdateUserRole,
   useUpdateUserProfile,
   useDeleteUser,
+  useHardDeleteUser,
   useLinkUserToStudent,
   useUnlinkUserFromStudent,
   useLinkUserToTeacher,
   useUnlinkUserFromTeacher,
   UserWithProfile,
 } from "@/hooks/useUsers";
-import { useStudents } from "@/hooks/useStudents";
-import { useTeachers } from "@/hooks/useTeachers";
+import { useStudents, useUpdateStudent } from "@/hooks/useStudents";
+import { useTeachers, useUpdateTeacher, useDeleteTeacher } from "@/hooks/useTeachers";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
   DropdownMenu,
@@ -50,16 +52,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("active");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null);
   const [linkType, setLinkType] = useState<"student" | "teacher" | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
+  const [generatedPassword, setGeneratedPassword] = useState<string>("");
+  const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
+  const [passwordCopied, setPasswordCopied] = useState(false);
 
   const { data: users = [], isLoading, error } = useUsers();
   const { data: students = [] } = useStudents();
@@ -68,19 +76,31 @@ export default function UsersPage() {
   const updateRole = useUpdateUserRole();
   const updateProfile = useUpdateUserProfile();
   const deleteUser = useDeleteUser();
+  const hardDeleteUser = useHardDeleteUser();
+  const updateStudent = useUpdateStudent();
+  const updateTeacher = useUpdateTeacher();
   const linkToStudent = useLinkUserToStudent();
   const unlinkFromStudent = useUnlinkUserFromStudent();
-    const linkToTeacher = useLinkUserToTeacher();
-    const unlinkFromTeacher = useUnlinkUserFromTeacher();
+  const linkToTeacher = useLinkUserToTeacher();
+  const unlinkFromTeacher = useUnlinkUserFromTeacher();
+  const deleteTeacher = useDeleteTeacher();
 
   const filteredUsers = users.filter((user) => {
     const name = user.profile?.full_name || "";
     const email = user.email || "";
+    const isActive = user.profile?.active ?? true;
     const searchLower = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       name.toLowerCase().includes(searchLower) ||
       email.toLowerCase().includes(searchLower)
-    );
+    ;
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && isActive) ||
+      (statusFilter === "inactive" && !isActive);
+
+    return matchesSearch && matchesStatus;
   });
 
   const handleCreateOrUpdate = (data: {
@@ -125,13 +145,19 @@ export default function UsersPage() {
       createUser.mutate(
         {
           email: data.email,
-          password: data.password || "",
+          password: "",
           fullName: data.fullName,
           role: data.role,
         },
         {
-          onSuccess: () => {
+          onSuccess: (result: any) => {
             setIsFormOpen(false);
+            if (result?.password) {
+              setGeneratedPassword(result.password);
+              setShowGeneratedPassword(false);
+              setPasswordCopied(false);
+              setIsPasswordDialogOpen(true);
+            }
           },
         }
       );
@@ -183,14 +209,64 @@ export default function UsersPage() {
   };
 
   const handleDeleteConfirm = () => {
-    if (selectedUser) {
-      deleteUser.mutate(selectedUser.id, {
+    if (!selectedUser) return;
+
+    const linkedStudent = selectedUser.profile?.student_id
+      ? students.find((s) => s.id === selectedUser.profile?.student_id)
+      : null;
+    const linkedTeacher = (selectedUser.profile as any)?.teacher_id
+      ? teachers.find((t) => t.id === (selectedUser.profile as any).teacher_id)
+      : null;
+
+    const isStudentActive = linkedStudent?.status === "ativo";
+    const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
+    const canHardDelete =
+      (linkedStudent && linkedStudent.status === "inativo") ||
+      (linkedTeacher && linkedTeacher.status === "inativo");
+
+    if (linkedStudent && isStudentActive) {
+      // Soft deactivate via student status so it reflects in both tabs
+      updateStudent.mutate(
+        { id: linkedStudent.id, status: "inativo" as any },
+        {
+          onSuccess: () => {
+            setDeleteDialogOpen(false);
+            setSelectedUser(null);
+          },
+        }
+      );
+      return;
+    }
+
+    if (linkedTeacher && isTeacherActive) {
+      // Soft deactivate via teacher status so it reflects in both tabs
+      deleteTeacher.mutate(linkedTeacher.id, {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setSelectedUser(null);
         },
       });
+      return;
     }
+
+    if (canHardDelete) {
+      // Hard delete auth user (admin-only Edge Function)
+      hardDeleteUser.mutate(selectedUser.id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setSelectedUser(null);
+        },
+      });
+      return;
+    }
+
+    // Fallback: just deactivate the profile (no linked student/teacher)
+    deleteUser.mutate(selectedUser.id, {
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setSelectedUser(null);
+      },
+    });
   };
 
   const openLinkDialog = (user: UserWithProfile, type: "student" | "teacher") => {
@@ -275,6 +351,16 @@ export default function UsersPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as any)}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Ativos</SelectItem>
+              <SelectItem value="inactive">Inativos</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Loading state */}
@@ -411,7 +497,7 @@ export default function UsersPage() {
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuContent align="end" className="w-60">
                               <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedUser(user);
@@ -448,16 +534,66 @@ export default function UsersPage() {
                                   Desvincular professor
                                 </DropdownMenuItem>
                               )}
-                              <DropdownMenuItem
-                                className="text-destructive focus:bg-destructive/10"
-                                disabled={!isActive}
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setDeleteDialogOpen(true);
-                                }}
-                              >
-                                {isActive ? "Desativar" : "Já desativado"}
-                              </DropdownMenuItem>
+                              {linkedStudent && linkedStudent.status === "inativo" && (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    updateStudent.mutate({
+                                      id: linkedStudent.id,
+                                      status: "ativo" as any,
+                                    });
+                                  }}
+                                >
+                                  Reativar aluno
+                                </DropdownMenuItem>
+                              )}
+                              {linkedTeacher && linkedTeacher.status === "inativo" && (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    updateTeacher.mutate({
+                                      id: linkedTeacher.id,
+                                      status: "ativo" as any,
+                                    });
+                                  }}
+                                >
+                                  Reativar professor
+                                </DropdownMenuItem>
+                              )}
+                              {(() => {
+                                const isStudentActive = linkedStudent?.status === "ativo";
+                                const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
+                                const userIsActive = isActive;
+                                const canHardDelete =
+                                  (linkedStudent && linkedStudent.status === "inativo") ||
+                                  (linkedTeacher && linkedTeacher.status === "inativo");
+
+                                const shouldShowDeactivate =
+                                  userIsActive && (isStudentActive || isTeacherActive || (!linkedStudent && !linkedTeacher));
+
+                                const label = shouldShowDeactivate
+                                  ? "Desativar"
+                                  : canHardDelete
+                                  ? "Excluir definitivamente"
+                                  : "Inativo";
+
+                                const disabled = !shouldShowDeactivate && !canHardDelete;
+
+                                return (
+                                  <DropdownMenuItem
+                                    className="text-destructive hover:bg-destructive/10 data-[highlighted]:!bg-destructive/10 data-[highlighted]:!text-destructive"
+                                    disabled={disabled}
+                                    onClick={() => {
+                                      if (disabled) return;
+                                      setSelectedUser(user);
+                                      setDeleteDialogOpen(true);
+                                    }}
+                                  >
+                                    {(!disabled && (shouldShowDeactivate || canHardDelete)) && (
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                    )}
+                                    {label}
+                                  </DropdownMenuItem>
+                                );
+                              })()}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </td>
@@ -488,6 +624,88 @@ export default function UsersPage() {
           onSubmit={handleCreateOrUpdate}
           isLoading={createUser.isPending || updateRole.isPending || updateProfile.isPending}
         />
+
+        {/* Generated Password Dialog */}
+        <Dialog
+          open={isPasswordDialogOpen}
+          onOpenChange={(open) => {
+            setIsPasswordDialogOpen(open);
+            if (!open && generatedPassword) {
+              toast.success("Usuário criado com sucesso!");
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Senha criada para o usuário</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Guarde esta senha com segurança. Ela não será exibida novamente.
+              </p>
+
+              <div className="space-y-2">
+                <Label>Senha temporária</Label>
+                <div className="relative">
+                  <Input
+                    type={showGeneratedPassword ? "text" : "password"}
+                    value={generatedPassword}
+                    readOnly
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGeneratedPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showGeneratedPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-between gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={async () => {
+                    if (!generatedPassword) return;
+                    try {
+                      await navigator.clipboard.writeText(generatedPassword);
+                      setPasswordCopied(true);
+                      setTimeout(() => setPasswordCopied(false), 2000);
+                    } catch (err) {
+                      console.error("Erro ao copiar senha: ", err);
+                    }
+                  }}
+                >
+                  {passwordCopied ? (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copiar senha
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  className="flex-1"
+                  onClick={() => setIsPasswordDialogOpen(false)}
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Link Dialog */}
         <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
@@ -586,33 +804,111 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Delete Confirmation Dialog */}
+        {/* Deactivate/Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogTitle>
+                {(() => {
+                  const linkedStudent = selectedUser?.profile?.student_id
+                    ? students.find((s) => s.id === selectedUser.profile?.student_id)
+                    : null;
+                  const linkedTeacher = (selectedUser?.profile as any)?.teacher_id
+                    ? teachers.find(
+                        (t) => t.id === (selectedUser?.profile as any).teacher_id
+                      )
+                    : null;
+                  const isStudentActive = linkedStudent?.status === "ativo";
+                  const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
+
+                  if (linkedStudent && isStudentActive) {
+                    return "Confirmar desativação";
+                  }
+
+                  if (linkedTeacher && isTeacherActive) {
+                    return "Confirmar desativação";
+                  }
+
+                  return "Confirmar desativação do usuário";
+                })()}
+              </AlertDialogTitle>
               <AlertDialogDescription>
-                Tem certeza que deseja excluir o usuário{" "}
-                <strong>{selectedUser?.profile?.full_name || selectedUser?.email}</strong>?
-                Esta ação não pode ser desfeita.
+                {(() => {
+                  const linkedStudent = selectedUser?.profile?.student_id
+                    ? students.find((s) => s.id === selectedUser.profile?.student_id)
+                    : null;
+                  const linkedTeacher = (selectedUser?.profile as any)?.teacher_id
+                    ? teachers.find(
+                        (t) => t.id === (selectedUser?.profile as any).teacher_id
+                      )
+                    : null;
+                  const isStudentActive = linkedStudent?.status === "ativo";
+                  const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
+
+                  const displayName =
+                    selectedUser?.profile?.full_name || selectedUser?.email || "este usuário";
+
+                  if (linkedStudent && isStudentActive) {
+                    return (
+                      <>
+                        Tem certeza que deseja desativar o usuário <strong>{displayName}</strong>?
+                        Ele será removido da lista de ativos e aparecerá como aluno inativo.
+                      </>
+                    );
+                  }
+
+                  if (linkedTeacher && isTeacherActive) {
+                    return (
+                      <>
+                        Tem certeza que deseja desativar o usuário <strong>{displayName}</strong>?
+                        Ele será removido da lista de ativos e aparecerá como professor inativo.
+                      </>
+                    );
+                  }
+
+                  return (
+                    <>
+                      Tem certeza que deseja desativar o usuário <strong>{displayName}</strong>?
+                      Esta ação não remove a conta do Supabase Auth, apenas desativa o acesso no painel.
+                    </>
+                  );
+                })()}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={deleteUser.isPending}>
+              <AlertDialogCancel
+                disabled={
+                  deleteUser.isPending ||
+                  updateStudent.isPending ||
+                  hardDeleteUser.isPending ||
+                  updateTeacher.isPending ||
+                  deleteTeacher.isPending
+                }
+              >
                 Cancelar
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteConfirm}
-                disabled={deleteUser.isPending}
+                disabled={
+                  deleteUser.isPending ||
+                  updateStudent.isPending ||
+                  hardDeleteUser.isPending ||
+                  updateTeacher.isPending ||
+                  deleteTeacher.isPending
+                }
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {deleteUser.isPending ? (
+                {deleteUser.isPending ||
+                updateStudent.isPending ||
+                hardDeleteUser.isPending ||
+                updateTeacher.isPending ||
+                deleteTeacher.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Excluindo...
+                    Desativando...
                   </>
                 ) : (
-                  "Excluir"
+                  "Desativar"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

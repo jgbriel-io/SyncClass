@@ -3,6 +3,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -26,7 +27,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, MoreHorizontal, Phone, Mail, Pencil, Trash2, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Search, Plus, MoreHorizontal, Phone, Mail, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
 import {
   useStudents,
@@ -58,11 +65,15 @@ function formatCurrency(value: number | null | undefined): string {
 
 export default function StudentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("ativo");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState("");
+  const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
+  const [passwordCopied, setPasswordCopied] = useState(false);
 
   const { data: students = [], isLoading, error } = useStudents();
   const createStudent = useCreateStudent();
@@ -120,11 +131,23 @@ export default function StudentsPage() {
             setIsFormOpen(false);
 
             if (createdStudent && createdStudent.email) {
-              createStudentUser.mutate({
-                studentId: createdStudent.id,
-                email: createdStudent.email,
-                fullName: createdStudent.name,
-              });
+              createStudentUser.mutate(
+                {
+                  studentId: createdStudent.id,
+                  email: createdStudent.email,
+                  fullName: createdStudent.name,
+                },
+                {
+                  onSuccess: (result) => {
+                    if (result?.password) {
+                      setGeneratedPassword(result.password);
+                      setShowGeneratedPassword(false);
+                      setPasswordCopied(false);
+                      setIsPasswordDialogOpen(true);
+                    }
+                  },
+                }
+              );
             }
           },
         });
@@ -140,13 +163,29 @@ export default function StudentsPage() {
   };
 
   const handleDeleteConfirm = () => {
-    if (studentToDelete) {
+    if (!studentToDelete) return;
+
+    const isActive = studentToDelete.status === "ativo";
+
+    if (isActive) {
+      // Soft deactivate (status -> inativo)
       deleteStudent.mutate(studentToDelete.id, {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setStudentToDelete(null);
         },
       });
+    } else {
+      // Reactivate (status -> ativo)
+      updateStudent.mutate(
+        { id: studentToDelete.id, status: "ativo" as any },
+        {
+          onSuccess: () => {
+            setDeleteDialogOpen(false);
+            setStudentToDelete(null);
+          },
+        }
+      );
     }
   };
 
@@ -338,11 +377,17 @@ export default function StudentsPage() {
                               Editar
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
+                              className={
+                                student.status === "ativo"
+                                  ? "text-destructive focus:text-destructive"
+                                  : "focus:text-primary"
+                              }
                               onClick={() => openDeleteDialog(student)}
                             >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Excluir
+                              {student.status === "ativo" && (
+                                <Trash2 className="h-4 w-4 mr-2" />
+                              )}
+                              {student.status === "ativo" ? "Desativar" : "Reativar aluno"}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -362,6 +407,88 @@ export default function StudentsPage() {
           </div>
         )}
 
+        {/* Generated Password Dialog for student account */}
+        <Dialog
+          open={isPasswordDialogOpen}
+          onOpenChange={(open) => {
+            setIsPasswordDialogOpen(open);
+            if (!open && generatedPassword) {
+              toast.success("Conta criada para o aluno.");
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Senha criada para o aluno</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Guarde esta senha com segurança. Ela não será exibida novamente.
+              </p>
+
+              <div className="space-y-2">
+                <Label>Senha temporária</Label>
+                <div className="relative">
+                  <Input
+                    type={showGeneratedPassword ? "text" : "password"}
+                    value={generatedPassword}
+                    readOnly
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGeneratedPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showGeneratedPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-between gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={async () => {
+                    if (!generatedPassword) return;
+                    try {
+                      await navigator.clipboard.writeText(generatedPassword);
+                      setPasswordCopied(true);
+                      setTimeout(() => setPasswordCopied(false), 2000);
+                    } catch (err) {
+                      console.error("Erro ao copiar senha: ", err);
+                    }
+                  }}
+                >
+                  {passwordCopied ? (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copiar senha
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  className="flex-1"
+                  onClick={() => setIsPasswordDialogOpen(false)}
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Form Dialog */}
         <StudentFormDialog
           open={isFormOpen}
@@ -378,29 +505,47 @@ export default function StudentsPage() {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogTitle>
+                {studentToDelete?.status === "ativo"
+                  ? "Confirmar desativação"
+                  : "Confirmar reativação"}
+              </AlertDialogTitle>
               <AlertDialogDescription>
-                Tem certeza que deseja excluir o aluno{" "}
-                <strong>{studentToDelete?.name}</strong>? Esta ação não pode ser
-                desfeita.
+                {studentToDelete?.status === "ativo" ? (
+                  <>
+                    Tem certeza que deseja desativar o aluno{" "}
+                    <strong>{studentToDelete?.name}</strong>? Ele será removido da
+                    lista de ativos, mas poderá ser visualizado em "Inativos".
+                  </>
+                ) : (
+                  <>
+                    Tem certeza que deseja reativar o aluno{" "}
+                    <strong>{studentToDelete?.name}</strong>? Ele voltará para a
+                    lista de ativos e terá o acesso reativado.
+                  </>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={deleteStudent.isPending}>
+              <AlertDialogCancel disabled={deleteStudent.isPending || updateStudent.isPending}>
                 Cancelar
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteConfirm}
-                disabled={deleteStudent.isPending}
+                disabled={deleteStudent.isPending || updateStudent.isPending}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {deleteStudent.isPending ? (
+                {deleteStudent.isPending || updateStudent.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Excluindo...
+                    {studentToDelete?.status === "ativo"
+                      ? "Desativando..."
+                      : "Reativando..."}
                   </>
+                ) : studentToDelete?.status === "ativo" ? (
+                  "Desativar"
                 ) : (
-                  "Excluir"
+                  "Reativar"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

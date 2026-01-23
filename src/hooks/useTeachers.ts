@@ -72,15 +72,17 @@ export function useDeleteTeacher() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      // Soft delete: mark teacher as inativo instead of removing row
       const { error } = await supabase
         .from("teachers")
-        .delete()
+        .update({ status: "inativo" as any })
         .eq("id", id);
+
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
-      toast.success("Professor excluído com sucesso!");
+      toast.success("Professor desativado com sucesso!");
     },
     onError: (error) => {
       console.error("Error deleting teacher:", error);

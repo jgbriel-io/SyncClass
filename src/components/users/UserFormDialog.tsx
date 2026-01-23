@@ -50,6 +50,7 @@ export function UserFormDialog({
   onSubmit,
   isLoading,
 }: UserFormDialogProps) {
+  const isEdit = !!user;
   const [selectedRole, setSelectedRole] = useState<"admin" | "student" | "teacher">("student");
 
   const {
@@ -123,21 +124,23 @@ export function UserFormDialog({
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">
-              Senha {user ? "(deixe em branco para manter)" : "*"}
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder={user ? "Deixe em branco para manter" : "Mínimo 6 caracteres"}
-              {...register("password")}
-              disabled={isLoading}
-            />
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
-            )}
-          </div>
+          {isEdit && (
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                Senha (deixe em branco para manter)
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Deixe em branco para manter"
+                {...register("password")}
+                disabled={isLoading}
+              />
+              {errors.password && (
+                <p className="text-sm text-destructive">{errors.password.message}</p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="fullName">Nome Completo *</Label>

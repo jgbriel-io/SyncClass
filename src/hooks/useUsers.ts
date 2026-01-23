@@ -111,10 +111,24 @@ export function useCreateUser() {
         );
       }
 
+      // Generate password if not provided or too short
+      let finalPassword = password;
+      if (!finalPassword || finalPassword.length < 6) {
+        const chars =
+          "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+        const length = 10;
+        finalPassword = "";
+        for (let i = 0; i < length; i++) {
+          finalPassword += chars.charAt(
+            Math.floor(Math.random() * chars.length)
+          );
+        }
+      }
+
       // Create user via signUp (will trigger profile creation)
       const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
         email: normalizedEmail,
-        password,
+        password: finalPassword,
         options: {
           data: {
             full_name: fullName,
@@ -156,12 +170,68 @@ export function useCreateUser() {
         // Don't throw - role might be set by trigger
       }
 
-      return authData.user;
+      // If role is student/teacher, create minimal domain record and link it
+      let createdStudent: { id: string } | null = null;
+      let createdTeacher: { id: string } | null = null;
+
+      if (role === "student") {
+        const { data: student, error: studentError } = await supabase
+          .from("students")
+          .insert({
+            name: fullName || normalizedEmail,
+            email: normalizedEmail,
+          })
+          .select("id")
+          .single();
+
+        if (studentError) {
+          console.error("Error creating student for new user:", studentError);
+        } else if (student?.id) {
+          createdStudent = { id: student.id };
+          const { error: linkError } = await supabase
+            .from("profiles")
+            .update({ student_id: student.id })
+            .eq("user_id", userId);
+
+          if (linkError) {
+            console.error("Error linking profile to created student:", linkError);
+          }
+        }
+      } else if (role === "teacher") {
+        const { data: teacher, error: teacherError } = await supabase
+          .from("teachers")
+          .insert({
+            name: fullName || normalizedEmail,
+            email: normalizedEmail,
+          })
+          .select("id")
+          .single();
+
+        if (teacherError) {
+          console.error("Error creating teacher for new user:", teacherError);
+        } else if (teacher?.id) {
+          createdTeacher = { id: teacher.id };
+          const { error: linkError } = await supabase
+            .from("profiles")
+            .update({ teacher_id: teacher.id })
+            .eq("user_id", userId);
+
+          if (linkError) {
+            console.error("Error linking profile to created teacher:", linkError);
+          }
+        }
+      }
+
+      return {
+        user: authData.user,
+        password: finalPassword,
+        createdStudent,
+        createdTeacher,
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success("Usuário criado com sucesso! O usuário precisará confirmar o email.");
     },
     onError: (error: any) => {
       console.error("Error creating user:", error);
@@ -268,6 +338,33 @@ export function useDeleteUser() {
     onError: (error: any) => {
       console.error("Error deleting user:", error);
       toast.error("Erro ao excluir usuário. Tente novamente.");
+    },
+  });
+}
+
+// Hard delete user via Edge Function (admin-only)
+export function useHardDeleteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { userId },
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      toast.success("Usuário excluído definitivamente.");
+    },
+    onError: (error: any) => {
+      console.error("Error hard-deleting user:", error);
+      toast.error(
+        error?.message ||
+          "Erro ao excluir definitivamente o usuário. Tente novamente."
+      );
     },
   });
 }
@@ -447,12 +544,9 @@ export function useCreateAuthUserForStudent() {
 
       return { user: authData.user, password };
     },
-    onSuccess: (result) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success(
-        `Conta criada para o aluno. Senha inicial: ${result.password}`
-      );
     },
     onError: (error: any) => {
       console.error("Error creating auth user for student:", error);
@@ -531,12 +625,9 @@ export function useCreateAuthUserForTeacher() {
 
       return { user: authData.user, password };
     },
-    onSuccess: (result) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success(
-        `Conta criada para o professor. Senha inicial: ${result.password}`
-      );
     },
     onError: (error: any) => {
       console.error("Error creating auth user for teacher:", error);
