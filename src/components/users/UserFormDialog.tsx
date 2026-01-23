@@ -11,13 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { UserWithProfile } from "@/hooks/useUsers";
 
@@ -51,7 +45,9 @@ export function UserFormDialog({
   isLoading,
 }: UserFormDialogProps) {
   const isEdit = !!user;
-  const [selectedRole, setSelectedRole] = useState<"admin" | "student" | "teacher">("student");
+  const [selectedRole, setSelectedRole] = useState<"admin" | "student" | "teacher">(
+    (user?.role?.role as any) || "admin",
+  );
 
   const {
     register,
@@ -65,7 +61,7 @@ export function UserFormDialog({
       email: user?.email || "",
       password: "",
       fullName: user?.profile?.full_name || "",
-      role: user?.role?.role || "student",
+      role: user?.role?.role || "admin",
     },
   });
 
@@ -75,17 +71,17 @@ export function UserFormDialog({
         email: user.email,
         password: "",
         fullName: user.profile?.full_name || "",
-        role: user.role?.role || "student",
+        role: user.role?.role || "admin",
       });
-      setSelectedRole(user.role?.role || "student");
+      setSelectedRole((user.role?.role as any) || "admin");
     } else {
       reset({
         email: "",
         password: "",
         fullName: "",
-        role: "student",
+        role: "admin",
       });
-      setSelectedRole("student");
+      setSelectedRole("admin");
     }
   }, [user, reset]);
 
@@ -109,7 +105,22 @@ export function UserFormDialog({
         <DialogHeader>
           <DialogTitle>{user ? "Editar Usuário" : "Novo Usuário"}</DialogTitle>
         </DialogHeader>
+        <div className="mt-2 mb-4">
+          <Label className="mb-2 block text-sm font-medium">Tipo de conta</Label>
+          <Tabs
+            value={selectedRole}
+            onValueChange={handleRoleChange}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="admin">Admin</TabsTrigger>
+              <TabsTrigger value="student">Aluno</TabsTrigger>
+              <TabsTrigger value="teacher">Professor</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          <input type="hidden" {...register("role")} />
           <div className="space-y-2">
             <Label htmlFor="email">Email *</Label>
             <Input
@@ -143,10 +154,22 @@ export function UserFormDialog({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="fullName">Nome Completo *</Label>
+            <Label htmlFor="fullName">
+              {selectedRole === "admin"
+                ? "Nome completo do administrador *"
+                : selectedRole === "student"
+                ? "Nome completo do aluno *"
+                : "Nome completo do professor *"}
+            </Label>
             <Input
               id="fullName"
-              placeholder="Nome do usuário"
+              placeholder={
+                selectedRole === "admin"
+                  ? "Nome do administrador"
+                  : selectedRole === "student"
+                  ? "Nome do aluno"
+                  : "Nome do professor"
+              }
               {...register("fullName")}
               disabled={isLoading}
             />
@@ -156,22 +179,19 @@ export function UserFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Privilégio *</Label>
-            <Select
-              value={selectedRole}
-              onValueChange={handleRoleChange}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o privilégio" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Administrador</SelectItem>
-                <SelectItem value="student">Aluno</SelectItem>
-                <SelectItem value="teacher">Professor</SelectItem>
-              </SelectContent>
-            </Select>
-            <input type="hidden" {...register("role")} />
+            {selectedRole === "student" && !isEdit && (
+              <p className="text-xs text-muted-foreground">
+                Esta opção cria a conta de acesso do aluno. Os dados detalhados
+                do cadastro (CPF, cidade, valor/hora, etc.) continuam sendo
+                gerenciados na aba Alunos.
+              </p>
+            )}
+            {selectedRole === "teacher" && !isEdit && (
+              <p className="text-xs text-muted-foreground">
+                Esta opção cria a conta de acesso do professor. Dados
+                complementares continuam sendo gerenciados na aba Professores.
+              </p>
+            )}
             {errors.role && (
               <p className="text-sm text-destructive">{errors.role.message}</p>
             )}

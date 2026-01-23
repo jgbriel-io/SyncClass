@@ -141,7 +141,7 @@ export default function UsersPage() {
         }
       );
     } else {
-      // Create new user
+      // Create new user from this screen (role selected in the form)
       createUser.mutate(
         {
           email: data.email,
