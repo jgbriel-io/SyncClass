@@ -191,9 +191,9 @@ const TeacherFinancialPage = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Cobranças</h1>
-            <p className="text-muted-foreground mt-1">
-              Crie cobranças únicas ou vinculadas às aulas dos seus alunos.
+            <h1 className="text-2xl font-bold tracking-tight">Financeiro</h1>
+            <p className="text-muted-foreground">
+              Gerencie cobranças e pagamentos
             </p>
           </div>
           <Button onClick={() => {

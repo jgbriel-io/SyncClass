@@ -1,112 +1,233 @@
-import { NavLink } from "react-router-dom";
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import {
-  Home,
+  LayoutDashboard,
   Users,
-  BookOpen,
   CreditCard,
-  BarChart2,
+  BookOpen,
   Menu,
+  X,
+  LogOut,
+  ClipboardList,
+  Loader2,
+  ChevronLeft,
+  Search,
+  Bell,
+  Settings,
 } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
-const TeacherLayout = ({ children }: { children: React.ReactNode }) => {
-  const { user, logout } = useAuth();
+interface TeacherLayoutProps {
+  children: React.ReactNode;
+}
 
-  const navItems = [
-    { to: "/teacher", icon: <Home className="h-4 w-4" />, label: "Início" },
-    { to: "/teacher/students", icon: <Users className="h-4 w-4" />, label: "Alunos" },
-    { to: "/teacher/classes", icon: <BookOpen className="h-4 w-4" />, label: "Aulas" },
-    { to: "/teacher/financial", icon: <CreditCard className="h-4 w-4" />, label: "Cobranças" },
-    { to: "/teacher/overview", icon: <BarChart2 className="h-4 w-4" />, label: "Visão Geral" },
-  ];
+const navigation = [
+  { name: "Dashboard", href: "/teacher", icon: LayoutDashboard },
+  { name: "Visão Geral", href: "/teacher/overview", icon: ClipboardList },
+  { name: "Alunos", href: "/teacher/students", icon: Users },
+  { name: "Pedagógico", href: "/teacher/pedagogical", icon: BookOpen },
+  { name: "Financeiro", href: "/teacher/financial", icon: CreditCard },
+];
+
+export default function TeacherLayout({ children }: TeacherLayoutProps) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const location = useLocation();
+  const { signOut, user } = useAuth();
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await signOut();
+  };
+
+  const userInitial = user?.email?.charAt(0).toUpperCase() || "P";
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Professor";
 
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-      <div className="hidden border-r bg-muted/40 md:block">
-        <div className="flex h-full max-h-screen flex-col gap-2">
-          <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <NavLink to="/" className="flex items-center gap-2 font-semibold">
-              <span className="">Edu-Core</span>
-            </NavLink>
-          </div>
-          <div className="flex-1">
-            <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.label}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${
-                      isActive && "text-primary bg-muted"
-                    }`
-                  }
-                >
-                  {item.icon}
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
-          </div>
+    <div className="min-h-screen bg-background">
+      {/* Mobile sidebar overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
+          sidebarCollapsed ? "w-[72px]" : "w-64",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
+        {/* Logo */}
+        <div className={cn(
+          "flex h-16 items-center border-b border-sidebar-border",
+          sidebarCollapsed ? "justify-center px-2" : "justify-between px-4"
+        )}>
+          <Link to="/teacher" className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 flex items-center justify-center shadow-lg">
+              <span className="text-sidebar-primary-foreground font-bold text-base">E</span>
+            </div>
+            {!sidebarCollapsed && (
+              <span className="text-lg font-semibold text-sidebar-foreground tracking-tight">
+                EduCore
+              </span>
+            )}
+          </Link>
+          
+          {/* Mobile close */}
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-      </div>
-      <div className="flex flex-col">
-        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0 md:hidden"
-              >
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col">
-              <nav className="grid gap-2 text-lg font-medium">
-                <NavLink
-                  to="/"
-                  className="flex items-center gap-2 text-lg font-semibold mb-4"
+
+        {/* Navigation */}
+        <nav className="flex-1 py-4 overflow-y-auto">
+          <div className={cn("space-y-1", sidebarCollapsed ? "px-2" : "px-3")}>
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  title={sidebarCollapsed ? item.name : undefined}
+                  className={cn(
+                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                    sidebarCollapsed && "justify-center px-2",
+                    isActive
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  )}
                 >
-                  Edu-Core
-                </NavLink>
-                {navItems.map((item) => (
-                  <NavLink
-                    key={item.label}
-                    to={item.to}
-                    className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                  >
-                    {item.icon}
-                    {item.label}
-                  </NavLink>
-                ))}
-              </nav>
-            </SheetContent>
-          </Sheet>
-          <div className="w-full flex-1">
-            {/* Pode adicionar uma barra de pesquisa aqui se desejar */}
+                  <item.icon className={cn("h-5 w-5 shrink-0", isActive && "drop-shadow-sm")} />
+                  {!sidebarCollapsed && <span>{item.name}</span>}
+                </Link>
+              );
+            })}
           </div>
-          <Button variant="secondary" size="icon" className="rounded-full" onClick={logout}>
-            <Avatar>
-              <AvatarImage src={user?.user_metadata.avatar_url} />
-              <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="sr-only">Toggle user menu</span>
-          </Button>
+        </nav>
+
+        {/* Bottom section */}
+        <div className="border-t border-sidebar-border p-3 space-y-2">
+          {/* Collapse toggle - desktop only */}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={cn(
+              "hidden lg:flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors",
+              sidebarCollapsed && "justify-center px-2"
+            )}
+          >
+            <ChevronLeft className={cn("h-5 w-5 transition-transform duration-300", sidebarCollapsed && "rotate-180")} />
+            {!sidebarCollapsed && <span>Recolher</span>}
+          </button>
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50",
+              sidebarCollapsed && "justify-center px-2"
+            )}
+          >
+            {isLoggingOut ? (
+              <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
+            ) : (
+              <LogOut className="h-5 w-5 shrink-0" />
+            )}
+            {!sidebarCollapsed && <span>Sair</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <div className={cn(
+        "transition-all duration-300 ease-in-out",
+        sidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-64"
+      )}>
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="lg:hidden text-muted-foreground hover:text-foreground"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+
+          {/* Search bar */}
+          <div className="hidden md:flex flex-1 max-w-md">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar..."
+                className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
+              />
+            </div>
+          </div>
+
+          {/* Right section */}
+          <div className="flex items-center gap-2">
+            {/* Notifications */}
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+            </Button>
+
+            {/* Settings */}
+            <Button variant="ghost" size="icon">
+              <Settings className="h-5 w-5" />
+            </Button>
+
+            {/* User menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 gap-2 px-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground font-semibold text-sm">
+                    {userInitial}
+                  </div>
+                  <span className="hidden md:inline-block text-sm font-medium">{userName}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Perfil</DropdownMenuItem>
+                <DropdownMenuItem>Configurações</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+                  {isLoggingOut ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="mr-2 h-4 w-4" />
+                  )}
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-          {children}
-        </main>
+
+        {/* Page content */}
+        <main className="p-4 lg:p-6 animate-fade-in">{children}</main>
       </div>
     </div>
   );
-};
-
-export default TeacherLayout;
+}

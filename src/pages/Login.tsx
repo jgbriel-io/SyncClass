@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,18 +41,18 @@ export default function Login() {
   };
 
   // Effect to handle redirect after login
-  const handleRedirectAfterAuth = () => {
-    if (role === "admin") {
-      navigate("/admin");
-    } else if (role === "student") {
-      navigate("/student");
+  useEffect(() => {
+    if (role && !isLoading) {
+      console.log("Redirecting user with role:", role);
+      if (role === "admin") {
+        navigate("/admin");
+      } else if (role === "student") {
+        navigate("/student");
+      } else if (role === "teacher") {
+        navigate("/teacher");
+      }
     }
-  };
-
-  // Watch for role changes to redirect
-  if (role) {
-    handleRedirectAfterAuth();
-  }
+  }, [role, isLoading, navigate]);
 
   return (
     <div className="min-h-screen flex">

@@ -1,47 +1,71 @@
-import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Navigate } from "react-router-dom";
 import TeacherLayout from "@/components/layout/TeacherLayout";
-import { useStudentsByTeacher, useCreateStudentForTeacher } from "@/hooks/useStudentsByTeacher";
-import { DataTable } from "@/components/ui/data-table";
-import { columns } from "@/pages/teacher/StudentsColumns";
-import { Button } from "@/components/ui/button";
-import { StudentFormDialog } from "@/components/students/StudentFormDialog";
-import { StudentInsert } from "@/hooks/useStudents";
+import { StudentsListView } from "@/components/students/StudentsListView";
+import { Loader2 } from "lucide-react";
+import { useTeachers } from "@/hooks/useTeachers";
 
 const TeacherStudentsPage = () => {
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const {
-    data: students,
-    isLoading,
-    isError,
-  } = useStudentsByTeacher();
-  const createStudent = useCreateStudentForTeacher();
+  const { user, role, isLoading: authLoading } = useAuth();
+  const { data: teachers = [] } = useTeachers();
 
-  const handleCreateStudent = (data: StudentInsert) => {
-    createStudent.mutate(data as any, {
-      onSuccess: () => {
-        setIsFormOpen(false);
-      },
-    });
-  };
+  // Fetch the teacher_id associated with the logged-in user
+  const { data: teacherId, isLoading: teacherIdLoading } = useQuery({
+    queryKey: ["teacherId", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("teacher_id")
+        .eq("user_id", user.id)
+        .single();
 
-  if (isLoading) return <div>Carregando alunos...</div>;
-  if (isError) return <div>Ocorreu um erro ao buscar os alunos.</div>;
+      if (error) {
+        console.error("Error fetching teacher_id:", error);
+        return null;
+      }
+
+      return data?.teacher_id as string | null;
+    },
+    enabled: !!user?.id && role === "teacher",
+  });
+
+  if (authLoading || teacherIdLoading) {
+    return (
+      <TeacherLayout>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </TeacherLayout>
+    );
+  }
+
+  if (!user || role !== "teacher") {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!teacherId) {
+    return (
+      <TeacherLayout>
+        <div className="text-center py-12 text-muted-foreground">
+          <p>Não foi possível carregar seu perfil de professor.</p>
+        </div>
+      </TeacherLayout>
+    );
+  }
 
   return (
     <TeacherLayout>
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-3xl font-bold tracking-tight">Meus Alunos</h2>
-          <Button onClick={() => setIsFormOpen(true)}>Cadastrar aluno</Button>
-        </div>
-        {students && <DataTable columns={columns} data={students} />}
-      </div>
-
-      <StudentFormDialog
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        onSubmit={handleCreateStudent}
-        isLoading={createStudent.isPending}
+      <StudentsListView
+        title="Meus Alunos"
+        subtitle="Visualize e gerencie os alunos sob sua responsabilidade"
+        showTeacherColumn={false}
+        showTeacherFilter={false}
+        autoTeacherId={teacherId}
+        teachers={teachers}
       />
     </TeacherLayout>
   );

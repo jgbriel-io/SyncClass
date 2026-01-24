@@ -140,6 +140,7 @@ interface StudentFormDialogProps {
   student?: Student | null;
   onSubmit: (data: StudentInsert) => void;
   isLoading?: boolean;
+  autoTeacherId?: string | null;
 }
 
 export function StudentFormDialog({
@@ -148,6 +149,7 @@ export function StudentFormDialog({
   student,
   onSubmit,
   isLoading,
+  autoTeacherId,
 }: StudentFormDialogProps) {
   const [selectedOrigin, setSelectedOrigin] = useState<string>(
     student?.origin || ""
@@ -281,7 +283,7 @@ export function StudentFormDialog({
 
     const payDayNumber = data.pay_day ? Number(data.pay_day) : null;
 
-    onSubmit({
+    const submitData: any = {
       name: data.name,
       state: selectedState || null,
       city: data.city || null,
@@ -294,7 +296,14 @@ export function StudentFormDialog({
       hourly_rate: hourlyRateNumber,
       classes_per_week: classesPerWeekNumber,
       pay_day: payDayNumber,
-    } as any);
+    };
+
+    // Auto-set teacher_id if provided (for teacher portal)
+    if (autoTeacherId && !student) {
+      submitData.teacher_id = autoTeacherId;
+    }
+
+    onSubmit(submitData);
   };
 
   return (
