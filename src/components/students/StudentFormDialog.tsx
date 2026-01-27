@@ -201,6 +201,28 @@ export function StudentFormDialog({
   const watchedCity = watch("city") || "";
 
   useEffect(() => {
+    // Sempre que o diálogo é fechado, garantimos que o formulário volte para o estado "novo aluno"
+    if (!open) {
+      reset({
+        name: "",
+        state: "",
+        city: "",
+        cpf: "",
+        phone: "",
+        email: "",
+        hourly_rate: "",
+        classes_per_week: "",
+        pay_day: "",
+        origin: undefined,
+        status: "ativo",
+        birth_date: null,
+      });
+      setSelectedOrigin("");
+      setSelectedStatus("ativo");
+      setSelectedState("");
+      return;
+    }
+
     if (student) {
       // Formata CPF se vier sem formatação do banco
       const formattedCPF = student.cpf 
@@ -254,7 +276,7 @@ export function StudentFormDialog({
       setSelectedStatus("ativo");
       setSelectedState("");
     }
-  }, [student, reset]);
+  }, [student, open, reset]);
 
   useEffect(() => {
     const loadCities = async () => {

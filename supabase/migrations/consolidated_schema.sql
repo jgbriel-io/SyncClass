@@ -23,6 +23,8 @@ CREATE TABLE public.user_roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     role app_role NOT NULL DEFAULT 'student',
+    full_name TEXT,
+    email TEXT,
     CONSTRAINT user_roles_user_id_key UNIQUE (user_id)
 );
 
@@ -207,8 +209,13 @@ BEGIN
     INSERT INTO public.profiles (user_id, full_name, email, role)
     VALUES (NEW.id, NEW.raw_user_meta_data->>'full_name', NEW.email, 'student');
     
-    INSERT INTO public.user_roles (user_id, role)
-    VALUES (NEW.id, 'student');
+    INSERT INTO public.user_roles (user_id, role, full_name, email)
+    VALUES (
+        NEW.id,
+        'student',
+        NEW.raw_user_meta_data->>'full_name',
+        NEW.email
+    );
     
     RETURN NEW;
 END;

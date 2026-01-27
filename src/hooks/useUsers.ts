@@ -264,15 +264,6 @@ export function useUpdateUserRole() {
       userId: string;
       role: "admin" | "student" | "teacher";
     }) => {
-      const { error } = await supabase
-        .from("user_roles")
-        .upsert({
-          user_id: userId,
-          role: role,
-        });
-
-      if (error) throw error;
-
       // Get current profile to know email, name and links
       const { data: profile, error: profileFetchError } = await supabase
         .from("profiles")
@@ -287,6 +278,18 @@ export function useUpdateUserRole() {
 
       const fullName = (profile.full_name as string | null) ?? "";
       const normalizedEmail = (profile.email as string | null | undefined)?.trim().toLowerCase();
+
+      // Keep user_roles in sync with name and email as well
+      const { error } = await supabase
+        .from("user_roles")
+        .upsert({
+          user_id: userId,
+          role: role,
+          full_name: fullName || null,
+          email: normalizedEmail || null,
+        });
+
+      if (error) throw error;
 
       // Keep profile role copy in sync
       const { error: profileError } = await supabase
