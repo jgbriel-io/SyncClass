@@ -34,6 +34,7 @@ export default function Login() {
       }
       toast.success("Login realizado com sucesso!");
       // Role-based redirect will happen via AuthContext
+      setIsLoading(false);
     } catch (error) {
       toast.error("Ocorreu um erro. Tente novamente.");
       setIsLoading(false);

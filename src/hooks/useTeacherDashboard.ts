@@ -44,15 +44,23 @@ export function useTeacherDashboardStats(teacherId: string | null) {
       const { count: activeCount } = await supabase
         .from("students")
         .select("*", { count: "exact", head: true })
-        .eq("status", "active")
+        .eq("status", "ativo")
+        .eq("teacher_id", teacherId);
+      
+      // First, get all student ids for this teacher
+      const { data: teacherStudents, error: teacherStudentsError } = await supabase
+        .from("students")
+        .select("id")
         .eq("teacher_id", teacherId);
 
-      // Overdue students
-      const { count: overdueCount } = await supabase
-        .from("students")
-        .select("*", { count: "exact", head: true })
-        .eq("financial_status", "overdue")
-        .eq("teacher_id", teacherId);
+      if (teacherStudentsError) {
+        throw teacherStudentsError;
+      }
+
+      const studentIds = (teacherStudents || []).map((s) => s.id);
+
+      let overdueCount = 0;
+      let classCount = 0;
 
       // New students this month
       const startMonth = startOfMonth(new Date()).toISOString();
@@ -65,13 +73,26 @@ export function useTeacherDashboardStats(teacherId: string | null) {
         .lte("created_at", endMonth)
         .eq("teacher_id", teacherId);
 
-      // Classes this month
-      const { count: classCount } = await supabase
-        .from("class_logs")
-        .select("*", { count: "exact", head: true })
-        .gte("date", startMonth)
-        .lte("date", endMonth)
-        .eq("teacher_id", teacherId);
+      if (studentIds.length > 0) {
+        // Overdue students (based on financial_records: status = 'atrasado')
+        const { count: overdue } = await supabase
+          .from("financial_records")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "atrasado")
+          .in("student_id", studentIds);
+
+        overdueCount = overdue || 0;
+
+        // Classes this month for this teacher's students
+        const { count: classes } = await supabase
+          .from("class_logs")
+          .select("id", { count: "exact", head: true })
+          .gte("class_date", startMonth)
+          .lte("class_date", endMonth)
+          .in("student_id", studentIds);
+
+        classCount = classes || 0;
+      }
 
       return {
         activeStudents: activeCount || 0,
@@ -102,7 +123,7 @@ export function useTeacherUpcomingPayments(teacherId: string | null) {
           amount,
           students!inner(id, name, teacher_id)
         `)
-        .eq("status", "pending")
+        .eq("status", "pendente")
         .gte("due_date", startDate)
         .lte("due_date", endDate)
         .eq("students.teacher_id", teacherId)
@@ -135,7 +156,6 @@ export function useTeacherBirthdaysThisMonth(teacherId: string | null) {
         .select("id, name, birth_date")
         .eq("teacher_id", teacherId)
         .not("birth_date", "is", null)
-        .ilike("birth_date", `%-${currentMonth}-%`)
         .order("birth_date", { ascending: true });
 
       if (error) throw error;

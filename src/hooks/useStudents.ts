@@ -69,7 +69,7 @@ export function useUpdateStudent() {
         throw error;
       }
 
-      // Synchronize profiles and user_roles for linked users
+      // Synchronize profiles, user_roles and active flag for linked users
       try {
         const updatedStudent = data as Student;
         const fullName = (updatedStudent as any).name as string | null | undefined;
@@ -77,6 +77,8 @@ export function useUpdateStudent() {
         const normalizedEmail = rawEmail
           ? rawEmail.trim().toLowerCase()
           : null;
+        const status = (updatedStudent as any).status as string | null | undefined;
+        const isActive = status === "ativo";
 
         const { data: linkedProfiles, error: profileError } = await supabase
           .from("profiles")
@@ -91,6 +93,7 @@ export function useUpdateStudent() {
           for (const profile of linkedProfiles as { id: string; user_id: string | null }[]) {
             const profileUpdate: Record<string, any> = {
               role: "student",
+              active: isActive,
             };
             if (typeof fullName === "string" && fullName.length > 0) {
               profileUpdate.full_name = fullName;
@@ -163,9 +166,21 @@ export function useDeleteStudent() {
       if (error) {
         throw error;
       }
+
+      // Also mark linked profiles as inactive
+      const { error: profilesError } = await supabase
+        .from("profiles")
+        .update({ active: false })
+        .eq("student_id", id);
+
+      if (profilesError) {
+        throw profilesError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Aluno desativado com sucesso!");
     },
     onError: (error) => {
