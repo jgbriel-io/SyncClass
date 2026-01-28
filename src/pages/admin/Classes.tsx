@@ -23,6 +23,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
+import { useTeachers } from "@/hooks/useTeachers";
 import {
   useClassLogs,
   useClassLogsSummary,
@@ -80,6 +81,7 @@ export default function ClassesPage() {
   const [logToDelete, setLogToDelete] = useState<ClassLogWithStudent | null>(null);
 
   const { data: logs = [], isLoading, error } = useClassLogs();
+  const { data: teachers = [] } = useTeachers();
   const { data: summary } = useClassLogsSummary();
   const createLog = useCreateClassLog();
   const createLogWithFinancial = useCreateClassLogWithFinancial();
@@ -89,6 +91,13 @@ export default function ClassesPage() {
   const filteredLogs = logs.filter((log) => {
     const studentName = log.students?.name || "";
     return studentName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const teacherMap = new Map<string, string>();
+  teachers.forEach((t: any) => {
+    if (t.id && t.name) {
+      teacherMap.set(t.id as string, t.name as string);
+    }
   });
 
   const handleCreateOrUpdate = (data: ClassLogInsert) => {
@@ -249,6 +258,11 @@ export default function ClassesPage() {
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-semibold">{log.students?.name || "Aluno não encontrado"}</h3>
+                        {log.students?.teacher_id && (
+                          <span className="text-xs text-muted-foreground">
+                            Professor: {teacherMap.get(log.students.teacher_id) || "—"}
+                          </span>
+                        )}
                         <StatusBadge
                           variant={log.attendance ? "success" : "destructive"}
                         >
