@@ -69,10 +69,78 @@ export function useUpdateStudent() {
         throw error;
       }
 
+      // Synchronize profiles and user_roles for linked users
+      try {
+        const updatedStudent = data as Student;
+        const fullName = (updatedStudent as any).name as string | null | undefined;
+        const rawEmail = (updatedStudent as any).email as string | null | undefined;
+        const normalizedEmail = rawEmail
+          ? rawEmail.trim().toLowerCase()
+          : null;
+
+        const { data: linkedProfiles, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, user_id")
+          .eq("student_id", updatedStudent.id);
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        if (linkedProfiles && linkedProfiles.length > 0) {
+          for (const profile of linkedProfiles as { id: string; user_id: string | null }[]) {
+            const profileUpdate: Record<string, any> = {
+              role: "student",
+            };
+            if (typeof fullName === "string" && fullName.length > 0) {
+              profileUpdate.full_name = fullName;
+            }
+            if (typeof normalizedEmail === "string" && normalizedEmail.length > 0) {
+              profileUpdate.email = normalizedEmail;
+            }
+
+            const { error: profileUpdateError } = await supabase
+              .from("profiles")
+              .update(profileUpdate)
+              .eq("id", profile.id);
+
+            if (profileUpdateError) {
+              throw profileUpdateError;
+            }
+
+            if (profile.user_id) {
+              const userRolePayload: Record<string, any> = {
+                user_id: profile.user_id,
+                role: "student",
+              };
+              if (typeof fullName === "string" && fullName.length > 0) {
+                userRolePayload.full_name = fullName;
+              }
+              if (typeof normalizedEmail === "string" && normalizedEmail.length > 0) {
+                userRolePayload.email = normalizedEmail;
+              }
+
+              const { error: roleError } = await supabase
+                .from("user_roles")
+                .upsert(userRolePayload, { onConflict: "user_id" });
+
+              if (roleError) {
+                throw roleError;
+              }
+            }
+          }
+        }
+      } catch (syncError) {
+        console.error("Error syncing student updates to profiles/user_roles:", syncError);
+        throw syncError;
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Aluno atualizado com sucesso!");
     },
     onError: (error) => {
