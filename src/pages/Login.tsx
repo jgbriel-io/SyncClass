@@ -44,7 +44,6 @@ export default function Login() {
   // Effect to handle redirect after login
   useEffect(() => {
     if (role && !isLoading) {
-      console.log("Redirecting user with role:", role);
       if (role === "admin") {
         navigate("/admin");
       } else if (role === "student") {

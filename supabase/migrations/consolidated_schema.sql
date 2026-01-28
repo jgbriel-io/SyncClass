@@ -36,6 +36,7 @@ CREATE TABLE public.teachers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     email TEXT,
+    cpf TEXT,
     phone TEXT,
     specialization TEXT,
     created_at TIMESTAMPTZ DEFAULT now(),

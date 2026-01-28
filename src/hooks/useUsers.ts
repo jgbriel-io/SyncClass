@@ -144,7 +144,6 @@ export function useCreateUser() {
 
       // Update profile name and link to domain entity (student/teacher) if needed
       const userId = authData.user.id;
-      console.log("Created user with ID:", userId, "intended role:", role);
 
       // Wait a bit for trigger to complete
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -159,13 +158,11 @@ export function useCreateUser() {
         if (profileError) {
           console.error("Error updating profile:", profileError);
         } else {
-          console.log("Profile updated successfully with role:", role);
         }
       }
 
       // Use UPSERT to update the role created by trigger
       // This will UPDATE if exists, INSERT if not
-      console.log("Upserting user_roles with role:", role);
       const { data: upsertedRole, error: roleError } = await supabase
         .from("user_roles")
         .upsert(
@@ -183,7 +180,6 @@ export function useCreateUser() {
         console.error("Error setting teacher role:", roleError);
         throw new Error("Erro ao definir permissões do usuário");
       }
-      console.log("Role upserted successfully:", upsertedRole);
 
       // If role is student/teacher, create minimal domain record and link it
       let createdStudent: { id: string } | null = null;
