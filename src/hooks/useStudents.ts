@@ -48,6 +48,24 @@ export function useCreateStudent() {
     },
     onError: (error) => {
       console.error("Error creating student:", error);
+      const err = error as any;
+      const message: string = err?.message || "";
+
+      if (err?.code === "23505") {
+        if (message.includes("students_unique_email")) {
+          toast.error("Já existe um aluno cadastrado com este email.");
+          return;
+        }
+        if (message.includes("students_unique_cpf")) {
+          toast.error("Já existe um aluno cadastrado com este CPF.");
+          return;
+        }
+        if (message.includes("students_unique_phone")) {
+          toast.error("Já existe um aluno cadastrado com este telefone.");
+          return;
+        }
+      }
+
       toast.error("Erro ao cadastrar aluno. Tente novamente.");
     },
   });
@@ -148,6 +166,24 @@ export function useUpdateStudent() {
     },
     onError: (error) => {
       console.error("Error updating student:", error);
+      const err = error as any;
+      const message: string = err?.message || "";
+
+      if (err?.code === "23505") {
+        if (message.includes("students_unique_email")) {
+          toast.error("Já existe um aluno cadastrado com este email.");
+          return;
+        }
+        if (message.includes("students_unique_cpf")) {
+          toast.error("Já existe um aluno cadastrado com este CPF.");
+          return;
+        }
+        if (message.includes("students_unique_phone")) {
+          toast.error("Já existe um aluno cadastrado com este telefone.");
+          return;
+        }
+      }
+
       toast.error("Erro ao atualizar aluno. Tente novamente.");
     },
   });
