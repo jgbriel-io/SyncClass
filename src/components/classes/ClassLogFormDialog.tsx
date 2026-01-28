@@ -43,6 +43,16 @@ function brDateToIso(value: string): string {
   return `${year}-${month}-${day}`;
 }
 
+function isoDateToBr(value: string): string {
+  if (!value) return "";
+
+  const parts = value.split("-");
+  if (parts.length !== 3) return value;
+
+  const [year, month, day] = parts;
+  return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
+}
+
 function maskDate(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 8);
 
@@ -64,7 +74,17 @@ const classLogSchema = z.object({
     .refine(isValidDateString, { message: "Data inválida" }),
   title: z.string().optional(),
   attendance: z.boolean(),
-  grade: z.string().optional(),
+  grade: z
+    .string()
+    .optional()
+    .refine((val) => {
+      if (!val) return true;
+      const normalized = val.replace(",", ".");
+      const num = parseFloat(normalized);
+      return !isNaN(num) && num >= 0 && num <= 10;
+    }, {
+      message: "Nota deve ser entre 0 e 10",
+    }),
   feedback: z.string().max(1000, "Feedback deve ter no máximo 1000 caracteres").optional(),
   // Campos de cobrança
   createFinancial: z.boolean().optional(),
@@ -107,6 +127,7 @@ export function ClassLogFormDialog({
   const [createFinancial, setCreateFinancial] = useState(false);
   const { data: students = [], isLoading: loadingStudents } = useStudents();
   const { data: teachers = [], isLoading: loadingTeachers } = useTeachers();
+  const selectedTeacherName = teachers.find((t: any) => t.id === selectedTeacherId)?.name as string | undefined;
 
   const {
     register,
@@ -128,15 +149,25 @@ export function ClassLogFormDialog({
   useEffect(() => {
     if (open && classLog) {
       setSelectedStudentId(classLog.student_id);
-      if (enableTeacherSelection && classLog.teacher_id) {
-        setSelectedTeacherId(classLog.teacher_id as string);
-        setTeacherError(null);
+      if (enableTeacherSelection) {
+        const initialTeacherId =
+          (classLog.teacher_id as string | null | undefined) ||
+          (classLog.students?.teacher_id as string | null | undefined) ||
+          "";
+
+        if (initialTeacherId) {
+          setSelectedTeacherId(initialTeacherId);
+          setTeacherError(null);
+        } else {
+          setSelectedTeacherId("");
+        }
       }
       setAttendance(classLog.attendance ?? true);
       setCreateFinancial(false);
       setValue("student_id", classLog.student_id);
-      setValue("class_date", classLog.class_date);
+      setValue("class_date", isoDateToBr(classLog.class_date));
       setValue("attendance", classLog.attendance ?? true);
+      setValue("title", classLog.title || "");
       setValue("grade", classLog.grade?.toString() || "");
       setValue("feedback", classLog.feedback || "");
       setValue("createFinancial", false);
@@ -240,27 +271,42 @@ export function ClassLogFormDialog({
           {enableTeacherSelection && (
             <div className="space-y-2">
               <Label>Professor *</Label>
-              <Select
-                value={selectedTeacherId}
-                onValueChange={(value) => {
-                  setSelectedTeacherId(value);
-                  setTeacherError(null);
-                }}
-                disabled={loadingTeachers || isEditing}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um professor (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {teachers.map((teacher) => (
-                    <SelectItem key={teacher.id} value={teacher.id}>
-                      {teacher.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {teacherError && (
-                <p className="text-sm text-destructive">{teacherError}</p>
+              {isEditing && selectedTeacherId ? (
+                <>
+                  <Input
+                    value={selectedTeacherName || "Professor não encontrado"}
+                    disabled
+                    readOnly
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Professor que registrou esta aula
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Select
+                    value={selectedTeacherId}
+                    onValueChange={(value) => {
+                      setSelectedTeacherId(value);
+                      setTeacherError(null);
+                    }}
+                    disabled={loadingTeachers}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um professor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teachers.map((teacher) => (
+                        <SelectItem key={teacher.id} value={teacher.id}>
+                          {teacher.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {teacherError && (
+                    <p className="text-sm text-destructive">{teacherError}</p>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -345,9 +391,15 @@ export function ClassLogFormDialog({
                 placeholder="8.5"
                 {...register("grade")}
               />
-              <p className="text-xs text-muted-foreground">
-                Deixe em branco se não houver avaliação
-              </p>
+              {errors.grade ? (
+                <p className="text-xs text-destructive">
+                  {errors.grade.message}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Deixe em branco se não houver avaliação
+                </p>
+              )}
             </div>
           )}
 

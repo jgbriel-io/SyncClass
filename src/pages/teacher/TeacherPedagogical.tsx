@@ -31,6 +31,9 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   useClassLogs,
   useClassLogsSummary,
@@ -81,6 +84,29 @@ function getPaymentStatusLabel(status: string | null): string {
 }
 
 const TeacherPedagogicalPage = () => {
+  const { user, role, isLoading: authLoading } = useAuth();
+
+  // Buscar o teacher_id vinculado ao usuário logado
+  const { data: teacherId, isLoading: teacherIdLoading } = useQuery({
+    queryKey: ["teacherId", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("teacher_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching teacher_id:", error);
+        return null;
+      }
+
+      return data?.teacher_id as string | null;
+    },
+    enabled: !!user?.id && role === "teacher",
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ClassLogWithStudent | null>(null);
@@ -156,6 +182,16 @@ const TeacherPedagogicalPage = () => {
     : "0";
 
   const isMutating = createLog.isPending || createLogWithFinancial.isPending || updateLog.isPending;
+
+  if (authLoading || teacherIdLoading) {
+    return (
+      <TeacherLayout>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </TeacherLayout>
+    );
+  }
 
   return (
     <TeacherLayout>
@@ -269,6 +305,11 @@ const TeacherPedagogicalPage = () => {
                           </StatusBadge>
                         )}
                       </div>
+                      {log.title && (
+                        <p className="text-sm sm:text-base font-medium text-foreground break-all whitespace-normal w-full">
+                          {log.title}
+                        </p>
+                      )}
                       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
@@ -334,11 +375,15 @@ const TeacherPedagogicalPage = () => {
         {/* Dialogs */}
         <ClassLogFormDialog
           open={isFormOpen}
-          onOpenChange={setIsFormOpen}
-          log={selectedLog}
+          onOpenChange={(open) => {
+            setIsFormOpen(open);
+            if (!open) setSelectedLog(null);
+          }}
+          classLog={selectedLog}
           onSubmit={handleCreateOrUpdate}
           onSubmitWithFinancial={handleCreateWithFinancial}
           isLoading={isMutating}
+          teacherId={teacherId || undefined}
         />
 
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -279,6 +279,11 @@ export default function ClassesPage() {
                           </StatusBadge>
                         )}
                       </div>
+                      {log.title && (
+                        <p className="text-sm sm:text-base font-medium text-foreground break-all whitespace-normal w-full">
+                          {log.title}
+                        </p>
+                      )}
                       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="h-4 w-4" />
