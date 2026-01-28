@@ -36,7 +36,7 @@ const navigation = [
   { name: "Dashboard", href: "/teacher", icon: LayoutDashboard },
   { name: "Visão Geral", href: "/teacher/overview", icon: ClipboardList },
   { name: "Alunos", href: "/teacher/students", icon: Users },
-  { name: "Pedagógico", href: "/teacher/pedagogical", icon: BookOpen },
+  { name: "Aulas", href: "/teacher/classes", icon: BookOpen },
   { name: "Financeiro", href: "/teacher/financial", icon: CreditCard },
 ];
 

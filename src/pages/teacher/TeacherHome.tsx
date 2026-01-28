@@ -269,7 +269,7 @@ const TeacherHome = () => {
                   </Link>
                   
                   <Link
-                    to="/teacher/pedagogical"
+                    to="/teacher/classes"
                     className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-muted transition-colors group"
                   >
                     <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center">

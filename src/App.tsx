@@ -154,7 +154,7 @@ const App = () => (
               }
             />
             <Route
-              path="/teacher/pedagogical"
+              path="/teacher/classes"
               element={
                 <ProtectedRoute allowedRoles={["teacher"]}>
                   <TeacherPedagogicalPage />
