@@ -45,25 +45,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    // Handle invalid refresh token errors
-    const handleInvalidRefreshToken = () => {
+    // Handle invalid refresh token errors with robust cleanup
+    const handleInvalidRefreshToken = async () => {
       console.warn("Invalid refresh token detected, clearing session and redirecting to login");
+      
+      // Use signOut from the client for complete cleanup
+      await supabase.auth.signOut();
+      
+      // Additional cleanup: remove all sb-* keys from localStorage
+      Object.keys(localStorage)
+        .filter(key => key.startsWith('sb-'))
+        .forEach(key => localStorage.removeItem(key));
+      
       setUser(null);
       setSession(null);
       setRole(null);
       setIsLoading(false);
-      localStorage.removeItem("sb-" + import.meta.env.VITE_SUPABASE_URL?.split("//")[1]?.split(".")[0] + "-auth-token");
+      
       window.location.href = "/login";
     };
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (!isMounted) return;
         
         // Detect token refresh errors
         if (event === "TOKEN_REFRESHED" && !session) {
-          handleInvalidRefreshToken();
+          await handleInvalidRefreshToken();
           return;
         }
 
@@ -96,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // Fallback: Listen for unhandled promise rejections (refresh token errors)
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+    const handleUnhandledRejection = async (event: PromiseRejectionEvent) => {
       const error = event.reason;
       const errorMessage = error?.message || error?.toString() || "";
       
@@ -106,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         errorMessage.includes("refresh_token_not_found")
       ) {
         event.preventDefault();
-        handleInvalidRefreshToken();
+        await handleInvalidRefreshToken();
       }
     };
 
