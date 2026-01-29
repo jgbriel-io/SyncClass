@@ -45,14 +45,15 @@ export interface FinancialRecordWithRelations extends FinancialRecord {
     attendance: boolean | null;
     grade: number | null;
     feedback: string | null;
+    title?: string | null;
   } | null;
 }
 
-export function useFinancialRecords() {
+export function useFinancialRecords(teacherId?: string | null) {
   return useQuery({
-    queryKey: ["financial_records"],
+    queryKey: ["financial_records", teacherId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("financial_records")
         .select(`
           *,
@@ -65,16 +66,32 @@ export function useFinancialRecords() {
             class_date,
             attendance,
             grade,
-            feedback
+            feedback,
+            title
           )
         `)
         .order("due_date", { ascending: false });
+
+      // Filter by teacher if provided
+      if (teacherId) {
+        query = query.eq("students.teacher_id", teacherId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         throw error;
       }
 
-      return data as FinancialRecordWithRelations[];
+      // Client-side filter if needed (Supabase join filter might not work directly)
+      let filteredData = data as FinancialRecordWithRelations[];
+      if (teacherId && filteredData) {
+        filteredData = filteredData.filter(
+          (record) => record.students?.teacher_id === teacherId
+        );
+      }
+
+      return filteredData;
     },
   });
 }
