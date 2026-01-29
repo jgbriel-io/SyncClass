@@ -304,7 +304,10 @@ CREATE POLICY "Usuários podem atualizar seu próprio perfil"
 CREATE POLICY "Usuários podem criar seu próprio perfil" 
     ON public.profiles 
     FOR INSERT 
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (
+        auth.role() = 'service_role' OR 
+        auth.uid() = user_id
+    );
 
 CREATE POLICY "Admins podem gerenciar todos os perfis"
     ON public.profiles FOR ALL
