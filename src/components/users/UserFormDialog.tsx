@@ -11,29 +11,163 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronsUpDown } from "lucide-react";
 import { UserWithProfile } from "@/hooks/useUsers";
+import { BR_STATES, fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib/br-locations";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
 
-const userSchema = z.object({
+// Helper functions para máscaras
+function maskCPF(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  
+  if (digits.length <= 3) {
+    return digits;
+  } else if (digits.length <= 6) {
+    return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  } else if (digits.length <= 9) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  } else {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  }
+}
+
+function maskPhone(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  
+  if (digits.length <= 2) {
+    return digits.length > 0 ? `(${digits}` : digits;
+  } else if (digits.length <= 6) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  } else if (digits.length <= 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  } else {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+}
+
+function maskDate(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+
+  if (digits.length <= 2) {
+    return digits;
+  }
+
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+function isValidDateString(value: string): boolean {
+  const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+  if (!dateRegex.test(value)) return false;
+  const [day, month, year] = value.split("/").map(Number);
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
+
+function brDateToIso(value: string): string {
+  const [day, month, year] = value.split("/");
+  return `${year}-${month}-${day}`;
+}
+
+const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
+const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+
+// Schema para Admin (simples)
+const adminSchema = z.object({
   email: z.string().email("Email inválido"),
-  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").optional(),
   fullName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  role: z.enum(["admin", "student", "teacher"]),
+  role: z.literal("admin"),
 });
 
-type UserFormData = z.infer<typeof userSchema>;
+// Schema para Student (completo)
+const studentSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
+  state: z.string().max(2).optional().nullable(),
+  city: z.string().max(100).optional().nullable(),
+  cpf: z.string()
+    .min(14, "CPF inválido")
+    .max(14, "CPF inválido")
+    .regex(cpfRegex, "Formato deve ser 000.000.000-00"),
+  phone: z.string()
+    .min(14, "Telefone inválido")
+    .max(15, "Telefone inválido")
+    .regex(phoneRegex, "Formato deve ser (00) 00000-0000"),
+  email: z
+    .string()
+    .min(1, "Email é obrigatório")
+    .email("Email inválido")
+    .max(255),
+  hourly_rate: z.string().optional().nullable(),
+  classes_per_week: z
+    .string()
+    .optional()
+    .nullable(),
+  pay_day: z
+    .string()
+    .optional()
+    .nullable(),
+  origin: z.enum(["indicacao", "google", "instagram", "passante", "outro"]),
+  status: z.enum(["ativo", "inativo"]).optional(),
+  birth_date: z
+    .string()
+    .optional()
+    .nullable()
+    .refine((val) => !val || (dateRegex.test(val) && isValidDateString(val)), {
+      message: "Data inválida",
+    }),
+  role: z.literal("student"),
+});
+
+// Schema para Teacher (completo)
+const teacherSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
+  email: z
+    .string()
+    .min(1, "Email é obrigatório")
+    .email("Email inválido")
+    .max(255),
+  phone: z
+    .string()
+    .max(20)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  cpf: z
+    .string()
+    .max(14)
+    .optional()
+    .refine((val) => !val || cpfRegex.test(val), {
+      message: "Formato deve ser 000.000.000-00",
+    }),
+  role: z.literal("teacher"),
+});
+
+type AdminFormData = z.infer<typeof adminSchema>;
+type StudentFormData = z.infer<typeof studentSchema>;
+type TeacherFormData = z.infer<typeof teacherSchema>;
 
 interface UserFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user?: UserWithProfile | null;
-  onSubmit: (data: {
-    email: string;
-    password?: string;
-    fullName: string;
-    role: "admin" | "student" | "teacher";
-  }) => void;
+  onSubmit: (data: any) => void;
   isLoading: boolean;
 }
 
@@ -49,153 +183,594 @@ export function UserFormDialog({
     (user?.role?.role as any) || "admin",
   );
 
+  // States para student
+  const [selectedOrigin, setSelectedOrigin] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("ativo");
+  const [selectedState, setSelectedState] = useState<string>("");
+  const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
+  const [statePopoverOpen, setStatePopoverOpen] = useState(false);
+  const [cities, setCities] = useState<BrCityOption[]>([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+
+  // Determinar schema baseado no role
+  const getSchema = () => {
+    if (selectedRole === "admin") return adminSchema;
+    if (selectedRole === "student") return studentSchema;
+    return teacherSchema;
+  };
+
   const {
     register,
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
-  } = useForm<UserFormData>({
-    resolver: zodResolver(userSchema),
+  } = useForm<any>({
+    resolver: zodResolver(getSchema()),
     defaultValues: {
       email: user?.email || "",
-      password: "",
       fullName: user?.profile?.full_name || "",
-      role: user?.role?.role || "admin",
+      name: user?.profile?.full_name || "",
+      role: selectedRole,
     },
   });
 
+  const watchedCity = watch("city") || "";
+
   useEffect(() => {
+    if (selectedRole === "student") {
+      const loadCities = async () => {
+        if (!selectedState) {
+          setCities([]);
+          return;
+        }
+
+        setIsLoadingCities(true);
+        const result = await fetchIbgeCitiesByUf(selectedState as BrStateCode);
+        setCities(result);
+        setIsLoadingCities(false);
+      };
+
+      void loadCities();
+    }
+  }, [selectedState, selectedRole]);
+
+  useEffect(() => {
+    if (!open) {
+      reset({
+        email: "",
+        fullName: "",
+        name: "",
+        role: "admin",
+      });
+      setSelectedRole("admin");
+      setSelectedOrigin("");
+      setSelectedStatus("ativo");
+      setSelectedState("");
+      return;
+    }
+
     if (user) {
       reset({
         email: user.email,
-        password: "",
         fullName: user.profile?.full_name || "",
         role: user.role?.role || "admin",
       });
       setSelectedRole((user.role?.role as any) || "admin");
     } else {
-      reset({
-        email: "",
-        password: "",
-        fullName: "",
-        role: "admin",
-      });
-      setSelectedRole("admin");
-    }
-  }, [user, reset]);
+      const defaults: any = {
+        role: selectedRole,
+      };
 
-  const handleFormSubmit = (data: UserFormData) => {
-    onSubmit({
-      email: data.email,
-      password: data.password || undefined,
-      fullName: data.fullName,
-      role: selectedRole,
-    });
-  };
+      if (selectedRole === "admin") {
+        defaults.email = "";
+        defaults.fullName = "";
+      } else if (selectedRole === "student") {
+        defaults.name = "";
+        defaults.email = "";
+        defaults.cpf = "";
+        defaults.phone = "";
+        defaults.state = "";
+        defaults.city = "";
+        defaults.birth_date = null;
+        defaults.hourly_rate = "";
+        defaults.classes_per_week = "";
+        defaults.pay_day = "";
+        defaults.origin = undefined;
+        defaults.status = "ativo";
+      } else {
+        defaults.name = "";
+        defaults.email = "";
+        defaults.phone = "";
+        defaults.cpf = "";
+      }
+
+      reset(defaults);
+      setSelectedOrigin("");
+      setSelectedStatus("ativo");
+      setSelectedState("");
+    }
+  }, [user, open, reset, selectedRole]);
 
   const handleRoleChange = (value: string) => {
-    setSelectedRole(value as "admin" | "student" | "teacher");
-    setValue("role", value as "admin" | "student" | "teacher");
+    const newRole = value as "admin" | "student" | "teacher";
+    setSelectedRole(newRole);
+    setValue("role", newRole);
+
+    // Reset form com defaults do novo role
+    const defaults: any = { role: newRole };
+
+    if (newRole === "admin") {
+      defaults.email = "";
+      defaults.fullName = "";
+    } else if (newRole === "student") {
+      defaults.name = "";
+      defaults.email = "";
+      defaults.cpf = "";
+      defaults.phone = "";
+      defaults.state = "";
+      defaults.city = "";
+      defaults.birth_date = null;
+      defaults.hourly_rate = "";
+      defaults.classes_per_week = "";
+      defaults.pay_day = "";
+      defaults.origin = undefined;
+      defaults.status = "ativo";
+      setSelectedOrigin("");
+      setSelectedStatus("ativo");
+      setSelectedState("");
+    } else {
+      defaults.name = "";
+      defaults.email = "";
+      defaults.phone = "";
+      defaults.cpf = "";
+    }
+
+    reset(defaults);
+  };
+
+  const handleFormSubmit = (data: any) => {
+    if (selectedRole === "admin") {
+      onSubmit({
+        email: data.email,
+        fullName: data.fullName,
+        role: "admin",
+      });
+    } else if (selectedRole === "student") {
+      const hourlyRateNumber = data.hourly_rate
+        ? parseFloat(data.hourly_rate.replace(/[^.\d,]/g, "").replace(",", "."))
+        : null;
+
+      const classesPerWeekNumber = data.classes_per_week
+        ? Number(data.classes_per_week)
+        : null;
+
+      const payDayNumber = data.pay_day ? Number(data.pay_day) : null;
+
+      onSubmit({
+        email: data.email,
+        fullName: data.name,
+        role: "student",
+        studentData: {
+          name: data.name,
+          state: selectedState || null,
+          city: data.city || null,
+          cpf: data.cpf,
+          phone: data.phone,
+          email: data.email,
+          origin: selectedOrigin,
+          status: selectedStatus,
+          birth_date: data.birth_date ? brDateToIso(data.birth_date) : null,
+          hourly_rate: hourlyRateNumber,
+          classes_per_week: classesPerWeekNumber,
+          pay_day: payDayNumber,
+        },
+      });
+    } else {
+      onSubmit({
+        email: data.email,
+        fullName: data.name,
+        role: "teacher",
+        teacherData: {
+          name: data.name,
+          email: data.email,
+          phone: data.phone || undefined,
+          cpf: data.cpf || undefined,
+        },
+      });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={selectedRole === "admin" ? "sm:max-w-md" : "sm:max-w-lg"}>
         <DialogHeader>
           <DialogTitle>{user ? "Editar Usuário" : "Novo Usuário"}</DialogTitle>
         </DialogHeader>
-        <div className="mt-2 mb-4">
-          <Label className="mb-2 block text-sm font-medium">Tipo de conta</Label>
-          <Tabs
-            value={selectedRole}
-            onValueChange={handleRoleChange}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="admin">Admin</TabsTrigger>
-              <TabsTrigger value="student">Aluno</TabsTrigger>
-              <TabsTrigger value="teacher">Professor</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        
+        {!isEdit && (
+          <div className="mt-2 mb-4">
+            <Label className="mb-2 block text-sm font-medium">Tipo de conta</Label>
+            <Tabs
+              value={selectedRole}
+              onValueChange={handleRoleChange}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="admin">Admin</TabsTrigger>
+                <TabsTrigger value="student">Aluno</TabsTrigger>
+                <TabsTrigger value="teacher">Professor</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <input type="hidden" {...register("role")} />
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="usuario@exemplo.com"
-              {...register("email")}
-              disabled={isLoading || !!user}
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
-          </div>
 
-          {isEdit && (
-            <div className="space-y-2">
-              <Label htmlFor="password">
-                Senha (deixe em branco para manter)
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Deixe em branco para manter"
-                {...register("password")}
-                disabled={isLoading}
-              />
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
-              )}
+          {/* Formulário ADMIN */}
+          {selectedRole === "admin" && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@exemplo.com"
+                  {...register("email")}
+                  disabled={isLoading || isEdit}
+                />
+                {errors.email && (
+                  <p className="text-sm text-destructive">{(errors.email as any).message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Nome completo *</Label>
+                <Input
+                  id="fullName"
+                  placeholder="Nome do administrador"
+                  {...register("fullName")}
+                  disabled={isLoading}
+                />
+                {errors.fullName && (
+                  <p className="text-sm text-destructive">{(errors.fullName as any).message}</p>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Formulário STUDENT - Completo */}
+          {selectedRole === "student" && !isEdit && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2 space-y-2">
+                <Label htmlFor="name">Nome completo *</Label>
+                <Input
+                  id="name"
+                  placeholder="Nome do aluno"
+                  {...register("name")}
+                  disabled={isLoading}
+                />
+                {errors.name && (
+                  <p className="text-sm text-destructive">{(errors.name as any).message}</p>
+                )}
+              </div>
+
+              <div className="sm:col-span-2 space-y-2">
+                <Label>Estado e cidade</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Estado (UF)</Label>
+                    <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between"
+                          disabled={isLoading}
+                        >
+                          {(() => {
+                            const current = BR_STATES.find((st) => st.code === selectedState);
+                            if (current) return `${current.code} - ${current.name}`;
+                            return "Selecione UF";
+                          })()}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[260px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Buscar estado ou UF..." />
+                          <CommandList>
+                            <CommandEmpty>Nenhum estado encontrado.</CommandEmpty>
+                            <CommandGroup>
+                              {BR_STATES.map((st) => (
+                                <CommandItem
+                                  key={st.code}
+                                  value={`${st.code} ${st.name}`}
+                                  onSelect={() => {
+                                    setSelectedState(st.code);
+                                    setValue("state", st.code, { shouldValidate: true });
+                                    setValue("city", "", { shouldValidate: true });
+                                    setStatePopoverOpen(false);
+                                  }}
+                                >
+                                  <span className="mr-2 font-mono text-xs">{st.code}</span>
+                                  <span>{st.name}</span>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="sm:col-span-2 space-y-1">
+                    <Label className="text-xs text-muted-foreground">Cidade</Label>
+                    <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between"
+                          disabled={!selectedState || isLoading || isLoadingCities}
+                        >
+                          {(() => {
+                            const cityValue = watchedCity;
+                            const current = cities.find((c) => c.value === cityValue);
+                            if (current) return current.label;
+                            if (cityValue) return cityValue;
+                            if (isLoadingCities) return "Carregando cidades...";
+                            return selectedState
+                              ? "Selecione a cidade"
+                              : "Selecione uma UF primeiro";
+                          })()}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[280px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Buscar cidade..." />
+                          <CommandList>
+                            <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
+                            <CommandGroup>
+                              {cities.map((city) => (
+                                <CommandItem
+                                  key={city.value}
+                                  value={city.label}
+                                  onSelect={() => {
+                                    setValue("city", city.value, { shouldValidate: true });
+                                    setCityPopoverOpen(false);
+                                  }}
+                                >
+                                  {city.label}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cpf">CPF *</Label>
+                <Input
+                  id="cpf"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={14}
+                  placeholder="000.000.000-00"
+                  {...register("cpf")}
+                  onChange={(e) => {
+                    const masked = maskCPF(e.target.value);
+                    setValue("cpf", masked, { shouldValidate: true });
+                  }}
+                  disabled={isLoading}
+                />
+                {errors.cpf && (
+                  <p className="text-sm text-destructive">{(errors.cpf as any).message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="birth_date">Data de Nascimento</Label>
+                <Input
+                  id="birth_date"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="dd/mm/aaaa"
+                  {...register("birth_date")}
+                  onChange={(e) => {
+                    const masked = maskDate(e.target.value);
+                    setValue("birth_date", masked, { shouldValidate: true });
+                  }}
+                  disabled={isLoading}
+                />
+                {errors.birth_date && (
+                  <p className="text-sm text-destructive">{(errors.birth_date as any).message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefone *</Label>
+                <Input
+                  id="phone"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={15}
+                  placeholder="(00) 00000-0000"
+                  {...register("phone")}
+                  onChange={(e) => {
+                    const masked = maskPhone(e.target.value);
+                    setValue("phone", masked, { shouldValidate: true });
+                  }}
+                  disabled={isLoading}
+                />
+                {errors.phone && (
+                  <p className="text-sm text-destructive">{(errors.phone as any).message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  {...register("email")}
+                  disabled={isLoading}
+                />
+                {errors.email && (
+                  <p className="text-sm text-destructive">{(errors.email as any).message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="hourly_rate">Valor por hora</Label>
+                <Input
+                  id="hourly_rate_valor"
+                  type="text"
+                  placeholder="Ex: 120,00"
+                  {...register("hourly_rate")}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="classes_per_week">Aulas por semana</Label>
+                <Input
+                  id="classes_per_week"
+                  type="number"
+                  min={0}
+                  max={14}
+                  placeholder="Ex: 1, 2, 3..."
+                  {...register("classes_per_week")}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pay_day">Dia de pagamento</Label>
+                <Input
+                  id="pay_day"
+                  type="number"
+                  min={1}
+                  max={31}
+                  placeholder="1 a 31"
+                  {...register("pay_day")}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Origem do Aluno *</Label>
+                <Select
+                  value={selectedOrigin}
+                  onValueChange={(value) => {
+                    setSelectedOrigin(value);
+                    setValue("origin", value as any, { shouldValidate: true });
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="indicacao">Indicação</SelectItem>
+                    <SelectItem value="google">Google</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                    <SelectItem value="passante">Passante</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+                {!selectedOrigin && (
+                  <p className="text-sm text-destructive">Selecione uma origem</p>
+                )}
+              </div>
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="fullName">
-              {selectedRole === "admin"
-                ? "Nome completo do administrador *"
-                : selectedRole === "student"
-                ? "Nome completo do aluno *"
-                : "Nome completo do professor *"}
-            </Label>
-            <Input
-              id="fullName"
-              placeholder={
-                selectedRole === "admin"
-                  ? "Nome do administrador"
-                  : selectedRole === "student"
-                  ? "Nome do aluno"
-                  : "Nome do professor"
-              }
-              {...register("fullName")}
-              disabled={isLoading}
-            />
-            {errors.fullName && (
-              <p className="text-sm text-destructive">{errors.fullName.message}</p>
-            )}
-          </div>
+          {/* Formulário TEACHER - Completo */}
+          {selectedRole === "teacher" && !isEdit && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2 space-y-2">
+                <Label htmlFor="name">Nome completo *</Label>
+                <Input
+                  id="name"
+                  placeholder="Nome do professor"
+                  {...register("name")}
+                  disabled={isLoading}
+                />
+                {errors.name && (
+                  <p className="text-sm text-destructive">{(errors.name as any).message}</p>
+                )}
+              </div>
 
-          <div className="space-y-2">
-            {selectedRole === "student" && !isEdit && (
-              <p className="text-xs text-muted-foreground">
-                Esta opção cria a conta de acesso do aluno. Os dados detalhados
-                do cadastro (CPF, cidade, valor/hora, etc.) continuam sendo
-                gerenciados na aba Alunos.
-              </p>
-            )}
-            {selectedRole === "teacher" && !isEdit && (
-              <p className="text-xs text-muted-foreground">
-                Esta opção cria a conta de acesso do professor. Dados
-                complementares continuam sendo gerenciados na aba Professores.
-              </p>
-            )}
-            {errors.role && (
-              <p className="text-sm text-destructive">{errors.role.message}</p>
-            )}
-          </div>
+              <div className="sm:col-span-2 space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  {...register("email")}
+                  disabled={isLoading}
+                />
+                {errors.email && (
+                  <p className="text-sm text-destructive">{(errors.email as any).message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefone</Label>
+                <Input
+                  id="phone"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={15}
+                  placeholder="(00) 00000-0000"
+                  {...register("phone")}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const digits = value.replace(/\D/g, "").slice(0, 11);
+                    let masked = digits;
+                    if (digits.length > 2) masked = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+                    if (digits.length > 6) masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+                    setValue("phone", masked, { shouldValidate: true });
+                  }}
+                  disabled={isLoading}
+                />
+                {errors.phone && (
+                  <p className="text-sm text-destructive">{(errors.phone as any).message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cpf">CPF</Label>
+                <Input
+                  id="cpf"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={14}
+                  placeholder="000.000.000-00"
+                  {...register("cpf")}
+                  onChange={(e) => {
+                    const masked = maskCPF(e.target.value);
+                    setValue("cpf", masked, { shouldValidate: true });
+                  }}
+                  disabled={isLoading}
+                />
+                {errors.cpf && (
+                  <p className="text-sm text-destructive">{(errors.cpf as any).message}</p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <Button
@@ -206,13 +781,16 @@ export function UserFormDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              disabled={isLoading || (selectedRole === "student" && !selectedOrigin)}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
+                  {isEdit ? "Salvando..." : "Criando..."}
                 </>
-              ) : user ? (
+              ) : isEdit ? (
                 "Salvar Alterações"
               ) : (
                 "Criar Usuário"

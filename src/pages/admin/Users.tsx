@@ -108,6 +108,8 @@ export default function UsersPage() {
     password?: string;
     fullName: string;
     role: "admin" | "student" | "teacher";
+    studentData?: any;
+    teacherData?: any;
   }) => {
     if (selectedUser) {
       // Update existing user
@@ -148,6 +150,8 @@ export default function UsersPage() {
           password: "",
           fullName: data.fullName,
           role: data.role,
+          studentData: data.studentData,
+          teacherData: data.teacherData,
         },
         {
           onSuccess: (result: any) => {
