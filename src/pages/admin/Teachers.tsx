@@ -183,48 +183,51 @@ export default function TeachersPage() {
   return (
     <AdminLayout>
       <PageContainer>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Professores</h1>
-            <p className="text-muted-foreground mt-1">
-              Gerencie os professores do sistema
-            </p>
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Professores</h1>
+              <p className="text-muted-foreground mt-1">
+                Gerencie os professores do sistema
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setSelectedTeacher(null);
+                setIsFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" /> Novo Professor
+            </Button>
           </div>
-          <Button
-            onClick={() => {
-              setSelectedTeacher(null);
-              setIsFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" /> Novo Professor
-          </Button>
-        </div>
 
-        {/* Filtros */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          {/* Filtros */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome..."
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="ativo">Ativos</SelectItem>
+                <SelectItem value="inativo">Inativos</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="ativo">Ativos</SelectItem>
-              <SelectItem value="inativo">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {/* Table */}
-        <div className="rounded-lg border bg-card shadow-card overflow-hidden">
-          <Table>
+
+          {/* Table */}
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="text-xs uppercase tracking-wider">
@@ -244,7 +247,7 @@ export default function TeachersPage() {
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+              <TableBody>
                 {filteredTeachers.map((teacher) => {
                   const status =
                     ((teacher as any).status as string | null) ?? "ativo";
@@ -319,17 +322,18 @@ export default function TeachersPage() {
                     </TableRow>
                   );
                 })}
-            </TableBody>
-          </Table>
-          {filteredTeachers.length === 0 && (
-            <EmptyState
-              icon={Search}
-              title={teachers.length === 0 ? "Nenhum professor cadastrado" : "Nenhum resultado"}
-              message={teachers.length === 0
-                ? "Clique no botão 'Novo Professor' para adicionar o primeiro"
-                : "Ajuste os filtros acima ou limpe a busca"}
-            />
-          )}
+              </TableBody>
+            </Table>
+            {filteredTeachers.length === 0 && (
+              <EmptyState
+                icon={Search}
+                title={teachers.length === 0 ? "Nenhum professor cadastrado" : "Nenhum resultado"}
+                message={teachers.length === 0
+                  ? "Clique no botão 'Novo Professor' para adicionar o primeiro"
+                  : "Ajuste os filtros acima ou limpe a busca"}
+              />
+            )}
+          </div>
         </div>
 
         {/* Formulário de cadastro/edição */}

@@ -107,6 +107,7 @@ export function ClassesView({
     return studentName.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
+  // Mapa de professores para fallback (caso o join não traga o nome)
   const teacherMap = new Map<string, string>();
   teachers.forEach((t: any) => {
     if (t.id && t.name) {
@@ -262,22 +263,22 @@ export function ClassesView({
                       Aula / Professor
                     </th>
                   )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
                     Data
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
                     Nota
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden xl:table-cell w-0 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden xl:table-cell whitespace-nowrap">
                     Financeiro
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden 2xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden 2xl:table-cell whitespace-nowrap">
                     Valor
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
                     Feedback
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
                     Ações
                   </th>
                 </tr>
@@ -285,9 +286,12 @@ export function ClassesView({
               <tbody className="divide-y">
                 {filteredLogs.map((log) => {
                   const lastUpdatedAt = (log as any).updated_at as string | null | undefined;
-                  const teacherName = log.students?.teacher_id
-                    ? teacherMap.get(log.students.teacher_id) || "—"
-                    : "—";
+                  // Prioriza o nome do professor do join direto do class_log, depois fallback via teacher_id
+                  const teacherName = 
+                    (log as any).teachers?.name ?? 
+                    (log.teacher_id ? teacherMap.get(log.teacher_id) : null) ?? 
+                    (log.students?.teacher_id ? teacherMap.get(log.students.teacher_id) : null) ?? 
+                    "Sem professor";
 
                   return (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
@@ -298,9 +302,9 @@ export function ClassesView({
                               {log.students?.name?.charAt(0) || "?"}
                             </span>
                           </div>
-                          <div className="min-w-0 space-y-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="text-sm font-medium truncate max-w-[180px]">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 whitespace-nowrap">
+                              <p className="text-sm font-medium">
                                 {log.students?.name || "Aluno não encontrado"}
                               </p>
                               <StatusBadge
@@ -310,7 +314,7 @@ export function ClassesView({
                               </StatusBadge>
                             </div>
                             {lastUpdatedAt && (
-                              <p className="text-[11px] text-muted-foreground">
+                              <p className="text-[11px] text-muted-foreground whitespace-nowrap">
                                 {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
                               </p>
                             )}
@@ -319,24 +323,24 @@ export function ClassesView({
                       </td>
                       {showTeacherColumn && (
                         <td className="px-4 py-3 align-top hidden lg:table-cell">
-                          <div className="min-w-0 space-y-1">
+                          <div className="space-y-1 min-w-[200px]">
                             {log.title && (
-                              <p className="text-sm font-semibold text-foreground break-all whitespace-normal">
+                              <p className="text-sm font-semibold text-foreground whitespace-normal">
                                 {log.title}
                               </p>
                             )}
-                            <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                            <p className="text-xs text-muted-foreground whitespace-nowrap">
                               {teacherName}
                             </p>
                           </div>
                         </td>
                       )}
-                      <td className="px-4 py-3 align-top">
+                      <td className="px-4 py-3 align-top whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {formatDate(log.class_date)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top">
+                      <td className="px-4 py-3 align-top whitespace-nowrap">
                         <span className="text-sm font-medium">
                           {log.grade !== null
                             ? Number(log.grade).toFixed(1)
@@ -355,7 +359,7 @@ export function ClassesView({
                           <span className="text-sm text-muted-foreground">Sem cobrança</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 align-top hidden 2xl:table-cell">
+                      <td className="px-4 py-3 align-top hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {log.financial_records
                             ? `R$ ${formatCurrency(log.financial_records.amount)}`

@@ -337,25 +337,26 @@ export default function UsersPage() {
   return (
     <AdminLayout>
       <PageContainer>
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Usuários</h1>
-            <p className="text-muted-foreground mt-1">
-              Gerencie usuários, privilégios e vínculos
-            </p>
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Usuários</h1>
+              <p className="text-muted-foreground mt-1">
+                Gerencie usuários, privilégios e vínculos
+              </p>
+            </div>
+            <Button onClick={() => {
+              setSelectedUser(null);
+              setIsFormOpen(true);
+            }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Usuário
+            </Button>
           </div>
-          <Button onClick={() => {
-            setSelectedUser(null);
-            setIsFormOpen(true);
-          }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Usuário
-          </Button>
-        </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -402,16 +403,16 @@ export default function UsersPage() {
                   <TableHead className="text-xs uppercase tracking-wider">
                     Usuário
                   </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider w-[140px]">
+                  <TableHead className="text-xs uppercase tracking-wider whitespace-nowrap">
                     Privilégio
                   </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider hidden lg:table-cell">
+                  <TableHead className="text-xs uppercase tracking-wider hidden lg:table-cell whitespace-nowrap">
                     Vínculo
                   </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider hidden md:table-cell">
+                  <TableHead className="text-xs uppercase tracking-wider hidden md:table-cell whitespace-nowrap">
                     Cadastro
                   </TableHead>
-                  <TableHead className="text-right text-xs uppercase tracking-wider">
+                  <TableHead className="text-right text-xs uppercase tracking-wider whitespace-nowrap">
                     Ações
                   </TableHead>
                 </TableRow>
@@ -449,24 +450,24 @@ export default function UsersPage() {
                                 {avatarLetter}
                               </span>
                             </div>
-                            <div className="min-w-0">
-                              <p className="font-medium text-sm truncate">
+                            <div className="space-y-0.5">
+                              <p className="font-medium text-sm whitespace-nowrap">
                                 {displayName}
                               </p>
                               {subtitle && (
-                                <p className="text-xs text-muted-foreground truncate">
+                                <p className="text-xs text-muted-foreground whitespace-nowrap">
                                   {subtitle}
                                 </p>
                               )}
                               {!isActive && (
-                                <p className="text-[11px] text-amber-600 mt-0.5">
+                                <p className="text-[11px] text-amber-600">
                                   Conta desativada
                                 </p>
                               )}
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="w-[140px]">
+                        <TableCell className="whitespace-nowrap">
                           <div className="flex flex-col gap-1 items-start">
                             <StatusBadge variant={getRoleVariant(role)}>
                               {getRoleLabel(role)}
@@ -478,7 +479,7 @@ export default function UsersPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="hidden lg:table-cell">
+                        <TableCell className="hidden lg:table-cell whitespace-nowrap">
                           {linkedStudent || linkedTeacher ? (
                             <div className="flex flex-col gap-1">
                               {linkedStudent && (
@@ -498,7 +499,7 @@ export default function UsersPage() {
                             <span className="text-sm text-muted-foreground">—</span>
                           )}
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">
+                        <TableCell className="hidden md:table-cell whitespace-nowrap">
                           <div className="flex flex-col text-xs text-muted-foreground">
                             <span>
                               {user.created_at
@@ -639,6 +640,7 @@ export default function UsersPage() {
             )}
           </div>
         )}
+        </div>
 
         {/* Create/Edit User Dialog */}
         <UserFormDialog

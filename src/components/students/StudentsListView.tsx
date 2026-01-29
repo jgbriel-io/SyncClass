@@ -413,29 +413,29 @@ export function StudentsListView({
                     Aluno
                   </th>
                   {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
                       Professor
                     </th>
                   )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
                     Valor/hora
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
                     Aulas/semana
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
                     Total semanal
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
                     Dia pagto
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
                     Financeiro
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Última aula
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Ações
                   </th>
                 </tr>
@@ -515,33 +515,33 @@ export function StudentsListView({
                         </div>
                       </td>
                       {showTeacherColumn && (
-                        <td className="px-6 py-4 hidden xl:table-cell">
-                          <span className="text-sm text-muted-foreground truncate max-w-[160px] inline-block">
+                        <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
+                          <span className="text-sm text-muted-foreground">
                             {teacherName}
                           </span>
                         </td>
                       )}
-                      <td className="px-6 py-4 hidden xl:table-cell">
+                      <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {formatCurrency(hourlyRate)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden 2xl:table-cell">
+                      <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {classesPerWeek ?? "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden 2xl:table-cell">
+                      <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {formatCurrency(weeklyTotal)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden 2xl:table-cell">
+                      <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {(student as any).pay_day ?? "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden xl:table-cell">
+                      <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
                         {financialStatus ? (
                           <StatusBadge variant={financialStatus.variant}>
                             {financialStatus.label}
@@ -550,7 +550,7 @@ export function StudentsListView({
                           <span className="text-sm text-muted-foreground">Sem cobranças</span>
                         )}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="space-y-0.5">
                           <span className="text-sm text-muted-foreground block">
                             {lastClassDateRaw

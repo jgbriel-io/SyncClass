@@ -13,6 +13,9 @@ export interface ClassLogWithStudent extends ClassLog {
     name: string;
     teacher_id?: string | null;
   } | null;
+  teachers?: {
+    name: string;
+  } | null;
   financial_records: {
     id: string;
     status: "pendente" | "pago" | "atrasado" | null;
@@ -43,6 +46,9 @@ export function useClassLogs(teacherId?: string) {
           students (
             name,
             teacher_id
+          ),
+          teachers (
+            name
           ),
           financial_records (
             id,
