@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -30,6 +31,7 @@ export function useCreateStudent() {
 
   return useMutation({
     mutationFn: async (student: StudentInsert) => {
+      // 1. Criar o registro do aluno
       const { data, error } = await supabase
         .from("students")
         .insert(student)
@@ -40,33 +42,151 @@ export function useCreateStudent() {
         throw error;
       }
 
+      const createdStudent = data as Student;
+
+      // 2. Criar conta de acesso (auth.user) se tiver email
+      if (createdStudent.email) {
+        try {
+          const normalizedEmail = createdStudent.email.trim().toLowerCase();
+          
+          // Gerar senha aleatória
+          const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+          let password = "";
+          for (let i = 0; i < 10; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+
+          // Criar auth.user (trigger criará profiles + user_roles automaticamente)
+          const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
+            email: normalizedEmail,
+            password: password,
+            options: {
+              data: {
+                full_name: createdStudent.name,
+              },
+              emailRedirectTo: `${window.location.origin}/login`,
+            },
+          });
+
+          if (authError) {
+            console.error("Erro ao criar conta de acesso:", authError);
+            toast.warning("Aluno cadastrado, mas não foi possível criar a conta de acesso.");
+          } else if (authData.user) {
+            const userId = authData.user.id;
+            console.log("✅ Auth user criado:", userId);
+
+            // Aguardar trigger completar
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Verificar se profile já existe (criado pelo trigger)
+            const { data: existingProfile, error: checkError } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("user_id", userId)
+              .maybeSingle();
+
+            console.log("🔍 Profile existente?", existingProfile);
+
+            if (checkError) {
+              console.error("❌ Erro ao verificar profile:", checkError);
+            }
+
+            // UPSERT profile (cria se não existir, atualiza se existir)
+            const profilePayload = {
+              user_id: userId,
+              student_id: createdStudent.id,
+              role: "student",
+              full_name: createdStudent.name,
+              email: normalizedEmail,
+              active: true
+            };
+
+            console.log("📝 Tentando UPSERT profile:", profilePayload);
+
+            const { data: profileData, error: profileError } = await supabase
+              .from("profiles")
+              .upsert(profilePayload, { 
+                onConflict: "user_id",
+                ignoreDuplicates: false 
+              })
+              .select()
+              .single();
+
+            if (profileError) {
+              console.error("❌ ERRO ao criar profile:", {
+                message: profileError.message,
+                details: profileError.details,
+                hint: profileError.hint,
+                code: profileError.code
+              });
+              toast.error(`Erro ao criar profile: ${profileError.message}`);
+            } else {
+              console.log("✅ Profile criado/atualizado:", profileData);
+            }
+
+            // UPSERT user_roles para garantir role de student
+            const { data: roleData, error: roleError } = await supabase
+              .from("user_roles")
+              .upsert({
+                user_id: userId,
+                role: "student",
+                full_name: createdStudent.name,
+                email: normalizedEmail,
+              }, { onConflict: "user_id" })
+              .select()
+              .single();
+
+            if (roleError) {
+              console.error("❌ ERRO ao criar user_role:", roleError);
+            } else {
+              console.log("✅ User_role criado/atualizado:", roleData);
+            }
+
+            // Forçar atualização das queries
+            queryClient.invalidateQueries({ queryKey: ["users"] });
+            queryClient.invalidateQueries({ queryKey: ["profiles"] });
+          }
+        } catch (authError) {
+          console.error("❌ Erro ao criar conta de acesso:", authError);
+          toast.error(`Erro: ${authError}`);
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
-      toast.success("Aluno cadastrado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      toast.success("Aluno e conta de acesso cadastrados com sucesso!");
     },
     onError: (error) => {
-      console.error("Error creating student:", error);
+      console.error("❌ Error creating student:", error);
       const err = error as any;
       const message: string = err?.message || "";
+      const details: string = err?.details || "";
+      const hint: string = err?.hint || "";
 
-      if (err?.code === "23505") {
-        if (message.includes("students_unique_email")) {
-          toast.error("Já existe um aluno cadastrado com este email.");
+      console.log("Detalhes do erro:", { message, details, hint, code: err?.code });
+
+      if (err?.code === "23505" || message.includes("duplicate") || message.includes("unique")) {
+        if (message.includes("students_unique_email") || message.includes("email")) {
+          toast.error("⚠️ Já existe um aluno cadastrado com este email.");
           return;
         }
-        if (message.includes("students_unique_cpf")) {
-          toast.error("Já existe um aluno cadastrado com este CPF.");
+        if (message.includes("students_unique_cpf") || message.includes("cpf")) {
+          toast.error("⚠️ Já existe um aluno cadastrado com este CPF.");
           return;
         }
-        if (message.includes("students_unique_phone")) {
-          toast.error("Já existe um aluno cadastrado com este telefone.");
+        if (message.includes("students_unique_phone") || message.includes("phone")) {
+          toast.error("⚠️ Já existe um aluno cadastrado com este telefone.");
           return;
         }
+        toast.error("⚠️ Já existe um aluno com estes dados (email, CPF ou telefone).");
+        return;
       }
 
-      toast.error("Erro ao cadastrar aluno. Tente novamente.");
+      toast.error(`Erro ao cadastrar aluno: ${message || "Tente novamente"}`);
     },
   });
 }
