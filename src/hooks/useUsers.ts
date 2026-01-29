@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { toast } from "sonner";
+import { StudentInsert } from "./useStudents";
+import { TeacherInsert } from "./useTeachers";
 
 export interface UserWithProfile {
   id: string;
@@ -30,6 +32,7 @@ export interface UserWithProfile {
 export function useUsers() {
   return useQuery({
     queryKey: ["users"],
+    staleTime: 0, // Always fetch fresh data
     queryFn: async () => {
       // Buscar perfis
       const { data: profiles, error: profilesError } = await supabase
@@ -134,6 +137,7 @@ export function useCreateUser() {
         options: {
           data: {
             full_name: fullName,
+            role: role, // Pass role to trigger
           },
           emailRedirectTo: `${window.location.origin}/login`,
         },
@@ -587,6 +591,7 @@ export function useCreateAuthUserForStudent() {
         options: {
           data: {
             full_name: fullName,
+            role: "student", // Pass role to trigger
           },
           emailRedirectTo: `${window.location.origin}/login`,
         },
@@ -596,6 +601,9 @@ export function useCreateAuthUserForStudent() {
       if (!authData.user) throw new Error("Failed to create user");
 
       const userId = authData.user.id;
+
+      // Wait a bit for trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       // Link profile to existing student and update name
       const { error: profileError } = await supabase
@@ -642,6 +650,212 @@ export function useCreateAuthUserForStudent() {
   });
 }
 
+// Create user with full student or teacher profile in one operation
+export function useCreateUserWithFullProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      role,
+      fullName,
+      email,
+      password,
+      studentData,
+      teacherData,
+    }: {
+      role: "admin" | "student" | "teacher";
+      fullName: string;
+      email: string;
+      password?: string;
+      studentData?: Partial<StudentInsert>;
+      teacherData?: Partial<TeacherInsert>;
+    }) => {
+      const normalizedEmail = email.trim().toLowerCase();
+
+      // 1. Validate email uniqueness
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("email", normalizedEmail)
+        .maybeSingle();
+
+      if (profileCheckError) {
+        console.error("Error checking email uniqueness:", profileCheckError);
+        throw new Error("Erro ao validar email. Tente novamente.");
+      }
+
+      if (existingProfile) {
+        throw new Error("Já existe uma conta com esse email.");
+      }
+
+      // 2. Generate password if needed
+      let finalPassword = password;
+      if (!finalPassword || finalPassword.length < 6) {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+        const length = 10;
+        finalPassword = "";
+        for (let i = 0; i < length; i++) {
+          finalPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+      }
+
+      // 3. Create auth user with role in metadata
+      const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
+        email: normalizedEmail,
+        password: finalPassword,
+        options: {
+          data: {
+            full_name: fullName,
+            role: role,
+          },
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Failed to create user");
+
+      const userId = authData.user.id;
+
+      // Wait for trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Ensure profile exists (create if trigger didn't fire)
+      const { data: createdProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!createdProfile) {
+        console.log("Profile not created by trigger, creating manually...");
+        const { error: profileCreateError } = await supabase
+          .from("profiles")
+          .insert({
+            user_id: userId,
+            full_name: fullName,
+            email: normalizedEmail,
+            role: role,
+            active: true,
+          });
+
+        if (profileCreateError) {
+          console.error("Error creating profile manually:", profileCreateError);
+          throw new Error("Erro ao criar perfil do usuário");
+        }
+      }
+
+      // Ensure user_roles exists
+      const { error: roleUpsertError } = await supabase
+        .from("user_roles")
+        .upsert({
+          user_id: userId,
+          role: role,
+          full_name: fullName,
+          email: normalizedEmail,
+        });
+
+      if (roleUpsertError) {
+        console.error("Error upserting user role:", roleUpsertError);
+      }
+
+      // 4. Create domain record (student or teacher) with full data
+      let domainRecordId: string | null = null;
+
+      if (role === "student" && studentData) {
+        const { data: student, error: studentError } = await supabase
+          .from("students")
+          .insert({
+            ...studentData,
+            name: fullName,
+            email: normalizedEmail,
+          })
+          .select("id")
+          .single();
+
+        if (studentError) {
+          console.error("Error creating student:", studentError);
+          throw new Error("Erro ao criar registro de aluno");
+        }
+
+        domainRecordId = student.id;
+
+        // 5. Link profile to student
+        const { error: linkError } = await supabase
+          .from("profiles")
+          .update({ 
+            student_id: student.id,
+            full_name: fullName,
+            email: normalizedEmail,
+            role: "student",
+            active: true
+          })
+          .eq("user_id", userId);
+
+        if (linkError) {
+          console.error("Error linking profile to student:", linkError);
+        }
+      } else if (role === "teacher" && teacherData) {
+        const { data: teacher, error: teacherError } = await supabase
+          .from("teachers")
+          .insert({
+            ...teacherData,
+            name: fullName,
+            email: normalizedEmail,
+          })
+          .select("id")
+          .single();
+
+        if (teacherError) {
+          console.error("Error creating teacher:", teacherError);
+          throw new Error("Erro ao criar registro de professor");
+        }
+
+        domainRecordId = teacher.id;
+
+        // 5. Link profile to teacher
+        const { error: linkError } = await supabase
+          .from("profiles")
+          .update({ 
+            teacher_id: teacher.id,
+            full_name: fullName,
+            email: normalizedEmail,
+            role: "teacher",
+            active: true
+          })
+          .eq("user_id", userId);
+
+        if (linkError) {
+          console.error("Error linking profile to teacher:", linkError);
+        }
+      }
+
+      return {
+        user: authData.user,
+        password: finalPassword,
+        domainRecordId,
+      };
+    },
+    onSuccess: () => {
+      // Invalidate immediately
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      
+      // Force refetch after a delay to ensure DB propagation
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["users"] });
+        queryClient.refetchQueries({ queryKey: ["users"] });
+      }, 1500);
+    },
+    onError: (error: any) => {
+      console.error("Error creating user with full profile:", error);
+      toast.error(error.message || "Erro ao criar usuário. Tente novamente.");
+    },
+  });
+}
+
 // Create auth user and link to an existing teacher
 export function useCreateAuthUserForTeacher() {
   const queryClient = useQueryClient();
@@ -669,6 +883,7 @@ export function useCreateAuthUserForTeacher() {
         options: {
           data: {
             full_name: fullName,
+            role: "teacher", // Pass role to trigger
           },
           emailRedirectTo: `${window.location.origin}/login`,
         },
@@ -678,6 +893,9 @@ export function useCreateAuthUserForTeacher() {
       if (!authData.user) throw new Error("Failed to create user");
 
       const userId = authData.user.id;
+
+      // Wait a bit for trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       const { error: profileError } = await supabase
         .from("profiles")

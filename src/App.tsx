@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AuthRedirect } from "@/components/auth/AuthRedirect";
+import { setupAuthErrorHandler } from "@/lib/auth-error-handler";
+import { validateEnvironment } from "@/lib/env-validator";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import StudentsPage from "./pages/admin/Students";
@@ -27,6 +29,12 @@ import TeacherOverviewPage from "./pages/teacher/TeacherOverview";
 import TeacherPedagogicalPage from "./pages/teacher/TeacherPedagogical";
 
 const queryClient = new QueryClient();
+
+// Validate environment variables
+validateEnvironment();
+
+// Setup global auth error handler for refresh token errors
+setupAuthErrorHandler();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

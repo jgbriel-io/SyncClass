@@ -24,7 +24,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserRole = async (userId: string) => {
     try {
-      console.log("Fetching role for user:", userId);
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
@@ -33,11 +32,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error("Error fetching role:", error);
-        console.error("Error details:", JSON.stringify(error, null, 2));
         return null;
       }
-      console.log("Role data:", data);
-      console.log("Role value:", data?.role);
       return data?.role as UserRole;
     } catch (error) {
       console.error("Error fetching role:", error);
@@ -48,11 +44,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
+    // Handle invalid refresh token errors by forcing logout
+    const handleInvalidRefreshToken = async () => {
+      console.warn("Invalid refresh token detected - forcing logout");
+      try {
+        await supabase.auth.signOut();
+        // Clear all auth-related items from localStorage
+        const keysToRemove = Object.keys(localStorage).filter(
+          key => key.startsWith('supabase') || key.includes('auth')
+        );
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+      } catch (error) {
+        console.error("Error during forced logout:", error);
+      }
+      
+      setUser(null);
+      setSession(null);
+      setRole(null);
+      setIsLoading(false);
+      
+      // Redirect to login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    };
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (!isMounted) return;
         
+        // Handle sign out or session expired
+        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+          setSession(null);
+          setUser(null);
+          setRole(null);
+          setIsLoading(false);
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -74,8 +104,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (!isMounted) return;
+      
+      // Handle invalid refresh token error
+      if (error) {
+        console.error("Error getting session:", error);
+        if (
+          error.message?.includes("Invalid Refresh Token") ||
+          error.message?.includes("Refresh Token Not Found") ||
+          error.message?.includes("refresh_token")
+        ) {
+          handleInvalidRefreshToken();
+          return;
+        }
+      }
       
       setSession(session);
       setUser(session?.user ?? null);
@@ -89,6 +132,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       } else {
         setIsLoading(false);
+      }
+    }).catch((error) => {
+      console.error("Unexpected error in getSession:", error);
+      if (isMounted) {
+        handleInvalidRefreshToken();
       }
     });
 
