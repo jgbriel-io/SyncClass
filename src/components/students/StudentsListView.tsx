@@ -47,6 +47,7 @@ import {
 } from "@/hooks/useStudents";
 import { useCreateAuthUserForStudent } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFinancialRecords } from "@/hooks/useFinancialRecords";
 import { useClassLogs } from "@/hooks/useClassLogs";
@@ -108,6 +109,7 @@ export function StudentsListView({
   const updateStudent = useUpdateStudent();
   const deleteStudent = useDeleteStudent();
   const createStudentUser = useCreateAuthUserForStudent();
+  const queryClient = useQueryClient();
 
   const teacherMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -273,12 +275,43 @@ export function StudentsListView({
                 },
                 {
                   onSuccess: (result) => {
-                    if (result?.password) {
-                      setGeneratedPassword(result.password);
-                      setShowGeneratedPassword(false);
-                      setPasswordCopied(false);
-                      setIsPasswordDialogOpen(true);
+                    if (!result?.password) return;
+
+                    const userId = result.user?.id as string | undefined;
+                    const studentId = createdStudent.id;
+
+                    // Update profiles cache optimistically so Users tab shows link immediately
+                    try {
+                      queryClient.setQueryData(["profiles", "all"], (old: any) => {
+                        if (!old) return old;
+                        return (old as any[]).map((p: any) =>
+                          p.user_id === userId ? { ...p, student_id: studentId } : p
+                        );
+                      });
+                      queryClient.setQueryData(["users"], (old: any) => {
+                        if (!old) return old;
+                        return (old as any[]).map((u: any) => {
+                          if (u.id === userId) {
+                            return {
+                              ...u,
+                              profile: {
+                                ...(u.profile || {}),
+                                student_id: studentId,
+                              },
+                            };
+                          }
+                          return u;
+                        });
+                      });
+                    } catch (e) {
+                      // ignore cache update failures
                     }
+
+                    setGeneratedPassword(result.password);
+                    setShowGeneratedPassword(false);
+                    setPasswordCopied(false);
+                    setIsPasswordDialogOpen(true);
+                    toast.success("Aluno e conta de acesso cadastrados com sucesso.");
                   },
                 }
               );
@@ -617,15 +650,7 @@ export function StudentsListView({
       />
 
       {/* Generated Password Dialog */}
-      <Dialog
-        open={isPasswordDialogOpen}
-        onOpenChange={(open) => {
-          setIsPasswordDialogOpen(open);
-          if (!open && generatedPassword) {
-            toast.success("Conta criada para o aluno.");
-          }
-        }}
-      >
+      <Dialog open={isPasswordDialogOpen} onOpenChange={(open) => setIsPasswordDialogOpen(open)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Senha criada para o aluno</DialogTitle>

@@ -47,6 +47,7 @@ import {
 } from "@/hooks/useTeachers";
 import { useCreateAuthUserForTeacher } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export default function TeachersPage() {
@@ -66,6 +67,7 @@ export default function TeachersPage() {
   const updateTeacher = useUpdateTeacher();
   const deleteTeacher = useDeleteTeacher();
   const createTeacherUser = useCreateAuthUserForTeacher();
+  const queryClient = useQueryClient();
 
   const filteredTeachers = teachers.filter((teacher) => {
     const name = (teacher.name ?? "").toLowerCase();
@@ -129,12 +131,42 @@ export default function TeachersPage() {
                 },
                 {
                   onSuccess: (result) => {
-                    if (result?.password) {
-                      setGeneratedPassword(result.password);
-                      setShowGeneratedPassword(false);
-                      setPasswordCopied(false);
-                      setIsPasswordDialogOpen(true);
+                    if (!result?.password) return;
+
+                    const userId = result.user?.id as string | undefined;
+                    const teacherId = createdTeacher.id;
+
+                    try {
+                      queryClient.setQueryData(["profiles", "all"], (old: any) => {
+                        if (!old) return old;
+                        return (old as any[]).map((p: any) =>
+                          p.user_id === userId ? { ...p, teacher_id: teacherId } : p
+                        );
+                      });
+                      queryClient.setQueryData(["users"], (old: any) => {
+                        if (!old) return old;
+                        return (old as any[]).map((u: any) => {
+                          if (u.id === userId) {
+                            return {
+                              ...u,
+                              profile: {
+                                ...(u.profile || {}),
+                                teacher_id: teacherId,
+                              },
+                            };
+                          }
+                          return u;
+                        });
+                      });
+                    } catch (e) {
+                      // ignore cache update failures
                     }
+
+                    setGeneratedPassword(result.password);
+                    setShowGeneratedPassword(false);
+                    setPasswordCopied(false);
+                    setIsPasswordDialogOpen(true);
+                    toast.success("Professor e conta de acesso cadastrados com sucesso.");
                   },
                 }
               );

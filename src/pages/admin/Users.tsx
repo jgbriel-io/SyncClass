@@ -63,6 +63,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,6 +84,7 @@ export default function UsersPage() {
   const { data: students = [] } = useStudents();
   const { data: teachers = [] } = useTeachers();
   const createUser = useCreateUser();
+  const queryClient = useQueryClient();
   const updateRole = useUpdateUserRole();
   const updateProfile = useUpdateUserProfile();
   const deleteUser = useDeleteUser();
@@ -164,13 +166,58 @@ export default function UsersPage() {
           teacherData: data.teacherData,
         },
         {
-          onSuccess: (result: any) => {
+          onSuccess: (result: any, variables: any) => {
             setIsFormOpen(false);
             if (result?.password) {
+              const userId = result.user?.id as string | undefined;
+              const studentId = result.createdStudent?.id as string | undefined;
+              const teacherId = result.createdTeacher?.id as string | undefined;
+
+              try {
+                // update profiles cache so Users list shows linkage immediately
+                queryClient.setQueryData(["profiles", "all"], (old: any) => {
+                  if (!old) return old;
+                  return (old as any[]).map((p: any) => {
+                    if (p.user_id === userId) {
+                      return {
+                        ...p,
+                        student_id: studentId ?? p.student_id,
+                        teacher_id: teacherId ?? p.teacher_id,
+                      };
+                    }
+                    return p;
+                  });
+                });
+                queryClient.setQueryData(["users"], (old: any) => {
+                  if (!old) return old;
+                  return (old as any[]).map((u: any) => {
+                    if (u.id === userId) {
+                      return {
+                        ...u,
+                        profile: {
+                          ...(u.profile || {}),
+                          student_id: studentId ?? (u.profile?.student_id ?? null),
+                          teacher_id: teacherId ?? (u.profile?.teacher_id ?? null),
+                        },
+                      };
+                    }
+                    return u;
+                  });
+                });
+              } catch (e) {
+                // ignore cache update failures
+              }
+
               setGeneratedPassword(result.password);
               setShowGeneratedPassword(false);
               setPasswordCopied(false);
               setIsPasswordDialogOpen(true);
+              const role = (variables && variables.role) ? String(variables.role) : null;
+              if (role === "admin") {
+                toast.success("Conta de admin criada com sucesso.");
+              } else {
+                toast.success("Conta criada com sucesso.");
+              }
             }
           },
         }

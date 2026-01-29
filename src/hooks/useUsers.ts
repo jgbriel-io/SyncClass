@@ -259,6 +259,7 @@ export function useCreateUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
     },
     onError: (error: any) => {
       console.error("Error creating user:", error);
@@ -403,6 +404,7 @@ export function useUpdateUserProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
       toast.success("Perfil atualizado com sucesso!");
     },
     onError: (error: any) => {
@@ -432,6 +434,7 @@ export function useDeleteUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
       toast.success("Usuário desativado com sucesso!");
     },
     onError: (error: any) => {
@@ -456,6 +459,7 @@ export function useHardDeleteUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
       toast.success("Usuário excluído definitivamente.");
     },
     onError: (error: any) => {
@@ -515,6 +519,7 @@ export function useLinkUserToStudent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
       toast.success("Usuário vinculado ao aluno com sucesso!");
     },
     onError: (error: any) => {
@@ -571,6 +576,7 @@ export function useLinkUserToTeacher() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
       toast.success("Usuário vinculado ao professor com sucesso!");
     },
     onError: (error: any) => {
@@ -596,6 +602,7 @@ export function useUnlinkUserFromStudent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
       toast.success("Vínculo removido com sucesso!");
     },
     onError: (error: any) => {
@@ -700,35 +707,34 @@ export function useCreateAuthUserForStudent() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
     },
-    onError: (error: any) => {
+    onError: async (error: any, variables: any) => {
       console.error("Error creating auth user for student:", error);
-      const message = String(error?.message || "").toLowerCase();
 
-      if (message.includes("already")) {
-        (async () => {
-          try {
-            const email = String((error?.request?.body && JSON.parse(error.request.body).email) || "");
-            const normalized = email.trim().toLowerCase();
-            if (normalized) {
-              const { data: existingProfile } = await supabase
-                .from("profiles")
-                .select("user_id, student_id")
-                .ilike("email", normalized)
-                .maybeSingle();
+      // Prefer email from mutation variables (reliable)
+      const emailVar = (variables && variables.email) ? String(variables.email).trim().toLowerCase() : null;
 
-              if (existingProfile) {
-                toast.success("Conta já existe e parece estar vinculada na aba Usuários.");
-                return;
-              }
-            }
-          } catch (e) {
-            // ignore and fall back to default message
+      if (emailVar) {
+        try {
+          const { data: existingProfile } = await supabase
+            .from("profiles")
+            .select("user_id, student_id")
+            .ilike("email", emailVar)
+            .maybeSingle();
+
+          if (existingProfile) {
+            // perfil já existe — suprimir notificação aqui para evitar toasts duplicados
+            return;
           }
+        } catch (e) {
+          // ignore and fall back to default message
+        }
+      }
 
-          toast.error(
-            "Já existe uma conta com esse email. Use a aba Usuários para vincular esse aluno à conta existente."
-          );
-        })();
+      const message = String(error?.message || "").toLowerCase();
+      if (message.includes("already")) {
+        toast.error(
+          "Já existe uma conta com esse email. Use a aba Usuários para vincular esse aluno à conta existente."
+        );
       } else {
         toast.error(error.message || "Erro ao criar conta de acesso para o aluno.");
       }
@@ -804,35 +810,33 @@ export function useCreateAuthUserForTeacher() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
     },
-    onError: (error: any) => {
+    onError: async (error: any, variables: any) => {
       console.error("Error creating auth user for teacher:", error);
-      const message = String(error?.message || "").toLowerCase();
 
-      if (message.includes("already")) {
-        (async () => {
-          try {
-            const email = String((error?.request?.body && JSON.parse(error.request.body).email) || "");
-            const normalized = email.trim().toLowerCase();
-            if (normalized) {
-              const { data: existingProfile } = await supabase
-                .from("profiles")
-                .select("user_id, teacher_id")
-                .ilike("email", normalized)
-                .maybeSingle();
+      const emailVar = (variables && variables.email) ? String(variables.email).trim().toLowerCase() : null;
 
-              if (existingProfile) {
-                toast.success("Conta já existe e parece estar vinculada na aba Usuários.");
-                return;
-              }
-            }
-          } catch (e) {
-            // ignore and fall back to default message
+      if (emailVar) {
+        try {
+          const { data: existingProfile } = await supabase
+            .from("profiles")
+            .select("user_id, teacher_id")
+            .ilike("email", emailVar)
+            .maybeSingle();
+
+          if (existingProfile) {
+            // perfil já existe — suprimir notificação aqui para evitar toasts duplicados
+            return;
           }
+        } catch (e) {
+          // ignore and fall back to default
+        }
+      }
 
-          toast.error(
-            "Já existe uma conta com esse email. Use a aba Usuários para vincular esse professor à conta existente."
-          );
-        })();
+      const message = String(error?.message || "").toLowerCase();
+      if (message.includes("already")) {
+        toast.error(
+          "Já existe uma conta com esse email. Use a aba Usuários para vincular esse professor à conta existente."
+        );
       } else {
         toast.error(error.message || "Erro ao criar conta de acesso para o professor.");
       }
