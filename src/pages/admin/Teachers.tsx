@@ -7,9 +7,19 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { PageContainer } from "@/components/ui/page-container";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -172,7 +182,7 @@ export default function TeachersPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <PageContainer>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Professores</h1>
@@ -214,39 +224,35 @@ export default function TeachersPage() {
         </div>
         {/* Table */}
         <div className="rounded-lg border bg-card shadow-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                    Nome
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                    Email
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                    Telefone
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                    Status
-                  </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs uppercase tracking-wider">
+                  Nome
+                </TableHead>
+                <TableHead className="text-xs uppercase tracking-wider">
+                  Email
+                </TableHead>
+                <TableHead className="text-xs uppercase tracking-wider">
+                  Telefone
+                </TableHead>
+                <TableHead className="text-xs uppercase tracking-wider">
+                  Status
+                </TableHead>
+                <TableHead className="text-right text-xs uppercase tracking-wider">
+                  Ações
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
                 {filteredTeachers.map((teacher) => {
                   const status =
                     ((teacher as any).status as string | null) ?? "ativo";
                   const lastUpdatedAt = (teacher as any).updated_at as string | null | undefined;
 
                   return (
-                    <tr
-                      key={teacher.id}
-                      className="hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="px-6 py-4">
+                    <TableRow key={teacher.id}>
+                      <TableCell>
                         <div className="flex flex-col">
                           <span className="font-medium text-sm">
                             {teacher.name}
@@ -257,14 +263,14 @@ export default function TeachersPage() {
                             </span>
                           )}
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
                         <span className="text-sm">{teacher.email || "—"}</span>
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
                         <span className="text-sm">{teacher.phone || "—"}</span>
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
                         <StatusBadge
                           variant={
                             status === "inativo" ? "default" : "success"
@@ -272,8 +278,8 @@ export default function TeachersPage() {
                         >
                           {status === "inativo" ? "Inativo" : "Ativo"}
                         </StatusBadge>
-                      </td>
-                      <td className="px-6 py-4 text-right">
+                      </TableCell>
+                      <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
@@ -309,19 +315,20 @@ export default function TeachersPage() {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+            </TableBody>
+          </Table>
           {filteredTeachers.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              {teachers.length === 0
-                ? "Nenhum professor cadastrado ainda"
-                : "Nenhum professor encontrado com esses filtros"}
-            </div>
+            <EmptyState
+              icon={Search}
+              title={teachers.length === 0 ? "Nenhum professor cadastrado" : "Nenhum resultado"}
+              message={teachers.length === 0
+                ? "Clique no botão 'Novo Professor' para adicionar o primeiro"
+                : "Ajuste os filtros acima ou limpe a busca"}
+            />
           )}
         </div>
 
@@ -477,7 +484,7 @@ export default function TeachersPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </PageContainer>
     </AdminLayout>
   );
 }

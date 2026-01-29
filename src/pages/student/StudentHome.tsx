@@ -1,4 +1,6 @@
 import { StudentLayout } from "@/components/layout/StudentLayout";
+import { PageContainer } from "@/components/ui/page-container";
+import { EmptyState } from "@/components/ui/empty-state";
 import { CheckCircle, AlertCircle, BookOpen, Calendar, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -23,12 +25,12 @@ export default function StudentHome() {
 
   return (
     <StudentLayout>
-      <div className="space-y-6 max-w-lg mx-auto">
+      <PageContainer constrained maxWidth="5xl">
         {/* Loading */}
         {isLoading && (
-          <div className="flex items-center justify-center py-12">
+          <EmptyState size="lg">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+          </EmptyState>
         )}
 
         {!isLoading && (
@@ -129,11 +131,11 @@ export default function StudentHome() {
                     )}
                   </div>
                 ) : (
-                  <div className="rounded-xl border bg-card p-5 shadow-card text-center">
-                    <BookOpen className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">
-                      Nenhuma aula registrada ainda
-                    </p>
+                  <div className="rounded-xl border bg-card shadow-card">
+                    <EmptyState
+                      icon={BookOpen}
+                      message="Nenhuma aula registrada ainda"
+                    />
                   </div>
                 )}
 
@@ -158,7 +160,7 @@ export default function StudentHome() {
             )}
           </>
         )}
-      </div>
+      </PageContainer>
     </StudentLayout>
   );
 }

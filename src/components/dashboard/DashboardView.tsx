@@ -1,4 +1,5 @@
 import { StatusBadge } from "@/components/ui/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Users,
   AlertCircle,
@@ -321,10 +322,11 @@ export function DashboardView({
               </div>
               <div className="divide-y max-h-[320px] overflow-y-auto">
                 {upcomingPayments.length === 0 ? (
-                  <div className="px-6 py-10 text-center text-muted-foreground">
-                    <DollarSign className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Nenhum vencimento próximo</p>
-                  </div>
+                  <EmptyState
+                    icon={DollarSign}
+                    message="Nenhum vencimento próximo"
+                    size="default"
+                  />
                 ) : (
                   upcomingPayments.map((payment) => (
                     <div
@@ -380,10 +382,11 @@ export function DashboardView({
               </div>
               <div className="divide-y max-h-[320px] overflow-y-auto">
                 {birthdays.length === 0 ? (
-                  <div className="px-6 py-10 text-center text-muted-foreground">
-                    <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Nenhum aniversariante este mês</p>
-                  </div>
+                  <EmptyState
+                    icon={Calendar}
+                    message="Nenhum aniversariante este mês"
+                    size="default"
+                  />
                 ) : (
                   birthdays.map((birthday) => (
                     <div

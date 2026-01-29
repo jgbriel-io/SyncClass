@@ -1,8 +1,18 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { PageContainer } from "@/components/ui/page-container";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -326,7 +336,7 @@ export default function UsersPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <PageContainer>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -386,28 +396,27 @@ export default function UsersPage() {
         {/* Table */}
         {!isLoading && !error && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                      Usuário
-                    </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 w-[140px]">
-                      Privilégio
-                    </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
-                      Vínculo
-                    </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
-                      Cadastro
-                    </th>
-                    <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs uppercase tracking-wider">
+                    Usuário
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider w-[140px]">
+                    Privilégio
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider hidden lg:table-cell">
+                    Vínculo
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider hidden md:table-cell">
+                    Cadastro
+                  </TableHead>
+                  <TableHead className="text-right text-xs uppercase tracking-wider">
+                    Ações
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                   {filteredUsers.map((user) => {
                     const linkedStudent = user.profile?.student_id
                       ? students.find((s) => s.id === user.profile?.student_id)
@@ -432,11 +441,8 @@ export default function UsersPage() {
                     const lastUpdatedAt = (user.profile as any)?.updated_at as string | null | undefined;
 
                     return (
-                      <tr
-                        key={user.id}
-                        className="hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="px-6 py-4">
+                      <TableRow key={user.id}>
+                        <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                               <span className="text-sm font-medium text-accent-foreground">
@@ -459,8 +465,8 @@ export default function UsersPage() {
                               )}
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 w-[140px]">
+                        </TableCell>
+                        <TableCell className="w-[140px]">
                           <div className="flex flex-col gap-1 items-start">
                             <StatusBadge variant={getRoleVariant(role)}>
                               {getRoleLabel(role)}
@@ -471,8 +477,8 @@ export default function UsersPage() {
                               </span>
                             )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 hidden lg:table-cell">
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           {linkedStudent || linkedTeacher ? (
                             <div className="flex flex-col gap-1">
                               {linkedStudent && (
@@ -491,8 +497,8 @@ export default function UsersPage() {
                           ) : (
                             <span className="text-sm text-muted-foreground">—</span>
                           )}
-                        </td>
-                        <td className="px-6 py-4 hidden md:table-cell">
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <div className="flex flex-col text-xs text-muted-foreground">
                             <span>
                               {user.created_at
@@ -505,8 +511,8 @@ export default function UsersPage() {
                               </span>
                             )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
+                        </TableCell>
+                        <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
@@ -616,19 +622,20 @@ export default function UsersPage() {
                               })()}
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
+              </TableBody>
+            </Table>
             {filteredUsers.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                {users.length === 0
-                  ? "Nenhum usuário cadastrado ainda"
-                  : "Nenhum usuário encontrado com esses filtros"}
-              </div>
+              <EmptyState
+                icon={User}
+                title={users.length === 0 ? "Nenhum usuário cadastrado" : "Nenhum resultado"}
+                message={users.length === 0
+                  ? "Clique no botão 'Novo Usuário' para adicionar o primeiro"
+                  : "Ajuste os filtros acima ou limpe a busca"}
+              />
             )}
           </div>
         )}
@@ -934,7 +941,7 @@ export default function UsersPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
+      </PageContainer>
     </AdminLayout>
   );
 }
