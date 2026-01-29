@@ -145,15 +145,15 @@ function StudentOverviewPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50">
-                      <TableHead className="w-[200px]">Aluno</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
-                      <TableHead className="text-center">Aulas</TableHead>
-                      <TableHead className="text-center">Frequência</TableHead>
-                      <TableHead className="text-center">Média</TableHead>
-                      <TableHead className="text-right">Pago</TableHead>
-                      <TableHead className="text-right">Pendente</TableHead>
-                      <TableHead className="text-right">Atrasado</TableHead>
-                      <TableHead className="text-center w-[80px]">Ações</TableHead>
+                      <TableHead className="whitespace-nowrap">Aluno</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Status</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Aulas</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Frequência</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Média</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Pago</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Pendente</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Atrasado</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -168,18 +168,18 @@ function StudentOverviewPage() {
                           key={student.id}
                           className="hover:bg-muted/30 transition-colors"
                         >
-                          <TableCell>
+                          <TableCell className="whitespace-nowrap">
                             <div className="flex items-center gap-3">
                               <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                                 <span className="text-sm font-medium text-accent-foreground">
                                   {student.name.charAt(0)}
                                 </span>
                               </div>
-                              <div className="min-w-0">
-                                <p className="font-medium text-sm truncate">
+                              <div>
+                                <p className="font-medium text-sm">
                                   {student.name}
                                 </p>
-                                <p className="text-xs text-muted-foreground truncate">
+                                <p className="text-xs text-muted-foreground">
                                   {student.email || student.phone || "—"}
                                 </p>
                               </div>
@@ -351,15 +351,15 @@ function StudentOverviewPage() {
               <table className="min-w-full text-sm">
                 <thead className="bg-muted/50 border-b">
                   <tr>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aluno</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Cidade</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Valor/hora</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas/semana</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas/mês</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Prev. mensal</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Dia pagamento</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Status pagto (mês)</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas devidas (mês)</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aluno</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Cidade</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Valor/hora</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aulas/semana</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aulas/mês</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Prev. mensal</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Dia pagamento</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Status pagto (mês)</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aulas devidas (mês)</th>
                   </tr>
                 </thead>
                 <tbody>

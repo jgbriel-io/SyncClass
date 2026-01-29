@@ -89,15 +89,15 @@ const TeacherOverviewPage = () => {
               <table className="min-w-full text-sm">
                 <thead className="bg-muted/50 border-b">
                   <tr>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aluno</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Cidade</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Valor/hora</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas/semana</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas/mês</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Prev. mensal</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Dia pagamento</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Status pagto (mês)</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aulas devidas (mês)</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aluno</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Cidade</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Valor/hora</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aulas/semana</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aulas/mês</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Prev. mensal</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Dia pagamento</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Status pagto (mês)</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aulas devidas (mês)</th>
                   </tr>
                 </thead>
                 <tbody>
