@@ -45,10 +45,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
+    // Handle invalid refresh token errors
+    const handleInvalidRefreshToken = () => {
+      console.warn("Invalid refresh token detected, clearing session and redirecting to login");
+      setUser(null);
+      setSession(null);
+      setRole(null);
+      setIsLoading(false);
+      localStorage.removeItem("sb-" + import.meta.env.VITE_SUPABASE_URL?.split("//")[1]?.split(".")[0] + "-auth-token");
+      window.location.href = "/login";
+    };
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!isMounted) return;
+        
+        // Detect token refresh errors
+        if (event === "TOKEN_REFRESHED" && !session) {
+          handleInvalidRefreshToken();
+          return;
+        }
+
+        if (event === "SIGNED_OUT") {
+          setSession(null);
+          setUser(null);
+          setRole(null);
+          setIsLoading(false);
+          return;
+        }
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -69,6 +94,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     );
+
+    // Fallback: Listen for unhandled promise rejections (refresh token errors)
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const error = event.reason;
+      const errorMessage = error?.message || error?.toString() || "";
+      
+      if (
+        errorMessage.includes("Invalid Refresh Token") ||
+        errorMessage.includes("Refresh Token Not Found") ||
+        errorMessage.includes("refresh_token_not_found")
+      ) {
+        event.preventDefault();
+        handleInvalidRefreshToken();
+      }
+    };
+
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -92,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       isMounted = false;
       subscription.unsubscribe();
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
     };
   }, []);
 
