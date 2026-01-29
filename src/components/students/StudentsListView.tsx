@@ -47,7 +47,6 @@ import {
 } from "@/hooks/useStudents";
 import { useCreateAuthUserForStudent } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFinancialRecords } from "@/hooks/useFinancialRecords";
 import { useClassLogs } from "@/hooks/useClassLogs";
@@ -109,7 +108,6 @@ export function StudentsListView({
   const updateStudent = useUpdateStudent();
   const deleteStudent = useDeleteStudent();
   const createStudentUser = useCreateAuthUserForStudent();
-  const queryClient = useQueryClient();
 
   const teacherMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -275,43 +273,12 @@ export function StudentsListView({
                 },
                 {
                   onSuccess: (result) => {
-                    if (!result?.password) return;
-
-                    const userId = result.user?.id as string | undefined;
-                    const studentId = createdStudent.id;
-
-                    // Update profiles cache optimistically so Users tab shows link immediately
-                    try {
-                      queryClient.setQueryData(["profiles", "all"], (old: any) => {
-                        if (!old) return old;
-                        return (old as any[]).map((p: any) =>
-                          p.user_id === userId ? { ...p, student_id: studentId } : p
-                        );
-                      });
-                      queryClient.setQueryData(["users"], (old: any) => {
-                        if (!old) return old;
-                        return (old as any[]).map((u: any) => {
-                          if (u.id === userId) {
-                            return {
-                              ...u,
-                              profile: {
-                                ...(u.profile || {}),
-                                student_id: studentId,
-                              },
-                            };
-                          }
-                          return u;
-                        });
-                      });
-                    } catch (e) {
-                      // ignore cache update failures
+                    if (result?.password) {
+                      setGeneratedPassword(result.password);
+                      setShowGeneratedPassword(false);
+                      setPasswordCopied(false);
+                      setIsPasswordDialogOpen(true);
                     }
-
-                    setGeneratedPassword(result.password);
-                    setShowGeneratedPassword(false);
-                    setPasswordCopied(false);
-                    setIsPasswordDialogOpen(true);
-                    toast.success("Aluno e conta de acesso cadastrados com sucesso.");
                   },
                 }
               );
@@ -446,29 +413,29 @@ export function StudentsListView({
                     Aluno
                   </th>
                   {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
                       Professor
                     </th>
                   )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
                     Valor/hora
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
                     Aulas/semana
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
                     Total semanal
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
                     Dia pagto
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
                     Financeiro
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Última aula
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Ações
                   </th>
                 </tr>
@@ -548,33 +515,33 @@ export function StudentsListView({
                         </div>
                       </td>
                       {showTeacherColumn && (
-                        <td className="px-6 py-4 hidden xl:table-cell">
-                          <span className="text-sm text-muted-foreground truncate max-w-[160px] inline-block">
+                        <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
+                          <span className="text-sm text-muted-foreground">
                             {teacherName}
                           </span>
                         </td>
                       )}
-                      <td className="px-6 py-4 hidden xl:table-cell">
+                      <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {formatCurrency(hourlyRate)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden 2xl:table-cell">
+                      <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {classesPerWeek ?? "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden 2xl:table-cell">
+                      <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {formatCurrency(weeklyTotal)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden 2xl:table-cell">
+                      <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {(student as any).pay_day ?? "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden xl:table-cell">
+                      <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
                         {financialStatus ? (
                           <StatusBadge variant={financialStatus.variant}>
                             {financialStatus.label}
@@ -583,7 +550,7 @@ export function StudentsListView({
                           <span className="text-sm text-muted-foreground">Sem cobranças</span>
                         )}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="space-y-0.5">
                           <span className="text-sm text-muted-foreground block">
                             {lastClassDateRaw
@@ -650,7 +617,15 @@ export function StudentsListView({
       />
 
       {/* Generated Password Dialog */}
-      <Dialog open={isPasswordDialogOpen} onOpenChange={(open) => setIsPasswordDialogOpen(open)}>
+      <Dialog
+        open={isPasswordDialogOpen}
+        onOpenChange={(open) => {
+          setIsPasswordDialogOpen(open);
+          if (!open && generatedPassword) {
+            toast.success("Conta criada para o aluno.");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Senha criada para o aluno</DialogTitle>
