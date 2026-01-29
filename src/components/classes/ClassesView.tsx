@@ -286,9 +286,10 @@ export function ClassesView({
               <tbody className="divide-y">
                 {filteredLogs.map((log) => {
                   const lastUpdatedAt = (log as any).updated_at as string | null | undefined;
-                  // Prioriza o nome do professor do join, depois tenta o teacherMap, e por último "Sem professor"
+                  // Prioriza o nome do professor do join direto do class_log, depois fallback via teacher_id
                   const teacherName = 
-                    log.students?.teachers?.name ?? 
+                    (log as any).teachers?.name ?? 
+                    (log.teacher_id ? teacherMap.get(log.teacher_id) : null) ?? 
                     (log.students?.teacher_id ? teacherMap.get(log.students.teacher_id) : null) ?? 
                     "Sem professor";
 
