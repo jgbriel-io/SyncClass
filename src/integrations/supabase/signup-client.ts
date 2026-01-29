@@ -4,11 +4,20 @@ import type { Database } from "./types";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// Custom memory storage to avoid conflicts with localStorage from main client
+// Map-backed memory storage to avoid conflicts with localStorage from main client
+// Provides predictable behavior for testing and reentrancy
+const memoryStorageMap = new Map<string, string>();
+
 const memoryStorage = {
-  getItem: (_key: string) => null,
-  setItem: (_key: string, _value: string) => {},
-  removeItem: (_key: string) => {},
+  getItem: (key: string): string | null => {
+    return memoryStorageMap.get(key) ?? null;
+  },
+  setItem: (key: string, value: string): void => {
+    memoryStorageMap.set(key, value);
+  },
+  removeItem: (key: string): void => {
+    memoryStorageMap.delete(key);
+  },
 };
 
 // Separate client used only for creating users via signUp, without
