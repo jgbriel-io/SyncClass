@@ -255,30 +255,30 @@ export function ClassesView({
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 w-[250px]">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
                     Aluno
                   </th>
                   {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell w-[280px]">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
                       Aula / Professor
                     </th>
                   )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 w-[110px]">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
                     Data
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 w-[80px]">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
                     Nota
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden xl:table-cell w-[130px]">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden xl:table-cell whitespace-nowrap">
                     Financeiro
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden 2xl:table-cell w-[110px]">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden 2xl:table-cell whitespace-nowrap">
                     Valor
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
                     Feedback
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 w-[80px]">
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
                     Ações
                   </th>
                 </tr>
@@ -295,16 +295,16 @@ export function ClassesView({
 
                   return (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 align-top w-[250px]">
+                      <td className="px-4 py-3 align-top">
                         <div className="flex items-start gap-3">
                           <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-medium text-accent-foreground">
                               {log.students?.name?.charAt(0) || "?"}
                             </span>
                           </div>
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="text-sm font-medium truncate">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 whitespace-nowrap">
+                              <p className="text-sm font-medium">
                                 {log.students?.name || "Aluno não encontrado"}
                               </p>
                               <StatusBadge
@@ -314,7 +314,7 @@ export function ClassesView({
                               </StatusBadge>
                             </div>
                             {lastUpdatedAt && (
-                              <p className="text-[11px] text-muted-foreground">
+                              <p className="text-[11px] text-muted-foreground whitespace-nowrap">
                                 {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
                               </p>
                             )}
@@ -322,25 +322,25 @@ export function ClassesView({
                         </div>
                       </td>
                       {showTeacherColumn && (
-                        <td className="px-4 py-3 align-top hidden lg:table-cell w-[280px]">
-                          <div className="space-y-1">
+                        <td className="px-4 py-3 align-top hidden lg:table-cell">
+                          <div className="space-y-1 min-w-[200px]">
                             {log.title && (
-                              <p className="text-sm font-semibold text-foreground line-clamp-2">
+                              <p className="text-sm font-semibold text-foreground whitespace-normal">
                                 {log.title}
                               </p>
                             )}
-                            <p className="text-xs text-muted-foreground truncate">
+                            <p className="text-xs text-muted-foreground whitespace-nowrap">
                               {teacherName}
                             </p>
                           </div>
                         </td>
                       )}
-                      <td className="px-4 py-3 align-top">
+                      <td className="px-4 py-3 align-top whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {formatDate(log.class_date)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top">
+                      <td className="px-4 py-3 align-top whitespace-nowrap">
                         <span className="text-sm font-medium">
                           {log.grade !== null
                             ? Number(log.grade).toFixed(1)
@@ -359,7 +359,7 @@ export function ClassesView({
                           <span className="text-sm text-muted-foreground">Sem cobrança</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 align-top hidden 2xl:table-cell">
+                      <td className="px-4 py-3 align-top hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {log.financial_records
                             ? `R$ ${formatCurrency(log.financial_records.amount)}`
