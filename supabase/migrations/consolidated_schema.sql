@@ -23,6 +23,8 @@ CREATE TABLE public.user_roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     role app_role NOT NULL DEFAULT 'student',
+    full_name TEXT,
+    email TEXT,
     CONSTRAINT user_roles_user_id_key UNIQUE (user_id)
 );
 
@@ -34,6 +36,7 @@ CREATE TABLE public.teachers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     email TEXT,
+    cpf TEXT,
     phone TEXT,
     specialization TEXT,
     created_at TIMESTAMPTZ DEFAULT now(),
@@ -113,6 +116,9 @@ CREATE INDEX idx_profiles_teacher_id ON public.profiles(teacher_id);
 CREATE INDEX idx_user_roles_user_id ON public.user_roles(user_id);
 CREATE INDEX idx_students_teacher_id ON public.students(teacher_id);
 CREATE INDEX idx_students_status ON public.students(status);
+CREATE UNIQUE INDEX students_unique_email ON public.students (lower(email)) WHERE email IS NOT NULL;
+CREATE UNIQUE INDEX students_unique_cpf ON public.students (cpf) WHERE cpf IS NOT NULL;
+CREATE UNIQUE INDEX students_unique_phone ON public.students (phone) WHERE phone IS NOT NULL;
 CREATE INDEX idx_financial_records_student_id ON public.financial_records(student_id);
 CREATE INDEX idx_financial_records_class_log_id ON public.financial_records(class_log_id);
 CREATE INDEX idx_financial_records_status ON public.financial_records(status);
@@ -207,8 +213,13 @@ BEGIN
     INSERT INTO public.profiles (user_id, full_name, email, role)
     VALUES (NEW.id, NEW.raw_user_meta_data->>'full_name', NEW.email, 'student');
     
-    INSERT INTO public.user_roles (user_id, role)
-    VALUES (NEW.id, 'student');
+    INSERT INTO public.user_roles (user_id, role, full_name, email)
+    VALUES (
+        NEW.id,
+        'student',
+        NEW.raw_user_meta_data->>'full_name',
+        NEW.email
+    );
     
     RETURN NEW;
 END;

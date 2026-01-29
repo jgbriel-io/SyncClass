@@ -55,10 +55,82 @@ export function useUpdateTeacher() {
         .select()
         .single();
       if (error) throw error;
+
+      // Synchronize profiles, user_roles and active flag for linked users
+      try {
+        const updatedTeacher = data as Teacher;
+        const fullName = (updatedTeacher as any).name as string | null | undefined;
+        const rawEmail = (updatedTeacher as any).email as string | null | undefined;
+        const normalizedEmail = rawEmail
+          ? rawEmail.trim().toLowerCase()
+          : null;
+        const status = (updatedTeacher as any).status as string | null | undefined;
+        const isActive = status === "ativo";
+
+        const { data: linkedProfiles, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, user_id")
+          .eq("teacher_id", updatedTeacher.id);
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        if (linkedProfiles && linkedProfiles.length > 0) {
+          for (const profile of linkedProfiles as { id: string; user_id: string | null }[]) {
+            const profileUpdate: Record<string, any> = {
+              role: "teacher",
+              active: isActive,
+            };
+            if (typeof fullName === "string" && fullName.length > 0) {
+              profileUpdate.full_name = fullName;
+            }
+            if (typeof normalizedEmail === "string" && normalizedEmail.length > 0) {
+              profileUpdate.email = normalizedEmail;
+            }
+
+            const { error: profileUpdateError } = await supabase
+              .from("profiles")
+              .update(profileUpdate)
+              .eq("id", profile.id);
+
+            if (profileUpdateError) {
+              throw profileUpdateError;
+            }
+
+            if (profile.user_id) {
+              const userRolePayload: Record<string, any> = {
+                user_id: profile.user_id,
+                role: "teacher",
+              };
+              if (typeof fullName === "string" && fullName.length > 0) {
+                userRolePayload.full_name = fullName;
+              }
+              if (typeof normalizedEmail === "string" && normalizedEmail.length > 0) {
+                userRolePayload.email = normalizedEmail;
+              }
+
+              const { error: roleError } = await supabase
+                .from("user_roles")
+                .upsert(userRolePayload, { onConflict: "user_id" });
+
+              if (roleError) {
+                throw roleError;
+              }
+            }
+          }
+        }
+      } catch (syncError) {
+        console.error("Error syncing teacher updates to profiles/user_roles:", syncError);
+        throw syncError;
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Professor atualizado com sucesso!");
     },
     onError: (error) => {
@@ -79,9 +151,21 @@ export function useDeleteTeacher() {
         .eq("id", id);
 
       if (error) throw error;
+
+      // Also mark linked profiles as inactive
+      const { error: profilesError } = await supabase
+        .from("profiles")
+        .update({ active: false })
+        .eq("teacher_id", id);
+
+      if (profilesError) {
+        throw profilesError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Professor desativado com sucesso!");
     },
     onError: (error) => {

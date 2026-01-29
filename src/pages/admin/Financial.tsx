@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUndoFinancialPayment } from "@/hooks/useFinancialRecords";
+import { useTeachers } from "@/hooks/useTeachers";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,6 +98,7 @@ export default function FinancialPage() {
 
   const { data: records = [], isLoading, error } = useFinancialRecords();
   const { data: summary } = useFinancialSummary();
+  const { data: teachers = [] } = useTeachers();
   const createRecord = useCreateFinancialRecord();
   const markAsPaid = useMarkAsPaid();
   const updateRecord = useUpdateFinancialRecord();
@@ -116,6 +118,13 @@ export default function FinancialPage() {
     const matchesStatus =
       statusFilter === "all" || record.actualStatus === statusFilter;
     return matchesSearch && matchesStatus;
+  });
+
+  const teacherMap = new Map<string, string>();
+  teachers.forEach((t: any) => {
+    if (t.id && t.name) {
+      teacherMap.set(t.id as string, t.name as string);
+    }
   });
 
   const handleCreateRecord = (data: FinancialRecordInsert) => {
@@ -308,13 +317,13 @@ export default function FinancialPage() {
                       Status
                     </th>
                     <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                      Ação
+                      Ações
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody>
                   {filteredRecords.map((record) => {
-                    const lastUpdatedAt = (record as any).updated_at as string | null | undefined;
+                    const lastUpdatedAt = record.updated_at || record.created_at;
 
                     return (
                       <tr
@@ -328,13 +337,20 @@ export default function FinancialPage() {
                         </td>
                         <td className="px-6 py-4 hidden lg:table-cell">
                           {record.class_logs ? (
-                            <p className="text-sm text-muted-foreground">
-                              {record.students?.name}
-                              {" | "}
-                              {record.class_logs.title?.trim()
-                                ? record.class_logs.title
-                                : formatDate(record.class_logs.class_date)}
-                            </p>
+                            <div className="flex flex-col text-sm text-muted-foreground">
+                              <span>
+                                {record.students?.name}
+                                {" | "}
+                                {record.class_logs.title?.trim()
+                                  ? record.class_logs.title
+                                  : formatDate(record.class_logs.class_date)}
+                              </span>
+                              {record.students?.teacher_id && (
+                                <span className="text-xs text-muted-foreground/80">
+                                  Professor: {teacherMap.get(record.students.teacher_id) || "—"}
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <span className="text-sm text-muted-foreground/70">
                               Sem aula vinculada
@@ -382,10 +398,12 @@ export default function FinancialPage() {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => {
-                                      setRecordToEdit(record);
-                                      setIsFormOpen(true);
-                                    }}>
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setRecordToEdit(record);
+                                        setIsFormOpen(true);
+                                      }}
+                                    >
                                       <Pencil className="h-4 w-4 mr-2" />
                                       Editar
                                     </DropdownMenuItem>

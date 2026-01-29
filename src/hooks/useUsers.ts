@@ -148,7 +148,6 @@ export function useCreateUser() {
 
       // Update profile name and link to domain entity (student/teacher) if needed
       const userId = authData.user.id;
-      console.log("Created user with ID:", userId, "intended role:", role);
 
       // Wait a bit for trigger to complete
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -163,28 +162,28 @@ export function useCreateUser() {
         if (profileError) {
           console.error("Error updating profile:", profileError);
         } else {
-          console.log("Profile updated successfully with role:", role);
         }
       }
 
       // Use UPSERT to update the role created by trigger
       // This will UPDATE if exists, INSERT if not
-      console.log("Upserting user_roles with role:", role);
       const { data: upsertedRole, error: roleError } = await supabase
         .from("user_roles")
-        .upsert({
-          user_id: userId,
-          role: role,
-          full_name: fullName,
-          email: normalizedEmail,
-        })
+        .upsert(
+          {
+            user_id: userId,
+            role: role,
+            full_name: fullName,
+            email: normalizedEmail,
+          },
+          { onConflict: "user_id" }
+        )
         .select();
 
       if (roleError) {
         console.error("Error setting teacher role:", roleError);
         throw new Error("Erro ao definir permissões do usuário");
       }
-      console.log("Role upserted successfully:", upsertedRole);
 
       // If role is student/teacher, create minimal domain record and link it
       let createdStudent: { id: string } | null = null;
@@ -268,15 +267,6 @@ export function useUpdateUserRole() {
       userId: string;
       role: "admin" | "student" | "teacher";
     }) => {
-      const { error } = await supabase
-        .from("user_roles")
-        .upsert({
-          user_id: userId,
-          role: role,
-        });
-
-      if (error) throw error;
-
       // Get current profile to know email, name and links
       const { data: profile, error: profileFetchError } = await supabase
         .from("profiles")
@@ -291,6 +281,21 @@ export function useUpdateUserRole() {
 
       const fullName = (profile.full_name as string | null) ?? "";
       const normalizedEmail = (profile.email as string | null | undefined)?.trim().toLowerCase();
+
+      // Keep user_roles in sync with name and email as well
+      const { error } = await supabase
+        .from("user_roles")
+        .upsert(
+          {
+            user_id: userId,
+            role: role,
+            full_name: fullName || null,
+            email: normalizedEmail || null,
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (error) throw error;
 
       // Keep profile role copy in sync
       const { error: profileError } = await supabase
@@ -463,12 +468,37 @@ export function useLinkUserToStudent() {
       userId: string;
       studentId: string;
     }) => {
-      const { error } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .update({ student_id: studentId })
+        .select("full_name, email")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+
+      const { error: profileUpdateError } = await supabase
+        .from("profiles")
+        .update({ student_id: studentId, role: "student" })
         .eq("user_id", userId);
 
-      if (error) throw error;
+      if (profileUpdateError) throw profileUpdateError;
+
+      const fullName = (profile?.full_name as string | null) ?? null;
+      const email = (profile?.email as string | null) ?? null;
+
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .upsert(
+          {
+            user_id: userId,
+            role: "student" as any,
+            full_name: fullName,
+            email,
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (roleError) throw roleError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -494,12 +524,37 @@ export function useLinkUserToTeacher() {
       userId: string;
       teacherId: string;
     }) => {
-      const { error } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .update({ teacher_id: teacherId })
+        .select("full_name, email")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+
+      const { error: profileUpdateError } = await supabase
+        .from("profiles")
+        .update({ teacher_id: teacherId, role: "teacher" })
         .eq("user_id", userId);
 
-      if (error) throw error;
+      if (profileUpdateError) throw profileUpdateError;
+
+      const fullName = (profile?.full_name as string | null) ?? null;
+      const email = (profile?.email as string | null) ?? null;
+
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .upsert(
+          {
+            user_id: userId,
+            role: "teacher" as any,
+            full_name: fullName,
+            email,
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (roleError) throw roleError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -617,12 +672,15 @@ export function useCreateAuthUserForStudent() {
 
       const { error: roleError } = await supabase
         .from("user_roles")
-        .upsert({
-          user_id: userId,
-          role: "student" as any,
-          full_name: fullName,
-          email,
-        });
+        .upsert(
+          {
+            user_id: userId,
+            role: "student" as any,
+            full_name: fullName,
+            email,
+          },
+          { onConflict: "user_id" }
+        );
 
       if (roleError) {
         console.error("Error setting student role:", roleError);
@@ -908,12 +966,15 @@ export function useCreateAuthUserForTeacher() {
 
       const { error: roleError } = await supabase
         .from("user_roles")
-        .upsert({
-          user_id: userId,
-          role: "teacher" as any,
-          full_name: fullName,
-          email,
-        });
+        .upsert(
+          {
+            user_id: userId,
+            role: "teacher" as any,
+            full_name: fullName,
+            email,
+          },
+          { onConflict: "user_id" }
+        );
 
       if (roleError) {
         console.error("Error setting teacher role:", roleError);

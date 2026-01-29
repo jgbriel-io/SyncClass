@@ -23,6 +23,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
+import { useTeachers } from "@/hooks/useTeachers";
 import {
   useClassLogs,
   useClassLogsSummary,
@@ -80,6 +81,7 @@ export default function ClassesPage() {
   const [logToDelete, setLogToDelete] = useState<ClassLogWithStudent | null>(null);
 
   const { data: logs = [], isLoading, error } = useClassLogs();
+  const { data: teachers = [] } = useTeachers();
   const { data: summary } = useClassLogsSummary();
   const createLog = useCreateClassLog();
   const createLogWithFinancial = useCreateClassLogWithFinancial();
@@ -89,6 +91,13 @@ export default function ClassesPage() {
   const filteredLogs = logs.filter((log) => {
     const studentName = log.students?.name || "";
     return studentName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const teacherMap = new Map<string, string>();
+  teachers.forEach((t: any) => {
+    if (t.id && t.name) {
+      teacherMap.set(t.id as string, t.name as string);
+    }
   });
 
   const handleCreateOrUpdate = (data: ClassLogInsert) => {
@@ -154,7 +163,7 @@ export default function ClassesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Pedagógico</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Aulas</h1>
             <p className="text-muted-foreground mt-1">
               Registro de aulas e acompanhamento
             </p>
@@ -227,114 +236,152 @@ export default function ClassesPage() {
           </div>
         )}
 
-        {/* Timeline */}
+        {/* Tabela de aulas */}
         {!isLoading && !error && (
-          <div className="space-y-4">
-            {filteredLogs.map((log, index) => {
-              const lastUpdatedAt = (log as any).updated_at as string | null | undefined;
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                      Aluno
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
+                      Aula / Professor
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                      Data
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                      Nota
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden xl:table-cell w-0 whitespace-nowrap">
+                      Financeiro
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden 2xl:table-cell">
+                      Valor
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
+                      Feedback
+                    </th>
+                    <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filteredLogs.map((log) => {
+                    const lastUpdatedAt = (log as any).updated_at as string | null | undefined;
+                    const teacherName = log.students?.teacher_id
+                      ? teacherMap.get(log.students.teacher_id) || "—"
+                      : "—";
 
-              return (
-              <div
-                key={log.id}
-                className="relative rounded-lg border bg-card p-6 shadow-card animate-slide-up"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="h-12 w-12 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                      <span className="text-base font-medium text-accent-foreground">
-                        {log.students?.name?.charAt(0) || "?"}
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold">{log.students?.name || "Aluno não encontrado"}</h3>
-                        <StatusBadge
-                          variant={log.attendance ? "success" : "destructive"}
-                        >
-                          {log.attendance ? "Presente" : "Ausente"}
-                        </StatusBadge>
-                        {/* Badge de cobrança */}
-                        {log.financial_records && (
-                          <StatusBadge
-                            variant={getPaymentStatusVariant(log.financial_records.status)}
-                            className="flex items-center gap-1"
-                          >
-                            <Receipt className="h-3 w-3" />
-                            {getPaymentStatusLabel(log.financial_records.status)}
-                          </StatusBadge>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1.5">
-                          <Calendar className="h-4 w-4" />
-                          {formatDate(log.class_date)}
-                        </span>
-                        {log.financial_records && (
-                          <span className="flex items-center gap-1.5 text-xs">
-                            <Receipt className="h-3.5 w-3.5" />
-                            R$ {formatCurrency(log.financial_records.amount)}
+                    return (
+                      <tr key={log.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3 align-top">
+                          <div className="flex items-start gap-3">
+                            <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                              <span className="text-xs font-medium text-accent-foreground">
+                                {log.students?.name?.charAt(0) || "?"}
+                              </span>
+                            </div>
+                            <div className="min-w-0 space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-medium truncate max-w-[180px]">
+                                  {log.students?.name || "Aluno não encontrado"}
+                                </p>
+                                <StatusBadge
+                                  variant={log.attendance ? "success" : "destructive"}
+                                >
+                                  {log.attendance ? "Presente" : "Ausente"}
+                                </StatusBadge>
+                              </div>
+                              {lastUpdatedAt && (
+                                <p className="text-[11px] text-muted-foreground">
+                                  {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 align-top hidden lg:table-cell">
+                          <div className="min-w-0 space-y-1">
+                            {log.title && (
+                              <p className="text-sm font-semibold text-foreground break-all whitespace-normal">
+                                {log.title}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                              {teacherName}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <span className="text-sm text-muted-foreground">
+                            {formatDate(log.class_date)}
                           </span>
-                        )}
-                        {lastUpdatedAt && (
-                          <span className="flex items-center gap-1.5 text-xs">
-                            {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <span className="text-sm font-medium">
+                            {log.grade !== null
+                              ? Number(log.grade).toFixed(1)
+                              : "—"}
                           </span>
-                        )}
-                      </div>
-                      {log.feedback && (
-                        <p className="text-sm text-muted-foreground max-w-xl">
-                          {log.feedback}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    {log.grade !== null && (
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                          Nota
-                        </p>
-                        <p
-                          className={`text-3xl font-bold ${
-                            Number(log.grade) >= 7
-                              ? "text-success"
-                              : Number(log.grade) >= 5
-                              ? "text-warning"
-                              : "text-destructive"
-                          }`}
-                        >
-                          {Number(log.grade).toFixed(1)}
-                        </p>
-                      </div>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(log)}>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => openDeleteDialog(log)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </div>
-            );})}
-
+                        </td>
+                        <td className="px-4 py-3 align-top hidden xl:table-cell whitespace-nowrap">
+                          {log.financial_records ? (
+                            <StatusBadge
+                              variant={getPaymentStatusVariant(log.financial_records.status)}
+                            >
+                              <Receipt className="h-3 w-3" />
+                              {getPaymentStatusLabel(log.financial_records.status)}
+                            </StatusBadge>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Sem cobrança</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 align-top hidden 2xl:table-cell">
+                          <span className="text-sm text-muted-foreground">
+                            {log.financial_records
+                              ? `R$ ${formatCurrency(log.financial_records.amount)}`
+                              : "—"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 align-top hidden lg:table-cell">
+                          <span className="text-sm text-muted-foreground line-clamp-2 max-w-xs">
+                            {log.feedback || "—"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 align-top text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(log)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => openDeleteDialog(log)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
             {filteredLogs.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground rounded-lg border bg-card">
+              <div className="text-center py-10 text-muted-foreground border-t">
                 {logs.length === 0
                   ? "Nenhuma aula registrada ainda"
                   : "Nenhum registro encontrado"}

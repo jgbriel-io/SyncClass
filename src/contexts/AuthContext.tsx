@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error("Error fetching role:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
         return null;
       }
       return data?.role as UserRole;
@@ -44,29 +45,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    // Handle invalid refresh token errors by forcing logout
+    // Handle invalid refresh token errors with robust cleanup
     const handleInvalidRefreshToken = async () => {
-      console.warn("Invalid refresh token detected - forcing logout");
-      try {
-        await supabase.auth.signOut();
-        // Clear all auth-related items from localStorage
-        const keysToRemove = Object.keys(localStorage).filter(
-          key => key.startsWith('supabase') || key.includes('auth')
-        );
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-      } catch (error) {
-        console.error("Error during forced logout:", error);
-      }
+      console.warn("Invalid refresh token detected, clearing session and redirecting to login");
+      
+      // Use signOut from the client for complete cleanup
+      await supabase.auth.signOut();
+      
+      // Additional cleanup: remove all sb-* keys from localStorage
+      Object.keys(localStorage)
+        .filter(key => key.startsWith('sb-'))
+        .forEach(key => localStorage.removeItem(key));
       
       setUser(null);
       setSession(null);
       setRole(null);
       setIsLoading(false);
       
-      // Redirect to login page
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+      window.location.href = "/login";
     };
 
     // Set up auth state listener FIRST
@@ -74,15 +70,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, session) => {
         if (!isMounted) return;
         
-        // Handle sign out or session expired
-        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        // Detect token refresh errors
+        if (event === "TOKEN_REFRESHED" && !session) {
+          await handleInvalidRefreshToken();
+          return;
+        }
+
+        if (event === "SIGNED_OUT") {
           setSession(null);
           setUser(null);
           setRole(null);
           setIsLoading(false);
           return;
         }
-
+        
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -103,22 +104,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (!isMounted) return;
+    // Fallback: Listen for unhandled promise rejections (refresh token errors)
+    const handleUnhandledRejection = async (event: PromiseRejectionEvent) => {
+      const error = event.reason;
+      const errorMessage = error?.message || error?.toString() || "";
       
-      // Handle invalid refresh token error
-      if (error) {
-        console.error("Error getting session:", error);
-        if (
-          error.message?.includes("Invalid Refresh Token") ||
-          error.message?.includes("Refresh Token Not Found") ||
-          error.message?.includes("refresh_token")
-        ) {
-          handleInvalidRefreshToken();
-          return;
-        }
+      if (
+        errorMessage.includes("Invalid Refresh Token") ||
+        errorMessage.includes("Refresh Token Not Found") ||
+        errorMessage.includes("refresh_token_not_found")
+      ) {
+        event.preventDefault();
+        await handleInvalidRefreshToken();
       }
+    };
+
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
       
       setSession(session);
       setUser(session?.user ?? null);
@@ -133,16 +138,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setIsLoading(false);
       }
-    }).catch((error) => {
-      console.error("Unexpected error in getSession:", error);
-      if (isMounted) {
-        handleInvalidRefreshToken();
-      }
     });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
     };
   }, []);
 

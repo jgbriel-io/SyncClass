@@ -191,8 +191,8 @@ const TeacherFinancialPage = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Financeiro</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-semibold tracking-tight">Financeiro</h1>
+            <p className="text-muted-foreground mt-1">
               Gerencie cobranças e pagamentos
             </p>
           </div>
@@ -286,16 +286,22 @@ const TeacherFinancialPage = () => {
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Aluno
                     </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
+                      Aula Vinculada
+                    </th>
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden sm:table-cell">
+                      Descrição
+                    </th>
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Valor
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
                       Método
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
                       Vencimento
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Status
                     </th>
                     <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
@@ -306,77 +312,128 @@ const TeacherFinancialPage = () => {
                 <tbody className="divide-y">
                   {filteredRecords.map((record) => {
                     const actualStatus = record.actualStatus as PaymentStatus;
+                    const lastUpdatedAt = record.updated_at || record.created_at;
+
                     return (
-                      <tr key={record.id} className="hover:bg-muted/30 transition-colors">
+                      <tr
+                        key={record.id}
+                        className="hover:bg-muted/30 transition-colors"
+                      >
                         <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className="font-medium text-sm">
-                              {record.students?.name || "Aluno removido"}
+                          <p className="font-medium text-sm">
+                            {record.students?.name || "Aluno removido"}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4 hidden lg:table-cell">
+                          {record.class_logs ? (
+                            <div className="flex flex-col text-sm text-muted-foreground">
+                              <span>
+                                {record.students?.name}
+                                {" | "}
+                                {record.class_logs.title?.trim()
+                                  ? record.class_logs.title
+                                  : formatDate(record.class_logs.class_date)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/70">
+                              Sem aula vinculada
                             </span>
-                            {record.class_logs && (
-                              <span className="text-xs text-muted-foreground">
-                                Aula {formatDate(record.class_logs.class_date)}
+                          )}
+                        </td>
+                        <td className="px-6 py-4 hidden sm:table-cell">
+                          <div className="flex flex-col text-sm text-muted-foreground">
+                            <span>{record.description || "—"}</span>
+                            {lastUpdatedAt && (
+                              <span className="text-[11px] mt-0.5">
+                                {`Editado em ${format(
+                                  new Date(lastUpdatedAt),
+                                  "dd/MM/yyyy HH:mm",
+                                  { locale: ptBR }
+                                )}`}
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm">
-                          {formatCurrency(Number(record.amount) || 0)}
+                        <td className="px-6 py-4">
+                          <p className="font-semibold text-sm">
+                            {formatCurrency(Number(record.amount) || 0)}
+                          </p>
                         </td>
-                        <td className="px-6 py-4 text-sm hidden md:table-cell">
-                          {record.payment_method || "—"}
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          {formatDate(record.due_date)}
+                        <td className="px-6 py-4 hidden lg:table-cell">
+                          <p className="text-sm text-muted-foreground">
+                            {record.payment_method || "—"}
+                          </p>
                         </td>
                         <td className="px-6 py-4 hidden md:table-cell">
+                          <p className="text-sm text-muted-foreground">
+                            {formatDate(record.due_date)}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4">
                           <StatusBadge variant={statusVariants[actualStatus]}>
                             {statusLabels[actualStatus]}
                           </StatusBadge>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {actualStatus !== "pago" ? (
-                                <DropdownMenuItem
+                          <div className="flex items-center justify-end gap-2">
+                            {actualStatus !== "pago" ? (
+                              <>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setRecordToEdit(record);
+                                        setIsFormOpen(true);
+                                      }}
+                                    >
+                                      <Pencil className="h-4 w-4 mr-2" />
+                                      Editar
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() => {
+                                        setRecordToDelete(record);
+                                        setDeleteDialogOpen(true);
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Excluir
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                                <Button
+                                  size="sm"
+                                  className="h-8 bg-[#25D366] text-white hover:bg-[#1ebe57] border-none"
                                   onClick={() => openConfirmPayment(record)}
                                 >
-                                  <Check className="h-4 w-4 mr-2" />
-                                  Marcar como pago
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem
-                                  onClick={() => undoPayment.mutate(record.id)}
-                                >
-                                  Desfazer pagamento
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setRecordToEdit(record);
-                                  setIsFormOpen(true);
-                                }}
+                                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                                  Confirmar
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                size="sm"
+                                className="h-8 bg-yellow-400 text-white font-semibold hover:bg-yellow-500 border-none shadow"
+                                disabled={undoPayment.isPending}
+                                onClick={() => undoPayment.mutate(record.id)}
                               >
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => {
-                                  setRecordToDelete(record);
-                                  setDeleteDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                {undoPayment.isPending ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Desfazendo...
+                                  </>
+                                ) : (
+                                  "Desfazer Cobrança"
+                                )}
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

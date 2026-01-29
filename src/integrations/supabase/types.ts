@@ -19,7 +19,9 @@ export type Database = {
           id: string;
           name: string;
           email: string | null;
+          cpf: string | null;
           phone: string | null;
+          specialization: string | null;
           created_at: string | null;
           updated_at: string | null;
         };
@@ -27,7 +29,9 @@ export type Database = {
           id?: string;
           name: string;
           email?: string | null;
+          cpf?: string | null;
           phone?: string | null;
+          specialization?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
         };
@@ -35,7 +39,9 @@ export type Database = {
           id?: string;
           name?: string;
           email?: string | null;
+          cpf?: string | null;
           phone?: string | null;
+          specialization?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
         };
@@ -239,16 +245,22 @@ export type Database = {
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
+          full_name: string | null
+          email: string | null
         }
         Insert: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id: string
+          full_name?: string | null
+          email?: string | null
         }
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+          full_name?: string | null
+          email?: string | null
         }
         Relationships: []
       }

@@ -37,7 +37,7 @@ const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Visão Geral", href: "/admin/students/overview", icon: ClipboardList },
   { name: "Alunos", href: "/admin/students", icon: Users },
-  { name: "Pedagógico", href: "/admin/classes", icon: BookOpen },
+  { name: "Aulas", href: "/admin/classes", icon: BookOpen },
   { name: "Financeiro", href: "/admin/financial", icon: CreditCard },
   { name: "Professores", href: "/admin/teachers", icon: Users },
   { name: "Usuários", href: "/admin/users", icon: Link2 },

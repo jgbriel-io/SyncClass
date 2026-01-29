@@ -9,6 +9,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Loader2 } from "lucide-react";
 import { Teacher, TeacherInsert } from "@/hooks/useTeachers";
 
+function maskCPF(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+
+  if (digits.length <= 3) {
+    return digits;
+  } else if (digits.length <= 6) {
+    return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  } else if (digits.length <= 9) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  } else {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  }
+}
+
+const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+
 const teacherSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
   email: z
@@ -21,6 +37,13 @@ const teacherSchema = z.object({
     .max(20)
     .optional()
     .or(z.literal("").transform(() => undefined)),
+  cpf: z
+    .string()
+    .max(14)
+    .optional()
+    .refine((val) => !val || cpfRegex.test(val), {
+      message: "Formato deve ser 000.000.000-00",
+    }),
 });
 
 type TeacherFormData = z.infer<typeof teacherSchema>;
@@ -52,6 +75,11 @@ export function TeacherFormDialog({
       name: teacher?.name || "",
       email: teacher?.email || "",
       phone: teacher?.phone || "",
+      cpf: teacher?.cpf
+        ? teacher.cpf.includes(".")
+          ? teacher.cpf
+          : maskCPF(teacher.cpf)
+        : "",
     },
   });
 
@@ -60,6 +88,11 @@ export function TeacherFormDialog({
       name: teacher?.name || "",
       email: teacher?.email || "",
       phone: teacher?.phone || "",
+      cpf: teacher?.cpf
+        ? teacher.cpf.includes(".")
+          ? teacher.cpf
+          : maskCPF(teacher.cpf)
+        : "",
     });
   }, [teacher, reset]);
 
@@ -69,6 +102,7 @@ export function TeacherFormDialog({
       name: data.name,
       email: data.email,
       phone: data.phone || undefined,
+      cpf: data.cpf || undefined,
     } as TeacherInsert;
 
     onSubmit(payload);
@@ -109,7 +143,7 @@ export function TeacherFormDialog({
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="sm:col-span-2 space-y-2">
               <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
@@ -122,7 +156,6 @@ export function TeacherFormDialog({
                 <p className="text-sm text-destructive">{errors.email.message}</p>
               )}
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
               <Input
@@ -137,6 +170,26 @@ export function TeacherFormDialog({
               />
               {typeof errors.phone?.message === "string" && (
                 <p className="text-sm text-destructive">{errors.phone.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cpf">CPF</Label>
+              <Input
+                id="cpf"
+                type="text"
+                inputMode="numeric"
+                maxLength={14}
+                placeholder="000.000.000-00"
+                disabled={isLoading}
+                {...register("cpf")}
+                onChange={(e) => {
+                  const masked = maskCPF(e.target.value);
+                  setValue("cpf", masked, { shouldValidate: true });
+                }}
+              />
+              {typeof errors.cpf?.message === "string" && (
+                <p className="text-sm text-destructive">{errors.cpf.message}</p>
               )}
             </div>
           </div>

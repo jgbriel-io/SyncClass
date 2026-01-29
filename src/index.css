@@ -130,6 +130,8 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    /* Mantém o scrollbar vertical sempre visível para evitar "pulo" de layout ao trocar de tela */
+    overflow-y: scroll;
   }
   
   html {

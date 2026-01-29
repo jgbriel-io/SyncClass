@@ -37,6 +37,7 @@ export type FinancialRecordUpdate = TablesUpdate<"financial_records">;
 export interface FinancialRecordWithRelations extends FinancialRecord {
   students: {
     name: string;
+    teacher_id?: string | null;
   } | null;
   class_logs: {
     id: string;
@@ -56,7 +57,8 @@ export function useFinancialRecords() {
         .select(`
           *,
           students (
-            name
+            name,
+            teacher_id
           ),
           class_logs (
             id,
