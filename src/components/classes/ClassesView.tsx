@@ -1,4 +1,5 @@
 import { StatusBadge } from "@/components/ui/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -395,10 +396,14 @@ export function ClassesView({
             </table>
           </div>
           {filteredLogs.length === 0 && (
-            <div className="text-center py-10 text-muted-foreground border-t">
-              {logs.length === 0
-                ? "Nenhuma aula registrada ainda"
-                : "Nenhum registro encontrado"}
+            <div className="border-t">
+              <EmptyState
+                icon={Search}
+                title={logs.length === 0 ? "Nenhuma aula registrada" : "Nenhum resultado"}
+                message={logs.length === 0
+                  ? "Clique no botão 'Registrar Aula' para adicionar a primeira"
+                  : "Ajuste os filtros acima ou limpe a busca"}
+              />
             </div>
           )}
         </div>
@@ -502,10 +507,14 @@ export function ClassesView({
           ))}
 
           {filteredLogs.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground rounded-lg border bg-card">
-              {logs.length === 0
-                ? "Nenhuma aula registrada ainda"
-                : "Nenhum registro encontrado"}
+            <div className="rounded-lg border bg-card">
+              <EmptyState
+                icon={BookOpen}
+                title={logs.length === 0 ? "Nenhuma aula registrada" : "Nenhum resultado"}
+                message={logs.length === 0
+                  ? "Suas aulas aparecerão aqui"
+                  : "Ajuste os filtros acima ou limpe a busca"}
+              />
             </div>
           )}
         </div>

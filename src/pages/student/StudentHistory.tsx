@@ -1,6 +1,8 @@
 import { StudentLayout } from "@/components/layout/StudentLayout";
+import { PageContainer } from "@/components/ui/page-container";
+import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Calendar, Check, X, Loader2 } from "lucide-react";
+import { Calendar, Check, X, Loader2, BookOpen } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useStudentClassLogs, useStudentStats } from "@/hooks/useStudentPortal";
@@ -17,7 +19,7 @@ export default function StudentHistory() {
 
   return (
     <StudentLayout>
-      <div className="space-y-6 max-w-lg mx-auto">
+      <PageContainer constrained maxWidth="5xl">
         {/* Header */}
         <div>
           <h1 className="text-xl font-semibold">Histórico Acadêmico</h1>
@@ -28,9 +30,9 @@ export default function StudentHistory() {
 
         {/* Loading */}
         {isLoading && (
-          <div className="flex items-center justify-center py-12">
+          <EmptyState size="lg">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+          </EmptyState>
         )}
 
         {/* Error */}
@@ -65,8 +67,11 @@ export default function StudentHistory() {
             {/* Timeline */}
             <div className="space-y-3">
               {classLogs.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground rounded-lg border bg-card">
-                  Nenhuma aula registrada ainda
+                <div className="rounded-lg border bg-card">
+                  <EmptyState
+                    icon={BookOpen}
+                    message="Nenhuma aula registrada ainda"
+                  />
                 </div>
               ) : (
                 classLogs.map((record, index) => (
@@ -129,7 +134,7 @@ export default function StudentHistory() {
             </div>
           </>
         )}
-      </div>
+      </PageContainer>
     </StudentLayout>
   );
 }

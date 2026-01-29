@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { PageContainer } from "@/components/ui/page-container";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -172,7 +174,7 @@ export default function TeachersPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <PageContainer>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Professores</h1>
@@ -317,11 +319,13 @@ export default function TeachersPage() {
             </table>
           </div>
           {filteredTeachers.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              {teachers.length === 0
-                ? "Nenhum professor cadastrado ainda"
-                : "Nenhum professor encontrado com esses filtros"}
-            </div>
+            <EmptyState
+              icon={Search}
+              title={teachers.length === 0 ? "Nenhum professor cadastrado" : "Nenhum resultado"}
+              message={teachers.length === 0
+                ? "Clique no botão 'Novo Professor' para adicionar o primeiro"
+                : "Ajuste os filtros acima ou limpe a busca"}
+            />
           )}
         </div>
 
@@ -477,7 +481,7 @@ export default function TeachersPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </PageContainer>
     </AdminLayout>
   );
 }

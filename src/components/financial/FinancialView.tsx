@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -464,11 +465,13 @@ export function FinancialView({
             </table>
           </div>
           {filteredRecords.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              {records.length === 0
-                ? "Nenhuma cobrança cadastrada ainda"
-                : "Nenhuma cobrança encontrada com esses filtros"}
-            </div>
+            <EmptyState
+              icon={Search}
+              title={records.length === 0 ? "Nenhuma cobrança cadastrada" : "Nenhum resultado"}
+              message={records.length === 0
+                ? "Clique no botão 'Nova Cobrança' para adicionar a primeira"
+                : "Ajuste os filtros acima ou limpe a busca"}
+            />
           )}
         </div>
       )}

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { PageContainer } from "@/components/ui/page-container";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -326,7 +328,7 @@ export default function UsersPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <PageContainer>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -624,11 +626,13 @@ export default function UsersPage() {
               </table>
             </div>
             {filteredUsers.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                {users.length === 0
-                  ? "Nenhum usuário cadastrado ainda"
-                  : "Nenhum usuário encontrado com esses filtros"}
-              </div>
+              <EmptyState
+                icon={User}
+                title={users.length === 0 ? "Nenhum usuário cadastrado" : "Nenhum resultado"}
+                message={users.length === 0
+                  ? "Clique no botão 'Novo Usuário' para adicionar o primeiro"
+                  : "Ajuste os filtros acima ou limpe a busca"}
+              />
             )}
           </div>
         )}
@@ -934,7 +938,7 @@ export default function UsersPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
+      </PageContainer>
     </AdminLayout>
   );
 }
