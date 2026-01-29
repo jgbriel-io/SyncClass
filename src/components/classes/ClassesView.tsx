@@ -107,6 +107,7 @@ export function ClassesView({
     return studentName.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
+  // Mapa de professores para fallback (caso o join não traga o nome)
   const teacherMap = new Map<string, string>();
   teachers.forEach((t: any) => {
     if (t.id && t.name) {
@@ -285,9 +286,11 @@ export function ClassesView({
               <tbody className="divide-y">
                 {filteredLogs.map((log) => {
                   const lastUpdatedAt = (log as any).updated_at as string | null | undefined;
-                  const teacherName = log.students?.teacher_id
-                    ? teacherMap.get(log.students.teacher_id) || "—"
-                    : "—";
+                  // Prioriza o nome do professor do join, depois tenta o teacherMap, e por último "Sem professor"
+                  const teacherName = 
+                    log.students?.teachers?.name ?? 
+                    (log.students?.teacher_id ? teacherMap.get(log.students.teacher_id) : null) ?? 
+                    "Sem professor";
 
                   return (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
