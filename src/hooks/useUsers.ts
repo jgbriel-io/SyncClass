@@ -91,11 +91,15 @@ export function useCreateUser() {
       password,
       fullName,
       role,
+      studentData,
+      teacherData,
     }: {
       email: string;
       password: string;
       fullName: string;
       role: "admin" | "student" | "teacher";
+      studentData?: any;
+      teacherData?: any;
     }) => {
       const normalizedEmail = email.trim().toLowerCase();
 
@@ -190,12 +194,18 @@ export function useCreateUser() {
       let createdTeacher: { id: string } | null = null;
 
       if (role === "student") {
+        // Use dados completos se fornecidos, senão cria registro mínimo
+        const studentInsertData = studentData ? {
+          ...studentData,
+          email: normalizedEmail,
+        } : {
+          name: fullName || normalizedEmail,
+          email: normalizedEmail,
+        };
+
         const { data: student, error: studentError } = await supabase
           .from("students")
-          .insert({
-            name: fullName || normalizedEmail,
-            email: normalizedEmail,
-          })
+          .insert(studentInsertData)
           .select("id")
           .single();
 
@@ -213,12 +223,18 @@ export function useCreateUser() {
           }
         }
       } else if (role === "teacher") {
+        // Use dados completos se fornecidos, senão cria registro mínimo
+        const teacherInsertData = teacherData ? {
+          ...teacherData,
+          email: normalizedEmail,
+        } : {
+          name: fullName || normalizedEmail,
+          email: normalizedEmail,
+        };
+
         const { data: teacher, error: teacherError } = await supabase
           .from("teachers")
-          .insert({
-            name: fullName || normalizedEmail,
-            email: normalizedEmail,
-          })
+          .insert(teacherInsertData)
           .select("id")
           .single();
 

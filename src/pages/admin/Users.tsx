@@ -33,7 +33,6 @@ import { UserFormDialog } from "@/components/users/UserFormDialog";
 import {
   useUsers,
   useCreateUser,
-  useCreateUserWithFullProfile,
   useUpdateUserRole,
   useUpdateUserProfile,
   useDeleteUser,
@@ -74,7 +73,6 @@ export default function UsersPage() {
   const { data: students = [] } = useStudents();
   const { data: teachers = [] } = useTeachers();
   const createUser = useCreateUser();
-  const createUserWithFullProfile = useCreateUserWithFullProfile();
   const updateRole = useUpdateUserRole();
   const updateProfile = useUpdateUserProfile();
   const deleteUser = useDeleteUser();
@@ -145,62 +143,28 @@ export default function UsersPage() {
         }
       );
     } else {
-      // Create new user from this screen
-      // Use full profile creation if student/teacher data is provided
-      if (data.studentData || data.teacherData) {
-        createUserWithFullProfile.mutate(
-          {
-            email: data.email,
-            password: data.password || "",
-            fullName: data.fullName,
-            role: data.role,
-            studentData: data.studentData,
-            teacherData: data.teacherData,
+      // Create new user from this screen (role selected in the form)
+      createUser.mutate(
+        {
+          email: data.email,
+          password: "",
+          fullName: data.fullName,
+          role: data.role,
+          studentData: data.studentData,
+          teacherData: data.teacherData,
+        },
+        {
+          onSuccess: (result: any) => {
+            setIsFormOpen(false);
+            if (result?.password) {
+              setGeneratedPassword(result.password);
+              setShowGeneratedPassword(false);
+              setPasswordCopied(false);
+              setIsPasswordDialogOpen(true);
+            }
           },
-          {
-            onSuccess: (result: any) => {
-              setIsFormOpen(false);
-              toast.success("Usuário criado com sucesso!");
-              if (result?.password) {
-                setGeneratedPassword(result.password);
-                setShowGeneratedPassword(false);
-                setPasswordCopied(false);
-                setIsPasswordDialogOpen(true);
-              }
-            },
-            onError: (error: any) => {
-              console.error("Error creating user:", error);
-              toast.error(error.message || "Erro ao criar usuário");
-            },
-          }
-        );
-      } else {
-        // Basic user creation for admin role
-        createUser.mutate(
-          {
-            email: data.email,
-            password: "",
-            fullName: data.fullName,
-            role: data.role,
-          },
-          {
-            onSuccess: (result: any) => {
-              setIsFormOpen(false);
-              toast.success("Usuário criado com sucesso!");
-              if (result?.password) {
-                setGeneratedPassword(result.password);
-                setShowGeneratedPassword(false);
-                setPasswordCopied(false);
-                setIsPasswordDialogOpen(true);
-              }
-            },
-            onError: (error: any) => {
-              console.error("Error creating user:", error);
-              toast.error(error.message || "Erro ao criar usuário");
-            },
-          }
-        );
-      }
+        }
+      );
     }
   };
 
@@ -678,7 +642,7 @@ export default function UsersPage() {
           }}
           user={selectedUser}
           onSubmit={handleCreateOrUpdate}
-          isLoading={createUser.isPending || createUserWithFullProfile.isPending || updateRole.isPending || updateProfile.isPending}
+          isLoading={createUser.isPending || updateRole.isPending || updateProfile.isPending}
         />
 
         {/* Generated Password Dialog */}
