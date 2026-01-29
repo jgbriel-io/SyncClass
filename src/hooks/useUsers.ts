@@ -703,14 +703,34 @@ export function useCreateAuthUserForStudent() {
     onError: (error: any) => {
       console.error("Error creating auth user for student:", error);
       const message = String(error?.message || "").toLowerCase();
+
       if (message.includes("already")) {
-        toast.error(
-          "Já existe uma conta com esse email. Use a aba Usuários para vincular esse aluno à conta existente."
-        );
+        (async () => {
+          try {
+            const email = String((error?.request?.body && JSON.parse(error.request.body).email) || "");
+            const normalized = email.trim().toLowerCase();
+            if (normalized) {
+              const { data: existingProfile } = await supabase
+                .from("profiles")
+                .select("user_id, student_id")
+                .ilike("email", normalized)
+                .maybeSingle();
+
+              if (existingProfile) {
+                toast.success("Conta já existe e parece estar vinculada na aba Usuários.");
+                return;
+              }
+            }
+          } catch (e) {
+            // ignore and fall back to default message
+          }
+
+          toast.error(
+            "Já existe uma conta com esse email. Use a aba Usuários para vincular esse aluno à conta existente."
+          );
+        })();
       } else {
-        toast.error(
-          error.message || "Erro ao criar conta de acesso para o aluno."
-        );
+        toast.error(error.message || "Erro ao criar conta de acesso para o aluno.");
       }
     },
   });
@@ -787,14 +807,34 @@ export function useCreateAuthUserForTeacher() {
     onError: (error: any) => {
       console.error("Error creating auth user for teacher:", error);
       const message = String(error?.message || "").toLowerCase();
+
       if (message.includes("already")) {
-        toast.error(
-          "Já existe uma conta com esse email. Use a aba Usuários para vincular esse professor à conta existente."
-        );
+        (async () => {
+          try {
+            const email = String((error?.request?.body && JSON.parse(error.request.body).email) || "");
+            const normalized = email.trim().toLowerCase();
+            if (normalized) {
+              const { data: existingProfile } = await supabase
+                .from("profiles")
+                .select("user_id, teacher_id")
+                .ilike("email", normalized)
+                .maybeSingle();
+
+              if (existingProfile) {
+                toast.success("Conta já existe e parece estar vinculada na aba Usuários.");
+                return;
+              }
+            }
+          } catch (e) {
+            // ignore and fall back to default message
+          }
+
+          toast.error(
+            "Já existe uma conta com esse email. Use a aba Usuários para vincular esse professor à conta existente."
+          );
+        })();
       } else {
-        toast.error(
-          error.message || "Erro ao criar conta de acesso para o professor."
-        );
+        toast.error(error.message || "Erro ao criar conta de acesso para o professor.");
       }
     },
   });
