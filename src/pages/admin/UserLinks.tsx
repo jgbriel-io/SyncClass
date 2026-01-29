@@ -14,6 +14,14 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -127,28 +135,24 @@ export default function UsersPage() {
         {/* Table */}
         {!isLoading && !error && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                      Usuário
-                    </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
-                      Data de Cadastro
-                    </th>
-                    <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs uppercase tracking-wider">
+                    Usuário
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider hidden lg:table-cell">
+                    Data de Cadastro
+                  </TableHead>
+                  <TableHead className="text-right text-xs uppercase tracking-wider">
+                    Ações
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                   {filteredProfiles.map((profile) => (
-                    <tr
-                      key={profile.id}
-                      className="hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="px-6 py-4">
+                    <TableRow key={profile.id}>
+                      <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                             <span className="text-sm font-medium text-accent-foreground">
@@ -161,15 +165,15 @@ export default function UsersPage() {
                             </p>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 hidden lg:table-cell">
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <span className="text-sm text-muted-foreground">
                           {profile.created_at
                             ? format(new Date(profile.created_at), "dd/MM/yyyy", { locale: ptBR })
                             : "—"}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
+                      </TableCell>
+                      <TableCell className="text-right">
                         {/* Ações futuras: editar/excluir usuário */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -193,12 +197,11 @@ export default function UsersPage() {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+              </TableBody>
+            </Table>
             {filteredProfiles.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
                 {profiles.length === 0
