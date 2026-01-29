@@ -255,30 +255,30 @@ export function ClassesView({
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 w-[250px]">
                     Aluno
                   </th>
                   {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell w-[280px]">
                       Aula / Professor
                     </th>
                   )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 w-[110px]">
                     Data
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 w-[80px]">
                     Nota
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden xl:table-cell w-0 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden xl:table-cell w-[130px]">
                     Financeiro
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden 2xl:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden 2xl:table-cell w-[110px]">
                     Valor
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
                     Feedback
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 w-[80px]">
                     Ações
                   </th>
                 </tr>
@@ -295,16 +295,16 @@ export function ClassesView({
 
                   return (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 align-top">
+                      <td className="px-4 py-3 align-top w-[250px]">
                         <div className="flex items-start gap-3">
                           <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-medium text-accent-foreground">
                               {log.students?.name?.charAt(0) || "?"}
                             </span>
                           </div>
-                          <div className="min-w-0 space-y-1">
+                          <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="text-sm font-medium truncate max-w-[180px]">
+                              <p className="text-sm font-medium truncate">
                                 {log.students?.name || "Aluno não encontrado"}
                               </p>
                               <StatusBadge
@@ -322,14 +322,14 @@ export function ClassesView({
                         </div>
                       </td>
                       {showTeacherColumn && (
-                        <td className="px-4 py-3 align-top hidden lg:table-cell">
-                          <div className="min-w-0 space-y-1">
+                        <td className="px-4 py-3 align-top hidden lg:table-cell w-[280px]">
+                          <div className="space-y-1">
                             {log.title && (
-                              <p className="text-sm font-semibold text-foreground break-all whitespace-normal">
+                              <p className="text-sm font-semibold text-foreground line-clamp-2">
                                 {log.title}
                               </p>
                             )}
-                            <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                            <p className="text-xs text-muted-foreground truncate">
                               {teacherName}
                             </p>
                           </div>
