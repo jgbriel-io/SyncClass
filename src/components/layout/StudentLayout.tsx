@@ -50,7 +50,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       </header>
 
       {/* Page content */}
-      <main className="px-4 py-6 animate-fade-in">{children}</main>
+      <main className="p-4 lg:p-6 animate-fade-in">{children}</main>
 
       {/* Bottom navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
