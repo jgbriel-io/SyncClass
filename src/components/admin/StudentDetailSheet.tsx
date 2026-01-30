@@ -306,8 +306,8 @@ export function StudentDetailSheet({
                       <p className="text-lg font-bold">{student.stats.totalClasses}</p>
                       <p className="text-xs text-muted-foreground">Total</p>
                     </div>
-                    <div className="rounded-lg bg-emerald-500/10 p-3 text-center">
-                      <p className="text-lg font-bold text-emerald-600">
+                    <div className="rounded-lg bg-success/10 p-3 text-center">
+                      <p className="text-lg font-bold text-success">
                         {student.stats.presentClasses}
                       </p>
                       <p className="text-xs text-muted-foreground">Presenças</p>
@@ -335,7 +335,7 @@ export function StudentDetailSheet({
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               {log.attendance ? (
-                                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                <CheckCircle className="h-4 w-4 text-success" />
                               ) : (
                                 <XCircle className="h-4 w-4 text-rose-500" />
                               )}
@@ -347,7 +347,7 @@ export function StudentDetailSheet({
                               <span
                                 className={`text-sm font-bold ${
                                   log.grade >= 7
-                                    ? "text-emerald-600"
+                                    ? "text-success"
                                     : log.grade >= 5
                                     ? "text-amber-600"
                                     : "text-rose-600"
@@ -376,8 +376,8 @@ export function StudentDetailSheet({
                 <div className="p-6 space-y-4">
                   {/* Summary */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="rounded-lg bg-emerald-500/10 p-3 text-center">
-                      <p className="text-sm font-bold text-emerald-600">
+                    <div className="rounded-lg bg-success/10 p-3 text-center">
+                      <p className="text-sm font-bold text-success">
                         {formatCurrency(student.stats.totalPaid)}
                       </p>
                       <p className="text-xs text-muted-foreground">Pago</p>
@@ -435,7 +435,7 @@ export function StudentDetailSheet({
                               <span>Venc: {formatDate(record.due_date)}</span>
                             </div>
                             {record.paid_at && (
-                              <p className="text-xs text-emerald-600 mt-1">
+                              <p className="text-xs text-success mt-1">
                                 Pago em {formatDate(record.paid_at)}
                               </p>
                             )}

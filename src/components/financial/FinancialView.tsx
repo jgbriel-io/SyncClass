@@ -432,7 +432,7 @@ export function FinancialView({
                           ) : (
                             <Button
                               size="sm"
-                              className="h-8 bg-yellow-400 text-white font-semibold hover:bg-yellow-500 border-none shadow"
+                              className="h-8 bg-warning text-white font-semibold hover:bg-warning/90 border-none shadow"
                               disabled={undoPayment.isPending}
                               onClick={() => undoPayment.mutate(record.id)}
                             >

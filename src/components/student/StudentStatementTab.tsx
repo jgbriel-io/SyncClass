@@ -96,7 +96,7 @@ export function StudentStatementTab({
             <div>
               <p className="text-sm text-muted-foreground mb-1">Saldo Atual</p>
               <p className={`text-3xl font-bold ${
-                currentBalance >= 0 ? "text-emerald-600" : "text-rose-600"
+                currentBalance >= 0 ? "text-success" : "text-rose-600"
               }`}>
                 {formatCurrency(Math.abs(currentBalance))}
               </p>
@@ -105,10 +105,10 @@ export function StudentStatementTab({
               </p>
             </div>
             <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
-              currentBalance >= 0 ? "bg-emerald-500/10" : "bg-rose-500/10"
+              currentBalance >= 0 ? "bg-success/10" : "bg-rose-500/10"
             }`}>
               {currentBalance >= 0 ? (
-                <TrendingUp className="h-6 w-6 text-emerald-600" />
+                <TrendingUp className="h-6 w-6 text-success" />
               ) : (
                 <TrendingDown className="h-6 w-6 text-rose-600" />
               )}
@@ -165,7 +165,7 @@ export function StudentStatementTab({
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
                           {classLog.attendance ? (
-                            <CheckCircle className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                            <CheckCircle className="h-4 w-4 text-success flex-shrink-0" />
                           ) : (
                             <XCircle className="h-4 w-4 text-rose-500 flex-shrink-0" />
                           )}
@@ -182,7 +182,7 @@ export function StudentStatementTab({
                           <span
                             className={`text-sm font-bold px-2 py-0.5 rounded-full ${
                               classLog.grade >= 7
-                                ? "bg-emerald-500/10 text-emerald-600"
+                                ? "bg-success/10 text-success"
                                 : classLog.grade >= 5
                                 ? "bg-amber-500/10 text-amber-600"
                                 : "bg-rose-500/10 text-rose-600"
@@ -217,14 +217,14 @@ export function StudentStatementTab({
                     {/* Timeline dot */}
                     <div className={`absolute left-0 top-2 h-8 w-8 rounded-full bg-background border-2 flex items-center justify-center ${
                       actualStatus === "pago" 
-                        ? "border-emerald-500/50" 
+                        ? "border-success/50" 
                         : actualStatus === "atrasado"
                         ? "border-rose-500/50"
                         : "border-amber-500/50"
                     }`}>
                       <DollarSign className={`h-4 w-4 ${
                         actualStatus === "pago" 
-                          ? "text-emerald-600" 
+                          ? "text-success" 
                           : actualStatus === "atrasado"
                           ? "text-rose-600"
                           : "text-amber-600"
@@ -234,7 +234,7 @@ export function StudentStatementTab({
                     {/* Content */}
                     <div className={`rounded-lg border bg-card p-3 shadow-sm ${
                       actualStatus === "pago" 
-                        ? "border-emerald-200/50 dark:border-emerald-800/50" 
+                        ? "border-success/50" 
                         : actualStatus === "atrasado"
                         ? "border-rose-200/50 dark:border-rose-800/50"
                         : ""
@@ -271,7 +271,7 @@ export function StudentStatementTab({
                         </div>
                       </div>
                       {record.paid_at && (
-                        <p className="text-xs text-emerald-600 border-t pt-2 mt-2">
+                        <p className="text-xs text-success border-t pt-2 mt-2">
                           ✓ Pago em {formatDate(record.paid_at)}
                         </p>
                       )}
@@ -279,7 +279,7 @@ export function StudentStatementTab({
                       <div className="border-t pt-2 mt-2 flex items-center justify-between text-xs">
                         <span className="text-muted-foreground">Saldo após esta transação:</span>
                         <span className={`font-medium ${
-                          entry.balance >= 0 ? "text-emerald-600" : "text-rose-600"
+                          entry.balance >= 0 ? "text-success" : "text-rose-600"
                         }`}>
                           {formatCurrency(Math.abs(entry.balance))}
                           {entry.balance >= 0 ? " (crédito)" : " (débito)"}

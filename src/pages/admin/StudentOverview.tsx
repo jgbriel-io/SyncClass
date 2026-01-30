@@ -196,13 +196,13 @@ function StudentOverviewPage() {
                                   {lowAttendance ? (
                                     <TrendingDown className="h-3.5 w-3.5 text-rose-500" />
                                   ) : (
-                                    <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                                    <TrendingUp className="h-3.5 w-3.5 text-success" />
                                   )}
                                   <span
                                     className={`text-sm font-medium ${
                                       lowAttendance
                                         ? "text-rose-600"
-                                        : "text-emerald-600"
+                                        : "text-success"
                                     }`}
                                   >
                                     {student.stats.attendanceRate.toFixed(0)}%
@@ -220,7 +220,7 @@ function StudentOverviewPage() {
                               <span
                                 className={`text-sm font-medium ${
                                   student.stats.averageGrade >= 7
-                                    ? "text-emerald-600"
+                                    ? "text-success"
                                     : student.stats.averageGrade >= 5
                                     ? "text-amber-600"
                                     : "text-rose-600"
@@ -235,7 +235,7 @@ function StudentOverviewPage() {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <span className="text-sm text-emerald-600 font-medium">
+                            <span className="text-sm text-success font-medium">
                               {formatCurrency(student.stats.totalPaid)}
                             </span>
                           </TableCell>
