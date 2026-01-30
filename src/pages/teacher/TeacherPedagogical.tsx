@@ -309,10 +309,7 @@ const TeacherPedagogicalPage = () => {
                 </thead>
                 <tbody className="divide-y">
                   {filteredLogs.map((log) => {
-                    const lastUpdatedAt = (log as any).updated_at as
-                      | string
-                      | null
-                      | undefined;
+                    const lastUpdatedAt = log.updated_at;
 
                     return (
                       <tr key={log.id} className="hover:bg-muted/30 transition-colors">

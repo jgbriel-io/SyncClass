@@ -102,10 +102,10 @@ const TeacherOverviewPage = () => {
                 </thead>
                 <tbody>
                   {students.map((student) => {
-                    const hourlyRate = (student as any).hourly_rate as number | null;
-                    const classesPerWeek = (student as any).classes_per_week as number | null;
-                    const payDay = (student as any).pay_day as number | null;
-                    const city = (student as any).city as string | null;
+                    const hourlyRate = student.hourly_rate;
+                    const classesPerWeek = student.classes_per_week;
+                    const payDay = student.pay_day;
+                    const city = student.city;
 
                     const totalMonthlyClasses = classesPerWeek ? classesPerWeek * 4 : 0;
                     const expectedMonthlyAmount =

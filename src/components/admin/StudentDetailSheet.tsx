@@ -127,17 +127,17 @@ export function StudentDetailSheet({
               <ScrollArea className="h-full">
                 <div className="p-6 space-y-6">
                   {(() => {
-                    const hourlyRate = (student as any).hourly_rate as number | null | undefined;
-                    const classesPerWeek = (student as any).classes_per_week as number | null | undefined;
+                    const hourlyRate = student.hourly_rate;
+                    const classesPerWeek = student.classes_per_week;
                     const weeklyTotal =
                       hourlyRate != null && classesPerWeek != null
                         ? hourlyRate * classesPerWeek
                         : null;
-                    const payDay = (student as any).pay_day as number | null | undefined;
-                    const city = (student as any).city as string | null | undefined;
-                    const state = (student as any).state as string | null | undefined;
-                    const createdAt = student.created_at as string | null | undefined;
-                    const updatedAt = (student as any).updated_at as string | null | undefined;
+                    const payDay = student.pay_day;
+                    const city = student.city;
+                    const state = student.state;
+                    const createdAt = student.created_at;
+                    const updatedAt = student.updated_at;
 
                     return (
                       <>

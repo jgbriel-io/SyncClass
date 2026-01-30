@@ -63,7 +63,11 @@ serve(async (req) => {
   }
 
   // Parse body
-  let body: any;
+  interface RequestBody {
+    userId?: string;
+  }
+  
+  let body: RequestBody;
   try {
     body = await req.json();
   } catch (_e) {
@@ -73,7 +77,7 @@ serve(async (req) => {
     });
   }
 
-  const userIdToDelete = body?.userId as string | undefined;
+  const userIdToDelete = body?.userId;
   if (!userIdToDelete) {
     return new Response(JSON.stringify({ error: "Missing userId" }), {
       status: 400,
