@@ -32,6 +32,7 @@ import { useStudentsWithStats } from "@/hooks/useStudentDetails";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { useClassLogs } from "@/hooks/useClassLogs";
 import { useFinancialRecords } from "@/hooks/useFinancialRecords";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -115,13 +116,6 @@ function StudentOverviewPage() {
           </Select>
         </div>
 
-        {/* Loading state */}
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
-
         {/* Error state */}
         {error && (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
@@ -132,7 +126,9 @@ function StudentOverviewPage() {
         )}
 
         {/* Table */}
-        {!isLoading && !error && (
+        {isLoading ? (
+          <TableSkeleton rows={10} columns={9} />
+        ) : !error && (
           <>
             <div className="rounded-lg border bg-card shadow-card overflow-hidden">
               <div className="overflow-x-auto">

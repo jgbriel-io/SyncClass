@@ -44,6 +44,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 
 type PaymentStatus = "pendente" | "atrasado" | "pago";
 
@@ -277,14 +278,7 @@ export function FinancialView({
         </Select>
       </div>
 
-      {/* Loading state */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      )}
-
-      {/* Error state */}
+        {/* Error state */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <p className="text-destructive">
@@ -293,9 +287,11 @@ export function FinancialView({
         </div>
       )}
 
-      {/* Table */}
-      {!isLoading && !error && (
-        <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+        {/* Table */}
+        {isLoading ? (
+          <TableSkeleton rows={8} columns={8} />
+        ) : !error ? (
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -465,12 +461,12 @@ export function FinancialView({
               message={records.length === 0
                 ? "Clique no botão 'Nova Cobrança' para adicionar a primeira"
                 : "Ajuste os filtros acima ou limpe a busca"}
-            />
-          )}
-        </div>
-      )}
+              />
+            )}
+          </div>
+        ) : null}
 
-      {/* Create Form Dialog */}
+        {/* Create Form Dialog */}
       <FinancialFormDialog
         open={isFormOpen}
         onOpenChange={(open) => {

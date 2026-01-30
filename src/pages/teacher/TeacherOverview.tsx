@@ -2,7 +2,7 @@ import TeacherLayout from "@/components/layout/TeacherLayout";
 import { useClassLogs, useClassLogsSummary } from "@/hooks/useClassLogs";
 import { useFinancialRecords, useFinancialSummary } from "@/hooks/useFinancialRecords";
 import { useStudentsByTeacher } from "@/hooks/useStudentsByTeacher";
-import { Loader2 } from "lucide-react";
+import { DashboardSkeleton } from "@/components/ui/dashboard-skeleton";
 
 const TeacherOverviewPage = () => {
   // RLS garante que os resumos considerem apenas dados dos alunos do professor
@@ -28,13 +28,9 @@ const TeacherOverviewPage = () => {
           <p className="text-muted-foreground">Análise detalhada dos seus alunos</p>
         </div>
 
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
-
-        {!isLoading && (
+        {isLoading ? (
+          <DashboardSkeleton metricCards={7} showTable={true} />
+        ) : (
           <>
             <div className="grid gap-4 sm:grid-cols-4">
               <div className="rounded-lg border bg-card p-4 shadow-card">
