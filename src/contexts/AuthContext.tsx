@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/sentry";
 
 type UserRole = "admin" | "student" | "teacher" | null;
 
@@ -31,13 +32,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching role:", error);
-        console.error("Error details:", JSON.stringify(error, null, 2));
+        logger.error("Error fetching role", {
+          userId,
+          error: error.message,
+          code: error.code,
+        });
         return null;
       }
       return data?.role as UserRole;
     } catch (error) {
-      console.error("Error fetching role:", error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), {
+        userId,
+        context: "fetchUserRole",
+      });
       return null;
     }
   };
@@ -47,7 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Handle invalid refresh token errors with robust cleanup
     const handleInvalidRefreshToken = async () => {
-      console.warn("Invalid refresh token detected, clearing session and redirecting to login");
+      logger.warn("Invalid refresh token detected, clearing session", {
+        userId: user?.id,
+      });
+      
+      // Clear user context in Sentry
+      logger.clearUser();
       
       // Use signOut from the client for complete cleanup
       await supabase.auth.signOut();
@@ -95,6 +107,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (isMounted) {
               setRole(userRole);
               setIsLoading(false);
+              
+              // Set user context in Sentry for better error tracking
+              logger.setUser({
+                id: session.user.id,
+                email: session.user.email,
+                role: userRole || undefined,
+              });
+              
+              logger.addBreadcrumb(
+                "User authenticated",
+                "auth",
+                { role: userRole || "unknown" }
+              );
             }
           }, 0);
         } else {
@@ -133,6 +158,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isMounted) {
             setRole(userRole);
             setIsLoading(false);
+            
+            // Set user context in Sentry
+            logger.setUser({
+              id: session.user.id,
+              email: session.user.email,
+              role: userRole || undefined,
+            });
           }
         });
       } else {
@@ -200,6 +232,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    logger.addBreadcrumb("User signed out", "auth", { userId: user?.id });
+    logger.clearUser();
+    
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);

@@ -1,15 +1,16 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { extractDigits, removeLeadingZeros } from "@/lib/utils/patterns";
 
 // Função para formatar automaticamente para valor monetário (ex: 123 -> 123,00)
 function autoFormatNumber(
   e: React.ChangeEvent<HTMLInputElement>,
   originalOnChange?: React.ChangeEventHandler<HTMLInputElement>,
 ) {
-  let value = e.target.value.replace(/[^\d]/g, "");
+  let value = extractDigits(e.target.value);
   if (!value) value = "0";
-  value = value.replace(/^0+(?!$)/, "");
+  value = removeLeadingZeros(value);
   let formatted = value;
   if (value.length > 2) {
     formatted = value.slice(0, value.length - 2) + "," + value.slice(-2);
@@ -26,7 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, onChange, ...props }, ref) => {
     // Função para formatar automaticamente para dd/mm/aaaa
     function autoFormatDate(e: React.ChangeEvent<HTMLInputElement>) {
-      let value = e.target.value.replace(/\D/g, "");
+      let value = extractDigits(e.target.value);
       if (value.length > 8) value = value.slice(0, 8);
       let formatted = value;
       if (value.length > 4) {

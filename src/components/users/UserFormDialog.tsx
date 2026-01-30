@@ -25,74 +25,16 @@ import type { Enums } from "@/integrations/supabase/types";
 import { BR_STATES, fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib/br-locations";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { REGEX_PATTERNS, maskCPF, maskPhone, maskDate, isValidDateString } from "@/lib/utils/patterns";
 
 type AppRole = Enums<"app_role">;
 type StudentOrigin = Enums<"student_origin">;
 type StudentStatus = Enums<"student_status">;
 
-// Helper functions para máscaras
-function maskCPF(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  
-  if (digits.length <= 3) {
-    return digits;
-  } else if (digits.length <= 6) {
-    return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  } else if (digits.length <= 9) {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  } else {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-  }
-}
-
-function maskPhone(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  
-  if (digits.length <= 2) {
-    return digits.length > 0 ? `(${digits}` : digits;
-  } else if (digits.length <= 6) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  } else if (digits.length <= 10) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  } else {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  }
-}
-
-function maskDate(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-
-  if (digits.length <= 2) {
-    return digits;
-  }
-
-  if (digits.length <= 4) {
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  }
-
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-}
-
-function isValidDateString(value: string): boolean {
-  const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-  if (!dateRegex.test(value)) return false;
-  const [day, month, year] = value.split("/").map(Number);
-  const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-}
-
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
   return `${year}-${month}-${day}`;
 }
-
-const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
-const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
-const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
 
 // Schema para Admin (simples)
 const adminSchema = z.object({
@@ -134,7 +76,7 @@ const studentSchema = z.object({
     .string()
     .optional()
     .nullable()
-    .refine((val) => !val || (dateRegex.test(val) && isValidDateString(val)), {
+    .refine((val) => !val || isValidDateString(val), {
       message: "Data inválida",
     }),
   role: z.literal("student"),
@@ -157,7 +99,7 @@ const teacherSchema = z.object({
     .string()
     .max(14)
     .optional()
-    .refine((val) => !val || cpfRegex.test(val), {
+    .refine((val) => !val || REGEX_PATTERNS.cpf.test(val), {
       message: "Formato deve ser 000.000.000-00",
     }),
   role: z.literal("teacher"),

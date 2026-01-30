@@ -37,8 +37,10 @@ export function useDashboardStats() {
       const monthEnd = endOfMonth(now);
 
       // Get students stats
+      // Use students_masked para garantir mascaramento LGPD
+      // (não afeta esta query pois não seleciona CPF/telefone)
       const { data: students, error: studentsError } = await supabase
-        .from("students")
+        .from("students_masked")
         .select("id, status, created_at");
 
       if (studentsError) throw studentsError;
@@ -125,8 +127,10 @@ export function useBirthdaysThisMonth() {
       const now = new Date();
       const currentMonth = now.getMonth() + 1; // 1-12
 
+      // Use students_masked para garantir mascaramento LGPD
+      // (não afeta esta query pois não seleciona CPF/telefone)
       const { data, error } = await supabase
-        .from("students")
+        .from("students_masked")
         .select("id, name, birth_date")
         .eq("status", "ativo")
         .not("birth_date", "is", null);
@@ -161,8 +165,10 @@ export function useNewStudentsByMonth() {
   return useQuery({
     queryKey: ["new_students_by_month"],
     queryFn: async () => {
+      // Use students_masked para garantir mascaramento LGPD
+      // (não afeta esta query pois não seleciona CPF/telefone)
       const { data, error } = await supabase
-        .from("students")
+        .from("students_masked")
         .select("created_at")
         .order("created_at", { ascending: true });
 

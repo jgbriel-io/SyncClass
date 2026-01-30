@@ -26,79 +26,16 @@ import { BR_STATES, fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronsUpDown } from "lucide-react";
+import { REGEX_PATTERNS, maskCPF, maskPhone, maskDate, isValidDateString } from "@/lib/utils/patterns";
 
 // Type for student origin from database enum
 type StudentOrigin = Enums<"student_origin">;
 type StudentStatus = Enums<"student_status">;
 
-const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-function isValidDateString(value: string) {
-  if (!dateRegex.test(value)) return false;
-  const [day, month, year] = value.split("/").map(Number);
-  const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-}
-
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
   return `${year}-${month}-${day}`;
 }
-
-function maskDate(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-
-  if (digits.length <= 2) {
-    return digits;
-  }
-
-  if (digits.length <= 4) {
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  }
-
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-}
-
-function maskCPF(value: string): string {
-  // Remove tudo que não é dígito
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  
-  // Aplica a máscara 000.000.000-00
-  if (digits.length <= 3) {
-    return digits;
-  } else if (digits.length <= 6) {
-    return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  } else if (digits.length <= 9) {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  } else {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-  }
-}
-
-const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
-
-function maskPhone(value: string): string {
-  // Remove tudo que não é dígito
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  
-  // Aplica a máscara (00) 00000-0000 ou (00) 0000-0000
-  if (digits.length <= 2) {
-    return digits.length > 0 ? `(${digits}` : digits;
-  } else if (digits.length <= 6) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  } else if (digits.length <= 10) {
-    // Telefone fixo: (00) 0000-0000
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  } else {
-    // Celular: (00) 00000-0000
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  }
-}
-
-const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 
 const studentSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
@@ -107,11 +44,11 @@ const studentSchema = z.object({
   cpf: z.string()
     .min(14, "CPF inválido")
     .max(14, "CPF inválido")
-    .regex(cpfRegex, "Formato deve ser 000.000.000-00"),
+    .regex(REGEX_PATTERNS.cpf, "Formato deve ser 000.000.000-00"),
   phone: z.string()
     .min(14, "Telefone inválido")
     .max(15, "Telefone inválido")
-    .regex(phoneRegex, "Formato deve ser (00) 00000-0000"),
+    .regex(REGEX_PATTERNS.phone, "Formato deve ser (00) 00000-0000"),
   email: z
     .string()
     .min(1, "Email é obrigatório")
@@ -132,7 +69,7 @@ const studentSchema = z.object({
     .string()
     .optional()
     .nullable()
-    .refine((val) => !val || (dateRegex.test(val) && isValidDateString(val)), {
+    .refine((val) => !val || isValidDateString(val), {
       message: "Data inválida",
     }),
 });

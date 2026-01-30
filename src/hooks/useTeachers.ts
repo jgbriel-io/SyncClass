@@ -14,8 +14,10 @@ export function useTeachers() {
   return useQuery({
     queryKey: ["teachers"],
     queryFn: async () => {
+      // Use teachers_masked view para mascarar CPF e telefone conforme LGPD
+      // Admin vê dados completos, outros usuários veem dados mascarados
       const { data, error } = await supabase
-        .from("teachers")
+        .from("teachers_masked")
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;

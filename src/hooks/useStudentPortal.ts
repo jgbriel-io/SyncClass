@@ -52,8 +52,10 @@ export function useStudentProfile() {
       if (!profile?.student_id) return null;
 
       // Then get the student data
+      // Use students_masked para garantir mascaramento LGPD
+      // Nota: O aluno vê seus próprios dados mascarados por questão de conformidade
       const { data: student, error: studentError } = await supabase
-        .from("students")
+        .from("students_masked")
         .select("id, name, email, phone")
         .eq("id", profile.student_id)
         .maybeSingle();

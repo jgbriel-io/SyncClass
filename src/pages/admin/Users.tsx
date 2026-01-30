@@ -40,6 +40,7 @@ import { Search, Plus, Loader2, Shield, User, Link2, Unlink, MoreHorizontal, Eye
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
+import { getAvatarLetter } from "@/lib/utils/patterns";
 import {
   useUsers,
   useCreateUser,
@@ -454,7 +455,7 @@ export default function UsersPage() {
                       : storedRole;
 
                     const displayName = (user.profile?.full_name || "").trim() || "(sem nome)";
-                    const avatarLetter = displayName.replace(/[^A-Za-zÀ-ÿ0-9]/g, "").charAt(0).toUpperCase() || "?";
+                    const avatarLetter = getAvatarLetter(displayName);
                     const subtitle = user.email || getRoleLabel(role);
                     const isActive = user.profile?.active ?? true;
                     const lastUpdatedAt = user.profile?.updated_at;

@@ -10,11 +10,12 @@ export type StudentUpdate = TablesUpdate<"students">;
 export function useStudentsByTeacher() {
   // RLS garante que o professor veja apenas seus próprios alunos,
   // e o admin veja todos os alunos.
+  // Use students_masked para mascarar CPF e telefone conforme LGPD
   return useQuery({
     queryKey: ["students", "by-teacher"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("students")
+      const { data, error} = await supabase
+        .from("students_masked")
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;

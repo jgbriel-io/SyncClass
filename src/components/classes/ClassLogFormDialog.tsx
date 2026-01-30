@@ -25,18 +25,7 @@ import { Loader2, Receipt } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { ClassLogInsert, ClassLogWithStudent, ClassLogWithFinancialData } from "@/hooks/useClassLogs";
-
-const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-function isValidDateString(value: string) {
-  if (!dateRegex.test(value)) return false;
-  const [day, month, year] = value.split("/").map(Number);
-  const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-}
+import { maskDate, isValidDateString, parseMoneyToNumber } from "@/lib/utils/patterns";
 
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
@@ -52,20 +41,6 @@ function isoDateToBr(value: string): string {
   const [year, month, day] = parts;
   return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
 }
-
-function maskDate(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-
-  if (digits.length <= 2) {
-    return digits;
-  }
-
-  if (digits.length <= 4) {
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  }
-
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-}
 const classLogSchema = z.object({
   student_id: z.string().min(1, "Selecione um aluno"),
   class_date: z.string()
@@ -79,8 +54,7 @@ const classLogSchema = z.object({
     .optional()
     .refine((val) => {
       if (!val) return true;
-      const normalized = val.replace(",", ".");
-      const num = parseFloat(normalized);
+      const num = parseMoneyToNumber(val);
       return !isNaN(num) && num >= 0 && num <= 10;
     }, {
       message: "Nota deve ser entre 0 e 10",
@@ -90,7 +64,7 @@ const classLogSchema = z.object({
   createFinancial: z.boolean().optional(),
   financial_amount: z.string().optional(),
   financial_due_date: z.string().optional().refine(
-    (val) => !val || (dateRegex.test(val) && isValidDateString(val)),
+    (val) => !val || isValidDateString(val),
     { message: "Data inválida" }
   ),
   financial_description: z.string().optional(),
@@ -196,7 +170,7 @@ export function ClassLogFormDialog({
     }
     let grade: number | null = null;
     if (data.grade && data.attendance) {
-      const parsed = parseFloat(data.grade.replace(",", "."));
+      const parsed = parseMoneyToNumber(data.grade);
       if (!isNaN(parsed) && parsed >= 0 && parsed <= 10) {
         grade = parsed;
       }
@@ -216,7 +190,7 @@ export function ClassLogFormDialog({
 
     // Se está criando cobrança junto
     if (createFinancial && onSubmitWithFinancial && data.financial_amount && data.financial_due_date) {
-      const amount = parseFloat(data.financial_amount.replace(",", "."));
+      const amount = parseMoneyToNumber(data.financial_amount);
       if (!isNaN(amount) && amount > 0) {
         onSubmitWithFinancial({
           classLog: classLogData,

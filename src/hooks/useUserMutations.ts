@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { toast } from "sonner";
 import type { Tables, TablesInsert, Enums } from "@/integrations/supabase/types";
+import { logger } from "@/lib/sentry";
 
 // Types for mutations
 type AppRole = Enums<"app_role">;
@@ -53,9 +54,106 @@ function generateRandomPassword(length: number = 10): string {
   return password;
 }
 
-// Helper function to wait for trigger completion
-function waitForTrigger(ms: number = 800): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+// Helper function to retry with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  options: {
+    maxAttempts?: number;
+    initialDelayMs?: number;
+    maxDelayMs?: number;
+    backoffMultiplier?: number;
+  } = {}
+): Promise<T> {
+  const {
+    maxAttempts = 5,
+    initialDelayMs = 200,
+    maxDelayMs = 3000,
+    backoffMultiplier = 2,
+  } = options;
+
+  let lastError: Error | null = null;
+  let currentDelay = initialDelayMs;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      
+      // If this was the last attempt, throw the error
+      if (attempt === maxAttempts) {
+        break;
+      }
+
+      // Wait before retrying with exponential backoff
+      await new Promise(resolve => setTimeout(resolve, currentDelay));
+      
+      // Increase delay for next attempt, capped at maxDelayMs
+      currentDelay = Math.min(currentDelay * backoffMultiplier, maxDelayMs);
+    }
+  }
+
+  throw lastError || new Error("Retry failed without error");
+}
+
+// Helper function to wait for trigger completion with verification
+async function waitForProfileCreation(userId: string): Promise<void> {
+  await retryWithBackoff(
+    async () => {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("id, user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(`Erro ao verificar perfil: ${error.message}`);
+      }
+
+      if (!profile) {
+        throw new Error("Perfil ainda não foi criado pelo trigger");
+      }
+
+      // Profile exists, verification successful
+      return;
+    },
+    {
+      maxAttempts: 5,
+      initialDelayMs: 200,
+      maxDelayMs: 2000,
+      backoffMultiplier: 2,
+    }
+  );
+}
+
+// Helper function to wait for user_roles creation with verification
+async function waitForUserRoleCreation(userId: string): Promise<void> {
+  await retryWithBackoff(
+    async () => {
+      const { data: userRole, error } = await supabase
+        .from("user_roles")
+        .select("id, user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(`Erro ao verificar role: ${error.message}`);
+      }
+
+      if (!userRole) {
+        throw new Error("Role ainda não foi criada pelo trigger");
+      }
+
+      // Role exists, verification successful
+      return;
+    },
+    {
+      maxAttempts: 5,
+      initialDelayMs: 200,
+      maxDelayMs: 2000,
+      backoffMultiplier: 2,
+    }
+  );
 }
 
 // Create a new user
@@ -112,8 +210,15 @@ export function useCreateUser() {
 
       const userId = authData.user.id;
 
-      // Wait for trigger to complete
-      await waitForTrigger();
+      // Wait for trigger to complete with verification and retry
+      try {
+        await waitForProfileCreation(userId);
+        await waitForUserRoleCreation(userId);
+      } catch (error) {
+        throw new Error(
+          "Erro ao criar perfil. O sistema está em alta carga. Tente novamente em alguns instantes."
+        );
+      }
 
       // Update profile with name, role and email
       if (fullName) {
@@ -215,7 +320,12 @@ export function useCreateUser() {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables) => {
+      logger.error(error, {
+        context: "useCreateUser",
+        email: variables.email,
+        role: variables.role,
+      });
       toast.error(error.message || "Erro ao criar usuário. Tente novamente.");
     },
   });
@@ -560,6 +670,16 @@ export function useCreateAuthUserForStudent() {
 
       const userId = authData.user.id;
 
+      // Wait for trigger to complete with verification and retry
+      try {
+        await waitForProfileCreation(userId);
+        await waitForUserRoleCreation(userId);
+      } catch (error) {
+        throw new Error(
+          "Erro ao criar perfil. O sistema está em alta carga. Tente novamente em alguns instantes."
+        );
+      }
+
       // Link profile to existing student and update name
       const { error: profileError } = await supabase
         .from("profiles")
@@ -647,6 +767,16 @@ export function useCreateAuthUserForTeacher() {
       if (!authData.user) throw new Error("Failed to create user");
 
       const userId = authData.user.id;
+
+      // Wait for trigger to complete with verification and retry
+      try {
+        await waitForProfileCreation(userId);
+        await waitForUserRoleCreation(userId);
+      } catch (error) {
+        throw new Error(
+          "Erro ao criar perfil. O sistema está em alta carga. Tente novamente em alguns instantes."
+        );
+      }
 
       const { error: profileError } = await supabase
         .from("profiles")

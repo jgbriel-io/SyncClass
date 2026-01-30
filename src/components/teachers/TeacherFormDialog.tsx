@@ -8,22 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { Teacher, TeacherInsert } from "@/hooks/useTeachers";
-
-function maskCPF(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-
-  if (digits.length <= 3) {
-    return digits;
-  } else if (digits.length <= 6) {
-    return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  } else if (digits.length <= 9) {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  } else {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-  }
-}
-
-const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+import { REGEX_PATTERNS, maskCPF } from "@/lib/utils/patterns";
 
 const teacherSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
@@ -41,7 +26,7 @@ const teacherSchema = z.object({
     .string()
     .max(14)
     .optional()
-    .refine((val) => !val || cpfRegex.test(val), {
+    .refine((val) => !val || REGEX_PATTERNS.cpf.test(val), {
       message: "Formato deve ser 000.000.000-00",
     }),
 });

@@ -42,8 +42,9 @@ export function useStudentDetails(studentId: string | null) {
       if (!studentId) return null;
 
       // Fetch student data
+      // Use students_masked para mascarar CPF e telefone conforme LGPD
       const { data: student, error: studentError } = await supabase
-        .from("students")
+        .from("students_masked")
         .select("*")
         .eq("id", studentId)
         .maybeSingle();
@@ -124,8 +125,9 @@ export function useStudentsWithStats() {
     queryKey: ["students_with_stats"],
     queryFn: async () => {
       // Fetch all students
+      // Use students_masked para mascarar CPF e telefone conforme LGPD
       const { data: students, error: studentsError } = await supabase
-        .from("students")
+        .from("students_masked")
         .select("*")
         .order("name", { ascending: true });
 

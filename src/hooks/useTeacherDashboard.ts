@@ -162,8 +162,10 @@ export function useTeacherBirthdaysThisMonth(teacherId: string | null) {
       const today = new Date();
       const currentMonth = (today.getMonth() + 1).toString().padStart(2, "0");
 
+      // Use students_masked para garantir mascaramento LGPD
+      // (não afeta esta query pois não seleciona CPF/telefone)
       const { data, error } = await supabase
-        .from("students")
+        .from("students_masked")
         .select("id, name, birth_date")
         .eq("teacher_id", teacherId)
         .not("birth_date", "is", null)

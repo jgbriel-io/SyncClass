@@ -26,36 +26,11 @@ import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useAvailableClassLogsForStudent } from "@/hooks/useClassLogs";
 import { FinancialRecordInsert, FinancialRecord } from "@/hooks/useFinancialRecords";
-
-const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-function isValidDateString(value: string) {
-  if (!dateRegex.test(value)) return false;
-  const [day, month, year] = value.split("/").map(Number);
-  const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-}
+import { maskDate, isValidDateString, parseMoneyToNumber, formatNumberToMoney } from "@/lib/utils/patterns";
 
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
   return `${year}-${month}-${day}`;
-}
-
-function maskDate(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-
-  if (digits.length <= 2) {
-    return digits;
-  }
-
-  if (digits.length <= 4) {
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  }
-
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 const financialSchema = z.object({
   student_id: z.string().min(1, "Selecione um aluno"),
@@ -138,7 +113,7 @@ export function FinancialFormDialog({
       reset({
         student_id: initialData.student_id || "",
         class_log_id: initialData.class_log_id || "",
-        amount: initialData.amount ? String(initialData.amount).replace('.', ',') : "",
+        amount: initialData.amount ? formatNumberToMoney(Number(initialData.amount)) : "",
         due_date: initialData.due_date ? format(new Date(initialData.due_date + "T00:00:00"), "dd/MM/yyyy") : "",
         description: initialData.description || "",
       });
@@ -158,7 +133,7 @@ export function FinancialFormDialog({
       return;
     }
 
-    const amount = parseFloat(data.amount.replace(/[^\d,.-]/g, "").replace(",", "."));
+    const amount = parseMoneyToNumber(data.amount);
     
     onSubmit({
       student_id: data.student_id,
