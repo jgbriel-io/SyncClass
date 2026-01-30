@@ -44,6 +44,7 @@ import {
   useUpdateTeacher,
   useDeleteTeacher,
   Teacher,
+  TeacherInsert,
 } from "@/hooks/useTeachers";
 import { useCreateAuthUserForTeacher } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,15 +72,15 @@ export default function TeachersPage() {
     const name = (teacher.name ?? "").toLowerCase();
     const matchesSearch = name.includes(searchQuery.toLowerCase());
 
-    const status = ((teacher as any).status as string | null) ?? "ativo";
+    const status = teacher.status ?? "ativo";
     const matchesStatus = statusFilter === "all" || status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
 
-  const handleCreateOrUpdate = (data: any) => {
+  const handleCreateOrUpdate = (data: TeacherInsert) => {
     const run = async () => {
-      const normalizedEmail = (data as any).email?.trim().toLowerCase();
+      const normalizedEmail = data.email?.trim().toLowerCase();
 
       if (!selectedTeacher && normalizedEmail) {
         const { data: existingProfile, error: profileError } = await supabase
@@ -155,7 +156,7 @@ export default function TeachersPage() {
   const handleStatusChangeConfirm = () => {
     if (!teacherToDelete) return;
 
-    const status = ((teacherToDelete as any).status as string | null) ?? "ativo";
+    const status = teacherToDelete.status ?? "ativo";
     const isActive = status === "ativo";
 
     if (isActive) {
@@ -169,7 +170,7 @@ export default function TeachersPage() {
     } else {
       // Reactivate (status -> ativo)
       updateTeacher.mutate(
-        { id: teacherToDelete.id, status: "ativo" as any },
+        { id: teacherToDelete.id, status: "ativo" },
         {
           onSuccess: () => {
             setDeleteDialogOpen(false);
@@ -249,9 +250,8 @@ export default function TeachersPage() {
             </TableHeader>
               <TableBody>
                 {filteredTeachers.map((teacher) => {
-                  const status =
-                    ((teacher as any).status as string | null) ?? "ativo";
-                  const lastUpdatedAt = (teacher as any).updated_at as string | null | undefined;
+                  const status = teacher.status ?? "ativo";
+                  const lastUpdatedAt = teacher.updated_at;
 
                   return (
                     <TableRow key={teacher.id}>
@@ -435,15 +435,13 @@ export default function TeachersPage() {
           <DialogContent aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>
-                {(((teacherToDelete as any)?.status as string | null) ??
-                "ativo") === "ativo"
+                {(teacherToDelete?.status ?? "ativo") === "ativo"
                   ? "Confirmar desativação"
                   : "Confirmar reativação"}
               </DialogTitle>
             </DialogHeader>
             <p className="mt-2 text-sm text-muted-foreground">
-              {(((teacherToDelete as any)?.status as string | null) ??
-              "ativo") === "ativo" ? (
+              {(teacherToDelete?.status ?? "ativo") === "ativo" ? (
                 <>
                   Tem certeza que deseja desativar o professor{" "}
                   <strong>{teacherToDelete?.name}</strong>? Ele será removido da
@@ -473,13 +471,11 @@ export default function TeachersPage() {
                 {deleteTeacher.isPending || updateTeacher.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {(((teacherToDelete as any)?.status as string | null) ??
-                    "ativo") === "ativo"
+                    {(teacherToDelete?.status ?? "ativo") === "ativo"
                       ? "Desativando..."
                       : "Reativando..."}
                   </>
-                ) : (((teacherToDelete as any)?.status as string | null) ??
-                    "ativo") === "ativo" ? (
+                ) : (teacherToDelete?.status ?? "ativo") === "ativo" ? (
                   "Desativar"
                 ) : (
                   "Reativar"

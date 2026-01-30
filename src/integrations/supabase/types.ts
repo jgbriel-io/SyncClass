@@ -14,39 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      teachers: {
-        Row: {
-          id: string;
-          name: string;
-          email: string | null;
-          cpf: string | null;
-          phone: string | null;
-          specialization: string | null;
-          created_at: string | null;
-          updated_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          email?: string | null;
-          cpf?: string | null;
-          phone?: string | null;
-          specialization?: string | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          email?: string | null;
-          cpf?: string | null;
-          phone?: string | null;
-          specialization?: string | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Relationships: [];
-      };
       class_logs: {
         Row: {
           attendance: boolean | null
@@ -56,8 +23,9 @@ export type Database = {
           grade: number | null
           id: string
           student_id: string
-          updated_at: string | null
           teacher_id: string | null
+          title: string | null
+          updated_at: string | null
         }
         Insert: {
           attendance?: boolean | null
@@ -67,8 +35,9 @@ export type Database = {
           grade?: number | null
           id?: string
           student_id: string
-          updated_at?: string | null
           teacher_id?: string | null
+          title?: string | null
+          updated_at?: string | null
         }
         Update: {
           attendance?: boolean | null
@@ -78,8 +47,9 @@ export type Database = {
           grade?: number | null
           id?: string
           student_id?: string
-          updated_at?: string | null
           teacher_id?: string | null
+          title?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -87,6 +57,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_logs_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
             referencedColumns: ["id"]
           },
         ]
@@ -150,29 +127,44 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active: boolean
           avatar_url: string | null
           created_at: string | null
+          email: string | null
           full_name: string | null
           id: string
+          is_admin: boolean | null
+          role: Database["public"]["Enums"]["app_role"] | null
           student_id: string | null
+          teacher_id: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          active?: boolean
           avatar_url?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           student_id?: string | null
+          teacher_id?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          active?: boolean
           avatar_url?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           student_id?: string | null
+          teacher_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -182,6 +174,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
             referencedColumns: ["id"]
           },
         ]
@@ -200,9 +199,10 @@ export type Database = {
           origin: Database["public"]["Enums"]["student_origin"] | null
           pay_day: number | null
           phone: string | null
+          state: string | null
           status: Database["public"]["Enums"]["student_status"] | null
-          updated_at: string | null
           teacher_id: string | null
+          updated_at: string | null
         }
         Insert: {
           birth_date?: string | null
@@ -217,9 +217,10 @@ export type Database = {
           origin?: Database["public"]["Enums"]["student_origin"] | null
           pay_day?: number | null
           phone?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["student_status"] | null
-          updated_at?: string | null
           teacher_id?: string | null
+          updated_at?: string | null
         }
         Update: {
           birth_date?: string | null
@@ -234,33 +235,78 @@ export type Database = {
           origin?: Database["public"]["Enums"]["student_origin"] | null
           pay_day?: number | null
           phone?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["student_status"] | null
-          updated_at?: string | null
           teacher_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teachers: {
+        Row: {
+          cpf: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          status: Database["public"]["Enums"]["teacher_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["teacher_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["teacher_status"]
+          updated_at?: string | null
         }
         Relationships: []
       }
       user_roles: {
         Row: {
+          active: boolean
+          email: string | null
+          full_name: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
-          full_name: string | null
-          email: string | null
         }
         Insert: {
+          active?: boolean
+          email?: string | null
+          full_name?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id: string
-          full_name?: string | null
-          email?: string | null
         }
         Update: {
+          active?: boolean
+          email?: string | null
+          full_name?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
-          full_name?: string | null
-          email?: string | null
         }
         Relationships: []
       }
@@ -270,6 +316,7 @@ export type Database = {
     }
     Functions: {
       get_my_student_id: { Args: never; Returns: string }
+      get_my_teacher_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -278,9 +325,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_teacher: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "student"
+      app_role: "admin" | "student" | "teacher"
       payment_status: "pendente" | "pago" | "atrasado"
       student_origin:
         | "indicacao"
@@ -289,6 +337,7 @@ export type Database = {
         | "passante"
         | "outro"
       student_status: "ativo" | "inativo"
+      teacher_status: "ativo" | "inativo"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -308,23 +357,23 @@ export type Tables<
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+          DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+        Row: infer R
+      }
     ? R
     : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
+          DefaultSchema["Views"])
     ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
+          DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+          Row: infer R
+        }
       ? R
       : never
     : never
@@ -342,14 +391,14 @@ export type TablesInsert<
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
+        Insert: infer I
+      }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
+          Insert: infer I
+        }
       ? I
       : never
     : never
@@ -367,14 +416,14 @@ export type TablesUpdate<
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
+        Update: infer U
+      }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
+          Update: infer U
+        }
       ? U
       : never
     : never
@@ -416,10 +465,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "student"],
+      app_role: ["admin", "student", "teacher"],
       payment_status: ["pendente", "pago", "atrasado"],
       student_origin: ["indicacao", "google", "instagram", "passante", "outro"],
       student_status: ["ativo", "inativo"],
+      teacher_status: ["ativo", "inativo"],
     },
   },
 } as const

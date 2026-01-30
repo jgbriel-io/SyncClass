@@ -27,6 +27,17 @@ export interface MonthData {
   count: number;
 }
 
+interface FinancialRecordWithStudent {
+  id: string;
+  due_date: string;
+  amount: number;
+  students: {
+    id: string;
+    name: string;
+    teacher_id: string | null;
+  };
+}
+
 export function useTeacherDashboardStats(teacherId: string | null) {
   return useQuery({
     queryKey: ["teacher-dashboard-stats", teacherId],
@@ -131,7 +142,7 @@ export function useTeacherUpcomingPayments(teacherId: string | null) {
 
       if (error) throw error;
 
-      return (data || []).map((record: any) => ({
+      return (data || []).map((record: FinancialRecordWithStudent) => ({
         id: record.id,
         studentName: record.students.name,
         dueDate: record.due_date,

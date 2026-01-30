@@ -6,6 +6,13 @@ import { toast } from "sonner";
 export type Student = Tables<"students">;
 export type StudentInsert = TablesInsert<"students">;
 export type StudentUpdate = TablesUpdate<"students">;
+type ProfileUpdate = TablesUpdate<"profiles">;
+type UserRoleInsert = TablesInsert<"user_roles">;
+
+interface PostgresError {
+  code?: string;
+  message?: string;
+}
 
 export function useStudents() {
   return useQuery({
@@ -46,10 +53,9 @@ export function useCreateStudent() {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       toast.success("Aluno cadastrado com sucesso!");
     },
-    onError: (error) => {
-      console.error("Error creating student:", error);
-      const err = error as any;
-      const message: string = err?.message || "";
+    onError: (error: unknown) => {
+      const err = error as PostgresError;
+      const message = err?.message || "";
 
       if (err?.code === "23505") {
         if (message.includes("students_unique_email")) {
@@ -88,72 +94,60 @@ export function useUpdateStudent() {
       }
 
       // Synchronize profiles, user_roles and active flag for linked users
-      try {
-        const updatedStudent = data as Student;
-        const fullName = (updatedStudent as any).name as string | null | undefined;
-        const rawEmail = (updatedStudent as any).email as string | null | undefined;
-        const normalizedEmail = rawEmail
-          ? rawEmail.trim().toLowerCase()
-          : null;
-        const status = (updatedStudent as any).status as string | null | undefined;
-        const isActive = status === "ativo";
+      const updatedStudent = data as Student;
+      const fullName = updatedStudent.name;
+      const rawEmail = updatedStudent.email;
+      const normalizedEmail = rawEmail ? rawEmail.trim().toLowerCase() : null;
+      const isActive = updatedStudent.status === "ativo";
 
-        const { data: linkedProfiles, error: profileError } = await supabase
-          .from("profiles")
-          .select("id, user_id")
-          .eq("student_id", updatedStudent.id);
+      const { data: linkedProfiles, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, user_id")
+        .eq("student_id", updatedStudent.id);
 
-        if (profileError) {
-          throw profileError;
-        }
+      if (profileError) {
+        throw profileError;
+      }
 
-        if (linkedProfiles && linkedProfiles.length > 0) {
-          for (const profile of linkedProfiles as { id: string; user_id: string | null }[]) {
-            const profileUpdate: Record<string, any> = {
+      if (linkedProfiles && linkedProfiles.length > 0) {
+        for (const profile of linkedProfiles) {
+          const profileUpdate: ProfileUpdate = {
+            role: "student",
+            active: isActive,
+          };
+          if (fullName) {
+            profileUpdate.full_name = fullName;
+          }
+          if (normalizedEmail) {
+            profileUpdate.email = normalizedEmail;
+          }
+
+          const { error: profileUpdateError } = await supabase
+            .from("profiles")
+            .update(profileUpdate)
+            .eq("id", profile.id);
+
+          if (profileUpdateError) {
+            throw profileUpdateError;
+          }
+
+          if (profile.user_id) {
+            const userRolePayload: UserRoleInsert = {
+              user_id: profile.user_id,
               role: "student",
-              active: isActive,
+              full_name: fullName,
+              email: normalizedEmail,
             };
-            if (typeof fullName === "string" && fullName.length > 0) {
-              profileUpdate.full_name = fullName;
-            }
-            if (typeof normalizedEmail === "string" && normalizedEmail.length > 0) {
-              profileUpdate.email = normalizedEmail;
-            }
 
-            const { error: profileUpdateError } = await supabase
-              .from("profiles")
-              .update(profileUpdate)
-              .eq("id", profile.id);
+            const { error: roleError } = await supabase
+              .from("user_roles")
+              .upsert(userRolePayload, { onConflict: "user_id" });
 
-            if (profileUpdateError) {
-              throw profileUpdateError;
-            }
-
-            if (profile.user_id) {
-              const userRolePayload: Record<string, any> = {
-                user_id: profile.user_id,
-                role: "student",
-              };
-              if (typeof fullName === "string" && fullName.length > 0) {
-                userRolePayload.full_name = fullName;
-              }
-              if (typeof normalizedEmail === "string" && normalizedEmail.length > 0) {
-                userRolePayload.email = normalizedEmail;
-              }
-
-              const { error: roleError } = await supabase
-                .from("user_roles")
-                .upsert(userRolePayload, { onConflict: "user_id" });
-
-              if (roleError) {
-                throw roleError;
-              }
+            if (roleError) {
+              throw roleError;
             }
           }
         }
-      } catch (syncError) {
-        console.error("Error syncing student updates to profiles/user_roles:", syncError);
-        throw syncError;
       }
 
       return data;
@@ -164,10 +158,9 @@ export function useUpdateStudent() {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Aluno atualizado com sucesso!");
     },
-    onError: (error) => {
-      console.error("Error updating student:", error);
-      const err = error as any;
-      const message: string = err?.message || "";
+    onError: (error: unknown) => {
+      const err = error as PostgresError;
+      const message = err?.message || "";
 
       if (err?.code === "23505") {
         if (message.includes("students_unique_email")) {
@@ -219,8 +212,7 @@ export function useDeleteStudent() {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Aluno desativado com sucesso!");
     },
-    onError: (error) => {
-      console.error("Error deleting student:", error);
+    onError: () => {
       toast.error("Erro ao desativar aluno. Tente novamente.");
     },
   });

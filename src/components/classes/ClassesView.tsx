@@ -23,7 +23,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
-import { useTeachers } from "@/hooks/useTeachers";
+import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import {
   useClassLogs,
   useClassLogsSummary,
@@ -109,9 +109,9 @@ export function ClassesView({
 
   // Mapa de professores para fallback (caso o join não traga o nome)
   const teacherMap = new Map<string, string>();
-  teachers.forEach((t: any) => {
+  teachers.forEach((t: Teacher) => {
     if (t.id && t.name) {
-      teacherMap.set(t.id as string, t.name as string);
+      teacherMap.set(t.id, t.name);
     }
   });
 
@@ -285,10 +285,10 @@ export function ClassesView({
               </thead>
               <tbody className="divide-y">
                 {filteredLogs.map((log) => {
-                  const lastUpdatedAt = (log as any).updated_at as string | null | undefined;
+                  const lastUpdatedAt = log.updated_at;
                   // Prioriza o nome do professor do join direto do class_log, depois fallback via teacher_id
                   const teacherName = 
-                    (log as any).teachers?.name ?? 
+                    log.teachers?.name ?? 
                     (log.teacher_id ? teacherMap.get(log.teacher_id) : null) ?? 
                     (log.students?.teacher_id ? teacherMap.get(log.students.teacher_id) : null) ?? 
                     "Sem professor";

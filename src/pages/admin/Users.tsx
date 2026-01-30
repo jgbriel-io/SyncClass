@@ -118,8 +118,26 @@ export default function UsersPage() {
     password?: string;
     fullName: string;
     role: "admin" | "student" | "teacher";
-    studentData?: any;
-    teacherData?: any;
+    studentData?: {
+      name: string;
+      state: string | null;
+      city: string | null;
+      cpf: string;
+      phone: string;
+      email: string;
+      origin: string;
+      status: string;
+      birth_date: string | null;
+      hourly_rate: number | null;
+      classes_per_week: number | null;
+      pay_day: number | null;
+    };
+    teacherData?: {
+      name: string;
+      email: string;
+      phone?: string;
+      cpf?: string;
+    };
   }) => {
     if (selectedUser) {
       // Update existing user
@@ -164,7 +182,7 @@ export default function UsersPage() {
           teacherData: data.teacherData,
         },
         {
-          onSuccess: (result: any) => {
+          onSuccess: (result: { password?: string }) => {
             setIsFormOpen(false);
             if (result?.password) {
               setGeneratedPassword(result.password);
@@ -228,8 +246,8 @@ export default function UsersPage() {
     const linkedStudent = selectedUser.profile?.student_id
       ? students.find((s) => s.id === selectedUser.profile?.student_id)
       : null;
-    const linkedTeacher = (selectedUser.profile as any)?.teacher_id
-      ? teachers.find((t) => t.id === (selectedUser.profile as any).teacher_id)
+    const linkedTeacher = selectedUser.profile?.teacher_id
+      ? teachers.find((t) => t.id === selectedUser.profile.teacher_id)
       : null;
 
     const isStudentActive = linkedStudent?.status === "ativo";
@@ -241,7 +259,7 @@ export default function UsersPage() {
     if (linkedStudent && isStudentActive) {
       // Soft deactivate via student status so it reflects in both tabs
       updateStudent.mutate(
-        { id: linkedStudent.id, status: "inativo" as any },
+        { id: linkedStudent.id, status: "inativo" },
         {
           onSuccess: () => {
             setDeleteDialogOpen(false);
@@ -301,7 +319,7 @@ export default function UsersPage() {
 
   const linkedTeacherIds = new Set(
     users
-      .map((u) => (u.profile as any)?.teacher_id)
+      .map((u) => u.profile?.teacher_id)
       .filter((id): id is string => !!id)
   );
   const availableTeachers = teachers.filter(
@@ -366,7 +384,7 @@ export default function UsersPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as any)}>
+          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as "all" | "active" | "inactive")}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -422,8 +440,8 @@ export default function UsersPage() {
                     const linkedStudent = user.profile?.student_id
                       ? students.find((s) => s.id === user.profile?.student_id)
                       : null;
-                    const linkedTeacher = (user.profile as any)?.teacher_id
-                      ? teachers.find((t) => t.id === (user.profile as any).teacher_id)
+                    const linkedTeacher = user.profile?.teacher_id
+                      ? teachers.find((t) => t.id === user.profile.teacher_id)
                       : null;
 
                     const storedRole = (user.role?.role as string | null) ?? null;
@@ -439,7 +457,7 @@ export default function UsersPage() {
                     const avatarLetter = displayName.replace(/[^A-Za-zÀ-ÿ0-9]/g, "").charAt(0).toUpperCase() || "?";
                     const subtitle = user.email || getRoleLabel(role);
                     const isActive = user.profile?.active ?? true;
-                    const lastUpdatedAt = (user.profile as any)?.updated_at as string | null | undefined;
+                    const lastUpdatedAt = user.profile?.updated_at;
 
                     return (
                       <TableRow key={user.id}>
@@ -566,7 +584,7 @@ export default function UsersPage() {
                                   onClick={() => {
                                     updateStudent.mutate({
                                       id: linkedStudent.id,
-                                      status: "ativo" as any,
+                                      status: "ativo",
                                     });
                                   }}
                                 >
@@ -578,7 +596,7 @@ export default function UsersPage() {
                                   onClick={() => {
                                     updateTeacher.mutate({
                                       id: linkedTeacher.id,
-                                      status: "ativo" as any,
+                                      status: "ativo",
                                     });
                                   }}
                                 >
@@ -842,9 +860,9 @@ export default function UsersPage() {
                   const linkedStudent = selectedUser?.profile?.student_id
                     ? students.find((s) => s.id === selectedUser.profile?.student_id)
                     : null;
-                  const linkedTeacher = (selectedUser?.profile as any)?.teacher_id
+                  const linkedTeacher = selectedUser?.profile?.teacher_id
                     ? teachers.find(
-                        (t) => t.id === (selectedUser?.profile as any).teacher_id
+                        (t) => t.id === selectedUser.profile.teacher_id
                       )
                     : null;
                   const isStudentActive = linkedStudent?.status === "ativo";
@@ -866,9 +884,9 @@ export default function UsersPage() {
                   const linkedStudent = selectedUser?.profile?.student_id
                     ? students.find((s) => s.id === selectedUser.profile?.student_id)
                     : null;
-                  const linkedTeacher = (selectedUser?.profile as any)?.teacher_id
+                  const linkedTeacher = selectedUser?.profile?.teacher_id
                     ? teachers.find(
-                        (t) => t.id === (selectedUser?.profile as any).teacher_id
+                        (t) => t.id === selectedUser.profile.teacher_id
                       )
                     : null;
                   const isStudentActive = linkedStudent?.status === "ativo";

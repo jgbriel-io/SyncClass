@@ -25,7 +25,7 @@ import { Loader2 } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useAvailableClassLogsForStudent } from "@/hooks/useClassLogs";
-import { FinancialRecordInsert } from "@/hooks/useFinancialRecords";
+import { FinancialRecordInsert, FinancialRecord } from "@/hooks/useFinancialRecords";
 
 const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
 function isValidDateString(value: string) {
@@ -76,7 +76,7 @@ interface FinancialFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: FinancialRecordInsert) => void;
   isLoading: boolean;
-  initialData?: any;
+  initialData?: FinancialRecord;
   enableTeacherSelection?: boolean;
 }
 

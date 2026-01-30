@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Receipt } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
-import { useTeachers } from "@/hooks/useTeachers";
+import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { ClassLogInsert, ClassLogWithStudent, ClassLogWithFinancialData } from "@/hooks/useClassLogs";
 
 const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
@@ -127,7 +127,7 @@ export function ClassLogFormDialog({
   const [createFinancial, setCreateFinancial] = useState(false);
   const { data: students = [], isLoading: loadingStudents } = useStudents();
   const { data: teachers = [], isLoading: loadingTeachers } = useTeachers();
-  const selectedTeacherName = teachers.find((t: any) => t.id === selectedTeacherId)?.name as string | undefined;
+  const selectedTeacherName = teachers.find((t: Teacher) => t.id === selectedTeacherId)?.name;
 
   const {
     register,
@@ -179,7 +179,7 @@ export function ClassLogFormDialog({
       setCreateFinancial(false);
       setTeacherError(null);
     }
-  }, [open, classLog, reset, setValue]);
+  }, [open, classLog, reset, setValue, enableTeacherSelection, teacherId]);
 
   // Auto-fill due date when class date changes
   useEffect(() => {
@@ -486,7 +486,7 @@ export function ClassLogFormDialog({
                   <div className="space-y-2">
                     <Label htmlFor="financial_payment_method">Método de Pagamento</Label>
                     <Select
-                      onValueChange={(value) => setValue("financial_payment_method", value as any)}
+                      onValueChange={(value) => setValue("financial_payment_method", value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione (opcional)" />

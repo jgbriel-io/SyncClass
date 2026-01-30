@@ -19,12 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CalendarIcon } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Student, StudentInsert } from "@/hooks/useStudents";
+import type { Enums } from "@/integrations/supabase/types";
 import { BR_STATES, fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib/br-locations";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronsUpDown } from "lucide-react";
+
+// Type for student origin from database enum
+type StudentOrigin = Enums<"student_origin">;
+type StudentStatus = Enums<"student_status">;
 
 const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
 function isValidDateString(value: string) {
@@ -151,13 +156,13 @@ export function StudentFormDialog({
   isLoading,
   autoTeacherId,
 }: StudentFormDialogProps) {
-  const [selectedOrigin, setSelectedOrigin] = useState<string>(
+  const [selectedOrigin, setSelectedOrigin] = useState<StudentOrigin | "">(
     student?.origin || ""
   );
-  const [selectedStatus, setSelectedStatus] = useState<string>(
+  const [selectedStatus, setSelectedStatus] = useState<StudentStatus>(
     student?.status || "ativo"
   );
-  const [selectedState, setSelectedState] = useState<string>((student as any)?.state || "");
+  const [selectedState, setSelectedState] = useState<string>(student?.state || "");
   const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
   const [statePopoverOpen, setStatePopoverOpen] = useState(false);
   const [cities, setCities] = useState<BrCityOption[]>([]);
@@ -174,8 +179,8 @@ export function StudentFormDialog({
     resolver: zodResolver(studentSchema),
     defaultValues: {
       name: student?.name || "",
-      state: (student as any)?.state || "",
-      city: (student as any)?.city || "",
+      state: student?.state || "",
+      city: student?.city || "",
       cpf: student?.cpf 
         ? (student.cpf.includes(".") ? student.cpf : maskCPF(student.cpf))
         : "",
@@ -183,13 +188,13 @@ export function StudentFormDialog({
         ? (student.phone.includes("(") ? student.phone : maskPhone(student.phone))
         : "",
       email: student?.email || "",
-      hourly_rate: (student as any)?.hourly_rate
-        ? String((student as any).hourly_rate).replace(".", ",")
+      hourly_rate: student?.hourly_rate
+        ? String(student.hourly_rate).replace(".", ",")
         : "",
-      classes_per_week: (student as any)?.classes_per_week
-        ? String((student as any).classes_per_week)
+      classes_per_week: student?.classes_per_week
+        ? String(student.classes_per_week)
         : "",
-      pay_day: (student as any)?.pay_day ? String((student as any).pay_day) : "",
+      pay_day: student?.pay_day ? String(student.pay_day) : "",
       origin: student?.origin || undefined,
       status: student?.status || "ativo",
       birth_date: student?.birth_date
@@ -236,18 +241,18 @@ export function StudentFormDialog({
       
       reset({
         name: student.name,
-        state: (student as any)?.state || "",
-        city: (student as any)?.city || "",
+        state: student.state || "",
+        city: student.city || "",
         cpf: formattedCPF,
         phone: formattedPhone,
         email: student.email || "",
-        hourly_rate: (student as any)?.hourly_rate
-          ? String((student as any).hourly_rate).replace(".", ",")
+        hourly_rate: student.hourly_rate
+          ? String(student.hourly_rate).replace(".", ",")
           : "",
-        classes_per_week: (student as any)?.classes_per_week
-          ? String((student as any).classes_per_week)
+        classes_per_week: student.classes_per_week
+          ? String(student.classes_per_week)
           : "",
-        pay_day: (student as any)?.pay_day ? String((student as any).pay_day) : "",
+        pay_day: student.pay_day ? String(student.pay_day) : "",
         origin: student.origin || undefined,
         status: student.status || "ativo",
         birth_date: student.birth_date
@@ -256,7 +261,7 @@ export function StudentFormDialog({
       });
       setSelectedOrigin(student.origin || "");
       setSelectedStatus(student.status || "ativo");
-      setSelectedState((student as any)?.state || "");
+      setSelectedState(student.state || "");
     } else {
       reset({
         name: "",
@@ -305,25 +310,21 @@ export function StudentFormDialog({
 
     const payDayNumber = data.pay_day ? Number(data.pay_day) : null;
 
-    const submitData: any = {
+    const submitData: StudentInsert = {
       name: data.name,
       state: selectedState || null,
       city: data.city || null,
       cpf: data.cpf,
       phone: data.phone,
       email: data.email,
-      origin: selectedOrigin as StudentInsert["origin"],
-      status: selectedStatus as StudentInsert["status"],
+      origin: selectedOrigin as StudentOrigin,
+      status: selectedStatus,
       birth_date: data.birth_date ? brDateToIso(data.birth_date) : null,
       hourly_rate: hourlyRateNumber,
       classes_per_week: classesPerWeekNumber,
       pay_day: payDayNumber,
+      teacher_id: (autoTeacherId && !student) ? autoTeacherId : null,
     };
-
-    // Auto-set teacher_id if provided (for teacher portal)
-    if (autoTeacherId && !student) {
-      submitData.teacher_id = autoTeacherId;
-    }
 
     onSubmit(submitData);
   };
@@ -568,8 +569,9 @@ export function StudentFormDialog({
               <Select
                 value={selectedOrigin}
                 onValueChange={(value) => {
-                  setSelectedOrigin(value);
-                  setValue("origin", value as any, { shouldValidate: true });
+                  const origin = value as StudentOrigin;
+                  setSelectedOrigin(origin);
+                  setValue("origin", origin, { shouldValidate: true });
                 }}
                 disabled={isLoading}
               >

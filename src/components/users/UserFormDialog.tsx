@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -21,10 +21,14 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, ChevronsUpDown } from "lucide-react";
 import { UserWithProfile } from "@/hooks/useUsers";
+import type { Enums } from "@/integrations/supabase/types";
 import { BR_STATES, fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib/br-locations";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
+
+type AppRole = Enums<"app_role">;
+type StudentOrigin = Enums<"student_origin">;
+type StudentStatus = Enums<"student_status">;
 
 // Helper functions para máscaras
 function maskCPF(value: string): string {
@@ -162,14 +166,62 @@ const teacherSchema = z.object({
 type AdminFormData = z.infer<typeof adminSchema>;
 type StudentFormData = z.infer<typeof studentSchema>;
 type TeacherFormData = z.infer<typeof teacherSchema>;
+type FormData = AdminFormData | StudentFormData | TeacherFormData;
 
 interface UserFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user?: UserWithProfile | null;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: UserFormSubmitData) => void;
   isLoading: boolean;
 }
+
+// Tipos para o submit data
+interface AdminSubmitData {
+  email: string;
+  fullName: string;
+  role: "admin";
+}
+
+interface StudentSubmitData {
+  email: string;
+  fullName: string;
+  role: "student";
+  studentData: {
+    name: string;
+    state: string | null;
+    city: string | null;
+    cpf: string;
+    phone: string;
+    email: string;
+    origin: StudentOrigin;
+    status: StudentStatus;
+    birth_date: string | null;
+    hourly_rate: number | null;
+    classes_per_week: number | null;
+    pay_day: number | null;
+  };
+}
+
+interface TeacherSubmitData {
+  email: string;
+  fullName: string;
+  role: "teacher";
+  teacherData: {
+    name: string;
+    email: string;
+    phone?: string;
+    cpf?: string;
+  };
+}
+
+type UserFormSubmitData = AdminSubmitData | StudentSubmitData | TeacherSubmitData;
+
+// Helper para extrair mensagem de erro
+const getErrorMessage = (errors: FieldErrors<FormData>, field: keyof FormData): string | undefined => {
+  const error = errors[field];
+  return error?.message as string | undefined;
+};
 
 export function UserFormDialog({
   open,
@@ -179,13 +231,13 @@ export function UserFormDialog({
   isLoading,
 }: UserFormDialogProps) {
   const isEdit = !!user;
-  const [selectedRole, setSelectedRole] = useState<"admin" | "student" | "teacher">(
-    (user?.role?.role as any) || "admin",
+  const [selectedRole, setSelectedRole] = useState<AppRole>(
+    (user?.role?.role as AppRole) || "admin",
   );
 
   // States para student
-  const [selectedOrigin, setSelectedOrigin] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("ativo");
+  const [selectedOrigin, setSelectedOrigin] = useState<StudentOrigin | "">("");
+  const [selectedStatus, setSelectedStatus] = useState<StudentStatus>("ativo");
   const [selectedState, setSelectedState] = useState<string>("");
   const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
   const [statePopoverOpen, setStatePopoverOpen] = useState(false);
@@ -206,7 +258,7 @@ export function UserFormDialog({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<any>({
+  } = useForm<FormData>({
     resolver: zodResolver(getSchema()),
     defaultValues: {
       email: user?.email || "",
@@ -255,38 +307,42 @@ export function UserFormDialog({
       reset({
         email: user.email,
         fullName: user.profile?.full_name || "",
-        role: user.role?.role || "admin",
+        role: (user.role?.role as AppRole) || "admin",
       });
-      setSelectedRole((user.role?.role as any) || "admin");
+      setSelectedRole((user.role?.role as AppRole) || "admin");
     } else {
-      const defaults: any = {
-        role: selectedRole,
-      };
-
       if (selectedRole === "admin") {
-        defaults.email = "";
-        defaults.fullName = "";
+        reset({
+          email: "",
+          fullName: "",
+          role: "admin",
+        });
       } else if (selectedRole === "student") {
-        defaults.name = "";
-        defaults.email = "";
-        defaults.cpf = "";
-        defaults.phone = "";
-        defaults.state = "";
-        defaults.city = "";
-        defaults.birth_date = null;
-        defaults.hourly_rate = "";
-        defaults.classes_per_week = "";
-        defaults.pay_day = "";
-        defaults.origin = undefined;
-        defaults.status = "ativo";
+        reset({
+          name: "",
+          email: "",
+          cpf: "",
+          phone: "",
+          state: "",
+          city: "",
+          birth_date: null,
+          hourly_rate: "",
+          classes_per_week: "",
+          pay_day: "",
+          origin: "outro",
+          status: "ativo",
+          role: "student",
+        });
       } else {
-        defaults.name = "";
-        defaults.email = "";
-        defaults.phone = "";
-        defaults.cpf = "";
+        reset({
+          name: "",
+          email: "",
+          phone: "",
+          cpf: "",
+          role: "teacher",
+        });
       }
 
-      reset(defaults);
       setSelectedOrigin("");
       setSelectedStatus("ativo");
       setSelectedState("");
@@ -294,50 +350,56 @@ export function UserFormDialog({
   }, [user, open, reset, selectedRole]);
 
   const handleRoleChange = (value: string) => {
-    const newRole = value as "admin" | "student" | "teacher";
+    const newRole = value as AppRole;
     setSelectedRole(newRole);
     setValue("role", newRole);
 
     // Reset form com defaults do novo role
-    const defaults: any = { role: newRole };
 
     if (newRole === "admin") {
-      defaults.email = "";
-      defaults.fullName = "";
+      reset({
+        email: "",
+        fullName: "",
+        role: "admin",
+      });
     } else if (newRole === "student") {
-      defaults.name = "";
-      defaults.email = "";
-      defaults.cpf = "";
-      defaults.phone = "";
-      defaults.state = "";
-      defaults.city = "";
-      defaults.birth_date = null;
-      defaults.hourly_rate = "";
-      defaults.classes_per_week = "";
-      defaults.pay_day = "";
-      defaults.origin = undefined;
-      defaults.status = "ativo";
+      reset({
+        name: "",
+        email: "",
+        cpf: "",
+        phone: "",
+        state: "",
+        city: "",
+        birth_date: null,
+        hourly_rate: "",
+        classes_per_week: "",
+        pay_day: "",
+        origin: "outro",
+        status: "ativo",
+        role: "student",
+      });
       setSelectedOrigin("");
       setSelectedStatus("ativo");
       setSelectedState("");
     } else {
-      defaults.name = "";
-      defaults.email = "";
-      defaults.phone = "";
-      defaults.cpf = "";
+      reset({
+        name: "",
+        email: "",
+        phone: "",
+        cpf: "",
+        role: "teacher",
+      });
     }
-
-    reset(defaults);
   };
 
-  const handleFormSubmit = (data: any) => {
-    if (selectedRole === "admin") {
+  const handleFormSubmit = (data: FormData) => {
+    if (selectedRole === "admin" && "fullName" in data) {
       onSubmit({
         email: data.email,
         fullName: data.fullName,
         role: "admin",
       });
-    } else if (selectedRole === "student") {
+    } else if (selectedRole === "student" && "name" in data && "cpf" in data) {
       const hourlyRateNumber = data.hourly_rate
         ? parseFloat(data.hourly_rate.replace(/[^.\d,]/g, "").replace(",", "."))
         : null;
@@ -359,7 +421,7 @@ export function UserFormDialog({
           cpf: data.cpf,
           phone: data.phone,
           email: data.email,
-          origin: selectedOrigin,
+          origin: selectedOrigin as StudentOrigin,
           status: selectedStatus,
           birth_date: data.birth_date ? brDateToIso(data.birth_date) : null,
           hourly_rate: hourlyRateNumber,
@@ -367,7 +429,7 @@ export function UserFormDialog({
           pay_day: payDayNumber,
         },
       });
-    } else {
+    } else if (selectedRole === "teacher" && "name" in data) {
       onSubmit({
         email: data.email,
         fullName: data.name,
@@ -422,7 +484,7 @@ export function UserFormDialog({
                   disabled={isLoading || isEdit}
                 />
                 {errors.email && (
-                  <p className="text-sm text-destructive">{(errors.email as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "email")}</p>
                 )}
               </div>
 
@@ -435,7 +497,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.fullName && (
-                  <p className="text-sm text-destructive">{(errors.fullName as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "fullName")}</p>
                 )}
               </div>
             </>
@@ -453,7 +515,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.name && (
-                  <p className="text-sm text-destructive">{(errors.name as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "name")}</p>
                 )}
               </div>
 
@@ -573,7 +635,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.cpf && (
-                  <p className="text-sm text-destructive">{(errors.cpf as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "cpf")}</p>
                 )}
               </div>
 
@@ -593,7 +655,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.birth_date && (
-                  <p className="text-sm text-destructive">{(errors.birth_date as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "birth_date")}</p>
                 )}
               </div>
 
@@ -613,7 +675,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.phone && (
-                  <p className="text-sm text-destructive">{(errors.phone as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "phone")}</p>
                 )}
               </div>
 
@@ -627,7 +689,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.email && (
-                  <p className="text-sm text-destructive">{(errors.email as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "email")}</p>
                 )}
               </div>
 
@@ -673,8 +735,9 @@ export function UserFormDialog({
                 <Select
                   value={selectedOrigin}
                   onValueChange={(value) => {
-                    setSelectedOrigin(value);
-                    setValue("origin", value as any, { shouldValidate: true });
+                    const origin = value as StudentOrigin;
+                    setSelectedOrigin(origin);
+                    setValue("origin", origin, { shouldValidate: true });
                   }}
                   disabled={isLoading}
                 >
@@ -708,7 +771,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.name && (
-                  <p className="text-sm text-destructive">{(errors.name as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "name")}</p>
                 )}
               </div>
 
@@ -722,7 +785,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.email && (
-                  <p className="text-sm text-destructive">{(errors.email as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "email")}</p>
                 )}
               </div>
 
@@ -746,7 +809,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.phone && (
-                  <p className="text-sm text-destructive">{(errors.phone as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "phone")}</p>
                 )}
               </div>
 
@@ -766,7 +829,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.cpf && (
-                  <p className="text-sm text-destructive">{(errors.cpf as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "cpf")}</p>
                 )}
               </div>
             </div>

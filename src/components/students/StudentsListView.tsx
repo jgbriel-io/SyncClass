@@ -48,9 +48,10 @@ import {
 import { useCreateAuthUserForStudent } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useFinancialRecords } from "@/hooks/useFinancialRecords";
+import { useFinancialRecords, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import { useClassLogs } from "@/hooks/useClassLogs";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
+import { Teacher } from "@/hooks/useTeachers";
 
 interface StudentsListViewProps {
   title: string;
@@ -58,7 +59,7 @@ interface StudentsListViewProps {
   showTeacherColumn?: boolean;
   showTeacherFilter?: boolean;
   autoTeacherId?: string | null;
-  teachers: any[];
+  teachers: Teacher[];
   onNewStudentClick?: () => void;
 }
 
@@ -111,9 +112,9 @@ export function StudentsListView({
 
   const teacherMap = useMemo(() => {
     const map: Record<string, string> = {};
-    teachers.forEach((t: any) => {
+    teachers.forEach((t) => {
       if (t.id && t.name) {
-        map[t.id] = t.name as string;
+        map[t.id] = t.name;
       }
     });
     return map;
@@ -143,8 +144,8 @@ export function StudentsListView({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    financialRecords.forEach((record: any) => {
-      const studentId = record.student_id as string | undefined;
+    financialRecords.forEach((record: FinancialRecordWithRelations) => {
+      const studentId = record.student_id;
       if (!studentId) return;
 
       let actualStatus: InternalFinancialStatus;
@@ -182,9 +183,9 @@ export function StudentsListView({
   const lastClassDateByStudent = useMemo(() => {
     const map: Record<string, string> = {};
 
-    (classLogs as any[]).forEach((log) => {
-      const studentId = log.student_id as string | undefined;
-      const classDate = log.class_date as string | undefined;
+    classLogs.forEach((log) => {
+      const studentId = log.student_id;
+      const classDate = log.class_date;
       if (!studentId || !classDate || !log.attendance) return;
 
       const current = map[studentId];
@@ -212,11 +213,11 @@ export function StudentsListView({
 
     let matchesTeacher = true;
     if (autoTeacherId) {
-      matchesTeacher = ((student as any).teacher_id as string | null | undefined) === autoTeacherId;
+      matchesTeacher = student.teacher_id === autoTeacherId;
     } else if (showTeacherFilter) {
       matchesTeacher =
         teacherFilter === "all" ||
-        ((student as any).teacher_id as string | null | undefined) === teacherFilter;
+        student.teacher_id === teacherFilter;
     }
 
     return matchesSearch && matchesStatus && matchesTeacher;
@@ -226,7 +227,7 @@ export function StudentsListView({
     const run = async () => {
       // Auto-set teacher_id if provided
       const dataWithTeacher = autoTeacherId ? { ...data, teacher_id: autoTeacherId } : data;
-      const normalizedEmail = (dataWithTeacher as any).email?.trim().toLowerCase();
+      const normalizedEmail = dataWithTeacher.email?.trim().toLowerCase();
 
       if (!selectedStudent && normalizedEmail) {
         const { data: existingProfile, error: profileError } = await supabase
@@ -310,7 +311,7 @@ export function StudentsListView({
       });
     } else {
       updateStudent.mutate(
-        { id: studentToDelete.id, status: "ativo" as any },
+        { id: studentToDelete.id, status: "ativo" },
         {
           onSuccess: () => {
             setDeleteDialogOpen(false);
@@ -375,9 +376,9 @@ export function StudentsListView({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os professores</SelectItem>
-                {teachers.map((t: any) => (
-                  <SelectItem key={t.id} value={t.id as string}>
-                    {t.name as string}
+                {teachers.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -442,16 +443,16 @@ export function StudentsListView({
               </thead>
               <tbody className="divide-y">
                 {filteredStudents.map((student) => {
-                  const lastUpdatedAt = (student as any).updated_at as string | null | undefined;
-                  const hourlyRate = (student as any).hourly_rate as number | null | undefined;
-                  const classesPerWeek = (student as any).classes_per_week as number | null | undefined;
+                  const lastUpdatedAt = student.updated_at;
+                  const hourlyRate = student.hourly_rate;
+                  const classesPerWeek = student.classes_per_week;
                   const weeklyTotal =
                     hourlyRate != null && classesPerWeek != null
                       ? hourlyRate * classesPerWeek
                       : null;
 
-                  const teacherName = (student as any).teacher_id
-                    ? teacherMap[(student as any).teacher_id as string] || "—"
+                  const teacherName = student.teacher_id
+                    ? teacherMap[student.teacher_id] || "—"
                     : "—";
 
                   const lastClassDateRaw = lastClassDateByStudent[student.id];
@@ -538,7 +539,7 @@ export function StudentsListView({
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
-                          {(student as any).pay_day ?? "—"}
+                          {student.pay_day ?? "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">

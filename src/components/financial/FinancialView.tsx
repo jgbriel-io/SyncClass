@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUndoFinancialPayment } from "@/hooks/useFinancialRecords";
-import { useTeachers } from "@/hooks/useTeachers";
+import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -135,9 +135,9 @@ export function FinancialView({
   });
 
   const teacherMap = new Map<string, string>();
-  teachers.forEach((t: any) => {
+  teachers.forEach((t: Teacher) => {
     if (t.id && t.name) {
-      teacherMap.set(t.id as string, t.name as string);
+      teacherMap.set(t.id, t.name);
     }
   });
 
