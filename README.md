@@ -9,18 +9,55 @@ Sistema completo de gestão para escolas e cursos, com painéis para administrad
 
 ## 🚀 Quick Start
 
+### Desenvolvimento Local
+
 ```bash
-# Instalar dependências
+# 1. Clonar o repositório
+git clone <YOUR_GIT_URL>
+cd edu-core-zen
+
+# 2. Instalar dependências
 npm install
 
-# Rodar em desenvolvimento
+# 3. Configurar variáveis de ambiente
+cp .env.example .env
+# Edite .env com suas credenciais do Supabase
+
+# 4. Iniciar Supabase local (opcional)
+supabase start
+
+# 5. Rodar em desenvolvimento
 npm run dev
 
-# Verificar qualidade do código
-npm run check
+# App estará disponível em http://localhost:8080
+```
+
+### Verificação de Qualidade
+
+```bash
+# Antes de fazer commit/push
+npm run check        # Lint + Type check
 
 # Build para produção
 npm run build
+
+# Rodar testes
+npm test
+```
+
+### Docker (Produção)
+
+```bash
+# Build e rodar com Docker
+docker compose up -d --build
+
+# App estará disponível em http://localhost:3000
+
+# Ver logs
+docker compose logs -f
+
+# Parar containers
+docker compose down
 ```
 
 ## ✨ Features
@@ -73,6 +110,32 @@ npm run check
 
 [📖 Leia o guia completo de CI](.github/CI_GUIDE.md)
 
+## 🗄️ Supabase Local
+
+Para desenvolvimento local com Supabase:
+
+```bash
+# Iniciar Supabase (Docker necessário)
+supabase start
+
+# Ver status e URLs
+supabase status
+
+# Aplicar migrations
+supabase db push
+
+# Gerar tipos TypeScript
+supabase gen types typescript --local > src/integrations/supabase/types.ts
+
+# Parar Supabase
+supabase stop
+```
+
+### URLs Locais (Supabase)
+- **Studio:** http://127.0.0.1:54323
+- **API:** http://127.0.0.1:54321
+- **DB:** postgresql://postgres:postgres@127.0.0.1:54322/postgres
+
 ## 📦 Build Otimizado
 
 Bundle otimizado com code splitting:
@@ -80,6 +143,65 @@ Bundle otimizado com code splitting:
 - **Redução de 84%** no bundle inicial (1.3MB → 206KB)
 - Lazy loading de todas as páginas
 - Chunks separados para vendors
+
+## 📋 Requisitos
+
+- **Node.js:** 20.x ou superior ([instalar com nvm](https://github.com/nvm-sh/nvm))
+- **npm:** 9.x ou superior
+- **Docker:** Para Supabase local e produção ([instalar Docker](https://docs.docker.com/get-docker/))
+- **Supabase CLI:** Para desenvolvimento local ([instalar](https://supabase.com/docs/guides/cli))
+
+```bash
+# Verificar versões
+node --version   # v20.x
+npm --version    # 9.x
+docker --version # 20.x+
+supabase --version # 2.x+
+```
+
+## 🔧 Troubleshooting
+
+### Erro de permissão (EPERM) ao rodar testes
+```bash
+# Windows: Rodar como administrador ou desabilitar antivírus temporariamente
+npm test
+```
+
+### Supabase não inicia
+```bash
+# Verificar se Docker está rodando
+docker ps
+
+# Limpar e reiniciar
+supabase stop
+supabase start
+```
+
+### Build falha ou tipos incorretos
+```bash
+# Regenerar tipos do Supabase
+supabase gen types typescript --local > src/integrations/supabase/types.ts
+
+# Limpar cache e reinstalar
+rm -rf node_modules dist
+npm install
+npm run build
+```
+
+### Porta já em uso
+```bash
+# Desenvolvimento (porta 8080)
+# Alterar em vite.config.ts
+
+# Docker (porta 3000)
+# Alterar em docker-compose.yml
+```
+
+## 📚 Documentação Adicional
+
+- [Guia de CI](.github/CI_GUIDE.md) - Continuous Integration
+- [Checklist de CI](.github/CHECKLIST.md) - Checklist rápido
+- [Workflows](.github/workflows/README.md) - GitHub Actions
 
 ## Project info
 
