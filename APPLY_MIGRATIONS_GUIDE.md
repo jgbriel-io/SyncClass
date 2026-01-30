@@ -44,7 +44,30 @@
 
 **Esperado:** Campos adicionados + 1 view + 2 funções + índices
 
-### 4. Verificar se Funcionou
+### 4. Aplique Migration 3: Performance e Soft Delete ⚠️ **CRÍTICO**
+
+**Arquivo:** `supabase/migrations/performance_and_soft_delete.sql`
+
+```bash
+# ⚠️ IMPORTANTE: Esta migration é CRÍTICA!
+1. Abra: supabase/migrations/performance_and_soft_delete.sql
+2. Copie TODO o conteúdo
+3. Cole no SQL Editor do Supabase
+4. Clique em "RUN"
+5. ✅ Aguarde mensagem de sucesso
+```
+
+**Esperado:** 
+- 6 índices compostos criados
+- Campo `deleted_at` adicionado em students
+- 2 funções (soft_delete_student, restore_student)
+- 2 views (students_active, students_active_masked)
+
+**Por que é CRÍTICO?**
+- Previne perda de dados históricos ao deletar aluno
+- Melhora performance de queries em 10x
+
+### 5. Verificar se Funcionou
 
 Execute no SQL Editor:
 
@@ -68,6 +91,15 @@ SELECT * FROM public.class_logs_with_billing LIMIT 10;
 
 -- Teste 4: Ver estatísticas de aulas
 SELECT * FROM public.student_class_stats LIMIT 5;
+
+-- Teste 5: Verificar soft delete (NOVO)
+SELECT * FROM students_active LIMIT 5;
+
+-- Teste 6: Verificar índices compostos foram criados
+SELECT indexname FROM pg_indexes 
+WHERE tablename IN ('students', 'class_logs', 'financial_records')
+AND indexname LIKE 'idx_%'
+ORDER BY tablename, indexname;
 ```
 
 **Esperado:** Dados retornados sem erros ✅

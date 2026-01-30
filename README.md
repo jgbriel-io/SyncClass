@@ -229,6 +229,7 @@ npm run build
 ### Performance e UX
 - [Performance e UX Improvements](./PERFORMANCE_AND_UX_IMPROVEMENTS.md) - Melhorias implementadas
 - [Apply Migrations Guide](./APPLY_MIGRATIONS_GUIDE.md) - Como aplicar as migrations
+- [Soft Delete Guide](./SOFT_DELETE_GUIDE.md) - Guia de soft delete (preserva histórico)
 
 ## Project info
 

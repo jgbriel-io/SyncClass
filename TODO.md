@@ -26,24 +26,31 @@ Sistema está vulnerável a ataques de brute force! 😱
 
 ## ⚡ IMPORTANTE (Fazer esta semana)
 
-### 2. Aplicar Migrations SQL
-⏱️ **Tempo:** 5 minutos  
+### 2. Aplicar Migrations SQL ⚠️ **3 MIGRATIONS**
+⏱️ **Tempo:** 8 minutos  
 📖 **Guia:** [APPLY_MIGRATIONS_GUIDE.md](./APPLY_MIGRATIONS_GUIDE.md)
 
 ```
 ✓ Passos:
 1. Acessar Dashboard → SQL Editor
-2. Copiar conteúdo de: supabase/migrations/student_balance_view.sql
-3. Colar e executar (RUN)
-4. Copiar conteúdo de: supabase/migrations/class_logs_improvements.sql
-5. Colar e executar (RUN)
-6. Verificar: SELECT * FROM student_complete_balance;
+
+2. Migration 1: student_balance_view.sql
+   - Copiar e executar (RUN)
+   
+3. Migration 2: class_logs_improvements.sql
+   - Copiar e executar (RUN)
+   
+4. Migration 3: performance_and_soft_delete.sql ⚠️ CRÍTICO
+   - Copiar e executar (RUN)
+   
+5. Verificar: SELECT * FROM student_complete_balance;
 ```
 
 **Benefícios:**
-- ⚡ Performance 10x melhor
+- ⚡ Performance 10x melhor (índices compostos)
 - ✅ Saldo calculado automaticamente
 - 📊 Estatísticas prontas
+- 🗑️ Soft delete (preserva histórico ao deletar)
 
 ---
 
@@ -101,7 +108,18 @@ const { data } = await supabase
 
 ## 📝 CONSIDERAR (Futuro)
 
-### 5. Adicionar Pergunta "Cobrar Falta?"
+### 5. Atualizar Hooks para Usar students_active
+Após aplicar migration de soft delete, atualizar hooks:
+
+```typescript
+// ❌ Antes
+const { data } = await supabase.from("students").select();
+
+// ✅ Depois
+const { data } = await supabase.from("students_active").select();
+```
+
+### 6. Adicionar Pergunta "Cobrar Falta?"
 Quando professor registrar falta do aluno, perguntar se deve cobrar.
 
 ```typescript
