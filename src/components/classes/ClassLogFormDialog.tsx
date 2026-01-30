@@ -25,7 +25,7 @@ import { Loader2, Receipt } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { ClassLogInsert, ClassLogWithStudent, ClassLogWithFinancialData } from "@/hooks/useClassLogs";
-import { maskDate, isValidDateString, parseMoneyToNumber } from "@/lib/utils/patterns";
+import { maskDate, isValidDateString, parseMoneyToNumber, REGEX_PATTERNS } from "@/lib/utils/patterns";
 
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
@@ -45,7 +45,7 @@ const classLogSchema = z.object({
   student_id: z.string().min(1, "Selecione um aluno"),
   class_date: z.string()
     .min(1, "Informe a data da aula")
-    .regex(dateRegex, "Formato deve ser dd/mm/aaaa")
+    .regex(REGEX_PATTERNS.date, "Formato deve ser dd/mm/aaaa")
     .refine(isValidDateString, { message: "Data inválida" }),
   title: z.string().optional(),
   attendance: z.boolean(),

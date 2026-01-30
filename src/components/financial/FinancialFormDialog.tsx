@@ -26,7 +26,7 @@ import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useAvailableClassLogsForStudent } from "@/hooks/useClassLogs";
 import { FinancialRecordInsert, FinancialRecord } from "@/hooks/useFinancialRecords";
-import { maskDate, isValidDateString, parseMoneyToNumber, formatNumberToMoney } from "@/lib/utils/patterns";
+import { maskDate, isValidDateString, parseMoneyToNumber, formatNumberToMoney, REGEX_PATTERNS } from "@/lib/utils/patterns";
 
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
@@ -38,7 +38,7 @@ const financialSchema = z.object({
   amount: z.string().min(1, "Informe o valor"),
   due_date: z.string()
     .min(1, "Informe a data de vencimento")
-    .regex(dateRegex, "Formato deve ser dd/mm/aaaa")
+    .regex(REGEX_PATTERNS.date, "Formato deve ser dd/mm/aaaa")
     .refine(isValidDateString, { message: "Data inválida" }),
   payment_method: z.string().optional(),
   description: z.string().optional(),

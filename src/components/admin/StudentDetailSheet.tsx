@@ -24,6 +24,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { useStudentDetails } from "@/hooks/useStudentDetails";
+import { StudentStatementTab } from "@/components/student/StudentStatementTab";
 
 interface StudentDetailSheetProps {
   studentId: string | null;
@@ -107,7 +108,7 @@ export function StudentDetailSheet({
           </div>
         ) : student ? (
           <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="mx-6 mt-4 grid grid-cols-3">
+            <TabsList className="mx-6 mt-4 grid grid-cols-4">
               <TabsTrigger value="info" className="text-xs">
                 <User className="h-3.5 w-3.5 mr-1.5" />
                 Dados
@@ -119,6 +120,10 @@ export function StudentDetailSheet({
               <TabsTrigger value="financial" className="text-xs">
                 <CreditCard className="h-3.5 w-3.5 mr-1.5" />
                 Financeiro
+              </TabsTrigger>
+              <TabsTrigger value="statement" className="text-xs">
+                <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
+                Extrato
               </TabsTrigger>
             </TabsList>
 
@@ -447,6 +452,15 @@ export function StudentDetailSheet({
                   )}
                 </div>
               </ScrollArea>
+            </TabsContent>
+
+            {/* Extrato Consolidado */}
+            <TabsContent value="statement" className="flex-1 overflow-auto m-0">
+              <StudentStatementTab
+                classLogs={student.classLogs}
+                financialRecords={student.financialRecords}
+                studentName={student.name}
+              />
             </TabsContent>
           </Tabs>
         ) : (

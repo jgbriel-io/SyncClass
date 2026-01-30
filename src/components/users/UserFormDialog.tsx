@@ -51,11 +51,11 @@ const studentSchema = z.object({
   cpf: z.string()
     .min(14, "CPF inválido")
     .max(14, "CPF inválido")
-    .regex(cpfRegex, "Formato deve ser 000.000.000-00"),
+    .regex(REGEX_PATTERNS.cpf, "Formato deve ser 000.000.000-00"),
   phone: z.string()
     .min(14, "Telefone inválido")
     .max(15, "Telefone inválido")
-    .regex(phoneRegex, "Formato deve ser (00) 00000-0000"),
+    .regex(REGEX_PATTERNS.phone, "Formato deve ser (00) 00000-0000"),
   email: z
     .string()
     .min(1, "Email é obrigatório")

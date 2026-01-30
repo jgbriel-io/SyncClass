@@ -5,8 +5,10 @@ Este documento consolida todas as correções de segurança críticas implementa
 ## Status Geral
 
 ✅ **P0-SEC-01**: Brecha no RLS - CORRIGIDO  
+✅ **P0-SEC-02**: Mascaramento LGPD - IMPLEMENTADO  
 ✅ **P0-SEC-03**: Race Condition no Signup - CORRIGIDO  
 ✅ **P0-OBS-01**: Observabilidade - IMPLEMENTADO  
+⚠️ **P1-AUTH**: Rate Limiting - REQUER CONFIGURAÇÃO MANUAL  
 
 ---
 
@@ -218,6 +220,68 @@ VITE_ENVIRONMENT="development"
 
 ---
 
+## P1-AUTH: Rate Limiting
+
+### Problema Identificado
+Atualmente, **não há rate limiting configurado no lado do servidor**. Um atacante pode:
+- Tentar 1 milhão de combinações de senha (brute force)
+- Criar milhares de contas falsas (DDoS de signup)
+- Enviar flood de emails de recuperação de senha
+- Enumerar emails válidos no sistema
+
+Rate limiting no frontend é **inútil** porque:
+- Atacante pode chamar a API diretamente
+- Pode resetar localStorage/cookies
+- Pode trocar de IP facilmente
+
+### Solução Requerida
+**⚠️ Configuração manual no Dashboard do Supabase**
+
+O Supabase Auth tem rate limiting nativo, mas precisa ser ativado manualmente:
+
+#### 1. Rate Limits Recomendados
+**Nota:** Valores no Dashboard são por **5 minutos por IP** (não por hora)
+
+| Campo no Dashboard | Recomendado | Equivale a/hora | Justificativa |
+|-------------------|-------------|-----------------|---------------|
+| Sign-ups and sign-ins | 10/5min | 120/hora | Bloqueia brute force |
+| Token refreshes | 150/5min | 1800/hora | Permite uso normal |
+| Token verifications | 30/5min | 360/hora | Padrão adequado |
+| Anonymous users | 10/5min | 120/hora | Limita abuse de anônimos |
+| Sending emails | 2/hora | 2/hora | Previne flood de emails |
+
+#### 2. Session Settings
+| Configuração | Valor | Impacto |
+|-------------|-------|---------|
+| Max Inactivity Time | 24 hours | Logout automático |
+| JWT Expiry | 1 hour | Token expira rápido |
+| Refresh Token Rotation | ON | Invalida tokens antigos |
+
+#### 3. Passos de Configuração
+1. Acesse [Supabase Dashboard](https://app.supabase.com)
+2. Vá em **Authentication** → **Settings**
+3. Configure **Rate Limits** conforme tabela acima
+4. Configure **Session Settings** conforme tabela acima
+5. Ative **Email Confirmation** para novos usuários
+6. (Opcional) Ative **CAPTCHA** após tentativas falhas
+
+### Impacto
+- ✅ Bloqueia ataques de força bruta
+- ✅ Previne account enumeration
+- ✅ Limita abuse de recursos
+- ✅ Reduz risco de DDoS
+- ✅ Protege serviço de email
+
+### Arquivos Relacionados
+- `.github/RATE_LIMITING.md` (guia completo)
+
+### Status
+⚠️ **PENDENTE - Requer ação manual no Dashboard do Supabase**
+
+**Não pode ser automatizado via migration ou código.**
+
+---
+
 ## Monitoramento Contínuo
 
 ### Sentry Dashboard
@@ -253,8 +317,8 @@ Todos os erros incluem:
 
 ### Longo Prazo
 1. Adicionar logging de auditoria para ações sensíveis
-2. Implementar rate limiting
-3. Adicionar 2FA para admins
+2. ✅ ~~Implementar rate limiting~~ → Ver RATE_LIMITING.md (P1-AUTH)
+3. Adicionar 2FA para admins (P2-SEC)
 
 ---
 
@@ -262,6 +326,8 @@ Todos os erros incluem:
 
 - [Guia de Observabilidade](.github/OBSERVABILITY.md)
 - [Guia de CI](.github/CI_GUIDE.md)
+- [Guia de Rate Limiting](.github/RATE_LIMITING.md) ⚠️ **AÇÃO REQUERIDA**
+- [Implementação LGPD](.github/LGPD_IMPLEMENTATION.md)
 - [Checklist de Deploy](../DEPLOYMENT_CHECKLIST_COMPLETE.md)
 
 ---

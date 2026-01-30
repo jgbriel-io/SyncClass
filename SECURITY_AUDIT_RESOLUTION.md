@@ -15,10 +15,11 @@ Implementadas com sucesso **4 correções críticas de segurança P0** identific
 | P0-SEC-02 | CRÍTICO | ✅ RESOLVIDO | `supabase/migrations/lgpd_masking_sensitive_data.sql` |
 | P0-SEC-03 | CRÍTICO | ✅ RESOLVIDO | `src/hooks/useUserMutations.ts` |
 | P0-OBS-01 | ALTO | ✅ IMPLEMENTADO | `src/lib/sentry.ts`, `src/components/ErrorBoundary.tsx`, etc. |
+| P1-AUTH | ALTO | ⚠️ **REQUER AÇÃO** | `.github/RATE_LIMITING.md` |
 
 **0 erros de linting**  
 **100% das correções P0 aplicadas**  
-**Sistema pronto para produção**
+**⚠️ P1-AUTH requer configuração manual no Dashboard**
 
 ---
 
@@ -195,6 +196,58 @@ VITE_ENVIRONMENT="development"
 
 ---
 
+## ⚠️ P1-AUTH: Rate Limiting
+
+### O que é
+Proteção contra ataques de força bruta (brute force) configurada no servidor do Supabase.
+
+### Por que P1 (Alta Prioridade)?
+Sem rate limiting, um atacante pode:
+- ❌ Testar 1 milhão de senhas por hora
+- ❌ Criar milhares de contas falsas
+- ❌ Enumerar emails válidos no sistema
+- ❌ Enviar flood de emails de reset
+
+**Rate limiting no frontend não funciona** porque:
+- Atacante pode chamar a API diretamente
+- Pode resetar localStorage/cookies
+- Pode trocar de IP facilmente
+
+### O que foi feito
+✅ Criado guia completo em `.github/RATE_LIMITING.md`
+
+### O que PRECISA ser feito
+⚠️ **Configuração manual no Dashboard do Supabase**
+
+#### Passos Obrigatórios:
+1. Acesse [Supabase Dashboard](https://app.supabase.com)
+2. Vá em **Authentication** → **Settings** → **Rate Limits**
+3. Configure:
+   - SignIn: **10 requests/hour**
+   - SignUp: **5 requests/hour**
+   - Password Recovery: **3 requests/hour**
+   - Token Refresh: **100 requests/hour**
+4. Configure **Session Settings**:
+   - Max Inactivity Time: **24 hours**
+   - JWT Expiry: **1 hour**
+   - Refresh Token Rotation: **ON**
+
+### Por que não pode ser automatizado?
+- Configuração via Dashboard é a única forma oficial
+- Não há API pública para configurar rate limits
+- Não pode ser feito via migration SQL
+
+### Impacto
+- ✅ Bloqueia brute force de senhas
+- ✅ Previne spam de contas
+- ✅ Limita abuse de recursos
+- ✅ Protege contra DDoS de autenticação
+
+### Documentação
+Ver guia completo: `.github/RATE_LIMITING.md`
+
+---
+
 ## 🚀 Status do Sistema
 
 ### ✅ Funcionando
@@ -300,6 +353,7 @@ Com estas implementações, o sistema agora garante:
 - [x] Race conditions eliminadas
 - [x] Logs estruturados implementados
 - [x] Dados sensíveis filtrados e mascarados
+- [ ] **Rate limiting configurado no Supabase** ⚠️ **AÇÃO REQUERIDA**
 
 ### Qualidade
 - [x] 0 erros de linting
@@ -312,6 +366,7 @@ Com estas implementações, o sistema agora garante:
 - [ ] Variáveis de ambiente configuradas
 - [ ] Sentry monitorado
 - [ ] Testes E2E executados
+- [ ] **Rate limits configurados no Dashboard** ⚠️ **CRÍTICO**
 
 ---
 
@@ -328,8 +383,11 @@ O sistema está:
 ### Próximo Deploy
 O sistema está pronto para deploy em produção assim que:
 1. A migration do RLS for aplicada no Supabase
-2. As variáveis de ambiente forem configuradas
-3. Os testes de aceitação forem executados
+2. **Rate limiting for configurado no Dashboard** ⚠️ **OBRIGATÓRIO**
+3. As variáveis de ambiente forem configuradas
+4. Os testes de aceitação forem executados
+
+**IMPORTANTE:** Não fazer deploy em produção sem configurar rate limiting! Isso deixa o sistema vulnerável a ataques de força bruta.
 
 ---
 

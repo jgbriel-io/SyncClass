@@ -68,6 +68,8 @@ docker compose down
 - 📊 **Relatórios e Dashboards** - Visualização de métricas importantes
 - 🔐 **Autenticação e Permissões** - Sistema completo com RLS (Supabase)
 - 📱 **Responsivo** - Interface adaptável para todos os dispositivos
+- 💳 **Extrato Consolidado** - Timeline unificada de aulas e cobranças
+- ⚡ **Performance Otimizada** - Cálculos de saldo no banco (SQL Views)
 
 ## 🛠️ Tech Stack
 
@@ -197,11 +199,36 @@ npm run build
 # Alterar em docker-compose.yml
 ```
 
+## 🔒 Segurança
+
+⚠️ **IMPORTANTE:** Antes de fazer deploy em produção, execute o checklist de segurança!
+
+**[📋 SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md)** - Checklist obrigatório antes do deploy
+
+### Issues de Segurança Resolvidos
+- ✅ **P0-SEC-01:** Brecha no RLS corrigida
+- ✅ **P0-SEC-02:** Mascaramento LGPD implementado
+- ✅ **P0-SEC-03:** Race condition no signup eliminada
+- ✅ **P0-OBS-01:** Observabilidade com Sentry
+- ⚠️ **P1-AUTH:** Rate Limiting - **REQUER CONFIGURAÇÃO MANUAL**
+
+### Documentação de Segurança
+- [Security Checklist](./SECURITY_CHECKLIST.md) - ⚠️ **LEIA ANTES DO DEPLOY**
+- [Rate Limiting](.github/RATE_LIMITING.md) - Configuração obrigatória
+- [Security Fixes](.github/SECURITY_FIXES.md) - Correções implementadas
+- [LGPD Implementation](.github/LGPD_IMPLEMENTATION.md) - Mascaramento de dados
+- [Observabilidade](.github/OBSERVABILITY.md) - Monitoramento com Sentry
+
 ## 📚 Documentação Adicional
 
+### Desenvolvimento
 - [Guia de CI](.github/CI_GUIDE.md) - Continuous Integration
 - [Checklist de CI](.github/CHECKLIST.md) - Checklist rápido
 - [Workflows](.github/workflows/README.md) - GitHub Actions
+
+### Performance e UX
+- [Performance e UX Improvements](./PERFORMANCE_AND_UX_IMPROVEMENTS.md) - Melhorias implementadas
+- [Apply Migrations Guide](./APPLY_MIGRATIONS_GUIDE.md) - Como aplicar as migrations
 
 ## Project info
 
