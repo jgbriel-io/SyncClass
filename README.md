@@ -235,6 +235,8 @@ npm run build
 ### Frontend & UI/UX
 - [Frontend Audit Report](./FRONTEND_AUDIT_REPORT.md) - Auditoria completa de UI/UX (Score: 7.0/10)
 - [Frontend Quick Wins](./FRONTEND_QUICK_WINS.md) - Melhorias rápidas de alto impacto (1-2 dias)
+- [P0 Mobile-First Student](./P0_MOBILE_FIRST_STUDENT.md) - Experiência de app nativo para alunos mobile
+- [PWA Install Icons Guide](./PWA_INSTALL_ICONS.md) - Como gerar ícones PWA para instalação
 
 ## Project info
 
