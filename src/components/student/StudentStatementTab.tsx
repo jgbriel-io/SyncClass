@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { formatCurrency } from "@/lib/utils/formatters";
 import {
   BookOpen,
   DollarSign,
@@ -25,13 +26,6 @@ type StatementEntry = {
   type: "class" | "financial";
   data: StudentClassLog | StudentFinancialRecord;
 };
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-}
 
 function formatDate(dateString: string): string {
   return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });

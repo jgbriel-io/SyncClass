@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatCurrency } from "@/lib/utils/formatters";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,14 +71,6 @@ const originLabels: Record<string, string> = {
   passante: "Passante",
   outro: "Outro",
 };
-
-function formatCurrency(value: number | null | undefined): string {
-  if (!value && value !== 0) return "—";
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(Number(value));
-}
 
 export function StudentsListView({
   title,
@@ -526,7 +519,7 @@ export function StudentsListView({
                       )}
                       <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
-                          {formatCurrency(hourlyRate)}
+                          {hourlyRate != null ? formatCurrency(hourlyRate) : "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
@@ -536,7 +529,7 @@ export function StudentsListView({
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
-                          {formatCurrency(weeklyTotal)}
+                          {weeklyTotal != null ? formatCurrency(weeklyTotal) : "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">

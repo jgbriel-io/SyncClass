@@ -6,6 +6,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { formatCurrency } from "@/lib/utils/formatters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -39,13 +40,6 @@ const originLabels: Record<string, string> = {
   passante: "Passante",
   outro: "Outro",
 };
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-}
 
 function formatDate(dateString: string): string {
   return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });

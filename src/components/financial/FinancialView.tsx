@@ -2,6 +2,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatCurrency } from "@/lib/utils/formatters";
 import {
   Select,
   SelectContent,
@@ -57,13 +58,6 @@ const statusVariants: Record<PaymentStatus, "warning" | "destructive" | "success
   atrasado: "destructive",
   pago: "success",
 };
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-}
 
 function formatDate(dateString: string): string {
   return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });

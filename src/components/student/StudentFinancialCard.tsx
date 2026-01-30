@@ -5,6 +5,7 @@ import { Calendar, FileText, CreditCard, AlertCircle, CheckCircle2 } from "lucid
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils/formatters";
 
 type FinancialStatus = "pago" | "pendente" | "atrasado";
 
@@ -45,13 +46,6 @@ const statusConfig: Record<FinancialStatus, {
 export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCardProps) {
   const config = statusConfig[record.status];
   
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
-
   const formattedDueDate = format(new Date(record.due_date), "dd/MM/yyyy", {
     locale: ptBR,
   });

@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
+import { formatCurrency } from "@/lib/utils/formatters";
 import {
   Select,
   SelectContent,
@@ -33,13 +34,6 @@ import { useClassLogs } from "@/hooks/useClassLogs";
 import { useFinancialRecords } from "@/hooks/useFinancialRecords";
 
 const ITEMS_PER_PAGE = 10;
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-}
 
 function StudentOverviewPage() {
   const [searchQuery, setSearchQuery] = useState("");

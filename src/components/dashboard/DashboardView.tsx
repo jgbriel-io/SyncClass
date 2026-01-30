@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatCurrency } from "@/lib/utils/formatters";
 import {
   AreaChart,
   Area,
@@ -26,13 +27,6 @@ import {
 } from "recharts";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-}
 
 function formatDate(dateString: string): string {
   return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });

@@ -2,6 +2,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatCurrency } from "@/lib/utils/formatters";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,13 +39,6 @@ import {
 
 function formatDate(dateString: string): string {
   return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
 }
 
 function getPaymentStatusVariant(status: string | null): "success" | "warning" | "destructive" {
