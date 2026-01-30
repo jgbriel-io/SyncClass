@@ -232,6 +232,10 @@ npm run build
 - [Soft Delete Guide](./SOFT_DELETE_GUIDE.md) - Guia de soft delete (preserva histórico)
 - [Frontend Soft Delete Implementation](./FRONTEND_SOFT_DELETE_IMPLEMENTATION.md) - Implementação no React
 
+### Frontend & UI/UX
+- [Frontend Audit Report](./FRONTEND_AUDIT_REPORT.md) - Auditoria completa de UI/UX (Score: 7.0/10)
+- [Frontend Quick Wins](./FRONTEND_QUICK_WINS.md) - Melhorias rápidas de alto impacto (1-2 dias)
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
