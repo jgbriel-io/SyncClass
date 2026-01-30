@@ -51,16 +51,16 @@ export function useTeacherDashboardStats(teacherId: string | null) {
         };
       }
 
-      // Active students
+      // Active students (excluindo alunos deletados via soft delete)
       const { count: activeCount } = await supabase
-        .from("students")
+        .from("students_active")
         .select("*", { count: "exact", head: true })
         .eq("status", "ativo")
         .eq("teacher_id", teacherId);
       
-      // First, get all student ids for this teacher
+      // First, get all student ids for this teacher (excluindo deletados)
       const { data: teacherStudents, error: teacherStudentsError } = await supabase
-        .from("students")
+        .from("students_active")
         .select("id")
         .eq("teacher_id", teacherId);
 
@@ -73,12 +73,12 @@ export function useTeacherDashboardStats(teacherId: string | null) {
       let overdueCount = 0;
       let classCount = 0;
 
-      // New students this month
+      // New students this month (excluindo deletados)
       const startMonth = startOfMonth(new Date()).toISOString();
       const endMonth = endOfMonth(new Date()).toISOString();
 
       const { count: newCount } = await supabase
-        .from("students")
+        .from("students_active")
         .select("*", { count: "exact", head: true })
         .gte("created_at", startMonth)
         .lte("created_at", endMonth)
@@ -162,10 +162,10 @@ export function useTeacherBirthdaysThisMonth(teacherId: string | null) {
       const today = new Date();
       const currentMonth = (today.getMonth() + 1).toString().padStart(2, "0");
 
-      // Use students_masked para garantir mascaramento LGPD
+      // Use students_active_masked para mascaramento LGPD + excluir deletados
       // (não afeta esta query pois não seleciona CPF/telefone)
       const { data, error } = await supabase
-        .from("students_masked")
+        .from("students_active_masked")
         .select("id, name, birth_date")
         .eq("teacher_id", teacherId)
         .not("birth_date", "is", null)
@@ -198,7 +198,7 @@ export function useTeacherNewStudentsByMonth(teacherId: string | null) {
         const endMonth = endOfMonth(monthDate).toISOString();
 
         const { count } = await supabase
-          .from("students")
+          .from("students_active")
           .select("*", { count: "exact", head: true })
           .gte("created_at", startMonth)
           .lte("created_at", endMonth)

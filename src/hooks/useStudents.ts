@@ -18,10 +18,12 @@ export function useStudents() {
   return useQuery({
     queryKey: ["students"],
     queryFn: async () => {
-      // Use students_masked view para mascarar CPF e telefone conforme LGPD
+      // Use students_active_masked view para:
+      // 1. Mascarar CPF e telefone conforme LGPD
+      // 2. Excluir alunos deletados (soft delete)
       // Admin vê dados completos, outros usuários veem dados mascarados
       const { data, error } = await supabase
-        .from("students_masked")
+        .from("students_active_masked")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -184,6 +186,9 @@ export function useUpdateStudent() {
   });
 }
 
+/**
+ * @deprecated Use useSoftDeleteStudent() instead to preserve data history
+ */
 export function useDeleteStudent() {
   const queryClient = useQueryClient();
 
@@ -216,6 +221,90 @@ export function useDeleteStudent() {
     },
     onError: () => {
       toast.error("Erro ao desativar aluno. Tente novamente.");
+    },
+  });
+}
+
+/**
+ * Soft delete student - preserves class_logs and financial_records
+ * Sets deleted_at timestamp and status to 'inativo'
+ */
+export function useSoftDeleteStudent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Call Supabase function for soft delete
+      const { error } = await supabase.rpc("soft_delete_student", {
+        p_student_id: id,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Also mark linked profiles as inactive
+      const { error: profilesError } = await supabase
+        .from("profiles")
+        .update({ active: false })
+        .eq("student_id", id);
+
+      if (profilesError) {
+        throw profilesError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      toast.success("Aluno arquivado com sucesso!");
+    },
+    onError: (error: unknown) => {
+      const err = error as PostgresError;
+      console.error("Erro ao arquivar aluno:", err);
+      toast.error("Erro ao arquivar aluno. Tente novamente.");
+    },
+  });
+}
+
+/**
+ * Restore soft-deleted student
+ * Removes deleted_at timestamp and reactivates student
+ */
+export function useRestoreStudent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Call Supabase function for restore
+      const { error } = await supabase.rpc("restore_student", {
+        p_student_id: id,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Also mark linked profiles as active
+      const { error: profilesError } = await supabase
+        .from("profiles")
+        .update({ active: true })
+        .eq("student_id", id);
+
+      if (profilesError) {
+        throw profilesError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      toast.success("Aluno restaurado com sucesso!");
+    },
+    onError: (error: unknown) => {
+      const err = error as PostgresError;
+      console.error("Erro ao restaurar aluno:", err);
+      toast.error("Erro ao restaurar aluno. Tente novamente.");
     },
   });
 }
