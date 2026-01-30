@@ -1,4 +1,85 @@
-# Welcome to your Lovable project
+# Edu Core Zen - Sistema de Gestão Educacional
+
+![CI Status](https://github.com/YOUR_USERNAME/edu-core-zen/workflows/CI%20-%20Continuous%20Integration/badge.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)
+![React](https://img.shields.io/badge/React-18.3-blue)
+![Node](https://img.shields.io/badge/Node-20.x-green)
+
+Sistema completo de gestão para escolas e cursos, com painéis para administradores, professores e alunos.
+
+## 🚀 Quick Start
+
+```bash
+# Instalar dependências
+npm install
+
+# Rodar em desenvolvimento
+npm run dev
+
+# Verificar qualidade do código
+npm run check
+
+# Build para produção
+npm run build
+```
+
+## ✨ Features
+
+- 👨‍💼 **Painel Administrativo** - Gestão completa de alunos, professores e finanças
+- 👨‍🏫 **Painel do Professor** - Registro de aulas, notas e frequência
+- 👨‍🎓 **Painel do Aluno** - Acompanhamento de aulas e situação financeira
+- 📊 **Relatórios e Dashboards** - Visualização de métricas importantes
+- 🔐 **Autenticação e Permissões** - Sistema completo com RLS (Supabase)
+- 📱 **Responsivo** - Interface adaptável para todos os dispositivos
+
+## 🛠️ Tech Stack
+
+- **Frontend:** React 18 + Vite + TypeScript
+- **UI:** shadcn/ui + Tailwind CSS + Radix UI
+- **Backend:** Supabase (PostgreSQL + Auth + RLS)
+- **State:** TanStack Query (React Query)
+- **Forms:** React Hook Form + Zod
+- **Charts:** Recharts
+- **Icons:** Lucide React
+
+## 📋 Scripts Disponíveis
+
+```bash
+npm run dev          # Servidor de desenvolvimento
+npm run build        # Build de produção
+npm run preview      # Preview do build
+npm run lint         # Verificar erros de código
+npm run lint:fix     # Corrigir erros automaticamente
+npm run type-check   # Verificar tipos TypeScript
+npm run check        # Lint + Type check
+npm run ci           # Simular CI localmente
+npm test             # Rodar testes
+```
+
+## 🔍 Qualidade de Código
+
+Este projeto usa **CI (Continuous Integration)** para garantir qualidade:
+
+- ✅ ESLint - Padrões de código
+- ✅ TypeScript - Verificação de tipos
+- ✅ Build check - Garantia de build funcional
+- ✅ 0 erros no código (160 erros corrigidos!)
+
+**Antes de fazer push:**
+
+```bash
+npm run check
+```
+
+[📖 Leia o guia completo de CI](.github/CI_GUIDE.md)
+
+## 📦 Build Otimizado
+
+Bundle otimizado com code splitting:
+- **Bundle inicial:** ~206 KB (gzipped)
+- **Redução de 84%** no bundle inicial (1.3MB → 206KB)
+- Lazy loading de todas as páginas
+- Chunks separados para vendors
 
 ## Project info
 

@@ -8,6 +8,10 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "check": "npm run lint && npm run type-check",
+    "ci": "npm ci && npm run check && npm run build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
