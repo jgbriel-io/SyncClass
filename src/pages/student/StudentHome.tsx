@@ -1,7 +1,8 @@
 import { StudentLayout } from "@/components/layout/StudentLayout";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CheckCircle, AlertCircle, BookOpen, Calendar, Loader2 } from "lucide-react";
+import { StudentMetricCard } from "@/components/student/StudentMetricCard";
+import { CheckCircle, AlertCircle, BookOpen, Calendar, Loader2, TrendingUp, Award } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -59,34 +60,18 @@ export default function StudentHome() {
 
             {profile && (
               <>
-                {/* Financial Status Card */}
-                <div className="rounded-xl border bg-card p-5 shadow-card">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`h-12 w-12 rounded-full flex items-center justify-center ${
-                        isFinancialOk ? "bg-success-muted" : "bg-warning-muted"
-                      }`}
-                    >
-                      {isFinancialOk ? (
-                        <CheckCircle className="h-6 w-6 text-success" />
-                      ) : (
-                        <AlertCircle className="h-6 w-6 text-warning" />
-                      )}
-                    </div>
-                    <div>
-                      <h2 className="font-semibold">Situação Financeira</h2>
-                      <p
-                        className={`text-sm ${
-                          isFinancialOk ? "text-success" : "text-warning"
-                        }`}
-                      >
-                        {isFinancialOk
-                          ? "Você está em dia com seus pagamentos"
-                          : "Você tem pendências financeiras"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                {/* ⚡ P0-1: Financial Status usando StudentMetricCard */}
+                <StudentMetricCard
+                  icon={isFinancialOk ? CheckCircle : AlertCircle}
+                  label="Situação Financeira"
+                  value={isFinancialOk ? "Em dia" : "Pendente"}
+                  description={
+                    isFinancialOk
+                      ? "Você está em dia com seus pagamentos"
+                      : "Você tem pendências financeiras"
+                  }
+                  variant={isFinancialOk ? "success" : "warning"}
+                />
 
                 {/* Last Class Card */}
                 {lastClass ? (
@@ -139,22 +124,20 @@ export default function StudentHome() {
                   </div>
                 )}
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-xl border bg-card p-4 shadow-card text-center">
-                    <p className="text-3xl font-bold text-primary">
-                      {stats.totalClasses}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Aulas realizadas
-                    </p>
-                  </div>
-                  <div className="rounded-xl border bg-card p-4 shadow-card text-center">
-                    <p className="text-3xl font-bold text-success">
-                      {stats.averageGrade > 0 ? stats.averageGrade.toFixed(1) : "—"}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">Média geral</p>
-                  </div>
+                {/* ⚡ P0-1: Quick Stats usando StudentMetricCard */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <StudentMetricCard
+                    icon={TrendingUp}
+                    label="Aulas realizadas"
+                    value={stats.totalClasses}
+                    variant="default"
+                  />
+                  <StudentMetricCard
+                    icon={Award}
+                    label="Média geral"
+                    value={stats.averageGrade > 0 ? stats.averageGrade.toFixed(1) : "—"}
+                    variant="success"
+                  />
                 </div>
               </>
             )}
