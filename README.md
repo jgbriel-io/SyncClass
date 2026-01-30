@@ -230,6 +230,7 @@ npm run build
 - [Performance e UX Improvements](./PERFORMANCE_AND_UX_IMPROVEMENTS.md) - Melhorias implementadas
 - [Apply Migrations Guide](./APPLY_MIGRATIONS_GUIDE.md) - Como aplicar as migrations
 - [Soft Delete Guide](./SOFT_DELETE_GUIDE.md) - Guia de soft delete (preserva histórico)
+- [Frontend Soft Delete Implementation](./FRONTEND_SOFT_DELETE_IMPLEMENTATION.md) - Implementação no React
 
 ## Project info
 
