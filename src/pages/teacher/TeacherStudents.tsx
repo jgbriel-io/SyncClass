@@ -2,7 +2,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
-import TeacherLayout from "@/components/layout/TeacherLayout";
 import { StudentsListView } from "@/components/students/StudentsListView";
 import { Loader2 } from "lucide-react";
 import { useTeachers } from "@/hooks/useTeachers";
@@ -35,11 +34,9 @@ const TeacherStudentsPage = () => {
 
   if (authLoading || teacherIdLoading) {
     return (
-      <TeacherLayout>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </TeacherLayout>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
@@ -49,17 +46,14 @@ const TeacherStudentsPage = () => {
 
   if (!teacherId) {
     return (
-      <TeacherLayout>
-        <div className="text-center py-12 text-muted-foreground">
-          <p>Não foi possível carregar seu perfil de professor.</p>
-        </div>
-      </TeacherLayout>
+      <div className="text-center py-12 text-muted-foreground">
+        <p>Não foi possível carregar seu perfil de professor.</p>
+      </div>
     );
   }
 
   return (
-    <TeacherLayout>
-      <StudentsListView
+    <StudentsListView
         title="Meus Alunos"
         subtitle="Visualize e gerencie os alunos sob sua responsabilidade"
         showTeacherColumn={false}
@@ -67,7 +61,6 @@ const TeacherStudentsPage = () => {
         autoTeacherId={teacherId}
         teachers={teachers}
       />
-    </TeacherLayout>
   );
 };
 

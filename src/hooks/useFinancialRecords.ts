@@ -17,6 +17,7 @@ export function useUndoFinancialPayment() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança desfeita com sucesso!");
     },
     onError: (error) => {
@@ -157,6 +158,7 @@ export function useCreateFinancialRecord() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança criada com sucesso!");
     },
     onError: (error) => {
@@ -192,6 +194,7 @@ export function useMarkAsPaid() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Pagamento registrado com sucesso!");
     },
     onError: (error) => {
@@ -222,6 +225,7 @@ export function useUpdateFinancialRecord() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança atualizada com sucesso!");
     },
     onError: (error) => {
@@ -248,6 +252,7 @@ export function useDeleteFinancialRecord() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança removida com sucesso!");
     },
     onError: (error) => {

@@ -1,4 +1,3 @@
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useTeachers } from "@/hooks/useTeachers";
 import { StudentsListView } from "@/components/students/StudentsListView";
 
@@ -6,8 +5,7 @@ export default function StudentsPage() {
   const { data: teachers = [] } = useTeachers();
 
   return (
-    <AdminLayout>
-      <StudentsListView
+    <StudentsListView
         title="Alunos"
         subtitle="Gerencie todos os alunos cadastrados"
         showTeacherColumn={true}
@@ -15,6 +13,5 @@ export default function StudentsPage() {
         autoTeacherId={null}
         teachers={teachers}
       />
-    </AdminLayout>
   );
 }

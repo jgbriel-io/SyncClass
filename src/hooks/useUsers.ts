@@ -106,4 +106,6 @@ export {
   useUnlinkUserFromTeacher,
   useCreateAuthUserForStudent,
   useCreateAuthUserForTeacher,
+  useInviteStudent,
+  useInviteTeacher,
 } from "./useUserMutations";

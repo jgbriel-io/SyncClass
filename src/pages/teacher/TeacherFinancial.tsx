@@ -2,7 +2,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
-import TeacherLayout from "@/components/layout/TeacherLayout";
 import { FinancialView } from "@/components/financial/FinancialView";
 import { Loader2 } from "lucide-react";
 
@@ -33,11 +32,9 @@ const TeacherFinancialPage = () => {
 
   if (authLoading || teacherIdLoading) {
     return (
-      <TeacherLayout>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </TeacherLayout>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
@@ -47,24 +44,20 @@ const TeacherFinancialPage = () => {
 
   if (!teacherId) {
     return (
-      <TeacherLayout>
-        <div className="text-center py-12 text-muted-foreground">
-          <p>Não foi possível carregar seu perfil de professor.</p>
-        </div>
-      </TeacherLayout>
+      <div className="text-center py-12 text-muted-foreground">
+        <p>Não foi possível carregar seu perfil de professor.</p>
+      </div>
     );
   }
 
   return (
-    <TeacherLayout>
-      <FinancialView
+    <FinancialView
         title="Meu Financeiro"
         subtitle="Visualize as cobranças dos seus alunos"
         showTeacherColumn={false}
         enableTeacherSelection={false}
         autoTeacherId={teacherId}
       />
-    </TeacherLayout>
   );
 };
 

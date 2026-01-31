@@ -1,5 +1,4 @@
 import { useState } from "react";
-import TeacherLayout from "@/components/layout/TeacherLayout";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +28,7 @@ import {
   Loader2,
   Receipt,
 } from "lucide-react";
-import { format } from "date-fns";
+import format from "date-fns/format";
 import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -181,17 +180,14 @@ const TeacherPedagogicalPage = () => {
 
   if (authLoading || teacherIdLoading) {
     return (
-      <TeacherLayout>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </TeacherLayout>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <TeacherLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -462,8 +458,7 @@ const TeacherPedagogicalPage = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
-    </TeacherLayout>
+    </div>
   );
 };
 

@@ -1,4 +1,3 @@
-import { StudentLayout } from "@/components/layout/StudentLayout";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StudentClassCard } from "@/components/student/StudentClassCard";
@@ -13,8 +12,7 @@ export default function StudentHistory() {
   const attendancePercentage = stats.attendanceRate.toFixed(0);
 
   return (
-    <StudentLayout>
-      <PageContainer constrained maxWidth="5xl">
+    <PageContainer constrained maxWidth="5xl">
         {/* Header */}
         <div>
           <h1 className="text-xl font-semibold">Histórico Acadêmico</h1>
@@ -93,7 +91,6 @@ export default function StudentHistory() {
             </div>
           </>
         )}
-      </PageContainer>
-    </StudentLayout>
+    </PageContainer>
   );
 }

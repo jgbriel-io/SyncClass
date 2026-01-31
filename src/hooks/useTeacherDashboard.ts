@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, subMonths, startOfWeek, endOfWeek, addDays } from "date-fns";
+import format from "date-fns/format";
+import startOfMonth from "date-fns/startOfMonth";
+import endOfMonth from "date-fns/endOfMonth";
+import subMonths from "date-fns/subMonths";
+import startOfWeek from "date-fns/startOfWeek";
+import endOfWeek from "date-fns/endOfWeek";
+import addDays from "date-fns/addDays";
 
 export interface TeacherDashboardStats {
   activeStudents: number;

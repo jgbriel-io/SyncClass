@@ -1,4 +1,3 @@
-import TeacherLayout from "@/components/layout/TeacherLayout";
 import { useClassLogs, useClassLogsSummary } from "@/hooks/useClassLogs";
 import { useFinancialRecords, useFinancialSummary } from "@/hooks/useFinancialRecords";
 import { useStudentsByTeacher } from "@/hooks/useStudentsByTeacher";
@@ -21,8 +20,7 @@ const TeacherOverviewPage = () => {
     : "0";
 
   return (
-    <TeacherLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight">Visão Geral</h1>
           <p className="text-muted-foreground">Análise detalhada dos seus alunos</p>
@@ -198,8 +196,7 @@ const TeacherOverviewPage = () => {
             </div>
           </>
         )}
-      </div>
-    </TeacherLayout>
+    </div>
   );
 };
 

@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Search, Plus, Check, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { format } from "date-fns";
+import format from "date-fns/format";
 import { ptBR } from "date-fns/locale";
 import { FinancialFormDialog } from "@/components/financial/FinancialFormDialog";
 import {

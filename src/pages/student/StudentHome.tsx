@@ -1,9 +1,8 @@
-import { StudentLayout } from "@/components/layout/StudentLayout";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
 import { CheckCircle, AlertCircle, BookOpen, Calendar, Loader2, TrendingUp, Award } from "lucide-react";
-import { format } from "date-fns";
+import format from "date-fns/format";
 import { ptBR } from "date-fns/locale";
 import {
   useStudentProfile,
@@ -25,8 +24,7 @@ export default function StudentHome() {
   const isFinancialOk = !stats.hasPendingPayments;
 
   return (
-    <StudentLayout>
-      <PageContainer constrained maxWidth="5xl">
+    <PageContainer constrained maxWidth="5xl">
         {/* Loading */}
         {isLoading && (
           <EmptyState size="lg">
@@ -143,7 +141,6 @@ export default function StudentHome() {
             )}
           </>
         )}
-      </PageContainer>
-    </StudentLayout>
+    </PageContainer>
   );
 }

@@ -317,6 +317,17 @@ export type Database = {
     Functions: {
       get_my_student_id: { Args: never; Returns: string }
       get_my_teacher_id: { Args: never; Returns: string }
+      set_user_role: {
+        Args: {
+          p_user_id: string
+          p_role: Database["public"]["Enums"]["app_role"]
+          p_full_name?: string | null
+          p_email?: string | null
+          p_teacher_id?: string | null
+          p_student_id?: string | null
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Search, Plus, Loader2, Shield, User, Link2, Unlink, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import format from "date-fns/format";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
 import { getAvatarLetter } from "@/lib/utils/patterns";
@@ -354,8 +353,7 @@ export default function UsersPage() {
   };
 
   return (
-    <AdminLayout>
-      <PageContainer>
+    <PageContainer>
         <div className="space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -445,9 +443,13 @@ export default function UsersPage() {
                       ? teachers.find((t) => t.id === user.profile.teacher_id)
                       : null;
 
-                    const storedRole = (user.role?.role as string | null) ?? null;
+                    const storedRole = (user.role?.role ?? user.profile?.role) as string | null ?? null;
                     const role = storedRole === "admin"
                       ? "admin"
+                      : storedRole === "teacher"
+                      ? "teacher"
+                      : storedRole === "student"
+                      ? "student"
                       : linkedTeacher
                       ? "teacher"
                       : linkedStudent
@@ -962,7 +964,6 @@ export default function UsersPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </PageContainer>
-    </AdminLayout>
+    </PageContainer>
   );
 }

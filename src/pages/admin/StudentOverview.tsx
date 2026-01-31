@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils/formatters";
@@ -81,8 +80,7 @@ function StudentOverviewPage() {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -461,8 +459,7 @@ function StudentOverviewPage() {
           open={sheetOpen}
           onOpenChange={setSheetOpen}
         />
-      </div>
-    </AdminLayout>
+    </div>
   );
 }
 

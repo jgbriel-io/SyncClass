@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import format from "date-fns/format";
 import { ptBR } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StatusBadge } from "@/components/ui/status-badge";

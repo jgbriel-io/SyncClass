@@ -69,17 +69,28 @@ export function TeacherFormDialog({
   });
 
   useEffect(() => {
-    reset({
-      name: teacher?.name || "",
-      email: teacher?.email || "",
-      phone: teacher?.phone || "",
-      cpf: teacher?.cpf
-        ? teacher.cpf.includes(".")
-          ? teacher.cpf
-          : maskCPF(teacher.cpf)
-        : "",
-    });
-  }, [teacher, reset]);
+    if (!open) return;
+
+    if (teacher) {
+      reset({
+        name: teacher.name || "",
+        email: teacher.email || "",
+        phone: teacher.phone || "",
+        cpf: teacher.cpf
+          ? teacher.cpf.includes(".")
+            ? teacher.cpf
+            : maskCPF(teacher.cpf)
+          : "",
+      });
+    } else {
+      reset({
+        name: "",
+        email: "",
+        phone: "",
+        cpf: "",
+      });
+    }
+  }, [open, teacher, reset]);
 
   const handleFormSubmit = (data: TeacherFormData) => {
     // Normaliza campos opcionais vazios para undefined

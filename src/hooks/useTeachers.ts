@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -42,8 +43,9 @@ export function useCreateTeacher() {
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
       toast.success("Professor cadastrado com sucesso!");
     },
-    onError: () => {
-      toast.error("Erro ao cadastrar professor. Tente novamente.");
+    onError: (error: unknown) => {
+      const friendly = getDuplicateErrorMessage(error as { code?: string; message?: string });
+      toast.error(friendly || "Erro ao cadastrar professor. Tente novamente.");
     },
   });
 }
@@ -125,8 +127,9 @@ export function useUpdateTeacher() {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Professor atualizado com sucesso!");
     },
-    onError: () => {
-      toast.error("Erro ao atualizar professor. Tente novamente.");
+    onError: (error: unknown) => {
+      const friendly = getDuplicateErrorMessage(error as { code?: string; message?: string });
+      toast.error(friendly || "Erro ao atualizar professor. Tente novamente.");
     },
   });
 }

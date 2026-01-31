@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -58,25 +59,8 @@ export function useCreateStudent() {
       toast.success("Aluno cadastrado com sucesso!");
     },
     onError: (error: unknown) => {
-      const err = error as PostgresError;
-      const message = err?.message || "";
-
-      if (err?.code === "23505") {
-        if (message.includes("students_unique_email")) {
-          toast.error("Já existe um aluno cadastrado com este email.");
-          return;
-        }
-        if (message.includes("students_unique_cpf")) {
-          toast.error("Já existe um aluno cadastrado com este CPF.");
-          return;
-        }
-        if (message.includes("students_unique_phone")) {
-          toast.error("Já existe um aluno cadastrado com este telefone.");
-          return;
-        }
-      }
-
-      toast.error("Erro ao cadastrar aluno. Tente novamente.");
+      const friendly = getDuplicateErrorMessage(error as PostgresError);
+      toast.error(friendly || "Erro ao cadastrar aluno. Tente novamente.");
     },
   });
 }
@@ -163,25 +147,8 @@ export function useUpdateStudent() {
       toast.success("Aluno atualizado com sucesso!");
     },
     onError: (error: unknown) => {
-      const err = error as PostgresError;
-      const message = err?.message || "";
-
-      if (err?.code === "23505") {
-        if (message.includes("students_unique_email")) {
-          toast.error("Já existe um aluno cadastrado com este email.");
-          return;
-        }
-        if (message.includes("students_unique_cpf")) {
-          toast.error("Já existe um aluno cadastrado com este CPF.");
-          return;
-        }
-        if (message.includes("students_unique_phone")) {
-          toast.error("Já existe um aluno cadastrado com este telefone.");
-          return;
-        }
-      }
-
-      toast.error("Erro ao atualizar aluno. Tente novamente.");
+      const friendly = getDuplicateErrorMessage(error as PostgresError);
+      toast.error(friendly || "Erro ao atualizar aluno. Tente novamente.");
     },
   });
 }

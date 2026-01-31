@@ -36,7 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
-import { format } from "date-fns";
+import format from "date-fns/format";
 import { ptBR } from "date-fns/locale";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
 import {
@@ -47,7 +47,7 @@ import {
   Student,
   StudentInsert,
 } from "@/hooks/useStudents";
-import { useCreateAuthUserForStudent } from "@/hooks/useUsers";
+import { useCreateAuthUserForStudent, useInviteStudent } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFinancialRecords, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
@@ -100,6 +100,7 @@ export function StudentsListView({
   const { data: financialRecords = [] } = useFinancialRecords();
   const { data: classLogs = [] } = useClassLogs();
   const createStudent = useCreateStudent();
+  const inviteStudent = useInviteStudent();
   const updateStudent = useUpdateStudent();
   const softDeleteStudent = useSoftDeleteStudent();
   const createStudentUser = useCreateAuthUserForStudent();
@@ -238,7 +239,7 @@ export function StudentsListView({
 
         if (existingProfile) {
           toast.error(
-            "Já existe uma conta com esse email. Use a aba Usuários para vincular esse aluno à conta existente."
+            "Email já cadastrado"
           );
           return;
         }
@@ -255,31 +256,23 @@ export function StudentsListView({
           }
         );
       } else {
-        createStudent.mutate(dataWithTeacher, {
-          onSuccess: (createdStudent) => {
-            setIsFormOpen(false);
-
-            if (createdStudent && createdStudent.email) {
-              createStudentUser.mutate(
-                {
-                  studentId: createdStudent.id,
-                  email: createdStudent.email,
-                  fullName: createdStudent.name,
-                },
-                {
-                  onSuccess: (result) => {
-                    if (result?.password) {
-                      setGeneratedPassword(result.password);
-                      setShowGeneratedPassword(false);
-                      setPasswordCopied(false);
-                      setIsPasswordDialogOpen(true);
-                    }
-                  },
-                }
-              );
-            }
-          },
-        });
+        if (normalizedEmail) {
+          inviteStudent.mutate(dataWithTeacher as StudentInsert & { teacher_id?: string | null }, {
+            onSuccess: (result) => {
+              setIsFormOpen(false);
+              if (result?.password) {
+                setGeneratedPassword(result.password);
+                setShowGeneratedPassword(false);
+                setPasswordCopied(false);
+                setIsPasswordDialogOpen(true);
+              }
+            },
+          });
+        } else {
+          createStudent.mutate(dataWithTeacher, {
+            onSuccess: () => setIsFormOpen(false),
+          });
+        }
       }
     };
 
@@ -624,12 +617,7 @@ export function StudentsListView({
       {/* Generated Password Dialog */}
       <Dialog
         open={isPasswordDialogOpen}
-        onOpenChange={(open) => {
-          setIsPasswordDialogOpen(open);
-          if (!open && generatedPassword) {
-            toast.success("Conta criada para o aluno.");
-          }
-        }}
+        onOpenChange={setIsPasswordDialogOpen}
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -712,7 +700,7 @@ export function StudentsListView({
         }}
         student={selectedStudent}
         onSubmit={handleCreateOrUpdate}
-        isLoading={createStudent.isPending || updateStudent.isPending}
+        isLoading={createStudent.isPending || inviteStudent.isPending || updateStudent.isPending}
         autoTeacherId={autoTeacherId}
       />
 

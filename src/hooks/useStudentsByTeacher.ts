@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -44,9 +45,9 @@ export function useCreateStudentForTeacher() {
       queryClient.invalidateQueries({ queryKey: ["students", "by-teacher"] });
       toast.success("Aluno cadastrado com sucesso!");
     },
-    onError: (error) => {
-      console.error("Error creating student:", error);
-      toast.error("Erro ao cadastrar aluno. Tente novamente.");
+    onError: (error: unknown) => {
+      const friendly = getDuplicateErrorMessage(error as { code?: string; message?: string });
+      toast.error(friendly || "Erro ao cadastrar aluno. Tente novamente.");
     },
   });
 }

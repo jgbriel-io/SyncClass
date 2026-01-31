@@ -6,7 +6,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
-import { format } from "date-fns";
+import format from "date-fns/format";
 import { ptBR } from "date-fns/locale";
 import {
   DropdownMenu,
@@ -46,7 +45,7 @@ import {
   Teacher,
   TeacherInsert,
 } from "@/hooks/useTeachers";
-import { useCreateAuthUserForTeacher } from "@/hooks/useUsers";
+import { useCreateAuthUserForTeacher, useInviteTeacher } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -64,6 +63,7 @@ export default function TeachersPage() {
 
   const { data: teachers = [], isLoading, error } = useTeachers();
   const createTeacher = useCreateTeacher();
+  const inviteTeacher = useInviteTeacher();
   const updateTeacher = useUpdateTeacher();
   const deleteTeacher = useDeleteTeacher();
   const createTeacherUser = useCreateAuthUserForTeacher();
@@ -100,7 +100,7 @@ export default function TeachersPage() {
 
         if (existingProfile) {
           toast.error(
-            "Já existe uma conta com esse email. Use a aba Usuários para vincular esse professor à conta existente."
+            "Email já cadastrado"
           );
           return;
         }
@@ -117,31 +117,23 @@ export default function TeachersPage() {
           }
         );
       } else {
-        createTeacher.mutate(data, {
-          onSuccess: (createdTeacher) => {
-            setIsFormOpen(false);
-
-            if (createdTeacher && createdTeacher.email) {
-              createTeacherUser.mutate(
-                {
-                  teacherId: createdTeacher.id,
-                  email: createdTeacher.email,
-                  fullName: createdTeacher.name,
-                },
-                {
-                  onSuccess: (result) => {
-                    if (result?.password) {
-                      setGeneratedPassword(result.password);
-                      setShowGeneratedPassword(false);
-                      setPasswordCopied(false);
-                      setIsPasswordDialogOpen(true);
-                    }
-                  },
-                }
-              );
-            }
-          },
-        });
+        if (normalizedEmail) {
+          inviteTeacher.mutate(data, {
+            onSuccess: (result) => {
+              setIsFormOpen(false);
+              if (result?.password) {
+                setGeneratedPassword(result.password);
+                setShowGeneratedPassword(false);
+                setPasswordCopied(false);
+                setIsPasswordDialogOpen(true);
+              }
+            },
+          });
+        } else {
+          createTeacher.mutate(data, {
+            onSuccess: () => setIsFormOpen(false),
+          });
+        }
       }
     };
 
@@ -182,8 +174,7 @@ export default function TeachersPage() {
   };
 
   return (
-    <AdminLayout>
-      <PageContainer>
+    <PageContainer>
         <div className="space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -345,7 +336,7 @@ export default function TeachersPage() {
           }}
           teacher={selectedTeacher}
           onSubmit={handleCreateOrUpdate}
-          isLoading={createTeacher.isPending || updateTeacher.isPending}
+          isLoading={createTeacher.isPending || inviteTeacher.isPending || updateTeacher.isPending}
         />
 
         {/* Modal de senha gerada para professor */}
@@ -484,7 +475,6 @@ export default function TeachersPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </PageContainer>
-    </AdminLayout>
+    </PageContainer>
   );
 }

@@ -1,4 +1,3 @@
-import TeacherLayout from "@/components/layout/TeacherLayout";
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -40,8 +39,7 @@ const TeacherHome = () => {
   const isLoading = loadingStats || loadingPayments || loadingBirthdays || loadingChart || !teacherId;
 
   return (
-    <TeacherLayout>
-      <DashboardView
+    <DashboardView
         title="Dashboard"
         subtitle="Bem-vindo de volta! Aqui está o resumo dos seus alunos."
         stats={stats}
@@ -51,7 +49,6 @@ const TeacherHome = () => {
         isLoading={isLoading}
         basePath="/teacher"
       />
-    </TeacherLayout>
   );
 };
 

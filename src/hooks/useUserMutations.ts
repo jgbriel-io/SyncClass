@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
+import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { toast } from "sonner";
 import type { Tables, TablesInsert, Enums } from "@/integrations/supabase/types";
 import { logger } from "@/lib/sentry";
@@ -54,109 +55,166 @@ function generateRandomPassword(length: number = 10): string {
   return password;
 }
 
-// Helper function to retry with exponential backoff
-async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  options: {
-    maxAttempts?: number;
-    initialDelayMs?: number;
-    maxDelayMs?: number;
-    backoffMultiplier?: number;
-  } = {}
-): Promise<T> {
-  const {
-    maxAttempts = 5,
-    initialDelayMs = 200,
-    maxDelayMs = 3000,
-    backoffMultiplier = 2,
-  } = options;
+export interface InviteUserBody {
+  email: string;
+  password?: string;
+  full_name: string;
+  role: "admin" | "student" | "teacher";
+  teacher_id?: string | null;
+  teacherId?: string | null;
+  studentId?: string | null;
+  teacherData?: Partial<TeacherInsert>;
+  studentData?: Partial<StudentInsert>;
+}
 
-  let lastError: Error | null = null;
-  let currentDelay = initialDelayMs;
+export interface InviteUserResult {
+  userId: string;
+  email: string;
+  password: string;
+  createdStudent: { id: string } | null;
+  createdTeacher: { id: string } | null;
+  permissionsWarning?: boolean;
+}
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+function isEdgeFunctionNetworkError(err: unknown): boolean {
+  const msg = (err as Error)?.message?.toLowerCase() ?? "";
+  return (
+    msg.includes("failed to send") ||
+    msg.includes("fetch") ||
+    msg.includes("network") ||
+    msg.includes("load failed") ||
+    msg.includes("connection refused")
+  );
+}
+
+async function getFunctionError(err: unknown): Promise<string | null> {
+  const e = err as { context?: { json?: () => Promise<{ error?: string }>; body?: unknown } };
+  if (e?.context?.json) {
     try {
-      return await fn();
-    } catch (error) {
-      lastError = error as Error;
-      
-      // If this was the last attempt, throw the error
-      if (attempt === maxAttempts) {
-        break;
-      }
+      const body = await e.context.json();
+      if (body?.error && typeof body.error === "string") return body.error;
+    } catch {
+      /* ignore */
+    }
+  }
+  return null;
+}
 
-      // Wait before retrying with exponential backoff
-      await new Promise(resolve => setTimeout(resolve, currentDelay));
-      
-      // Increase delay for next attempt, capped at maxDelayMs
-      currentDelay = Math.min(currentDelay * backoffMultiplier, maxDelayMs);
+async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult> {
+  try {
+    const { data, error } = await supabase.functions.invoke("invite-user", { body });
+    const parsed = data as { error?: string; userId?: string; email?: string; password?: string; createdStudent?: { id: string } | null; createdTeacher?: { id: string } | null; permissionsWarning?: boolean } | null;
+    if (parsed?.userId && parsed?.password) {
+      return {
+        userId: parsed.userId,
+        email: parsed.email ?? body.email,
+        password: parsed.password,
+        createdStudent: parsed.createdStudent ?? null,
+        createdTeacher: parsed.createdTeacher ?? null,
+        permissionsWarning: parsed.permissionsWarning ?? false,
+      };
+    }
+    if (parsed?.error) throw new Error(parsed.error);
+    if (error) {
+      const fnMsg = await getFunctionError(error);
+      throw new Error(fnMsg || (error as Error).message || "Erro ao criar usuário");
+    }
+    throw new Error("Resposta inválida da função");
+  } catch (err) {
+    if (isEdgeFunctionNetworkError(err)) {
+      return createUserLegacy(body);
+    }
+    const fnMsg = await getFunctionError(err);
+    if (fnMsg) throw new Error(fnMsg);
+    if (err instanceof Error) throw err;
+    throw new Error("Erro ao criar usuário");
+  }
+}
+
+// Fallback quando Edge Function indisponível (não deployada, rede, etc.)
+async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult> {
+  const fullName = body.full_name;
+  const normalizedEmail = body.email.trim().toLowerCase();
+  const password = (body.password && body.password.length >= 6) ? body.password : generateRandomPassword();
+
+  const { data: existingProfile } = await supabase.from("profiles").select("id").ilike("email", normalizedEmail).maybeSingle();
+  if (existingProfile) throw new Error("Email já cadastrado");
+
+  let createdStudent: { id: string } | null = null;
+  let createdTeacher: { id: string } | null = null;
+  let resolvedStudentId = body.studentId ?? null;
+  let resolvedTeacherId = body.teacherId ?? body.teacher_id ?? null;
+
+  if (body.role === "student") {
+    if (body.studentId) {
+      resolvedStudentId = body.studentId;
+    } else if (body.studentData) {
+      const insert: StudentInsert = { ...body.studentData, name: fullName, email: normalizedEmail } as StudentInsert;
+      const { data: s, error: se } = await supabase.from("students").insert(insert).select("id").single();
+      if (se) throw new Error(getDuplicateErrorMessage(se) || se.message);
+      if (s?.id) { createdStudent = { id: s.id }; resolvedStudentId = s.id; }
+    } else {
+      throw new Error("studentId ou studentData é obrigatório para role student");
+    }
+  } else if (body.role === "teacher") {
+    if (body.teacherId) {
+      resolvedTeacherId = body.teacherId;
+    } else if (body.teacherData) {
+      const insert: TeacherInsert = { ...body.teacherData, name: fullName, email: normalizedEmail } as TeacherInsert;
+      const { data: t, error: te } = await supabase.from("teachers").insert(insert).select("id").single();
+      if (te) throw new Error(getDuplicateErrorMessage(te) || te.message);
+      if (t?.id) { createdTeacher = { id: t.id }; resolvedTeacherId = t.id; }
+    } else {
+      throw new Error("teacherId ou teacherData é obrigatório para role teacher");
     }
   }
 
-  throw lastError || new Error("Retry failed without error");
+  const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
+    email: normalizedEmail,
+    password,
+    options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/login` },
+  });
+  if (authError) throw authError;
+  if (!authData.user) throw new Error("Falha ao criar usuário");
+  const userId = authData.user.id;
+
+  for (let i = 0; i < 8; i++) {
+    const { data: p } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
+    if (p) break;
+    await new Promise((r) => setTimeout(r, 150 + i * 100));
+  }
+  await new Promise((r) => setTimeout(r, 400));
+
+  let roleOk = false;
+  const { error: rpcErr } = await supabase.rpc("set_user_role", {
+    p_user_id: userId,
+    p_role: body.role,
+    p_full_name: fullName,
+    p_email: normalizedEmail,
+    p_teacher_id: resolvedTeacherId ?? undefined,
+    p_student_id: resolvedStudentId ?? undefined,
+  });
+  if (!rpcErr) roleOk = true;
+  if (!roleOk) {
+    const { error: profileErr } = await supabase
+      .from("profiles")
+      .update({ role: body.role, full_name: fullName, email: normalizedEmail, student_id: resolvedStudentId, teacher_id: resolvedTeacherId })
+      .eq("user_id", userId);
+    const { error: rolesErr } = await supabase.from("user_roles").update({ role: body.role, full_name: fullName, email: normalizedEmail }).eq("user_id", userId);
+    if (!profileErr && !rolesErr) roleOk = true;
+  }
+
+  return {
+    userId,
+    email: normalizedEmail,
+    password,
+    createdStudent,
+    createdTeacher,
+    permissionsWarning: !roleOk,
+  };
 }
 
-// Helper function to wait for trigger completion with verification
-async function waitForProfileCreation(userId: string): Promise<void> {
-  await retryWithBackoff(
-    async () => {
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("id, user_id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (error) {
-        throw new Error(`Erro ao verificar perfil: ${error.message}`);
-      }
-
-      if (!profile) {
-        throw new Error("Perfil ainda não foi criado pelo trigger");
-      }
-
-      // Profile exists, verification successful
-      return;
-    },
-    {
-      maxAttempts: 5,
-      initialDelayMs: 200,
-      maxDelayMs: 2000,
-      backoffMultiplier: 2,
-    }
-  );
-}
-
-// Helper function to wait for user_roles creation with verification
-async function waitForUserRoleCreation(userId: string): Promise<void> {
-  await retryWithBackoff(
-    async () => {
-      const { data: userRole, error } = await supabase
-        .from("user_roles")
-        .select("id, user_id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (error) {
-        throw new Error(`Erro ao verificar role: ${error.message}`);
-      }
-
-      if (!userRole) {
-        throw new Error("Role ainda não foi criada pelo trigger");
-      }
-
-      // Role exists, verification successful
-      return;
-    },
-    {
-      maxAttempts: 5,
-      initialDelayMs: 200,
-      maxDelayMs: 2000,
-      backoffMultiplier: 2,
-    }
-  );
-}
-
-// Create a new user
+// Create a new user (via Edge Function invite-user)
 export function useCreateUser() {
   const queryClient = useQueryClient();
 
@@ -170,155 +228,45 @@ export function useCreateUser() {
       teacherData,
     }: CreateUserParams) => {
       const normalizedEmail = email.trim().toLowerCase();
+      const finalPassword = (!password || password.length < 6) ? generateRandomPassword() : password;
 
-      // Check if profile already exists
-      const { data: existingProfile, error: profileCheckError } = await supabase
-        .from("profiles")
-        .select("id")
-        .ilike("email", normalizedEmail)
-        .maybeSingle();
-
-      if (profileCheckError) {
-        throw new Error("Erro ao validar email. Tente novamente.");
-      }
-
-      if (existingProfile) {
-        throw new Error(
-          "Já existe uma conta com esse email. Use a aba Usuários para vincular ou editar essa conta."
-        );
-      }
-
-      // Generate password if not provided or too short
-      const finalPassword = (!password || password.length < 6) 
-        ? generateRandomPassword() 
-        : password;
-
-      // Create user via signUp (will trigger profile creation)
-      const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
+      const body: Parameters<typeof invokeInviteUser>[0] = {
         email: normalizedEmail,
         password: finalPassword,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
-      });
+        full_name: fullName || normalizedEmail,
+        role,
+      };
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
-
-      const userId = authData.user.id;
-
-      // Wait for trigger to complete with verification and retry
-      try {
-        await waitForProfileCreation(userId);
-        await waitForUserRoleCreation(userId);
-      } catch (error) {
-        throw new Error(
-          "Erro ao criar perfil. O sistema está em alta carga. Tente novamente em alguns instantes."
-        );
+      if (role === "student" && studentData) {
+        body.studentData = { ...studentData, name: studentData.name || fullName, email: normalizedEmail };
+      }
+      if (role === "teacher" && teacherData) {
+        body.teacherData = { ...teacherData, name: teacherData.name || fullName, email: normalizedEmail };
       }
 
-      // Update profile with name, role and email
-      if (fullName) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ full_name: fullName, role, email: normalizedEmail })
-          .eq("user_id", userId);
-
-        if (profileError) {
-          throw new Error("Erro ao atualizar perfil");
-        }
-      }
-
-      // Upsert role (will update if exists, insert if not)
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: role,
-            full_name: fullName,
-            email: normalizedEmail,
-          },
-          { onConflict: "user_id" }
-        )
-        .select();
-
-      if (roleError) {
-        throw new Error("Erro ao definir permissões do usuário");
-      }
-
-      // Create and link domain records for student/teacher
-      let createdStudent: { id: string } | null = null;
-      let createdTeacher: { id: string } | null = null;
-
-      if (role === "student") {
-        const studentInsertData: StudentInsert = studentData 
-          ? { ...studentData, name: studentData.name || fullName, email: normalizedEmail }
-          : { name: fullName || normalizedEmail, email: normalizedEmail };
-
-        const { data: student, error: studentError } = await supabase
-          .from("students")
-          .insert(studentInsertData)
-          .select("id")
-          .single();
-
-        if (studentError) {
-          throw new Error("Erro ao criar registro de aluno");
-        }
-        
-        if (student?.id) {
-          createdStudent = { id: student.id };
-          const { error: linkError } = await supabase
-            .from("profiles")
-            .update({ student_id: student.id })
-            .eq("user_id", userId);
-
-          if (linkError) {
-            throw new Error("Erro ao vincular perfil ao aluno");
-          }
-        }
-      } else if (role === "teacher") {
-        const teacherInsertData: TeacherInsert = teacherData
-          ? { ...teacherData, name: teacherData.name || fullName, email: normalizedEmail }
-          : { name: fullName || normalizedEmail, email: normalizedEmail };
-
-        const { data: teacher, error: teacherError } = await supabase
-          .from("teachers")
-          .insert(teacherInsertData)
-          .select("id")
-          .single();
-
-        if (teacherError) {
-          throw new Error("Erro ao criar registro de professor");
-        }
-        
-        if (teacher?.id) {
-          createdTeacher = { id: teacher.id };
-          const { error: linkError } = await supabase
-            .from("profiles")
-            .update({ teacher_id: teacher.id })
-            .eq("user_id", userId);
-
-          if (linkError) {
-            throw new Error("Erro ao vincular perfil ao professor");
-          }
-        }
-      }
+      const result = await invokeInviteUser(body);
 
       return {
-        user: authData.user,
-        password: finalPassword,
-        createdStudent,
-        createdTeacher,
+        user: { id: result.userId } as { id: string },
+        password: result.password,
+        createdStudent: result.createdStudent,
+        createdTeacher: result.createdTeacher,
+        permissionsWarning: result.permissionsWarning,
       };
     },
-    onSuccess: () => {
+    onSuccess: (result, variables) => {
+      if (result?.permissionsWarning) {
+        toast.warning("Usuário criado. Ajuste as permissões manualmente na aba Usuários se necessário.");
+      }
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
+      if (variables.role === "student" || result?.createdStudent) {
+        queryClient.invalidateQueries({ queryKey: ["students"] });
+      }
+      if (variables.role === "teacher" || result?.createdTeacher) {
+        queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      }
     },
     onError: (error: Error, variables) => {
       logger.error(error, {
@@ -387,7 +335,11 @@ export function useUpdateUserRole() {
           .select("id")
           .single();
 
-        if (!studentError && student?.id) {
+        if (studentError) {
+          const friendly = getDuplicateErrorMessage(studentError);
+          throw new Error(friendly || studentError.message);
+        }
+        if (student?.id) {
           await supabase
             .from("profiles")
             .update({ student_id: student.id })
@@ -403,7 +355,11 @@ export function useUpdateUserRole() {
           .select("id")
           .single();
 
-        if (!teacherError && teacher?.id) {
+        if (teacherError) {
+          const friendly = getDuplicateErrorMessage(teacherError);
+          throw new Error(friendly || teacherError.message);
+        }
+        if (teacher?.id) {
           await supabase
             .from("profiles")
             .update({ teacher_id: teacher.id })
@@ -416,7 +372,7 @@ export function useUpdateUserRole() {
       toast.success("Privilégio atualizado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao atualizar privilégio. Tente novamente.");
+      toast.error(error.message || "Erro ao atualizar privilégio. Tente novamente.");
     },
   });
 }
@@ -646,197 +602,117 @@ export function useUnlinkUserFromTeacher() {
   });
 }
 
-// Create auth user and link to an existing student
+// Convida aluno (cria student + auth user atomicamente via invite-user)
+export function useInviteStudent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: StudentInsert & { teacher_id?: string | null }) => {
+      const email = (data.email ?? "").trim().toLowerCase();
+      if (!email) throw new Error("Email é obrigatório");
+      const result = await invokeInviteUser({
+        email,
+        full_name: data.name,
+        role: "student",
+        teacher_id: data.teacher_id ?? undefined,
+        studentData: data as Partial<StudentInsert>,
+      });
+      return { ...result, createdStudent: result.createdStudent ?? { id: "" } };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      if (data?.permissionsWarning) {
+        toast.warning("Aluno criado. Ajuste as permissões na aba Usuários se necessário.");
+      } else {
+        toast.success("Aluno e conta de acesso criados com sucesso!");
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erro ao convidar aluno.");
+    },
+  });
+}
+
+// Convida professor (cria teacher + auth user atomicamente via invite-user)
+export function useInviteTeacher() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: TeacherInsert) => {
+      const email = (data.email ?? "").trim().toLowerCase();
+      if (!email) throw new Error("Email é obrigatório");
+      const result = await invokeInviteUser({
+        email,
+        full_name: data.name,
+        role: "teacher",
+        teacherData: data as Partial<TeacherInsert>,
+      });
+      return { ...result, createdTeacher: result.createdTeacher ?? { id: "" } };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      if (data?.permissionsWarning) {
+        toast.warning("Professor criado. Ajuste as permissões na aba Usuários se necessário.");
+      } else {
+        toast.success("Professor e conta de acesso criados com sucesso!");
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erro ao convidar professor.");
+    },
+  });
+}
+
+// Create auth user and link to an existing student (via Edge Function)
 export function useCreateAuthUserForStudent() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ studentId, email, fullName }: CreateAuthUserParams & { studentId: string }) => {
-      const password = generateRandomPassword();
-
-      const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
+      const result = await invokeInviteUser({
+        email: email.trim().toLowerCase(),
+        full_name: fullName || email,
+        role: "student",
+        studentId,
       });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
-
-      const userId = authData.user.id;
-
-      // Wait for trigger to complete with verification and retry
-      try {
-        await waitForProfileCreation(userId);
-        await waitForUserRoleCreation(userId);
-      } catch (error) {
-        throw new Error(
-          "Erro ao criar perfil. O sistema está em alta carga. Tente novamente em alguns instantes."
-        );
-      }
-
-      // Link profile to existing student and update name
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ full_name: fullName, student_id: studentId, role: "student", email })
-        .eq("user_id", userId);
-
-      if (profileError) {
-        throw new Error("Erro ao vincular perfil ao aluno");
-      }
-
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: "student",
-            full_name: fullName,
-            email,
-          },
-          { onConflict: "user_id" }
-        );
-
-      if (roleError) {
-        throw new Error("Erro ao definir role de aluno");
-      }
-
-      return { user: authData.user, password };
+      return { user: { id: result.userId } as { id: string }, password: result.password };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
     },
-    onError: async (error: Error, variables: CreateAuthUserParams) => {
-      const emailVar = variables.email?.trim().toLowerCase();
-
-      if (emailVar) {
-        try {
-          const { data: existingProfile } = await supabase
-            .from("profiles")
-            .select("user_id, student_id")
-            .ilike("email", emailVar)
-            .maybeSingle();
-
-          if (existingProfile) {
-            // Profile already exists, suppress duplicate toast
-            return;
-          }
-        } catch {
-          // Ignore and fall back to default message
-        }
-      }
-
-      const message = error?.message?.toLowerCase() || "";
-      if (message.includes("already")) {
-        toast.error(
-          "Já existe uma conta com esse email. Use a aba Usuários para vincular esse aluno à conta existente."
-        );
-      } else {
-        toast.error(error.message || "Erro ao criar conta de acesso para o aluno.");
-      }
+    onError: (error: Error) => {
+      const msg = error?.message?.toLowerCase() || "";
+      toast.error(msg.includes("already") || msg.includes("cadastrado") ? "Email já cadastrado" : error.message);
     },
   });
 }
 
-// Create auth user and link to an existing teacher
+// Create auth user and link to an existing teacher (via Edge Function)
 export function useCreateAuthUserForTeacher() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ teacherId, email, fullName }: CreateAuthUserParams & { teacherId: string }) => {
-      const password = generateRandomPassword();
-
-      const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
+      const result = await invokeInviteUser({
+        email: email.trim().toLowerCase(),
+        full_name: fullName || email,
+        role: "teacher",
+        teacherId,
       });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
-
-      const userId = authData.user.id;
-
-      // Wait for trigger to complete with verification and retry
-      try {
-        await waitForProfileCreation(userId);
-        await waitForUserRoleCreation(userId);
-      } catch (error) {
-        throw new Error(
-          "Erro ao criar perfil. O sistema está em alta carga. Tente novamente em alguns instantes."
-        );
-      }
-
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ full_name: fullName, teacher_id: teacherId, role: "teacher", email })
-        .eq("user_id", userId);
-
-      if (profileError) {
-        throw new Error("Erro ao vincular perfil ao professor");
-      }
-
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: "teacher",
-            full_name: fullName,
-            email,
-          },
-          { onConflict: "user_id" }
-        );
-
-      if (roleError) {
-        throw new Error("Erro ao definir role de professor");
-      }
-
-      return { user: authData.user, password };
+      return { user: { id: result.userId } as { id: string }, password: result.password };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
     },
-    onError: async (error: Error, variables: CreateAuthUserParams) => {
-      const emailVar = variables.email?.trim().toLowerCase();
-
-      if (emailVar) {
-        try {
-          const { data: existingProfile } = await supabase
-            .from("profiles")
-            .select("user_id, teacher_id")
-            .ilike("email", emailVar)
-            .maybeSingle();
-
-          if (existingProfile) {
-            // Profile already exists, suppress duplicate toast
-            return;
-          }
-        } catch {
-          // Ignore and fall back to default
-        }
-      }
-
-      const message = error?.message?.toLowerCase() || "";
-      if (message.includes("already")) {
-        toast.error(
-          "Já existe uma conta com esse email. Use a aba Usuários para vincular esse professor à conta existente."
-        );
-      } else {
-        toast.error(error.message || "Erro ao criar conta de acesso para o professor.");
-      }
+    onError: (error: Error) => {
+      const msg = error?.message?.toLowerCase() || "";
+      toast.error(msg.includes("already") || msg.includes("cadastrado") ? "Email já cadastrado" : error.message);
     },
   });
 }

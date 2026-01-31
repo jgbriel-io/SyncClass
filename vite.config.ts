@@ -90,9 +90,9 @@ export default defineConfig(({ mode }) => ({
           // Date utilities
           "date-utils": ["date-fns"],
           
-          // Icons
-          icons: ["lucide-react"],
-          
+          // lucide-react removido de manualChunks: ícones são tree-shaken
+          // e distribuídos nos chunks que os usam (evita bundle de 20KB+)
+
           // Charts
           charts: ["recharts"],
         },

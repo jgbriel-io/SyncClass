@@ -1,4 +1,3 @@
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import {
   useDashboardStats,
@@ -16,8 +15,7 @@ export default function AdminDashboard() {
   const isLoading = loadingStats || loadingPayments || loadingBirthdays || loadingChart;
 
   return (
-    <AdminLayout>
-      <DashboardView
+    <DashboardView
         title="Dashboard"
         subtitle="Bem-vindo de volta! Aqui está o resumo da sua instituição."
         stats={stats}
@@ -27,6 +25,5 @@ export default function AdminDashboard() {
         isLoading={isLoading}
         basePath="/admin"
       />
-    </AdminLayout>
   );
 }

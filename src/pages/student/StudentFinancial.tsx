@@ -1,4 +1,3 @@
-import { StudentLayout } from "@/components/layout/StudentLayout";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StudentFinancialCard } from "@/components/student/StudentFinancialCard";
@@ -15,8 +14,7 @@ export default function StudentFinancial() {
   const isFinancialOk = !stats.hasPendingPayments;
 
   return (
-    <StudentLayout>
-      <PageContainer constrained maxWidth="5xl">
+    <PageContainer constrained maxWidth="5xl">
         {/* Header */}
         <div>
           <h1 className="text-xl font-semibold">Financeiro</h1>
@@ -87,7 +85,6 @@ export default function StudentFinancial() {
             </p>
           </>
         )}
-      </PageContainer>
-    </StudentLayout>
+    </PageContainer>
   );
 }
