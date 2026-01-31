@@ -1,4 +1,5 @@
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyFinancialState } from "@/components/ui/contextual-empty-states";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -455,14 +456,22 @@ export function FinancialView({
             </table>
           </div>
           {filteredRecords.length === 0 && (
-            <EmptyState
-              icon={Search}
-              title={records.length === 0 ? "Nenhuma cobrança cadastrada" : "Nenhum resultado"}
-              message={records.length === 0
-                ? "Clique no botão 'Nova Cobrança' para adicionar a primeira"
-                : "Ajuste os filtros acima ou limpe a busca"}
+            records.length === 0 ? (
+              <EmptyFinancialState
+                onAction={() => {
+                  setRecordToEdit(null);
+                  setIsFormOpen(true);
+                }}
+                actionLabel="Criar primeira cobrança"
               />
-            )}
+            ) : (
+              <EmptyState
+                icon={Search}
+                title="Nenhum resultado"
+                message="Ajuste os filtros acima ou limpe a busca"
+              />
+            )
+          )}
           </div>
         ) : null}
 

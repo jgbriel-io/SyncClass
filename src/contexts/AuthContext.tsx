@@ -54,8 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Handle invalid refresh token errors with robust cleanup
     const handleInvalidRefreshToken = async () => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       logger.warn("Invalid refresh token detected, clearing session", {
-        userId: user?.id,
+        userId: currentUser?.id,
       });
       
       // Clear user context in Sentry

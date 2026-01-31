@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyStudentsState } from "@/components/ui/contextual-empty-states";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -595,13 +596,21 @@ export function StudentsListView({
             </table>
           </div>
           {filteredStudents.length === 0 && (
-            <EmptyState
-              icon={Search}
-              title={students.length === 0 ? "Nenhum aluno cadastrado" : "Nenhum resultado"}
-              message={students.length === 0
-                ? "Clique no botão 'Novo Aluno' para adicionar o primeiro"
-                : "Ajuste os filtros acima ou limpe a busca"}
-            />
+            students.length === 0 ? (
+              <EmptyStudentsState
+                onAction={() => {
+                  setSelectedStudent(null);
+                  setIsFormOpen(true);
+                }}
+                actionLabel="Adicionar primeiro aluno"
+              />
+            ) : (
+              <EmptyState
+                icon={Search}
+                title="Nenhum resultado"
+                message="Ajuste os filtros acima ou limpe a busca"
+              />
+            )
           )}
         </div>
       )}

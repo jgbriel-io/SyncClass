@@ -1,5 +1,6 @@
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyClassesState } from "@/components/ui/contextual-empty-states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils/formatters";
@@ -391,13 +392,21 @@ export function ClassesView({
           </div>
           {filteredLogs.length === 0 && (
             <div className="border-t">
-              <EmptyState
-                icon={Search}
-                title={logs.length === 0 ? "Nenhuma aula registrada" : "Nenhum resultado"}
-                message={logs.length === 0
-                  ? "Clique no botão 'Registrar Aula' para adicionar a primeira"
-                  : "Ajuste os filtros acima ou limpe a busca"}
-              />
+              {logs.length === 0 ? (
+                <EmptyClassesState
+                  onAction={() => {
+                    setSelectedLog(null);
+                    setIsFormOpen(true);
+                  }}
+                  actionLabel="Registrar primeira aula"
+                />
+              ) : (
+                <EmptyState
+                  icon={Search}
+                  title="Nenhum resultado"
+                  message="Ajuste os filtros acima ou limpe a busca"
+                />
+              )}
             </div>
           )}
         </div>
@@ -502,13 +511,21 @@ export function ClassesView({
 
           {filteredLogs.length === 0 && (
             <div className="rounded-lg border bg-card">
-              <EmptyState
-                icon={BookOpen}
-                title={logs.length === 0 ? "Nenhuma aula registrada" : "Nenhum resultado"}
-                message={logs.length === 0
-                  ? "Suas aulas aparecerão aqui"
-                  : "Ajuste os filtros acima ou limpe a busca"}
-              />
+              {logs.length === 0 ? (
+                <EmptyClassesState
+                  onAction={() => {
+                    setSelectedLog(null);
+                    setIsFormOpen(true);
+                  }}
+                  actionLabel="Registrar primeira aula"
+                />
+              ) : (
+                <EmptyState
+                  icon={BookOpen}
+                  title="Nenhum resultado"
+                  message="Ajuste os filtros acima ou limpe a busca"
+                />
+              )}
             </div>
           )}
         </div>
