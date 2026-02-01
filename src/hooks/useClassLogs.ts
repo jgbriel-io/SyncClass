@@ -3,6 +3,44 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
+/** Verifica se há sobreposição de horários para o mesmo professor na mesma data */
+async function checkClassOverlap(
+  teacherId: string | null,
+  classDate: string,
+  startAt: string | null,
+  endAt: string | null,
+  excludeId?: string
+): Promise<{ overlap: boolean; message?: string }> {
+  if (!teacherId || !startAt || !endAt) return { overlap: false };
+  const start = new Date(startAt).getTime();
+  const end = new Date(endAt).getTime();
+  if (start >= end) return { overlap: false };
+
+  const { data: existing, error } = await supabase
+    .from("class_logs")
+    .select("id, start_at, end_at")
+    .eq("teacher_id", teacherId)
+    .eq("class_date", classDate)
+    .not("start_at", "is", null)
+    .not("end_at", "is", null);
+
+  if (error) throw error;
+
+  for (const row of existing || []) {
+    if (excludeId && row.id === excludeId) continue;
+    const rowStart = new Date(row.start_at!).getTime();
+    const rowEnd = new Date(row.end_at!).getTime();
+    const overlaps = start < rowEnd && rowStart < end;
+    if (overlaps) {
+      return {
+        overlap: true,
+        message: "Já existe outra aula neste horário para este professor. Escolha outro intervalo.",
+      };
+    }
+  }
+  return { overlap: false };
+}
+
 export type ClassLog = Tables<"class_logs">;
 export type ClassLogInsert = TablesInsert<"class_logs">;
 export type ClassLogUpdate = TablesUpdate<"class_logs">;
@@ -114,13 +152,17 @@ export function useAvailableClassLogsForStudent(studentId: string | null, teache
   });
 }
 
-export function useClassLogsSummary() {
+export function useClassLogsSummary(teacherId?: string | null) {
   return useQuery({
-    queryKey: ["class_logs_summary"],
+    queryKey: ["class_logs_summary", teacherId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("class_logs")
         .select("attendance, grade");
+      if (teacherId) {
+        query = query.eq("teacher_id", teacherId);
+      }
+      const { data, error } = await query;
 
       if (error) {
         throw error;
@@ -161,6 +203,15 @@ export function useCreateClassLog() {
 
   return useMutation({
     mutationFn: async (log: ClassLogInsert) => {
+      const overlap = await checkClassOverlap(
+        log.teacher_id,
+        log.class_date,
+        log.start_at,
+        log.end_at
+      );
+      if (overlap.overlap) {
+        throw new Error(overlap.message);
+      }
       const { data, error } = await supabase
         .from("class_logs")
         .insert(log)
@@ -180,7 +231,21 @@ export function useCreateClassLog() {
     },
     onError: (error) => {
       console.error("Error creating class log:", error);
-      toast.error("Erro ao registrar aula. Tente novamente.");
+      const msg = (error as Error)?.message || "";
+      const code = (error as { code?: string })?.code;
+      const isOverlap =
+        code === "23P01" ||
+        msg.includes("neste horário") ||
+        msg.includes("sobreposição") ||
+        msg.includes("overlap") ||
+        msg.includes("class_logs_no_overlap") ||
+        msg.includes("exclusion constraint") ||
+        msg.includes("conflicting key");
+      toast.error(
+        isOverlap
+          ? "Já existe outra aula neste horário para este professor. Escolha outro intervalo."
+          : "Erro ao registrar aula. Tente novamente."
+      );
     },
   });
 }
@@ -192,6 +257,16 @@ export function useCreateClassLogWithFinancial() {
     mutationFn: async ({ classLog, createFinancial, financialData }: ClassLogWithFinancialData) => {
       // Permite cobrança para aulas agendadas (futuras): professor pode deixar em aberto
       // antes da aula; presença e feedback são marcados depois.
+
+      const overlap = await checkClassOverlap(
+        classLog.teacher_id,
+        classLog.class_date,
+        classLog.start_at,
+        classLog.end_at
+      );
+      if (overlap.overlap) {
+        throw new Error(overlap.message);
+      }
 
       // Primeiro cria a aula
       const { data: createdLog, error: logError } = await supabase
@@ -244,7 +319,21 @@ export function useCreateClassLogWithFinancial() {
     },
     onError: (error) => {
       console.error("Error creating class log:", error);
-      toast.error((error as Error).message || "Erro ao registrar aula. Tente novamente.");
+      const msg = (error as Error)?.message || "";
+      const code = (error as { code?: string })?.code;
+      const isOverlap =
+        code === "23P01" ||
+        msg.includes("neste horário") ||
+        msg.includes("sobreposição") ||
+        msg.includes("overlap") ||
+        msg.includes("class_logs_no_overlap") ||
+        msg.includes("exclusion constraint") ||
+        msg.includes("conflicting key");
+      toast.error(
+        isOverlap
+          ? "Já existe outra aula neste horário para este professor. Escolha outro intervalo."
+          : "Erro ao registrar aula. Tente novamente."
+      );
     },
   });
 }
@@ -254,6 +343,18 @@ export function useUpdateClassLog() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: ClassLogUpdate & { id: string }) => {
+      const hasTimeChange = "start_at" in updates || "end_at" in updates || "class_date" in updates || "teacher_id" in updates;
+      if (hasTimeChange) {
+        const { data: current } = await supabase.from("class_logs").select("teacher_id, class_date, start_at, end_at").eq("id", id).single();
+        const teacherId = updates.teacher_id ?? (current?.teacher_id ?? null);
+        const classDate = updates.class_date ?? (current?.class_date ?? null);
+        const startAt = updates.start_at ?? (current?.start_at ?? null);
+        const endAt = updates.end_at ?? (current?.end_at ?? null);
+        if (teacherId && classDate && startAt && endAt) {
+          const overlap = await checkClassOverlap(teacherId, classDate, startAt, endAt, id);
+          if (overlap.overlap) throw new Error(overlap.message);
+        }
+      }
       const { data, error } = await supabase
         .from("class_logs")
         .update(updates)
@@ -274,7 +375,21 @@ export function useUpdateClassLog() {
     },
     onError: (error) => {
       console.error("Error updating class log:", error);
-      toast.error("Erro ao atualizar registro. Tente novamente.");
+      const msg = (error as Error)?.message || "";
+      const code = (error as { code?: string })?.code;
+      const isOverlap =
+        code === "23P01" ||
+        msg.includes("neste horário") ||
+        msg.includes("sobreposição") ||
+        msg.includes("overlap") ||
+        msg.includes("class_logs_no_overlap") ||
+        msg.includes("exclusion constraint") ||
+        msg.includes("conflicting key");
+      toast.error(
+        isOverlap
+          ? "Já existe outra aula neste horário para este professor. Escolha outro intervalo."
+          : "Erro ao atualizar registro. Tente novamente."
+      );
     },
   });
 }

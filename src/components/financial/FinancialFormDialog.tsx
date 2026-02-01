@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Dialog,
@@ -25,33 +25,37 @@ import { Loader2 } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useAvailableClassLogsForStudent } from "@/hooks/useClassLogs";
-import { FinancialRecordInsert, FinancialRecord } from "@/hooks/useFinancialRecords";
+import { FinancialRecordInsert, FinancialRecord, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import { maskDate, isValidDateString, parseMoneyToNumber, formatNumberToMoney, REGEX_PATTERNS } from "@/lib/utils/patterns";
 
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
   return `${year}-${month}-${day}`;
 }
-const financialSchema = z.object({
-  student_id: z.string().min(1, "Selecione um aluno"),
-  class_log_id: z.string().optional(),
-  amount: z.string().min(1, "Informe o valor"),
-  due_date: z.string()
-    .min(1, "Informe a data de vencimento")
-    .regex(REGEX_PATTERNS.date, "Formato deve ser dd/mm/aaaa")
-    .refine(isValidDateString, { message: "Data inválida" }),
-  payment_method: z.string().optional(),
-  description: z.string().optional(),
-});
+function createFinancialSchema(requireClassLog: boolean) {
+  return z.object({
+    student_id: z.string().min(1, "Selecione um aluno"),
+    class_log_id: requireClassLog
+      ? z.string().min(1, "Selecione uma aula para vincular")
+      : z.string().optional(),
+    amount: z.string().min(1, "Informe o valor"),
+    due_date: z.string()
+      .min(1, "Informe a data de vencimento")
+      .regex(REGEX_PATTERNS.date, "Formato deve ser dd/mm/aaaa")
+      .refine(isValidDateString, { message: "Data inválida" }),
+    payment_method: z.string().optional(),
+    description: z.string().optional(),
+  });
+}
 
-type FinancialFormData = z.infer<typeof financialSchema>;
+type FinancialFormData = z.infer<ReturnType<typeof createFinancialSchema>>;
 
 interface FinancialFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: FinancialRecordInsert) => void;
   isLoading: boolean;
-  initialData?: FinancialRecord;
+  initialData?: FinancialRecord | FinancialRecordWithRelations | null;
   enableTeacherSelection?: boolean;
 }
 
@@ -78,6 +82,7 @@ export function FinancialFormDialog({
     enableTeacherSelection ? (selectedTeacherId || undefined) : undefined
   );
 
+  const requireClassLog = !initialData;
   const {
     register,
     handleSubmit,
@@ -85,7 +90,7 @@ export function FinancialFormDialog({
     setValue,
     formState: { errors },
   } = useForm<FinancialFormData>({
-    resolver: zodResolver(financialSchema),
+    resolver: zodResolver(createFinancialSchema(requireClassLog)),
   });
 
 
@@ -137,7 +142,7 @@ export function FinancialFormDialog({
     
     onSubmit({
       student_id: data.student_id,
-      class_log_id: data.class_log_id && data.class_log_id !== "none" ? data.class_log_id : null,
+      class_log_id: data.class_log_id || null,
       amount: amount,
       due_date: brDateToIso(data.due_date),
       payment_method: data.payment_method || null,
@@ -153,11 +158,26 @@ export function FinancialFormDialog({
 
   const handleClassLogChange = (value: string) => {
     setSelectedClassLogId(value);
-    setValue("class_log_id", value === "none" ? undefined : value);
+    setValue("class_log_id", value);
   };
 
   // Filter only active students
   const activeStudents = students.filter((s) => s.status === "ativo");
+
+  // Ao editar, a aula atual não aparece em availableClassLogs (já tem cobrança); incluir para exibição
+  const currentClassLog =
+    initialData && "class_logs" in initialData && initialData.class_logs
+      ? {
+          id: initialData.class_logs.id,
+          class_date: initialData.class_logs.class_date,
+          attendance: initialData.class_logs.attendance,
+          grade: initialData.class_logs.grade,
+        }
+      : null;
+  const classLogOptions =
+    currentClassLog && !availableClassLogs.some((a) => a.id === currentClassLog.id)
+      ? [currentClassLog, ...availableClassLogs]
+      : availableClassLogs;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -201,7 +221,7 @@ export function FinancialFormDialog({
             <Select
               value={selectedStudentId}
               onValueChange={handleStudentChange}
-              disabled={loadingStudents}
+              disabled={loadingStudents || !!initialData}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um aluno" />
@@ -222,11 +242,11 @@ export function FinancialFormDialog({
 
           {/* Class Log Select */}
           <div className="space-y-2">
-            <Label>Aula Vinculada (opcional)</Label>
+            <Label>Aula Vinculada *</Label>
             <Select
               value={selectedClassLogId}
               onValueChange={handleClassLogChange}
-              disabled={!selectedStudentId || loadingClassLogs}
+              disabled={!selectedStudentId || loadingClassLogs || (requireClassLog && classLogOptions.length === 0) || !!initialData}
             >
               <SelectTrigger>
                 <SelectValue placeholder={
@@ -234,12 +254,13 @@ export function FinancialFormDialog({
                     ? "Selecione um aluno primeiro" 
                     : loadingClassLogs 
                       ? "Carregando aulas..." 
-                      : "Selecione uma aula (opcional)"
+                      : requireClassLog && classLogOptions.length === 0
+                        ? "Nenhuma aula disponível"
+                        : "Selecione uma aula"
                 } />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Sem aula vinculada</SelectItem>
-                {availableClassLogs.map((log) => (
+                {classLogOptions.map((log) => (
                   <SelectItem key={log.id} value={log.id}>
                     {formatClassLogDate(log.class_date)}
                     {log.attendance === false && " (Falta)"}
@@ -248,10 +269,13 @@ export function FinancialFormDialog({
                 ))}
               </SelectContent>
             </Select>
-            {selectedStudentId && availableClassLogs.length === 0 && !loadingClassLogs && (
+            {selectedStudentId && classLogOptions.length === 0 && !loadingClassLogs && (
               <p className="text-xs text-muted-foreground">
-                Nenhuma aula disponível para vincular (todas já têm cobrança ou não há aulas cadastradas)
+                Nenhuma aula disponível (todas já têm cobrança ou não há aulas cadastradas). Registre uma aula na aba Aulas primeiro.
               </p>
+            )}
+            {errors.class_log_id && (
+              <p className="text-sm text-destructive">{errors.class_log_id.message}</p>
             )}
           </div>
 
@@ -330,7 +354,13 @@ export function FinancialFormDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button
+              type="submit"
+              disabled={
+                isLoading ||
+                (requireClassLog && (!selectedClassLogId || classLogOptions.length === 0))
+              }
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

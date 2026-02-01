@@ -26,9 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { formatCurrency } from "@/lib/utils/formatters";
+import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import {
   AreaChart,
   Area,
@@ -43,10 +43,6 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { TodayClassesData } from "@/hooks/useTodayClasses";
 import { getTodayClassStatus } from "@/hooks/useTodayClasses";
-
-function formatDate(dateString: string): string {
-  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
-}
 
 function formatBirthday(dateString: string): string {
   return format(new Date(dateString + "T00:00:00"), "dd/MM", { locale: ptBR });
@@ -137,10 +133,17 @@ export type ChartLineFilterTeacher = {
   aulas: boolean;
 };
 
+interface FinancialSummary {
+  totalPaid: number;
+  totalPending: number;
+  totalOverdue: number;
+}
+
 interface DashboardViewProps {
   title?: string;
   subtitle?: string;
   stats: DashboardStats | undefined;
+  financialSummary?: FinancialSummary | undefined;
   upcomingPayments: UpcomingPayment[];
   birthdays: Birthday[];
   chartData: ChartDataPoint[];
@@ -160,6 +163,7 @@ export function DashboardView({
   title = "Dashboard",
   subtitle,
   stats,
+  financialSummary,
   upcomingPayments,
   birthdays,
   chartData,
@@ -249,6 +253,51 @@ export function DashboardView({
               iconBg="bg-accent"
             />
           </div>
+
+          {/* Financeiro */}
+          {financialSummary != null && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">Total recebido</p>
+                    <p className="text-2xl font-bold tracking-tight text-success">
+                      {formatCurrency(financialSummary.totalPaid)}
+                    </p>
+                  </div>
+                  <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-success/10">
+                    <DollarSign className="h-5 w-5 text-success" />
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">A receber</p>
+                    <p className="text-2xl font-bold tracking-tight">
+                      {formatCurrency(financialSummary.totalPending)}
+                    </p>
+                  </div>
+                  <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-warning/10">
+                    <DollarSign className="h-5 w-5 text-warning" />
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">Em atraso</p>
+                    <p className="text-2xl font-bold tracking-tight text-destructive">
+                      {formatCurrency(financialSummary.totalOverdue)}
+                    </p>
+                  </div>
+                  <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-destructive/10">
+                    <DollarSign className="h-5 w-5 text-destructive" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Aulas de Hoje - altura relativa à quantidade de aulas */}
           <div className="rounded-xl border bg-card shadow-card overflow-hidden">

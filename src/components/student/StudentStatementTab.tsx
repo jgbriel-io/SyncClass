@@ -1,6 +1,7 @@
 import { memo, useMemo } from "react";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import ptBR from "date-fns/locale/pt-BR";
+import { formatDate } from "@/lib/utils/formatters";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { useStudentStatement } from "@/hooks/useStudentStatement";
@@ -15,7 +16,8 @@ interface StudentStatementTabProps {
 function groupByMonthYear(entries: StudentStatementEntry[]) {
   const groups = new Map<string, StudentStatementEntry[]>();
   for (const entry of entries) {
-    const key = format(new Date(entry.class_date), "yyyy-MM");
+    const d = new Date(entry.class_date + "T12:00:00");
+    const key = format(d, "yyyy-MM");
     const list = groups.get(key) ?? [];
     list.push(entry);
     groups.set(key, list);
@@ -24,7 +26,7 @@ function groupByMonthYear(entries: StudentStatementEntry[]) {
     .sort(([a], [b]) => b.localeCompare(a))
     .map(([key, items]) => ({
       key,
-      label: format(new Date(items[0]!.class_date), "MMMM 'de' yyyy", {
+      label: format(new Date(items[0]!.class_date + "T12:00:00"), "MMMM 'de' yyyy", {
         locale: ptBR,
       }),
       items,

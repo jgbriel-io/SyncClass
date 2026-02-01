@@ -1,4 +1,10 @@
 import { useState, useMemo } from "react";
+import { useTeachers } from "@/hooks/useTeachers";
+import {
+  OverviewFilters,
+  type OverviewFiltersState,
+} from "@/components/filters/OverviewFilters";
+import { defaultOverviewFilters } from "@/components/filters/filterDefaults";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils/formatters";
@@ -26,7 +32,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
-import { Search, Loader2, Eye, TrendingUp, TrendingDown } from "lucide-react";
+import { Loader2, Eye, TrendingUp, TrendingDown } from "lucide-react";
 import { useStudentsWithStats } from "@/hooks/useStudentDetails";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
@@ -34,24 +40,49 @@ import { TableSkeleton } from "@/components/ui/table-skeleton";
 const ITEMS_PER_PAGE = 10;
 
 function StudentOverviewPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [filters, setFilters] = useState<OverviewFiltersState>(defaultOverviewFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const { data: students = [], isLoading, error } = useStudentsWithStats();
+  const { data: teachers = [] } = useTeachers();
 
   const filteredStudents = useMemo(() => {
-    return students.filter((student) => {
-      const matchesSearch = student.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const matchesStatus =
-        statusFilter === "all" || student.status === statusFilter;
-      return matchesSearch && matchesStatus;
+    let result = students.filter((student) => {
+      const searchLower = filters.search.toLowerCase();
+      const matchesSearch = !searchLower || (student.name || "").toLowerCase().includes(searchLower);
+      if (!matchesSearch) return false;
+
+      const matchesStatus = filters.status === "all" || student.status === filters.status;
+      if (!matchesStatus) return false;
+
+      if (filters.teacherId !== "all" && student.teacher_id !== filters.teacherId) return false;
+
+      if (filters.period !== "all") {
+        const created = new Date(student.created_at || 0);
+        const days = parseInt(filters.period, 10);
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+        if (created < cutoff) return false;
+      }
+      return true;
     });
-  }, [students, searchQuery, statusFilter]);
+
+    result = [...result].sort((a, b) => {
+      const nameA = (a.name || "").toLowerCase();
+      const nameB = (b.name || "").toLowerCase();
+      const createdA = new Date(a.created_at || 0).getTime();
+      const createdB = new Date(b.created_at || 0).getTime();
+
+      if (filters.sortBy === "name_asc") return nameA.localeCompare(nameB);
+      if (filters.sortBy === "name_desc") return nameB.localeCompare(nameA);
+      if (filters.sortBy === "recent") return createdB - createdA;
+      if (filters.sortBy === "oldest") return createdA - createdB;
+      return 0;
+    });
+    return result;
+  }, [students, filters]);
 
   const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
   const paginatedStudents = useMemo(() => {
@@ -64,14 +95,8 @@ function StudentOverviewPage() {
     setSheetOpen(true);
   };
 
-  // Reset to page 1 when filters change
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1);
-  };
-
-  const handleStatusChange = (value: string) => {
-    setStatusFilter(value);
+  const handleFiltersChange = (newFilters: OverviewFiltersState) => {
+    setFilters(newFilters);
     setCurrentPage(1);
   };
 
@@ -87,28 +112,17 @@ function StudentOverviewPage() {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="ativo">Ativos</SelectItem>
-              <SelectItem value="inativo">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Filtros avançados */}
+        <OverviewFilters
+          filters={filters}
+          onChange={handleFiltersChange}
+          onReset={() => {
+            setFilters(defaultOverviewFilters);
+            setCurrentPage(1);
+          }}
+          teachers={teachers}
+          showTeacherFilter={true}
+        />
 
         {/* Error state */}
         {error && (

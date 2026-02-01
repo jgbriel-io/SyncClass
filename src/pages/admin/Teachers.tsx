@@ -5,7 +5,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import {
+  TeachersFilters,
+  type TeachersFiltersState,
+} from "@/components/filters/TeachersFilters";
+import { defaultTeachersFilters } from "@/components/filters/filterDefaults";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -28,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   DropdownMenu,
@@ -51,8 +56,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function TeachersPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ativo");
+  const [filters, setFilters] = useState<TeachersFiltersState>({
+    ...defaultTeachersFilters,
+    status: "ativo",
+  });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -69,15 +76,41 @@ export default function TeachersPage() {
   const deleteTeacher = useDeleteTeacher();
   const createTeacherUser = useCreateAuthUserForTeacher();
 
-  const filteredTeachers = teachers.filter((teacher) => {
-    const name = (teacher.name ?? "").toLowerCase();
-    const matchesSearch = name.includes(searchQuery.toLowerCase());
+  const specializations = useMemo(() => {
+    const set = new Set<string>();
+    teachers.forEach((t) => {
+      const s = (t as Teacher & { specialization?: string | null }).specialization;
+      if (s?.trim()) set.add(s.trim());
+    });
+    return Array.from(set).sort();
+  }, [teachers]);
 
-    const status = teacher.status ?? "ativo";
-    const matchesStatus = statusFilter === "all" || status === statusFilter;
+  const filteredTeachers = useMemo(() => {
+    let result = teachers.filter((teacher) => {
+      const searchLower = filters.search.toLowerCase();
+      const name = (teacher.name ?? "").toLowerCase();
+      const email = (teacher.email ?? "").toLowerCase();
+      const matchesSearch =
+        !searchLower || name.includes(searchLower) || email.includes(searchLower);
+      if (!matchesSearch) return false;
 
-    return matchesSearch && matchesStatus;
-  });
+      const status = teacher.status ?? "ativo";
+      const matchesStatus = filters.status === "all" || status === filters.status;
+      if (!matchesStatus) return false;
+
+      const spec = (teacher as Teacher & { specialization?: string | null }).specialization?.trim();
+      if (filters.specialization !== "all" && spec !== filters.specialization) return false;
+      return true;
+    });
+
+    result = [...result].sort((a, b) => {
+      const nameA = (a.name ?? "").toLowerCase();
+      const nameB = (b.name ?? "").toLowerCase();
+      if (filters.sortBy === "name_asc") return nameA.localeCompare(nameB);
+      return nameB.localeCompare(nameA);
+    });
+    return result;
+  }, [teachers, filters]);
 
   const handleCreateOrUpdate = (data: TeacherInsert) => {
     const run = async () => {
@@ -193,28 +226,13 @@ export default function TeachersPage() {
             </Button>
           </div>
 
-          {/* Filtros */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome..."
-                className="pl-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="ativo">Ativos</SelectItem>
-                <SelectItem value="inativo">Inativos</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filtros avançados */}
+          <TeachersFilters
+            filters={filters}
+            onChange={setFilters}
+            onReset={() => setFilters({ ...defaultTeachersFilters, status: "ativo", sortBy: "name_asc" })}
+            specializations={specializations}
+          />
 
           {/* Table */}
           <div className="rounded-lg border bg-card shadow-card overflow-hidden">

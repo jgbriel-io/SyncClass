@@ -27,6 +27,7 @@ export function useUndoFinancialPayment() {
   });
 }
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { isOverdue } from "@/lib/utils/financialStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
@@ -97,20 +98,18 @@ export function useFinancialRecords(teacherId?: string | null) {
   });
 }
 
-export function useFinancialSummary() {
+export function useFinancialSummary(teacherId?: string | null) {
   return useQuery({
-    queryKey: ["financial_summary"],
+    queryKey: ["financial_summary", teacherId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_records")
-        .select("amount, status");
+        .select("amount, status, due_date, students(teacher_id)");
 
       if (error) {
         throw error;
       }
 
-      const today = new Date();
-      
       const summary = {
         totalPending: 0,
         totalPaid: 0,
@@ -120,23 +119,44 @@ export function useFinancialSummary() {
         countOverdue: 0,
       };
 
-      data.forEach((record) => {
-        const amount = Number(record.amount) || 0;
-        if (record.status === "pago") {
-          summary.totalPaid += amount;
-          summary.countPaid++;
-        } else if (record.status === "atrasado") {
-          summary.totalOverdue += amount;
-          summary.countOverdue++;
-        } else {
-          summary.totalPending += amount;
-          summary.countPending++;
-        }
+      let records = (data || []) as Array<{ amount: number; status: string; due_date: string; students?: { teacher_id?: string } }>;
+      if (teacherId) {
+        records = records.filter((r) => r.students?.teacher_id === teacherId);
+      }
+
+      records.forEach((record) => {
+        accumulateSummary(record, summary);
       });
 
       return summary;
     },
   });
+}
+
+function accumulateSummary(
+  record: { amount: number; status: string; due_date: string },
+  summary: {
+    totalPending: number;
+    totalPaid: number;
+    totalOverdue: number;
+    countPending: number;
+    countPaid: number;
+    countOverdue: number;
+  }
+) {
+  const amount = Number(record.amount) || 0;
+  if (record.status === "pago") {
+    summary.totalPaid += amount;
+    summary.countPaid++;
+  } else {
+    if (isOverdue(record.due_date)) {
+      summary.totalOverdue += amount;
+      summary.countOverdue++;
+    } else {
+      summary.totalPending += amount;
+      summary.countPending++;
+    }
+  }
 }
 
 export function useCreateFinancialRecord() {

@@ -1,10 +1,30 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useClassLogsSummary } from "@/hooks/useClassLogs";
 import { useFinancialSummary } from "@/hooks/useFinancialRecords";
 import { DashboardSkeleton } from "@/components/ui/dashboard-skeleton";
 
 const TeacherOverviewPage = () => {
-  const { data: classSummary, isLoading: loadingClasses } = useClassLogsSummary();
-  const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary();
+  const { user } = useAuth();
+  const { data: teacherProfile } = useQuery({
+    queryKey: ["teacher-profile", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("teacher_id")
+        .eq("user_id", user.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+  const teacherId = teacherProfile?.teacher_id;
+
+  const { data: classSummary, isLoading: loadingClasses } = useClassLogsSummary(teacherId);
+  const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary(teacherId ?? undefined);
 
   const isLoading = loadingClasses || loadingFinancial;
 

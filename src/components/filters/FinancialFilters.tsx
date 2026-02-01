@@ -1,0 +1,121 @@
+import { Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export type FinancialPeriodPreset = "all" | "today" | "this_week" | "this_month";
+export type FinancialStatusFilter = "all" | "pendente" | "pago" | "atrasado";
+export type FinancialSortBy = "due_desc" | "due_asc" | "amount_desc" | "amount_asc";
+
+export interface FinancialFiltersState {
+  search: string;
+  periodPreset: FinancialPeriodPreset;
+  dateFrom: string;
+  dateTo: string;
+  status: FinancialStatusFilter;
+  sortBy: FinancialSortBy;
+}
+
+interface FinancialFiltersProps {
+  filters: FinancialFiltersState;
+  onChange: (f: FinancialFiltersState) => void;
+  onReset?: () => void;
+}
+
+export function FinancialFilters({ filters, onChange, onReset }: FinancialFiltersProps) {
+  const hasActiveFilters =
+    filters.periodPreset !== "all" ||
+    filters.status !== "all" ||
+    filters.sortBy !== "due_asc";
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por aluno..."
+            className="pl-9"
+            value={filters.search}
+            onChange={(e) => onChange({ ...filters, search: e.target.value })}
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Select
+            value={filters.periodPreset}
+            onValueChange={(v) => {
+              const preset = v as FinancialPeriodPreset;
+              const now = new Date();
+              let dateFrom = "";
+              let dateTo = "";
+              if (preset === "today") {
+                dateFrom = dateTo = now.toISOString().split("T")[0];
+              } else if (preset === "this_week") {
+                const start = new Date(now);
+                start.setDate(start.getDate() - start.getDay());
+                const end = new Date(start);
+                end.setDate(end.getDate() + 6);
+                dateFrom = start.toISOString().split("T")[0];
+                dateTo = end.toISOString().split("T")[0];
+              } else if (preset === "this_month") {
+                dateFrom = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+                dateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
+              }
+              onChange({ ...filters, periodPreset: preset, dateFrom, dateTo });
+            }}
+          >
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="today">Hoje</SelectItem>
+              <SelectItem value="this_week">Esta semana</SelectItem>
+              <SelectItem value="this_month">Este mês</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={filters.status}
+            onValueChange={(v) => onChange({ ...filters, status: v as FinancialStatusFilter })}
+          >
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="pendente">Pendente</SelectItem>
+              <SelectItem value="pago">Pago</SelectItem>
+              <SelectItem value="atrasado">Atrasado</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={filters.sortBy}
+            onValueChange={(v) => onChange({ ...filters, sortBy: v as FinancialSortBy })}
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Ordenar por" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="due_asc">Vencimento (mais próximo)</SelectItem>
+              <SelectItem value="due_desc">Vencimento (mais distante)</SelectItem>
+              <SelectItem value="amount_desc">Valor (maior)</SelectItem>
+              <SelectItem value="amount_asc">Valor (menor)</SelectItem>
+            </SelectContent>
+          </Select>
+          {hasActiveFilters && onReset && (
+            <Button variant="ghost" size="sm" onClick={onReset} className="h-9">
+              <X className="h-4 w-4 mr-1" />
+              Limpar
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

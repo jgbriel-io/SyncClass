@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -300,15 +300,17 @@ export function StudentFormDialog({
                         type="button"
                         variant="outline"
                         role="combobox"
-                        className="w-full justify-between"
+                        className="w-full min-w-0 justify-between"
                         disabled={isLoading}
                       >
-                        {(() => {
-                          const current = BR_STATES.find((st) => st.code === selectedState);
-                          if (current) return `${current.code} - ${current.name}`;
-                          return "Selecione UF";
-                        })()}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        <span className="min-w-0 truncate">
+                          {(() => {
+                            const current = BR_STATES.find((st) => st.code === selectedState);
+                            if (current) return `${current.code} - ${current.name}`;
+                            return "Selecione UF";
+                          })()}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[260px] p-0">
@@ -347,20 +349,22 @@ export function StudentFormDialog({
                         type="button"
                         variant="outline"
                         role="combobox"
-                        className="w-full justify-between"
+                        className="w-full min-w-0 justify-between"
                         disabled={!selectedState || isLoading || isLoadingCities}
                       >
-                        {(() => {
-                          const cityValue = watchedCity;
-                          const current = cities.find((c) => c.value === cityValue);
-                          if (current) return current.label;
-                          if (cityValue) return cityValue;
-                          if (isLoadingCities) return "Carregando cidades...";
-                          return selectedState
-                            ? "Selecione a cidade"
-                            : "Selecione uma UF primeiro";
-                        })()}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        <span className="min-w-0 truncate">
+                          {(() => {
+                            const cityValue = watchedCity;
+                            const current = cities.find((c) => c.value === cityValue);
+                            if (current) return current.label;
+                            if (cityValue) return cityValue;
+                            if (isLoadingCities) return "Carregando cidades...";
+                            return selectedState
+                              ? "Selecione a cidade"
+                              : "Selecione uma UF primeiro";
+                          })()}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[280px] p-0">

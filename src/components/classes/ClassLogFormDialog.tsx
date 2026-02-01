@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Receipt } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { ClassLogInsert, ClassLogWithStudent, ClassLogWithFinancialData } from "@/hooks/useClassLogs";
@@ -70,6 +71,7 @@ const classLogBaseSchema = z.object({
   ),
   financial_description: z.string().optional(),
   financial_payment_method: z.string().optional(),
+  semCobranca: z.boolean().optional(),
 }).refine(
   (data) => {
     if (!data.start_time || !data.end_time) return true;
@@ -83,14 +85,14 @@ const classLogBaseSchema = z.object({
 function createClassLogSchema(isEditing: boolean) {
   return classLogBaseSchema.refine(
     (data) => {
-      if (isEditing) return true;
+      if (isEditing || data.semCobranca) return true;
       const a = parseMoneyToNumber(data.financial_amount || "");
       return !isNaN(a) && a > 0;
     },
     { message: "Informe o valor da cobrança", path: ["financial_amount"] }
   ).refine(
     (data) => {
-      if (isEditing) return true;
+      if (isEditing || data.semCobranca) return true;
       return !!(data.financial_due_date && data.financial_due_date.trim());
     },
     { message: "Informe a data de vencimento", path: ["financial_due_date"] }
@@ -153,13 +155,14 @@ export function ClassLogFormDialog({
     formState: { errors },
   } = useForm<ClassLogFormData>({
     resolver: zodResolver(createClassLogSchema(isEditing)),
-    defaultValues: {},
+    defaultValues: { semCobranca: false },
   });
 
   const classDate = watch("class_date");
   const startTime = watch("start_time");
   const endTime = watch("end_time");
   const financialAmount = watch("financial_amount");
+  const semCobranca = watch("semCobranca");
   const isFutureDate = isDateFuture(classDate || "");
 
   const selectedStudent = activeStudents.find((s) => s.id === selectedStudentId);
@@ -281,8 +284,8 @@ export function ClassLogFormDialog({
           : null,
     };
 
-    // Criar aula: cobrança obrigatória (sempre usa onSubmitWithFinancial)
-    if (!isEditing && onSubmitWithFinancial && data.financial_amount && data.financial_due_date) {
+    // Criar aula com cobrança
+    if (!isEditing && onSubmitWithFinancial && !data.semCobranca && data.financial_amount && data.financial_due_date) {
       const amount = parseMoneyToNumber(data.financial_amount);
       if (!isNaN(amount) && amount > 0) {
         onSubmitWithFinancial({
@@ -299,7 +302,7 @@ export function ClassLogFormDialog({
       }
     }
 
-    // Edição: sem cobrança
+    // Edição ou criar sem cobrança
     onSubmit(classLogData);
   };
 
@@ -452,8 +455,22 @@ export function ClassLogFormDialog({
             )}
           </div>
 
-          {/* Cobrança obrigatória ao registrar aula */}
+          {/* Cobrança ao registrar aula */}
           {!isEditing && onSubmitWithFinancial && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="semCobranca"
+                  checked={!!semCobranca}
+                  onCheckedChange={(checked) =>
+                    setValue("semCobranca", !!checked, { shouldValidate: true })
+                  }
+                />
+                <Label htmlFor="semCobranca" className="cursor-pointer font-normal">
+                  Sem cobrança
+                </Label>
+              </div>
+              {!semCobranca && (
             <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
                   <h4 className="font-medium text-sm flex items-center gap-2">
                     <Receipt className="h-4 w-4" />
@@ -544,6 +561,8 @@ export function ClassLogFormDialog({
                     </Select>
                   </div>
                 </div>
+              )}
+            </div>
           )}
 
           {/* Actions */}

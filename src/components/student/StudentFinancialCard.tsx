@@ -2,10 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, FileText, CreditCard, AlertCircle, CheckCircle2 } from "lucide-react";
-import format from "date-fns/format";
-import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { formatCurrency } from "@/lib/utils/formatters";
+import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 
 type FinancialStatus = "pago" | "pendente" | "atrasado";
 
@@ -46,12 +44,10 @@ const statusConfig: Record<FinancialStatus, {
 export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCardProps) {
   const config = statusConfig[record.status];
   
-  const formattedDueDate = format(new Date(record.due_date), "dd/MM/yyyy", {
-    locale: ptBR,
-  });
+  const formattedDueDate = formatDate(record.due_date);
 
   const formattedPaymentDate = record.payment_date
-    ? format(new Date(record.payment_date), "dd/MM/yyyy", { locale: ptBR })
+    ? formatDate(record.payment_date)
     : null;
 
   return (

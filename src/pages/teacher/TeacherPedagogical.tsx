@@ -2,7 +2,7 @@ import { useState } from "react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatCurrency } from "@/lib/utils/formatters";
+import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,9 +29,10 @@ import {
   Receipt,
   BookOpen,
   Check,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
 import { PostClassDialog } from "@/components/classes/PostClassDialog";
@@ -49,9 +50,20 @@ import {
   ClassLogWithStudent,
   ClassLogWithFinancialData,
 } from "@/hooks/useClassLogs";
+import { isClassEvaluationBlocked, getClassStatusWithTime } from "@/lib/utils/classTime";
 
-function formatDate(dateString: string): string {
-  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+function formatClassDateAndTime(log: {
+  class_date: string;
+  start_at?: string | null;
+  end_at?: string | null;
+}): { date: string; timeRange: string | null } {
+  const date = format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+  if (log.start_at && log.end_at) {
+    const start = format(new Date(log.start_at), "HH:mm", { locale: ptBR });
+    const end = format(new Date(log.end_at), "HH:mm", { locale: ptBR });
+    return { date, timeRange: `${start} às ${end}` };
+  }
+  return { date, timeRange: null };
 }
 
 function getPaymentStatusVariant(status: string | null): "success" | "warning" | "destructive" {
@@ -80,23 +92,13 @@ function getPaymentStatusLabel(status: string | null): string {
   }
 }
 
-function getClassStatusBadge(log: { class_date: string; attendance: boolean | null }) {
-  const classDate = new Date(log.class_date + "T12:00:00");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  classDate.setHours(0, 0, 0, 0);
-  const isFuture = classDate > today;
-  if (log.attendance != null) return { label: "Concluída", variant: "success" as const };
-  if (isFuture) return { label: "Agendada", variant: "info" as const };
-  return { label: "Avaliação pendente", variant: "warning" as const };
-}
-
-function isClassDateFuture(classDate: string): boolean {
-  const d = new Date(classDate + "T12:00:00");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  d.setHours(0, 0, 0, 0);
-  return d > today;
+function getClassStatusBadge(log: {
+  class_date: string;
+  attendance: boolean | null;
+  start_at?: string | null;
+  end_at?: string | null;
+}) {
+  return getClassStatusWithTime(log);
 }
 
 const TeacherPedagogicalPage = () => {
@@ -132,20 +134,16 @@ const TeacherPedagogicalPage = () => {
   const [logForPostClass, setLogForPostClass] = useState<ClassLogWithStudent | null>(null);
 
   // RLS garante que o professor só veja/edite aulas dos seus alunos
-  const { data: logs = [], isLoading, error } = useClassLogs();
-  const { data: summary } = useClassLogsSummary();
+  const { data: logs = [], isLoading, error } = useClassLogs(teacherId ?? undefined);
+  const { data: summary } = useClassLogsSummary(teacherId);
   const createLog = useCreateClassLog();
   const createLogWithFinancial = useCreateClassLogWithFinancial();
   const updateLog = useUpdateClassLog();
   const deleteLog = useDeleteClassLog();
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const logsPendingRegistration = logs.filter((log) => {
-    const d = new Date(log.class_date + "T12:00:00");
-    d.setHours(0, 0, 0, 0);
-    return d <= todayStart && log.attendance == null;
-  });
+  const logsPendingRegistration = logs.filter(
+    (log) => !isClassEvaluationBlocked(log) && log.attendance == null
+  );
 
   const filteredLogs = logs.filter((log) => {
     const studentName = log.students?.name || "";
@@ -402,9 +400,15 @@ const TeacherPedagogicalPage = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 align-top">
-                          <span className="text-sm text-muted-foreground">
-                            {formatDate(log.class_date as string)}
-                          </span>
+                          {(() => {
+                            const { date, timeRange } = formatClassDateAndTime(log);
+                            return (
+                              <div className="flex flex-col gap-0.5 text-sm text-muted-foreground">
+                                <span>{date}</span>
+                                {timeRange && <span className="text-xs">{timeRange}</span>}
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="px-6 py-4 align-top">
                           <span
@@ -432,10 +436,10 @@ const TeacherPedagogicalPage = () => {
                           )}
                         </td>
                         <td className="px-6 py-4 align-top hidden 2xl:table-cell whitespace-nowrap">
-                          <span className="text-sm font-medium tabular-nums">
+                          <span className={log.financial_records ? "text-sm font-medium tabular-nums" : "text-sm font-medium text-foreground"}>
                             {log.financial_records
                               ? formatCurrency(Number(log.financial_records.amount))
-                              : "—"}
+                              : "sem cobrança"}
                           </span>
                         </td>
                         <td className="px-6 py-4 align-top hidden lg:table-cell">
@@ -468,22 +472,30 @@ const TeacherPedagogicalPage = () => {
                             <Button
                               size="sm"
                               className={`h-8 border-none ${
-                                log.attendance != null
-                                  ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
-                                  : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
+                                isClassEvaluationBlocked(log) && log.attendance == null
+                                  ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                  : log.attendance != null
+                                    ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+                                    : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
                               }`}
-                              disabled={isMutating}
+                              disabled={isMutating || (isClassEvaluationBlocked(log) && log.attendance == null)}
                               onClick={() => {
-                                if (isClassDateFuture(log.class_date)) {
-                                  toast.warning("Esta aula ainda não ocorreu. Se a data mudou, clique em Editar.");
-                                  return;
-                                }
+                                if (isClassEvaluationBlocked(log)) return;
                                 setLogForPostClass(log);
                                 setPostClassDialogOpen(true);
                               }}
                             >
-                              <Check className="h-3.5 w-3.5 mr-1.5" />
-                              {log.attendance != null ? "Atualizar" : "Avaliar"}
+                              {isClassEvaluationBlocked(log) && log.attendance == null ? (
+                                <>
+                                  <Lock className="h-3.5 w-3.5 mr-1.5" />
+                                  Avaliar
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                                  {log.attendance != null ? "Atualizar" : "Avaliar"}
+                                </>
+                              )}
                             </Button>
                           </div>
                         </td>

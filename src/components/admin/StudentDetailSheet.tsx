@@ -1,12 +1,11 @@
-import format from "date-fns/format";
-import { ptBR } from "date-fns/locale";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { formatCurrency } from "@/lib/utils/formatters";
+import { formatCurrency, formatDate } from "@/lib/utils/formatters";
+import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -40,18 +39,6 @@ const originLabels: Record<string, string> = {
   passante: "Passante",
   outro: "Outro",
 };
-
-function formatDate(dateString: string): string {
-  return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
-}
-
-function getActualStatus(record: { status: string | null; due_date: string }) {
-  if (record.status === "pago") return "pago";
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dueDate = new Date(record.due_date);
-  return dueDate < today ? "atrasado" : "pendente";
-}
 
 export function StudentDetailSheet({
   studentId,
@@ -128,9 +115,9 @@ export function StudentDetailSheet({
                   {(() => {
                     const hourlyRate = student.hourly_rate;
                     const classesPerWeek = student.classes_per_week;
-                    const weeklyTotal =
+                    const monthlyTotal =
                       hourlyRate != null && classesPerWeek != null
-                        ? hourlyRate * classesPerWeek
+                        ? hourlyRate * classesPerWeek * 4
                         : null;
                     const payDay = student.pay_day;
                     const city = student.city;
@@ -254,9 +241,9 @@ export function StudentDetailSheet({
                               </p>
                             </div>
                             <div className="rounded-lg border bg-card p-3">
-                              <p className="text-xs text-muted-foreground mb-1">Total semanal</p>
+                              <p className="text-xs text-muted-foreground mb-1">Total mensal</p>
                               <p className="text-sm font-semibold">
-                                {weeklyTotal != null ? formatCurrency(weeklyTotal) : "—"}
+                                {monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}
                               </p>
                             </div>
                             <div className="rounded-lg border bg-card p-3">
@@ -408,7 +395,7 @@ export function StudentDetailSheet({
                   ) : (
                     <div className="space-y-2">
                       {student.financialRecords.map((record) => {
-                        const actualStatus = getActualStatus(record);
+                        const actualStatus = getFinancialActualStatus(record);
                         return (
                           <div
                             key={record.id}

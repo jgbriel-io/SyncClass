@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isOverdue } from "@/lib/utils/financialStatus";
 import { Student } from "./useStudents";
 
 export interface StudentClassLog {
@@ -80,9 +81,6 @@ export function useStudentDetails(studentId: string | null) {
           : 0;
       const attendanceRate = totalClasses > 0 ? (presentClasses / totalClasses) * 100 : 0;
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
       let totalPaid = 0;
       let totalPending = 0;
       let totalOverdue = 0;
@@ -92,8 +90,7 @@ export function useStudentDetails(studentId: string | null) {
         if (record.status === "pago") {
           totalPaid += amount;
         } else {
-          const dueDate = new Date(record.due_date);
-          if (dueDate < today) {
+          if (isOverdue(record.due_date)) {
             totalOverdue += amount;
           } else {
             totalPending += amount;
@@ -147,9 +144,6 @@ export function useStudentsWithStats() {
 
       if (financialError) throw financialError;
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
       // Map stats to each student
       return students.map((student) => {
         const studentClassLogs = allClassLogs?.filter((log) => log.student_id === student.id) || [];
@@ -173,8 +167,7 @@ export function useStudentsWithStats() {
           if (record.status === "pago") {
             totalPaid += amount;
           } else {
-            const dueDate = new Date(record.due_date);
-            if (dueDate < today) {
+            if (isOverdue(record.due_date)) {
               totalOverdue += amount;
             } else {
               totalPending += amount;

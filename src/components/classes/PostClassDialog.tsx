@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,49 +12,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Receipt, CheckCircle2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { useUpdateClassLog } from "@/hooks/useClassLogs";
-import { useMarkAsPaid } from "@/hooks/useFinancialRecords";
-import { parseMoneyToNumber } from "@/lib/utils/patterns";
-import { formatCurrency } from "@/lib/utils/formatters";
+import { useMarkAsPaid, useDeleteFinancialRecord } from "@/hooks/useFinancialRecords";
 
-function createPostClassSchema(hasFinancialRecord: boolean) {
-  return z.object({
-    attendance: z.boolean(),
-    grade: z.string(),
-    feedback: z
-      .string()
-      .min(1, "Informe o feedback da aula")
-      .max(1000, "Máximo 1000 caracteres"),
-    confirmPayment: z.boolean(),
-  }).superRefine((data, ctx) => {
-    if (data.attendance) {
-      const trimmed = data.grade?.trim() ?? "";
-      if (!trimmed) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Informe a nota (0 a 10)", path: ["grade"] });
-        return;
-      }
-      const num = parseMoneyToNumber(data.grade);
-      if (isNaN(num) || num < 0 || num > 10) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Nota deve ser entre 0 e 10", path: ["grade"] });
-      }
-    }
-    if (hasFinancialRecord && !data.confirmPayment) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Marque para confirmar o pagamento", path: ["confirmPayment"] });
-    }
-  });
-}
+const postClassSchema = z.object({
+  attendance: z.boolean(),
+  grade: z.string().optional(),
+  feedback: z.string().max(500).optional(),
+  chargeAbsence: z.boolean().optional(),
+  confirmPayment: z.boolean().optional(),
+});
 
-type PostClassFormData = z.infer<ReturnType<typeof createPostClassSchema>>;
+type PostClassFormData = z.infer<typeof postClassSchema>;
 
 interface PostClassDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   classLog: ClassLogWithStudent | null;
-  onSuccess?: () => void;
+  onSuccess: () => void;
 }
 
 export function PostClassDialog({
@@ -63,205 +44,199 @@ export function PostClassDialog({
   classLog,
   onSuccess,
 }: PostClassDialogProps) {
-  const [attendance, setAttendance] = useState(true);
-  const updateLog = useUpdateClassLog();
+  const updateClassLog = useUpdateClassLog();
   const markAsPaid = useMarkAsPaid();
-
-  const hasFinancialRecord =
-    classLog?.financial_records != null && classLog.financial_records.status !== "pago";
-  const postClassSchema = createPostClassSchema(!!hasFinancialRecord);
+  const deleteFinancialRecord = useDeleteFinancialRecord();
 
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<PostClassFormData>({
-    resolver: zodResolver(postClassSchema as z.ZodType<PostClassFormData>),
+    resolver: zodResolver(postClassSchema),
     defaultValues: {
       attendance: true,
+      grade: "",
+      feedback: "",
+      chargeAbsence: false,
       confirmPayment: false,
     },
   });
 
+  const attendance = watch("attendance");
+  const chargeAbsence = watch("chargeAbsence");
   const confirmPayment = watch("confirmPayment");
+
+  const hasFinancialRecord = !!classLog?.financial_records?.id;
 
   useEffect(() => {
     if (open && classLog) {
-      setAttendance(classLog.attendance ?? true);
-      setValue("attendance", classLog.attendance ?? true);
-      setValue("grade", classLog.grade?.toString() || "");
-      setValue("feedback", classLog.feedback || "");
-      setValue("confirmPayment", false);
-    } else if (!open) {
-      reset();
+      reset({
+        attendance: classLog.attendance ?? true,
+        grade: classLog.grade != null ? String(classLog.grade) : "",
+        feedback: classLog.feedback ?? "",
+        chargeAbsence: false,
+        confirmPayment: false,
+      });
     }
-  }, [open, classLog, reset, setValue]);
+  }, [open, classLog, reset]);
 
-  const handleFormSubmit = (data: PostClassFormData) => {
+  const handleFormSubmit = async (data: PostClassFormData) => {
     if (!classLog) return;
 
-    let grade: number | null = null;
-    if (data.grade && data.attendance) {
-      const parsed = parseMoneyToNumber(data.grade);
-      if (!isNaN(parsed) && parsed >= 0 && parsed <= 10) {
-        grade = parsed;
-      }
-    }
+    const attendanceValue = data.attendance;
+    const gradeValue = data.grade?.trim()
+      ? Math.min(10, Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0))
+      : null;
+    const feedbackValue = data.feedback?.trim() || null;
 
-    updateLog.mutate(
-      {
+    try {
+      await updateClassLog.mutateAsync({
         id: classLog.id,
-        attendance: data.attendance,
-        grade: data.attendance ? grade : null,
-        feedback: data.feedback?.trim() || null,
-      },
-      {
-        onSuccess: () => {
-          if (
-            data.confirmPayment &&
-            hasFinancialRecord &&
-            classLog.financial_records?.id
-          ) {
-            markAsPaid.mutate(classLog.financial_records.id, {
-              onSuccess: () => {
-                onSuccess?.();
-                onOpenChange(false);
-              },
-              onError: () => {
-                onSuccess?.();
-                onOpenChange(false);
-              },
-            });
-          } else {
-            onSuccess?.();
-            onOpenChange(false);
-          }
-        },
+        attendance: attendanceValue,
+        grade: gradeValue,
+        feedback: feedbackValue,
+      });
+
+      if (!attendanceValue && hasFinancialRecord && !data.chargeAbsence) {
+        await deleteFinancialRecord.mutateAsync(classLog.financial_records!.id);
+      } else if (attendanceValue && hasFinancialRecord && data.confirmPayment) {
+        await markAsPaid.mutateAsync(classLog.financial_records!.id);
       }
-    );
+
+      onSuccess();
+      onOpenChange(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao registrar avaliação. Tente novamente.");
+    }
   };
 
-  const isPending = updateLog.isPending || markAsPaid.isPending;
+  const isPending =
+    updateClassLog.isPending ||
+    markAsPaid.isPending ||
+    deleteFinancialRecord.isPending;
+
+  if (!classLog) return null;
+
+  const studentName = classLog.students?.name ?? "Aluno";
+  const classDateFormatted = format(
+    new Date(classLog.class_date + "T12:00:00"),
+    "dd/MM/yyyy",
+    { locale: ptBR }
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-primary" />
-            Concluir aula
-          </DialogTitle>
+          <DialogTitle>Avaliar aula</DialogTitle>
         </DialogHeader>
-
-        {classLog ? (
-          <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-            <div className="rounded-lg border bg-muted/30 p-3">
-              <p className="text-sm font-medium">
-                {classLog.students?.name || "Aluno"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {classLog.title || "Aula"} • {new Date(classLog.class_date + "T12:00:00").toLocaleDateString("pt-BR")}
-              </p>
+        <p className="text-sm text-muted-foreground">
+          {studentName} — {classDateFormatted}
+        </p>
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Comparecimento</Label>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={attendance === true}
+                  onChange={() => setValue("attendance", true)}
+                  className="rounded-full"
+                />
+                <span>Compareceu</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={attendance === false}
+                  onChange={() => setValue("attendance", false)}
+                  className="rounded-full"
+                />
+                <span>Faltou</span>
+              </label>
             </div>
+          </div>
 
-            {/* Presença */}
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div>
-                <Label htmlFor="attendance">Presença</Label>
-                <p className="text-sm text-muted-foreground">
-                  O aluno compareceu à aula?
-                </p>
-              </div>
-              <Switch
-                id="attendance"
-                checked={attendance}
-                onCheckedChange={(checked) => {
-                  setAttendance(checked);
-                  setValue("attendance", checked);
-                  if (!checked) setValue("grade", "");
-                }}
-              />
-            </div>
-
-            {/* Nota - apenas se presente */}
-            {attendance && (
+          {attendance && (
+            <>
               <div className="space-y-2">
-                <Label htmlFor="grade">Nota (0 a 10)</Label>
+                <Label htmlFor="grade">Nota (0–10)</Label>
                 <Input
                   id="grade"
                   type="text"
-                  placeholder="8.5"
+                  placeholder="Ex: 8.5"
                   {...register("grade")}
                 />
                 {errors.grade && (
-                  <p className="text-xs text-destructive">{errors.grade.message}</p>
+                  <p className="text-sm text-destructive">{errors.grade.message}</p>
                 )}
               </div>
-            )}
-
-            {/* Feedback */}
-            <div className="space-y-2">
-              <Label htmlFor="feedback">Feedback</Label>
-              <Textarea
-                id="feedback"
-                placeholder="Como foi a aula? Pontos a melhorar..."
-                rows={4}
-                {...register("feedback")}
-              />
-              {errors.feedback && (
-                <p className="text-sm text-destructive">{errors.feedback.message}</p>
-              )}
-            </div>
-
-            {/* Confirmar pagamento */}
-            {hasFinancialRecord && (
-              <div className="space-y-1">
-                <div className="flex items-center space-x-3 rounded-lg border border-dashed p-4 bg-accent/20">
+              {hasFinancialRecord && (
+                <div className="flex items-center gap-2">
                   <Checkbox
                     id="confirmPayment"
                     checked={confirmPayment}
                     onCheckedChange={(checked) =>
-                      setValue("confirmPayment", checked === true, { shouldValidate: true })
+                      setValue("confirmPayment", !!checked)
                     }
                   />
-                  <div className="flex items-center gap-2 flex-1">
-                    <Receipt className="h-4 w-4 text-muted-foreground" />
-                    <Label htmlFor="confirmPayment" className="cursor-pointer font-medium">
-                      Confirmar pagamento de {formatCurrency(Number(classLog.financial_records?.amount))}
-                    </Label>
-                  </div>
+                  <Label htmlFor="confirmPayment" className="cursor-pointer">
+                    Confirmar pagamento
+                  </Label>
                 </div>
-                {errors.confirmPayment && (
-                  <p className="text-xs text-destructive">{errors.confirmPayment.message}</p>
-                )}
-              </div>
-            )}
+              )}
+            </>
+          )}
 
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isPending}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  "Salvar"
-                )}
-              </Button>
+          {!attendance && hasFinancialRecord && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="chargeAbsence"
+                checked={chargeAbsence}
+                onCheckedChange={(checked) =>
+                  setValue("chargeAbsence", !!checked)
+                }
+              />
+              <Label htmlFor="chargeAbsence" className="cursor-pointer">
+                Cobrar esta falta?
+              </Label>
             </div>
-          </form>
-        ) : null}
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="feedback">Feedback (opcional)</Label>
+            <Textarea
+              id="feedback"
+              placeholder="Observações sobre a aula..."
+              rows={3}
+              {...register("feedback")}
+            />
+            {errors.feedback && (
+              <p className="text-sm text-destructive">{errors.feedback.message}</p>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

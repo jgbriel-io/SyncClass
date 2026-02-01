@@ -9,6 +9,7 @@ import {
   useTeacherBirthdaysThisMonth,
   useTeacherNewStudentsByMonth,
 } from "@/hooks/useTeacherDashboard";
+import { useFinancialSummary } from "@/hooks/useFinancialRecords";
 import { useTodayClasses } from "@/hooks/useTodayClasses";
 import type { ChartMonthsFilter } from "@/components/dashboard/DashboardView";
 
@@ -36,18 +37,20 @@ const TeacherHome = () => {
   const teacherId = teacherProfile?.teacher_id;
 
   const { data: stats, isLoading: loadingStats } = useTeacherDashboardStats(teacherId);
+  const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary(teacherId ?? undefined);
   const { data: upcomingPayments = [], isLoading: loadingPayments } = useTeacherUpcomingPayments(teacherId);
   const { data: birthdays = [], isLoading: loadingBirthdays } = useTeacherBirthdaysThisMonth(teacherId);
   const { data: chartData = [], isLoading: loadingChart } = useTeacherNewStudentsByMonth(teacherId, chartMonths);
   const { data: todayClasses } = useTodayClasses(teacherId);
 
-  const isLoading = loadingStats || loadingPayments || loadingBirthdays || loadingChart || !teacherId;
+  const isLoading = loadingStats || loadingFinancial || loadingPayments || loadingBirthdays || loadingChart || !teacherId;
 
   return (
     <DashboardView
         title="Dashboard"
         subtitle="Bem-vindo de volta! Aqui está o resumo dos seus alunos."
         stats={stats}
+        financialSummary={financialSummary}
         upcomingPayments={upcomingPayments}
         birthdays={birthdays}
         chartData={chartData}

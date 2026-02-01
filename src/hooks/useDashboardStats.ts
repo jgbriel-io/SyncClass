@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import startOfMonth from "date-fns/startOfMonth";
 import endOfMonth from "date-fns/endOfMonth";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import subMonths from "date-fns/subMonths";
 import eachDayOfInterval from "date-fns/eachDayOfInterval";
 import ptBR from "date-fns/locale/pt-BR";

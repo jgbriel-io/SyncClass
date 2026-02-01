@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -35,8 +35,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil } from "lucide-react";
-import format from "date-fns/format";
+import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil } from "lucide-react";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
 import { getAvatarLetter } from "@/lib/utils/patterns";
@@ -61,10 +61,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import {
+  UsersFilters,
+  defaultFilters,
+  type UsersFiltersState,
+} from "@/components/filters/UsersFilters";
+import { defaultUsersFilters } from "@/components/filters/filterDefaults";
 
 export default function UsersPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("active");
+  const [filters, setFilters] = useState<UsersFiltersState>({
+    ...defaultUsersFilters,
+    status: "active",
+  });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -91,23 +99,69 @@ export default function UsersPage() {
   const linkToTeacher = useLinkUserToTeacher();
   const deleteTeacher = useDeleteTeacher();
 
-  const filteredUsers = users.filter((user) => {
-    const name = user.profile?.full_name || "";
-    const email = user.email || "";
-    const isActive = user.profile?.active ?? true;
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch =
-      name.toLowerCase().includes(searchLower) ||
-      email.toLowerCase().includes(searchLower)
-    ;
+  const filteredUsers = useMemo(() => {
+    let result = users.filter((user) => {
+      const name = user.profile?.full_name || "";
+      const email = user.email || "";
+      const searchLower = filters.search.toLowerCase();
+      const matchesSearch =
+        !searchLower ||
+        name.toLowerCase().includes(searchLower) ||
+        email.toLowerCase().includes(searchLower);
 
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && isActive) ||
-      (statusFilter === "inactive" && !isActive);
+      if (!matchesSearch) return false;
 
-    return matchesSearch && matchesStatus;
-  });
+      const storedRole = (user.role?.role ?? user.profile?.role) as string | null;
+      const linkedStudent = user.profile?.student_id;
+      const linkedTeacher = user.profile?.teacher_id;
+      const role =
+        storedRole === "admin"
+          ? "admin"
+          : storedRole === "teacher"
+          ? "teacher"
+          : storedRole === "student"
+          ? "student"
+          : linkedTeacher
+          ? "teacher"
+          : linkedStudent
+          ? "student"
+          : storedRole;
+
+      const matchesRole =
+        filters.role === "all" ||
+        (filters.role === "admin" && role === "admin") ||
+        (filters.role === "teacher" && role === "teacher") ||
+        (filters.role === "student" && role === "student");
+
+      if (!matchesRole) return false;
+
+      const isActive = user.profile?.active ?? true;
+      const matchesStatus =
+        filters.status === "all" ||
+        (filters.status === "active" && isActive) ||
+        (filters.status === "inactive" && !isActive);
+
+      if (!matchesStatus) return false;
+
+      return true;
+    });
+
+    const sortBy = filters.sortBy;
+    result = [...result].sort((a, b) => {
+      const nameA = (a.profile?.full_name || a.email || "").toLowerCase();
+      const nameB = (b.profile?.full_name || b.email || "").toLowerCase();
+      const createdA = new Date(a.profile?.created_at || a.created_at || 0).getTime();
+      const createdB = new Date(b.profile?.created_at || b.created_at || 0).getTime();
+
+      if (sortBy === "created_desc") return createdB - createdA;
+      if (sortBy === "created_asc") return createdA - createdB;
+      if (sortBy === "name_asc") return nameA.localeCompare(nameB);
+      if (sortBy === "name_desc") return nameB.localeCompare(nameA);
+      return 0;
+    });
+
+    return result;
+  }, [users, filters]);
 
   const handleCreateOrUpdate = (data: {
     email: string;
@@ -360,28 +414,12 @@ export default function UsersPage() {
             </Button>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome ou email..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as "all" | "active" | "inactive")}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="active">Ativos</SelectItem>
-              <SelectItem value="inactive">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          {/* Filtros avançados */}
+          <UsersFilters
+            filters={filters}
+            onChange={setFilters}
+            onReset={() => setFilters({ ...defaultUsersFilters, status: "active" })}
+          />
 
         {/* Loading state */}
         {isLoading && (

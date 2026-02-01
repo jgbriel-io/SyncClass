@@ -2,17 +2,12 @@ import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
 import { CheckCircle, AlertCircle, BookOpen, Calendar, Loader2, TrendingUp, Award } from "lucide-react";
-import format from "date-fns/format";
-import { ptBR } from "date-fns/locale";
+import { formatDate } from "@/lib/utils/formatters";
 import {
   useStudentProfile,
   useStudentStats,
   useLastClass,
 } from "@/hooks/useStudentPortal";
-
-function formatDate(dateString: string): string {
-  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
-}
 
 export default function StudentHome() {
   const { data: profile, isLoading: loadingProfile } = useStudentProfile();

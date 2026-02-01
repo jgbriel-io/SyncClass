@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface StudentProfile {
@@ -100,25 +101,10 @@ export function useStudentFinancialRecords() {
 
       if (error) throw error;
 
-      // Calculate actual status based on due_date
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      return (data || []).map((record) => {
-        let actualStatus = record.status as "pendente" | "pago" | "atrasado";
-        if (record.status !== "pago") {
-          const dueDate = new Date(record.due_date + "T00:00:00");
-          if (dueDate < today) {
-            actualStatus = "atrasado";
-          } else {
-            actualStatus = "pendente";
-          }
-        }
-        return {
-          ...record,
-          status: actualStatus,
-        };
-      }) as StudentFinancialRecord[];
+      return (data || []).map((record) => ({
+        ...record,
+        status: getFinancialActualStatus(record),
+      })) as StudentFinancialRecord[];
     },
     enabled: !!user?.id,
   });

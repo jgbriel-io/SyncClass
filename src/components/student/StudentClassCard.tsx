@@ -1,8 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, User, CheckCircle2, XCircle, Star, ChevronRight } from "lucide-react";
-import format from "date-fns/format";
-import { ptBR } from "date-fns/locale";
+import { formatDate } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils";
 
 interface StudentClassCardProps {
@@ -18,9 +17,7 @@ interface StudentClassCardProps {
 }
 
 export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
-  const formattedDate = format(new Date(classLog.class_date), "dd/MM/yyyy 'às' HH:mm", {
-    locale: ptBR,
-  });
+  const formattedDate = formatDate(classLog.class_date);
 
   return (
     <Card

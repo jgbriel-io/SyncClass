@@ -18,12 +18,25 @@ export function formatCurrency(value: number): string {
 }
 
 /**
+ * Parseia string YYYY-MM-DD como data local (evita bug de timezone UTC).
+ * Para strings com hora (ISO), usa parse padrão.
+ */
+function parseDateLocal(value: string): Date {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const d = new Date(value + "T12:00:00");
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  return new Date(value);
+}
+
+/**
  * Formata uma data no formato brasileiro (dd/MM/yyyy)
- * @param dateString - String de data ISO ou Date object
+ * @param dateString - String de data ISO (YYYY-MM-DD ou full) ou Date object
  * @returns String formatada (ex: "31/01/2026")
  */
 export function formatDate(dateString: string | Date): string {
-  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  const date = typeof dateString === "string" ? parseDateLocal(dateString) : dateString;
   return new Intl.DateTimeFormat("pt-BR").format(date);
 }
 
@@ -33,7 +46,7 @@ export function formatDate(dateString: string | Date): string {
  * @returns String formatada (ex: "31/01/2026 às 14:30")
  */
 export function formatDateTime(dateString: string | Date): string {
-  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  const date = typeof dateString === "string" ? parseDateLocal(dateString) : dateString;
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",

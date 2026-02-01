@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns/format";
+import { format } from "date-fns";
 import ptBR from "date-fns/locale/pt-BR";
+import { getClassStatusWithTime } from "@/lib/utils/classTime";
 
 export interface TodayClassItem {
   id: string;
@@ -18,16 +19,7 @@ export interface TodayClassItem {
 export function getTodayClassStatus(
   item: { class_date: string; attendance: boolean | null; start_at: string | null; end_at: string | null }
 ): { label: string; variant: "success" | "info" | "warning" } {
-  const now = new Date();
-
-  if (item.attendance != null) return { label: "Concluída", variant: "success" };
-
-  // Para hoje: se start_at é futuro, está Agendada; se já passou (ou sem horário), Avaliação pendente
-  if (item.start_at) {
-    const start = new Date(item.start_at);
-    if (start > now) return { label: "Agendada", variant: "info" };
-  }
-  return { label: "Avaliação pendente", variant: "warning" };
+  return getClassStatusWithTime(item);
 }
 
 export interface TodayClassesData {

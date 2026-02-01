@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import startOfMonth from "date-fns/startOfMonth";
 import endOfMonth from "date-fns/endOfMonth";
 import subMonths from "date-fns/subMonths";
@@ -94,11 +94,13 @@ export function useTeacherDashboardStats(teacherId: string | null) {
         .eq("teacher_id", teacherId);
 
       if (studentIds.length > 0) {
-        // Overdue students (based on financial_records: status = 'atrasado')
+        // Overdue = não pago e due_date < hoje (status no DB é "pendente", atrasado é derivado de due_date)
+        const todayStr = format(new Date(), "yyyy-MM-dd");
         const { count: overdue } = await supabase
           .from("financial_records")
           .select("id", { count: "exact", head: true })
-          .eq("status", "atrasado")
+          .neq("status", "pago")
+          .lt("due_date", todayStr)
           .in("student_id", studentIds);
 
         overdueCount = overdue || 0;

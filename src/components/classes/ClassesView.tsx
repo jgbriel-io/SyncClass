@@ -3,7 +3,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyClassesState } from "@/components/ui/contextual-empty-states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatCurrency } from "@/lib/utils/formatters";
+import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,10 +20,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, Check } from "lucide-react";
-import { useState } from "react";
+import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, Check, Lock } from "lucide-react";
+import { useState, useMemo } from "react";
+import {
+  ClassesFilters,
+  type ClassesFiltersState,
+} from "@/components/filters/ClassesFilters";
+import { defaultClassesFilters } from "@/components/filters/filterDefaults";
 import { toast } from "sonner";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
 import { PostClassDialog } from "@/components/classes/PostClassDialog";
@@ -40,9 +45,20 @@ import {
   ClassLogWithStudent,
   ClassLogWithFinancialData,
 } from "@/hooks/useClassLogs";
+import { isClassEvaluationBlocked, getClassStatusWithTime } from "@/lib/utils/classTime";
 
-function formatDate(dateString: string): string {
-  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+function formatClassDateAndTime(log: {
+  class_date: string;
+  start_at?: string | null;
+  end_at?: string | null;
+}): { date: string; timeRange: string | null } {
+  const date = format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+  if (log.start_at && log.end_at) {
+    const start = format(new Date(log.start_at), "HH:mm", { locale: ptBR });
+    const end = format(new Date(log.end_at), "HH:mm", { locale: ptBR });
+    return { date, timeRange: `${start} às ${end}` };
+  }
+  return { date, timeRange: null };
 }
 
 function getPaymentStatusVariant(status: string | null): "success" | "warning" | "destructive" {
@@ -79,25 +95,14 @@ function getPaymentStatusLabel(status: string | null): string {
   }
 }
 
-/** Badge de status: Concluída (já preencheu pós-aula), Agendada (futura), Avaliação pendente (passada sem concluir) */
-function getClassStatusBadge(log: { class_date: string; attendance: boolean | null }) {
-  const classDate = new Date(log.class_date + "T12:00:00");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  classDate.setHours(0, 0, 0, 0);
-  const isFuture = classDate > today;
-
-  if (log.attendance != null) return { label: "Concluída", variant: "success" as const };
-  if (isFuture) return { label: "Agendada", variant: "info" as const };
-  return { label: "Avaliação pendente", variant: "warning" as const };
-}
-
-function isClassDateFuture(classDate: string): boolean {
-  const d = new Date(classDate + "T12:00:00");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  d.setHours(0, 0, 0, 0);
-  return d > today;
+/** Badge de status: Concluída, Agendada, Em andamento, Avaliação pendente (usa horário quando disponível) */
+function getClassStatusBadge(log: {
+  class_date: string;
+  attendance: boolean | null;
+  start_at?: string | null;
+  end_at?: string | null;
+}) {
+  return getClassStatusWithTime(log);
 }
 
 interface ClassesViewProps {
@@ -115,7 +120,7 @@ export function ClassesView({
   showTeacherColumn = true,
   enableTeacherSelection = true,
 }: ClassesViewProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<ClassesFiltersState>(defaultClassesFilters);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ClassLogWithStudent | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -131,19 +136,58 @@ export function ClassesView({
   const updateLog = useUpdateClassLog();
   const deleteLog = useDeleteClassLog();
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  const logsPendingRegistration = logs.filter(
+    (log) => !isClassEvaluationBlocked(log) && log.attendance == null
+  );
 
-  const logsPendingRegistration = logs.filter((log) => {
-    const d = new Date(log.class_date + "T12:00:00");
-    d.setHours(0, 0, 0, 0);
-    return d <= todayStart && log.attendance == null;
-  });
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      const searchLower = filters.search.toLowerCase();
+      const studentName = log.students?.name || "";
+      const title = log.title || "";
+      const matchesSearch =
+        !searchLower ||
+        studentName.toLowerCase().includes(searchLower) ||
+        title.toLowerCase().includes(searchLower);
+      if (!matchesSearch) return false;
 
-  const filteredLogs = logs.filter((log) => {
-    const studentName = log.students?.name || "";
-    return studentName.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+      if (filters.teacherId !== "all" && log.teacher_id !== filters.teacherId) return false;
+
+      const badge = getClassStatusBadge(log);
+      const status =
+        badge.label === "Concluída"
+          ? "concluida"
+          : badge.label === "Agendada" || badge.label === "Em andamento"
+            ? "agendada"
+            : "avaliacao_pendente";
+
+      if (filters.status !== "all" && filters.status !== status) return false;
+
+      if (filters.period !== "all") {
+        const classDate = new Date(log.class_date + "T12:00:00");
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        let from: Date;
+        let to: Date;
+        if (filters.period === "week") {
+          from = new Date(today);
+          from.setDate(from.getDate() - from.getDay());
+          to = new Date(from);
+          to.setDate(to.getDate() + 6);
+        } else if (filters.period === "month") {
+          from = new Date(today.getFullYear(), today.getMonth(), 1);
+          to = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        } else {
+          from = new Date(today);
+          from.setMonth(from.getMonth() - 3);
+          to = new Date(today);
+        }
+        to.setHours(23, 59, 59, 999);
+        if (classDate < from || classDate > to) return false;
+      }
+      return true;
+    });
+  }, [logs, filters]);
 
   // Mapa de professores para fallback (caso o join não traga o nome)
   const teacherMap = new Map<string, string>();
@@ -282,18 +326,14 @@ export function ClassesView({
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por aluno..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
+      {/* Filtros avançados */}
+      <ClassesFilters
+        filters={filters}
+        onChange={setFilters}
+        onReset={() => setFilters(defaultClassesFilters)}
+        teachers={teachers}
+        showTeacherFilter={showTeacherColumn}
+      />
 
         {/* Error state */}
       {error && (
@@ -395,9 +435,15 @@ export function ClassesView({
                         </td>
                       )}
                       <td className="px-6 py-4 align-top whitespace-nowrap">
-                        <span className="text-sm text-muted-foreground">
-                          {formatDate(log.class_date)}
-                        </span>
+                        {(() => {
+                          const { date, timeRange } = formatClassDateAndTime(log);
+                          return (
+                            <div className="flex flex-col gap-0.5 text-sm text-muted-foreground">
+                              <span>{date}</span>
+                              {timeRange && <span className="text-xs">{timeRange}</span>}
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-4 align-top hidden sm:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
@@ -430,10 +476,10 @@ export function ClassesView({
                         )}
                       </td>
                       <td className="px-6 py-4 align-top hidden lg:table-cell whitespace-nowrap">
-                        <span className="text-sm font-medium tabular-nums">
+                        <span className={log.financial_records ? "text-sm font-medium tabular-nums" : "text-sm font-medium text-foreground"}>
                           {log.financial_records
                             ? formatCurrency(log.financial_records.amount)
-                            : "—"}
+                            : "Sem cobrança"}
                         </span>
                       </td>
                       <td className="px-6 py-4 align-top hidden lg:table-cell">
@@ -466,21 +512,30 @@ export function ClassesView({
                           <Button
                             size="sm"
                             className={`h-8 border-none ${
-                              log.attendance != null
-                                ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
-                                : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
+                              isClassEvaluationBlocked(log) && log.attendance == null
+                                ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                : log.attendance != null
+                                  ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+                                  : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
                             }`}
+                            disabled={isClassEvaluationBlocked(log) && log.attendance == null}
                             onClick={() => {
-                              if (isClassDateFuture(log.class_date)) {
-                                toast.warning("Esta aula ainda não ocorreu. Se a data mudou, clique em Editar.");
-                                return;
-                              }
+                              if (isClassEvaluationBlocked(log)) return;
                               setLogForPostClass(log);
                               setPostClassDialogOpen(true);
                             }}
                           >
-                            <Check className="h-3.5 w-3.5 mr-1.5" />
-                            {log.attendance != null ? "Atualizar" : "Avaliar"}
+                            {isClassEvaluationBlocked(log) && log.attendance == null ? (
+                              <>
+                                <Lock className="h-3.5 w-3.5 mr-1.5" />
+                                Avaliar
+                              </>
+                            ) : (
+                              <>
+                                <Check className="h-3.5 w-3.5 mr-1.5" />
+                                {log.attendance != null ? "Atualizar" : "Avaliar"}
+                              </>
+                            )}
                           </Button>
                         </div>
                       </td>
@@ -545,20 +600,30 @@ export function ClassesView({
                       )}
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="h-4 w-4" />
-                        {formatDate(log.class_date)}
-                      </span>
+                      {(() => {
+                        const { date, timeRange } = formatClassDateAndTime(log);
+                        return (
+                          <span className="flex flex-col gap-0.5">
+                            <span className="flex items-center gap-1.5">
+                              <Calendar className="h-4 w-4" />
+                              {date}
+                            </span>
+                            {timeRange && <span className="text-xs pl-6">{timeRange}</span>}
+                          </span>
+                        );
+                      })()}
                       {log.duration_minutes != null && (
                         <span className="flex items-center gap-1.5">
                           {formatDuration(log.duration_minutes)}
                         </span>
                       )}
-                      {log.financial_records && (
+                      {log.financial_records ? (
                         <span className="flex items-center gap-1.5 font-medium text-foreground">
                           <Receipt className="h-3.5 w-3.5" />
                           {formatCurrency(log.financial_records.amount)}
                         </span>
+                      ) : (
+                        <span className="text-foreground">Sem cobrança</span>
                       )}
                     </div>
                     {log.feedback && (
@@ -616,21 +681,30 @@ export function ClassesView({
                   <Button
                     size="sm"
                     className={`h-8 border-none ${
-                      log.attendance != null
-                        ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
-                        : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
+                      isClassEvaluationBlocked(log) && log.attendance == null
+                        ? "bg-muted text-muted-foreground cursor-not-allowed"
+                        : log.attendance != null
+                          ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+                          : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
                     }`}
+                    disabled={isClassEvaluationBlocked(log) && log.attendance == null}
                     onClick={() => {
-                      if (isClassDateFuture(log.class_date)) {
-                        toast.warning("Esta aula ainda não ocorreu. Se a data mudou, clique em Editar.");
-                        return;
-                      }
+                      if (isClassEvaluationBlocked(log)) return;
                       setLogForPostClass(log);
                       setPostClassDialogOpen(true);
                     }}
                   >
-                    <Check className="h-3.5 w-3.5 mr-1.5" />
-                    {log.attendance != null ? "Atualizar" : "Avaliar"}
+                    {isClassEvaluationBlocked(log) && log.attendance == null ? (
+                      <>
+                        <Lock className="h-3.5 w-3.5 mr-1.5" />
+                        Avaliar
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-3.5 w-3.5 mr-1.5" />
+                        {log.attendance != null ? "Atualizar" : "Avaliar"}
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

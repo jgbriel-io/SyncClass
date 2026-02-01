@@ -6,6 +6,7 @@ import {
   useBirthdaysThisMonth,
   useNewStudentsByMonth,
 } from "@/hooks/useDashboardStats";
+import { useFinancialSummary } from "@/hooks/useFinancialRecords";
 import { useTodayClasses } from "@/hooks/useTodayClasses";
 import type { ChartMonthsFilter } from "@/components/dashboard/DashboardView";
 
@@ -13,18 +14,20 @@ export default function AdminDashboard() {
   const [chartMonths, setChartMonths] = useState<ChartMonthsFilter>(6);
 
   const { data: stats, isLoading: loadingStats } = useDashboardStats();
+  const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary();
   const { data: upcomingPayments = [], isLoading: loadingPayments } = useUpcomingPayments();
   const { data: birthdays = [], isLoading: loadingBirthdays } = useBirthdaysThisMonth();
   const { data: chartData = [], isLoading: loadingChart } = useNewStudentsByMonth(chartMonths);
   const { data: todayClasses } = useTodayClasses(null);
 
-  const isLoading = loadingStats || loadingPayments || loadingBirthdays || loadingChart;
+  const isLoading = loadingStats || loadingFinancial || loadingPayments || loadingBirthdays || loadingChart;
 
   return (
     <DashboardView
         title="Dashboard"
         subtitle="Bem-vindo de volta! Aqui está o resumo da sua instituição."
         stats={stats}
+        financialSummary={financialSummary}
         upcomingPayments={upcomingPayments}
         birthdays={birthdays}
         chartData={chartData}

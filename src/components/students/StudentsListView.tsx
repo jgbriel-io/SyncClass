@@ -1,4 +1,9 @@
 import { useMemo, useState } from "react";
+import {
+  StudentsFilters,
+  type StudentsFiltersState,
+} from "@/components/filters/StudentsFilters";
+import { defaultStudentsFilters } from "@/components/filters/filterDefaults";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyStudentsState } from "@/components/ui/contextual-empty-states";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -13,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils/formatters";
+import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import {
   DropdownMenu,
@@ -37,7 +43,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
 import {
@@ -83,9 +89,11 @@ export function StudentsListView({
   teachers,
   onNewStudentClick,
 }: StudentsListViewProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ativo");
-  const [teacherFilter, setTeacherFilter] = useState<string>("all");
+  const [filters, setFilters] = useState<StudentsFiltersState>({
+    ...defaultStudentsFilters,
+    status: "ativo",
+    teacherId: "all",
+  });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
@@ -137,20 +145,11 @@ export function StudentsListView({
       }
     };
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     financialRecords.forEach((record: FinancialRecordWithRelations) => {
       const studentId = record.student_id;
       if (!studentId) return;
 
-      let actualStatus: InternalFinancialStatus;
-      if (record.status === "pago") {
-        actualStatus = "pago";
-      } else {
-        const dueDate = new Date(String(record.due_date) + "T00:00:00");
-        actualStatus = dueDate < today ? "atrasado" : "pendente";
-      }
+      const actualStatus = getFinancialActualStatus(record) as InternalFinancialStatus;
 
       const current = statusMap[studentId]?.status ?? "none";
       if (getPriority(actualStatus) <= getPriority(current)) {
@@ -200,24 +199,61 @@ export function StudentsListView({
     return map;
   }, [classLogs]);
 
-  const filteredStudents = students.filter((student) => {
-    const matchesSearch = student.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || student.status === statusFilter;
+  const lastPaymentDateByStudent = useMemo(() => {
+    const map: Record<string, string> = {};
+    financialRecords.forEach((record: FinancialRecordWithRelations) => {
+      if (record.status !== "pago" || !record.paid_at || !record.student_id) return;
+      const current = map[record.student_id];
+      if (!current) {
+        map[record.student_id] = record.paid_at;
+        return;
+      }
+      if (new Date(record.paid_at) > new Date(current)) {
+        map[record.student_id] = record.paid_at;
+      }
+    });
+    return map;
+  }, [financialRecords]);
 
-    let matchesTeacher = true;
-    if (autoTeacherId) {
-      matchesTeacher = student.teacher_id === autoTeacherId;
-    } else if (showTeacherFilter) {
-      matchesTeacher =
-        teacherFilter === "all" ||
-        student.teacher_id === teacherFilter;
-    }
+  const filteredStudents = useMemo(() => {
+    let result = students.filter((student) => {
+      const searchLower = filters.search.toLowerCase();
+      const matchesSearch =
+        !searchLower ||
+        (student.name || "").toLowerCase().includes(searchLower) ||
+        (student.cpf || "").replace(/\D/g, "").includes(searchLower.replace(/\D/g, ""));
 
-    return matchesSearch && matchesStatus && matchesTeacher;
-  });
+      if (!matchesSearch) return false;
+
+      const matchesStatus = filters.status === "all" || student.status === filters.status;
+      if (!matchesStatus) return false;
+
+      let matchesTeacher = true;
+      if (autoTeacherId) {
+        matchesTeacher = student.teacher_id === autoTeacherId;
+      } else if (showTeacherFilter) {
+        matchesTeacher = filters.teacherId === "all" || student.teacher_id === filters.teacherId;
+      }
+      if (!matchesTeacher) return false;
+
+      return true;
+    });
+
+    result = [...result].sort((a, b) => {
+      const nameA = (a.name || "").toLowerCase();
+      const nameB = (b.name || "").toLowerCase();
+      const lastPayA = lastPaymentDateByStudent[a.id] || "";
+      const lastPayB = lastPaymentDateByStudent[b.id] || "";
+
+      if (filters.sortBy === "name_asc") return nameA.localeCompare(nameB);
+      if (filters.sortBy === "name_desc") return nameB.localeCompare(nameA);
+      if (filters.sortBy === "last_payment_desc") return lastPayB.localeCompare(lastPayA);
+      if (filters.sortBy === "last_payment_asc") return lastPayA.localeCompare(lastPayB);
+      return 0;
+    });
+
+    return result;
+  }, [students, filters, autoTeacherId, showTeacherFilter, lastPaymentDateByStudent]);
 
   const handleCreateOrUpdate = (data: StudentInsert) => {
     const run = async () => {
@@ -335,45 +371,15 @@ export function StudentsListView({
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="ativo">Ativos</SelectItem>
-              <SelectItem value="inativo">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
-          {showTeacherFilter && (
-            <Select value={teacherFilter} onValueChange={setTeacherFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Professor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os professores</SelectItem>
-                {teachers.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-      </div>
+      {/* Filtros avançados */}
+      <StudentsFilters
+        filters={filters}
+        onChange={setFilters}
+        onReset={() => setFilters({ ...defaultStudentsFilters, status: "ativo", teacherId: "all" })}
+        teachers={teachers}
+        showTeacherFilter={showTeacherFilter}
+        autoTeacherId={autoTeacherId}
+      />
 
       {/* Loading state */}
       {isLoading && (
@@ -413,7 +419,7 @@ export function StudentsListView({
                     Aulas/semana
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
-                    Total semanal
+                    Total mensal
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
                     Dia pagto
@@ -434,9 +440,9 @@ export function StudentsListView({
                   const lastUpdatedAt = student.updated_at;
                   const hourlyRate = student.hourly_rate;
                   const classesPerWeek = student.classes_per_week;
-                  const weeklyTotal =
+                  const monthlyTotal =
                     hourlyRate != null && classesPerWeek != null
-                      ? hourlyRate * classesPerWeek
+                      ? hourlyRate * classesPerWeek * 4
                       : null;
 
                   const teacherName = student.teacher_id
@@ -522,7 +528,7 @@ export function StudentsListView({
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
-                          {weeklyTotal != null ? formatCurrency(weeklyTotal) : "—"}
+                          {monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">

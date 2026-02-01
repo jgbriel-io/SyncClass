@@ -51,7 +51,7 @@ import {
   useLinkStudentToProfile,
   ProfileWithRole,
 } from "@/hooks/useProfiles";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { StatCard } from "@/components/ui/stat-card";
 

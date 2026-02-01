@@ -1,9 +1,9 @@
 import { memo } from "react";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import ptBR from "date-fns/locale/pt-BR";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { formatCurrency } from "@/lib/utils/formatters";
+import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import type { StudentStatementEntry } from "@/hooks/useStudentStatement";
 import { cn } from "@/lib/utils";
 
@@ -28,10 +28,6 @@ const BILLING_VARIANTS: Record<
   not_billed: "default",
   unknown: "default",
 };
-
-function formatDate(dateString: string): string {
-  return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
-}
 
 interface UnifiedStatementCardProps {
   entry: StudentStatementEntry;
