@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import {
   StudentsFilters,
   type StudentsFiltersState,
@@ -47,7 +47,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
 import {
-  useStudents,
+  useStudentsPaginated,
   useCreateStudent,
   useUpdateStudent,
   useSoftDeleteStudent,
@@ -57,8 +57,9 @@ import {
 import { useCreateAuthUserForStudent, useInviteStudent } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useFinancialRecords, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
-import { useClassLogs } from "@/hooks/useClassLogs";
+import { useFinancialRecordsByStudentIds, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
+import { useClassLogsByStudentIds } from "@/hooks/useClassLogs";
+import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { Teacher } from "@/hooks/useTeachers";
 
@@ -104,10 +105,32 @@ export function StudentsListView({
   const [passwordCopied, setPasswordCopied] = useState(false);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
-  const { data: students = [], isLoading, error } = useStudents();
-  const { data: financialRecords = [] } = useFinancialRecords();
-  const { data: classLogs = [] } = useClassLogs();
+  const {
+    data: students = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useStudentsPaginated({
+    pageSize: 20,
+    filters: {
+      teacherId: filters.teacherId,
+      status: filters.status,
+      sortBy: filters.sortBy,
+    },
+  });
+  const studentIds = useMemo(() => students.map((s) => s.id), [students]);
+  const { data: financialRecords = [] } = useFinancialRecordsByStudentIds(studentIds);
+  const { data: classLogs = [] } = useClassLogsByStudentIds(studentIds);
+
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
   const createStudent = useCreateStudent();
   const inviteStudent = useInviteStudent();
   const updateStudent = useUpdateStudent();
@@ -374,8 +397,14 @@ export function StudentsListView({
       {/* Filtros avançados */}
       <StudentsFilters
         filters={filters}
-        onChange={setFilters}
-        onReset={() => setFilters({ ...defaultStudentsFilters, status: "ativo", teacherId: "all" })}
+        onChange={(newFilters) => {
+          setFilters(newFilters);
+          setPage(0);
+        }}
+        onReset={() => {
+          setFilters({ ...defaultStudentsFilters, status: "ativo", teacherId: "all" });
+          setPage(0);
+        }}
         teachers={teachers}
         showTeacherFilter={showTeacherFilter}
         autoTeacherId={autoTeacherId}
@@ -399,7 +428,7 @@ export function StudentsListView({
 
       {/* Table */}
       {!isLoading && !error && (
-        <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+        <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -624,6 +653,14 @@ export function StudentsListView({
               />
             )
           )}
+          <TablePaginationBar
+            page={page}
+            pageSize={20}
+            totalCount={totalCount}
+            hasMore={hasMore}
+            isFetching={isFetching}
+            onPageChange={setPage}
+          />
         </div>
       )}
 

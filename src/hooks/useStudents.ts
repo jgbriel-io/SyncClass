@@ -1,8 +1,17 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+
+const DEFAULT_PAGE_SIZE = 20;
+
+export type StudentsListFilters = {
+  teacherId?: string;
+  status?: "all" | "ativo" | "inativo";
+  sortBy?: "name_asc" | "name_desc" | "created_desc" | "last_payment_asc" | "last_payment_desc";
+};
 
 export type Student = Tables<"students">;
 export type StudentInsert = TablesInsert<"students">;
@@ -18,22 +27,83 @@ export function useStudents() {
   return useQuery({
     queryKey: ["students"],
     queryFn: async () => {
-      // Use students_active_masked view para:
-      // 1. Mascarar CPF e telefone conforme LGPD
-      // 2. Excluir alunos deletados (soft delete)
-      // Admin vê dados completos, outros usuários veem dados mascarados
       const { data, error } = await supabase
         .from("students_active_masked")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       return data as Student[];
     },
   });
+}
+
+export interface UseStudentsPaginatedOptions {
+  pageSize?: number;
+  filters?: StudentsListFilters;
+}
+
+export interface UseStudentsPaginatedResult {
+  data: Student[];
+  isLoading: boolean;
+  error: Error | null;
+  isFetching: boolean;
+  page: number;
+  setPage: (page: number | ((prev: number) => number)) => void;
+  hasMore: boolean;
+  totalCount: number;
+  refetch: () => void;
+}
+
+export function useStudentsPaginated(options?: UseStudentsPaginatedOptions): UseStudentsPaginatedResult {
+  const [page, setPage] = useState(0);
+  const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
+  const filters = options?.filters;
+
+  const query = useQuery({
+    queryKey: ["students_paginated", page, pageSize, filters],
+    queryFn: async () => {
+      let q = supabase
+        .from("students_active_masked")
+        .select("*", { count: "exact" });
+
+      if (filters?.teacherId && filters.teacherId !== "all") {
+        q = q.eq("teacher_id", filters.teacherId);
+      }
+      if (filters?.status && filters.status !== "all") {
+        q = q.eq("status", filters.status);
+      }
+
+      const sortBy = filters?.sortBy ?? "name_asc";
+      const orderCol = sortBy === "name_asc" || sortBy === "name_desc" ? "name" : "created_at";
+      const ascending = sortBy === "name_asc";
+      q = q.order(orderCol, { ascending: orderCol === "name" ? ascending : false });
+
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await q.range(from, to);
+
+      if (error) throw error;
+      return { list: (data ?? []) as Student[], count: count ?? 0 };
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const list = (query.data?.list ?? []) as Student[];
+  const totalCount = query.data?.count ?? 0;
+  const hasMore = totalCount > (page + 1) * pageSize;
+
+  return {
+    data: list,
+    isLoading: query.isLoading,
+    error: query.error as Error | null,
+    isFetching: query.isFetching,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    refetch: query.refetch,
+  };
 }
 
 export function useCreateStudent() {

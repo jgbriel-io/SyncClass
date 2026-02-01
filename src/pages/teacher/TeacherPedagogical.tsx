@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,8 @@ import {
   BookOpen,
   Check,
   Lock,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -132,10 +134,24 @@ const TeacherPedagogicalPage = () => {
   const [logToDelete, setLogToDelete] = useState<ClassLogWithStudent | null>(null);
   const [postClassDialogOpen, setPostClassDialogOpen] = useState(false);
   const [logForPostClass, setLogForPostClass] = useState<ClassLogWithStudent | null>(null);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
   // RLS garante que o professor só veja/edite aulas dos seus alunos
-  const { data: logs = [], isLoading, error } = useClassLogs(teacherId ?? undefined);
+  const {
+    data: logs = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useClassLogs(teacherId ?? undefined, { pageSize: 20 });
   const { data: summary } = useClassLogsSummary(teacherId);
+
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
   const createLog = useCreateClassLog();
   const createLogWithFinancial = useCreateClassLogWithFinancial();
   const updateLog = useUpdateClassLog();
@@ -322,7 +338,7 @@ const TeacherPedagogicalPage = () => {
 
         {/* Tabela de aulas */}
         {!isLoading && !error && (
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -510,6 +526,35 @@ const TeacherPedagogicalPage = () => {
                 {logs.length === 0
                   ? "Nenhuma aula registrada ainda"
                   : "Nenhum registro encontrado"}
+              </div>
+            )}
+            {(totalCount > 0 || page > 0) && (
+              <div className="border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
+                <p className="text-sm text-muted-foreground">
+                  {totalCount > 0
+                    ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}`
+                    : "0 registros"}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 0 || isFetching}
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!hasMore || isFetching}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Próximo
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
               </div>
             )}
           </div>

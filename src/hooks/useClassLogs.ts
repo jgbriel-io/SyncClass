@@ -1,7 +1,42 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+
+const DEFAULT_PAGE_SIZE = 20;
+
+export type ClassLogsFilters = {
+  teacherId?: string;
+  period?: "all" | "week" | "month" | "3months";
+};
+
+function getDateRangeForPeriod(period: "week" | "month" | "3months"): { from: string; to: string } {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const y = today.getFullYear();
+  const m = today.getMonth();
+  const d = today.getDate();
+  let from: Date;
+  let to: Date;
+  if (period === "week") {
+    const start = new Date(y, m, d);
+    start.setDate(start.getDate() - start.getDay());
+    from = start;
+    to = new Date(start);
+    to.setDate(to.getDate() + 6);
+  } else if (period === "month") {
+    from = new Date(y, m, 1);
+    to = new Date(y, m + 1, 0);
+  } else {
+    from = new Date(y, m - 3, d);
+    to = new Date(y, m, d);
+  }
+  return {
+    from: from.toISOString().split("T")[0],
+    to: to.toISOString().split("T")[0],
+  };
+}
 
 /** Verifica se há sobreposição de horários para o mesmo professor na mesma data */
 async function checkClassOverlap(
@@ -74,13 +109,35 @@ export interface ClassLogWithFinancialData {
   };
 }
 
-export function useClassLogs(teacherId?: string) {
-  return useQuery({
-    queryKey: ["class_logs", teacherId],
+export interface UseClassLogsOptions {
+  pageSize?: number;
+  filters?: ClassLogsFilters;
+}
+
+export interface UseClassLogsResult {
+  data: ClassLogWithStudent[];
+  isLoading: boolean;
+  error: Error | null;
+  isFetching: boolean;
+  page: number;
+  setPage: (page: number | ((prev: number) => number)) => void;
+  hasMore: boolean;
+  totalCount: number;
+  refetch: () => void;
+}
+
+export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions): UseClassLogsResult {
+  const [page, setPage] = useState(0);
+  const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
+  const filters = options?.filters;
+
+  const query = useQuery({
+    queryKey: ["class_logs", teacherId, page, pageSize, filters],
     queryFn: async () => {
-      let query = supabase
+      let q = supabase
         .from("class_logs")
-        .select(`
+        .select(
+          `
           *,
           students (
             name,
@@ -95,19 +152,68 @@ export function useClassLogs(teacherId?: string) {
             amount,
             due_date
           )
-        `)
+        `,
+          { count: "exact" }
+        )
         .order("class_date", { ascending: false });
 
-      if (teacherId) {
-        query = query.eq("teacher_id", teacherId);
+      const effectiveTeacherId = teacherId ?? (filters?.teacherId !== "all" ? filters?.teacherId : undefined);
+      if (effectiveTeacherId) {
+        q = q.eq("teacher_id", effectiveTeacherId);
       }
 
-      const { data, error } = await query;
-      if (error) {
-        throw error;
+      if (filters?.period && filters.period !== "all") {
+        const { from, to } = getDateRangeForPeriod(filters.period);
+        q = q.gte("class_date", from).lte("class_date", to);
       }
-      return data as ClassLogWithStudent[];
+
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await q.range(from, to);
+
+      if (error) throw error;
+      return { list: (data ?? []) as ClassLogWithStudent[], count: count ?? 0 };
     },
+    placeholderData: keepPreviousData,
+  });
+
+  const list = (query.data?.list ?? []) as ClassLogWithStudent[];
+  const totalCount = query.data?.count ?? 0;
+  const hasMore = totalCount > (page + 1) * pageSize;
+
+  return {
+    data: list,
+    isLoading: query.isLoading,
+    error: query.error as Error | null,
+    isFetching: query.isFetching,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    refetch: query.refetch,
+  };
+}
+
+/** Busca aulas por lista de student_ids (ex.: para enriquecer lista paginada de alunos) */
+export function useClassLogsByStudentIds(studentIds: string[]) {
+  return useQuery({
+    queryKey: ["class_logs_by_student_ids", studentIds],
+    queryFn: async () => {
+      if (studentIds.length === 0) return [] as ClassLogWithStudent[];
+      const { data, error } = await supabase
+        .from("class_logs")
+        .select(`
+          *,
+          students ( name, teacher_id ),
+          teachers ( name ),
+          financial_records ( id, status, amount, due_date )
+        `)
+        .in("student_id", studentIds)
+        .order("class_date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as ClassLogWithStudent[];
+    },
+    enabled: studentIds.length > 0,
   });
 }
 

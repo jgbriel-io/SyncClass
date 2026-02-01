@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useTeachers } from "@/hooks/useTeachers";
 import {
   OverviewFilters,
@@ -23,30 +23,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { Loader2, Eye, TrendingUp, TrendingDown } from "lucide-react";
-import { useStudentsWithStats } from "@/hooks/useStudentDetails";
+import { useStudentsWithStatsPaginated } from "@/hooks/useStudentDetails";
+import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 
-const ITEMS_PER_PAGE = 10;
+const PAGE_SIZE = 20;
 
 function StudentOverviewPage() {
   const [filters, setFilters] = useState<OverviewFiltersState>(defaultOverviewFilters);
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
-  const { data: students = [], isLoading, error } = useStudentsWithStats();
+  const {
+    data: students = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useStudentsWithStatsPaginated({ pageSize: PAGE_SIZE });
   const { data: teachers = [] } = useTeachers();
+
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
 
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
@@ -84,12 +90,6 @@ function StudentOverviewPage() {
     return result;
   }, [students, filters]);
 
-  const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
-  const paginatedStudents = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredStudents.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredStudents, currentPage]);
-
   const handleViewStudent = (studentId: string) => {
     setSelectedStudentId(studentId);
     setSheetOpen(true);
@@ -97,7 +97,7 @@ function StudentOverviewPage() {
 
   const handleFiltersChange = (newFilters: OverviewFiltersState) => {
     setFilters(newFilters);
-    setCurrentPage(1);
+    setPage(0);
   };
 
   return (
@@ -118,7 +118,7 @@ function StudentOverviewPage() {
           onChange={handleFiltersChange}
           onReset={() => {
             setFilters(defaultOverviewFilters);
-            setCurrentPage(1);
+            setPage(0);
           }}
           teachers={teachers}
           showTeacherFilter={true}
@@ -138,7 +138,7 @@ function StudentOverviewPage() {
           <TableSkeleton rows={10} columns={9} />
         ) : !error && (
           <>
-            <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+            <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -155,7 +155,7 @@ function StudentOverviewPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedStudents.map((student) => {
+                    {filteredStudents.map((student) => {
                       const hasOverdue = student.stats.totalOverdue > 0;
                       const lowAttendance =
                         student.stats.attendanceRate !== null &&
@@ -284,65 +284,15 @@ function StudentOverviewPage() {
                     : "Nenhum aluno encontrado com esses filtros"}
                 </div>
               )}
+              <TablePaginationBar
+                page={page}
+                pageSize={PAGE_SIZE}
+                totalCount={totalCount}
+                hasMore={hasMore}
+                isFetching={isFetching}
+                onPageChange={setPage}
+              />
             </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage((p) => Math.max(1, p - 1));
-                      }}
-                      className={
-                        currentPage === 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage(page);
-                          }}
-                          isActive={currentPage === page}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )
-                  )}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage((p) => Math.min(totalPages, p + 1));
-                      }}
-                      className={
-                        currentPage === totalPages
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )}
-
-            {/* Results info */}
-            <p className="text-sm text-muted-foreground text-center">
-              Mostrando {paginatedStudents.length} de {filteredStudents.length}{" "}
-              alunos
-            </p>
           </>
         )}
 

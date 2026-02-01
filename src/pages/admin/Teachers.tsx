@@ -5,13 +5,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   TeachersFilters,
   type TeachersFiltersState,
 } from "@/components/filters/TeachersFilters";
 import { defaultTeachersFilters } from "@/components/filters/filterDefaults";
-import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +44,7 @@ import { TeacherFormDialog } from "@/components/teachers/TeacherFormDialog";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import {
   useTeachers,
+  useTeachersPaginated,
   useCreateTeacher,
   useUpdateTeacher,
   useDeleteTeacher,
@@ -54,6 +54,7 @@ import {
 import { useCreateAuthUserForTeacher, useInviteTeacher } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 
 export default function TeachersPage() {
   const [filters, setFilters] = useState<TeachersFiltersState>({
@@ -69,21 +70,39 @@ export default function TeachersPage() {
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
 
-  const { data: teachers = [], isLoading, error } = useTeachers();
+  const listTopRef = useRef<HTMLDivElement>(null);
+  const { data: allTeachers = [] } = useTeachers();
+  const {
+    data: teachers = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useTeachersPaginated({
+    pageSize: 20,
+    filters: { status: filters.status, sortBy: filters.sortBy },
+  });
   const createTeacher = useCreateTeacher();
   const inviteTeacher = useInviteTeacher();
   const updateTeacher = useUpdateTeacher();
   const deleteTeacher = useDeleteTeacher();
   const createTeacherUser = useCreateAuthUserForTeacher();
 
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
+
   const specializations = useMemo(() => {
     const set = new Set<string>();
-    teachers.forEach((t) => {
+    allTeachers.forEach((t) => {
       const s = (t as Teacher & { specialization?: string | null }).specialization;
       if (s?.trim()) set.add(s.trim());
     });
     return Array.from(set).sort();
-  }, [teachers]);
+  }, [allTeachers]);
 
   const filteredTeachers = useMemo(() => {
     let result = teachers.filter((teacher) => {
@@ -206,8 +225,8 @@ export default function TeachersPage() {
   };
 
   return (
-    <PageContainer>
-        <div className="space-y-6">
+    <>
+    <div className="space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -229,13 +248,19 @@ export default function TeachersPage() {
           {/* Filtros avançados */}
           <TeachersFilters
             filters={filters}
-            onChange={setFilters}
-            onReset={() => setFilters({ ...defaultTeachersFilters, status: "ativo", sortBy: "name_asc" })}
+            onChange={(newFilters) => {
+              setFilters(newFilters);
+              setPage(0);
+            }}
+            onReset={() => {
+              setFilters({ ...defaultTeachersFilters, status: "ativo", sortBy: "name_asc" });
+              setPage(0);
+            }}
             specializations={specializations}
           />
 
           {/* Table */}
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
             <Table>
             <TableHeader>
               <TableRow>
@@ -341,6 +366,14 @@ export default function TeachersPage() {
                   : "Ajuste os filtros acima ou limpe a busca"}
               />
             )}
+            <TablePaginationBar
+              page={page}
+              pageSize={20}
+              totalCount={totalCount}
+              hasMore={hasMore}
+              isFetching={isFetching}
+              onPageChange={setPage}
+            />
           </div>
         </div>
 
@@ -492,6 +525,6 @@ export default function TeachersPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-    </PageContainer>
+    </>
   );
 }

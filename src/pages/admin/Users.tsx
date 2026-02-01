@@ -1,5 +1,4 @@
-import { useState, useMemo } from "react";
-import { PageContainer } from "@/components/ui/page-container";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +40,8 @@ import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
 import { getAvatarLetter } from "@/lib/utils/patterns";
 import {
-  useUsers,
+  useUsersPaginated,
+  useLinkedProfileIds,
   useCreateUser,
   useUpdateUserRole,
   useUpdateUserProfile,
@@ -67,6 +67,7 @@ import {
   type UsersFiltersState,
 } from "@/components/filters/UsersFilters";
 import { defaultUsersFilters } from "@/components/filters/filterDefaults";
+import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 
 export default function UsersPage() {
   const [filters, setFilters] = useState<UsersFiltersState>({
@@ -85,9 +86,24 @@ export default function UsersPage() {
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
 
-  const { data: users = [], isLoading, error } = useUsers();
+  const listTopRef = useRef<HTMLDivElement>(null);
+  const {
+    data: users = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useUsersPaginated({ pageSize: 20 });
   const { data: students = [] } = useStudents();
   const { data: teachers = [] } = useTeachers();
+  const { data: linkedIds } = useLinkedProfileIds();
+
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
   const createUser = useCreateUser();
   const updateRole = useUpdateUserRole();
   const updateProfile = useUpdateUserProfile();
@@ -349,24 +365,10 @@ export default function UsersPage() {
     setIsLinkDialogOpen(true);
   };
 
-  // Get available students (not linked to any user)
-  const linkedStudentIds = new Set(
-    users
-      .map((u) => u.profile?.student_id)
-      .filter((id): id is string => !!id)
-  );
-  const availableStudents = students.filter(
-    (s) => !linkedStudentIds.has(s.id)
-  );
-
-  const linkedTeacherIds = new Set(
-    users
-      .map((u) => u.profile?.teacher_id)
-      .filter((id): id is string => !!id)
-  );
-  const availableTeachers = teachers.filter(
-    (t) => !linkedTeacherIds.has(t.id)
-  );
+  const linkedStudentIds = linkedIds?.linkedStudentIds ?? new Set<string>();
+  const linkedTeacherIds = linkedIds?.linkedTeacherIds ?? new Set<string>();
+  const availableStudents = students.filter((s) => !linkedStudentIds.has(s.id));
+  const availableTeachers = teachers.filter((t) => !linkedTeacherIds.has(t.id));
 
   const getRoleVariant = (role: string | null) => {
     switch (role) {
@@ -395,8 +397,8 @@ export default function UsersPage() {
   };
 
   return (
-    <PageContainer>
-        <div className="space-y-6">
+    <>
+    <div className="space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -417,8 +419,14 @@ export default function UsersPage() {
           {/* Filtros avançados */}
           <UsersFilters
             filters={filters}
-            onChange={setFilters}
-            onReset={() => setFilters({ ...defaultUsersFilters, status: "active" })}
+            onChange={(newFilters) => {
+              setFilters(newFilters);
+              setPage(0);
+            }}
+            onReset={() => {
+              setFilters({ ...defaultUsersFilters, status: "active" });
+              setPage(0);
+            }}
           />
 
         {/* Loading state */}
@@ -439,7 +447,7 @@ export default function UsersPage() {
 
         {/* Table */}
         {!isLoading && !error && (
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -672,6 +680,14 @@ export default function UsersPage() {
                   : "Ajuste os filtros acima ou limpe a busca"}
               />
             )}
+            <TablePaginationBar
+              page={page}
+              pageSize={20}
+              totalCount={totalCount}
+              hasMore={hasMore}
+              isFetching={isFetching}
+              onPageChange={setPage}
+            />
           </div>
         )}
         </div>
@@ -977,6 +993,6 @@ export default function UsersPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-    </PageContainer>
+    </>
   );
 }

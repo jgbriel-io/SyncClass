@@ -24,8 +24,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Check, Loader2 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { Search, Check, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   FinancialFilters,
   type FinancialFiltersState,
@@ -90,9 +90,30 @@ export function FinancialView({
   const [recordToUndo, setRecordToUndo] = useState<FinancialRecordWithRelations | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [undoDialogOpen, setUndoDialogOpen] = useState(false);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
-  const { data: records = [], isLoading, error } = useFinancialRecords(autoTeacherId);
+  const {
+    data: records = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useFinancialRecords(autoTeacherId, {
+    pageSize: 20,
+    filters: {
+      dateFrom: filters.dateFrom || undefined,
+      dateTo: filters.dateTo || undefined,
+      sortBy: filters.sortBy,
+    },
+  });
   const { data: summary } = useFinancialSummary(autoTeacherId);
+
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
   const { data: teachers = [] } = useTeachers();
   const createRecord = useCreateFinancialRecord();
   const markAsPaid = useMarkAsPaid();
@@ -264,8 +285,14 @@ export function FinancialView({
       {/* Filtros avançados */}
       <FinancialFilters
         filters={filters}
-        onChange={setFilters}
-        onReset={() => setFilters(defaultFinancialFilters)}
+        onChange={(newFilters) => {
+          setFilters(newFilters);
+          setPage(0);
+        }}
+        onReset={() => {
+          setFilters(defaultFinancialFilters);
+          setPage(0);
+        }}
       />
 
         {/* Error state */}
@@ -281,7 +308,7 @@ export function FinancialView({
         {isLoading ? (
           <TableSkeleton rows={8} columns={8} />
         ) : !error ? (
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -459,6 +486,35 @@ export function FinancialView({
                 message="Ajuste os filtros acima ou limpe a busca"
               />
             )
+          )}
+          {(totalCount > 0 || page > 0) && (
+            <div className="border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
+              <p className="text-sm text-muted-foreground">
+                {totalCount > 0
+                  ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}`
+                  : "0 registros"}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0 || isFetching}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!hasMore || isFetching}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Próximo
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
           )}
           </div>
         ) : null}

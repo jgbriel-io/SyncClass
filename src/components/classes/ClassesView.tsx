@@ -20,8 +20,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, Check, Lock } from "lucide-react";
-import { useState, useMemo } from "react";
+import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, Check, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   ClassesFilters,
   type ClassesFiltersState,
@@ -127,9 +127,26 @@ export function ClassesView({
   const [logToDelete, setLogToDelete] = useState<ClassLogWithStudent | null>(null);
   const [postClassDialogOpen, setPostClassDialogOpen] = useState(false);
   const [logForPostClass, setLogForPostClass] = useState<ClassLogWithStudent | null>(null);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
-  const { data: logs = [], isLoading, error } = useClassLogs();
+  const {
+    data: logs = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useClassLogs(undefined, {
+    pageSize: 20,
+    filters: { teacherId: filters.teacherId, period: filters.period },
+  });
   const { data: teachers = [] } = useTeachers();
+
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
   const { data: summary } = useClassLogsSummary();
   const createLog = useCreateClassLog();
   const createLogWithFinancial = useCreateClassLogWithFinancial();
@@ -329,8 +346,14 @@ export function ClassesView({
       {/* Filtros avançados */}
       <ClassesFilters
         filters={filters}
-        onChange={setFilters}
-        onReset={() => setFilters(defaultClassesFilters)}
+        onChange={(newFilters) => {
+          setFilters(newFilters);
+          setPage(0);
+        }}
+        onReset={() => {
+          setFilters(defaultClassesFilters);
+          setPage(0);
+        }}
         teachers={teachers}
         showTeacherFilter={showTeacherColumn}
       />
@@ -348,7 +371,7 @@ export function ClassesView({
         {isLoading ? (
           <TableSkeleton rows={8} columns={8} />
         ) : !error && viewMode === "table" && (
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -564,12 +587,42 @@ export function ClassesView({
               )}
             </div>
           )}
+          {/* Paginação */}
+          {(totalCount > 0 || page > 0) && (
+            <div className="border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
+              <p className="text-sm text-muted-foreground">
+                {totalCount > 0
+                  ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}`
+                  : "0 registros"}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0 || isFetching}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!hasMore || isFetching}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Próximo
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
         )}
 
         {/* Cards View (Teacher) */}
       {!isLoading && !error && viewMode === "cards" && (
-        <div className="space-y-4">
+        <div className="space-y-4" ref={listTopRef}>
           {filteredLogs.map((log, index) => (
             <div
               key={log.id}
@@ -728,6 +781,33 @@ export function ClassesView({
                   message="Ajuste os filtros acima ou limpe a busca"
                 />
               )}
+            </div>
+          )}
+          {(totalCount > 0 || page > 0) && (
+            <div className="rounded-lg border bg-card px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
+              <p className="text-sm text-muted-foreground">
+                {totalCount > 0 ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}` : "0 registros"}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0 || isFetching}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!hasMore || isFetching}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Próximo
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
             </div>
           )}
         </div>

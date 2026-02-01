@@ -1,8 +1,16 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+
+const DEFAULT_PAGE_SIZE = 20;
+
+export type TeachersListFilters = {
+  status?: "all" | "ativo" | "inativo";
+  sortBy?: "name_asc" | "name_desc";
+};
 
 export type Teacher = Tables<"teachers">;
 export type TeacherInsert = TablesInsert<"teachers">;
@@ -14,8 +22,6 @@ export function useTeachers() {
   return useQuery({
     queryKey: ["teachers"],
     queryFn: async () => {
-      // Use teachers_masked view para mascarar CPF e telefone conforme LGPD
-      // Admin vê dados completos, outros usuários veem dados mascarados
       const { data, error } = await supabase
         .from("teachers_masked")
         .select("*")
@@ -24,6 +30,67 @@ export function useTeachers() {
       return data as Teacher[];
     },
   });
+}
+
+export interface UseTeachersPaginatedOptions {
+  pageSize?: number;
+  filters?: TeachersListFilters;
+}
+
+export interface UseTeachersPaginatedResult {
+  data: Teacher[];
+  isLoading: boolean;
+  error: Error | null;
+  isFetching: boolean;
+  page: number;
+  setPage: (page: number | ((prev: number) => number)) => void;
+  hasMore: boolean;
+  totalCount: number;
+  refetch: () => void;
+}
+
+export function useTeachersPaginated(options?: UseTeachersPaginatedOptions): UseTeachersPaginatedResult {
+  const [page, setPage] = useState(0);
+  const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
+  const filters = options?.filters;
+
+  const query = useQuery({
+    queryKey: ["teachers_paginated", page, pageSize, filters],
+    queryFn: async () => {
+      let q = supabase.from("teachers_masked").select("*", { count: "exact" });
+
+      if (filters?.status && filters.status !== "all") {
+        q = q.eq("status", filters.status);
+      }
+
+      const ascending = filters?.sortBy === "name_asc";
+      q = q.order("name", { ascending });
+
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await q.range(from, to);
+
+      if (error) throw error;
+      return { list: (data ?? []) as Teacher[], count: count ?? 0 };
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const list = (query.data?.list ?? []) as Teacher[];
+  const totalCount = query.data?.count ?? 0;
+  const hasMore = totalCount > (page + 1) * pageSize;
+
+  return {
+    data: list,
+    isLoading: query.isLoading,
+    error: query.error as Error | null,
+    isFetching: query.isFetching,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    refetch: query.refetch,
+  };
 }
 
 export function useCreateTeacher() {
