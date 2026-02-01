@@ -26,8 +26,8 @@ function randomPassword(length = 10): string {
 }
 
 function friendlyDuplicateError(msg: string): string {
-  if (msg.includes("teachers_unique_cpf") || msg.includes("students_unique_cpf")) return "CPF já cadastrado";
-  if (msg.includes("teachers_unique_phone") || msg.includes("students_unique_phone")) return "Telefone já cadastrado";
+  if (msg.includes("CPF já cadastrado na plataforma") || msg.includes("teachers_unique_cpf") || msg.includes("students_unique_cpf")) return "CPF já cadastrado na plataforma";
+  if (msg.includes("Telefone já cadastrado na plataforma") || msg.includes("teachers_unique_phone") || msg.includes("students_unique_phone")) return "Telefone já cadastrado na plataforma";
   if (msg.includes("students_unique_email") || (msg.includes("duplicate key") && msg.toLowerCase().includes("email"))) return "Email já cadastrado";
   return msg;
 }
@@ -37,38 +37,21 @@ function normalizeDigits(val: string | null | undefined): string {
   return val.replace(/\D/g, "");
 }
 
-async function validateStudentCpfPhone(
+// Validação platform-wide: CPF e telefone únicos em students + teachers
+async function validateCpfPhonePlatform(
   admin: ReturnType<typeof createClient>,
-  studentData: Record<string, unknown> | undefined
+  data: Record<string, unknown> | undefined
 ): Promise<string | null> {
-  if (!studentData) return null;
-  const cpf = normalizeDigits(studentData.cpf as string);
-  const phone = normalizeDigits(studentData.phone as string);
+  if (!data) return null;
+  const cpf = normalizeDigits(data.cpf as string);
+  const phone = normalizeDigits(data.phone as string);
   if (cpf.length === 11) {
-    const { data } = await admin.rpc("check_student_cpf_exists", { p_cpf_digits: cpf });
-    if (data === true) return "CPF já cadastrado";
+    const { data: cpfExists } = await admin.rpc("check_cpf_exists_platform", { p_cpf_digits: cpf });
+    if (cpfExists === true) return "CPF já cadastrado na plataforma";
   }
   if (phone.length >= 10) {
-    const { data } = await admin.rpc("check_student_phone_exists", { p_phone_digits: phone });
-    if (data === true) return "Telefone já cadastrado";
-  }
-  return null;
-}
-
-async function validateTeacherCpfPhone(
-  admin: ReturnType<typeof createClient>,
-  teacherData: Record<string, unknown> | undefined
-): Promise<string | null> {
-  if (!teacherData) return null;
-  const cpf = normalizeDigits(teacherData.cpf as string);
-  const phone = normalizeDigits(teacherData.phone as string);
-  if (cpf.length === 11) {
-    const { data } = await admin.rpc("check_teacher_cpf_exists", { p_cpf_digits: cpf });
-    if (data === true) return "CPF já cadastrado";
-  }
-  if (phone.length >= 10) {
-    const { data } = await admin.rpc("check_teacher_phone_exists", { p_phone_digits: phone });
-    if (data === true) return "Telefone já cadastrado";
+    const { data: phoneExists } = await admin.rpc("check_phone_exists_platform", { p_phone_digits: phone });
+    if (phoneExists === true) return "Telefone já cadastrado na plataforma";
   }
   return null;
 }
@@ -209,11 +192,11 @@ serve(async (req) => {
   }
 
   if (role === "student" && !studentId) {
-    const err = await validateStudentCpfPhone(supabaseAdmin, studentData as Record<string, unknown> | undefined);
+    const err = await validateCpfPhonePlatform(supabaseAdmin, studentData as Record<string, unknown> | undefined);
     if (err) return jsonResponse({ error: err }, 400);
   }
   if (role === "teacher" && !teacherId) {
-    const err = await validateTeacherCpfPhone(supabaseAdmin, teacherData as Record<string, unknown> | undefined);
+    const err = await validateCpfPhonePlatform(supabaseAdmin, teacherData as Record<string, unknown> | undefined);
     if (err) return jsonResponse({ error: err }, 400);
   }
 

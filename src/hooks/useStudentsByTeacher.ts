@@ -29,7 +29,9 @@ export function useCreateStudentForTeacher() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (student: Omit<StudentInsert, "teacher_id">) => {
-      // Descobre o teacher_id do usuário logado via função SQL
+      const { validateCpfPhonePlatform } = await import("@/lib/validate-cpf-phone-platform");
+      const err = await validateCpfPhonePlatform(supabase, student);
+      if (err) throw new Error(err);
       const { data: teacherId, error: teacherError } = await supabase.rpc("get_my_teacher_id");
       if (teacherError) throw teacherError;
 

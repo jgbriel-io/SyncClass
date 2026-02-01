@@ -20,11 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen } from "lucide-react";
+import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, Check } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import format from "date-fns/format";
 import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
+import { PostClassDialog } from "@/components/classes/PostClassDialog";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
@@ -56,6 +58,14 @@ function getPaymentStatusVariant(status: string | null): "success" | "warning" |
   }
 }
 
+function formatDuration(minutes: number | null | undefined): string {
+  if (minutes == null || minutes < 0) return "—";
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}min` : `${h}h`;
+}
+
 function getPaymentStatusLabel(status: string | null): string {
   switch (status) {
     case "pago":
@@ -67,6 +77,27 @@ function getPaymentStatusLabel(status: string | null): string {
     default:
       return "Pendente";
   }
+}
+
+/** Badge de status: Concluída (já preencheu pós-aula), Agendada (futura), Avaliação pendente (passada sem concluir) */
+function getClassStatusBadge(log: { class_date: string; attendance: boolean | null }) {
+  const classDate = new Date(log.class_date + "T12:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  classDate.setHours(0, 0, 0, 0);
+  const isFuture = classDate > today;
+
+  if (log.attendance != null) return { label: "Concluída", variant: "success" as const };
+  if (isFuture) return { label: "Agendada", variant: "info" as const };
+  return { label: "Avaliação pendente", variant: "warning" as const };
+}
+
+function isClassDateFuture(classDate: string): boolean {
+  const d = new Date(classDate + "T12:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  d.setHours(0, 0, 0, 0);
+  return d > today;
 }
 
 interface ClassesViewProps {
@@ -89,6 +120,8 @@ export function ClassesView({
   const [selectedLog, setSelectedLog] = useState<ClassLogWithStudent | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [logToDelete, setLogToDelete] = useState<ClassLogWithStudent | null>(null);
+  const [postClassDialogOpen, setPostClassDialogOpen] = useState(false);
+  const [logForPostClass, setLogForPostClass] = useState<ClassLogWithStudent | null>(null);
 
   const { data: logs = [], isLoading, error } = useClassLogs();
   const { data: teachers = [] } = useTeachers();
@@ -97,6 +130,15 @@ export function ClassesView({
   const createLogWithFinancial = useCreateClassLogWithFinancial();
   const updateLog = useUpdateClassLog();
   const deleteLog = useDeleteClassLog();
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const logsPendingRegistration = logs.filter((log) => {
+    const d = new Date(log.class_date + "T12:00:00");
+    d.setHours(0, 0, 0, 0);
+    return d <= todayStart && log.attendance == null;
+  });
 
   const filteredLogs = logs.filter((log) => {
     const studentName = log.students?.name || "";
@@ -215,6 +257,31 @@ export function ClassesView({
         </div>
       </div>
 
+      {/* Conferência: alerta de aulas passadas sem presença marcada */}
+      {logsPendingRegistration.length > 0 && (
+        <div className="rounded-lg border border-warning/50 bg-warning/10 p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-warning" />
+            <p className="text-sm font-medium">
+              <span className="font-semibold">{logsPendingRegistration.length}</span>{" "}
+              {logsPendingRegistration.length === 1
+                ? "aula pendentes de feedback"
+                : "aulas pendentes de feedback "}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const first = logsPendingRegistration[0];
+              if (first) handleEdit(first);
+            }}
+          >
+            Ver e registrar
+          </Button>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-sm">
@@ -246,35 +313,38 @@ export function ClassesView({
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                     Aluno
                   </th>
                   {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
                       Aula / Professor
                     </th>
                   )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Data
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden sm:table-cell whitespace-nowrap">
+                    Duração
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Nota
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden xl:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
                     Financeiro
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden 2xl:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell whitespace-nowrap">
                     Valor
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
                     Feedback
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Ações
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody>
                 {filteredLogs.map((log) => {
                   const lastUpdatedAt = log.updated_at;
                   // Prioriza o nome do professor do join direto do class_log, depois fallback via teacher_id
@@ -286,7 +356,7 @@ export function ClassesView({
 
                   return (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 align-top">
+                      <td className="px-6 py-4 align-top">
                         <div className="flex items-start gap-3">
                           <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-medium text-accent-foreground">
@@ -298,10 +368,8 @@ export function ClassesView({
                               <p className="text-sm font-medium">
                                 {log.students?.name || "Aluno não encontrado"}
                               </p>
-                              <StatusBadge
-                                variant={log.attendance ? "success" : "destructive"}
-                              >
-                                {log.attendance ? "Presente" : "Ausente"}
+                              <StatusBadge variant={getClassStatusBadge(log).variant}>
+                                {getClassStatusBadge(log).label}
                               </StatusBadge>
                             </div>
                             {lastUpdatedAt && (
@@ -313,7 +381,7 @@ export function ClassesView({
                         </div>
                       </td>
                       {showTeacherColumn && (
-                        <td className="px-4 py-3 align-top hidden lg:table-cell">
+                        <td className="px-6 py-4 align-top hidden lg:table-cell">
                           <div className="space-y-1 min-w-[200px]">
                             {log.title && (
                               <p className="text-sm font-semibold text-foreground whitespace-normal">
@@ -326,19 +394,30 @@ export function ClassesView({
                           </div>
                         </td>
                       )}
-                      <td className="px-4 py-3 align-top whitespace-nowrap">
+                      <td className="px-6 py-4 align-top whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
                           {formatDate(log.class_date)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top whitespace-nowrap">
-                        <span className="text-sm font-medium">
-                          {log.grade !== null
-                            ? Number(log.grade).toFixed(1)
-                            : "—"}
+                      <td className="px-6 py-4 align-top hidden sm:table-cell whitespace-nowrap">
+                        <span className="text-sm text-muted-foreground">
+                          {formatDuration(log.duration_minutes)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top hidden xl:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 align-top whitespace-nowrap">
+                        <span
+                          className={`text-sm font-medium ${
+                            log.attendance === false ? "text-destructive" : ""
+                          }`}
+                        >
+                          {log.grade != null
+                            ? Number(log.grade).toFixed(1)
+                            : log.attendance === false
+                              ? "Não compareceu"
+                              : "—"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 align-top hidden xl:table-cell whitespace-nowrap">
                         {log.financial_records ? (
                           <StatusBadge
                             variant={getPaymentStatusVariant(log.financial_records.status)}
@@ -350,39 +429,60 @@ export function ClassesView({
                           <span className="text-sm text-muted-foreground">Sem cobrança</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 align-top hidden 2xl:table-cell whitespace-nowrap">
-                        <span className="text-sm text-muted-foreground">
+                      <td className="px-6 py-4 align-top hidden lg:table-cell whitespace-nowrap">
+                        <span className="text-sm font-medium tabular-nums">
                           {log.financial_records
-                            ? `R$ ${formatCurrency(log.financial_records.amount)}`
+                            ? formatCurrency(log.financial_records.amount)
                             : "—"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top hidden lg:table-cell">
+                      <td className="px-6 py-4 align-top hidden lg:table-cell">
                         <span className="text-sm text-muted-foreground line-clamp-2 max-w-xs">
                           {log.feedback || "—"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(log)}>
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => openDeleteDialog(log)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <td className="px-6 py-4 align-top text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(log)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => openDeleteDialog(log)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <Button
+                            size="sm"
+                            className={`h-8 border-none ${
+                              log.attendance != null
+                                ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+                                : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
+                            }`}
+                            onClick={() => {
+                              if (isClassDateFuture(log.class_date)) {
+                                toast.warning("Esta aula ainda não ocorreu. Se a data mudou, clique em Editar.");
+                                return;
+                              }
+                              setLogForPostClass(log);
+                              setPostClassDialogOpen(true);
+                            }}
+                          >
+                            <Check className="h-3.5 w-3.5 mr-1.5" />
+                            {log.attendance != null ? "Atualizar" : "Avaliar"}
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -431,10 +531,8 @@ export function ClassesView({
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold">{log.students?.name || "Aluno não encontrado"}</h3>
-                      <StatusBadge
-                        variant={log.attendance ? "success" : "destructive"}
-                      >
-                        {log.attendance ? "Presente" : "Ausente"}
+                      <StatusBadge variant={getClassStatusBadge(log).variant}>
+                        {getClassStatusBadge(log).label}
                       </StatusBadge>
                       {log.financial_records && (
                         <StatusBadge
@@ -451,10 +549,15 @@ export function ClassesView({
                         <Calendar className="h-4 w-4" />
                         {formatDate(log.class_date)}
                       </span>
+                      {log.duration_minutes != null && (
+                        <span className="flex items-center gap-1.5">
+                          {formatDuration(log.duration_minutes)}
+                        </span>
+                      )}
                       {log.financial_records && (
-                        <span className="flex items-center gap-1.5 text-xs">
+                        <span className="flex items-center gap-1.5 font-medium text-foreground">
                           <Receipt className="h-3.5 w-3.5" />
-                          R$ {formatCurrency(log.financial_records.amount)}
+                          {formatCurrency(log.financial_records.amount)}
                         </span>
                       )}
                     </div>
@@ -465,23 +568,29 @@ export function ClassesView({
                     )}
                   </div>
                 </div>
-                <div className="flex items-start gap-4">
-                  {log.grade !== null && (
+                <div className="flex items-start gap-2">
+                  {log.attendance != null && (
                     <div className="text-right">
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">
                         Nota
                       </p>
-                      <p
-                        className={`text-3xl font-bold ${
-                          Number(log.grade) >= 7
-                            ? "text-success"
-                            : Number(log.grade) >= 5
-                            ? "text-warning"
-                            : "text-destructive"
-                        }`}
-                      >
-                        {Number(log.grade).toFixed(1)}
-                      </p>
+                      {log.grade != null ? (
+                        <p
+                          className={`text-3xl font-bold ${
+                            Number(log.grade) >= 7
+                              ? "text-success"
+                              : Number(log.grade) >= 5
+                              ? "text-warning"
+                              : "text-destructive"
+                          }`}
+                        >
+                          {Number(log.grade).toFixed(1)}
+                        </p>
+                      ) : (
+                        <p className="text-sm font-medium text-destructive">
+                          Não compareceu
+                        </p>
+                      )}
                     </div>
                   )}
                   <DropdownMenu>
@@ -504,6 +613,25 @@ export function ClassesView({
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  <Button
+                    size="sm"
+                    className={`h-8 border-none ${
+                      log.attendance != null
+                        ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+                        : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
+                    }`}
+                    onClick={() => {
+                      if (isClassDateFuture(log.class_date)) {
+                        toast.warning("Esta aula ainda não ocorreu. Se a data mudou, clique em Editar.");
+                        return;
+                      }
+                      setLogForPostClass(log);
+                      setPostClassDialogOpen(true);
+                    }}
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1.5" />
+                    {log.attendance != null ? "Atualizar" : "Avaliar"}
+                  </Button>
                 </div>
               </div>
             </div>
@@ -531,7 +659,20 @@ export function ClassesView({
         </div>
       )}
 
-      {/* Form Dialog */}
+      {/* Post-class Dialog */}
+      <PostClassDialog
+        open={postClassDialogOpen}
+        onOpenChange={(open) => {
+          setPostClassDialogOpen(open);
+          if (!open) setLogForPostClass(null);
+        }}
+        classLog={logForPostClass}
+        onSuccess={() => {
+          setLogForPostClass(null);
+        }}
+      />
+
+      {/* Form Dialog (pré-aula) */}
       <ClassLogFormDialog
         open={isFormOpen}
         onOpenChange={(open) => {
@@ -550,15 +691,24 @@ export function ClassesView({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o registro de aula de{" "}
-              <strong>{logToDelete?.students?.name}</strong> do dia{" "}
-              <strong>{logToDelete ? formatDate(logToDelete.class_date) : ""}</strong>?
-              {logToDelete?.financial_records && (
-                <span className="block mt-2 text-warning">
-                  ⚠️ Esta aula possui uma cobrança vinculada que também será afetada.
-                </span>
-              )}
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Tem certeza que deseja excluir o registro de aula de{" "}
+                  <strong>{logToDelete?.students?.name}</strong> do dia{" "}
+                  <strong>{logToDelete ? formatDate(logToDelete.class_date) : ""}</strong>?
+                </p>
+                {logToDelete?.financial_records?.status === "pago" ? (
+                  <p className="text-destructive font-medium">
+                    Esta aula possui uma cobrança já paga. A exclusão da aula também exclui a cobrança.
+                    Deseja excluir mesmo assim?
+                  </p>
+                ) : logToDelete?.financial_records ? (
+                  <span className="block text-warning">
+                    ⚠️ Esta aula possui uma cobrança vinculada que também será afetada.
+                  </span>
+                ) : null}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

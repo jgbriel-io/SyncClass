@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils/formatters";
+import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -238,9 +239,7 @@ export function StudentsListView({
         }
 
         if (existingProfile) {
-          toast.error(
-            "Email já cadastrado"
-          );
+          toast.error(MSG_EMAIL);
           return;
         }
       }
@@ -555,12 +554,25 @@ export function StudentsListView({
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => {
+                              setDetailStudentId(student.id);
+                              setDetailSheetOpen(true);
+                            }}
+                            title="Ver detalhes"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEdit(student)}>
                               <Pencil className="h-4 w-4 mr-2" />
@@ -580,7 +592,8 @@ export function StudentsListView({
                               {student.status === "ativo" ? "Arquivar" : "Reativar aluno"}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
-                        </DropdownMenu>
+                          </DropdownMenu>
+                        </div>
                       </td>
                     </tr>
                   );

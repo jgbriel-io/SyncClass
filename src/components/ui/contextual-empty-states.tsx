@@ -49,12 +49,16 @@ export function EmptyClassesState({ onAction, actionLabel = "Registrar primeira 
   );
 }
 
-export function EmptyFinancialState({ onAction, actionLabel = "Criar primeira cobrança" }: EmptyStateWithActionProps) {
+export function EmptyFinancialState({
+  onAction,
+  actionLabel = "Criar primeira cobrança",
+  message = "As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças.",
+}: EmptyStateWithActionProps & { message?: string }) {
   return (
     <EmptyState
       illustration={<EmptyFinancialIllustration />}
       title="Nenhuma cobrança registrada"
-      message="Crie cobranças manuais ou registre aulas para gerar cobranças automaticamente."
+      message={message}
       actionLabel={onAction ? actionLabel : undefined}
       onAction={onAction}
       size="lg"

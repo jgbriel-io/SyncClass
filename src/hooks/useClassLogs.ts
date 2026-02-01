@@ -27,6 +27,7 @@ export interface ClassLogWithStudent extends ClassLog {
 export interface ClassLogWithFinancialData {
   classLog: ClassLogInsert;
   createFinancial: boolean;
+  /** amount = classLog.billed_amount ?? (hourly_rate * (duration_minutes / 60)); usado ao criar financial_records */
   financialData?: {
     amount: number;
     due_date: string;
@@ -189,6 +190,9 @@ export function useCreateClassLogWithFinancial() {
 
   return useMutation({
     mutationFn: async ({ classLog, createFinancial, financialData }: ClassLogWithFinancialData) => {
+      // Permite cobrança para aulas agendadas (futuras): professor pode deixar em aberto
+      // antes da aula; presença e feedback são marcados depois.
+
       // Primeiro cria a aula
       const { data: createdLog, error: logError } = await supabase
         .from("class_logs")
@@ -200,14 +204,15 @@ export function useCreateClassLogWithFinancial() {
         throw logError;
       }
 
-      // Se deve criar cobrança, cria vinculada à aula
+      // Se deve criar cobrança, cria vinculada à aula.
+      // financialData.amount = classLog.billed_amount ?? (hourly_rate * duration_minutes/60) — calculado no frontend.
       if (createFinancial && financialData) {
         const { error: financialError } = await supabase
           .from("financial_records")
           .insert({
             student_id: classLog.student_id,
             class_log_id: createdLog.id,
-            amount: financialData.amount,
+            amount: financialData.amount, // computedAmount do frontend
             due_date: financialData.due_date,
             description: financialData.description || `Aula do dia ${classLog.class_date}`,
             payment_method: financialData.payment_method || null,
@@ -229,6 +234,7 @@ export function useCreateClassLogWithFinancial() {
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["available_class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       
       if (variables.createFinancial) {
         toast.success("Aula e cobrança registradas com sucesso!");
@@ -238,7 +244,7 @@ export function useCreateClassLogWithFinancial() {
     },
     onError: (error) => {
       console.error("Error creating class log:", error);
-      toast.error("Erro ao registrar aula. Tente novamente.");
+      toast.error((error as Error).message || "Erro ao registrar aula. Tente novamente.");
     },
   });
 }
@@ -278,6 +284,12 @@ export function useDeleteClassLog() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Exclui a cobrança vinculada (se existir) antes de excluir a aula
+      await supabase
+        .from("financial_records")
+        .delete()
+        .eq("class_log_id", id);
+
       const { error } = await supabase
         .from("class_logs")
         .delete()
@@ -290,6 +302,8 @@ export function useDeleteClassLog() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Registro removido com sucesso!");
     },
     onError: (error) => {

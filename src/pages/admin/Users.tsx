@@ -35,7 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Plus, Loader2, Shield, User, Link2, Unlink, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2 } from "lucide-react";
+import { Search, Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil } from "lucide-react";
 import format from "date-fns/format";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
@@ -48,9 +48,7 @@ import {
   useDeleteUser,
   useHardDeleteUser,
   useLinkUserToStudent,
-  useUnlinkUserFromStudent,
   useLinkUserToTeacher,
-  useUnlinkUserFromTeacher,
   UserWithProfile,
 } from "@/hooks/useUsers";
 import { useStudents, useUpdateStudent } from "@/hooks/useStudents";
@@ -90,9 +88,7 @@ export default function UsersPage() {
   const updateStudent = useUpdateStudent();
   const updateTeacher = useUpdateTeacher();
   const linkToStudent = useLinkUserToStudent();
-  const unlinkFromStudent = useUnlinkUserFromStudent();
   const linkToTeacher = useLinkUserToTeacher();
-  const unlinkFromTeacher = useUnlinkUserFromTeacher();
   const deleteTeacher = useDeleteTeacher();
 
   const filteredUsers = users.filter((user) => {
@@ -214,10 +210,6 @@ export default function UsersPage() {
     }
   };
 
-  const handleUnlinkStudent = (userId: string) => {
-    unlinkFromStudent.mutate(userId);
-  };
-
   const handleLinkTeacher = () => {
     if (selectedUser && selectedTeacherId) {
       linkToTeacher.mutate(
@@ -234,10 +226,6 @@ export default function UsersPage() {
         }
       );
     }
-  };
-
-  const handleUnlinkTeacher = (userId: string) => {
-    unlinkFromTeacher.mutate(userId);
   };
 
   const handleDeleteConfirm = () => {
@@ -482,7 +470,7 @@ export default function UsersPage() {
                               )}
                               {!isActive && (
                                 <p className="text-[11px] text-amber-600">
-                                  Conta desativada
+                                  Conta arquivada
                                 </p>
                               )}
                             </div>
@@ -495,7 +483,7 @@ export default function UsersPage() {
                             </StatusBadge>
                             {!isActive && (
                               <span className="text-[11px] text-muted-foreground">
-                                Desativado
+                                Arquivado
                               </span>
                             )}
                           </div>
@@ -552,6 +540,7 @@ export default function UsersPage() {
                                   setIsFormOpen(true);
                                 }}
                               >
+                                <Pencil className="h-4 w-4 mr-2" />
                                 Editar
                               </DropdownMenuItem>
                               {role === "student" && !linkedStudent && (
@@ -561,25 +550,11 @@ export default function UsersPage() {
                                   Vincular aluno
                                 </DropdownMenuItem>
                               )}
-                              {linkedStudent && (
-                                <DropdownMenuItem
-                                  onClick={() => handleUnlinkStudent(user.id)}
-                                >
-                                  Desvincular aluno
-                                </DropdownMenuItem>
-                              )}
                               {role === "teacher" && !linkedTeacher && (
                                 <DropdownMenuItem
                                   onClick={() => openLinkDialog(user, "teacher")}
                                 >
                                   Vincular professor
-                                </DropdownMenuItem>
-                              )}
-                              {role === "teacher" && linkedTeacher && (
-                                <DropdownMenuItem
-                                  onClick={() => handleUnlinkTeacher(user.id)}
-                                >
-                                  Desvincular professor
                                 </DropdownMenuItem>
                               )}
                               {linkedStudent && linkedStudent.status === "inativo" && (
@@ -618,7 +593,7 @@ export default function UsersPage() {
                                   userIsActive && (isStudentActive || isTeacherActive || (!linkedStudent && !linkedTeacher));
 
                                 const label = shouldShowDeactivate
-                                  ? "Desativar"
+                                  ? "Arquivar"
                                   : canHardDelete
                                   ? "Excluir definitivamente"
                                   : "Inativo";
@@ -872,14 +847,14 @@ export default function UsersPage() {
                   const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
 
                   if (linkedStudent && isStudentActive) {
-                    return "Confirmar desativação";
+                    return "Confirmar arquivamento";
                   }
 
                   if (linkedTeacher && isTeacherActive) {
-                    return "Confirmar desativação";
+                    return "Confirmar arquivamento";
                   }
 
-                  return "Confirmar desativação do usuário";
+                  return "Confirmar arquivamento do usuário";
                 })()}
               </AlertDialogTitle>
               <AlertDialogDescription>
@@ -901,7 +876,7 @@ export default function UsersPage() {
                   if (linkedStudent && isStudentActive) {
                     return (
                       <>
-                        Tem certeza que deseja desativar o usuário <strong>{displayName}</strong>?
+                        Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
                         Ele será removido da lista de ativos e aparecerá como aluno inativo.
                       </>
                     );
@@ -910,7 +885,7 @@ export default function UsersPage() {
                   if (linkedTeacher && isTeacherActive) {
                     return (
                       <>
-                        Tem certeza que deseja desativar o usuário <strong>{displayName}</strong>?
+                        Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
                         Ele será removido da lista de ativos e aparecerá como professor inativo.
                       </>
                     );
@@ -918,8 +893,8 @@ export default function UsersPage() {
 
                   return (
                     <>
-                      Tem certeza que deseja desativar o usuário <strong>{displayName}</strong>?
-                      Esta ação não remove a conta do Supabase Auth, apenas desativa o acesso no painel.
+                      Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
+                      Esta ação não remove a conta do Supabase Auth, apenas arquiva o usuário no painel.
                     </>
                   );
                 })()}
@@ -955,10 +930,10 @@ export default function UsersPage() {
                 deleteTeacher.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Desativando...
+                    Arquivando...
                   </>
                 ) : (
-                  "Desativar"
+                  "Arquivar"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

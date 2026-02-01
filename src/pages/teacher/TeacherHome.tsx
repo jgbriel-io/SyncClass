@@ -1,4 +1,5 @@
 import { DashboardView } from "@/components/dashboard/DashboardView";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,9 +9,12 @@ import {
   useTeacherBirthdaysThisMonth,
   useTeacherNewStudentsByMonth,
 } from "@/hooks/useTeacherDashboard";
+import { useTodayClasses } from "@/hooks/useTodayClasses";
+import type { ChartMonthsFilter } from "@/components/dashboard/DashboardView";
 
 const TeacherHome = () => {
   const { user } = useAuth();
+  const [chartMonths, setChartMonths] = useState<ChartMonthsFilter>(6);
   
   // Get teacher_id from profile
   const { data: teacherProfile } = useQuery({
@@ -34,7 +38,8 @@ const TeacherHome = () => {
   const { data: stats, isLoading: loadingStats } = useTeacherDashboardStats(teacherId);
   const { data: upcomingPayments = [], isLoading: loadingPayments } = useTeacherUpcomingPayments(teacherId);
   const { data: birthdays = [], isLoading: loadingBirthdays } = useTeacherBirthdaysThisMonth(teacherId);
-  const { data: chartData = [], isLoading: loadingChart } = useTeacherNewStudentsByMonth(teacherId);
+  const { data: chartData = [], isLoading: loadingChart } = useTeacherNewStudentsByMonth(teacherId, chartMonths);
+  const { data: todayClasses } = useTodayClasses(teacherId);
 
   const isLoading = loadingStats || loadingPayments || loadingBirthdays || loadingChart || !teacherId;
 
@@ -46,8 +51,11 @@ const TeacherHome = () => {
         upcomingPayments={upcomingPayments}
         birthdays={birthdays}
         chartData={chartData}
+        todayClasses={todayClasses}
         isLoading={isLoading}
         basePath="/teacher"
+        chartMonths={chartMonths}
+        onChartMonthsChange={setChartMonths}
       />
   );
 };

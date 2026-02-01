@@ -9,7 +9,6 @@ export type TeacherInsert = TablesInsert<"teachers">;
 export type TeacherUpdate = TablesUpdate<"teachers">;
 type TeacherStatus = Enums<"teacher_status">;
 type ProfileUpdate = TablesUpdate<"profiles">;
-type UserRoleInsert = TablesInsert<"user_roles">;
 
 export function useTeachers() {
   return useQuery({
@@ -31,6 +30,9 @@ export function useCreateTeacher() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (teacher: TeacherInsert) => {
+      const { validateCpfPhonePlatform } = await import("@/lib/validate-cpf-phone-platform");
+      const err = await validateCpfPhonePlatform(supabase, teacher);
+      if (err) throw new Error(err);
       const { data, error } = await supabase
         .from("teachers")
         .insert(teacher)
@@ -101,20 +103,13 @@ export function useUpdateTeacher() {
           }
 
           if (profile.user_id) {
-            const userRolePayload: UserRoleInsert = {
-              user_id: profile.user_id,
-              role: "teacher",
-              full_name: fullName,
-              email: normalizedEmail,
-            };
-
-            const { error: roleError } = await supabase
-              .from("user_roles")
-              .upsert(userRolePayload, { onConflict: "user_id" });
-
-            if (roleError) {
-              throw roleError;
-            }
+            const { error: roleError } = await supabase.rpc("upsert_user_role_safe", {
+              p_user_id: profile.user_id,
+              p_role: "teacher",
+              p_full_name: fullName ?? null,
+              p_email: normalizedEmail,
+            });
+            if (roleError) throw roleError;
           }
         }
       }
@@ -161,7 +156,7 @@ export function useDeleteTeacher() {
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success("Professor desativado com sucesso!");
+      toast.success("Professor arquivado com sucesso!");
     },
     onError: () => {
       toast.error("Erro ao excluir professor. Tente novamente.");

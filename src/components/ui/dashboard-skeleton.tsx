@@ -11,7 +11,7 @@ interface CardSkeletonProps {
 
 /**
  * Skeleton para cards
- * Útil para dashboards e páginas com cards de métricas
+ * Útil para dashboards e páginas com cards de estatísticas
  */
 export function CardSkeleton({ count = 3 }: CardSkeletonProps) {
   return (
@@ -36,7 +36,7 @@ export function CardSkeleton({ count = 3 }: CardSkeletonProps) {
 
 interface DashboardSkeletonProps {
   /**
-   * Número de cards de métricas
+   * Número de cards de estatísticas
    * @default 4
    */
   metricCards?: number;
@@ -49,7 +49,7 @@ interface DashboardSkeletonProps {
 
 /**
  * Skeleton para dashboard completo
- * Cards de métricas + tabela
+ * Cards de estatísticas + tabela
  */
 export function DashboardSkeleton({ 
   metricCards = 4,
@@ -57,7 +57,7 @@ export function DashboardSkeleton({
 }: DashboardSkeletonProps) {
   return (
     <div className="space-y-6">
-      {/* Metric Cards Grid */}
+      {/* Cards de estatísticas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <CardSkeleton count={metricCards} />
       </div>

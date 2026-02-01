@@ -2,7 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
+import { validateCpfPhonePlatform } from "@/lib/validate-cpf-phone-platform";
 import { toast } from "sonner";
+import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import type { Tables, TablesInsert, Enums } from "@/integrations/supabase/types";
 import { logger } from "@/lib/sentry";
 
@@ -138,7 +140,7 @@ async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult>
   const password = (body.password && body.password.length >= 6) ? body.password : generateRandomPassword();
 
   const { data: existingProfile } = await supabase.from("profiles").select("id").ilike("email", normalizedEmail).maybeSingle();
-  if (existingProfile) throw new Error("Email já cadastrado");
+  if (existingProfile) throw new Error(MSG_EMAIL);
 
   let createdStudent: { id: string } | null = null;
   let createdTeacher: { id: string } | null = null;
@@ -149,6 +151,8 @@ async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult>
     if (body.studentId) {
       resolvedStudentId = body.studentId;
     } else if (body.studentData) {
+      const err = await validateCpfPhonePlatform(supabase, body.studentData);
+      if (err) throw new Error(err);
       const insert: StudentInsert = { ...body.studentData, name: fullName, email: normalizedEmail } as StudentInsert;
       const { data: s, error: se } = await supabase.from("students").insert(insert).select("id").single();
       if (se) throw new Error(getDuplicateErrorMessage(se) || se.message);
@@ -160,6 +164,8 @@ async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult>
     if (body.teacherId) {
       resolvedTeacherId = body.teacherId;
     } else if (body.teacherData) {
+      const err = await validateCpfPhonePlatform(supabase, body.teacherData);
+      if (err) throw new Error(err);
       const insert: TeacherInsert = { ...body.teacherData, name: fullName, email: normalizedEmail } as TeacherInsert;
       const { data: t, error: te } = await supabase.from("teachers").insert(insert).select("id").single();
       if (te) throw new Error(getDuplicateErrorMessage(te) || te.message);
@@ -200,7 +206,12 @@ async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult>
       .from("profiles")
       .update({ role: body.role, full_name: fullName, email: normalizedEmail, student_id: resolvedStudentId, teacher_id: resolvedTeacherId })
       .eq("user_id", userId);
-    const { error: rolesErr } = await supabase.from("user_roles").update({ role: body.role, full_name: fullName, email: normalizedEmail }).eq("user_id", userId);
+    const { error: rolesErr } = await supabase.rpc("upsert_user_role_safe", {
+      p_user_id: userId,
+      p_role: body.role,
+      p_full_name: fullName || null,
+      p_email: normalizedEmail,
+    });
     if (!profileErr && !rolesErr) roleOk = true;
   }
 
@@ -299,19 +310,12 @@ export function useUpdateUserRole() {
       const fullName = profile.full_name ?? "";
       const normalizedEmail = profile.email?.trim().toLowerCase() ?? null;
 
-      // Keep user_roles in sync
-      const { error } = await supabase
-        .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: role,
-            full_name: fullName || null,
-            email: normalizedEmail,
-          },
-          { onConflict: "user_id" }
-        );
-
+      const { error } = await supabase.rpc("upsert_user_role_safe", {
+        p_user_id: userId,
+        p_role: role,
+        p_full_name: fullName || null,
+        p_email: normalizedEmail,
+      });
       if (error) throw error;
 
       // Keep profile role copy in sync
@@ -419,7 +423,7 @@ export function useDeleteUser() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário desativado com sucesso!");
+      toast.success("Usuário arquivado com sucesso!");
     },
     onError: (error: Error) => {
       toast.error("Erro ao excluir usuário. Tente novamente.");
@@ -477,18 +481,12 @@ export function useLinkUserToStudent() {
       const fullName = profile?.full_name ?? null;
       const email = profile?.email ?? null;
 
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: "student",
-            full_name: fullName,
-            email,
-          },
-          { onConflict: "user_id" }
-        );
-
+      const { error: roleError } = await supabase.rpc("upsert_user_role_safe", {
+        p_user_id: userId,
+        p_role: "student",
+        p_full_name: fullName,
+        p_email: email,
+      });
       if (roleError) throw roleError;
     },
     onSuccess: () => {
@@ -527,18 +525,12 @@ export function useLinkUserToTeacher() {
       const fullName = profile?.full_name ?? null;
       const email = profile?.email ?? null;
 
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: "teacher",
-            full_name: fullName,
-            email,
-          },
-          { onConflict: "user_id" }
-        );
-
+      const { error: roleError } = await supabase.rpc("upsert_user_role_safe", {
+        p_user_id: userId,
+        p_role: "teacher",
+        p_full_name: fullName,
+        p_email: email,
+      });
       if (roleError) throw roleError;
     },
     onSuccess: () => {
@@ -553,54 +545,6 @@ export function useLinkUserToTeacher() {
   });
 }
 
-// Unlink user from student
-export function useUnlinkUserFromStudent() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ student_id: null })
-        .eq("user_id", userId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Vínculo removido com sucesso!");
-    },
-    onError: (error: Error) => {
-      toast.error("Erro ao remover vínculo. Tente novamente.");
-    },
-  });
-}
-
-// Unlink user from teacher
-export function useUnlinkUserFromTeacher() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ teacher_id: null })
-        .eq("user_id", userId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success("Vínculo de professor removido com sucesso!");
-    },
-    onError: (error: Error) => {
-      toast.error("Erro ao remover vínculo de professor. Tente novamente.");
-    },
-  });
-}
 
 // Convida aluno (cria student + auth user atomicamente via invite-user)
 export function useInviteStudent() {
@@ -686,7 +630,7 @@ export function useCreateAuthUserForStudent() {
     },
     onError: (error: Error) => {
       const msg = error?.message?.toLowerCase() || "";
-      toast.error(msg.includes("already") || msg.includes("cadastrado") ? "Email já cadastrado" : error.message);
+      toast.error(msg.includes("already") || msg.includes("cadastrado") ? MSG_EMAIL : error.message);
     },
   });
 }
@@ -712,7 +656,7 @@ export function useCreateAuthUserForTeacher() {
     },
     onError: (error: Error) => {
       const msg = error?.message?.toLowerCase() || "";
-      toast.error(msg.includes("already") || msg.includes("cadastrado") ? "Email já cadastrado" : error.message);
+      toast.error(msg.includes("already") || msg.includes("cadastrado") ? MSG_EMAIL : error.message);
     },
   });
 }

@@ -8,7 +8,6 @@ export type Student = Tables<"students">;
 export type StudentInsert = TablesInsert<"students">;
 export type StudentUpdate = TablesUpdate<"students">;
 type ProfileUpdate = TablesUpdate<"profiles">;
-type UserRoleInsert = TablesInsert<"user_roles">;
 
 interface PostgresError {
   code?: string;
@@ -42,6 +41,9 @@ export function useCreateStudent() {
 
   return useMutation({
     mutationFn: async (student: StudentInsert) => {
+      const { validateCpfPhonePlatform } = await import("@/lib/validate-cpf-phone-platform");
+      const err = await validateCpfPhonePlatform(supabase, student);
+      if (err) throw new Error(err);
       const { data, error } = await supabase
         .from("students")
         .insert(student)
@@ -65,14 +67,27 @@ export function useCreateStudent() {
   });
 }
 
+/** Remove cpf/phone do update se parecerem mascarados (evita sobrescrever dados reais com ***) */
+function sanitizeStudentUpdateForEdit(updates: Record<string, unknown>): Record<string, unknown> {
+  const out = { ...updates };
+  if (typeof out.cpf === "string" && out.cpf.includes("*")) {
+    delete out.cpf;
+  }
+  if (typeof out.phone === "string" && out.phone.includes("*")) {
+    delete out.phone;
+  }
+  return out;
+}
+
 export function useUpdateStudent() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: StudentUpdate & { id: string }) => {
+      const safeUpdates = sanitizeStudentUpdateForEdit(updates as Record<string, unknown>) as StudentUpdate;
       const { data, error } = await supabase
         .from("students")
-        .update(updates)
+        .update(safeUpdates)
         .eq("id", id)
         .select()
         .single();
@@ -120,20 +135,13 @@ export function useUpdateStudent() {
           }
 
           if (profile.user_id) {
-            const userRolePayload: UserRoleInsert = {
-              user_id: profile.user_id,
-              role: "student",
-              full_name: fullName,
-              email: normalizedEmail,
-            };
-
-            const { error: roleError } = await supabase
-              .from("user_roles")
-              .upsert(userRolePayload, { onConflict: "user_id" });
-
-            if (roleError) {
-              throw roleError;
-            }
+            const { error: roleError } = await supabase.rpc("upsert_user_role_safe", {
+              p_user_id: profile.user_id,
+              p_role: "student",
+              p_full_name: fullName ?? null,
+              p_email: normalizedEmail,
+            });
+            if (roleError) throw roleError;
           }
         }
       }
@@ -147,8 +155,10 @@ export function useUpdateStudent() {
       toast.success("Aluno atualizado com sucesso!");
     },
     onError: (error: unknown) => {
-      const friendly = getDuplicateErrorMessage(error as PostgresError);
-      toast.error(friendly || "Erro ao atualizar aluno. Tente novamente.");
+      const pgErr = error as PostgresError;
+      const friendly = getDuplicateErrorMessage(pgErr);
+      const msg = pgErr?.message || (error as Error)?.message;
+      toast.error(friendly || msg || "Erro ao atualizar aluno. Tente novamente.");
     },
   });
 }
@@ -184,10 +194,10 @@ export function useDeleteStudent() {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success("Aluno desativado com sucesso!");
+      toast.success("Aluno arquivado com sucesso!");
     },
     onError: () => {
-      toast.error("Erro ao desativar aluno. Tente novamente.");
+      toast.error("Erro ao arquivar aluno. Tente novamente.");
     },
   });
 }

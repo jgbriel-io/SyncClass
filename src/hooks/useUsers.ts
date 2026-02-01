@@ -102,8 +102,6 @@ export {
   useHardDeleteUser,
   useLinkUserToStudent,
   useLinkUserToTeacher,
-  useUnlinkUserFromStudent,
-  useUnlinkUserFromTeacher,
   useCreateAuthUserForStudent,
   useCreateAuthUserForTeacher,
   useInviteStudent,

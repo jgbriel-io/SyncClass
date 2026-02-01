@@ -343,7 +343,7 @@ export function StudentDetailSheet({
                                 {formatDate(log.class_date)}
                               </span>
                             </div>
-                            {log.grade !== null && (
+                            {log.grade != null ? (
                               <span
                                 className={`text-sm font-bold ${
                                   log.grade >= 7
@@ -355,7 +355,11 @@ export function StudentDetailSheet({
                               >
                                 {Number(log.grade).toFixed(1)}
                               </span>
-                            )}
+                            ) : log.attendance === false ? (
+                              <span className="text-sm font-medium text-destructive">
+                                Não compareceu
+                              </span>
+                            ) : null}
                           </div>
                           {log.feedback && (
                             <p className="text-xs text-muted-foreground pl-6">
@@ -451,8 +455,7 @@ export function StudentDetailSheet({
             {/* Extrato Consolidado */}
             <TabsContent value="statement" className="flex-1 overflow-auto m-0">
               <StudentStatementTab
-                classLogs={student.classLogs}
-                financialRecords={student.financialRecords}
+                studentId={student.id}
                 studentName={student.name}
               />
             </TabsContent>

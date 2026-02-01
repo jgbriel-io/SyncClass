@@ -23,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Check, Loader2 } from "lucide-react";
+import { Search, Check, Loader2 } from "lucide-react";
 import { useState } from "react";
 import format from "date-fns/format";
 import { ptBR } from "date-fns/locale";
@@ -104,7 +104,9 @@ export function FinancialView({
   const [recordToConfirm, setRecordToConfirm] = useState<FinancialRecordWithRelations | null>(null);
   const [recordToEdit, setRecordToEdit] = useState<FinancialRecordWithRelations | null>(null);
   const [recordToDelete, setRecordToDelete] = useState<FinancialRecordWithRelations | null>(null);
+  const [recordToUndo, setRecordToUndo] = useState<FinancialRecordWithRelations | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [undoDialogOpen, setUndoDialogOpen] = useState(false);
 
   const { data: records = [], isLoading, error } = useFinancialRecords(autoTeacherId);
   const { data: summary } = useFinancialSummary();
@@ -215,13 +217,6 @@ export function FinancialView({
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="text-muted-foreground mt-1">{subtitle}</p>
         </div>
-        <Button onClick={() => {
-          setRecordToEdit(null);
-          setIsFormOpen(true);
-        }}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Cobrança
-        </Button>
       </div>
 
       {/* Summary Cards */}
@@ -435,7 +430,10 @@ export function FinancialView({
                               size="sm"
                               className="h-8 bg-warning text-white font-semibold hover:bg-warning/90 border-none shadow"
                               disabled={undoPayment.isPending}
-                              onClick={() => undoPayment.mutate(record.id)}
+                              onClick={() => {
+                                setRecordToUndo(record);
+                                setUndoDialogOpen(true);
+                              }}
                             >
                               {undoPayment.isPending ? (
                                 <>
@@ -458,11 +456,7 @@ export function FinancialView({
           {filteredRecords.length === 0 && (
             records.length === 0 ? (
               <EmptyFinancialState
-                onAction={() => {
-                  setRecordToEdit(null);
-                  setIsFormOpen(true);
-                }}
-                actionLabel="Criar primeira cobrança"
+                message="As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças."
               />
             ) : (
               <EmptyState
@@ -513,6 +507,63 @@ export function FinancialView({
                 </>
               ) : (
                 "Excluir"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Undo Payment (Desfazer Cobrança) Dialog */}
+      <AlertDialog
+        open={undoDialogOpen}
+        onOpenChange={(open) => {
+          setUndoDialogOpen(open);
+          if (!open) setRecordToUndo(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desfazer cobrança</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Deseja desfazer o pagamento da cobrança de{" "}
+                  <strong>{recordToUndo?.students?.name}</strong> no valor de{" "}
+                  <strong>{recordToUndo ? formatCurrency(Number(recordToUndo.amount)) : ""}</strong>?
+                </p>
+                {recordToUndo?.class_logs && recordToUndo.class_logs.attendance != null ? (
+                  <p className="text-destructive font-medium">
+                    Esta cobrança está vinculada a uma aula já concluída/confirmada.
+                    Deseja desfazer mesmo assim?
+                  </p>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={undoPayment.isPending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (recordToUndo) {
+                  undoPayment.mutate(recordToUndo.id, {
+                    onSettled: () => {
+                      setUndoDialogOpen(false);
+                      setRecordToUndo(null);
+                    },
+                  });
+                }
+              }}
+              disabled={undoPayment.isPending}
+            >
+              {undoPayment.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Desfazendo...
+                </>
+              ) : (
+                "Desfazer cobrança"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

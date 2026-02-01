@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TeacherFormDialog } from "@/components/teachers/TeacherFormDialog";
+import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import {
   useTeachers,
   useCreateTeacher,
@@ -99,9 +100,7 @@ export default function TeachersPage() {
         }
 
         if (existingProfile) {
-          toast.error(
-            "Email já cadastrado"
-          );
+          toast.error(MSG_EMAIL);
           return;
         }
       }
@@ -305,7 +304,7 @@ export default function TeachersPage() {
                               {status === "ativo" && (
                                 <Trash2 className="h-4 w-4 mr-2" />
                               )}
-                              {status === "ativo" ? "Desativar" : "Reativar professor"}
+                              {status === "ativo" ? "Arquivar" : "Reativar professor"}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -421,20 +420,20 @@ export default function TeachersPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal de confirmação de status (desativar/reativar) */}
+        {/* Modal de confirmação de status (arquivar/reativar) */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>
                 {(teacherToDelete?.status ?? "ativo") === "ativo"
-                  ? "Confirmar desativação"
+                  ? "Confirmar arquivamento"
                   : "Confirmar reativação"}
               </DialogTitle>
             </DialogHeader>
             <p className="mt-2 text-sm text-muted-foreground">
               {(teacherToDelete?.status ?? "ativo") === "ativo" ? (
                 <>
-                  Tem certeza que deseja desativar o professor{" "}
+                  Tem certeza que deseja arquivar o professor{" "}
                   <strong>{teacherToDelete?.name}</strong>? Ele será removido da
                   lista de ativos, mas poderá ser visualizado em "Inativos".
                 </>
@@ -463,11 +462,11 @@ export default function TeachersPage() {
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {(teacherToDelete?.status ?? "ativo") === "ativo"
-                      ? "Desativando..."
+                      ? "Arquivando..."
                       : "Reativando..."}
                   </>
                 ) : (teacherToDelete?.status ?? "ativo") === "ativo" ? (
-                  "Desativar"
+                  "Arquivar"
                 ) : (
                   "Reativar"
                 )}

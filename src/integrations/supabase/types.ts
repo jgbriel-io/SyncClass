@@ -17,11 +17,16 @@ export type Database = {
       class_logs: {
         Row: {
           attendance: boolean | null
+          billed_amount: number | null
           class_date: string
           created_at: string | null
+          duration_minutes: number | null
+          end_at: string | null
           feedback: string | null
           grade: number | null
           id: string
+          observations: string | null
+          start_at: string | null
           student_id: string
           teacher_id: string | null
           title: string | null
@@ -29,11 +34,16 @@ export type Database = {
         }
         Insert: {
           attendance?: boolean | null
+          billed_amount?: number | null
           class_date: string
           created_at?: string | null
+          duration_minutes?: number | null
+          end_at?: string | null
           feedback?: string | null
           grade?: number | null
           id?: string
+          observations?: string | null
+          start_at?: string | null
           student_id: string
           teacher_id?: string | null
           title?: string | null
@@ -41,11 +51,16 @@ export type Database = {
         }
         Update: {
           attendance?: boolean | null
-          class_date?: string
+          billed_amount?: number | null
+          class_date?: string | null
           created_at?: string | null
+          duration_minutes?: number | null
+          end_at?: string | null
           feedback?: string | null
           grade?: number | null
           id?: string
+          observations?: string | null
+          start_at?: string | null
           student_id?: string
           teacher_id?: string | null
           title?: string | null
@@ -312,9 +327,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      class_logs_with_billing: {
+        Row: {
+          class_log_id: string
+          student_id: string
+          teacher_id: string | null
+          class_date: string
+          attendance: boolean | null
+          title: string | null
+          grade: number | null
+          feedback: string | null
+          created_at: string | null
+          financial_record_id: string | null
+          billed_amount: number | null
+          billing_status: Database["public"]["Enums"]["payment_status"] | null
+          billing_due_date: string | null
+          billing_paid_at: string | null
+          billing_status_consolidated: "not_billed" | "paid" | "pending" | "overdue" | "unknown"
+          student_name: string | null
+          teacher_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      check_cpf_exists_platform: { Args: { p_cpf_digits: string }; Returns: boolean }
+      check_phone_exists_platform: { Args: { p_phone_digits: string }; Returns: boolean }
       get_my_student_id: { Args: never; Returns: string }
       get_my_teacher_id: { Args: never; Returns: string }
       set_user_role: {
@@ -337,6 +375,15 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_teacher: { Args: never; Returns: boolean }
+      upsert_user_role_safe: {
+        Args: {
+          p_user_id: string
+          p_role: Database["public"]["Enums"]["app_role"]
+          p_full_name?: string | null
+          p_email?: string | null
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "student" | "teacher"

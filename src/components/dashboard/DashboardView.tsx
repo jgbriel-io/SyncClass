@@ -1,5 +1,6 @@
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useState } from "react";
 import {
   Users,
   AlertCircle,
@@ -12,7 +13,19 @@ import {
   GraduationCap,
   Clock,
   ChevronRight,
+  Bell,
+  Link2,
+  UserPlus,
+  Zap,
+  Filter,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import format from "date-fns/format";
 import { ptBR } from "date-fns/locale";
 import { formatCurrency } from "@/lib/utils/formatters";
@@ -23,10 +36,13 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import type { TodayClassesData } from "@/hooks/useTodayClasses";
+import { getTodayClassStatus } from "@/hooks/useTodayClasses";
 
 function formatDate(dateString: string): string {
   return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
@@ -102,7 +118,24 @@ interface Birthday {
 interface ChartDataPoint {
   month: string;
   count: number;
+  classesCount?: number;
+  teachersCount?: number;
+  usersCount?: number;
 }
+
+export type ChartMonthsFilter = 1 | 3 | 6 | 12;
+
+export type ChartLineFilterAdmin = {
+  alunos: boolean;
+  professores: boolean;
+  aulas: boolean;
+  usuarios: boolean;
+};
+
+export type ChartLineFilterTeacher = {
+  alunos: boolean;
+  aulas: boolean;
+};
 
 interface DashboardViewProps {
   title?: string;
@@ -111,9 +144,17 @@ interface DashboardViewProps {
   upcomingPayments: UpcomingPayment[];
   birthdays: Birthday[];
   chartData: ChartDataPoint[];
+  todayClasses: TodayClassesData | undefined;
   isLoading: boolean;
   basePath: "/admin" | "/teacher";
+  chartMonths?: ChartMonthsFilter;
+  onChartMonthsChange?: (v: ChartMonthsFilter) => void;
+  chartLines?: ChartLineFilterAdmin | ChartLineFilterTeacher;
+  onChartLinesChange?: (v: ChartLineFilterAdmin | ChartLineFilterTeacher) => void;
 }
+
+const DEFAULT_CHART_LINES_ADMIN: ChartLineFilterAdmin = { alunos: true, professores: true, aulas: true, usuarios: true };
+const DEFAULT_CHART_LINES_TEACHER: ChartLineFilterTeacher = { alunos: true, aulas: true };
 
 export function DashboardView({
   title = "Dashboard",
@@ -122,9 +163,20 @@ export function DashboardView({
   upcomingPayments,
   birthdays,
   chartData,
+  todayClasses,
   isLoading,
   basePath,
+  chartMonths = 6,
+  onChartMonthsChange,
+  chartLines,
+  onChartLinesChange,
 }: DashboardViewProps) {
+  const [internalChartLines, setInternalChartLines] = useState<ChartLineFilterAdmin | ChartLineFilterTeacher>(
+    basePath === "/admin" ? DEFAULT_CHART_LINES_ADMIN : DEFAULT_CHART_LINES_TEACHER
+  );
+  const lines = chartLines ?? internalChartLines;
+  const setLines = onChartLinesChange ?? setInternalChartLines;
+
   const overduePercentage = stats && stats.activeStudents > 0
     ? ((stats.overdueCount / stats.activeStudents) * 100).toFixed(1)
     : "0";
@@ -146,7 +198,24 @@ export function DashboardView({
 
       {!isLoading && (
         <>
-          {/* Metrics Grid */}
+          {/* Alerta Próxima Aula */}
+          {todayClasses?.nextClass && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 flex items-center gap-3">
+              <Bell className="h-5 w-5 text-primary shrink-0" />
+              <p className="text-sm font-medium">
+                {basePath === "/teacher" ? "Sua próxima aula" : "Próxima aula do dia"}{" "}
+                é com o aluno{" "}
+                <span className="font-semibold text-primary">{todayClasses.nextClass.studentName}</span>
+                {todayClasses.nextClass.timeLabel !== "Horário não definido" && (
+                  <span className="font-normal">
+                    {" "}das {todayClasses.nextClass.timeLabel}
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* Estatísticas */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               title="Alunos Ativos"
@@ -181,125 +250,78 @@ export function DashboardView({
             />
           </div>
 
-          {/* Chart + Quick Actions */}
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Chart */}
-            <div className="lg:col-span-2 rounded-xl border bg-card shadow-card">
-              <div className="flex items-center justify-between border-b px-6 py-4">
+          {/* Aulas de Hoje - altura relativa à quantidade de aulas */}
+          <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+            <div className="flex items-center justify-between border-b px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center">
+                  <Clock className="h-4 w-4 text-warning" />
+                </div>
                 <div>
-                  <h2 className="font-semibold">Crescimento de Alunos</h2>
-                  <p className="text-sm text-muted-foreground">Últimos 6 meses</p>
+                  <h2 className="font-semibold">Aulas de Hoje</h2>
+                  <p className="text-xs text-muted-foreground">
+                    {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
+                  </p>
                 </div>
               </div>
-              <div className="p-6">
-                {chartData.every((d) => d.count === 0) ? (
-                  <div className="h-[280px] flex items-center justify-center text-muted-foreground">
-                    <div className="text-center">
-                      <TrendingUp className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Nenhum dado disponível ainda</p>
-                    </div>
+              {todayClasses?.classes.length ? (
+                <StatusBadge variant="warning">{todayClasses.classes.length}</StatusBadge>
+              ) : null}
+            </div>
+            <div>
+                {!todayClasses?.classes.length ? (
+                  <div className="py-12 px-6 text-center text-muted-foreground">
+                    <Calendar className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nenhuma aula agendada para hoje</p>
                   </div>
                 ) : (
-                  <div className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartData}>
-                        <defs>
-                          <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                        <XAxis
-                          dataKey="month"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                          allowDecimals={false}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "var(--radius)",
-                            boxShadow: "var(--shadow-md)",
-                          }}
-                          labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
-                          formatter={(value: number) => [value, "Novos alunos"]}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="count"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                          fillOpacity={1}
-                          fill="url(#colorCount)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                  <div className="divide-y">
+                    {todayClasses.classes.map((item) => {
+                      const status = getTodayClassStatus(item);
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                              <span className="text-sm font-medium">
+                                {item.studentName.charAt(0)}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">
+                                {item.timeLabel} — {item.studentName}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {item.title?.trim() || "Aula"}
+                              </p>
+                            </div>
+                          </div>
+                          <StatusBadge variant={status.variant}>
+                            {status.label}
+                          </StatusBadge>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="rounded-xl border bg-card shadow-card">
-              <div className="border-b px-6 py-4">
-                <h2 className="font-semibold">Ações Rápidas</h2>
-              </div>
-              <div className="p-4 space-y-2">
-                <Link
-                  to={`${basePath}/students`}
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Users className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p>Cadastrar Aluno</p>
-                    <p className="text-xs text-muted-foreground">Adicione um novo aluno</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
-                
-                <Link
-                  to={`${basePath}/classes`}
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center">
-                    <GraduationCap className="h-4 w-4 text-success" />
-                  </div>
-                  <div className="flex-1">
-                    <p>Registrar Aula</p>
-                    <p className="text-xs text-muted-foreground">Lance presença e notas</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
-                
-                <Link
-                  to={`${basePath}/financial`}
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center">
-                    <DollarSign className="h-4 w-4 text-warning" />
-                  </div>
-                  <div className="flex-1">
-                    <p>Lançar Cobrança</p>
-                    <p className="text-xs text-muted-foreground">Crie uma nova cobrança</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
-              </div>
+              {todayClasses?.classes.length ? (
+                <div className="border-t px-6 py-3 flex items-center">
+                  <Link
+                    to={`${basePath}/classes`}
+                    className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1"
+                  >
+                    Ver todas
+                    <ChevronRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </div>
 
-          {/* Lists Grid */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          {/* Terceira linha: Próximos Vencimentos 40% + Aniversariantes 40% + Ações Rápidas 20% */}
+          <div className="grid gap-6 lg:grid-cols-[2fr_2fr_1fr]">
             {/* Upcoming Payments */}
             <div className="rounded-xl border bg-card shadow-card">
               <div className="flex items-center justify-between border-b px-6 py-4">
@@ -309,7 +331,7 @@ export function DashboardView({
                   </div>
                   <div>
                     <h2 className="font-semibold">Próximos Vencimentos</h2>
-                    <p className="text-xs text-muted-foreground">Esta semana</p>
+                    <p className="text-xs text-muted-foreground">Pagamentos pendentes desta semana</p>
                   </div>
                 </div>
                 <StatusBadge variant="warning">{upcomingPayments.length}</StatusBadge>
@@ -372,7 +394,7 @@ export function DashboardView({
                     <p className="text-xs text-muted-foreground">Este mês</p>
                   </div>
                 </div>
-                <StatusBadge variant="default">{birthdays.length}</StatusBadge>
+                <StatusBadge variant="warning">{birthdays.length}</StatusBadge>
               </div>
               <div className="divide-y max-h-[320px] overflow-y-auto">
                 {birthdays.length === 0 ? (
@@ -414,6 +436,282 @@ export function DashboardView({
                     Ver todos
                     <ChevronRight className="h-3 w-3" />
                   </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Ações Rápidas */}
+            <div className="rounded-xl border bg-card shadow-card flex flex-col">
+              <div className="border-b px-6 py-4 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Zap className="h-4 w-4 text-primary" />
+                  </div>
+                  <h2 className="font-semibold">Ações Rápidas</h2>
+                </div>
+              </div>
+              <div className="flex-1 flex items-center justify-center p-4 min-h-0">
+                <div className="grid grid-cols-3 gap-x-4 gap-y-5 w-full max-w-[280px]">
+                <Link
+                  to={`${basePath}/students`}
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Users className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-center text-xs leading-tight">Cadastrar Aluno</p>
+                </Link>
+                <Link
+                  to={`${basePath}/classes`}
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center">
+                    <GraduationCap className="h-4 w-4 text-success" />
+                  </div>
+                  <p className="text-center text-xs leading-tight">Registrar Aula</p>
+                </Link>
+                <Link
+                  to={`${basePath}/financial`}
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center">
+                    <DollarSign className="h-4 w-4 text-warning" />
+                  </div>
+                  <p className="text-center text-xs leading-tight">Visualizar cobranças</p>
+                </Link>
+                <Link
+                  to={basePath === "/admin" ? "/admin/students/overview" : "/teacher/overview"}
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center">
+                    <TrendingUp className="h-4 w-4 text-accent-foreground" />
+                  </div>
+                  <p className="text-center text-xs leading-tight">Visão Geral</p>
+                </Link>
+                {basePath === "/admin" && (
+                  <>
+                    <Link
+                      to="/admin/teachers"
+                      className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
+                    >
+                      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <UserPlus className="h-4 w-4 text-primary" />
+                      </div>
+                      <p className="text-center text-xs leading-tight">Cadastrar professor</p>
+                    </Link>
+                    <Link
+                      to="/admin/users"
+                      className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
+                    >
+                      <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center">
+                        <Link2 className="h-4 w-4 text-accent-foreground" />
+                      </div>
+                      <p className="text-center text-xs leading-tight">Cadastrar usuário</p>
+                    </Link>
+                  </>
+                )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Gráfico de crescimento - ao final da página */}
+          <div className="rounded-xl border bg-card shadow-card">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4 text-success" />
+                </div>
+                <div>
+                  <h2 className="font-semibold">
+                    {basePath === "/admin" ? "Crescimento da plataforma" : "Crescimento de Alunos e Aulas"}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {chartMonths === 1 ? "Mês atual (por dia)" : `Últimos ${chartMonths} meses`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                {onChartMonthsChange && (
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <Select
+                      value={String(chartMonths)}
+                      onValueChange={(v) => onChartMonthsChange(Number(v) as ChartMonthsFilter)}
+                    >
+                      <SelectTrigger className="w-[120px] h-8">
+                        <SelectValue placeholder="Período" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 mês</SelectItem>
+                        <SelectItem value="3">3 meses</SelectItem>
+                        <SelectItem value="6">6 meses</SelectItem>
+                        <SelectItem value="12">1 ano</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {basePath === "/admin" && (
+                  <div className="flex flex-wrap gap-2">
+                    {(["alunos", "professores", "aulas", "usuarios"] as const).map((key) => {
+                      const adminLines = lines as ChartLineFilterAdmin;
+                      const label = { alunos: "Alunos", professores: "Professores", aulas: "Aulas", usuarios: "Usuários" }[key];
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setLines({ ...adminLines, [key]: !adminLines[key] })}
+                          className={cn(
+                            "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
+                            adminLines[key]
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          )}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {basePath === "/teacher" && (
+                  <div className="flex flex-wrap gap-2">
+                    {(["alunos", "aulas"] as const).map((key) => {
+                      const teacherLines = lines as ChartLineFilterTeacher;
+                      const label = { alunos: "Alunos", aulas: "Aulas" }[key];
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setLines({ ...teacherLines, [key]: !teacherLines[key] })}
+                          className={cn(
+                            "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
+                            teacherLines[key]
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          )}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="p-6">
+              {chartData.every((d) =>
+                d.count === 0 &&
+                (d.classesCount ?? 0) === 0 &&
+                (d.teachersCount ?? 0) === 0 &&
+                (d.usersCount ?? 0) === 0
+              ) ? (
+                <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+                  <div className="text-center">
+                    <TrendingUp className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nenhum dado disponível ainda</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-[280px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorClasses" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorTeachers" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(24 95% 53%)" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(24 95% 53%)" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(262 83% 58%)" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(262 83% 58%)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis
+                        dataKey="month"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        allowDecimals={false}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "var(--radius)",
+                          boxShadow: "var(--shadow-md)",
+                        }}
+                        labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
+                        formatter={(value: number, name: string) => [
+                          value,
+                          name === "count" ? "Alunos" : name === "classesCount" ? "Aulas" : name === "teachersCount" ? "Professores" : name === "usersCount" ? "Usuários" : name,
+                        ]}
+                      />
+                      <Legend
+                        formatter={(value) =>
+                          value === "count" ? "Alunos" : value === "classesCount" ? "Aulas" : value === "teachersCount" ? "Professores" : value === "usersCount" ? "Usuários" : value
+                        }
+                        wrapperStyle={{ paddingTop: 16 }}
+                      />
+                      {(basePath === "/teacher" ? (lines as ChartLineFilterTeacher).alunos : (lines as ChartLineFilterAdmin).alunos) && (
+                        <Area
+                          type="monotone"
+                          dataKey="count"
+                          name="count"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorStudents)"
+                        />
+                      )}
+                      {basePath === "/admin" && (lines as ChartLineFilterAdmin).professores && (
+                        <Area
+                          type="monotone"
+                          dataKey="teachersCount"
+                          name="teachersCount"
+                          stroke="hsl(24 95% 53%)"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorTeachers)"
+                        />
+                      )}
+                      {(basePath === "/teacher" ? (lines as ChartLineFilterTeacher).aulas : (lines as ChartLineFilterAdmin).aulas) && (
+                        <Area
+                          type="monotone"
+                          dataKey="classesCount"
+                          name="classesCount"
+                          stroke="hsl(var(--success))"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorClasses)"
+                        />
+                      )}
+                      {basePath === "/admin" && (lines as ChartLineFilterAdmin).usuarios && (
+                        <Area
+                          type="monotone"
+                          dataKey="usersCount"
+                          name="usersCount"
+                          stroke="hsl(262 83% 58%)"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorUsers)"
+                        />
+                      )}
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
               )}
             </div>

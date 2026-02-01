@@ -1,307 +1,125 @@
+import { memo, useMemo } from "react";
 import format from "date-fns/format";
-import { ptBR } from "date-fns/locale";
+import ptBR from "date-fns/locale/pt-BR";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency } from "@/lib/utils/formatters";
-import {
-  BookOpen,
-  DollarSign,
-  CheckCircle,
-  XCircle,
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-} from "lucide-react";
-import { StudentClassLog, StudentFinancialRecord } from "@/hooks/useStudentDetails";
+import { useStudentStatement } from "@/hooks/useStudentStatement";
+import { UnifiedStatementCard } from "./UnifiedStatementCard";
+import type { StudentStatementEntry } from "@/hooks/useStudentStatement";
 
 interface StudentStatementTabProps {
-  classLogs: StudentClassLog[];
-  financialRecords: StudentFinancialRecord[];
+  studentId: string | null;
   studentName: string;
 }
 
-type StatementEntry = {
-  id: string;
-  date: string;
-  type: "class" | "financial";
-  data: StudentClassLog | StudentFinancialRecord;
-};
-
-function formatDate(dateString: string): string {
-  return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
+function groupByMonthYear(entries: StudentStatementEntry[]) {
+  const groups = new Map<string, StudentStatementEntry[]>();
+  for (const entry of entries) {
+    const key = format(new Date(entry.class_date), "yyyy-MM");
+    const list = groups.get(key) ?? [];
+    list.push(entry);
+    groups.set(key, list);
+  }
+  return Array.from(groups.entries())
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([key, items]) => ({
+      key,
+      label: format(new Date(items[0]!.class_date), "MMMM 'de' yyyy", {
+        locale: ptBR,
+      }),
+      items,
+    }));
 }
 
-function getActualStatus(record: StudentFinancialRecord): string {
-  if (record.status === "pago") return "pago";
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dueDate = new Date(record.due_date);
-  return dueDate < today ? "atrasado" : "pendente";
-}
-
-export function StudentStatementTab({
-  classLogs,
-  financialRecords,
+export const StudentStatementTab = memo(function StudentStatementTab({
+  studentId,
   studentName,
 }: StudentStatementTabProps) {
-  // Combinar aulas e cobranças em uma única timeline
-  const entries: StatementEntry[] = [
-    ...classLogs.map((log) => ({
-      id: log.id,
-      date: log.class_date,
-      type: "class" as const,
-      data: log,
-    })),
-    ...financialRecords.map((record) => ({
-      id: record.id,
-      date: record.due_date, // Usar due_date para ordenação
-      type: "financial" as const,
-      data: record,
-    })),
-  ];
+  const { data: entries = [], isLoading } = useStudentStatement(studentId);
 
-  // Ordenar por data (mais recente primeiro)
-  entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const grouped = useMemo(() => groupByMonthYear(entries), [entries]);
 
-  // Calcular saldo corrente (running balance)
-  let runningBalance = 0;
-  const entriesWithBalance = entries.map((entry) => {
-    if (entry.type === "financial") {
-      const record = entry.data as StudentFinancialRecord;
-      const amount = Number(record.amount) || 0;
-      
-      if (record.status === "pago") {
-        runningBalance += amount; // Pagamento = crédito
-      } else {
-        runningBalance -= amount; // Cobrança pendente = débito
-      }
-    }
-    
-    return {
-      ...entry,
-      balance: runningBalance,
-    };
-  }).reverse(); // Inverter para mostrar o saldo correto (do mais antigo para o mais recente)
+  const totalClasses = entries.length;
+  const totalBilled = useMemo(
+    () =>
+      entries.reduce((sum, e) => {
+        if (e.financial_record_id != null && e.billed_amount != null) {
+          return sum + Number(e.billed_amount);
+        }
+        return sum;
+      }, 0),
+    [entries]
+  );
+  const openBilling = entries.filter(
+    (e) =>
+      e.billing_status_consolidated === "pending" ||
+      e.billing_status_consolidated === "overdue"
+  ).length;
 
-  const currentBalance = entriesWithBalance.length > 0 
-    ? entriesWithBalance[entriesWithBalance.length - 1].balance 
-    : 0;
+  if (isLoading) {
+    return (
+      <ScrollArea className="h-full">
+        <div className="p-6 space-y-4">
+          <div className="h-20 rounded-lg bg-muted/50 animate-pulse" />
+          <div className="h-32 rounded-lg bg-muted/50 animate-pulse" />
+          <div className="h-32 rounded-lg bg-muted/50 animate-pulse" />
+        </div>
+      </ScrollArea>
+    );
+  }
 
   return (
     <ScrollArea className="h-full">
       <div className="p-6 space-y-4">
-        {/* Header com saldo atual */}
-        <div className="rounded-lg border-2 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Saldo Atual</p>
-              <p className={`text-3xl font-bold ${
-                currentBalance >= 0 ? "text-success" : "text-rose-600"
-              }`}>
-                {formatCurrency(Math.abs(currentBalance))}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {currentBalance >= 0 ? "Crédito disponível" : "Em aberto"}
-              </p>
-            </div>
-            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
-              currentBalance >= 0 ? "bg-success/10" : "bg-rose-500/10"
-            }`}>
-              {currentBalance >= 0 ? (
-                <TrendingUp className="h-6 w-6 text-success" />
-              ) : (
-                <TrendingDown className="h-6 w-6 text-rose-600" />
-              )}
-            </div>
-          </div>
+        {/* Header informativo */}
+        <div className="rounded-lg border bg-card p-3 flex items-center justify-between gap-4">
+          <p className="text-sm font-medium">Extrato</p>
+          {totalBilled > 0 && (
+            <p className="text-base font-semibold tabular-nums">
+              {formatCurrency(totalBilled)}
+            </p>
+          )}
         </div>
 
-        {/* Legenda */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <BookOpen className="h-3.5 w-3.5" />
-            <span>Aula</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <DollarSign className="h-3.5 w-3.5" />
-            <span>Cobrança</span>
-          </div>
-        </div>
-
-        {/* Timeline */}
-        {entriesWithBalance.length === 0 ? (
+        {/* Timeline agrupada por mês/ano */}
+        {grouped.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            <Calendar className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p>Nenhum registro encontrado</p>
             <p className="text-sm mt-1">
-              O histórico aparecerá aqui quando houver aulas ou cobranças
+              O histórico aparecerá aqui quando houver aulas
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {entriesWithBalance.map((entry, index) => {
-              const isLastEntry = index === entriesWithBalance.length - 1;
-              
-              if (entry.type === "class") {
-                const classLog = entry.data as StudentClassLog;
-                
-                return (
-                  <div
-                    key={entry.id}
-                    className="relative pl-8 pb-3"
-                  >
-                    {/* Timeline line */}
-                    {!isLastEntry && (
-                      <div className="absolute left-[15px] top-8 bottom-0 w-[2px] bg-border" />
-                    )}
-                    
-                    {/* Timeline dot */}
-                    <div className="absolute left-0 top-2 h-8 w-8 rounded-full bg-background border-2 border-primary/20 flex items-center justify-center">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="rounded-lg border bg-card p-3 shadow-sm">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          {classLog.attendance ? (
-                            <CheckCircle className="h-4 w-4 text-success flex-shrink-0" />
-                          ) : (
-                            <XCircle className="h-4 w-4 text-rose-500 flex-shrink-0" />
-                          )}
-                          <div>
-                            <p className="text-sm font-medium">
-                              Aula - {formatDate(classLog.class_date)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {classLog.attendance ? "Presença" : "Falta"}
-                            </p>
-                          </div>
-                        </div>
-                        {classLog.grade !== null && (
-                          <span
-                            className={`text-sm font-bold px-2 py-0.5 rounded-full ${
-                              classLog.grade >= 7
-                                ? "bg-success/10 text-success"
-                                : classLog.grade >= 5
-                                ? "bg-amber-500/10 text-amber-600"
-                                : "bg-rose-500/10 text-rose-600"
-                            }`}
-                          >
-                            {Number(classLog.grade).toFixed(1)}
-                          </span>
-                        )}
-                      </div>
-                      {classLog.feedback && (
-                        <p className="text-xs text-muted-foreground border-t pt-2 mt-2">
-                          {classLog.feedback}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                );
-              } else {
-                const record = entry.data as StudentFinancialRecord;
-                const actualStatus = getActualStatus(record);
-                
-                return (
-                  <div
-                    key={entry.id}
-                    className="relative pl-8 pb-3"
-                  >
-                    {/* Timeline line */}
-                    {!isLastEntry && (
-                      <div className="absolute left-[15px] top-8 bottom-0 w-[2px] bg-border" />
-                    )}
-                    
-                    {/* Timeline dot */}
-                    <div className={`absolute left-0 top-2 h-8 w-8 rounded-full bg-background border-2 flex items-center justify-center ${
-                      actualStatus === "pago" 
-                        ? "border-success/50" 
-                        : actualStatus === "atrasado"
-                        ? "border-rose-500/50"
-                        : "border-amber-500/50"
-                    }`}>
-                      <DollarSign className={`h-4 w-4 ${
-                        actualStatus === "pago" 
-                          ? "text-success" 
-                          : actualStatus === "atrasado"
-                          ? "text-rose-600"
-                          : "text-amber-600"
-                      }`} />
-                    </div>
-                    
-                    {/* Content */}
-                    <div className={`rounded-lg border bg-card p-3 shadow-sm ${
-                      actualStatus === "pago" 
-                        ? "border-success/50" 
-                        : actualStatus === "atrasado"
-                        ? "border-rose-200/50 dark:border-rose-800/50"
-                        : ""
-                    }`}>
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="text-sm font-medium">
-                            {record.description || "Cobrança"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Vencimento: {formatDate(record.due_date)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold">
-                            {formatCurrency(record.amount)}
-                          </p>
-                          <StatusBadge
-                            variant={
-                              actualStatus === "pago"
-                                ? "success"
-                                : actualStatus === "atrasado"
-                                ? "destructive"
-                                : "warning"
-                            }
-                            className="text-xs"
-                          >
-                            {actualStatus === "pago"
-                              ? "Pago"
-                              : actualStatus === "atrasado"
-                              ? "Atrasado"
-                              : "Pendente"}
-                          </StatusBadge>
-                        </div>
-                      </div>
-                      {record.paid_at && (
-                        <p className="text-xs text-success border-t pt-2 mt-2">
-                          ✓ Pago em {formatDate(record.paid_at)}
-                        </p>
-                      )}
-                      {/* Saldo após esta transação */}
-                      <div className="border-t pt-2 mt-2 flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Saldo após esta transação:</span>
-                        <span className={`font-medium ${
-                          entry.balance >= 0 ? "text-success" : "text-rose-600"
-                        }`}>
-                          {formatCurrency(Math.abs(entry.balance))}
-                          {entry.balance >= 0 ? " (crédito)" : " (débito)"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-            })}
+          <div className="space-y-6">
+            {grouped.map(({ key, label, items }) => (
+              <section key={key}>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 sticky top-0 bg-background/95 py-1 z-10">
+                  {label}
+                </h3>
+                <div className="space-y-0">
+                  {items.map((entry, idx) => (
+                    <UnifiedStatementCard
+                      key={entry.class_log_id}
+                      entry={entry}
+                      isLast={idx === items.length - 1}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
         )}
 
         {/* Footer */}
         <div className="pt-4 border-t text-xs text-muted-foreground text-center">
-          <p>Extrato completo de {studentName}</p>
+          <p>Extrato de {studentName}</p>
           <p className="mt-1">
-            {classLogs.length} aula{classLogs.length !== 1 ? "s" : ""} • {" "}
-            {financialRecords.length} cobrança{financialRecords.length !== 1 ? "s" : ""}
+            {totalClasses} aula{totalClasses !== 1 ? "s" : ""}
+            {openBilling > 0 &&
+              ` • ${openBilling} cobrança${openBilling !== 1 ? "s" : ""} em aberto`}
           </p>
         </div>
       </div>
     </ScrollArea>
   );
-}
+});

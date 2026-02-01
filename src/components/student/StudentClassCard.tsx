@@ -69,12 +69,14 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
             </div>
 
             {/* Nota */}
-            {classLog.grade !== null && classLog.grade !== undefined && (
+            {classLog.grade != null ? (
               <div className="flex items-center gap-1.5">
                 <Star className="h-4 w-4 text-warning" />
                 <span className="text-sm font-medium">Nota: {classLog.grade}</span>
               </div>
-            )}
+            ) : !classLog.attendance ? (
+              <span className="text-sm font-medium text-destructive">Não compareceu</span>
+            ) : null}
           </div>
         </div>
 
