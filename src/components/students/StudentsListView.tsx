@@ -71,6 +71,8 @@ interface StudentsListViewProps {
   autoTeacherId?: string | null;
   teachers: Teacher[];
   onNewStudentClick?: () => void;
+  /** Termo de busca vindo da URL (ex.: header global) */
+  initialSearch?: string;
 }
 
 const originLabels: Record<string, string> = {
@@ -89,11 +91,13 @@ export function StudentsListView({
   autoTeacherId = null,
   teachers,
   onNewStudentClick,
+  initialSearch = "",
 }: StudentsListViewProps) {
   const [filters, setFilters] = useState<StudentsFiltersState>({
     ...defaultStudentsFilters,
     status: "ativo",
     teacherId: "all",
+    search: initialSearch,
   });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -106,6 +110,11 @@ export function StudentsListView({
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, search: initialSearch }));
+    setPage(0);
+  }, [initialSearch, setPage]);
 
   const {
     data: students = [],

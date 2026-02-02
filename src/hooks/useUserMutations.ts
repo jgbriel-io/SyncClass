@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { validateCpfPhonePlatform } from "@/lib/validate-cpf-phone-platform";
+import { validateAndResizeAvatar, type AvatarValidationError } from "@/lib/utils/avatarUpload";
 import { toast } from "sonner";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import type { Tables, TablesInsert, Enums } from "@/integrations/supabase/types";
@@ -32,6 +33,16 @@ interface UpdateUserRoleParams {
 interface UpdateUserProfileParams {
   userId: string;
   fullName: string;
+}
+
+interface UpdateMyProfileParams {
+  userId: string;
+  avatar_url?: string | null;
+}
+
+interface UploadAvatarParams {
+  userId: string;
+  file: File;
 }
 
 interface LinkUserParams {
@@ -402,6 +413,96 @@ export function useUpdateUserProfile() {
     },
     onError: (error: Error) => {
       toast.error("Erro ao atualizar perfil. Tente novamente.");
+    },
+  });
+}
+
+/** Atualiza avatar (e opcionalmente outros campos) do próprio perfil. */
+export function useUpdateMyProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, avatar_url }: UpdateMyProfileParams) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: avatar_url ?? null })
+        .eq("user_id", userId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: ["current_user_profile", userId] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Foto de perfil atualizada.");
+    },
+    onError: (err: Error) => {
+      const message =
+        err?.message && String(err.message).trim()
+          ? String(err.message)
+          : "Erro ao atualizar foto. Tente novamente.";
+      toast.error(message);
+    },
+  });
+}
+
+const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+
+function getExtensionFromMime(mime: string): string {
+  if (mime === "image/jpeg") return "jpeg";
+  if (mime === "image/png") return "png";
+  if (mime === "image/webp") return "webp";
+  return "jpeg";
+}
+
+function getContentTypeForUpload(file: File, blob: Blob): string {
+  const t = blob.type || file.type;
+  if (ALLOWED_AVATAR_TYPES.includes(t as (typeof ALLOWED_AVATAR_TYPES)[number])) return t;
+  return "image/jpeg";
+}
+
+/** Upload de foto de perfil: valida (tamanho + px), redimensiona se necessário, envia para Storage e atualiza profiles.avatar_url. */
+export function useUploadAvatar() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, file }: UploadAvatarParams): Promise<void> => {
+      const blob = await validateAndResizeAvatar(file).catch((err: AvatarValidationError) => {
+        toast.error(err.message);
+        throw err;
+      });
+      const contentType = getContentTypeForUpload(file, blob);
+      const ext = getExtensionFromMime(contentType);
+      const path = `${userId}/avatar.${ext}`;
+      const fileToUpload = new File([blob], `avatar.${ext}`, { type: contentType });
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, fileToUpload, { upsert: true, contentType });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const avatarUrl = urlData.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: avatarUrl })
+        .eq("user_id", userId);
+
+      if (updateError) throw updateError;
+    },
+    onSuccess: (_, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: ["current_user_profile", userId] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Foto de perfil atualizada.");
+    },
+    onError: (err: Error) => {
+      if (err && typeof err === "object" && "code" in err && (err as AvatarValidationError).code) return;
+      const message =
+        err?.message && String(err.message).trim()
+          ? String(err.message)
+          : "Erro ao enviar foto. Tente novamente.";
+      toast.error(message);
     },
   });
 }

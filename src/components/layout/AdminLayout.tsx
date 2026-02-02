@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -18,6 +20,9 @@ import {
   Settings,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
+import { useCurrentUserProfile } from "@/hooks/useUsers";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -28,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { SettingsModal } from "@/components/layout/SettingsModal";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -47,8 +53,20 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const { data: profile } = useCurrentUserProfile(user?.id);
+  const { data: pendingClasses = [], isLoading: loadingNotifications } = usePendingEvaluationClassLogs();
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (q) navigate(`/admin/students?search=${encodeURIComponent(q)}`);
+    else navigate("/admin/students");
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -166,45 +184,94 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         sidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-64"
       )}>
         {/* Top bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="lg:hidden text-muted-foreground hover:text-foreground"
-          >
-            <Menu className="h-6 w-6" />
-          </button>
-
-          {/* Search */}
-          <div className="hidden md:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar alunos, aulas..."
-                className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
-              />
-            </div>
+        <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
+          {/* Left: menu + search */}
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden shrink-0 text-muted-foreground hover:text-foreground"
+              type="button"
+              aria-label="Abrir menu"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+            <form onSubmit={handleSearchSubmit} className="hidden md:block w-full max-w-sm">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="search"
+                  placeholder="Buscar alunos, aulas..."
+                  className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Buscar alunos, aulas"
+                />
+              </div>
+            </form>
           </div>
 
-          <div className="flex-1 md:hidden" />
-
-          {/* Right side */}
-          <div className="flex items-center gap-2">
+          {/* Right: notifications + user */}
+          <div className="flex shrink-0 items-center gap-2">
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5 text-muted-foreground" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                  aria-label="Notificações"
+                >
+                  <Bell className="h-5 w-5 text-muted-foreground" />
+                  {pendingClasses.length > 0 && (
+                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" aria-hidden />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel className="flex items-center justify-between">
+                  Notificações
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="max-h-[320px] overflow-y-auto py-2">
+                  {loadingNotifications ? (
+                    <div className="flex justify-center py-6">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : pendingClasses.length === 0 ? (
+                    <p className="px-2 py-6 text-center text-sm text-muted-foreground">
+                      Nenhuma notificação no momento
+                    </p>
+                  ) : (
+                    <ul className="space-y-0.5">
+                      {pendingClasses.map((log) => (
+                        <li key={log.id}>
+                          <Link
+                            to="/admin/classes?status=avaliacao_pendente"
+                            className="block rounded-md px-2 py-2 text-sm hover:bg-muted focus:bg-muted focus:outline-none"
+                          >
+                            <span className="font-medium text-foreground">Aula em aberto para avaliação</span>
+                            <p className="mt-0.5 truncate text-muted-foreground">
+                              {(log.students as { name?: string } | null)?.name ?? "Aluno"} · {log.class_date && format(new Date(log.class_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
+                            </p>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* User menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2 px-2">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                    <span className="text-sm font-medium text-primary-foreground">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-sm font-medium">
                       {userInitial}
-                    </span>
-                  </div>
+                    </AvatarFallback>
+                  </Avatar>
                   <span className="hidden sm:block text-sm font-medium max-w-[120px] truncate">
                     {userName}
                   </span>
@@ -213,7 +280,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2">
+                <DropdownMenuItem className="gap-2" onClick={() => setSettingsOpen(true)}>
                   <Settings className="h-4 w-4" />
                   Configurações
                 </DropdownMenuItem>
@@ -238,6 +305,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* Page content */}
         <main className="p-4 lg:p-6 animate-fade-in">{children}</main>
       </div>
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }

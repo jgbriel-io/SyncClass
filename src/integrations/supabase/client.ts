@@ -16,8 +16,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   global: {
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
-  }
+      Accept: "application/json",
+      // Não definir Content-Type globalmente: Storage upload precisa enviar image/* e o cliente define por request
+    },
+  },
 });

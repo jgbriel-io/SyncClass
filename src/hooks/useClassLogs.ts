@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { getClassStatusWithTime } from "@/lib/utils/classTime";
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -214,6 +215,33 @@ export function useClassLogsByStudentIds(studentIds: string[]) {
       return (data ?? []) as ClassLogWithStudent[];
     },
     enabled: studentIds.length > 0,
+  });
+}
+
+/** Aulas em aberto para avaliação (attendance/grade não preenchidos, data já passou). Usado no sino de notificações. */
+export function usePendingEvaluationClassLogs() {
+  return useQuery({
+    queryKey: ["class_logs_pending_evaluation"],
+    queryFn: async () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("class_logs")
+        .select(`
+          *,
+          students ( name, teacher_id ),
+          teachers ( name ),
+          financial_records ( id, status, amount, due_date )
+        `)
+        .is("attendance", null)
+        .lte("class_date", todayStr)
+        .order("class_date", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      const list = (data ?? []) as ClassLogWithStudent[];
+      return list.filter((log) => getClassStatusWithTime(log).label === "Avaliação pendente");
+    },
   });
 }
 

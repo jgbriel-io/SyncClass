@@ -25,6 +25,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import {
   ClassesFilters,
   type ClassesFiltersState,
+  type ClassStatusFilter,
 } from "@/components/filters/ClassesFilters";
 import { defaultClassesFilters } from "@/components/filters/filterDefaults";
 import { toast } from "sonner";
@@ -111,6 +112,8 @@ interface ClassesViewProps {
   viewMode?: "table" | "cards";
   showTeacherColumn?: boolean;
   enableTeacherSelection?: boolean;
+  /** Status inicial vindo da URL (ex.: notificações) */
+  initialStatus?: ClassStatusFilter;
 }
 
 export function ClassesView({
@@ -119,8 +122,12 @@ export function ClassesView({
   viewMode = "table",
   showTeacherColumn = true,
   enableTeacherSelection = true,
+  initialStatus,
 }: ClassesViewProps) {
-  const [filters, setFilters] = useState<ClassesFiltersState>(defaultClassesFilters);
+  const [filters, setFilters] = useState<ClassesFiltersState>({
+    ...defaultClassesFilters,
+    ...(initialStatus && { status: initialStatus }),
+  });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ClassLogWithStudent | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -128,6 +135,10 @@ export function ClassesView({
   const [postClassDialogOpen, setPostClassDialogOpen] = useState(false);
   const [logForPostClass, setLogForPostClass] = useState<ClassLogWithStudent | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (initialStatus) setFilters((prev) => ({ ...prev, status: initialStatus }));
+  }, [initialStatus]);
 
   const {
     data: logs = [],

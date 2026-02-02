@@ -201,6 +201,24 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
   };
 }
 
+/** Perfil do usuário logado (para avatar, nome, configurações). */
+export function useCurrentUserProfile(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["current_user_profile", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, user_id, full_name, email, avatar_url")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; user_id: string; full_name: string | null; email: string | null; avatar_url: string | null } | null;
+    },
+    enabled: !!userId,
+  });
+}
+
 /** IDs de alunos e professores já vinculados a algum perfil (para dropdown "vincular") */
 export function useLinkedProfileIds() {
   return useQuery({
@@ -226,6 +244,8 @@ export {
   useCreateUser,
   useUpdateUserRole,
   useUpdateUserProfile,
+  useUpdateMyProfile,
+  useUploadAvatar,
   useDeleteUser,
   useHardDeleteUser,
   useLinkUserToStudent,
