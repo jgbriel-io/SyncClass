@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -162,6 +162,14 @@ export default function Login() {
                 "Entrar"
               )}
             </Button>
+            <p className="text-center text-sm">
+              <Link
+                to="/esqueci-senha"
+                className="text-muted-foreground hover:text-foreground underline underline-offset-2"
+              >
+                Esqueci minha senha
+              </Link>
+            </p>
           </form>
 
           {/* Sem cadastro público: contas são criadas pelo administrador. */}

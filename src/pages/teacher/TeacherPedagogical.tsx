@@ -166,10 +166,13 @@ const TeacherPedagogicalPage = () => {
     return studentName.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const handleCreateOrUpdate = (data: ClassLogInsert) => {
+  const handleCreateOrUpdate = (
+    data: ClassLogInsert,
+    financialUpdate?: { financialRecordId: string; dueDate: string }
+  ) => {
     if (selectedLog) {
       updateLog.mutate(
-        { id: selectedLog.id, ...data },
+        { id: selectedLog.id, ...data, ...financialUpdate },
         {
           onSuccess: () => {
             setIsFormOpen(false);

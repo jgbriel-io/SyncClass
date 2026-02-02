@@ -80,10 +80,15 @@ export default function StudentHistory() {
                     classLog={{
                       id: record.id,
                       class_date: record.class_date,
+                      start_at: record.start_at ?? null,
+                      end_at: record.end_at ?? null,
+                      duration_minutes: record.duration_minutes ?? null,
                       attendance: record.attendance,
                       grade: record.grade,
-                      title: record.title,
-                      teacher_name: undefined, // Portal do aluno não precisa mostrar nome do professor (sempre o mesmo)
+                      title: record.title ?? null,
+                      teacher_name: record.teachers?.name ?? undefined,
+                      feedback: record.feedback ?? null,
+                      amount: record.financial_records?.[0]?.amount ?? null,
                     }}
                   />
                 ))

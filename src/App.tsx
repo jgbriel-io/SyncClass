@@ -8,8 +8,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AuthRedirect } from "@/components/auth/AuthRedirect";
 import { Loader2 } from "lucide-react";
 
-// Eager - apenas login (home para usuário não logado)
+// Eager - login e fluxo de senha (páginas públicas)
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // Lazy - shells por role (carrega só Admin OU Professor OU Aluno conforme rota)
 const AdminShell = lazy(() => import("@/components/layout/AdminShell"));
@@ -87,6 +89,15 @@ const App = () => (
                 </AuthRedirect>
               }
             />
+            <Route
+              path="/esqueci-senha"
+              element={
+                <AuthRedirect>
+                  <ForgotPassword />
+                </AuthRedirect>
+              }
+            />
+            <Route path="/redefinir-senha" element={<ResetPassword />} />
 
             {/* Admin Routes - layout persistente evita piscada ao trocar abas */}
             <Route path="/admin" element={<AdminShell />}>

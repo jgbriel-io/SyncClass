@@ -62,3 +62,20 @@ export function getClassStatusWithTime(item: ClassTimeInput & { attendance?: boo
 
   return { label: "Avaliação pendente", variant: "warning" };
 }
+
+/**
+ * Status da aula quando só temos class_date e attendance (ex.: extrato / view).
+ * Usado em UnifiedStatementCard e qualquer lista que não tenha start_at/end_at.
+ */
+export function getClassStatusFromDate(
+  class_date: string,
+  attendance: boolean | null
+): { label: string; variant: "success" | "info" | "warning" } {
+  if (attendance != null) return { label: "Concluída", variant: "success" };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(class_date + "T12:00:00");
+  d.setHours(0, 0, 0, 0);
+  if (d > today) return { label: "Agendada", variant: "info" };
+  return { label: "Avaliação pendente", variant: "warning" };
+}

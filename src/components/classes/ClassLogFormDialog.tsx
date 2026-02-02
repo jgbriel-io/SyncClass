@@ -54,6 +54,19 @@ function isDateFuture(brDate: string): boolean {
   d.setHours(0, 0, 0, 0);
   return d > today;
 }
+
+/** Vencimento padrão: dia do pagamento do aluno no mês da aula (dd/mm/yyyy). pay_day 1–31; se mês tem menos dias, usa último dia. */
+function getDefaultDueDateForClassMonth(classDateBr: string, payDay: number | null): string {
+  if (!classDateBr || !REGEX_PATTERNS.date.test(classDateBr)) return classDateBr;
+  if (payDay == null || payDay < 1 || payDay > 31) return classDateBr;
+  const iso = brDateToIso(classDateBr);
+  const [y, m] = iso.split("-").map(Number);
+  const lastDay = new Date(y, m, 0).getDate();
+  const day = Math.min(payDay, lastDay);
+  const dd = day.toString().padStart(2, "0");
+  const mm = m.toString().padStart(2, "0");
+  return `${dd}/${mm}/${y}`;
+}
 const classLogBaseSchema = z.object({
   student_id: z.string().min(1, "Selecione um aluno"),
   class_date: z.string()
@@ -115,11 +128,16 @@ function extractTimeFromIso(iso: string | null | undefined): string {
   return `${h}:${m}`;
 }
 
+export interface ClassLogFinancialUpdate {
+  financialRecordId: string;
+  dueDate: string;
+}
+
 interface ClassLogFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   classLog?: ClassLogWithStudent | null;
-  onSubmit: (data: ClassLogInsert) => void;
+  onSubmit: (data: ClassLogInsert, financialUpdate?: ClassLogFinancialUpdate) => void;
   teacherId?: string;
   onSubmitWithFinancial?: (data: ClassLogWithFinancialData) => void;
   isLoading: boolean;
@@ -226,6 +244,9 @@ export function ClassLogFormDialog({
       setValue("observations", (classLog as { observations?: string | null }).observations || "");
       setValue("start_time", extractTimeFromIso(classLog.start_at));
       setValue("end_time", extractTimeFromIso(classLog.end_at));
+      if (classLog.financial_records?.due_date) {
+        setValue("financial_due_date", isoDateToBr(classLog.financial_records.due_date));
+      }
     } else if (!open) {
       reset();
       setSelectedStudentId("");
@@ -234,12 +255,13 @@ export function ClassLogFormDialog({
     }
   }, [open, classLog, reset, setValue, enableTeacherSelection, teacherId]);
 
-  // Auto-fill due date when class date changes (só ao criar)
+  // Vencimento padrão: dia do pagamento do aluno no mês da aula (só ao criar; usuário pode alterar)
   useEffect(() => {
-    if (!isEditing && classDate) {
-      setValue("financial_due_date", classDate);
+    if (!isEditing && classDate && selectedStudent) {
+      const due = getDefaultDueDateForClassMonth(classDate, selectedStudent.pay_day ?? null);
+      setValue("financial_due_date", due);
     }
-  }, [classDate, isEditing, setValue]);
+  }, [classDate, isEditing, selectedStudent, setValue]);
 
   // Auto-fill valor quando horário/duração muda (sempre atualiza com o calculado)
   useEffect(() => {
@@ -302,8 +324,15 @@ export function ClassLogFormDialog({
       }
     }
 
-    // Edição ou criar sem cobrança
-    onSubmit(classLogData);
+    // Edição: atualizar aula e, se tiver cobrança vinculada, atualizar vencimento
+    if (isEditing && classLog?.financial_records?.id && data.financial_due_date?.trim()) {
+      onSubmit(classLogData, {
+        financialRecordId: classLog.financial_records.id,
+        dueDate: brDateToIso(data.financial_due_date),
+      });
+    } else {
+      onSubmit(classLogData);
+    }
   };
 
   const handleStudentChange = (value: string) => {
@@ -454,6 +483,35 @@ export function ClassLogFormDialog({
               <p className="text-sm text-destructive">{errors.observations.message}</p>
             )}
           </div>
+
+          {/* Ao editar: vencimento da cobrança vinculada (pode alterar) */}
+          {isEditing && classLog?.financial_records && (
+            <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Receipt className="h-4 w-4" />
+                Cobrança vinculada
+              </h4>
+
+              <div className="space-y-2">
+                <Label htmlFor="financial_due_date_edit">Vencimento</Label>
+                <Input
+                  id="financial_due_date_edit"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="dd/mm/aaaa"
+                  {...register("financial_due_date")}
+                  onChange={(e) => {
+                    const masked = maskDate(e.target.value);
+                    setValue("financial_due_date", masked, { shouldValidate: true });
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Alterar a data da aula não altera o vencimento automaticamente; edite aqui se quiser.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Cobrança ao registrar aula */}
           {!isEditing && onSubmitWithFinancial && (

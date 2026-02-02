@@ -11,12 +11,14 @@ import {
 
 export type StudentStatusFilter = "all" | "ativo" | "inativo";
 export type StudentSortBy = "name_asc" | "name_desc" | "last_payment_desc" | "last_payment_asc";
+export type StudentFilterPreset = "all" | "aniversariantes";
 
 export interface StudentsFiltersState {
   search: string;
   status: StudentStatusFilter;
   teacherId: string;
   sortBy: StudentSortBy;
+  filterPreset: StudentFilterPreset;
 }
 
 interface Teacher {
@@ -45,6 +47,7 @@ export function StudentsFilters({
   primaryStatus = "ativo",
 }: StudentsFiltersProps) {
   const hasActiveFilters =
+    filters.filterPreset !== "all" ||
     filters.status !== primaryStatus ||
     (showTeacherFilter && filters.teacherId !== "all") ||
     filters.sortBy !== "name_asc";
@@ -62,6 +65,18 @@ export function StudentsFilters({
           />
         </div>
         <div className="flex flex-wrap gap-2">
+          <Select
+            value={filters.filterPreset}
+            onValueChange={(v) => onChange({ ...filters, filterPreset: v as StudentFilterPreset })}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Ver" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="aniversariantes">Aniversariantes do mês</SelectItem>
+            </SelectContent>
+          </Select>
           <Select
             value={filters.status}
             onValueChange={(v) => onChange({ ...filters, status: v as StudentStatusFilter })}

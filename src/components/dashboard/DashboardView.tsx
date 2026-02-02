@@ -149,6 +149,7 @@ interface DashboardViewProps {
   chartData: ChartDataPoint[];
   todayClasses: TodayClassesData | undefined;
   isLoading: boolean;
+  chartLoading?: boolean;
   basePath: "/admin" | "/teacher";
   chartMonths?: ChartMonthsFilter;
   onChartMonthsChange?: (v: ChartMonthsFilter) => void;
@@ -169,8 +170,9 @@ export function DashboardView({
   chartData,
   todayClasses,
   isLoading,
+  chartLoading = false,
   basePath,
-  chartMonths = 6,
+  chartMonths = 3,
   onChartMonthsChange,
   chartLines,
   onChartLinesChange,
@@ -432,8 +434,8 @@ export function DashboardView({
             </div>
 
             {/* Birthdays */}
-            <div className="rounded-xl border bg-card shadow-card">
-              <div className="flex items-center justify-between border-b px-6 py-4">
+            <div className="rounded-xl border bg-card shadow-card flex flex-col min-h-0">
+              <div className="flex items-center justify-between border-b px-6 py-4 shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center">
                     <span className="text-lg">🎂</span>
@@ -445,7 +447,7 @@ export function DashboardView({
                 </div>
                 <StatusBadge variant="warning">{birthdays.length}</StatusBadge>
               </div>
-              <div className="divide-y max-h-[320px] overflow-y-auto">
+              <div className="divide-y flex-1 min-h-0 overflow-y-auto">
                 {birthdays.length === 0 ? (
                   <EmptyState
                     icon={Calendar}
@@ -477,9 +479,9 @@ export function DashboardView({
                 )}
               </div>
               {birthdays.length > 0 && (
-                <div className="border-t px-6 py-3">
+                <div className="border-t px-6 py-3 shrink-0 flex justify-end">
                   <Link
-                    to={`${basePath}/students`}
+                    to={`${basePath}/students?filter=aniversariantes`}
                     className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1"
                   >
                     Ver todos
@@ -649,7 +651,11 @@ export function DashboardView({
               </div>
             </div>
             <div className="p-6">
-              {chartData.every((d) =>
+              {chartLoading ? (
+                <div className="h-[280px] flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : chartData.every((d) =>
                 d.count === 0 &&
                 (d.classesCount ?? 0) === 0 &&
                 (d.teachersCount ?? 0) === 0 &&

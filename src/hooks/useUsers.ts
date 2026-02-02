@@ -248,6 +248,7 @@ export {
   useUploadAvatar,
   useDeleteUser,
   useHardDeleteUser,
+  useAdminResetPassword,
   useLinkUserToStudent,
   useLinkUserToTeacher,
   useCreateAuthUserForStudent,

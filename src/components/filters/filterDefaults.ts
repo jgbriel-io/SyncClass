@@ -34,6 +34,7 @@ export const defaultStudentsFilters: StudentsFiltersState = {
   status: "all",
   teacherId: "all",
   sortBy: "name_asc",
+  filterPreset: "all",
 };
 
 export const defaultTeachersFilters: TeachersFiltersState = {

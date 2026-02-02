@@ -13,9 +13,15 @@ interface StudentProfile {
 interface StudentClassLog {
   id: string;
   class_date: string;
+  start_at: string | null;
+  end_at: string | null;
+  duration_minutes: number | null;
   attendance: boolean | null;
   grade: number | null;
   feedback: string | null;
+  title?: string | null;
+  teachers?: { name: string | null } | null;
+  financial_records?: { amount: number; status: string }[] | null;
 }
 
 interface StudentFinancialRecord {
@@ -77,7 +83,7 @@ export function useStudentClassLogs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("class_logs")
-        .select("id, class_date, attendance, grade, feedback")
+        .select("id, class_date, start_at, end_at, duration_minutes, attendance, grade, feedback, title, teachers(name), financial_records(amount, status)")
         .order("class_date", { ascending: false });
 
       if (error) throw error;

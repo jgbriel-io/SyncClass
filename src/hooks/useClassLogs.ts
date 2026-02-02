@@ -218,10 +218,10 @@ export function useClassLogsByStudentIds(studentIds: string[]) {
   });
 }
 
-/** Aulas em aberto para avaliação (attendance/grade não preenchidos, data já passou). Usado no sino de notificações. */
-export function usePendingEvaluationClassLogs() {
+/** Aulas em aberto para avaliação (attendance/grade não preenchidos, data já passou). Usado no sino de notificações. Não filtra por teacher_id: RLS já restringe ao professor (só vê aulas dos seus alunos); filtrar por teacher_id excluiria aulas com teacher_id nulo. */
+export function usePendingEvaluationClassLogs(teacherId?: string | null) {
   return useQuery({
-    queryKey: ["class_logs_pending_evaluation"],
+    queryKey: ["class_logs_pending_evaluation", teacherId],
     queryFn: async () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -423,7 +423,10 @@ export function useCreateClassLogWithFinancial() {
             class_log_id: createdLog.id,
             amount: financialData.amount, // computedAmount do frontend
             due_date: financialData.due_date,
-            description: financialData.description || `Aula do dia ${classLog.class_date}`,
+            description: financialData.description || (() => {
+              const [y, m, d] = (classLog.class_date || "").split("-");
+              return y && m && d ? `Aula do dia ${d}/${m}/${y}` : `Aula do dia ${classLog.class_date}`;
+            })(),
             payment_method: financialData.payment_method || null,
             status: "pendente",
           });
@@ -472,11 +475,17 @@ export function useCreateClassLogWithFinancial() {
   });
 }
 
+export type UpdateClassLogPayload = ClassLogUpdate & {
+  id: string;
+  financialRecordId?: string;
+  dueDate?: string;
+};
+
 export function useUpdateClassLog() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: ClassLogUpdate & { id: string }) => {
+    mutationFn: async ({ id, financialRecordId, dueDate, ...updates }: UpdateClassLogPayload) => {
       const hasTimeChange = "start_at" in updates || "end_at" in updates || "class_date" in updates || "teacher_id" in updates;
       if (hasTimeChange) {
         const { data: current } = await supabase.from("class_logs").select("teacher_id, class_date, start_at, end_at").eq("id", id).single();
@@ -500,11 +509,25 @@ export function useUpdateClassLog() {
         throw error;
       }
 
+      if (financialRecordId && dueDate) {
+        const { error: financialError } = await supabase
+          .from("financial_records")
+          .update({ due_date: dueDate })
+          .eq("id", financialRecordId);
+        if (financialError) {
+          console.error("Error updating financial due_date:", financialError);
+          toast.error("Aula atualizada, mas não foi possível atualizar o vencimento da cobrança.");
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs_pending_evaluation"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Registro atualizado com sucesso!");
     },
     onError: (error) => {

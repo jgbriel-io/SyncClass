@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,7 @@ const navigation = [
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
+  const queryClient = useQueryClient();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -60,6 +62,32 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { signOut, user } = useAuth();
   const { data: profile } = useCurrentUserProfile(user?.id);
   const { data: pendingClasses = [], isLoading: loadingNotifications } = usePendingEvaluationClassLogs();
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/admin" || path === "/admin/") {
+      queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["upcoming_payments"] });
+      queryClient.invalidateQueries({ queryKey: ["birthdays_this_month"] });
+      queryClient.invalidateQueries({ queryKey: ["new_students_and_classes_by_month"] });
+      queryClient.invalidateQueries({ queryKey: ["today_classes"] });
+    } else if (path.startsWith("/admin/students")) {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["students_with_stats"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs_by_student_ids"] });
+    } else if (path.startsWith("/admin/classes")) {
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
+    } else if (path.startsWith("/admin/financial")) {
+      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+    } else if (path.startsWith("/admin/teachers")) {
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+    } else if (path.startsWith("/admin/users")) {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    }
+  }, [location.pathname, queryClient]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

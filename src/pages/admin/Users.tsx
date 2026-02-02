@@ -33,8 +33,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil } from "lucide-react";
+import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil, KeyRound } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
@@ -47,6 +48,7 @@ import {
   useUpdateUserProfile,
   useDeleteUser,
   useHardDeleteUser,
+  useAdminResetPassword,
   useLinkUserToStudent,
   useLinkUserToTeacher,
   UserWithProfile,
@@ -85,8 +87,14 @@ export default function UsersPage() {
   const [generatedPassword, setGeneratedPassword] = useState<string>("");
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [userToResetPassword, setUserToResetPassword] = useState<UserWithProfile | null>(null);
+  const [resetPasswordNew, setResetPasswordNew] = useState("");
+  const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
 
   const listTopRef = useRef<HTMLDivElement>(null);
+  const adminResetPassword = useAdminResetPassword();
   const {
     data: users = [],
     isLoading,
@@ -119,7 +127,7 @@ export default function UsersPage() {
     let result = users.filter((user) => {
       const name = user.profile?.full_name || "";
       const email = user.email || "";
-      const searchLower = filters.search.toLowerCase();
+      const searchLower = filters.search.toLowerCase().trim();
       const matchesSearch =
         !searchLower ||
         name.toLowerCase().includes(searchLower) ||
@@ -589,6 +597,17 @@ export default function UsersPage() {
                                 <Pencil className="h-4 w-4 mr-2" />
                                 Editar
                               </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setUserToResetPassword(user);
+                                  setResetPasswordNew("");
+                                  setResetPasswordConfirm("");
+                                  setResetPasswordDialogOpen(true);
+                                }}
+                              >
+                                <KeyRound className="h-4 w-4 mr-2" />
+                                Redefinir senha
+                              </DropdownMenuItem>
                               {role === "student" && !linkedStudent && (
                                 <DropdownMenuItem
                                   onClick={() => openLinkDialog(user, "student")}
@@ -727,6 +746,7 @@ export default function UsersPage() {
                 <Label>Senha temporária</Label>
                 <div className="relative">
                   <Input
+                    ref={passwordInputRef}
                     type={showGeneratedPassword ? "text" : "password"}
                     value={generatedPassword}
                     readOnly
@@ -751,14 +771,28 @@ export default function UsersPage() {
                   type="button"
                   variant="outline"
                   className="flex-1"
-                  onClick={async () => {
+                  onClick={() => {
                     if (!generatedPassword) return;
-                    try {
-                      await navigator.clipboard.writeText(generatedPassword);
+                    const onSuccess = () => {
                       setPasswordCopied(true);
                       setTimeout(() => setPasswordCopied(false), 2000);
-                    } catch (err) {
-                      console.error("Erro ao copiar senha: ", err);
+                    };
+                    const tryInputCopy = () => {
+                      const input = passwordInputRef.current;
+                      if (input) {
+                        input.focus();
+                        input.select();
+                        input.setSelectionRange(0, generatedPassword.length);
+                        if (document.execCommand("copy")) onSuccess();
+                        else toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                      } else {
+                        toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                      }
+                    };
+                    if (navigator.clipboard?.writeText) {
+                      navigator.clipboard.writeText(generatedPassword).then(onSuccess).catch(tryInputCopy);
+                    } else {
+                      tryInputCopy();
                     }
                   }}
                 >
@@ -783,6 +817,115 @@ export default function UsersPage() {
                 </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Redefinir senha (admin) */}
+        <Dialog
+          open={resetPasswordDialogOpen}
+          onOpenChange={(open) => {
+            setResetPasswordDialogOpen(open);
+            if (!open) {
+              setUserToResetPassword(null);
+              setResetPasswordNew("");
+              setResetPasswordConfirm("");
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Redefinir senha</DialogTitle>
+            </DialogHeader>
+            {userToResetPassword && (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Nova senha para <strong>{userToResetPassword.profile?.full_name ?? userToResetPassword.email}</strong>. Mínimo 6 caracteres.
+                </p>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-password-new">Nova senha</Label>
+                    <Input
+                      id="reset-password-new"
+                      type="password"
+                      placeholder="••••••••"
+                      value={resetPasswordNew}
+                      onChange={(e) => setResetPasswordNew(e.target.value)}
+                      minLength={6}
+                      disabled={adminResetPassword.isPending}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-password-confirm">Confirmar senha</Label>
+                    <Input
+                      id="reset-password-confirm"
+                      type="password"
+                      placeholder="••••••••"
+                      value={resetPasswordConfirm}
+                      onChange={(e) => setResetPasswordConfirm(e.target.value)}
+                      minLength={6}
+                      disabled={adminResetPassword.isPending}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+                      let p = "";
+                      for (let i = 0; i < 10; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
+                      setResetPasswordNew(p);
+                      setResetPasswordConfirm(p);
+                    }}
+                  >
+                    Gerar senha
+                  </Button>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setResetPasswordDialogOpen(false);
+                      setUserToResetPassword(null);
+                      setResetPasswordNew("");
+                      setResetPasswordConfirm("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    disabled={
+                      adminResetPassword.isPending ||
+                      resetPasswordNew.length < 6 ||
+                      resetPasswordNew !== resetPasswordConfirm
+                    }
+                    onClick={() => {
+                      if (resetPasswordNew.length < 6 || resetPasswordNew !== resetPasswordConfirm) return;
+                      adminResetPassword.mutate(
+                        { userId: userToResetPassword.id, password: resetPasswordNew },
+                        {
+                          onSuccess: () => {
+                            setResetPasswordDialogOpen(false);
+                            setUserToResetPassword(null);
+                            setResetPasswordNew("");
+                            setResetPasswordConfirm("");
+                          },
+                        }
+                      );
+                    }}
+                  >
+                    {adminResetPassword.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Redefinindo...
+                      </>
+                    ) : (
+                      "Redefinir senha"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
           </DialogContent>
         </Dialog>
 

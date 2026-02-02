@@ -1,13 +1,15 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { StudentsListView } from "@/components/students/StudentsListView";
 import { Loader2 } from "lucide-react";
 import { useTeachers } from "@/hooks/useTeachers";
 
 const TeacherStudentsPage = () => {
   const { user, role, isLoading: authLoading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const searchFromUrl = searchParams.get("search") ?? "";
   const { data: teachers = [] } = useTeachers();
 
   // Fetch the teacher_id associated with the logged-in user
@@ -52,6 +54,9 @@ const TeacherStudentsPage = () => {
     );
   }
 
+  const filterFromUrl = searchParams.get("filter");
+  const initialFilterPreset = filterFromUrl === "aniversariantes" ? "aniversariantes" : "all";
+
   return (
     <StudentsListView
         title="Meus Alunos"
@@ -60,6 +65,8 @@ const TeacherStudentsPage = () => {
         showTeacherFilter={false}
         autoTeacherId={teacherId}
         teachers={teachers}
+        initialSearch={searchFromUrl}
+        initialFilterPreset={initialFilterPreset}
       />
   );
 };

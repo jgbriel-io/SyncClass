@@ -128,9 +128,19 @@ export function FinancialView({
 
   const filteredRecords = useMemo(() => {
     let result = recordsWithActualStatus.filter((record) => {
-      const searchLower = filters.search.toLowerCase();
+      const searchLower = filters.search.toLowerCase().trim();
       const studentName = record.students?.name || "";
-      const matchesSearch = !searchLower || studentName.toLowerCase().includes(searchLower);
+      const studentEmail = (record.students as { email?: string | null })?.email || "";
+      const studentCpf = (record.students as { cpf?: string | null })?.cpf || "";
+      const studentPhone = (record.students as { phone?: string | null })?.phone || "";
+      const searchDigits = searchLower.replace(/\D/g, "");
+      const matchesSearch =
+        !searchLower ||
+        studentName.toLowerCase().includes(searchLower) ||
+        studentEmail.toLowerCase().includes(searchLower) ||
+        (searchDigits.length > 0 &&
+          (studentCpf.replace(/\D/g, "").includes(searchDigits) ||
+            studentPhone.replace(/\D/g, "").includes(searchDigits)));
       if (!matchesSearch) return false;
 
       const matchesStatus = filters.status === "all" || record.actualStatus === filters.status;

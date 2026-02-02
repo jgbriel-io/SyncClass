@@ -15,7 +15,7 @@ import type { ChartMonthsFilter } from "@/components/dashboard/DashboardView";
 
 const TeacherHome = () => {
   const { user } = useAuth();
-  const [chartMonths, setChartMonths] = useState<ChartMonthsFilter>(6);
+  const [chartMonths, setChartMonths] = useState<ChartMonthsFilter>(3);
   
   // Get teacher_id from profile
   const { data: teacherProfile } = useQuery({
@@ -43,7 +43,7 @@ const TeacherHome = () => {
   const { data: chartData = [], isLoading: loadingChart } = useTeacherNewStudentsByMonth(teacherId, chartMonths);
   const { data: todayClasses } = useTodayClasses(teacherId);
 
-  const isLoading = loadingStats || loadingFinancial || loadingPayments || loadingBirthdays || loadingChart || !teacherId;
+  const isLoading = loadingStats || loadingFinancial || loadingPayments || loadingBirthdays || !teacherId;
 
   return (
     <DashboardView
@@ -56,6 +56,7 @@ const TeacherHome = () => {
         chartData={chartData}
         todayClasses={todayClasses}
         isLoading={isLoading}
+        chartLoading={loadingChart}
         basePath="/teacher"
         chartMonths={chartMonths}
         onChartMonthsChange={setChartMonths}

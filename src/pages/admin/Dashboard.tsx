@@ -11,7 +11,7 @@ import { useTodayClasses } from "@/hooks/useTodayClasses";
 import type { ChartMonthsFilter } from "@/components/dashboard/DashboardView";
 
 export default function AdminDashboard() {
-  const [chartMonths, setChartMonths] = useState<ChartMonthsFilter>(6);
+  const [chartMonths, setChartMonths] = useState<ChartMonthsFilter>(3);
 
   const { data: stats, isLoading: loadingStats } = useDashboardStats();
   const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary();
@@ -20,7 +20,7 @@ export default function AdminDashboard() {
   const { data: chartData = [], isLoading: loadingChart } = useNewStudentsByMonth(chartMonths);
   const { data: todayClasses } = useTodayClasses(null);
 
-  const isLoading = loadingStats || loadingFinancial || loadingPayments || loadingBirthdays || loadingChart;
+  const isLoading = loadingStats || loadingFinancial || loadingPayments || loadingBirthdays;
 
   return (
     <DashboardView
@@ -33,6 +33,7 @@ export default function AdminDashboard() {
         chartData={chartData}
         todayClasses={todayClasses}
         isLoading={isLoading}
+        chartLoading={loadingChart}
         basePath="/admin"
         chartMonths={chartMonths}
         onChartMonthsChange={setChartMonths}

@@ -56,8 +56,14 @@ function StudentOverviewPage() {
 
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
-      const searchLower = filters.search.toLowerCase();
-      const matchesSearch = !searchLower || (student.name || "").toLowerCase().includes(searchLower);
+      const searchLower = filters.search.toLowerCase().trim();
+      const searchDigits = searchLower.replace(/\D/g, "");
+      const matchesSearch =
+        !searchLower ||
+        (student.name || "").toLowerCase().includes(searchLower) ||
+        (student.email || "").toLowerCase().includes(searchLower) ||
+        (student.cpf || "").replace(/\D/g, "").includes(searchDigits) ||
+        (student.phone || "").replace(/\D/g, "").includes(searchDigits);
       if (!matchesSearch) return false;
 
       const matchesStatus = filters.status === "all" || student.status === filters.status;

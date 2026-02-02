@@ -49,6 +49,9 @@ export interface FinancialRecordWithRelations extends FinancialRecord {
   students: {
     name: string;
     teacher_id?: string | null;
+    cpf?: string | null;
+    phone?: string | null;
+    email?: string | null;
   } | null;
   class_logs: {
     id: string;
@@ -121,7 +124,10 @@ export function useFinancialRecords(
           *,
           students (
             name,
-            teacher_id
+            teacher_id,
+            cpf,
+            phone,
+            email
           ),
           class_logs (
             id,

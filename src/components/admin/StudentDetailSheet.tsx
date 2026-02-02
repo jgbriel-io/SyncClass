@@ -22,9 +22,11 @@ import {
   AlertCircle,
   TrendingUp,
   MapPin,
+  CalendarClock,
 } from "lucide-react";
 import { useStudentDetails } from "@/hooks/useStudentDetails";
 import { StudentStatementTab } from "@/components/student/StudentStatementTab";
+import { getClassStatusWithTime } from "@/lib/utils/classTime";
 
 interface StudentDetailSheetProps {
   studentId: string | null;
@@ -314,47 +316,62 @@ export function StudentDetailSheet({
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {student.classLogs.map((log) => (
-                        <div
-                          key={log.id}
-                          className="rounded-lg border bg-card p-3 space-y-2"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {log.attendance ? (
-                                <CheckCircle className="h-4 w-4 text-success" />
-                              ) : (
-                                <XCircle className="h-4 w-4 text-rose-500" />
-                              )}
-                              <span className="text-sm font-medium">
-                                {formatDate(log.class_date)}
-                              </span>
+                      {student.classLogs.map((log) => {
+                        const status = getClassStatusWithTime(log);
+                        const isConcluida = status.label === "Concluída";
+                        return (
+                          <div
+                            key={log.id}
+                            className="rounded-lg border bg-card p-3 space-y-2"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {isConcluida ? (
+                                  log.attendance ? (
+                                    <CheckCircle className="h-4 w-4 text-success" />
+                                  ) : (
+                                    <XCircle className="h-4 w-4 text-rose-500" />
+                                  )
+                                ) : status.label === "Agendada" || status.label === "Em andamento" ? (
+                                  <CalendarClock className="h-4 w-4 text-blue-600" />
+                                ) : (
+                                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                                )}
+                                <span className="text-sm font-medium">
+                                  {formatDate(log.class_date)}
+                                </span>
+                                {!isConcluida && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {status.label}
+                                  </span>
+                                )}
+                              </div>
+                              {log.grade != null ? (
+                                <span
+                                  className={`text-sm font-bold ${
+                                    log.grade >= 7
+                                      ? "text-success"
+                                      : log.grade >= 5
+                                      ? "text-amber-600"
+                                      : "text-rose-600"
+                                  }`}
+                                >
+                                  {Number(log.grade).toFixed(1)}
+                                </span>
+                              ) : isConcluida && log.attendance === false ? (
+                                <span className="text-sm font-medium text-destructive">
+                                  Não compareceu
+                                </span>
+                              ) : null}
                             </div>
-                            {log.grade != null ? (
-                              <span
-                                className={`text-sm font-bold ${
-                                  log.grade >= 7
-                                    ? "text-success"
-                                    : log.grade >= 5
-                                    ? "text-amber-600"
-                                    : "text-rose-600"
-                                }`}
-                              >
-                                {Number(log.grade).toFixed(1)}
-                              </span>
-                            ) : log.attendance === false ? (
-                              <span className="text-sm font-medium text-destructive">
-                                Não compareceu
-                              </span>
-                            ) : null}
+                            {log.feedback && (
+                              <p className="text-xs text-muted-foreground pl-6">
+                                {log.feedback}
+                              </p>
+                            )}
                           </div>
-                          {log.feedback && (
-                            <p className="text-xs text-muted-foreground pl-6">
-                              {log.feedback}
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

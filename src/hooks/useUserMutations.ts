@@ -558,6 +558,26 @@ export function useHardDeleteUser() {
   });
 }
 
+/** Redefinir senha de um usuário (admin via Edge Function). */
+export function useAdminResetPassword() {
+  return useMutation({
+    mutationFn: async ({ userId, password }: { userId: string; password: string }) => {
+      const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+        body: { userId, password },
+      });
+      const errMsg = (data as { error?: string })?.error;
+      if (error) throw new Error(error.message || "Erro ao redefinir senha.");
+      if (errMsg) throw new Error(errMsg);
+    },
+    onSuccess: () => {
+      toast.success("Senha redefinida com sucesso.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erro ao redefinir senha. Tente novamente.");
+    },
+  });
+}
+
 // Link user to student
 export function useLinkUserToStudent() {
   const queryClient = useQueryClient();

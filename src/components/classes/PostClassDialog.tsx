@@ -72,6 +72,8 @@ export function PostClassDialog({
 
   const hasFinancialRecord = !!classLog?.financial_records?.id;
 
+  const isPaymentAlreadyPaid = classLog?.financial_records?.status === "pago";
+
   useEffect(() => {
     if (open && classLog) {
       reset({
@@ -79,10 +81,10 @@ export function PostClassDialog({
         grade: classLog.grade != null ? String(classLog.grade) : "",
         feedback: classLog.feedback ?? "",
         chargeAbsence: false,
-        confirmPayment: false,
+        confirmPayment: isPaymentAlreadyPaid,
       });
     }
-  }, [open, classLog, reset]);
+  }, [open, classLog, reset, isPaymentAlreadyPaid]);
 
   const handleFormSubmit = async (data: PostClassFormData) => {
     if (!classLog) return;
@@ -182,11 +184,15 @@ export function PostClassDialog({
                   <Checkbox
                     id="confirmPayment"
                     checked={confirmPayment}
+                    disabled={isPaymentAlreadyPaid}
                     onCheckedChange={(checked) =>
                       setValue("confirmPayment", !!checked)
                     }
                   />
-                  <Label htmlFor="confirmPayment" className="cursor-pointer">
+                  <Label
+                    htmlFor="confirmPayment"
+                    className={isPaymentAlreadyPaid ? "cursor-default text-muted-foreground" : "cursor-pointer"}
+                  >
                     Confirmar pagamento
                   </Label>
                 </div>

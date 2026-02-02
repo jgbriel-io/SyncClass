@@ -2,6 +2,7 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import {
   StudentsFilters,
   type StudentsFiltersState,
+  type StudentFilterPreset,
 } from "@/components/filters/StudentsFilters";
 import { defaultStudentsFilters } from "@/components/filters/filterDefaults";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -73,6 +74,8 @@ interface StudentsListViewProps {
   onNewStudentClick?: () => void;
   /** Termo de busca vindo da URL (ex.: header global) */
   initialSearch?: string;
+  /** Filtro inicial vindo da URL (ex.: dashboard aniversariantes) */
+  initialFilterPreset?: StudentFilterPreset;
 }
 
 const originLabels: Record<string, string> = {
@@ -92,12 +95,14 @@ export function StudentsListView({
   teachers,
   onNewStudentClick,
   initialSearch = "",
+  initialFilterPreset = "all",
 }: StudentsListViewProps) {
   const [filters, setFilters] = useState<StudentsFiltersState>({
     ...defaultStudentsFilters,
     status: "ativo",
     teacherId: "all",
     search: initialSearch,
+    filterPreset: initialFilterPreset,
   });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -107,14 +112,10 @@ export function StudentsListView({
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setFilters((prev) => ({ ...prev, search: initialSearch }));
-    setPage(0);
-  }, [initialSearch, setPage]);
 
   const {
     data: students = [],
@@ -128,11 +129,17 @@ export function StudentsListView({
   } = useStudentsPaginated({
     pageSize: 20,
     filters: {
-      teacherId: filters.teacherId,
+      teacherId: autoTeacherId ?? filters.teacherId,
       status: filters.status,
       sortBy: filters.sortBy,
     },
   });
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, search: initialSearch }));
+    setPage(0);
+  }, [initialSearch, setPage]);
+
   const studentIds = useMemo(() => students.map((s) => s.id), [students]);
   const { data: financialRecords = [] } = useFinancialRecordsByStudentIds(studentIds);
   const { data: classLogs = [] } = useClassLogsByStudentIds(studentIds);
@@ -247,13 +254,24 @@ export function StudentsListView({
     return map;
   }, [financialRecords]);
 
+  const currentMonth = useMemo(() => new Date().getMonth() + 1, []);
+
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
-      const searchLower = filters.search.toLowerCase();
+      if (filters.filterPreset === "aniversariantes") {
+        if (!student.birth_date) return false;
+        const birthMonth = new Date(student.birth_date + "T00:00:00").getMonth() + 1;
+        if (birthMonth !== currentMonth) return false;
+      }
+
+      const searchLower = filters.search.toLowerCase().trim();
+      const searchDigits = searchLower.replace(/\D/g, "");
       const matchesSearch =
         !searchLower ||
         (student.name || "").toLowerCase().includes(searchLower) ||
-        (student.cpf || "").replace(/\D/g, "").includes(searchLower.replace(/\D/g, ""));
+        (student.email || "").toLowerCase().includes(searchLower) ||
+        (student.cpf || "").replace(/\D/g, "").includes(searchDigits) ||
+        (student.phone || "").replace(/\D/g, "").includes(searchDigits);
 
       if (!matchesSearch) return false;
 
@@ -285,7 +303,7 @@ export function StudentsListView({
     });
 
     return result;
-  }, [students, filters, autoTeacherId, showTeacherFilter, lastPaymentDateByStudent]);
+  }, [students, filters, autoTeacherId, showTeacherFilter, lastPaymentDateByStudent, currentMonth]);
 
   const handleCreateOrUpdate = (data: StudentInsert) => {
     const run = async () => {
@@ -697,6 +715,7 @@ export function StudentsListView({
               <Label>Senha temporária</Label>
               <div className="relative">
                 <Input
+                  ref={passwordInputRef}
                   type={showGeneratedPassword ? "text" : "password"}
                   value={generatedPassword}
                   readOnly
@@ -721,14 +740,28 @@ export function StudentsListView({
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={async () => {
+onClick={() => {
                   if (!generatedPassword) return;
-                  try {
-                    await navigator.clipboard.writeText(generatedPassword);
+                  const onSuccess = () => {
                     setPasswordCopied(true);
                     setTimeout(() => setPasswordCopied(false), 2000);
-                  } catch (err) {
-                    console.error("Erro ao copiar senha: ", err);
+                  };
+                  const tryInputCopy = () => {
+                    const input = passwordInputRef.current;
+                    if (input) {
+                      input.focus();
+                      input.select();
+                      input.setSelectionRange(0, generatedPassword.length);
+                      if (document.execCommand("copy")) onSuccess();
+                      else toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                    } else {
+                      toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                    }
+                  };
+                  if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(generatedPassword).then(onSuccess).catch(tryInputCopy);
+                  } else {
+                    tryInputCopy();
                   }
                 }}
               >

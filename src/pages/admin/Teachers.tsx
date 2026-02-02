@@ -69,6 +69,7 @@ export default function TeachersPage() {
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const listTopRef = useRef<HTMLDivElement>(null);
   const { data: allTeachers = [] } = useTeachers();
@@ -106,11 +107,17 @@ export default function TeachersPage() {
 
   const filteredTeachers = useMemo(() => {
     let result = teachers.filter((teacher) => {
-      const searchLower = filters.search.toLowerCase();
+      const searchLower = filters.search.toLowerCase().trim();
+      const searchDigits = searchLower.replace(/\D/g, "");
       const name = (teacher.name ?? "").toLowerCase();
       const email = (teacher.email ?? "").toLowerCase();
+      const phoneDigits = (teacher.phone ?? "").replace(/\D/g, "");
+      const cpfDigits = (teacher.cpf ?? "").replace(/\D/g, "");
       const matchesSearch =
-        !searchLower || name.includes(searchLower) || email.includes(searchLower);
+        !searchLower ||
+        name.includes(searchLower) ||
+        email.includes(searchLower) ||
+        (searchDigits.length > 0 && (phoneDigits.includes(searchDigits) || cpfDigits.includes(searchDigits)));
       if (!matchesSearch) return false;
 
       const status = teacher.status ?? "ativo";
@@ -412,6 +419,7 @@ export default function TeachersPage() {
                 <Label>Senha temporária</Label>
                 <div className="relative">
                   <Input
+                    ref={passwordInputRef}
                     type={showGeneratedPassword ? "text" : "password"}
                     value={generatedPassword}
                     readOnly
@@ -436,14 +444,28 @@ export default function TeachersPage() {
                   type="button"
                   variant="outline"
                   className="flex-1"
-                  onClick={async () => {
+                  onClick={() => {
                     if (!generatedPassword) return;
-                    try {
-                      await navigator.clipboard.writeText(generatedPassword);
+                    const onSuccess = () => {
                       setPasswordCopied(true);
                       setTimeout(() => setPasswordCopied(false), 2000);
-                    } catch (err) {
-                      console.error("Erro ao copiar senha: ", err);
+                    };
+                    const tryInputCopy = () => {
+                      const input = passwordInputRef.current;
+                      if (input) {
+                        input.focus();
+                        input.select();
+                        input.setSelectionRange(0, generatedPassword.length);
+                        if (document.execCommand("copy")) onSuccess();
+                        else toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                      } else {
+                        toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                      }
+                    };
+                    if (navigator.clipboard?.writeText) {
+                      navigator.clipboard.writeText(generatedPassword).then(onSuccess).catch(tryInputCopy);
+                    } else {
+                      tryInputCopy();
                     }
                   }}
                 >

@@ -5,6 +5,8 @@ import { StudentsListView } from "@/components/students/StudentsListView";
 export default function StudentsPage() {
   const [searchParams] = useSearchParams();
   const searchFromUrl = searchParams.get("search") ?? "";
+  const filterFromUrl = searchParams.get("filter");
+  const initialFilterPreset = filterFromUrl === "aniversariantes" ? "aniversariantes" : "all";
   const { data: teachers = [] } = useTeachers();
 
   return (
@@ -16,6 +18,7 @@ export default function StudentsPage() {
       autoTeacherId={null}
       teachers={teachers}
       initialSearch={searchFromUrl}
+      initialFilterPreset={initialFilterPreset}
     />
   );
 }

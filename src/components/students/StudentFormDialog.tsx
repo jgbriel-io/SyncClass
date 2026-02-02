@@ -37,18 +37,23 @@ function brDateToIso(value: string): string {
   return `${year}-${month}-${day}`;
 }
 
+function isMasked(value: string | null | undefined): boolean {
+  return typeof value === "string" && value.includes("*");
+}
+
 const studentSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
   state: z.string().max(2).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
   cpf: z.string()
-    .min(14, "CPF inválido")
-    .max(14, "CPF inválido")
-    .regex(REGEX_PATTERNS.cpf, "Formato deve ser 000.000.000-00"),
+    .max(14)
+    .refine((v) => !v || v.trim() === "" || REGEX_PATTERNS.cpf.test(v), "Formato deve ser 000.000.000-00"),
   phone: z.string()
-    .min(14, "Telefone inválido")
-    .max(15, "Telefone inválido")
-    .regex(REGEX_PATTERNS.phone, "Formato deve ser (00) 00000-0000"),
+    .max(20)
+    .refine(
+      (v) => !v || v.trim() === "" || isMasked(v) || REGEX_PATTERNS.phone.test(v),
+      "Formato deve ser (00) 00000-0000"
+    ),
   email: z
     .string()
     .min(1, "Email é obrigatório")
@@ -118,11 +123,11 @@ export function StudentFormDialog({
       name: student?.name || "",
       state: student?.state || "",
       city: student?.city || "",
-      cpf: student?.cpf 
+      cpf: student?.cpf && !isMasked(student.cpf)
         ? (student.cpf.includes(".") ? student.cpf : maskCPF(student.cpf))
         : "",
-      phone: student?.phone 
-        ? (student.phone.includes("(") ? student.phone : maskPhone(student.phone))
+      phone: student?.phone
+        ? (isMasked(student.phone) ? student.phone : student.phone.includes("(") ? student.phone : maskPhone(student.phone))
         : "",
       email: student?.email || "",
       hourly_rate: student?.hourly_rate
@@ -166,16 +171,14 @@ export function StudentFormDialog({
     }
 
     if (student) {
-      // Formata CPF se vier sem formatação do banco
-      const formattedCPF = student.cpf 
-        ? (student.cpf.includes(".") ? student.cpf : maskCPF(student.cpf))
+      const formattedCPF =
+        student.cpf && !isMasked(student.cpf)
+          ? (student.cpf.includes(".") ? student.cpf : maskCPF(student.cpf))
+          : "";
+      const formattedPhone = student.phone
+        ? (isMasked(student.phone) ? student.phone : student.phone.includes("(") ? student.phone : maskPhone(student.phone))
         : "";
-      
-      // Formata telefone se vier sem formatação do banco
-      const formattedPhone = student.phone 
-        ? (student.phone.includes("(") ? student.phone : maskPhone(student.phone))
-        : "";
-      
+
       reset({
         name: student.name,
         state: student.state || "",
@@ -247,12 +250,15 @@ export function StudentFormDialog({
 
     const payDayNumber = data.pay_day ? Number(data.pay_day) : null;
 
+    const omitCpfOnEdit = student && (data.cpf.trim() === "" || !!autoTeacherId);
+    const omitPhoneOnEdit = student && data.phone.trim() === "";
+
     const submitData: StudentInsert = {
       name: data.name,
       state: selectedState || null,
       city: data.city || null,
-      cpf: data.cpf,
-      phone: data.phone,
+      ...(omitCpfOnEdit ? {} : { cpf: data.cpf }),
+      ...(omitPhoneOnEdit ? {} : { phone: data.phone }),
       email: data.email,
       origin: selectedOrigin as StudentOrigin,
       status: selectedStatus,
@@ -395,19 +401,23 @@ export function StudentFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cpf">CPF *</Label>
+              <Label htmlFor="cpf">CPF {!autoTeacherId && "*"}</Label>
               <Input
                 id="cpf"
                 type="text"
                 inputMode="numeric"
                 maxLength={14}
-                placeholder="000.000.000-00"
+                placeholder={
+                  autoTeacherId && student && isMasked(student.cpf)
+                    ? student.cpf
+                    : "000.000.000-00"
+                }
                 {...register("cpf")}
                 onChange={(e) => {
                   const masked = maskCPF(e.target.value);
                   setValue("cpf", masked, { shouldValidate: true });
                 }}
-                disabled={isLoading}
+                disabled={isLoading || (!!autoTeacherId && !!student)}
               />
               {errors.cpf && (
                 <p className="text-sm text-destructive">{errors.cpf.message}</p>

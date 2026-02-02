@@ -9,6 +9,8 @@ const DEFAULT_PAGE_SIZE = 20;
 export interface StudentClassLog {
   id: string;
   class_date: string;
+  start_at: string | null;
+  end_at: string | null;
   attendance: boolean | null;
   grade: number | null;
   feedback: string | null;
@@ -59,7 +61,7 @@ export function useStudentDetails(studentId: string | null) {
       // Fetch class logs
       const { data: classLogs, error: classLogsError } = await supabase
         .from("class_logs")
-        .select("id, class_date, attendance, grade, feedback, created_at")
+        .select("id, class_date, start_at, end_at, attendance, grade, feedback, created_at")
         .eq("student_id", studentId)
         .order("class_date", { ascending: false });
 

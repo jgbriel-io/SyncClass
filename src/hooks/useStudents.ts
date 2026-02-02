@@ -128,6 +128,7 @@ export function useCreateStudent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
       toast.success("Aluno cadastrado com sucesso!");
     },
     onError: (error: unknown) => {
