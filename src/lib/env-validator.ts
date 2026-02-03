@@ -1,0 +1,44 @@
+/**
+ * Environment variables validator
+ * Ensures all required Supabase credentials are properly configured
+ */
+
+export function validateEnvironment() {
+  const errors: string[] = [];
+  
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  
+  if (!supabaseUrl) {
+    errors.push('VITE_SUPABASE_URL is not defined');
+  } else if (!supabaseUrl.startsWith('https://')) {
+    errors.push('VITE_SUPABASE_URL must start with https://');
+  }
+  
+  if (!supabaseKey) {
+    errors.push('VITE_SUPABASE_PUBLISHABLE_KEY is not defined');
+  } else if (supabaseKey.length < 20) {
+    errors.push('VITE_SUPABASE_PUBLISHABLE_KEY appears to be invalid (too short)');
+  }
+  
+  // Check if both clients would use the same project
+  if (supabaseUrl && supabaseKey) {
+    console.log('✅ Supabase configuration:');
+    console.log('   URL:', supabaseUrl);
+    console.log('   Key prefix:', supabaseKey.substring(0, 20) + '...');
+    
+    // Extract project ref from URL (format: https://xxxxx.supabase.co)
+    const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+    if (projectRef) {
+      console.log('   Project ref:', projectRef);
+    }
+  }
+  
+  if (errors.length > 0) {
+    console.error('❌ Environment validation errors:');
+    errors.forEach(error => console.error(`   - ${error}`));
+    throw new Error('Invalid environment configuration. Check console for details.');
+  }
+  
+  console.log('✅ Environment validation passed');
+}
