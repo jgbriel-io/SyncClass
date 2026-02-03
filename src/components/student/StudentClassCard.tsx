@@ -151,49 +151,40 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
             </div>
           )}
 
-          {/* Detalhes expandidos: professor, valor, nota, duração + feedback */}
+          {/* Detalhes expandidos: mesmo fluxo vertical (sem caixa) */}
           {expanded && (
-            <div className="space-y-3 rounded-lg bg-muted/50 p-3 text-sm">
-              <div className="grid gap-2 sm:grid-cols-2">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground">Professor:</span>
-                  <span className="font-medium text-foreground">{classLog.teacher_name?.trim() || "—"}</span>
+            <>
+              {!classLog.teacher_name && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                  <span>Professor: —</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground">Valor da aula:</span>
-                  <span className="font-medium text-foreground">
-                    {classLog.amount != null ? formatCurrency(classLog.amount) : "—"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground">Nota:</span>
-                  <span className="font-medium text-foreground">
-                    {classLog.grade != null ? Number(classLog.grade).toFixed(1) : "—"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Timer className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground">Duração:</span>
-                  <span className="font-medium text-foreground">
-                    {formatDuration(classLog.duration_minutes, classLog.start_at, classLog.end_at)}
-                  </span>
-                </div>
+              )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <DollarSign className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                <span>Valor da aula: {classLog.amount != null ? formatCurrency(classLog.amount) : "—"}</span>
               </div>
-              <div className="flex items-start gap-2 pt-2 border-t border-border/50">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Star className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                <span>Nota: {classLog.grade != null ? Number(classLog.grade).toFixed(1) : "—"}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Timer className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                <span>Duração: {formatDuration(classLog.duration_minutes, classLog.start_at, classLog.end_at)}</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm">
                 <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-foreground mb-1">Feedback</p>
-                  {hasDetails ? (
-                    <p className="text-muted-foreground whitespace-pre-wrap">{classLog.feedback}</p>
-                  ) : (
-                    <p className="text-muted-foreground italic">Nenhum feedback registrado para esta aula.</p>
-                  )}
+                  <span className="text-muted-foreground">
+                    {hasDetails ? (
+                      <span className="whitespace-pre-wrap">{classLog.feedback}</span>
+                    ) : (
+                      <span className="italic">Nenhum feedback registrado para esta aula.</span>
+                    )}
+                  </span>
                 </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* Botão Ver mais / Ver menos (sempre no final do card) */}
