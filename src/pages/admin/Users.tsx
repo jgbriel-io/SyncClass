@@ -34,6 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil, KeyRound } from "lucide-react";
 import { format } from "date-fns";
@@ -87,6 +88,7 @@ export default function UsersPage() {
   const [generatedPassword, setGeneratedPassword] = useState<string>("");
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const [passwordDialogSource, setPasswordDialogSource] = useState<"create" | "reset" | null>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [userToResetPassword, setUserToResetPassword] = useState<UserWithProfile | null>(null);
@@ -262,6 +264,7 @@ export default function UsersPage() {
               setGeneratedPassword(result.password);
               setShowGeneratedPassword(false);
               setPasswordCopied(false);
+              setPasswordDialogSource("create");
               setIsPasswordDialogOpen(true);
             }
           },
@@ -728,14 +731,17 @@ export default function UsersPage() {
           open={isPasswordDialogOpen}
           onOpenChange={(open) => {
             setIsPasswordDialogOpen(open);
-            if (!open && generatedPassword) {
+            if (!open && generatedPassword && passwordDialogSource === "create") {
               toast.success("Usuário criado com sucesso!");
             }
+            if (!open) setPasswordDialogSource(null);
           }}
         >
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Senha criada para o usuário</DialogTitle>
+              <DialogTitle>
+                {passwordDialogSource === "reset" ? "Senha redefinida" : "Senha criada para o usuário"}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
@@ -835,12 +841,14 @@ export default function UsersPage() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Redefinir senha</DialogTitle>
+              {userToResetPassword && (
+                <DialogDescription>
+                  Nova senha para <strong>{userToResetPassword.profile?.full_name ?? userToResetPassword.email}</strong>. Mínimo 6 caracteres.
+                </DialogDescription>
+              )}
             </DialogHeader>
             {userToResetPassword && (
               <>
-                <p className="text-sm text-muted-foreground">
-                  Nova senha para <strong>{userToResetPassword.profile?.full_name ?? userToResetPassword.email}</strong>. Mínimo 6 caracteres.
-                </p>
                 <div className="space-y-4 py-2">
                   <div className="space-y-2">
                     <Label htmlFor="reset-password-new">Nova senha</Label>
@@ -905,10 +913,16 @@ export default function UsersPage() {
                         { userId: userToResetPassword.id, password: resetPasswordNew },
                         {
                           onSuccess: () => {
+                            const passwordToShow = resetPasswordNew;
                             setResetPasswordDialogOpen(false);
                             setUserToResetPassword(null);
                             setResetPasswordNew("");
                             setResetPasswordConfirm("");
+                            setGeneratedPassword(passwordToShow);
+                            setShowGeneratedPassword(false);
+                            setPasswordCopied(false);
+                            setPasswordDialogSource("reset");
+                            setIsPasswordDialogOpen(true);
                           },
                         }
                       );

@@ -1,17 +1,35 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const supabaseUrl = env.VITE_SUPABASE_URL ?? "";
+
+  return {
   server: {
     host: "::",
     port: 8080,
     hmr: {
       overlay: false,
     },
+    // Em dev, proxy para Edge Functions evita CORS (request same-origin)
+    proxy: supabaseUrl ? {
+      "/supabase-functions": {
+        target: supabaseUrl,
+        changeOrigin: true,
+        secure: false,
+        ws: false,
+        // Preservar todos os headers da requisição original
+        headers: {
+          // Estes headers serão adicionados se não existirem
+        },
+        rewrite: (path) => path.replace(/^\/supabase-functions/, "/functions/v1"),
+      },
+    } : undefined,
   },
   plugins: [
     react(),
@@ -41,7 +59,7 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       devOptions: {
-        enabled: true, // Habilitar PWA em dev para testes
+        enabled: false, // Desabilitar PWA em dev para evitar logs do Workbox
       },
     }),
   ].filter(Boolean),
@@ -101,4 +119,5 @@ export default defineConfig(({ mode }) => ({
     // Aumentar o limite de warning para chunks grandes
     chunkSizeWarningLimit: 600,
   },
-}));
+  };
+});

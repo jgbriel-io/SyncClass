@@ -558,16 +558,54 @@ export function useHardDeleteUser() {
   });
 }
 
-/** Redefinir senha de um usuário (admin via Edge Function). */
+/** Redefinir senha de um usuário (admin via Edge Function). Usa fetch para garantir envio do Authorization. */
 export function useAdminResetPassword() {
   return useMutation({
     mutationFn: async ({ userId, password }: { userId: string; password: string }) => {
-      const { data, error } = await supabase.functions.invoke("admin-reset-password", {
-        body: { userId, password },
-      });
-      const errMsg = (data as { error?: string })?.error;
-      if (error) throw new Error(error.message || "Erro ao redefinir senha.");
-      if (errMsg) throw new Error(errMsg);
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+      // Em dev usa proxy (same-origin) para evitar CORS; em prod chama Supabase direto
+      const functionsBase = import.meta.env.DEV && typeof window !== "undefined"
+        ? `${window.location.origin}/supabase-functions`
+        : `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+      const url = `${functionsBase}/admin-reset-password`;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: anonKey ?? "",
+          },
+          body: JSON.stringify({
+            userId,
+            password,
+            accessToken: session.access_token,
+          }),
+        });
+        
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        
+        if (!res.ok) {
+          throw new Error(data?.error ?? (res.statusText || "Erro ao redefinir senha."));
+        }
+        if (data?.error) throw new Error(data.error);
+      } catch (err) {
+        console.error("[useAdminResetPassword] Erro:", err);
+        if (isEdgeFunctionNetworkError(err)) {
+          throw new Error(
+            "Não foi possível contactar o servidor. Verifique sua conexão e se a Edge Function 'admin-reset-password' está publicada no projeto Supabase."
+          );
+        }
+        throw err;
+      }
     },
     onSuccess: () => {
       toast.success("Senha redefinida com sucesso.");

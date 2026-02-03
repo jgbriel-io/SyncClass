@@ -33,21 +33,42 @@ serve(async (req) => {
     return jsonResponse({ error: "Missing Supabase env vars" }, 500);
   }
 
-  const authHeader = req.headers.get("Authorization");
-  const jwt = authHeader?.replace(/^Bearer\s+/i, "").trim();
-  if (!jwt) {
-    return jsonResponse({ error: "Not authenticated" }, 401);
+  interface RequestBody {
+    userId?: string;
+    password?: string;
+    accessToken?: string;
   }
 
+  let body: RequestBody;
+  try {
+    body = await req.json();
+  } catch (_e) {
+    return jsonResponse({ error: "Invalid JSON body" }, 400);
+  }
+
+  const authHeader = req.headers.get("Authorization");
+  const jwtFromAuth = authHeader?.replace(/^Bearer\s+/i, "").trim();
+  const jwtFromBody = typeof body?.accessToken === "string" ? body.accessToken.trim() : "";
+  const jwt = jwtFromAuth || jwtFromBody;
+  
+  if (!jwt) {
+    return jsonResponse({ error: "Token de autenticação ausente. Faça login novamente." }, 401);
+  }
+
+  const bearer = authHeader ?? `Bearer ${jwt}`;
   const supabaseAuthed = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
+    global: { headers: { Authorization: bearer } },
   });
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
   const { data: { user }, error: authError } = await supabaseAuthed.auth.getUser(jwt);
 
-  if (authError || !user) {
-    return jsonResponse({ error: "Not authenticated" }, 401);
+  if (authError) {
+    return jsonResponse({ error: `Erro de autenticação: ${authError.message}` }, 401);
+  }
+  
+  if (!user) {
+    return jsonResponse({ error: "Usuário não encontrado. Token inválido." }, 401);
   }
 
   const { data: roleRow, error: roleError } = await supabaseAdmin
@@ -56,20 +77,12 @@ serve(async (req) => {
     .eq("user_id", user.id)
     .single();
 
-  if (roleError || !roleRow || roleRow.role !== "admin") {
-    return jsonResponse({ error: "Forbidden" }, 403);
+  if (roleError) {
+    console.error("[admin-reset-password] Role error:", roleError);
+    return jsonResponse({ error: "Erro ao verificar permissões." }, 500);
   }
-
-  interface RequestBody {
-    userId?: string;
-    password?: string;
-  }
-
-  let body: RequestBody;
-  try {
-    body = await req.json();
-  } catch (_e) {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
+  if (!roleRow || roleRow.role !== "admin") {
+    return jsonResponse({ error: "Acesso negado. Apenas administradores podem redefinir senhas." }, 403);
   }
 
   const userIdToUpdate = body?.userId;
