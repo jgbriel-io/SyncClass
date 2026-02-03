@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface StudentProfile {
@@ -12,9 +13,15 @@ interface StudentProfile {
 interface StudentClassLog {
   id: string;
   class_date: string;
+  start_at: string | null;
+  end_at: string | null;
+  duration_minutes: number | null;
   attendance: boolean | null;
   grade: number | null;
   feedback: string | null;
+  title?: string | null;
+  teachers?: { name: string | null } | null;
+  financial_records?: { amount: number; status: string }[] | null;
 }
 
 interface StudentFinancialRecord {
@@ -52,8 +59,10 @@ export function useStudentProfile() {
       if (!profile?.student_id) return null;
 
       // Then get the student data
+      // Use students_masked para garantir mascaramento LGPD
+      // Nota: O aluno vê seus próprios dados mascarados por questão de conformidade
       const { data: student, error: studentError } = await supabase
-        .from("students")
+        .from("students_masked")
         .select("id, name, email, phone")
         .eq("id", profile.student_id)
         .maybeSingle();
@@ -74,7 +83,7 @@ export function useStudentClassLogs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("class_logs")
-        .select("id, class_date, attendance, grade, feedback")
+        .select("id, class_date, start_at, end_at, duration_minutes, attendance, grade, feedback, title, teachers(name), financial_records(amount, status)")
         .order("class_date", { ascending: false });
 
       if (error) throw error;
@@ -98,25 +107,10 @@ export function useStudentFinancialRecords() {
 
       if (error) throw error;
 
-      // Calculate actual status based on due_date
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      return (data || []).map((record) => {
-        let actualStatus = record.status as "pendente" | "pago" | "atrasado";
-        if (record.status !== "pago") {
-          const dueDate = new Date(record.due_date + "T00:00:00");
-          if (dueDate < today) {
-            actualStatus = "atrasado";
-          } else {
-            actualStatus = "pendente";
-          }
-        }
-        return {
-          ...record,
-          status: actualStatus,
-        };
-      }) as StudentFinancialRecord[];
+      return (data || []).map((record) => ({
+        ...record,
+        status: getFinancialActualStatus(record),
+      })) as StudentFinancialRecord[];
     },
     enabled: !!user?.id,
   });

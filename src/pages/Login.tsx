@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,20 +13,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { signIn, role } = useAuth();
-
-  // Show message if user was logged out due to session expiry
-  useEffect(() => {
-    const error = searchParams.get('error');
-    if (error === 'session_expired') {
-      toast.error('Sua sessão expirou. Por favor, faça login novamente.', {
-        duration: 5000,
-      });
-      // Clear the error from URL
-      window.history.replaceState({}, '', '/login');
-    }
-  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,6 +162,14 @@ export default function Login() {
                 "Entrar"
               )}
             </Button>
+            <p className="text-center text-sm">
+              <Link
+                to="/esqueci-senha"
+                className="text-muted-foreground hover:text-foreground underline underline-offset-2"
+              >
+                Esqueci minha senha
+              </Link>
+            </p>
           </form>
 
           {/* Sem cadastro público: contas são criadas pelo administrador. */}

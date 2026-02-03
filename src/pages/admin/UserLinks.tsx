@@ -44,12 +44,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, MoreHorizontal, Link2, Unlink, Loader2, Users, UserCheck, UserX } from "lucide-react";
+import { Search, MoreHorizontal, Link2, Loader2, Users, UserCheck, UserX } from "lucide-react";
 import { LinkStudentDialog } from "@/components/admin/LinkStudentDialog";
 import {
   useAllProfiles,
   useLinkStudentToProfile,
-  useUnlinkStudentFromProfile,
   ProfileWithRole,
 } from "@/hooks/useProfiles";
 import { format } from "date-fns";

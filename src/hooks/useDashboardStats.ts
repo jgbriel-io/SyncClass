@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, format, subMonths } from "date-fns";
+import startOfMonth from "date-fns/startOfMonth";
+import endOfMonth from "date-fns/endOfMonth";
+import { format } from "date-fns";
+import subMonths from "date-fns/subMonths";
+import eachDayOfInterval from "date-fns/eachDayOfInterval";
+import ptBR from "date-fns/locale/pt-BR";
 
 interface DashboardStats {
   activeStudents: number;
@@ -23,9 +28,12 @@ interface Birthday {
   birthDate: string;
 }
 
-interface MonthlyNewStudents {
+export interface MonthlyChartData {
   month: string;
-  count: number;
+  count: number; // novos alunos
+  classesCount: number; // aulas no mês
+  teachersCount?: number; // novos professores (admin)
+  usersCount?: number; // total usuários = alunos + professores (admin)
 }
 
 export function useDashboardStats() {
@@ -37,8 +45,10 @@ export function useDashboardStats() {
       const monthEnd = endOfMonth(now);
 
       // Get students stats
+      // Use students_masked para garantir mascaramento LGPD
+      // (não afeta esta query pois não seleciona CPF/telefone)
       const { data: students, error: studentsError } = await supabase
-        .from("students")
+        .from("students_masked")
         .select("id, status, created_at");
 
       if (studentsError) throw studentsError;
@@ -125,8 +135,10 @@ export function useBirthdaysThisMonth() {
       const now = new Date();
       const currentMonth = now.getMonth() + 1; // 1-12
 
+      // Use students_masked para garantir mascaramento LGPD
+      // (não afeta esta query pois não seleciona CPF/telefone)
       const { data, error } = await supabase
-        .from("students")
+        .from("students_masked")
         .select("id, name, birth_date")
         .eq("status", "ativo")
         .not("birth_date", "is", null);
@@ -157,35 +169,88 @@ export function useBirthdaysThisMonth() {
   });
 }
 
-export function useNewStudentsByMonth() {
+export function useNewStudentsByMonth(monthsBack: 1 | 3 | 6 | 12 = 6) {
   return useQuery({
-    queryKey: ["new_students_by_month"],
+    queryKey: ["new_students_and_classes_by_month", monthsBack],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("students")
-        .select("created_at")
-        .order("created_at", { ascending: true });
+      const [studentsRes, classesRes, teachersRes] = await Promise.all([
+        supabase.from("students_masked").select("created_at").order("created_at", { ascending: true }),
+        supabase.from("class_logs").select("class_date"),
+        supabase.from("teachers").select("created_at"),
+      ]);
 
-      if (error) throw error;
+      if (studentsRes.error) throw studentsRes.error;
+      if (classesRes.error) throw classesRes.error;
+      if (teachersRes.error) throw teachersRes.error;
 
-      // Group by month (last 6 months)
       const now = new Date();
-      const months: MonthlyNewStudents[] = [];
 
-      for (let i = 5; i >= 0; i--) {
+      if (monthsBack === 1) {
+        const monthStart = startOfMonth(now);
+        const monthEnd = endOfMonth(now);
+        const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+        const months: MonthlyChartData[] = days.map((dayDate) => {
+          const dayStart = new Date(dayDate);
+          dayStart.setHours(0, 0, 0, 0);
+          const dayEnd = new Date(dayDate);
+          dayEnd.setHours(23, 59, 59, 999);
+
+          const count = (studentsRes.data || []).filter((student) => {
+            const createdAt = new Date(student.created_at || "");
+            return createdAt >= dayStart && createdAt <= dayEnd;
+          }).length;
+
+          const teachersCount = (teachersRes.data || []).filter((teacher) => {
+            const createdAt = new Date(teacher.created_at || "");
+            return createdAt >= dayStart && createdAt <= dayEnd;
+          }).length;
+
+          const classesCount = (classesRes.data || []).filter((log) => {
+            const d = new Date(log.class_date + "T12:00:00");
+            return d >= dayStart && d <= dayEnd;
+          }).length;
+
+          return {
+            month: format(dayDate, "d", { locale: ptBR }),
+            count,
+            classesCount,
+            teachersCount,
+            usersCount: count + teachersCount,
+          };
+        });
+        return months;
+      }
+
+      const months: MonthlyChartData[] = [];
+      const n = monthsBack;
+
+      for (let i = n - 1; i >= 0; i--) {
         const monthDate = subMonths(now, i);
         const monthStart = startOfMonth(monthDate);
         const monthEnd = endOfMonth(monthDate);
-        const monthLabel = format(monthDate, "MMM", { locale: undefined });
+        const monthLabel = format(monthDate, "MMM", { locale: ptBR });
 
-        const count = (data || []).filter((student) => {
+        const count = (studentsRes.data || []).filter((student) => {
           const createdAt = new Date(student.created_at || "");
           return createdAt >= monthStart && createdAt <= monthEnd;
+        }).length;
+
+        const teachersCount = (teachersRes.data || []).filter((teacher) => {
+          const createdAt = new Date(teacher.created_at || "");
+          return createdAt >= monthStart && createdAt <= monthEnd;
+        }).length;
+
+        const classesCount = (classesRes.data || []).filter((log) => {
+          const d = new Date(log.class_date + "T12:00:00");
+          return d >= monthStart && d <= monthEnd;
         }).length;
 
         months.push({
           month: monthLabel,
           count,
+          classesCount,
+          teachersCount,
+          usersCount: count + teachersCount,
         });
       }
 

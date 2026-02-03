@@ -26,6 +26,14 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      {/* ⚡ P0-2: Skip link para acessibilidade WCAG A */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg"
+      >
+        Pular para conteúdo principal
+      </a>
+
       {/* Header */}
       <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center justify-between px-4">
@@ -38,6 +46,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}
+            aria-label={isLoggingOut ? "Saindo..." : "Sair da conta"}
             className="text-muted-foreground hover:text-foreground p-2 disabled:opacity-50"
           >
             {isLoggingOut ? (
@@ -50,10 +59,13 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       </header>
 
       {/* Page content */}
-      <main className="p-4 lg:p-6 animate-fade-in">{children}</main>
+      <main id="main-content" className="p-4 lg:p-6 animate-fade-in">{children}</main>
 
       {/* Bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav 
+        className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        aria-label="Navegação principal"
+      >
         <div className="flex items-center justify-around py-2">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
@@ -61,6 +73,8 @@ export function StudentLayout({ children }: StudentLayoutProps) {
               <Link
                 key={item.name}
                 to={item.href}
+                aria-label={item.name}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex flex-col items-center gap-1 px-4 py-2 text-xs font-medium transition-colors",
                   isActive
@@ -68,7 +82,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <item.icon className={cn("h-5 w-5", isActive && "text-primary")} />
+                <item.icon className={cn("h-5 w-5", isActive && "text-primary")} aria-hidden="true" />
                 {item.name}
               </Link>
             );

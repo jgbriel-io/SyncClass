@@ -1,40 +1,67 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AuthRedirect } from "@/components/auth/AuthRedirect";
-import { setupAuthErrorHandler } from "@/lib/auth-error-handler";
-import { validateEnvironment } from "@/lib/env-validator";
+import { Loader2 } from "lucide-react";
+
+// Eager - login e fluxo de senha (páginas públicas)
 import Login from "./pages/Login";
-import AdminDashboard from "./pages/admin/Dashboard";
-import StudentsPage from "./pages/admin/Students";
-import StudentOverviewPage from "./pages/admin/StudentOverview";
-import UsersPage from "./pages/admin/Users";
-import FinancialPage from "./pages/admin/Financial";
-import ClassesPage from "./pages/admin/Classes";
-// import removido: TeachersPage de admin/Teachers
-import StudentHome from "./pages/student/StudentHome";
-import StudentHistory from "./pages/student/StudentHistory";
-import StudentFinancial from "./pages/student/StudentFinancial";
-import StudentPanel from "./pages/StudentPanel";
-import NotFound from "./pages/NotFound";
-import AdminTeachersPage from "./pages/admin/Teachers";
-import TeacherHome from "./pages/teacher/TeacherHome";
-import TeacherStudentsPage from "./pages/teacher/TeacherStudents";
-import TeacherFinancialPage from "./pages/teacher/TeacherFinancial";
-import TeacherOverviewPage from "./pages/teacher/TeacherOverview";
-import TeacherPedagogicalPage from "./pages/teacher/TeacherPedagogical";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
-const queryClient = new QueryClient();
+// Lazy - shells por role (carrega só Admin OU Professor OU Aluno conforme rota)
+const AdminShell = lazy(() => import("@/components/layout/AdminShell"));
+const TeacherShell = lazy(() => import("@/components/layout/TeacherShell"));
+const StudentShell = lazy(() => import("@/components/layout/StudentShell"));
 
-// Validate environment variables
-validateEnvironment();
+// Lazy - páginas administrativas
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const StudentsPage = lazy(() => import("./pages/admin/Students"));
+const StudentOverviewPage = lazy(() => import("./pages/admin/StudentOverview"));
+const UsersPage = lazy(() => import("./pages/admin/Users"));
+const FinancialPage = lazy(() => import("./pages/admin/Financial"));
+const ClassesPage = lazy(() => import("./pages/admin/Classes"));
+const AdminTeachersPage = lazy(() => import("./pages/admin/Teachers"));
 
-// Setup global auth error handler for refresh token errors
-setupAuthErrorHandler();
+// Lazy loading - páginas de professor
+const TeacherHome = lazy(() => import("./pages/teacher/TeacherHome"));
+const TeacherStudentsPage = lazy(() => import("./pages/teacher/TeacherStudents"));
+const TeacherFinancialPage = lazy(() => import("./pages/teacher/TeacherFinancial"));
+const TeacherOverviewPage = lazy(() => import("./pages/teacher/TeacherOverview"));
+const TeacherPedagogicalPage = lazy(() => import("./pages/teacher/TeacherPedagogical"));
+
+// Lazy loading - páginas de estudante
+const StudentHome = lazy(() => import("./pages/student/StudentHome"));
+const StudentHistory = lazy(() => import("./pages/student/StudentHistory"));
+const StudentFinancial = lazy(() => import("./pages/student/StudentFinancial"));
+const StudentPanel = lazy(() => import("./pages/StudentPanel"));
+
+// Lazy loading - outras páginas
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="flex flex-col items-center gap-2">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <p className="text-sm text-muted-foreground">Carregando...</p>
+    </div>
+  </div>
+);
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 2 * 60 * 1000, // 2 min - evita refetch desnecessário
+      refetchOnWindowFocus: false, // evita "piscada" ao trocar de aba
+      refetchOnReconnect: true,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -43,7 +70,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
             {/* Public routes with auth redirect */}
             <Route
               path="/"
@@ -61,152 +89,53 @@ const App = () => (
                 </AuthRedirect>
               }
             />
+            <Route
+              path="/esqueci-senha"
+              element={
+                <AuthRedirect>
+                  <ForgotPassword />
+                </AuthRedirect>
+              }
+            />
+            <Route path="/redefinir-senha" element={<ResetPassword />} />
 
-            {/* Admin Routes - Protected */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/students"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <StudentsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/students/overview"
-            element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <StudentOverviewPage />
-              </ProtectedRoute>
-            }
-            />
-            <Route
-              path="/admin/financial"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <FinancialPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/classes"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <ClassesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <UsersPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/teachers"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminTeachersPage />
-                </ProtectedRoute>
-              }
-            />
+            {/* Admin Routes - layout persistente evita piscada ao trocar abas */}
+            <Route path="/admin" element={<AdminShell />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="students" element={<StudentsPage />} />
+              <Route path="students/overview" element={<StudentOverviewPage />} />
+              <Route path="financial" element={<FinancialPage />} />
+              <Route path="classes" element={<ClassesPage />} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="teachers" element={<AdminTeachersPage />} />
+            </Route>
 
-            {/* Teacher Routes - Protected */}
-            <Route
-              path="/teachers"
-              element={
-                <ProtectedRoute allowedRoles={["teacher"]}>
-                  <TeacherHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher"
-              element={
-                <ProtectedRoute allowedRoles={["teacher"]}>
-                  <TeacherHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher/students"
-              element={
-                <ProtectedRoute allowedRoles={["teacher"]}>
-                  <TeacherStudentsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher/overview"
-              element={
-                <ProtectedRoute allowedRoles={["teacher"]}>
-                  <TeacherOverviewPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher/financial"
-              element={
-                <ProtectedRoute allowedRoles={["teacher"]}>
-                  <TeacherFinancialPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher/classes"
-              element={
-                <ProtectedRoute allowedRoles={["teacher"]}>
-                  <TeacherPedagogicalPage />
-                </ProtectedRoute>
-              }
-            />
+            {/* Teacher Routes - layout persistente */}
+            <Route path="/teachers" element={<TeacherShell />}>
+              <Route index element={<TeacherHome />} />
+            </Route>
+            <Route path="/teacher" element={<TeacherShell />}>
+              <Route index element={<TeacherHome />} />
+              <Route path="students" element={<TeacherStudentsPage />} />
+              <Route path="overview" element={<TeacherOverviewPage />} />
+              <Route path="financial" element={<TeacherFinancialPage />} />
+              <Route path="classes" element={<TeacherPedagogicalPage />} />
+            </Route>
 
-            {/* Student Routes - Protected */}
-            <Route
-              path="/students"
-              element={
-                <ProtectedRoute allowedRoles={["student"]}>
-                  <StudentPanel />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student"
-              element={
-                <ProtectedRoute allowedRoles={["student"]}>
-                  <StudentHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/history"
-              element={
-                <ProtectedRoute allowedRoles={["student"]}>
-                  <StudentHistory />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/financial"
-              element={
-                <ProtectedRoute allowedRoles={["student"]}>
-                  <StudentFinancial />
-                </ProtectedRoute>
-              }
-            />
+            {/* Student Routes - layout persistente */}
+            <Route path="/students" element={<StudentShell />}>
+              <Route index element={<StudentPanel />} />
+            </Route>
+            <Route path="/student" element={<StudentShell />}>
+              <Route index element={<StudentHome />} />
+              <Route path="history" element={<StudentHistory />} />
+              <Route path="financial" element={<StudentFinancial />} />
+            </Route>
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

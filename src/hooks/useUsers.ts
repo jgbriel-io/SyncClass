@@ -1,11 +1,23 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
-import { toast } from "sonner";
-import { StudentInsert } from "./useStudents";
-import { TeacherInsert } from "./useTeachers";
+import type { Tables, Enums } from "@/integrations/supabase/types";
 
-export interface UserWithProfile {
+const DEFAULT_PAGE_SIZE = 20;
+
+export type UsersListFilters = {
+  role?: "all" | "admin" | "teacher" | "student";
+  status?: "all" | "active" | "inactive";
+  sortBy?: "created_desc" | "created_asc" | "name_asc" | "name_desc";
+};
+
+// Type aliases for better readability
+type ProfileRow = Tables<"profiles">;
+type UserRoleRow = Tables<"user_roles">;
+type AppRole = Enums<"app_role">;
+
+// Combined user interface with proper typing
+export interface CombinedUser {
   id: string;
   email: string;
   created_at: string;
@@ -13,28 +25,31 @@ export interface UserWithProfile {
     id: string;
     user_id: string;
     full_name: string | null;
-    email?: string | null;
+    email: string | null;
     student_id: string | null;
-    teacher_id?: string | null;
-    role?: "admin" | "student" | "teacher" | null;
-    active?: boolean | null;
+    teacher_id: string | null;
+    role: AppRole | null;
+    active: boolean;
     created_at: string | null;
-    updated_at?: string | null;
+    updated_at: string | null;
   } | null;
   role: {
     id: string;
     user_id: string;
-    role: "admin" | "student" | "teacher";
+    role: AppRole;
+    full_name: string | null;
+    email: string | null;
   } | null;
 }
+
+// Legacy export for backward compatibility
+export type UserWithProfile = CombinedUser;
 
 // Fetch all users with their profiles and roles
 export function useUsers() {
   return useQuery({
     queryKey: ["users"],
-    staleTime: 0, // Always fetch fresh data
-    queryFn: async () => {
-      // Buscar perfis
+    queryFn: async (): Promise<CombinedUser[]> => {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
@@ -42,23 +57,21 @@ export function useUsers() {
 
       if (profilesError) throw profilesError;
 
-      // Buscar roles
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
         .select("*");
 
       if (rolesError) throw rolesError;
 
-      // Combinar perfis e roles
-      return (profiles || []).map(profile => {
-        const roleRow = (roles || []).find((r: any) => r.user_id === profile.user_id) as any | undefined;
-
-        const emailFromProfile = (profile as any).email as string | null | undefined;
-        const emailFromRole = roleRow?.email as string | null | undefined;
+      return (profiles || []).map((profile: ProfileRow): CombinedUser => {
+        const roleRow = (roles || []).find((r: UserRoleRow) => r.user_id === profile.user_id);
+        const emailFromProfile = profile.email;
+        const emailFromRole = roleRow?.email;
+        const primaryEmail = emailFromProfile || emailFromRole || "";
 
         return {
           id: profile.user_id,
-          email: emailFromProfile || emailFromRole || "",
+          email: primaryEmail,
           created_at: profile.created_at || "",
           profile: {
             id: profile.id,
@@ -66,998 +79,180 @@ export function useUsers() {
             full_name: profile.full_name,
             email: emailFromProfile ?? emailFromRole ?? null,
             student_id: profile.student_id,
-            teacher_id: (profile as any).teacher_id ?? null,
-            active: (profile as any).active ?? true,
-            role: (profile as any).role ?? null,
+            teacher_id: profile.teacher_id,
+            active: profile.active,
+            role: profile.role,
             created_at: profile.created_at,
-            updated_at: (profile as any).updated_at ?? null,
+            updated_at: profile.updated_at,
           },
-          role: (roleRow as any) || null,
-        } as UserWithProfile;
+          role: roleRow ? {
+            id: roleRow.id,
+            user_id: roleRow.user_id,
+            role: roleRow.role,
+            full_name: roleRow.full_name,
+            email: roleRow.email,
+          } : null,
+        };
       });
     },
   });
 }
 
-// Create a new user
-// Note: Without Admin API, we use signUp which requires email confirmation
-// For production, consider creating an Edge Function with Admin API
-export function useCreateUser() {
-  const queryClient = useQueryClient();
+export interface UseUsersPaginatedOptions {
+  pageSize?: number;
+  filters?: UsersListFilters;
+}
 
-  return useMutation({
-    mutationFn: async ({
-      email,
-      password,
-      fullName,
-      role,
-      studentData,
-      teacherData,
-    }: {
-      email: string;
-      password: string;
-      fullName: string;
-      role: "admin" | "student" | "teacher";
-      studentData?: any;
-      teacherData?: any;
-    }) => {
-      const normalizedEmail = email.trim().toLowerCase();
+export interface UseUsersPaginatedResult {
+  data: CombinedUser[];
+  isLoading: boolean;
+  error: Error | null;
+  isFetching: boolean;
+  page: number;
+  setPage: (page: number | ((prev: number) => number)) => void;
+  hasMore: boolean;
+  totalCount: number;
+  refetch: () => void;
+}
 
-      const { data: existingProfile, error: profileCheckError } = await supabase
+export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersPaginatedResult {
+  const [page, setPage] = useState(0);
+  const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
+  const filters = options?.filters;
+
+  const query = useQuery({
+    queryKey: ["users_paginated", page, pageSize, filters],
+    queryFn: async () => {
+      const q = supabase
         .from("profiles")
-        .select("id")
-        .ilike("email", normalizedEmail)
-        .maybeSingle();
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false });
 
-      if (profileCheckError) {
-        console.error("Error checking email uniqueness (profiles):", profileCheckError);
-        throw new Error("Erro ao validar email. Tente novamente.");
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      const { data: profiles, error: profilesError, count } = await q.range(from, to);
+
+      if (profilesError) throw profilesError;
+
+      const profileRows = (profiles || []) as ProfileRow[];
+      const userIds = profileRows.map((p) => p.user_id);
+      if (userIds.length === 0) {
+        return { list: [] as CombinedUser[], count: count ?? 0 };
       }
 
-      if (existingProfile) {
-        throw new Error(
-          "Já existe uma conta com esse email. Use a aba Usuários para vincular ou editar essa conta."
-        );
-      }
-
-      // Generate password if not provided or too short
-      let finalPassword = password;
-      if (!finalPassword || finalPassword.length < 6) {
-        const chars =
-          "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-        const length = 10;
-        finalPassword = "";
-        for (let i = 0; i < length; i++) {
-          finalPassword += chars.charAt(
-            Math.floor(Math.random() * chars.length)
-          );
-        }
-      }
-
-      // Create user via signUp (will trigger profile creation)
-      const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
-        email: normalizedEmail,
-        password: finalPassword,
-        options: {
-          data: {
-            full_name: fullName,
-            role: role, // Pass role to trigger
-          },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
-      });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
-
-      // Update profile name and link to domain entity (student/teacher) if needed
-      const userId = authData.user.id;
-
-      // Wait a bit for trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // Ensure profile exists and update name/role copy
-      if (fullName) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ full_name: fullName, role, email: normalizedEmail })
-          .eq("user_id", userId);
-
-        if (profileError) {
-          console.error("Error updating profile:", profileError);
-        } else {
-        }
-      }
-
-      // Use UPSERT to update the role created by trigger
-      // This will UPDATE if exists, INSERT if not
-      const { data: upsertedRole, error: roleError } = await supabase
+      const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: role,
-            full_name: fullName,
-            email: normalizedEmail,
+        .select("*")
+        .in("user_id", userIds);
+
+      if (rolesError) throw rolesError;
+
+      const list = profileRows.map((profile): CombinedUser => {
+        const roleRow = (roles || []).find((r: UserRoleRow) => r.user_id === profile.user_id);
+        const emailFromProfile = profile.email;
+        const emailFromRole = roleRow?.email;
+        const primaryEmail = emailFromProfile || emailFromRole || "";
+
+        return {
+          id: profile.user_id,
+          email: primaryEmail,
+          created_at: profile.created_at || "",
+          profile: {
+            id: profile.id,
+            user_id: profile.user_id,
+            full_name: profile.full_name,
+            email: emailFromProfile ?? emailFromRole ?? null,
+            student_id: profile.student_id,
+            teacher_id: profile.teacher_id,
+            active: profile.active,
+            role: profile.role,
+            created_at: profile.created_at,
+            updated_at: profile.updated_at,
           },
-          { onConflict: "user_id" }
-        )
-        .select();
-
-      if (roleError) {
-        console.error("Error setting teacher role:", roleError);
-        throw new Error("Erro ao definir permissões do usuário");
-      }
-
-      // If role is student/teacher, create minimal domain record and link it
-      let createdStudent: { id: string } | null = null;
-      let createdTeacher: { id: string } | null = null;
-
-      if (role === "student") {
-        // Use dados completos se fornecidos, senão cria registro mínimo
-        const studentInsertData = studentData ? {
-          ...studentData,
-          email: normalizedEmail,
-        } : {
-          name: fullName || normalizedEmail,
-          email: normalizedEmail,
+          role: roleRow ? {
+            id: roleRow.id,
+            user_id: roleRow.user_id,
+            role: roleRow.role,
+            full_name: roleRow.full_name,
+            email: roleRow.email,
+          } : null,
         };
+      });
 
-        const { data: student, error: studentError } = await supabase
-          .from("students")
-          .insert(studentInsertData)
-          .select("id")
-          .single();
-
-        if (studentError) {
-          console.error("Error creating student for new user:", studentError);
-        } else if (student?.id) {
-          createdStudent = { id: student.id };
-          const { error: linkError } = await supabase
-            .from("profiles")
-            .update({ student_id: student.id })
-            .eq("user_id", userId);
-
-          if (linkError) {
-            console.error("Error linking profile to created student:", linkError);
-          }
-        }
-      } else if (role === "teacher") {
-        // Use dados completos se fornecidos, senão cria registro mínimo
-        const teacherInsertData = teacherData ? {
-          ...teacherData,
-          email: normalizedEmail,
-        } : {
-          name: fullName || normalizedEmail,
-          email: normalizedEmail,
-        };
-
-        const { data: teacher, error: teacherError } = await supabase
-          .from("teachers")
-          .insert(teacherInsertData)
-          .select("id")
-          .single();
-
-        if (teacherError) {
-          console.error("Error creating teacher for new user:", teacherError);
-        } else if (teacher?.id) {
-          createdTeacher = { id: teacher.id };
-          const { error: linkError } = await supabase
-            .from("profiles")
-            .update({ teacher_id: teacher.id })
-            .eq("user_id", userId);
-
-          if (linkError) {
-            console.error("Error linking profile to created teacher:", linkError);
-          }
-        }
-      }
-
-      return {
-        user: authData.user,
-        password: finalPassword,
-        createdStudent,
-        createdTeacher,
-      };
+      return { list, count: count ?? 0 };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-    },
-    onError: (error: any) => {
-      console.error("Error creating user:", error);
-      toast.error(error.message || "Erro ao criar usuário. Tente novamente.");
-    },
+    placeholderData: keepPreviousData,
   });
+
+  const list = (query.data?.list ?? []) as CombinedUser[];
+  const totalCount = query.data?.count ?? 0;
+  const hasMore = totalCount > (page + 1) * pageSize;
+
+  return {
+    data: list,
+    isLoading: query.isLoading,
+    error: query.error as Error | null,
+    isFetching: query.isFetching,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    refetch: query.refetch,
+  };
 }
 
-// Update user role
-export function useUpdateUserRole() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      userId,
-      role,
-    }: {
-      userId: string;
-      role: "admin" | "student" | "teacher";
-    }) => {
-      // Get current profile to know email, name and links
-      const { data: profile, error: profileFetchError } = await supabase
+/** Perfil do usuário logado (para avatar, nome, configurações). */
+export function useCurrentUserProfile(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["current_user_profile", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, email, student_id, teacher_id, role")
+        .select("id, user_id, full_name, email, avatar_url")
         .eq("user_id", userId)
-        .single();
-
-      if (profileFetchError) {
-        console.error("Error fetching profile for role update:", profileFetchError);
-        throw profileFetchError;
-      }
-
-      const fullName = (profile.full_name as string | null) ?? "";
-      const normalizedEmail = (profile.email as string | null | undefined)?.trim().toLowerCase();
-
-      // Keep user_roles in sync with name and email as well
-      const { error } = await supabase
-        .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: role,
-            full_name: fullName || null,
-            email: normalizedEmail || null,
-          },
-          { onConflict: "user_id" }
-        );
-
+        .maybeSingle();
       if (error) throw error;
-
-      // Keep profile role copy in sync
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ role })
-        .eq("user_id", userId);
-
-      if (profileError) {
-        console.error("Error updating profile role copy:", profileError);
-      }
-
-      // When switching to student/teacher, ensure there is a corresponding domain record linked
-      if (role === "student") {
-        if (!profile.student_id && normalizedEmail) {
-          const { data: student, error: studentError } = await supabase
-            .from("students")
-            .insert({
-              name: fullName || normalizedEmail,
-              email: normalizedEmail,
-            })
-            .select("id")
-            .single();
-
-          if (studentError) {
-            console.error("Error creating student when updating role:", studentError);
-          } else if (student?.id) {
-            const { error: linkError } = await supabase
-              .from("profiles")
-              .update({ student_id: student.id })
-              .eq("user_id", userId);
-
-            if (linkError) {
-              console.error("Error linking profile to created student on role update:", linkError);
-            }
-          }
-        }
-      } else if (role === "teacher") {
-        if (!profile.teacher_id && normalizedEmail) {
-          const { data: teacher, error: teacherError } = await supabase
-            .from("teachers")
-            .insert({
-              name: fullName || normalizedEmail,
-              email: normalizedEmail,
-            })
-            .select("id")
-            .single();
-
-          if (teacherError) {
-            console.error("Error creating teacher when updating role:", teacherError);
-          } else if (teacher?.id) {
-            const { error: linkError } = await supabase
-              .from("profiles")
-              .update({ teacher_id: teacher.id })
-              .eq("user_id", userId);
-
-            if (linkError) {
-              console.error("Error linking profile to created teacher on role update:", linkError);
-            }
-          }
-        }
-      }
+      return data as { id: string; user_id: string; full_name: string | null; email: string | null; avatar_url: string | null } | null;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("Privilégio atualizado com sucesso!");
-    },
-    onError: (error: any) => {
-      console.error("Error updating role:", error);
-      toast.error("Erro ao atualizar privilégio. Tente novamente.");
-    },
+    enabled: !!userId,
   });
 }
 
-// Update user profile
-export function useUpdateUserProfile() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      userId,
-      fullName,
-    }: {
-      userId: string;
-      fullName: string;
-    }) => {
-      const { error } = await supabase
+/** IDs de alunos e professores já vinculados a algum perfil (para dropdown "vincular") */
+export function useLinkedProfileIds() {
+  return useQuery({
+    queryKey: ["profiles_linked_ids"],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("profiles")
-        .update({ full_name: fullName })
-        .eq("user_id", userId);
-
+        .select("student_id, teacher_id");
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Perfil atualizado com sucesso!");
-    },
-    onError: (error: any) => {
-      console.error("Error updating profile:", error);
-      toast.error("Erro ao atualizar perfil. Tente novamente.");
-    },
-  });
-}
-
-// Delete user
-// Note: Without Admin API, we can only delete the profile and role
-// The auth user will remain but won't be accessible
-// For full deletion, use an Edge Function with Admin API
-export function useDeleteUser() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      // Soft delete: mark profile as inactive instead of removing records
-      const { error } = await supabase
-        .from("profiles")
-        .update({ active: false })
-        .eq("user_id", userId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário desativado com sucesso!");
-    },
-    onError: (error: any) => {
-      console.error("Error deleting user:", error);
-      toast.error("Erro ao excluir usuário. Tente novamente.");
-    },
-  });
-}
-
-// Hard delete user via Edge Function (admin-only)
-export function useHardDeleteUser() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      const { error } = await supabase.functions.invoke("admin-delete-user", {
-        body: { userId },
-      });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário excluído definitivamente.");
-    },
-    onError: (error: any) => {
-      console.error("Error hard-deleting user:", error);
-      toast.error(
-        error?.message ||
-          "Erro ao excluir definitivamente o usuário. Tente novamente."
+      const linkedStudentIds = new Set(
+        (data ?? []).map((r) => r.student_id).filter((id): id is string => !!id)
       );
+      const linkedTeacherIds = new Set(
+        (data ?? []).map((r) => r.teacher_id).filter((id): id is string => !!id)
+      );
+      return { linkedStudentIds, linkedTeacherIds };
     },
   });
 }
 
-// Link user to student
-export function useLinkUserToStudent() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      userId,
-      studentId,
-    }: {
-      userId: string;
-      studentId: string;
-    }) => {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("full_name, email")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-
-      const { error: profileUpdateError } = await supabase
-        .from("profiles")
-        .update({ student_id: studentId, role: "student" })
-        .eq("user_id", userId);
-
-      if (profileUpdateError) throw profileUpdateError;
-
-      const fullName = (profile?.full_name as string | null) ?? null;
-      const email = (profile?.email as string | null) ?? null;
-
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: "student" as any,
-            full_name: fullName,
-            email,
-          },
-          { onConflict: "user_id" }
-        );
-
-      if (roleError) throw roleError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário vinculado ao aluno com sucesso!");
-    },
-    onError: (error: any) => {
-      console.error("Error linking user to student:", error);
-      toast.error("Erro ao vincular usuário ao aluno. Tente novamente.");
-    },
-  });
-}
-
-// Link user to teacher
-export function useLinkUserToTeacher() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      userId,
-      teacherId,
-    }: {
-      userId: string;
-      teacherId: string;
-    }) => {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("full_name, email")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-
-      const { error: profileUpdateError } = await supabase
-        .from("profiles")
-        .update({ teacher_id: teacherId, role: "teacher" })
-        .eq("user_id", userId);
-
-      if (profileUpdateError) throw profileUpdateError;
-
-      const fullName = (profile?.full_name as string | null) ?? null;
-      const email = (profile?.email as string | null) ?? null;
-
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: "teacher" as any,
-            full_name: fullName,
-            email,
-          },
-          { onConflict: "user_id" }
-        );
-
-      if (roleError) throw roleError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário vinculado ao professor com sucesso!");
-    },
-    onError: (error: any) => {
-      console.error("Error linking user to teacher:", error);
-      toast.error(error.message || "Erro ao vincular usuário ao professor. Tente novamente.");
-    },
-  });
-}
-
-// Unlink user from student
-export function useUnlinkUserFromStudent() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ student_id: null })
-        .eq("user_id", userId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Vínculo removido com sucesso!");
-    },
-    onError: (error: any) => {
-      console.error("Error unlinking user from student:", error);
-      toast.error("Erro ao remover vínculo. Tente novamente.");
-    },
-  });
-}
-
-// Unlink user from teacher
-export function useUnlinkUserFromTeacher() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ teacher_id: null })
-        .eq("user_id", userId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success("Vínculo de professor removido com sucesso!");
-    },
-    onError: (error: any) => {
-      console.error("Error unlinking user from teacher:", error);
-      toast.error("Erro ao remover vínculo de professor. Tente novamente.");
-    },
-  });
-}
-
-// Create auth user and link to an existing student
-export function useCreateAuthUserForStudent() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      studentId,
-      email,
-      fullName,
-    }: {
-      studentId: string;
-      email: string;
-      fullName: string;
-    }) => {
-      // Simple random password generator (8-10 chars)
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-      const length = 10;
-      let password = "";
-      for (let i = 0; i < length; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-
-      const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            role: "student", // Pass role to trigger
-          },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
-      });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
-
-      const userId = authData.user.id;
-
-      // Wait a bit for trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // Link profile to existing student and update name
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ full_name: fullName, student_id: studentId, role: "student", email })
-        .eq("user_id", userId);
-
-      if (profileError) {
-        console.error("Error linking profile to student:", profileError);
-      }
-
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: "student" as any,
-            full_name: fullName,
-            email,
-          },
-          { onConflict: "user_id" }
-        );
-
-      if (roleError) {
-        console.error("Error setting student role:", roleError);
-      }
-
-      return { user: authData.user, password };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-    },
-    onError: async (error: any, variables: any) => {
-      console.error("Error creating auth user for student:", error);
-
-      // Prefer email from mutation variables (reliable)
-      const emailVar = (variables && variables.email) ? String(variables.email).trim().toLowerCase() : null;
-
-      if (emailVar) {
-        try {
-          const { data: existingProfile } = await supabase
-            .from("profiles")
-            .select("user_id, student_id")
-            .ilike("email", emailVar)
-            .maybeSingle();
-
-          if (existingProfile) {
-            // perfil já existe — suprimir notificação aqui para evitar toasts duplicados
-            return;
-          }
-        } catch (e) {
-          // ignore and fall back to default message
-        }
-      }
-
-      const message = String(error?.message || "").toLowerCase();
-      if (message.includes("already")) {
-        toast.error(
-          "Já existe uma conta com esse email. Use a aba Usuários para vincular esse aluno à conta existente."
-        );
-      } else {
-        toast.error(error.message || "Erro ao criar conta de acesso para o aluno.");
-      }
-    },
-  });
-}
-
-// Create user with full student or teacher profile in one operation
-export function useCreateUserWithFullProfile() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      role,
-      fullName,
-      email,
-      password,
-      studentData,
-      teacherData,
-    }: {
-      role: "admin" | "student" | "teacher";
-      fullName: string;
-      email: string;
-      password?: string;
-      studentData?: Partial<StudentInsert>;
-      teacherData?: Partial<TeacherInsert>;
-    }) => {
-      const normalizedEmail = email.trim().toLowerCase();
-
-      // 1. Validate email uniqueness
-      const { data: existingProfile, error: profileCheckError } = await supabase
-        .from("profiles")
-        .select("id")
-        .ilike("email", normalizedEmail)
-        .maybeSingle();
-
-      if (profileCheckError) {
-        console.error("Error checking email uniqueness:", profileCheckError);
-        throw new Error("Erro ao validar email. Tente novamente.");
-      }
-
-      if (existingProfile) {
-        throw new Error("Já existe uma conta com esse email.");
-      }
-
-      // 2. Generate password if needed
-      let finalPassword = password;
-      if (!finalPassword || finalPassword.length < 6) {
-        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-        const length = 10;
-        finalPassword = "";
-        for (let i = 0; i < length; i++) {
-          finalPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-      }
-
-      // 3. Create auth user with role in metadata
-      const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
-        email: normalizedEmail,
-        password: finalPassword,
-        options: {
-          data: {
-            full_name: fullName,
-            role: role,
-          },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
-      });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
-
-      const userId = authData.user.id;
-
-      // Wait for trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Ensure profile exists (create if trigger didn't fire)
-      const { data: createdProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (!createdProfile) {
-        console.log("Profile not created by trigger, creating manually...");
-        const { error: profileCreateError } = await supabase
-          .from("profiles")
-          .insert({
-            user_id: userId,
-            full_name: fullName,
-            email: normalizedEmail,
-            role: role,
-            active: true,
-          });
-
-        if (profileCreateError) {
-          console.error("Error creating profile manually:", profileCreateError);
-          throw new Error("Erro ao criar perfil do usuário");
-        }
-      }
-
-      // Ensure user_roles exists
-      const { error: roleUpsertError } = await supabase
-        .from("user_roles")
-        .upsert({
-          user_id: userId,
-          role: role,
-          full_name: fullName,
-          email: normalizedEmail,
-        });
-
-      if (roleUpsertError) {
-        console.error("Error upserting user role:", roleUpsertError);
-      }
-
-      // 4. Create domain record (student or teacher) with full data
-      let domainRecordId: string | null = null;
-
-      if (role === "student" && studentData) {
-        const { data: student, error: studentError } = await supabase
-          .from("students")
-          .insert({
-            ...studentData,
-            name: fullName,
-            email: normalizedEmail,
-          })
-          .select("id")
-          .single();
-
-        if (studentError) {
-          console.error("Error creating student:", studentError);
-          throw new Error("Erro ao criar registro de aluno");
-        }
-
-        domainRecordId = student.id;
-
-        // 5. Link profile to student
-        const { error: linkError } = await supabase
-          .from("profiles")
-          .update({ 
-            student_id: student.id,
-            full_name: fullName,
-            email: normalizedEmail,
-            role: "student",
-            active: true
-          })
-          .eq("user_id", userId);
-
-        if (linkError) {
-          console.error("Error linking profile to student:", linkError);
-        }
-      } else if (role === "teacher" && teacherData) {
-        const { data: teacher, error: teacherError } = await supabase
-          .from("teachers")
-          .insert({
-            ...teacherData,
-            name: fullName,
-            email: normalizedEmail,
-          })
-          .select("id")
-          .single();
-
-        if (teacherError) {
-          console.error("Error creating teacher:", teacherError);
-          throw new Error("Erro ao criar registro de professor");
-        }
-
-        domainRecordId = teacher.id;
-
-        // 5. Link profile to teacher
-        const { error: linkError } = await supabase
-          .from("profiles")
-          .update({ 
-            teacher_id: teacher.id,
-            full_name: fullName,
-            email: normalizedEmail,
-            role: "teacher",
-            active: true
-          })
-          .eq("user_id", userId);
-
-        if (linkError) {
-          console.error("Error linking profile to teacher:", linkError);
-        }
-      }
-
-      return {
-        user: authData.user,
-        password: finalPassword,
-        domainRecordId,
-      };
-    },
-    onSuccess: () => {
-      // Invalidate immediately
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      queryClient.invalidateQueries({ queryKey: ["teachers"] });
-      
-      // Force refetch after a delay to ensure DB propagation
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["users"] });
-        queryClient.refetchQueries({ queryKey: ["users"] });
-      }, 1500);
-    },
-    onError: (error: any) => {
-      console.error("Error creating user with full profile:", error);
-      toast.error(error.message || "Erro ao criar usuário. Tente novamente.");
-    },
-  });
-}
-
-// Create auth user and link to an existing teacher
-export function useCreateAuthUserForTeacher() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      teacherId,
-      email,
-      fullName,
-    }: {
-      teacherId: string;
-      email: string;
-      fullName: string;
-    }) => {
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-      const length = 10;
-      let password = "";
-      for (let i = 0; i < length; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-
-      const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            role: "teacher", // Pass role to trigger
-          },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
-      });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
-
-      const userId = authData.user.id;
-
-      // Wait a bit for trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ full_name: fullName, teacher_id: teacherId, role: "teacher", email })
-        .eq("user_id", userId);
-
-      if (profileError) {
-        console.error("Error linking profile to teacher:", profileError);
-      }
-
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert(
-          {
-            user_id: userId,
-            role: "teacher" as any,
-            full_name: fullName,
-            email,
-          },
-          { onConflict: "user_id" }
-        );
-
-      if (roleError) {
-        console.error("Error setting teacher role:", roleError);
-      }
-
-      return { user: authData.user, password };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-    },
-    onError: async (error: any, variables: any) => {
-      console.error("Error creating auth user for teacher:", error);
-
-      const emailVar = (variables && variables.email) ? String(variables.email).trim().toLowerCase() : null;
-
-      if (emailVar) {
-        try {
-          const { data: existingProfile } = await supabase
-            .from("profiles")
-            .select("user_id, teacher_id")
-            .ilike("email", emailVar)
-            .maybeSingle();
-
-          if (existingProfile) {
-            // perfil já existe — suprimir notificação aqui para evitar toasts duplicados
-            return;
-          }
-        } catch (e) {
-          // ignore and fall back to default
-        }
-      }
-
-      const message = String(error?.message || "").toLowerCase();
-      if (message.includes("already")) {
-        toast.error(
-          "Já existe uma conta com esse email. Use a aba Usuários para vincular esse professor à conta existente."
-        );
-      } else {
-        toast.error(error.message || "Erro ao criar conta de acesso para o professor.");
-      }
-    },
-  });
-}
+// Export all mutation hooks from the dedicated mutations file
+export {
+  useCreateUser,
+  useUpdateUserRole,
+  useUpdateUserProfile,
+  useUpdateMyProfile,
+  useUploadAvatar,
+  useDeleteUser,
+  useHardDeleteUser,
+  useAdminResetPassword,
+  useLinkUserToStudent,
+  useLinkUserToTeacher,
+  useCreateAuthUserForStudent,
+  useCreateAuthUserForTeacher,
+  useInviteStudent,
+  useInviteTeacher,
+} from "./useUserMutations";

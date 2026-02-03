@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -10,11 +11,12 @@ export type StudentUpdate = TablesUpdate<"students">;
 export function useStudentsByTeacher() {
   // RLS garante que o professor veja apenas seus próprios alunos,
   // e o admin veja todos os alunos.
+  // Use students_masked para mascarar CPF e telefone conforme LGPD
   return useQuery({
     queryKey: ["students", "by-teacher"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("students")
+      const { data, error} = await supabase
+        .from("students_masked")
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -27,7 +29,9 @@ export function useCreateStudentForTeacher() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (student: Omit<StudentInsert, "teacher_id">) => {
-      // Descobre o teacher_id do usuário logado via função SQL
+      const { validateCpfPhonePlatform } = await import("@/lib/validate-cpf-phone-platform");
+      const err = await validateCpfPhonePlatform(supabase, student);
+      if (err) throw new Error(err);
       const { data: teacherId, error: teacherError } = await supabase.rpc("get_my_teacher_id");
       if (teacherError) throw teacherError;
 
@@ -43,9 +47,9 @@ export function useCreateStudentForTeacher() {
       queryClient.invalidateQueries({ queryKey: ["students", "by-teacher"] });
       toast.success("Aluno cadastrado com sucesso!");
     },
-    onError: (error) => {
-      console.error("Error creating student:", error);
-      toast.error("Erro ao cadastrar aluno. Tente novamente.");
+    onError: (error: unknown) => {
+      const friendly = getDuplicateErrorMessage(error as { code?: string; message?: string });
+      toast.error(friendly || "Erro ao cadastrar aluno. Tente novamente.");
     },
   });
 }

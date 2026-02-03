@@ -1,8 +1,8 @@
-import { useState } from "react";
-import TeacherLayout from "@/components/layout/TeacherLayout";
+import { useState, useRef, useEffect } from "react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,10 +27,17 @@ import {
   Trash2,
   Loader2,
   Receipt,
+  BookOpen,
+  Check,
+  Lock,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
+import { PostClassDialog } from "@/components/classes/PostClassDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,16 +52,20 @@ import {
   ClassLogWithStudent,
   ClassLogWithFinancialData,
 } from "@/hooks/useClassLogs";
+import { isClassEvaluationBlocked, getClassStatusWithTime } from "@/lib/utils/classTime";
 
-function formatDate(dateString: string): string {
-  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+function formatClassDateAndTime(log: {
+  class_date: string;
+  start_at?: string | null;
+  end_at?: string | null;
+}): { date: string; timeRange: string | null } {
+  const date = format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+  if (log.start_at && log.end_at) {
+    const start = format(new Date(log.start_at), "HH:mm", { locale: ptBR });
+    const end = format(new Date(log.end_at), "HH:mm", { locale: ptBR });
+    return { date, timeRange: `${start} às ${end}` };
+  }
+  return { date, timeRange: null };
 }
 
 function getPaymentStatusVariant(status: string | null): "success" | "warning" | "destructive" {
@@ -81,6 +92,15 @@ function getPaymentStatusLabel(status: string | null): string {
     default:
       return "Pendente";
   }
+}
+
+function getClassStatusBadge(log: {
+  class_date: string;
+  attendance: boolean | null;
+  start_at?: string | null;
+  end_at?: string | null;
+}) {
+  return getClassStatusWithTime(log);
 }
 
 const TeacherPedagogicalPage = () => {
@@ -112,24 +132,47 @@ const TeacherPedagogicalPage = () => {
   const [selectedLog, setSelectedLog] = useState<ClassLogWithStudent | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [logToDelete, setLogToDelete] = useState<ClassLogWithStudent | null>(null);
+  const [postClassDialogOpen, setPostClassDialogOpen] = useState(false);
+  const [logForPostClass, setLogForPostClass] = useState<ClassLogWithStudent | null>(null);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
   // RLS garante que o professor só veja/edite aulas dos seus alunos
-  const { data: logs = [], isLoading, error } = useClassLogs();
-  const { data: summary } = useClassLogsSummary();
+  const {
+    data: logs = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useClassLogs(teacherId ?? undefined, { pageSize: 20 });
+  const { data: summary } = useClassLogsSummary(teacherId);
+
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
   const createLog = useCreateClassLog();
   const createLogWithFinancial = useCreateClassLogWithFinancial();
   const updateLog = useUpdateClassLog();
   const deleteLog = useDeleteClassLog();
+
+  const logsPendingRegistration = logs.filter(
+    (log) => !isClassEvaluationBlocked(log) && log.attendance == null
+  );
 
   const filteredLogs = logs.filter((log) => {
     const studentName = log.students?.name || "";
     return studentName.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const handleCreateOrUpdate = (data: ClassLogInsert) => {
+  const handleCreateOrUpdate = (
+    data: ClassLogInsert,
+    financialUpdate?: { financialRecordId: string; dueDate: string }
+  ) => {
     if (selectedLog) {
       updateLog.mutate(
-        { id: selectedLog.id, ...data },
+        { id: selectedLog.id, ...data, ...financialUpdate },
         {
           onSuccess: () => {
             setIsFormOpen(false);
@@ -187,17 +230,14 @@ const TeacherPedagogicalPage = () => {
 
   if (authLoading || teacherIdLoading) {
     return (
-      <TeacherLayout>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </TeacherLayout>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <TeacherLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -245,6 +285,31 @@ const TeacherPedagogicalPage = () => {
           </div>
         </div>
 
+        {/* Conferência: aulas passadas sem presença */}
+        {logsPendingRegistration.length > 0 && (
+          <div className="rounded-lg border border-warning/50 bg-warning/10 p-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-warning" />
+              <p className="text-sm font-medium">
+                <span className="font-semibold">{logsPendingRegistration.length}</span>{" "}
+                {logsPendingRegistration.length === 1
+                  ? "aula pendente de feedback"
+                  : "aulas pendentes de feedback"}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const first = logsPendingRegistration[0];
+                if (first) handleEdit(first);
+              }}
+            >
+              Ver e registrar
+            </Button>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 max-w-sm">
@@ -276,47 +341,44 @@ const TeacherPedagogicalPage = () => {
 
         {/* Tabela de aulas */}
         {!isLoading && !error && (
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Aluno
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
                       Aula / Professor
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Data
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Nota
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden xl:table-cell w-0 whitespace-nowrap">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell w-0 whitespace-nowrap">
                       Financeiro
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden 2xl:table-cell">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell">
                       Valor
                     </th>
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
                       Feedback
                     </th>
-                    <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                    <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                       Ações
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody>
                   {filteredLogs.map((log) => {
-                    const lastUpdatedAt = (log as any).updated_at as
-                      | string
-                      | null
-                      | undefined;
+                    const lastUpdatedAt = log.updated_at;
 
                     return (
                       <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 align-top">
+                        <td className="px-6 py-4 align-top">
                           <div className="flex items-start gap-3">
                             <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                               <span className="text-xs font-medium text-accent-foreground">
@@ -328,10 +390,8 @@ const TeacherPedagogicalPage = () => {
                                 <p className="text-sm font-medium truncate max-w-[180px]">
                                   {log.students?.name || "Aluno não encontrado"}
                                 </p>
-                                <StatusBadge
-                                  variant={log.attendance ? "success" : "destructive"}
-                                >
-                                  {log.attendance ? "Presente" : "Ausente"}
+                                <StatusBadge variant={getClassStatusBadge(log).variant}>
+                                  {getClassStatusBadge(log).label}
                                 </StatusBadge>
                               </div>
                               {lastUpdatedAt && (
@@ -346,7 +406,7 @@ const TeacherPedagogicalPage = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 align-top hidden lg:table-cell">
+                        <td className="px-6 py-4 align-top hidden lg:table-cell">
                           <div className="min-w-0 space-y-1">
                             {log.title && (
                               <p className="text-sm font-semibold text-foreground break-all whitespace-normal">
@@ -358,19 +418,31 @@ const TeacherPedagogicalPage = () => {
                             </p>
                           </div>
                         </td>
-                        <td className="px-4 py-3 align-top">
-                          <span className="text-sm text-muted-foreground">
-                            {formatDate(log.class_date as string)}
-                          </span>
+                        <td className="px-6 py-4 align-top">
+                          {(() => {
+                            const { date, timeRange } = formatClassDateAndTime(log);
+                            return (
+                              <div className="flex flex-col gap-0.5 text-sm text-muted-foreground">
+                                <span>{date}</span>
+                                {timeRange && <span className="text-xs">{timeRange}</span>}
+                              </div>
+                            );
+                          })()}
                         </td>
-                        <td className="px-4 py-3 align-top">
-                          <span className="text-sm font-medium">
-                            {typeof log.grade === "number"
+                        <td className="px-6 py-4 align-top">
+                          <span
+                            className={`text-sm font-medium ${
+                              log.attendance === false ? "text-destructive" : ""
+                            }`}
+                          >
+                            {log.grade != null
                               ? Number(log.grade).toFixed(1)
-                              : "—"}
+                              : log.attendance === false
+                                ? "Não compareceu"
+                                : "—"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 align-top hidden xl:table-cell whitespace-nowrap">
+                        <td className="px-6 py-4 align-top hidden xl:table-cell whitespace-nowrap">
                           {log.financial_records ? (
                             <StatusBadge
                               variant={getPaymentStatusVariant(log.financial_records.status)}
@@ -382,44 +454,69 @@ const TeacherPedagogicalPage = () => {
                             <span className="text-sm text-muted-foreground">Sem cobrança</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 align-top hidden 2xl:table-cell">
-                          <span className="text-sm text-muted-foreground">
+                        <td className="px-6 py-4 align-top hidden 2xl:table-cell whitespace-nowrap">
+                          <span className={log.financial_records ? "text-sm font-medium tabular-nums" : "text-sm font-medium text-foreground"}>
                             {log.financial_records
-                              ? `R$ ${formatCurrency(Number(log.financial_records.amount))}`
-                              : "—"}
+                              ? formatCurrency(Number(log.financial_records.amount))
+                              : "sem cobrança"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 align-top hidden lg:table-cell">
+                        <td className="px-6 py-4 align-top hidden lg:table-cell">
                           <span className="text-sm text-muted-foreground line-clamp-2 max-w-xs">
                             {log.feedback || "—"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 align-top text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                disabled={isMutating}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(log)}>
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => openDeleteDialog(log)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                        <td className="px-6 py-4 align-top text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEdit(log)}>
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => openDeleteDialog(log)}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                            <Button
+                              size="sm"
+                              className={`h-8 border-none ${
+                                isClassEvaluationBlocked(log) && log.attendance == null
+                                  ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                  : log.attendance != null
+                                    ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+                                    : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
+                              }`}
+                              disabled={isMutating || (isClassEvaluationBlocked(log) && log.attendance == null)}
+                              onClick={() => {
+                                if (isClassEvaluationBlocked(log)) return;
+                                setLogForPostClass(log);
+                                setPostClassDialogOpen(true);
+                              }}
+                            >
+                              {isClassEvaluationBlocked(log) && log.attendance == null ? (
+                                <>
+                                  <Lock className="h-3.5 w-3.5 mr-1.5" />
+                                  Avaliar
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                                  {log.attendance != null ? "Atualizar" : "Avaliar"}
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -434,10 +531,48 @@ const TeacherPedagogicalPage = () => {
                   : "Nenhum registro encontrado"}
               </div>
             )}
+            {(totalCount > 0 || page > 0) && (
+              <div className="border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
+                <p className="text-sm text-muted-foreground">
+                  {totalCount > 0
+                    ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}`
+                    : "0 registros"}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 0 || isFetching}
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!hasMore || isFetching}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Próximo
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Dialogs */}
+        <PostClassDialog
+          open={postClassDialogOpen}
+          onOpenChange={(open) => {
+            setPostClassDialogOpen(open);
+            if (!open) setLogForPostClass(null);
+          }}
+          classLog={logForPostClass}
+          onSuccess={() => setLogForPostClass(null)}
+        />
         <ClassLogFormDialog
           open={isFormOpen}
           onOpenChange={(open) => {
@@ -454,10 +589,25 @@ const TeacherPedagogicalPage = () => {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Excluir registro de aula</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja excluir este registro de aula? Esta ação não
-                pode ser desfeita.
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-2">
+                  <p>
+                    Tem certeza que deseja excluir o registro de aula de{" "}
+                    <strong>{logToDelete?.students?.name}</strong> do dia{" "}
+                    <strong>{logToDelete ? formatDate(logToDelete.class_date) : ""}</strong>?
+                  </p>
+                  {logToDelete?.financial_records?.status === "pago" ? (
+                    <p className="text-destructive font-medium">
+                      Esta aula possui uma cobrança já paga. A exclusão da aula também exclui a cobrança.
+                      Deseja excluir mesmo assim?
+                    </p>
+                  ) : logToDelete?.financial_records ? (
+                    <span className="block text-warning">
+                      ⚠️ Esta aula possui uma cobrança vinculada que também será afetada.
+                    </span>
+                  ) : null}
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -471,8 +621,7 @@ const TeacherPedagogicalPage = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
-    </TeacherLayout>
+    </div>
   );
 };
 

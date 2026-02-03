@@ -19,94 +19,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CalendarIcon } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Student, StudentInsert } from "@/hooks/useStudents";
+import type { Enums } from "@/integrations/supabase/types";
 import { BR_STATES, fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib/br-locations";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronsUpDown } from "lucide-react";
+import { REGEX_PATTERNS, maskCPF, maskPhone, maskDate, isValidDateString } from "@/lib/utils/patterns";
 
-const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-function isValidDateString(value: string) {
-  if (!dateRegex.test(value)) return false;
-  const [day, month, year] = value.split("/").map(Number);
-  const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-}
+// Type for student origin from database enum
+type StudentOrigin = Enums<"student_origin">;
+type StudentStatus = Enums<"student_status">;
 
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
   return `${year}-${month}-${day}`;
 }
 
-function maskDate(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-
-  if (digits.length <= 2) {
-    return digits;
-  }
-
-  if (digits.length <= 4) {
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  }
-
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+function isMasked(value: string | null | undefined): boolean {
+  return typeof value === "string" && value.includes("*");
 }
-
-function maskCPF(value: string): string {
-  // Remove tudo que não é dígito
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  
-  // Aplica a máscara 000.000.000-00
-  if (digits.length <= 3) {
-    return digits;
-  } else if (digits.length <= 6) {
-    return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  } else if (digits.length <= 9) {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  } else {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-  }
-}
-
-const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
-
-function maskPhone(value: string): string {
-  // Remove tudo que não é dígito
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  
-  // Aplica a máscara (00) 00000-0000 ou (00) 0000-0000
-  if (digits.length <= 2) {
-    return digits.length > 0 ? `(${digits}` : digits;
-  } else if (digits.length <= 6) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  } else if (digits.length <= 10) {
-    // Telefone fixo: (00) 0000-0000
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  } else {
-    // Celular: (00) 00000-0000
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  }
-}
-
-const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 
 const studentSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
   state: z.string().max(2).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
   cpf: z.string()
-    .min(14, "CPF inválido")
-    .max(14, "CPF inválido")
-    .regex(cpfRegex, "Formato deve ser 000.000.000-00"),
+    .max(14)
+    .refine((v) => !v || v.trim() === "" || REGEX_PATTERNS.cpf.test(v), "Formato deve ser 000.000.000-00"),
   phone: z.string()
-    .min(14, "Telefone inválido")
-    .max(15, "Telefone inválido")
-    .regex(phoneRegex, "Formato deve ser (00) 00000-0000"),
+    .max(20)
+    .refine(
+      (v) => !v || v.trim() === "" || isMasked(v) || REGEX_PATTERNS.phone.test(v),
+      "Formato deve ser (00) 00000-0000"
+    ),
   email: z
     .string()
     .min(1, "Email é obrigatório")
@@ -127,7 +74,7 @@ const studentSchema = z.object({
     .string()
     .optional()
     .nullable()
-    .refine((val) => !val || (dateRegex.test(val) && isValidDateString(val)), {
+    .refine((val) => !val || isValidDateString(val), {
       message: "Data inválida",
     }),
 });
@@ -151,13 +98,13 @@ export function StudentFormDialog({
   isLoading,
   autoTeacherId,
 }: StudentFormDialogProps) {
-  const [selectedOrigin, setSelectedOrigin] = useState<string>(
+  const [selectedOrigin, setSelectedOrigin] = useState<StudentOrigin | "">(
     student?.origin || ""
   );
-  const [selectedStatus, setSelectedStatus] = useState<string>(
+  const [selectedStatus, setSelectedStatus] = useState<StudentStatus>(
     student?.status || "ativo"
   );
-  const [selectedState, setSelectedState] = useState<string>((student as any)?.state || "");
+  const [selectedState, setSelectedState] = useState<string>(student?.state || "");
   const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
   const [statePopoverOpen, setStatePopoverOpen] = useState(false);
   const [cities, setCities] = useState<BrCityOption[]>([]);
@@ -174,22 +121,22 @@ export function StudentFormDialog({
     resolver: zodResolver(studentSchema),
     defaultValues: {
       name: student?.name || "",
-      state: (student as any)?.state || "",
-      city: (student as any)?.city || "",
-      cpf: student?.cpf 
+      state: student?.state || "",
+      city: student?.city || "",
+      cpf: student?.cpf && !isMasked(student.cpf)
         ? (student.cpf.includes(".") ? student.cpf : maskCPF(student.cpf))
         : "",
-      phone: student?.phone 
-        ? (student.phone.includes("(") ? student.phone : maskPhone(student.phone))
+      phone: student?.phone
+        ? (isMasked(student.phone) ? student.phone : student.phone.includes("(") ? student.phone : maskPhone(student.phone))
         : "",
       email: student?.email || "",
-      hourly_rate: (student as any)?.hourly_rate
-        ? String((student as any).hourly_rate).replace(".", ",")
+      hourly_rate: student?.hourly_rate
+        ? String(student.hourly_rate).replace(".", ",")
         : "",
-      classes_per_week: (student as any)?.classes_per_week
-        ? String((student as any).classes_per_week)
+      classes_per_week: student?.classes_per_week
+        ? String(student.classes_per_week)
         : "",
-      pay_day: (student as any)?.pay_day ? String((student as any).pay_day) : "",
+      pay_day: student?.pay_day ? String(student.pay_day) : "",
       origin: student?.origin || undefined,
       status: student?.status || "ativo",
       birth_date: student?.birth_date
@@ -224,30 +171,28 @@ export function StudentFormDialog({
     }
 
     if (student) {
-      // Formata CPF se vier sem formatação do banco
-      const formattedCPF = student.cpf 
-        ? (student.cpf.includes(".") ? student.cpf : maskCPF(student.cpf))
+      const formattedCPF =
+        student.cpf && !isMasked(student.cpf)
+          ? (student.cpf.includes(".") ? student.cpf : maskCPF(student.cpf))
+          : "";
+      const formattedPhone = student.phone
+        ? (isMasked(student.phone) ? student.phone : student.phone.includes("(") ? student.phone : maskPhone(student.phone))
         : "";
-      
-      // Formata telefone se vier sem formatação do banco
-      const formattedPhone = student.phone 
-        ? (student.phone.includes("(") ? student.phone : maskPhone(student.phone))
-        : "";
-      
+
       reset({
         name: student.name,
-        state: (student as any)?.state || "",
-        city: (student as any)?.city || "",
+        state: student.state || "",
+        city: student.city || "",
         cpf: formattedCPF,
         phone: formattedPhone,
         email: student.email || "",
-        hourly_rate: (student as any)?.hourly_rate
-          ? String((student as any).hourly_rate).replace(".", ",")
+        hourly_rate: student.hourly_rate
+          ? String(student.hourly_rate).replace(".", ",")
           : "",
-        classes_per_week: (student as any)?.classes_per_week
-          ? String((student as any).classes_per_week)
+        classes_per_week: student.classes_per_week
+          ? String(student.classes_per_week)
           : "",
-        pay_day: (student as any)?.pay_day ? String((student as any).pay_day) : "",
+        pay_day: student.pay_day ? String(student.pay_day) : "",
         origin: student.origin || undefined,
         status: student.status || "ativo",
         birth_date: student.birth_date
@@ -256,7 +201,7 @@ export function StudentFormDialog({
       });
       setSelectedOrigin(student.origin || "");
       setSelectedStatus(student.status || "ativo");
-      setSelectedState((student as any)?.state || "");
+      setSelectedState(student.state || "");
     } else {
       reset({
         name: "",
@@ -305,25 +250,24 @@ export function StudentFormDialog({
 
     const payDayNumber = data.pay_day ? Number(data.pay_day) : null;
 
-    const submitData: any = {
+    const omitCpfOnEdit = student && (data.cpf.trim() === "" || !!autoTeacherId);
+    const omitPhoneOnEdit = student && data.phone.trim() === "";
+
+    const submitData: StudentInsert = {
       name: data.name,
       state: selectedState || null,
       city: data.city || null,
-      cpf: data.cpf,
-      phone: data.phone,
+      ...(omitCpfOnEdit ? {} : { cpf: data.cpf }),
+      ...(omitPhoneOnEdit ? {} : { phone: data.phone }),
       email: data.email,
-      origin: selectedOrigin as StudentInsert["origin"],
-      status: selectedStatus as StudentInsert["status"],
+      origin: selectedOrigin as StudentOrigin,
+      status: selectedStatus,
       birth_date: data.birth_date ? brDateToIso(data.birth_date) : null,
       hourly_rate: hourlyRateNumber,
       classes_per_week: classesPerWeekNumber,
       pay_day: payDayNumber,
+      teacher_id: (autoTeacherId && !student) ? autoTeacherId : null,
     };
-
-    // Auto-set teacher_id if provided (for teacher portal)
-    if (autoTeacherId && !student) {
-      submitData.teacher_id = autoTeacherId;
-    }
 
     onSubmit(submitData);
   };
@@ -362,15 +306,17 @@ export function StudentFormDialog({
                         type="button"
                         variant="outline"
                         role="combobox"
-                        className="w-full justify-between"
+                        className="w-full min-w-0 justify-between"
                         disabled={isLoading}
                       >
-                        {(() => {
-                          const current = BR_STATES.find((st) => st.code === selectedState);
-                          if (current) return `${current.code} - ${current.name}`;
-                          return "Selecione UF";
-                        })()}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        <span className="min-w-0 truncate">
+                          {(() => {
+                            const current = BR_STATES.find((st) => st.code === selectedState);
+                            if (current) return `${current.code} - ${current.name}`;
+                            return "Selecione UF";
+                          })()}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[260px] p-0">
@@ -409,20 +355,22 @@ export function StudentFormDialog({
                         type="button"
                         variant="outline"
                         role="combobox"
-                        className="w-full justify-between"
+                        className="w-full min-w-0 justify-between"
                         disabled={!selectedState || isLoading || isLoadingCities}
                       >
-                        {(() => {
-                          const cityValue = watchedCity;
-                          const current = cities.find((c) => c.value === cityValue);
-                          if (current) return current.label;
-                          if (cityValue) return cityValue;
-                          if (isLoadingCities) return "Carregando cidades...";
-                          return selectedState
-                            ? "Selecione a cidade"
-                            : "Selecione uma UF primeiro";
-                        })()}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        <span className="min-w-0 truncate">
+                          {(() => {
+                            const cityValue = watchedCity;
+                            const current = cities.find((c) => c.value === cityValue);
+                            if (current) return current.label;
+                            if (cityValue) return cityValue;
+                            if (isLoadingCities) return "Carregando cidades...";
+                            return selectedState
+                              ? "Selecione a cidade"
+                              : "Selecione uma UF primeiro";
+                          })()}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[280px] p-0">
@@ -453,19 +401,23 @@ export function StudentFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cpf">CPF *</Label>
+              <Label htmlFor="cpf">CPF {!autoTeacherId && "*"}</Label>
               <Input
                 id="cpf"
                 type="text"
                 inputMode="numeric"
                 maxLength={14}
-                placeholder="000.000.000-00"
+                placeholder={
+                  autoTeacherId && student && isMasked(student.cpf)
+                    ? student.cpf
+                    : "000.000.000-00"
+                }
                 {...register("cpf")}
                 onChange={(e) => {
                   const masked = maskCPF(e.target.value);
                   setValue("cpf", masked, { shouldValidate: true });
                 }}
-                disabled={isLoading}
+                disabled={isLoading || (!!autoTeacherId && !!student)}
               />
               {errors.cpf && (
                 <p className="text-sm text-destructive">{errors.cpf.message}</p>
@@ -568,8 +520,9 @@ export function StudentFormDialog({
               <Select
                 value={selectedOrigin}
                 onValueChange={(value) => {
-                  setSelectedOrigin(value);
-                  setValue("origin", value as any, { shouldValidate: true });
+                  const origin = value as StudentOrigin;
+                  setSelectedOrigin(origin);
+                  setValue("origin", origin, { shouldValidate: true });
                 }}
                 disabled={isLoading}
               >

@@ -47,8 +47,10 @@ export function useAllProfiles() {
 
       let studentMap: Record<string, string> = {};
       if (studentIds.length > 0) {
+        // Use students_masked para garantir mascaramento LGPD
+        // (não afeta esta query pois só seleciona id e name)
         const { data: students } = await supabase
-          .from("students")
+          .from("students_masked")
           .select("id, name")
           .in("id", studentIds as string[]);
 

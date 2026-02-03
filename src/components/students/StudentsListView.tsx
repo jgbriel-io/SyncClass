@@ -1,5 +1,12 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
+import {
+  StudentsFilters,
+  type StudentsFiltersState,
+  type StudentFilterPreset,
+} from "@/components/filters/StudentsFilters";
+import { defaultStudentsFilters } from "@/components/filters/filterDefaults";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyStudentsState } from "@/components/ui/contextual-empty-states";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatCurrency } from "@/lib/utils/formatters";
+import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
+import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,19 +48,21 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
 import {
-  useStudents,
+  useStudentsPaginated,
   useCreateStudent,
   useUpdateStudent,
-  useDeleteStudent,
+  useSoftDeleteStudent,
   Student,
   StudentInsert,
 } from "@/hooks/useStudents";
-import { useCreateAuthUserForStudent } from "@/hooks/useUsers";
+import { useCreateAuthUserForStudent, useInviteStudent } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useFinancialRecords } from "@/hooks/useFinancialRecords";
-import { useClassLogs } from "@/hooks/useClassLogs";
+import { useFinancialRecordsByStudentIds, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
+import { useClassLogsByStudentIds } from "@/hooks/useClassLogs";
+import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
+import { Teacher } from "@/hooks/useTeachers";
 
 interface StudentsListViewProps {
   title: string;
@@ -58,8 +70,12 @@ interface StudentsListViewProps {
   showTeacherColumn?: boolean;
   showTeacherFilter?: boolean;
   autoTeacherId?: string | null;
-  teachers: any[];
+  teachers: Teacher[];
   onNewStudentClick?: () => void;
+  /** Termo de busca vindo da URL (ex.: header global) */
+  initialSearch?: string;
+  /** Filtro inicial vindo da URL (ex.: dashboard aniversariantes) */
+  initialFilterPreset?: StudentFilterPreset;
 }
 
 const originLabels: Record<string, string> = {
@@ -70,14 +86,6 @@ const originLabels: Record<string, string> = {
   outro: "Outro",
 };
 
-function formatCurrency(value: number | null | undefined): string {
-  if (!value && value !== 0) return "—";
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(Number(value));
-}
-
 export function StudentsListView({
   title,
   subtitle,
@@ -86,34 +94,70 @@ export function StudentsListView({
   autoTeacherId = null,
   teachers,
   onNewStudentClick,
+  initialSearch = "",
+  initialFilterPreset = "all",
 }: StudentsListViewProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ativo");
-  const [teacherFilter, setTeacherFilter] = useState<string>("all");
+  const [filters, setFilters] = useState<StudentsFiltersState>({
+    ...defaultStudentsFilters,
+    status: "ativo",
+    teacherId: "all",
+    search: initialSearch,
+    filterPreset: initialFilterPreset,
+  });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [studentToArchive, setStudentToArchive] = useState<Student | null>(null);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
-  const { data: students = [], isLoading, error } = useStudents();
-  const { data: financialRecords = [] } = useFinancialRecords();
-  const { data: classLogs = [] } = useClassLogs();
+  const {
+    data: students = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useStudentsPaginated({
+    pageSize: 20,
+    filters: {
+      teacherId: autoTeacherId ?? filters.teacherId,
+      status: filters.status,
+      sortBy: filters.sortBy,
+    },
+  });
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, search: initialSearch }));
+    setPage(0);
+  }, [initialSearch, setPage]);
+
+  const studentIds = useMemo(() => students.map((s) => s.id), [students]);
+  const { data: financialRecords = [] } = useFinancialRecordsByStudentIds(studentIds);
+  const { data: classLogs = [] } = useClassLogsByStudentIds(studentIds);
+
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
   const createStudent = useCreateStudent();
+  const inviteStudent = useInviteStudent();
   const updateStudent = useUpdateStudent();
-  const deleteStudent = useDeleteStudent();
+  const softDeleteStudent = useSoftDeleteStudent();
   const createStudentUser = useCreateAuthUserForStudent();
 
   const teacherMap = useMemo(() => {
     const map: Record<string, string> = {};
-    teachers.forEach((t: any) => {
+    teachers.forEach((t) => {
       if (t.id && t.name) {
-        map[t.id] = t.name as string;
+        map[t.id] = t.name;
       }
     });
     return map;
@@ -140,20 +184,11 @@ export function StudentsListView({
       }
     };
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    financialRecords.forEach((record: any) => {
-      const studentId = record.student_id as string | undefined;
+    financialRecords.forEach((record: FinancialRecordWithRelations) => {
+      const studentId = record.student_id;
       if (!studentId) return;
 
-      let actualStatus: InternalFinancialStatus;
-      if (record.status === "pago") {
-        actualStatus = "pago";
-      } else {
-        const dueDate = new Date(String(record.due_date) + "T00:00:00");
-        actualStatus = dueDate < today ? "atrasado" : "pendente";
-      }
+      const actualStatus = getFinancialActualStatus(record) as InternalFinancialStatus;
 
       const current = statusMap[studentId]?.status ?? "none";
       if (getPriority(actualStatus) <= getPriority(current)) {
@@ -182,9 +217,9 @@ export function StudentsListView({
   const lastClassDateByStudent = useMemo(() => {
     const map: Record<string, string> = {};
 
-    (classLogs as any[]).forEach((log) => {
-      const studentId = log.student_id as string | undefined;
-      const classDate = log.class_date as string | undefined;
+    classLogs.forEach((log) => {
+      const studentId = log.student_id;
+      const classDate = log.class_date;
       if (!studentId || !classDate || !log.attendance) return;
 
       const current = map[studentId];
@@ -203,30 +238,78 @@ export function StudentsListView({
     return map;
   }, [classLogs]);
 
-  const filteredStudents = students.filter((student) => {
-    const matchesSearch = student.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || student.status === statusFilter;
+  const lastPaymentDateByStudent = useMemo(() => {
+    const map: Record<string, string> = {};
+    financialRecords.forEach((record: FinancialRecordWithRelations) => {
+      if (record.status !== "pago" || !record.paid_at || !record.student_id) return;
+      const current = map[record.student_id];
+      if (!current) {
+        map[record.student_id] = record.paid_at;
+        return;
+      }
+      if (new Date(record.paid_at) > new Date(current)) {
+        map[record.student_id] = record.paid_at;
+      }
+    });
+    return map;
+  }, [financialRecords]);
 
-    let matchesTeacher = true;
-    if (autoTeacherId) {
-      matchesTeacher = ((student as any).teacher_id as string | null | undefined) === autoTeacherId;
-    } else if (showTeacherFilter) {
-      matchesTeacher =
-        teacherFilter === "all" ||
-        ((student as any).teacher_id as string | null | undefined) === teacherFilter;
-    }
+  const currentMonth = useMemo(() => new Date().getMonth() + 1, []);
 
-    return matchesSearch && matchesStatus && matchesTeacher;
-  });
+  const filteredStudents = useMemo(() => {
+    let result = students.filter((student) => {
+      if (filters.filterPreset === "aniversariantes") {
+        if (!student.birth_date) return false;
+        const birthMonth = new Date(student.birth_date + "T00:00:00").getMonth() + 1;
+        if (birthMonth !== currentMonth) return false;
+      }
+
+      const searchLower = filters.search.toLowerCase().trim();
+      const searchDigits = searchLower.replace(/\D/g, "");
+      const matchesSearch =
+        !searchLower ||
+        (student.name || "").toLowerCase().includes(searchLower) ||
+        (student.email || "").toLowerCase().includes(searchLower) ||
+        (student.cpf || "").replace(/\D/g, "").includes(searchDigits) ||
+        (student.phone || "").replace(/\D/g, "").includes(searchDigits);
+
+      if (!matchesSearch) return false;
+
+      const matchesStatus = filters.status === "all" || student.status === filters.status;
+      if (!matchesStatus) return false;
+
+      let matchesTeacher = true;
+      if (autoTeacherId) {
+        matchesTeacher = student.teacher_id === autoTeacherId;
+      } else if (showTeacherFilter) {
+        matchesTeacher = filters.teacherId === "all" || student.teacher_id === filters.teacherId;
+      }
+      if (!matchesTeacher) return false;
+
+      return true;
+    });
+
+    result = [...result].sort((a, b) => {
+      const nameA = (a.name || "").toLowerCase();
+      const nameB = (b.name || "").toLowerCase();
+      const lastPayA = lastPaymentDateByStudent[a.id] || "";
+      const lastPayB = lastPaymentDateByStudent[b.id] || "";
+
+      if (filters.sortBy === "name_asc") return nameA.localeCompare(nameB);
+      if (filters.sortBy === "name_desc") return nameB.localeCompare(nameA);
+      if (filters.sortBy === "last_payment_desc") return lastPayB.localeCompare(lastPayA);
+      if (filters.sortBy === "last_payment_asc") return lastPayA.localeCompare(lastPayB);
+      return 0;
+    });
+
+    return result;
+  }, [students, filters, autoTeacherId, showTeacherFilter, lastPaymentDateByStudent, currentMonth]);
 
   const handleCreateOrUpdate = (data: StudentInsert) => {
     const run = async () => {
       // Auto-set teacher_id if provided
       const dataWithTeacher = autoTeacherId ? { ...data, teacher_id: autoTeacherId } : data;
-      const normalizedEmail = (dataWithTeacher as any).email?.trim().toLowerCase();
+      const normalizedEmail = dataWithTeacher.email?.trim().toLowerCase();
 
       if (!selectedStudent && normalizedEmail) {
         const { data: existingProfile, error: profileError } = await supabase
@@ -242,9 +325,7 @@ export function StudentsListView({
         }
 
         if (existingProfile) {
-          toast.error(
-            "Já existe uma conta com esse email. Use a aba Usuários para vincular esse aluno à conta existente."
-          );
+          toast.error(MSG_EMAIL);
           return;
         }
       }
@@ -260,31 +341,23 @@ export function StudentsListView({
           }
         );
       } else {
-        createStudent.mutate(dataWithTeacher, {
-          onSuccess: (createdStudent) => {
-            setIsFormOpen(false);
-
-            if (createdStudent && createdStudent.email) {
-              createStudentUser.mutate(
-                {
-                  studentId: createdStudent.id,
-                  email: createdStudent.email,
-                  fullName: createdStudent.name,
-                },
-                {
-                  onSuccess: (result) => {
-                    if (result?.password) {
-                      setGeneratedPassword(result.password);
-                      setShowGeneratedPassword(false);
-                      setPasswordCopied(false);
-                      setIsPasswordDialogOpen(true);
-                    }
-                  },
-                }
-              );
-            }
-          },
-        });
+        if (normalizedEmail) {
+          inviteStudent.mutate(dataWithTeacher as StudentInsert & { teacher_id?: string | null }, {
+            onSuccess: (result) => {
+              setIsFormOpen(false);
+              if (result?.password) {
+                setGeneratedPassword(result.password);
+                setShowGeneratedPassword(false);
+                setPasswordCopied(false);
+                setIsPasswordDialogOpen(true);
+              }
+            },
+          });
+        } else {
+          createStudent.mutate(dataWithTeacher, {
+            onSuccess: () => setIsFormOpen(false),
+          });
+        }
       }
     };
 
@@ -296,34 +369,36 @@ export function StudentsListView({
     setIsFormOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    if (!studentToDelete) return;
+  const handleArchiveConfirm = () => {
+    if (!studentToArchive) return;
 
-    const isActive = studentToDelete.status === "ativo";
+    const isActive = studentToArchive.status === "ativo";
 
     if (isActive) {
-      deleteStudent.mutate(studentToDelete.id, {
+      // Soft delete: preserva histórico de aulas e cobranças
+      softDeleteStudent.mutate(studentToArchive.id, {
         onSuccess: () => {
-          setDeleteDialogOpen(false);
-          setStudentToDelete(null);
+          setArchiveDialogOpen(false);
+          setStudentToArchive(null);
         },
       });
     } else {
+      // Reativar aluno
       updateStudent.mutate(
-        { id: studentToDelete.id, status: "ativo" as any },
+        { id: studentToArchive.id, status: "ativo" },
         {
           onSuccess: () => {
-            setDeleteDialogOpen(false);
-            setStudentToDelete(null);
+            setArchiveDialogOpen(false);
+            setStudentToArchive(null);
           },
         }
       );
     }
   };
 
-  const openDeleteDialog = (student: Student) => {
-    setStudentToDelete(student);
-    setDeleteDialogOpen(true);
+  const openArchiveDialog = (student: Student) => {
+    setStudentToArchive(student);
+    setArchiveDialogOpen(true);
   };
 
   return (
@@ -346,45 +421,21 @@ export function StudentsListView({
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="ativo">Ativos</SelectItem>
-              <SelectItem value="inativo">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
-          {showTeacherFilter && (
-            <Select value={teacherFilter} onValueChange={setTeacherFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Professor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os professores</SelectItem>
-                {teachers.map((t: any) => (
-                  <SelectItem key={t.id} value={t.id as string}>
-                    {t.name as string}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-      </div>
+      {/* Filtros avançados */}
+      <StudentsFilters
+        filters={filters}
+        onChange={(newFilters) => {
+          setFilters(newFilters);
+          setPage(0);
+        }}
+        onReset={() => {
+          setFilters({ ...defaultStudentsFilters, status: "ativo", teacherId: "all" });
+          setPage(0);
+        }}
+        teachers={teachers}
+        showTeacherFilter={showTeacherFilter}
+        autoTeacherId={autoTeacherId}
+      />
 
       {/* Loading state */}
       {isLoading && (
@@ -404,7 +455,7 @@ export function StudentsListView({
 
       {/* Table */}
       {!isLoading && !error && (
-        <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+        <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -424,7 +475,7 @@ export function StudentsListView({
                     Aulas/semana
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
-                    Total semanal
+                    Total mensal
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
                     Dia pagto
@@ -442,16 +493,16 @@ export function StudentsListView({
               </thead>
               <tbody className="divide-y">
                 {filteredStudents.map((student) => {
-                  const lastUpdatedAt = (student as any).updated_at as string | null | undefined;
-                  const hourlyRate = (student as any).hourly_rate as number | null | undefined;
-                  const classesPerWeek = (student as any).classes_per_week as number | null | undefined;
-                  const weeklyTotal =
+                  const lastUpdatedAt = student.updated_at;
+                  const hourlyRate = student.hourly_rate;
+                  const classesPerWeek = student.classes_per_week;
+                  const monthlyTotal =
                     hourlyRate != null && classesPerWeek != null
-                      ? hourlyRate * classesPerWeek
+                      ? hourlyRate * classesPerWeek * 4
                       : null;
 
-                  const teacherName = (student as any).teacher_id
-                    ? teacherMap[(student as any).teacher_id as string] || "—"
+                  const teacherName = student.teacher_id
+                    ? teacherMap[student.teacher_id] || "—"
                     : "—";
 
                   const lastClassDateRaw = lastClassDateByStudent[student.id];
@@ -523,7 +574,7 @@ export function StudentsListView({
                       )}
                       <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
-                          {formatCurrency(hourlyRate)}
+                          {hourlyRate != null ? formatCurrency(hourlyRate) : "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
@@ -533,12 +584,12 @@ export function StudentsListView({
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
-                          {formatCurrency(weeklyTotal)}
+                          {monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
-                          {(student as any).pay_day ?? "—"}
+                          {student.pay_day ?? "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
@@ -565,12 +616,25 @@ export function StudentsListView({
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => {
+                              setDetailStudentId(student.id);
+                              setDetailSheetOpen(true);
+                            }}
+                            title="Ver detalhes"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEdit(student)}>
                               <Pencil className="h-4 w-4 mr-2" />
@@ -582,15 +646,16 @@ export function StudentsListView({
                                   ? "text-destructive focus:text-destructive"
                                   : "focus:text-primary"
                               }
-                              onClick={() => openDeleteDialog(student)}
+                              onClick={() => openArchiveDialog(student)}
                             >
                               {student.status === "ativo" && (
                                 <Trash2 className="h-4 w-4 mr-2" />
                               )}
-                              {student.status === "ativo" ? "Desativar" : "Reativar aluno"}
+                              {student.status === "ativo" ? "Arquivar" : "Reativar aluno"}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
-                        </DropdownMenu>
+                          </DropdownMenu>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -599,14 +664,30 @@ export function StudentsListView({
             </table>
           </div>
           {filteredStudents.length === 0 && (
-            <EmptyState
-              icon={Search}
-              title={students.length === 0 ? "Nenhum aluno cadastrado" : "Nenhum resultado"}
-              message={students.length === 0
-                ? "Clique no botão 'Novo Aluno' para adicionar o primeiro"
-                : "Ajuste os filtros acima ou limpe a busca"}
-            />
+            students.length === 0 ? (
+              <EmptyStudentsState
+                onAction={() => {
+                  setSelectedStudent(null);
+                  setIsFormOpen(true);
+                }}
+                actionLabel="Adicionar primeiro aluno"
+              />
+            ) : (
+              <EmptyState
+                icon={Search}
+                title="Nenhum resultado"
+                message="Ajuste os filtros acima ou limpe a busca"
+              />
+            )
           )}
+          <TablePaginationBar
+            page={page}
+            pageSize={20}
+            totalCount={totalCount}
+            hasMore={hasMore}
+            isFetching={isFetching}
+            onPageChange={setPage}
+          />
         </div>
       )}
 
@@ -619,12 +700,7 @@ export function StudentsListView({
       {/* Generated Password Dialog */}
       <Dialog
         open={isPasswordDialogOpen}
-        onOpenChange={(open) => {
-          setIsPasswordDialogOpen(open);
-          if (!open && generatedPassword) {
-            toast.success("Conta criada para o aluno.");
-          }
-        }}
+        onOpenChange={setIsPasswordDialogOpen}
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -639,6 +715,7 @@ export function StudentsListView({
               <Label>Senha temporária</Label>
               <div className="relative">
                 <Input
+                  ref={passwordInputRef}
                   type={showGeneratedPassword ? "text" : "password"}
                   value={generatedPassword}
                   readOnly
@@ -663,14 +740,28 @@ export function StudentsListView({
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={async () => {
+onClick={() => {
                   if (!generatedPassword) return;
-                  try {
-                    await navigator.clipboard.writeText(generatedPassword);
+                  const onSuccess = () => {
                     setPasswordCopied(true);
                     setTimeout(() => setPasswordCopied(false), 2000);
-                  } catch (err) {
-                    console.error("Erro ao copiar senha: ", err);
+                  };
+                  const tryInputCopy = () => {
+                    const input = passwordInputRef.current;
+                    if (input) {
+                      input.focus();
+                      input.select();
+                      input.setSelectionRange(0, generatedPassword.length);
+                      if (document.execCommand("copy")) onSuccess();
+                      else toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                    } else {
+                      toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                    }
+                  };
+                  if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(generatedPassword).then(onSuccess).catch(tryInputCopy);
+                  } else {
+                    tryInputCopy();
                   }
                 }}
               >
@@ -707,53 +798,56 @@ export function StudentsListView({
         }}
         student={selectedStudent}
         onSubmit={handleCreateOrUpdate}
-        isLoading={createStudent.isPending || updateStudent.isPending}
+        isLoading={createStudent.isPending || inviteStudent.isPending || updateStudent.isPending}
         autoTeacherId={autoTeacherId}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {/* Archive Confirmation Dialog */}
+      <AlertDialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {studentToDelete?.status === "ativo"
-                ? "Confirmar desativação"
+              {studentToArchive?.status === "ativo"
+                ? "Confirmar arquivamento"
                 : "Confirmar reativação"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {studentToDelete?.status === "ativo" ? (
+              {studentToArchive?.status === "ativo" ? (
                 <>
-                  Tem certeza que deseja desativar o aluno{" "}
-                  <strong>{studentToDelete?.name}</strong>? Ele será removido da
-                  lista de ativos, mas poderá ser visualizado em "Inativos".
+                  Tem certeza que deseja arquivar o aluno{" "}
+                  <strong>{studentToArchive?.name}</strong>?
+                  <br />
+                  <br />
+                  <strong>Importante:</strong> O histórico de aulas e cobranças será{" "}
+                  <strong>preservado</strong>. O aluno apenas não aparecerá mais nas listagens ativas.
                 </>
               ) : (
                 <>
                   Tem certeza que deseja reativar o aluno{" "}
-                  <strong>{studentToDelete?.name}</strong>? Ele voltará para a
+                  <strong>{studentToArchive?.name}</strong>? Ele voltará para a
                   lista de ativos e terá o acesso reativado.
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteStudent.isPending || updateStudent.isPending}>
+            <AlertDialogCancel disabled={softDeleteStudent.isPending || updateStudent.isPending}>
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={deleteStudent.isPending || updateStudent.isPending}
+              onClick={handleArchiveConfirm}
+              disabled={softDeleteStudent.isPending || updateStudent.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteStudent.isPending || updateStudent.isPending ? (
+              {softDeleteStudent.isPending || updateStudent.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {studentToDelete?.status === "ativo"
-                    ? "Desativando..."
+                  {studentToArchive?.status === "ativo"
+                    ? "Arquivando..."
                     : "Reativando..."}
                 </>
-              ) : studentToDelete?.status === "ativo" ? (
-                "Desativar"
+              ) : studentToArchive?.status === "ativo" ? (
+                "Arquivar"
               ) : (
                 "Reativar"
               )}

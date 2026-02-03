@@ -5,9 +5,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useState } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import { PageContainer } from "@/components/ui/page-container";
+import { useState, useMemo, useRef, useEffect } from "react";
+import {
+  TeachersFilters,
+  type TeachersFiltersState,
+} from "@/components/filters/TeachersFilters";
+import { defaultTeachersFilters } from "@/components/filters/filterDefaults";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,20 +41,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TeacherFormDialog } from "@/components/teachers/TeacherFormDialog";
+import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import {
   useTeachers,
+  useTeachersPaginated,
   useCreateTeacher,
   useUpdateTeacher,
   useDeleteTeacher,
   Teacher,
+  TeacherInsert,
 } from "@/hooks/useTeachers";
-import { useCreateAuthUserForTeacher } from "@/hooks/useUsers";
+import { useCreateAuthUserForTeacher, useInviteTeacher } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 
 export default function TeachersPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ativo");
+  const [filters, setFilters] = useState<TeachersFiltersState>({
+    ...defaultTeachersFilters,
+    status: "ativo",
+  });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -60,26 +69,78 @@ export default function TeachersPage() {
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: teachers = [], isLoading, error } = useTeachers();
+  const listTopRef = useRef<HTMLDivElement>(null);
+  const { data: allTeachers = [] } = useTeachers();
+  const {
+    data: teachers = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useTeachersPaginated({
+    pageSize: 20,
+    filters: { status: filters.status, sortBy: filters.sortBy },
+  });
   const createTeacher = useCreateTeacher();
+  const inviteTeacher = useInviteTeacher();
   const updateTeacher = useUpdateTeacher();
   const deleteTeacher = useDeleteTeacher();
   const createTeacherUser = useCreateAuthUserForTeacher();
 
-  const filteredTeachers = teachers.filter((teacher) => {
-    const name = (teacher.name ?? "").toLowerCase();
-    const matchesSearch = name.includes(searchQuery.toLowerCase());
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
 
-    const status = ((teacher as any).status as string | null) ?? "ativo";
-    const matchesStatus = statusFilter === "all" || status === statusFilter;
+  const specializations = useMemo(() => {
+    const set = new Set<string>();
+    allTeachers.forEach((t) => {
+      const s = (t as Teacher & { specialization?: string | null }).specialization;
+      if (s?.trim()) set.add(s.trim());
+    });
+    return Array.from(set).sort();
+  }, [allTeachers]);
 
-    return matchesSearch && matchesStatus;
-  });
+  const filteredTeachers = useMemo(() => {
+    let result = teachers.filter((teacher) => {
+      const searchLower = filters.search.toLowerCase().trim();
+      const searchDigits = searchLower.replace(/\D/g, "");
+      const name = (teacher.name ?? "").toLowerCase();
+      const email = (teacher.email ?? "").toLowerCase();
+      const phoneDigits = (teacher.phone ?? "").replace(/\D/g, "");
+      const cpfDigits = (teacher.cpf ?? "").replace(/\D/g, "");
+      const matchesSearch =
+        !searchLower ||
+        name.includes(searchLower) ||
+        email.includes(searchLower) ||
+        (searchDigits.length > 0 && (phoneDigits.includes(searchDigits) || cpfDigits.includes(searchDigits)));
+      if (!matchesSearch) return false;
 
-  const handleCreateOrUpdate = (data: any) => {
+      const status = teacher.status ?? "ativo";
+      const matchesStatus = filters.status === "all" || status === filters.status;
+      if (!matchesStatus) return false;
+
+      const spec = (teacher as Teacher & { specialization?: string | null }).specialization?.trim();
+      if (filters.specialization !== "all" && spec !== filters.specialization) return false;
+      return true;
+    });
+
+    result = [...result].sort((a, b) => {
+      const nameA = (a.name ?? "").toLowerCase();
+      const nameB = (b.name ?? "").toLowerCase();
+      if (filters.sortBy === "name_asc") return nameA.localeCompare(nameB);
+      return nameB.localeCompare(nameA);
+    });
+    return result;
+  }, [teachers, filters]);
+
+  const handleCreateOrUpdate = (data: TeacherInsert) => {
     const run = async () => {
-      const normalizedEmail = (data as any).email?.trim().toLowerCase();
+      const normalizedEmail = data.email?.trim().toLowerCase();
 
       if (!selectedTeacher && normalizedEmail) {
         const { data: existingProfile, error: profileError } = await supabase
@@ -98,9 +159,7 @@ export default function TeachersPage() {
         }
 
         if (existingProfile) {
-          toast.error(
-            "Já existe uma conta com esse email. Use a aba Usuários para vincular esse professor à conta existente."
-          );
+          toast.error(MSG_EMAIL);
           return;
         }
       }
@@ -116,31 +175,23 @@ export default function TeachersPage() {
           }
         );
       } else {
-        createTeacher.mutate(data, {
-          onSuccess: (createdTeacher) => {
-            setIsFormOpen(false);
-
-            if (createdTeacher && createdTeacher.email) {
-              createTeacherUser.mutate(
-                {
-                  teacherId: createdTeacher.id,
-                  email: createdTeacher.email,
-                  fullName: createdTeacher.name,
-                },
-                {
-                  onSuccess: (result) => {
-                    if (result?.password) {
-                      setGeneratedPassword(result.password);
-                      setShowGeneratedPassword(false);
-                      setPasswordCopied(false);
-                      setIsPasswordDialogOpen(true);
-                    }
-                  },
-                }
-              );
-            }
-          },
-        });
+        if (normalizedEmail) {
+          inviteTeacher.mutate(data, {
+            onSuccess: (result) => {
+              setIsFormOpen(false);
+              if (result?.password) {
+                setGeneratedPassword(result.password);
+                setShowGeneratedPassword(false);
+                setPasswordCopied(false);
+                setIsPasswordDialogOpen(true);
+              }
+            },
+          });
+        } else {
+          createTeacher.mutate(data, {
+            onSuccess: () => setIsFormOpen(false),
+          });
+        }
       }
     };
 
@@ -155,7 +206,7 @@ export default function TeachersPage() {
   const handleStatusChangeConfirm = () => {
     if (!teacherToDelete) return;
 
-    const status = ((teacherToDelete as any).status as string | null) ?? "ativo";
+    const status = teacherToDelete.status ?? "ativo";
     const isActive = status === "ativo";
 
     if (isActive) {
@@ -169,7 +220,7 @@ export default function TeachersPage() {
     } else {
       // Reactivate (status -> ativo)
       updateTeacher.mutate(
-        { id: teacherToDelete.id, status: "ativo" as any },
+        { id: teacherToDelete.id, status: "ativo" },
         {
           onSuccess: () => {
             setDeleteDialogOpen(false);
@@ -181,9 +232,8 @@ export default function TeachersPage() {
   };
 
   return (
-    <AdminLayout>
-      <PageContainer>
-        <div className="space-y-6">
+    <>
+    <div className="space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -202,31 +252,22 @@ export default function TeachersPage() {
             </Button>
           </div>
 
-          {/* Filtros */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome..."
-                className="pl-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="ativo">Ativos</SelectItem>
-                <SelectItem value="inativo">Inativos</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filtros avançados */}
+          <TeachersFilters
+            filters={filters}
+            onChange={(newFilters) => {
+              setFilters(newFilters);
+              setPage(0);
+            }}
+            onReset={() => {
+              setFilters({ ...defaultTeachersFilters, status: "ativo", sortBy: "name_asc" });
+              setPage(0);
+            }}
+            specializations={specializations}
+          />
 
           {/* Table */}
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
             <Table>
             <TableHeader>
               <TableRow>
@@ -249,9 +290,8 @@ export default function TeachersPage() {
             </TableHeader>
               <TableBody>
                 {filteredTeachers.map((teacher) => {
-                  const status =
-                    ((teacher as any).status as string | null) ?? "ativo";
-                  const lastUpdatedAt = (teacher as any).updated_at as string | null | undefined;
+                  const status = teacher.status ?? "ativo";
+                  const lastUpdatedAt = teacher.updated_at;
 
                   return (
                     <TableRow key={teacher.id}>
@@ -314,7 +354,7 @@ export default function TeachersPage() {
                               {status === "ativo" && (
                                 <Trash2 className="h-4 w-4 mr-2" />
                               )}
-                              {status === "ativo" ? "Desativar" : "Reativar professor"}
+                              {status === "ativo" ? "Arquivar" : "Reativar professor"}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -333,6 +373,14 @@ export default function TeachersPage() {
                   : "Ajuste os filtros acima ou limpe a busca"}
               />
             )}
+            <TablePaginationBar
+              page={page}
+              pageSize={20}
+              totalCount={totalCount}
+              hasMore={hasMore}
+              isFetching={isFetching}
+              onPageChange={setPage}
+            />
           </div>
         </div>
 
@@ -345,7 +393,7 @@ export default function TeachersPage() {
           }}
           teacher={selectedTeacher}
           onSubmit={handleCreateOrUpdate}
-          isLoading={createTeacher.isPending || updateTeacher.isPending}
+          isLoading={createTeacher.isPending || inviteTeacher.isPending || updateTeacher.isPending}
         />
 
         {/* Modal de senha gerada para professor */}
@@ -371,6 +419,7 @@ export default function TeachersPage() {
                 <Label>Senha temporária</Label>
                 <div className="relative">
                   <Input
+                    ref={passwordInputRef}
                     type={showGeneratedPassword ? "text" : "password"}
                     value={generatedPassword}
                     readOnly
@@ -395,14 +444,28 @@ export default function TeachersPage() {
                   type="button"
                   variant="outline"
                   className="flex-1"
-                  onClick={async () => {
+                  onClick={() => {
                     if (!generatedPassword) return;
-                    try {
-                      await navigator.clipboard.writeText(generatedPassword);
+                    const onSuccess = () => {
                       setPasswordCopied(true);
                       setTimeout(() => setPasswordCopied(false), 2000);
-                    } catch (err) {
-                      console.error("Erro ao copiar senha: ", err);
+                    };
+                    const tryInputCopy = () => {
+                      const input = passwordInputRef.current;
+                      if (input) {
+                        input.focus();
+                        input.select();
+                        input.setSelectionRange(0, generatedPassword.length);
+                        if (document.execCommand("copy")) onSuccess();
+                        else toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                      } else {
+                        toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                      }
+                    };
+                    if (navigator.clipboard?.writeText) {
+                      navigator.clipboard.writeText(generatedPassword).then(onSuccess).catch(tryInputCopy);
+                    } else {
+                      tryInputCopy();
                     }
                   }}
                 >
@@ -430,22 +493,20 @@ export default function TeachersPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal de confirmação de status (desativar/reativar) */}
+        {/* Modal de confirmação de status (arquivar/reativar) */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>
-                {(((teacherToDelete as any)?.status as string | null) ??
-                "ativo") === "ativo"
-                  ? "Confirmar desativação"
+                {(teacherToDelete?.status ?? "ativo") === "ativo"
+                  ? "Confirmar arquivamento"
                   : "Confirmar reativação"}
               </DialogTitle>
             </DialogHeader>
             <p className="mt-2 text-sm text-muted-foreground">
-              {(((teacherToDelete as any)?.status as string | null) ??
-              "ativo") === "ativo" ? (
+              {(teacherToDelete?.status ?? "ativo") === "ativo" ? (
                 <>
-                  Tem certeza que deseja desativar o professor{" "}
+                  Tem certeza que deseja arquivar o professor{" "}
                   <strong>{teacherToDelete?.name}</strong>? Ele será removido da
                   lista de ativos, mas poderá ser visualizado em "Inativos".
                 </>
@@ -473,14 +534,12 @@ export default function TeachersPage() {
                 {deleteTeacher.isPending || updateTeacher.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {(((teacherToDelete as any)?.status as string | null) ??
-                    "ativo") === "ativo"
-                      ? "Desativando..."
+                    {(teacherToDelete?.status ?? "ativo") === "ativo"
+                      ? "Arquivando..."
                       : "Reativando..."}
                   </>
-                ) : (((teacherToDelete as any)?.status as string | null) ??
-                    "ativo") === "ativo" ? (
-                  "Desativar"
+                ) : (teacherToDelete?.status ?? "ativo") === "ativo" ? (
+                  "Arquivar"
                 ) : (
                   "Reativar"
                 )}
@@ -488,7 +547,6 @@ export default function TeachersPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </PageContainer>
-    </AdminLayout>
+    </>
   );
 }

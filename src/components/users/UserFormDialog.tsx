@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -21,74 +21,20 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, ChevronsUpDown } from "lucide-react";
 import { UserWithProfile } from "@/hooks/useUsers";
+import type { Enums } from "@/integrations/supabase/types";
 import { BR_STATES, fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib/br-locations";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { REGEX_PATTERNS, maskCPF, maskPhone, maskDate, isValidDateString } from "@/lib/utils/patterns";
 
-// Helper functions para máscaras
-function maskCPF(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  
-  if (digits.length <= 3) {
-    return digits;
-  } else if (digits.length <= 6) {
-    return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  } else if (digits.length <= 9) {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  } else {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-  }
-}
-
-function maskPhone(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  
-  if (digits.length <= 2) {
-    return digits.length > 0 ? `(${digits}` : digits;
-  } else if (digits.length <= 6) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  } else if (digits.length <= 10) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  } else {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  }
-}
-
-function maskDate(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-
-  if (digits.length <= 2) {
-    return digits;
-  }
-
-  if (digits.length <= 4) {
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  }
-
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-}
-
-function isValidDateString(value: string): boolean {
-  const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-  if (!dateRegex.test(value)) return false;
-  const [day, month, year] = value.split("/").map(Number);
-  const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-}
+type AppRole = Enums<"app_role">;
+type StudentOrigin = Enums<"student_origin">;
+type StudentStatus = Enums<"student_status">;
 
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
   return `${year}-${month}-${day}`;
 }
-
-const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
-const phoneRegex = /^\(\d{2}\) \d{4,5}-\d{4}$/;
-const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
 
 // Schema para Admin (simples)
 const adminSchema = z.object({
@@ -105,11 +51,11 @@ const studentSchema = z.object({
   cpf: z.string()
     .min(14, "CPF inválido")
     .max(14, "CPF inválido")
-    .regex(cpfRegex, "Formato deve ser 000.000.000-00"),
+    .regex(REGEX_PATTERNS.cpf, "Formato deve ser 000.000.000-00"),
   phone: z.string()
     .min(14, "Telefone inválido")
     .max(15, "Telefone inválido")
-    .regex(phoneRegex, "Formato deve ser (00) 00000-0000"),
+    .regex(REGEX_PATTERNS.phone, "Formato deve ser (00) 00000-0000"),
   email: z
     .string()
     .min(1, "Email é obrigatório")
@@ -130,7 +76,7 @@ const studentSchema = z.object({
     .string()
     .optional()
     .nullable()
-    .refine((val) => !val || (dateRegex.test(val) && isValidDateString(val)), {
+    .refine((val) => !val || isValidDateString(val), {
       message: "Data inválida",
     }),
   role: z.literal("student"),
@@ -153,7 +99,7 @@ const teacherSchema = z.object({
     .string()
     .max(14)
     .optional()
-    .refine((val) => !val || cpfRegex.test(val), {
+    .refine((val) => !val || REGEX_PATTERNS.cpf.test(val), {
       message: "Formato deve ser 000.000.000-00",
     }),
   role: z.literal("teacher"),
@@ -162,14 +108,62 @@ const teacherSchema = z.object({
 type AdminFormData = z.infer<typeof adminSchema>;
 type StudentFormData = z.infer<typeof studentSchema>;
 type TeacherFormData = z.infer<typeof teacherSchema>;
+type FormData = AdminFormData | StudentFormData | TeacherFormData;
 
 interface UserFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user?: UserWithProfile | null;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: UserFormSubmitData) => void;
   isLoading: boolean;
 }
+
+// Tipos para o submit data
+interface AdminSubmitData {
+  email: string;
+  fullName: string;
+  role: "admin";
+}
+
+interface StudentSubmitData {
+  email: string;
+  fullName: string;
+  role: "student";
+  studentData: {
+    name: string;
+    state: string | null;
+    city: string | null;
+    cpf: string;
+    phone: string;
+    email: string;
+    origin: StudentOrigin;
+    status: StudentStatus;
+    birth_date: string | null;
+    hourly_rate: number | null;
+    classes_per_week: number | null;
+    pay_day: number | null;
+  };
+}
+
+interface TeacherSubmitData {
+  email: string;
+  fullName: string;
+  role: "teacher";
+  teacherData: {
+    name: string;
+    email: string;
+    phone?: string;
+    cpf?: string;
+  };
+}
+
+type UserFormSubmitData = AdminSubmitData | StudentSubmitData | TeacherSubmitData;
+
+// Helper para extrair mensagem de erro
+const getErrorMessage = (errors: FieldErrors<FormData>, field: keyof FormData): string | undefined => {
+  const error = errors[field];
+  return error?.message as string | undefined;
+};
 
 export function UserFormDialog({
   open,
@@ -179,13 +173,13 @@ export function UserFormDialog({
   isLoading,
 }: UserFormDialogProps) {
   const isEdit = !!user;
-  const [selectedRole, setSelectedRole] = useState<"admin" | "student" | "teacher">(
-    (user?.role?.role as any) || "admin",
+  const [selectedRole, setSelectedRole] = useState<AppRole>(
+    (user?.role?.role as AppRole) || "admin",
   );
 
   // States para student
-  const [selectedOrigin, setSelectedOrigin] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("ativo");
+  const [selectedOrigin, setSelectedOrigin] = useState<StudentOrigin | "">("");
+  const [selectedStatus, setSelectedStatus] = useState<StudentStatus>("ativo");
   const [selectedState, setSelectedState] = useState<string>("");
   const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
   const [statePopoverOpen, setStatePopoverOpen] = useState(false);
@@ -206,7 +200,7 @@ export function UserFormDialog({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<any>({
+  } = useForm<FormData>({
     resolver: zodResolver(getSchema()),
     defaultValues: {
       email: user?.email || "",
@@ -255,38 +249,42 @@ export function UserFormDialog({
       reset({
         email: user.email,
         fullName: user.profile?.full_name || "",
-        role: user.role?.role || "admin",
+        role: (user.role?.role as AppRole) || "admin",
       });
-      setSelectedRole((user.role?.role as any) || "admin");
+      setSelectedRole((user.role?.role as AppRole) || "admin");
     } else {
-      const defaults: any = {
-        role: selectedRole,
-      };
-
       if (selectedRole === "admin") {
-        defaults.email = "";
-        defaults.fullName = "";
+        reset({
+          email: "",
+          fullName: "",
+          role: "admin",
+        });
       } else if (selectedRole === "student") {
-        defaults.name = "";
-        defaults.email = "";
-        defaults.cpf = "";
-        defaults.phone = "";
-        defaults.state = "";
-        defaults.city = "";
-        defaults.birth_date = null;
-        defaults.hourly_rate = "";
-        defaults.classes_per_week = "";
-        defaults.pay_day = "";
-        defaults.origin = undefined;
-        defaults.status = "ativo";
+        reset({
+          name: "",
+          email: "",
+          cpf: "",
+          phone: "",
+          state: "",
+          city: "",
+          birth_date: null,
+          hourly_rate: "",
+          classes_per_week: "",
+          pay_day: "",
+          origin: "outro",
+          status: "ativo",
+          role: "student",
+        });
       } else {
-        defaults.name = "";
-        defaults.email = "";
-        defaults.phone = "";
-        defaults.cpf = "";
+        reset({
+          name: "",
+          email: "",
+          phone: "",
+          cpf: "",
+          role: "teacher",
+        });
       }
 
-      reset(defaults);
       setSelectedOrigin("");
       setSelectedStatus("ativo");
       setSelectedState("");
@@ -294,50 +292,56 @@ export function UserFormDialog({
   }, [user, open, reset, selectedRole]);
 
   const handleRoleChange = (value: string) => {
-    const newRole = value as "admin" | "student" | "teacher";
+    const newRole = value as AppRole;
     setSelectedRole(newRole);
     setValue("role", newRole);
 
     // Reset form com defaults do novo role
-    const defaults: any = { role: newRole };
 
     if (newRole === "admin") {
-      defaults.email = "";
-      defaults.fullName = "";
+      reset({
+        email: "",
+        fullName: "",
+        role: "admin",
+      });
     } else if (newRole === "student") {
-      defaults.name = "";
-      defaults.email = "";
-      defaults.cpf = "";
-      defaults.phone = "";
-      defaults.state = "";
-      defaults.city = "";
-      defaults.birth_date = null;
-      defaults.hourly_rate = "";
-      defaults.classes_per_week = "";
-      defaults.pay_day = "";
-      defaults.origin = undefined;
-      defaults.status = "ativo";
+      reset({
+        name: "",
+        email: "",
+        cpf: "",
+        phone: "",
+        state: "",
+        city: "",
+        birth_date: null,
+        hourly_rate: "",
+        classes_per_week: "",
+        pay_day: "",
+        origin: "outro",
+        status: "ativo",
+        role: "student",
+      });
       setSelectedOrigin("");
       setSelectedStatus("ativo");
       setSelectedState("");
     } else {
-      defaults.name = "";
-      defaults.email = "";
-      defaults.phone = "";
-      defaults.cpf = "";
+      reset({
+        name: "",
+        email: "",
+        phone: "",
+        cpf: "",
+        role: "teacher",
+      });
     }
-
-    reset(defaults);
   };
 
-  const handleFormSubmit = (data: any) => {
-    if (selectedRole === "admin") {
+  const handleFormSubmit = (data: FormData) => {
+    if (selectedRole === "admin" && "fullName" in data) {
       onSubmit({
         email: data.email,
         fullName: data.fullName,
         role: "admin",
       });
-    } else if (selectedRole === "student") {
+    } else if (selectedRole === "student" && "name" in data && "cpf" in data) {
       const hourlyRateNumber = data.hourly_rate
         ? parseFloat(data.hourly_rate.replace(/[^.\d,]/g, "").replace(",", "."))
         : null;
@@ -359,7 +363,7 @@ export function UserFormDialog({
           cpf: data.cpf,
           phone: data.phone,
           email: data.email,
-          origin: selectedOrigin,
+          origin: selectedOrigin as StudentOrigin,
           status: selectedStatus,
           birth_date: data.birth_date ? brDateToIso(data.birth_date) : null,
           hourly_rate: hourlyRateNumber,
@@ -367,7 +371,7 @@ export function UserFormDialog({
           pay_day: payDayNumber,
         },
       });
-    } else {
+    } else if (selectedRole === "teacher" && "name" in data) {
       onSubmit({
         email: data.email,
         fullName: data.name,
@@ -422,7 +426,7 @@ export function UserFormDialog({
                   disabled={isLoading || isEdit}
                 />
                 {errors.email && (
-                  <p className="text-sm text-destructive">{(errors.email as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "email")}</p>
                 )}
               </div>
 
@@ -435,7 +439,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.fullName && (
-                  <p className="text-sm text-destructive">{(errors.fullName as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "fullName")}</p>
                 )}
               </div>
             </>
@@ -453,7 +457,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.name && (
-                  <p className="text-sm text-destructive">{(errors.name as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "name")}</p>
                 )}
               </div>
 
@@ -468,15 +472,17 @@ export function UserFormDialog({
                           type="button"
                           variant="outline"
                           role="combobox"
-                          className="w-full justify-between"
+                          className="w-full min-w-0 justify-between"
                           disabled={isLoading}
                         >
-                          {(() => {
-                            const current = BR_STATES.find((st) => st.code === selectedState);
-                            if (current) return `${current.code} - ${current.name}`;
-                            return "Selecione UF";
-                          })()}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                          <span className="min-w-0 truncate">
+                            {(() => {
+                              const current = BR_STATES.find((st) => st.code === selectedState);
+                              if (current) return `${current.code} - ${current.name}`;
+                              return "Selecione UF";
+                            })()}
+                          </span>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[260px] p-0">
@@ -514,20 +520,22 @@ export function UserFormDialog({
                           type="button"
                           variant="outline"
                           role="combobox"
-                          className="w-full justify-between"
+                          className="w-full min-w-0 justify-between"
                           disabled={!selectedState || isLoading || isLoadingCities}
                         >
-                          {(() => {
-                            const cityValue = watchedCity;
-                            const current = cities.find((c) => c.value === cityValue);
-                            if (current) return current.label;
-                            if (cityValue) return cityValue;
-                            if (isLoadingCities) return "Carregando cidades...";
-                            return selectedState
-                              ? "Selecione a cidade"
-                              : "Selecione uma UF primeiro";
-                          })()}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                          <span className="min-w-0 truncate">
+                            {(() => {
+                              const cityValue = watchedCity;
+                              const current = cities.find((c) => c.value === cityValue);
+                              if (current) return current.label;
+                              if (cityValue) return cityValue;
+                              if (isLoadingCities) return "Carregando cidades...";
+                              return selectedState
+                                ? "Selecione a cidade"
+                                : "Selecione uma UF primeiro";
+                            })()}
+                          </span>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[280px] p-0">
@@ -573,7 +581,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.cpf && (
-                  <p className="text-sm text-destructive">{(errors.cpf as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "cpf")}</p>
                 )}
               </div>
 
@@ -593,7 +601,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.birth_date && (
-                  <p className="text-sm text-destructive">{(errors.birth_date as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "birth_date")}</p>
                 )}
               </div>
 
@@ -613,7 +621,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.phone && (
-                  <p className="text-sm text-destructive">{(errors.phone as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "phone")}</p>
                 )}
               </div>
 
@@ -627,7 +635,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.email && (
-                  <p className="text-sm text-destructive">{(errors.email as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "email")}</p>
                 )}
               </div>
 
@@ -673,8 +681,9 @@ export function UserFormDialog({
                 <Select
                   value={selectedOrigin}
                   onValueChange={(value) => {
-                    setSelectedOrigin(value);
-                    setValue("origin", value as any, { shouldValidate: true });
+                    const origin = value as StudentOrigin;
+                    setSelectedOrigin(origin);
+                    setValue("origin", origin, { shouldValidate: true });
                   }}
                   disabled={isLoading}
                 >
@@ -708,7 +717,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.name && (
-                  <p className="text-sm text-destructive">{(errors.name as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "name")}</p>
                 )}
               </div>
 
@@ -722,7 +731,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.email && (
-                  <p className="text-sm text-destructive">{(errors.email as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "email")}</p>
                 )}
               </div>
 
@@ -746,7 +755,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.phone && (
-                  <p className="text-sm text-destructive">{(errors.phone as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "phone")}</p>
                 )}
               </div>
 
@@ -766,7 +775,7 @@ export function UserFormDialog({
                   disabled={isLoading}
                 />
                 {errors.cpf && (
-                  <p className="text-sm text-destructive">{(errors.cpf as any).message}</p>
+                  <p className="text-sm text-destructive">{getErrorMessage(errors, "cpf")}</p>
                 )}
               </div>
             </div>

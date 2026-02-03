@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -17,6 +20,11 @@ import {
   Settings,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
+import { useCurrentUserProfile } from "@/hooks/useUsers";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -27,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { SettingsModal } from "@/components/layout/SettingsModal";
 
 interface TeacherLayoutProps {
   children: React.ReactNode;
@@ -41,11 +50,61 @@ const navigation = [
 ];
 
 export default function TeacherLayout({ children }: TeacherLayoutProps) {
+  const queryClient = useQueryClient();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const { data: profile } = useCurrentUserProfile(user?.id);
+  const { data: teacherProfile } = useQuery({
+    queryKey: ["teacher-profile", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("teacher_id")
+        .eq("user_id", user.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+  const teacherId = teacherProfile?.teacher_id;
+  const { data: pendingClasses = [], isLoading: loadingNotifications } = usePendingEvaluationClassLogs(teacherId);
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/teacher" || path === "/teacher/") {
+      queryClient.invalidateQueries({ queryKey: ["teacher-dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher-upcoming-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher-birthdays"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher-new-students-and-classes-by-month"] });
+      queryClient.invalidateQueries({ queryKey: ["today_classes"] });
+    } else if (path.startsWith("/teacher/overview") || path.startsWith("/teacher/students")) {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["students_with_stats"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs_by_student_ids"] });
+    } else if (path.startsWith("/teacher/classes")) {
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
+    } else if (path.startsWith("/teacher/financial")) {
+      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+    }
+  }, [location.pathname, queryClient]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (q) navigate(`/teacher/students?search=${encodeURIComponent(q)}`);
+    else navigate("/teacher/students");
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -162,63 +221,119 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         "transition-all duration-300 ease-in-out",
         sidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-64"
       )}>
-        {/* Top bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="lg:hidden text-muted-foreground hover:text-foreground"
-          >
-            <Menu className="h-6 w-6" />
-          </button>
-
-          {/* Search bar */}
-          <div className="hidden md:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Buscar..."
-                className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
-              />
-            </div>
+        {/* Top bar - alinhado ao AdminLayout */}
+        <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
+          {/* Left: menu + search */}
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden shrink-0 text-muted-foreground hover:text-foreground"
+              type="button"
+              aria-label="Abrir menu"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+            <form onSubmit={handleSearchSubmit} className="hidden md:block w-full max-w-sm">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="search"
+                  placeholder="Buscar alunos, aulas..."
+                  className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Buscar alunos, aulas"
+                />
+              </div>
+            </form>
           </div>
 
-          {/* Right section */}
-          <div className="flex items-center gap-2">
+          {/* Right: notifications + user */}
+          <div className="flex shrink-0 items-center gap-2">
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
-            </Button>
-
-            {/* Settings */}
-            <Button variant="ghost" size="icon">
-              <Settings className="h-5 w-5" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                  aria-label="Notificações"
+                >
+                  <Bell className="h-5 w-5 text-muted-foreground" />
+                  {pendingClasses.length > 0 && (
+                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" aria-hidden />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel className="flex items-center justify-between">
+                  Notificações
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="max-h-[320px] overflow-y-auto py-2">
+                  {loadingNotifications ? (
+                    <div className="flex justify-center py-6">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : pendingClasses.length === 0 ? (
+                    <p className="px-2 py-6 text-center text-sm text-muted-foreground">
+                      Nenhuma notificação no momento
+                    </p>
+                  ) : (
+                    <ul className="space-y-0.5">
+                      {pendingClasses.map((log) => (
+                        <li key={log.id}>
+                          <Link
+                            to="/teacher/classes?status=avaliacao_pendente"
+                            className="block rounded-md px-2 py-2 text-sm hover:bg-muted focus:bg-muted focus:outline-none"
+                          >
+                            <span className="font-medium text-foreground">Aula em aberto para avaliação</span>
+                            <p className="mt-0.5 truncate text-muted-foreground">
+                              {(log.students as { name?: string } | null)?.name ?? "Aluno"} · {log.class_date && format(new Date(log.class_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
+                            </p>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* User menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 gap-2 px-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground font-semibold text-sm">
-                    {userInitial}
-                  </div>
-                  <span className="hidden md:inline-block text-sm font-medium">{userName}</span>
+                <Button variant="ghost" className="gap-2 px-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-sm font-medium">
+                      {userInitial}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:block text-sm font-medium max-w-[120px] truncate">
+                    {userName}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Perfil</DropdownMenuItem>
-                <DropdownMenuItem>Configurações</DropdownMenuItem>
+                <DropdownMenuItem className="gap-2" onClick={() => setSettingsOpen(true)}>
+                  <Settings className="h-4 w-4" />
+                  Configurações
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="gap-2 text-destructive focus:text-destructive"
+                >
                   {isLoggingOut ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <LogOut className="mr-2 h-4 w-4" />
+                    <LogOut className="h-4 w-4" />
                   )}
-                  Sair
+                  {isLoggingOut ? "Saindo..." : "Sair"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -228,6 +343,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         {/* Page content */}
         <main className="p-4 lg:p-6 animate-fade-in">{children}</main>
       </div>
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }

@@ -1,1 +1,8 @@
 project_id = "xobasqtrsasutjhhdqsv"
+
+# Gateway não valida JWT; a função valida internamente (evita 401 do gateway)
+[functions.invite-user]
+verify_jwt=false
+
+[functions.admin-delete-user]
+verify_jwt=false

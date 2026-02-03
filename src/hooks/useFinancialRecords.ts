@@ -17,6 +17,7 @@ export function useUndoFinancialPayment() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança desfeita com sucesso!");
     },
     onError: (error) => {
@@ -25,10 +26,20 @@ export function useUndoFinancialPayment() {
     },
   });
 }
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useState } from "react";
+import { isOverdue } from "@/lib/utils/financialStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+
+const DEFAULT_PAGE_SIZE = 20;
+
+export type FinancialRecordsFilters = {
+  dateFrom?: string;
+  dateTo?: string;
+  sortBy?: "due_desc" | "due_asc" | "amount_desc" | "amount_asc";
+};
 
 export type FinancialRecord = Tables<"financial_records">;
 export type FinancialRecordInsert = TablesInsert<"financial_records">;
@@ -38,6 +49,9 @@ export interface FinancialRecordWithRelations extends FinancialRecord {
   students: {
     name: string;
     teacher_id?: string | null;
+    cpf?: string | null;
+    phone?: string | null;
+    email?: string | null;
   } | null;
   class_logs: {
     id: string;
@@ -49,17 +63,71 @@ export interface FinancialRecordWithRelations extends FinancialRecord {
   } | null;
 }
 
-export function useFinancialRecords(teacherId?: string | null) {
+export interface UseFinancialRecordsOptions {
+  pageSize?: number;
+  filters?: FinancialRecordsFilters;
+}
+
+export interface UseFinancialRecordsResult {
+  data: FinancialRecordWithRelations[];
+  isLoading: boolean;
+  error: Error | null;
+  isFetching: boolean;
+  page: number;
+  setPage: (page: number | ((prev: number) => number)) => void;
+  hasMore: boolean;
+  totalCount: number;
+  refetch: () => void;
+}
+
+/** Busca cobranças por lista de student_ids (ex.: para enriquecer lista paginada de alunos) */
+export function useFinancialRecordsByStudentIds(studentIds: string[]) {
   return useQuery({
-    queryKey: ["financial_records", teacherId],
+    queryKey: ["financial_records_by_student_ids", studentIds],
     queryFn: async () => {
-      let query = supabase
+      if (studentIds.length === 0) return [] as FinancialRecordWithRelations[];
+      const { data, error } = await supabase
         .from("financial_records")
         .select(`
           *,
+          students ( name, teacher_id ),
+          class_logs ( id, class_date, attendance, grade, feedback, title )
+        `)
+        .in("student_id", studentIds)
+        .order("due_date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as FinancialRecordWithRelations[];
+    },
+    enabled: studentIds.length > 0,
+  });
+}
+
+export function useFinancialRecords(
+  teacherId?: string | null,
+  options?: UseFinancialRecordsOptions
+): UseFinancialRecordsResult {
+  const [page, setPage] = useState(0);
+  const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
+  const filters = options?.filters;
+
+  const query = useQuery({
+    queryKey: ["financial_records", teacherId, page, pageSize, filters],
+    queryFn: async () => {
+      const sortBy = filters?.sortBy ?? "due_asc";
+      const orderCol = sortBy.startsWith("amount") ? "amount" : "due_date";
+      const ascending = sortBy === "due_asc" || sortBy === "amount_asc";
+
+      let q = supabase
+        .from("financial_records")
+        .select(
+          `
+          *,
           students (
             name,
-            teacher_id
+            teacher_id,
+            cpf,
+            phone,
+            email
           ),
           class_logs (
             id,
@@ -69,47 +137,65 @@ export function useFinancialRecords(teacherId?: string | null) {
             feedback,
             title
           )
-        `)
-        .order("due_date", { ascending: false });
+        `,
+          { count: "exact" }
+        )
+        .order(orderCol, { ascending });
 
-      // Filter by teacher if provided
       if (teacherId) {
-        query = query.eq("students.teacher_id", teacherId);
+        q = q.eq("students.teacher_id", teacherId);
+      }
+      if (filters?.dateFrom) {
+        q = q.gte("due_date", filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        q = q.lte("due_date", filters.dateTo);
       }
 
-      const { data, error } = await query;
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await q.range(from, to);
 
-      if (error) {
-        throw error;
+      if (error) throw error;
+
+      let list = (data ?? []) as FinancialRecordWithRelations[];
+      if (teacherId && list.length) {
+        list = list.filter((record) => record.students?.teacher_id === teacherId);
       }
-
-      // Client-side filter if needed (Supabase join filter might not work directly)
-      let filteredData = data as FinancialRecordWithRelations[];
-      if (teacherId && filteredData) {
-        filteredData = filteredData.filter(
-          (record) => record.students?.teacher_id === teacherId
-        );
-      }
-
-      return filteredData;
+      return { list, count: count ?? 0 };
     },
+    placeholderData: keepPreviousData,
   });
+
+  const list = (query.data?.list ?? []) as FinancialRecordWithRelations[];
+  const totalCount = query.data?.count ?? 0;
+  const hasMore = totalCount > (page + 1) * pageSize;
+
+  return {
+    data: list,
+    isLoading: query.isLoading,
+    error: query.error as Error | null,
+    isFetching: query.isFetching,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    refetch: query.refetch,
+  };
 }
 
-export function useFinancialSummary() {
+export function useFinancialSummary(teacherId?: string | null) {
   return useQuery({
-    queryKey: ["financial_summary"],
+    queryKey: ["financial_summary", teacherId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_records")
-        .select("amount, status");
+        .select("amount, status, due_date, students(teacher_id)");
 
       if (error) {
         throw error;
       }
 
-      const today = new Date();
-      
       const summary = {
         totalPending: 0,
         totalPaid: 0,
@@ -119,23 +205,44 @@ export function useFinancialSummary() {
         countOverdue: 0,
       };
 
-      data.forEach((record) => {
-        const amount = Number(record.amount) || 0;
-        if (record.status === "pago") {
-          summary.totalPaid += amount;
-          summary.countPaid++;
-        } else if (record.status === "atrasado") {
-          summary.totalOverdue += amount;
-          summary.countOverdue++;
-        } else {
-          summary.totalPending += amount;
-          summary.countPending++;
-        }
+      let records = (data || []) as Array<{ amount: number; status: string; due_date: string; students?: { teacher_id?: string } }>;
+      if (teacherId) {
+        records = records.filter((r) => r.students?.teacher_id === teacherId);
+      }
+
+      records.forEach((record) => {
+        accumulateSummary(record, summary);
       });
 
       return summary;
     },
   });
+}
+
+function accumulateSummary(
+  record: { amount: number; status: string; due_date: string },
+  summary: {
+    totalPending: number;
+    totalPaid: number;
+    totalOverdue: number;
+    countPending: number;
+    countPaid: number;
+    countOverdue: number;
+  }
+) {
+  const amount = Number(record.amount) || 0;
+  if (record.status === "pago") {
+    summary.totalPaid += amount;
+    summary.countPaid++;
+  } else {
+    if (isOverdue(record.due_date)) {
+      summary.totalOverdue += amount;
+      summary.countOverdue++;
+    } else {
+      summary.totalPending += amount;
+      summary.countPending++;
+    }
+  }
 }
 
 export function useCreateFinancialRecord() {
@@ -157,6 +264,7 @@ export function useCreateFinancialRecord() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança criada com sucesso!");
     },
     onError: (error) => {
@@ -192,6 +300,7 @@ export function useMarkAsPaid() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Pagamento registrado com sucesso!");
     },
     onError: (error) => {
@@ -222,6 +331,7 @@ export function useUpdateFinancialRecord() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança atualizada com sucesso!");
     },
     onError: (error) => {
@@ -248,6 +358,7 @@ export function useDeleteFinancialRecord() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança removida com sucesso!");
     },
     onError: (error) => {

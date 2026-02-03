@@ -1,11 +1,11 @@
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { formatCurrency, formatDate } from "@/lib/utils/formatters";
+import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,8 +22,11 @@ import {
   AlertCircle,
   TrendingUp,
   MapPin,
+  CalendarClock,
 } from "lucide-react";
 import { useStudentDetails } from "@/hooks/useStudentDetails";
+import { StudentStatementTab } from "@/components/student/StudentStatementTab";
+import { getClassStatusWithTime } from "@/lib/utils/classTime";
 
 interface StudentDetailSheetProps {
   studentId: string | null;
@@ -38,25 +41,6 @@ const originLabels: Record<string, string> = {
   passante: "Passante",
   outro: "Outro",
 };
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-}
-
-function formatDate(dateString: string): string {
-  return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
-}
-
-function getActualStatus(record: { status: string | null; due_date: string }) {
-  if (record.status === "pago") return "pago";
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dueDate = new Date(record.due_date);
-  return dueDate < today ? "atrasado" : "pendente";
-}
 
 export function StudentDetailSheet({
   studentId,
@@ -107,7 +91,7 @@ export function StudentDetailSheet({
           </div>
         ) : student ? (
           <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="mx-6 mt-4 grid grid-cols-3">
+            <TabsList className="mx-6 mt-4 grid grid-cols-4">
               <TabsTrigger value="info" className="text-xs">
                 <User className="h-3.5 w-3.5 mr-1.5" />
                 Dados
@@ -120,6 +104,10 @@ export function StudentDetailSheet({
                 <CreditCard className="h-3.5 w-3.5 mr-1.5" />
                 Financeiro
               </TabsTrigger>
+              <TabsTrigger value="statement" className="text-xs">
+                <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
+                Extrato
+              </TabsTrigger>
             </TabsList>
 
             {/* Dados Pessoais */}
@@ -127,17 +115,17 @@ export function StudentDetailSheet({
               <ScrollArea className="h-full">
                 <div className="p-6 space-y-6">
                   {(() => {
-                    const hourlyRate = (student as any).hourly_rate as number | null | undefined;
-                    const classesPerWeek = (student as any).classes_per_week as number | null | undefined;
-                    const weeklyTotal =
+                    const hourlyRate = student.hourly_rate;
+                    const classesPerWeek = student.classes_per_week;
+                    const monthlyTotal =
                       hourlyRate != null && classesPerWeek != null
-                        ? hourlyRate * classesPerWeek
+                        ? hourlyRate * classesPerWeek * 4
                         : null;
-                    const payDay = (student as any).pay_day as number | null | undefined;
-                    const city = (student as any).city as string | null | undefined;
-                    const state = (student as any).state as string | null | undefined;
-                    const createdAt = student.created_at as string | null | undefined;
-                    const updatedAt = (student as any).updated_at as string | null | undefined;
+                    const payDay = student.pay_day;
+                    const city = student.city;
+                    const state = student.state;
+                    const createdAt = student.created_at;
+                    const updatedAt = student.updated_at;
 
                     return (
                       <>
@@ -255,9 +243,9 @@ export function StudentDetailSheet({
                               </p>
                             </div>
                             <div className="rounded-lg border bg-card p-3">
-                              <p className="text-xs text-muted-foreground mb-1">Total semanal</p>
+                              <p className="text-xs text-muted-foreground mb-1">Total mensal</p>
                               <p className="text-sm font-semibold">
-                                {weeklyTotal != null ? formatCurrency(weeklyTotal) : "—"}
+                                {monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}
                               </p>
                             </div>
                             <div className="rounded-lg border bg-card p-3">
@@ -307,8 +295,8 @@ export function StudentDetailSheet({
                       <p className="text-lg font-bold">{student.stats.totalClasses}</p>
                       <p className="text-xs text-muted-foreground">Total</p>
                     </div>
-                    <div className="rounded-lg bg-emerald-500/10 p-3 text-center">
-                      <p className="text-lg font-bold text-emerald-600">
+                    <div className="rounded-lg bg-success/10 p-3 text-center">
+                      <p className="text-lg font-bold text-success">
                         {student.stats.presentClasses}
                       </p>
                       <p className="text-xs text-muted-foreground">Presenças</p>
@@ -328,43 +316,62 @@ export function StudentDetailSheet({
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {student.classLogs.map((log) => (
-                        <div
-                          key={log.id}
-                          className="rounded-lg border bg-card p-3 space-y-2"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {log.attendance ? (
-                                <CheckCircle className="h-4 w-4 text-emerald-500" />
-                              ) : (
-                                <XCircle className="h-4 w-4 text-rose-500" />
-                              )}
-                              <span className="text-sm font-medium">
-                                {formatDate(log.class_date)}
-                              </span>
+                      {student.classLogs.map((log) => {
+                        const status = getClassStatusWithTime(log);
+                        const isConcluida = status.label === "Concluída";
+                        return (
+                          <div
+                            key={log.id}
+                            className="rounded-lg border bg-card p-3 space-y-2"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {isConcluida ? (
+                                  log.attendance ? (
+                                    <CheckCircle className="h-4 w-4 text-success" />
+                                  ) : (
+                                    <XCircle className="h-4 w-4 text-rose-500" />
+                                  )
+                                ) : status.label === "Agendada" || status.label === "Em andamento" ? (
+                                  <CalendarClock className="h-4 w-4 text-blue-600" />
+                                ) : (
+                                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                                )}
+                                <span className="text-sm font-medium">
+                                  {formatDate(log.class_date)}
+                                </span>
+                                {!isConcluida && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {status.label}
+                                  </span>
+                                )}
+                              </div>
+                              {log.grade != null ? (
+                                <span
+                                  className={`text-sm font-bold ${
+                                    log.grade >= 7
+                                      ? "text-success"
+                                      : log.grade >= 5
+                                      ? "text-amber-600"
+                                      : "text-rose-600"
+                                  }`}
+                                >
+                                  {Number(log.grade).toFixed(1)}
+                                </span>
+                              ) : isConcluida && log.attendance === false ? (
+                                <span className="text-sm font-medium text-destructive">
+                                  Não compareceu
+                                </span>
+                              ) : null}
                             </div>
-                            {log.grade !== null && (
-                              <span
-                                className={`text-sm font-bold ${
-                                  log.grade >= 7
-                                    ? "text-emerald-600"
-                                    : log.grade >= 5
-                                    ? "text-amber-600"
-                                    : "text-rose-600"
-                                }`}
-                              >
-                                {Number(log.grade).toFixed(1)}
-                              </span>
+                            {log.feedback && (
+                              <p className="text-xs text-muted-foreground pl-6">
+                                {log.feedback}
+                              </p>
                             )}
                           </div>
-                          {log.feedback && (
-                            <p className="text-xs text-muted-foreground pl-6">
-                              {log.feedback}
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -377,8 +384,8 @@ export function StudentDetailSheet({
                 <div className="p-6 space-y-4">
                   {/* Summary */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="rounded-lg bg-emerald-500/10 p-3 text-center">
-                      <p className="text-sm font-bold text-emerald-600">
+                    <div className="rounded-lg bg-success/10 p-3 text-center">
+                      <p className="text-sm font-bold text-success">
                         {formatCurrency(student.stats.totalPaid)}
                       </p>
                       <p className="text-xs text-muted-foreground">Pago</p>
@@ -405,7 +412,7 @@ export function StudentDetailSheet({
                   ) : (
                     <div className="space-y-2">
                       {student.financialRecords.map((record) => {
-                        const actualStatus = getActualStatus(record);
+                        const actualStatus = getFinancialActualStatus(record);
                         return (
                           <div
                             key={record.id}
@@ -436,7 +443,7 @@ export function StudentDetailSheet({
                               <span>Venc: {formatDate(record.due_date)}</span>
                             </div>
                             {record.paid_at && (
-                              <p className="text-xs text-emerald-600 mt-1">
+                              <p className="text-xs text-success mt-1">
                                 Pago em {formatDate(record.paid_at)}
                               </p>
                             )}
@@ -447,6 +454,14 @@ export function StudentDetailSheet({
                   )}
                 </div>
               </ScrollArea>
+            </TabsContent>
+
+            {/* Extrato Consolidado */}
+            <TabsContent value="statement" className="flex-1 overflow-auto m-0">
+              <StudentStatementTab
+                studentId={student.id}
+                studentName={student.name}
+              />
             </TabsContent>
           </Tabs>
         ) : (

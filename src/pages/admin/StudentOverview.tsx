@@ -1,7 +1,13 @@
-import { useState, useMemo } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { useTeachers } from "@/hooks/useTeachers";
+import {
+  OverviewFilters,
+  type OverviewFiltersState,
+} from "@/components/filters/OverviewFilters";
+import { defaultOverviewFilters } from "@/components/filters/filterDefaults";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
+import { formatCurrency } from "@/lib/utils/formatters";
 import {
   Select,
   SelectContent,
@@ -17,116 +23,112 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
-import { Search, Loader2, Eye, TrendingUp, TrendingDown } from "lucide-react";
-import { useStudentsWithStats } from "@/hooks/useStudentDetails";
+import { Loader2, Eye, TrendingUp, TrendingDown } from "lucide-react";
+import { useStudentsWithStatsPaginated } from "@/hooks/useStudentDetails";
+import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
-import { useClassLogs } from "@/hooks/useClassLogs";
-import { useFinancialRecords } from "@/hooks/useFinancialRecords";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 
-const ITEMS_PER_PAGE = 10;
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-}
+const PAGE_SIZE = 20;
 
 function StudentOverviewPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<OverviewFiltersState>(defaultOverviewFilters);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
-  const { data: students = [], isLoading, error } = useStudentsWithStats();
-  const { data: classLogs = [] } = useClassLogs();
-  const { data: financialRecords = [] } = useFinancialRecords();
+  const {
+    data: students = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useStudentsWithStatsPaginated({ pageSize: PAGE_SIZE });
+  const { data: teachers = [] } = useTeachers();
+
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
 
   const filteredStudents = useMemo(() => {
-    return students.filter((student) => {
-      const matchesSearch = student.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const matchesStatus =
-        statusFilter === "all" || student.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [students, searchQuery, statusFilter]);
+    let result = students.filter((student) => {
+      const searchLower = filters.search.toLowerCase().trim();
+      const searchDigits = searchLower.replace(/\D/g, "");
+      const matchesSearch =
+        !searchLower ||
+        (student.name || "").toLowerCase().includes(searchLower) ||
+        (student.email || "").toLowerCase().includes(searchLower) ||
+        (student.cpf || "").replace(/\D/g, "").includes(searchDigits) ||
+        (student.phone || "").replace(/\D/g, "").includes(searchDigits);
+      if (!matchesSearch) return false;
 
-  const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
-  const paginatedStudents = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredStudents.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredStudents, currentPage]);
+      const matchesStatus = filters.status === "all" || student.status === filters.status;
+      if (!matchesStatus) return false;
+
+      if (filters.teacherId !== "all" && student.teacher_id !== filters.teacherId) return false;
+
+      if (filters.period !== "all") {
+        const created = new Date(student.created_at || 0);
+        const days = parseInt(filters.period, 10);
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+        if (created < cutoff) return false;
+      }
+      return true;
+    });
+
+    result = [...result].sort((a, b) => {
+      const nameA = (a.name || "").toLowerCase();
+      const nameB = (b.name || "").toLowerCase();
+      const createdA = new Date(a.created_at || 0).getTime();
+      const createdB = new Date(b.created_at || 0).getTime();
+
+      if (filters.sortBy === "name_asc") return nameA.localeCompare(nameB);
+      if (filters.sortBy === "name_desc") return nameB.localeCompare(nameA);
+      if (filters.sortBy === "recent") return createdB - createdA;
+      if (filters.sortBy === "oldest") return createdA - createdB;
+      return 0;
+    });
+    return result;
+  }, [students, filters]);
 
   const handleViewStudent = (studentId: string) => {
     setSelectedStudentId(studentId);
     setSheetOpen(true);
   };
 
-  // Reset to page 1 when filters change
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1);
-  };
-
-  const handleStatusChange = (value: string) => {
-    setStatusFilter(value);
-    setCurrentPage(1);
+  const handleFiltersChange = (newFilters: OverviewFiltersState) => {
+    setFilters(newFilters);
+    setPage(0);
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
             Visão Geral dos Alunos
           </h1>
           <p className="text-muted-foreground mt-1">
-            Planilha completa com todos os dados dos alunos
+            Estatísticas completas de todos os alunos
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="ativo">Ativos</SelectItem>
-              <SelectItem value="inativo">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Loading state */}
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
+        {/* Filtros avançados */}
+        <OverviewFilters
+          filters={filters}
+          onChange={handleFiltersChange}
+          onReset={() => {
+            setFilters(defaultOverviewFilters);
+            setPage(0);
+          }}
+          teachers={teachers}
+          showTeacherFilter={true}
+        />
 
         {/* Error state */}
         {error && (
@@ -138,9 +140,11 @@ function StudentOverviewPage() {
         )}
 
         {/* Table */}
-        {!isLoading && !error && (
+        {isLoading ? (
+          <TableSkeleton rows={10} columns={9} />
+        ) : !error && (
           <>
-            <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+            <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -157,7 +161,7 @@ function StudentOverviewPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedStudents.map((student) => {
+                    {filteredStudents.map((student) => {
                       const hasOverdue = student.stats.totalOverdue > 0;
                       const lowAttendance =
                         student.stats.attendanceRate !== null &&
@@ -206,13 +210,13 @@ function StudentOverviewPage() {
                                   {lowAttendance ? (
                                     <TrendingDown className="h-3.5 w-3.5 text-rose-500" />
                                   ) : (
-                                    <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                                    <TrendingUp className="h-3.5 w-3.5 text-success" />
                                   )}
                                   <span
                                     className={`text-sm font-medium ${
                                       lowAttendance
                                         ? "text-rose-600"
-                                        : "text-emerald-600"
+                                        : "text-success"
                                     }`}
                                   >
                                     {student.stats.attendanceRate.toFixed(0)}%
@@ -230,7 +234,7 @@ function StudentOverviewPage() {
                               <span
                                 className={`text-sm font-medium ${
                                   student.stats.averageGrade >= 7
-                                    ? "text-emerald-600"
+                                    ? "text-success"
                                     : student.stats.averageGrade >= 5
                                     ? "text-amber-600"
                                     : "text-rose-600"
@@ -245,7 +249,7 @@ function StudentOverviewPage() {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <span className="text-sm text-emerald-600 font-medium">
+                            <span className="text-sm text-success font-medium">
                               {formatCurrency(student.stats.totalPaid)}
                             </span>
                           </TableCell>
@@ -286,181 +290,14 @@ function StudentOverviewPage() {
                     : "Nenhum aluno encontrado com esses filtros"}
                 </div>
               )}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage((p) => Math.max(1, p - 1));
-                      }}
-                      className={
-                        currentPage === 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage(page);
-                          }}
-                          isActive={currentPage === page}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )
-                  )}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage((p) => Math.min(totalPages, p + 1));
-                      }}
-                      className={
-                        currentPage === totalPages
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )}
-
-            {/* Results info */}
-            <p className="text-sm text-muted-foreground text-center">
-              Mostrando {paginatedStudents.length} de {filteredStudents.length}{" "}
-              alunos
-            </p>
-
-            {/* Planilha mensal similar à visão do professor */}
-            <div className="mt-8 border rounded-lg overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-muted/50 border-b">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aluno</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Cidade</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Valor/hora</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aulas/semana</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aulas/mês</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Prev. mensal</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Dia pagamento</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Status pagto (mês)</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">Aulas devidas (mês)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredStudents.map((student) => {
-                    const hourlyRate = (student as any).hourly_rate as number | null;
-                    const classesPerWeek = (student as any).classes_per_week as number | null;
-                    const payDay = (student as any).pay_day as number | null;
-                    const city = (student as any).city as string | null;
-
-                    const totalMonthlyClasses = classesPerWeek ? classesPerWeek * 4 : 0;
-                    const expectedMonthlyAmount =
-                      hourlyRate && totalMonthlyClasses
-                        ? hourlyRate * totalMonthlyClasses
-                        : 0;
-
-                    const now = new Date();
-                    const year = now.getFullYear();
-                    const month = now.getMonth();
-                    const monthStart = new Date(year, month, 1);
-                    const monthEnd = new Date(year, month + 1, 0);
-
-                    const classesThisMonth = classLogs.filter(
-                      (log) =>
-                        log.student_id === student.id &&
-                        new Date(log.class_date + "T00:00:00") >= monthStart &&
-                        new Date(log.class_date + "T00:00:00") <= monthEnd
-                    ).length;
-
-                    const classesOwed = Math.max(
-                      (totalMonthlyClasses || 0) - classesThisMonth,
-                      0
-                    );
-
-                    const recordsThisMonth = financialRecords.filter(
-                      (rec) =>
-                        rec.student_id === student.id &&
-                        new Date(rec.due_date + "T00:00:00") >= monthStart &&
-                        new Date(rec.due_date + "T00:00:00") <= monthEnd
-                    );
-
-                    const lastRecord =
-                      recordsThisMonth.length > 0
-                        ? recordsThisMonth[recordsThisMonth.length - 1]
-                        : null;
-
-                    const paymentStatusLabel = lastRecord
-                      ? lastRecord.status === "pago"
-                        ? "Pago"
-                        : lastRecord.status === "atrasado"
-                        ? "Atrasado"
-                        : "Pendente"
-                      : "—";
-
-                    return (
-                      <tr key={student.id} className="border-b last:border-0">
-                        <td className="px-4 py-2 whitespace-nowrap">{student.name}</td>
-                        <td className="px-4 py-2 whitespace-nowrap">{city || "—"}</td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {hourlyRate
-                            ? new Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              }).format(hourlyRate)
-                            : "—"}
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          {classesPerWeek ?? "—"}
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          {totalMonthlyClasses || "—"}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {expectedMonthlyAmount
-                            ? new Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              }).format(expectedMonthlyAmount)
-                            : "—"}
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          {payDay ?? "—"}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {paymentStatusLabel}
-                        </td>
-                        <td className="px-4 py-2 text-center">{classesOwed}</td>
-                      </tr>
-                    );
-                  })}
-                  {filteredStudents.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={9}
-                        className="px-4 py-6 text-center text-muted-foreground"
-                      >
-                        Nenhum aluno encontrado para esta planilha.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              <TablePaginationBar
+                page={page}
+                pageSize={PAGE_SIZE}
+                totalCount={totalCount}
+                hasMore={hasMore}
+                isFetching={isFetching}
+                onPageChange={setPage}
+              />
             </div>
           </>
         )}
@@ -471,8 +308,7 @@ function StudentOverviewPage() {
           open={sheetOpen}
           onOpenChange={setSheetOpen}
         />
-      </div>
-    </AdminLayout>
+    </div>
   );
 }
 

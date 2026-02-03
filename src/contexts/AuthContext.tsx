@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/sentry";
 
 type UserRole = "admin" | "student" | "teacher" | null;
 
@@ -22,22 +23,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<UserRole>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserRole = async (userId: string): Promise<UserRole> => {
     try {
-      const { data, error } = await supabase
+      const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching role:", error);
-        console.error("Error details:", JSON.stringify(error, null, 2));
-        return null;
+      if (!roleError && roleData?.role) return roleData.role as UserRole;
+
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("role, teacher_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!profileError && profileData) {
+        const r = profileData.role as string;
+        if (r === "admin" || r === "student" || r === "teacher") return r as UserRole;
+        if (profileData.teacher_id) return "teacher";
       }
-      return data?.role as UserRole;
+      return null;
     } catch (error) {
-      console.error("Error fetching role:", error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), { userId, context: "fetchUserRole" });
       return null;
     }
   };
@@ -47,7 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Handle invalid refresh token errors with robust cleanup
     const handleInvalidRefreshToken = async () => {
-      console.warn("Invalid refresh token detected, clearing session and redirecting to login");
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      logger.warn("Invalid refresh token detected, clearing session", {
+        userId: currentUser?.id,
+      });
+      
+      // Clear user context in Sentry
+      logger.clearUser();
       
       // Use signOut from the client for complete cleanup
       await supabase.auth.signOut();
@@ -95,6 +110,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (isMounted) {
               setRole(userRole);
               setIsLoading(false);
+              
+              // Set user context in Sentry for better error tracking
+              logger.setUser({
+                id: session.user.id,
+                email: session.user.email,
+                role: userRole || undefined,
+              });
+              
+              logger.addBreadcrumb(
+                "User authenticated",
+                "auth",
+                { role: userRole || "unknown" }
+              );
             }
           }, 0);
         } else {
@@ -133,6 +161,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isMounted) {
             setRole(userRole);
             setIsLoading(false);
+            
+            // Set user context in Sentry
+            logger.setUser({
+              id: session.user.id,
+              email: session.user.email,
+              role: userRole || undefined,
+            });
           }
         });
       } else {
@@ -152,12 +187,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
-    if (error) {
-      return { error: error as Error };
-    }
+    if (error) return { error: error as Error };
 
     const authenticatedUser = data?.user ?? data?.session?.user ?? null;
-
     if (authenticatedUser) {
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -167,12 +199,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!profileError && profile && profile.active === false) {
         await supabase.auth.signOut();
-        return {
-          error: new Error(
-            "Sua conta está inativa. Entre em contato com a secretaria."
-          ),
-        };
+        return { error: new Error("Sua conta está inativa. Entre em contato com a secretaria.") };
       }
+
+      const userRole = await fetchUserRole(authenticatedUser.id);
+      setRole(userRole);
+      setIsLoading(false);
     }
 
     return { error: null };
@@ -200,6 +232,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    logger.addBreadcrumb("User signed out", "auth", { userId: user?.id });
+    logger.clearUser();
+    
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);

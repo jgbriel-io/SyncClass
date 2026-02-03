@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import { PageContainer } from "@/components/ui/page-container";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,22 +33,25 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Search, Plus, Loader2, Shield, User, Link2, Unlink, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2 } from "lucide-react";
+import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil, KeyRound } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
+import { getAvatarLetter } from "@/lib/utils/patterns";
 import {
-  useUsers,
+  useUsersPaginated,
+  useLinkedProfileIds,
   useCreateUser,
   useUpdateUserRole,
   useUpdateUserProfile,
   useDeleteUser,
   useHardDeleteUser,
+  useAdminResetPassword,
   useLinkUserToStudent,
-  useUnlinkUserFromStudent,
   useLinkUserToTeacher,
-  useUnlinkUserFromTeacher,
   UserWithProfile,
 } from "@/hooks/useUsers";
 import { useStudents, useUpdateStudent } from "@/hooks/useStudents";
@@ -63,10 +64,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import {
+  UsersFilters,
+  defaultFilters,
+  type UsersFiltersState,
+} from "@/components/filters/UsersFilters";
+import { defaultUsersFilters } from "@/components/filters/filterDefaults";
+import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 
 export default function UsersPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("active");
+  const [filters, setFilters] = useState<UsersFiltersState>({
+    ...defaultUsersFilters,
+    status: "active",
+  });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -78,10 +88,32 @@ export default function UsersPage() {
   const [generatedPassword, setGeneratedPassword] = useState<string>("");
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const [passwordDialogSource, setPasswordDialogSource] = useState<"create" | "reset" | null>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [userToResetPassword, setUserToResetPassword] = useState<UserWithProfile | null>(null);
+  const [resetPasswordNew, setResetPasswordNew] = useState("");
+  const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
 
-  const { data: users = [], isLoading, error } = useUsers();
+  const listTopRef = useRef<HTMLDivElement>(null);
+  const adminResetPassword = useAdminResetPassword();
+  const {
+    data: users = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useUsersPaginated({ pageSize: 20 });
   const { data: students = [] } = useStudents();
   const { data: teachers = [] } = useTeachers();
+  const { data: linkedIds } = useLinkedProfileIds();
+
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
   const createUser = useCreateUser();
   const updateRole = useUpdateUserRole();
   const updateProfile = useUpdateUserProfile();
@@ -90,36 +122,98 @@ export default function UsersPage() {
   const updateStudent = useUpdateStudent();
   const updateTeacher = useUpdateTeacher();
   const linkToStudent = useLinkUserToStudent();
-  const unlinkFromStudent = useUnlinkUserFromStudent();
   const linkToTeacher = useLinkUserToTeacher();
-  const unlinkFromTeacher = useUnlinkUserFromTeacher();
   const deleteTeacher = useDeleteTeacher();
 
-  const filteredUsers = users.filter((user) => {
-    const name = user.profile?.full_name || "";
-    const email = user.email || "";
-    const isActive = user.profile?.active ?? true;
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch =
-      name.toLowerCase().includes(searchLower) ||
-      email.toLowerCase().includes(searchLower)
-    ;
+  const filteredUsers = useMemo(() => {
+    let result = users.filter((user) => {
+      const name = user.profile?.full_name || "";
+      const email = user.email || "";
+      const searchLower = filters.search.toLowerCase().trim();
+      const matchesSearch =
+        !searchLower ||
+        name.toLowerCase().includes(searchLower) ||
+        email.toLowerCase().includes(searchLower);
 
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && isActive) ||
-      (statusFilter === "inactive" && !isActive);
+      if (!matchesSearch) return false;
 
-    return matchesSearch && matchesStatus;
-  });
+      const storedRole = (user.role?.role ?? user.profile?.role) as string | null;
+      const linkedStudent = user.profile?.student_id;
+      const linkedTeacher = user.profile?.teacher_id;
+      const role =
+        storedRole === "admin"
+          ? "admin"
+          : storedRole === "teacher"
+          ? "teacher"
+          : storedRole === "student"
+          ? "student"
+          : linkedTeacher
+          ? "teacher"
+          : linkedStudent
+          ? "student"
+          : storedRole;
+
+      const matchesRole =
+        filters.role === "all" ||
+        (filters.role === "admin" && role === "admin") ||
+        (filters.role === "teacher" && role === "teacher") ||
+        (filters.role === "student" && role === "student");
+
+      if (!matchesRole) return false;
+
+      const isActive = user.profile?.active ?? true;
+      const matchesStatus =
+        filters.status === "all" ||
+        (filters.status === "active" && isActive) ||
+        (filters.status === "inactive" && !isActive);
+
+      if (!matchesStatus) return false;
+
+      return true;
+    });
+
+    const sortBy = filters.sortBy;
+    result = [...result].sort((a, b) => {
+      const nameA = (a.profile?.full_name || a.email || "").toLowerCase();
+      const nameB = (b.profile?.full_name || b.email || "").toLowerCase();
+      const createdA = new Date(a.profile?.created_at || a.created_at || 0).getTime();
+      const createdB = new Date(b.profile?.created_at || b.created_at || 0).getTime();
+
+      if (sortBy === "created_desc") return createdB - createdA;
+      if (sortBy === "created_asc") return createdA - createdB;
+      if (sortBy === "name_asc") return nameA.localeCompare(nameB);
+      if (sortBy === "name_desc") return nameB.localeCompare(nameA);
+      return 0;
+    });
+
+    return result;
+  }, [users, filters]);
 
   const handleCreateOrUpdate = (data: {
     email: string;
     password?: string;
     fullName: string;
     role: "admin" | "student" | "teacher";
-    studentData?: any;
-    teacherData?: any;
+    studentData?: {
+      name: string;
+      state: string | null;
+      city: string | null;
+      cpf: string;
+      phone: string;
+      email: string;
+      origin: string;
+      status: string;
+      birth_date: string | null;
+      hourly_rate: number | null;
+      classes_per_week: number | null;
+      pay_day: number | null;
+    };
+    teacherData?: {
+      name: string;
+      email: string;
+      phone?: string;
+      cpf?: string;
+    };
   }) => {
     if (selectedUser) {
       // Update existing user
@@ -164,12 +258,13 @@ export default function UsersPage() {
           teacherData: data.teacherData,
         },
         {
-          onSuccess: (result: any) => {
+          onSuccess: (result: { password?: string }) => {
             setIsFormOpen(false);
             if (result?.password) {
               setGeneratedPassword(result.password);
               setShowGeneratedPassword(false);
               setPasswordCopied(false);
+              setPasswordDialogSource("create");
               setIsPasswordDialogOpen(true);
             }
           },
@@ -196,10 +291,6 @@ export default function UsersPage() {
     }
   };
 
-  const handleUnlinkStudent = (userId: string) => {
-    unlinkFromStudent.mutate(userId);
-  };
-
   const handleLinkTeacher = () => {
     if (selectedUser && selectedTeacherId) {
       linkToTeacher.mutate(
@@ -218,18 +309,14 @@ export default function UsersPage() {
     }
   };
 
-  const handleUnlinkTeacher = (userId: string) => {
-    unlinkFromTeacher.mutate(userId);
-  };
-
   const handleDeleteConfirm = () => {
     if (!selectedUser) return;
 
     const linkedStudent = selectedUser.profile?.student_id
       ? students.find((s) => s.id === selectedUser.profile?.student_id)
       : null;
-    const linkedTeacher = (selectedUser.profile as any)?.teacher_id
-      ? teachers.find((t) => t.id === (selectedUser.profile as any).teacher_id)
+    const linkedTeacher = selectedUser.profile?.teacher_id
+      ? teachers.find((t) => t.id === selectedUser.profile.teacher_id)
       : null;
 
     const isStudentActive = linkedStudent?.status === "ativo";
@@ -241,7 +328,7 @@ export default function UsersPage() {
     if (linkedStudent && isStudentActive) {
       // Soft deactivate via student status so it reflects in both tabs
       updateStudent.mutate(
-        { id: linkedStudent.id, status: "inativo" as any },
+        { id: linkedStudent.id, status: "inativo" },
         {
           onSuccess: () => {
             setDeleteDialogOpen(false);
@@ -289,24 +376,10 @@ export default function UsersPage() {
     setIsLinkDialogOpen(true);
   };
 
-  // Get available students (not linked to any user)
-  const linkedStudentIds = new Set(
-    users
-      .map((u) => u.profile?.student_id)
-      .filter((id): id is string => !!id)
-  );
-  const availableStudents = students.filter(
-    (s) => !linkedStudentIds.has(s.id)
-  );
-
-  const linkedTeacherIds = new Set(
-    users
-      .map((u) => (u.profile as any)?.teacher_id)
-      .filter((id): id is string => !!id)
-  );
-  const availableTeachers = teachers.filter(
-    (t) => !linkedTeacherIds.has(t.id)
-  );
+  const linkedStudentIds = linkedIds?.linkedStudentIds ?? new Set<string>();
+  const linkedTeacherIds = linkedIds?.linkedTeacherIds ?? new Set<string>();
+  const availableStudents = students.filter((s) => !linkedStudentIds.has(s.id));
+  const availableTeachers = teachers.filter((t) => !linkedTeacherIds.has(t.id));
 
   const getRoleVariant = (role: string | null) => {
     switch (role) {
@@ -335,9 +408,8 @@ export default function UsersPage() {
   };
 
   return (
-    <AdminLayout>
-      <PageContainer>
-        <div className="space-y-6">
+    <>
+    <div className="space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -355,28 +427,18 @@ export default function UsersPage() {
             </Button>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome ou email..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as any)}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="active">Ativos</SelectItem>
-              <SelectItem value="inactive">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          {/* Filtros avançados */}
+          <UsersFilters
+            filters={filters}
+            onChange={(newFilters) => {
+              setFilters(newFilters);
+              setPage(0);
+            }}
+            onReset={() => {
+              setFilters({ ...defaultUsersFilters, status: "active" });
+              setPage(0);
+            }}
+          />
 
         {/* Loading state */}
         {isLoading && (
@@ -396,7 +458,7 @@ export default function UsersPage() {
 
         {/* Table */}
         {!isLoading && !error && (
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -422,13 +484,17 @@ export default function UsersPage() {
                     const linkedStudent = user.profile?.student_id
                       ? students.find((s) => s.id === user.profile?.student_id)
                       : null;
-                    const linkedTeacher = (user.profile as any)?.teacher_id
-                      ? teachers.find((t) => t.id === (user.profile as any).teacher_id)
+                    const linkedTeacher = user.profile?.teacher_id
+                      ? teachers.find((t) => t.id === user.profile.teacher_id)
                       : null;
 
-                    const storedRole = (user.role?.role as string | null) ?? null;
+                    const storedRole = (user.role?.role ?? user.profile?.role) as string | null ?? null;
                     const role = storedRole === "admin"
                       ? "admin"
+                      : storedRole === "teacher"
+                      ? "teacher"
+                      : storedRole === "student"
+                      ? "student"
                       : linkedTeacher
                       ? "teacher"
                       : linkedStudent
@@ -436,10 +502,10 @@ export default function UsersPage() {
                       : storedRole;
 
                     const displayName = (user.profile?.full_name || "").trim() || "(sem nome)";
-                    const avatarLetter = displayName.replace(/[^A-Za-zÀ-ÿ0-9]/g, "").charAt(0).toUpperCase() || "?";
+                    const avatarLetter = getAvatarLetter(displayName);
                     const subtitle = user.email || getRoleLabel(role);
                     const isActive = user.profile?.active ?? true;
-                    const lastUpdatedAt = (user.profile as any)?.updated_at as string | null | undefined;
+                    const lastUpdatedAt = user.profile?.updated_at;
 
                     return (
                       <TableRow key={user.id}>
@@ -461,7 +527,7 @@ export default function UsersPage() {
                               )}
                               {!isActive && (
                                 <p className="text-[11px] text-amber-600">
-                                  Conta desativada
+                                  Conta arquivada
                                 </p>
                               )}
                             </div>
@@ -474,7 +540,7 @@ export default function UsersPage() {
                             </StatusBadge>
                             {!isActive && (
                               <span className="text-[11px] text-muted-foreground">
-                                Desativado
+                                Arquivado
                               </span>
                             )}
                           </div>
@@ -531,20 +597,25 @@ export default function UsersPage() {
                                   setIsFormOpen(true);
                                 }}
                               >
+                                <Pencil className="h-4 w-4 mr-2" />
                                 Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setUserToResetPassword(user);
+                                  setResetPasswordNew("");
+                                  setResetPasswordConfirm("");
+                                  setResetPasswordDialogOpen(true);
+                                }}
+                              >
+                                <KeyRound className="h-4 w-4 mr-2" />
+                                Redefinir senha
                               </DropdownMenuItem>
                               {role === "student" && !linkedStudent && (
                                 <DropdownMenuItem
                                   onClick={() => openLinkDialog(user, "student")}
                                 >
                                   Vincular aluno
-                                </DropdownMenuItem>
-                              )}
-                              {linkedStudent && (
-                                <DropdownMenuItem
-                                  onClick={() => handleUnlinkStudent(user.id)}
-                                >
-                                  Desvincular aluno
                                 </DropdownMenuItem>
                               )}
                               {role === "teacher" && !linkedTeacher && (
@@ -554,19 +625,12 @@ export default function UsersPage() {
                                   Vincular professor
                                 </DropdownMenuItem>
                               )}
-                              {role === "teacher" && linkedTeacher && (
-                                <DropdownMenuItem
-                                  onClick={() => handleUnlinkTeacher(user.id)}
-                                >
-                                  Desvincular professor
-                                </DropdownMenuItem>
-                              )}
                               {linkedStudent && linkedStudent.status === "inativo" && (
                                 <DropdownMenuItem
                                   onClick={() => {
                                     updateStudent.mutate({
                                       id: linkedStudent.id,
-                                      status: "ativo" as any,
+                                      status: "ativo",
                                     });
                                   }}
                                 >
@@ -578,7 +642,7 @@ export default function UsersPage() {
                                   onClick={() => {
                                     updateTeacher.mutate({
                                       id: linkedTeacher.id,
-                                      status: "ativo" as any,
+                                      status: "ativo",
                                     });
                                   }}
                                 >
@@ -597,7 +661,7 @@ export default function UsersPage() {
                                   userIsActive && (isStudentActive || isTeacherActive || (!linkedStudent && !linkedTeacher));
 
                                 const label = shouldShowDeactivate
-                                  ? "Desativar"
+                                  ? "Arquivar"
                                   : canHardDelete
                                   ? "Excluir definitivamente"
                                   : "Inativo";
@@ -638,6 +702,14 @@ export default function UsersPage() {
                   : "Ajuste os filtros acima ou limpe a busca"}
               />
             )}
+            <TablePaginationBar
+              page={page}
+              pageSize={20}
+              totalCount={totalCount}
+              hasMore={hasMore}
+              isFetching={isFetching}
+              onPageChange={setPage}
+            />
           </div>
         )}
         </div>
@@ -659,14 +731,17 @@ export default function UsersPage() {
           open={isPasswordDialogOpen}
           onOpenChange={(open) => {
             setIsPasswordDialogOpen(open);
-            if (!open && generatedPassword) {
+            if (!open && generatedPassword && passwordDialogSource === "create") {
               toast.success("Usuário criado com sucesso!");
             }
+            if (!open) setPasswordDialogSource(null);
           }}
         >
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Senha criada para o usuário</DialogTitle>
+              <DialogTitle>
+                {passwordDialogSource === "reset" ? "Senha redefinida" : "Senha criada para o usuário"}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
@@ -677,6 +752,7 @@ export default function UsersPage() {
                 <Label>Senha temporária</Label>
                 <div className="relative">
                   <Input
+                    ref={passwordInputRef}
                     type={showGeneratedPassword ? "text" : "password"}
                     value={generatedPassword}
                     readOnly
@@ -701,14 +777,28 @@ export default function UsersPage() {
                   type="button"
                   variant="outline"
                   className="flex-1"
-                  onClick={async () => {
+                  onClick={() => {
                     if (!generatedPassword) return;
-                    try {
-                      await navigator.clipboard.writeText(generatedPassword);
+                    const onSuccess = () => {
                       setPasswordCopied(true);
                       setTimeout(() => setPasswordCopied(false), 2000);
-                    } catch (err) {
-                      console.error("Erro ao copiar senha: ", err);
+                    };
+                    const tryInputCopy = () => {
+                      const input = passwordInputRef.current;
+                      if (input) {
+                        input.focus();
+                        input.select();
+                        input.setSelectionRange(0, generatedPassword.length);
+                        if (document.execCommand("copy")) onSuccess();
+                        else toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                      } else {
+                        toast.error("Não foi possível copiar. Copie a senha manualmente.");
+                      }
+                    };
+                    if (navigator.clipboard?.writeText) {
+                      navigator.clipboard.writeText(generatedPassword).then(onSuccess).catch(tryInputCopy);
+                    } else {
+                      tryInputCopy();
                     }
                   }}
                 >
@@ -733,6 +823,123 @@ export default function UsersPage() {
                 </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Redefinir senha (admin) */}
+        <Dialog
+          open={resetPasswordDialogOpen}
+          onOpenChange={(open) => {
+            setResetPasswordDialogOpen(open);
+            if (!open) {
+              setUserToResetPassword(null);
+              setResetPasswordNew("");
+              setResetPasswordConfirm("");
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Redefinir senha</DialogTitle>
+              {userToResetPassword && (
+                <DialogDescription>
+                  Nova senha para <strong>{userToResetPassword.profile?.full_name ?? userToResetPassword.email}</strong>. Mínimo 6 caracteres.
+                </DialogDescription>
+              )}
+            </DialogHeader>
+            {userToResetPassword && (
+              <>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-password-new">Nova senha</Label>
+                    <Input
+                      id="reset-password-new"
+                      type="password"
+                      placeholder="••••••••"
+                      value={resetPasswordNew}
+                      onChange={(e) => setResetPasswordNew(e.target.value)}
+                      minLength={6}
+                      disabled={adminResetPassword.isPending}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-password-confirm">Confirmar senha</Label>
+                    <Input
+                      id="reset-password-confirm"
+                      type="password"
+                      placeholder="••••••••"
+                      value={resetPasswordConfirm}
+                      onChange={(e) => setResetPasswordConfirm(e.target.value)}
+                      minLength={6}
+                      disabled={adminResetPassword.isPending}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+                      let p = "";
+                      for (let i = 0; i < 10; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
+                      setResetPasswordNew(p);
+                      setResetPasswordConfirm(p);
+                    }}
+                  >
+                    Gerar senha
+                  </Button>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setResetPasswordDialogOpen(false);
+                      setUserToResetPassword(null);
+                      setResetPasswordNew("");
+                      setResetPasswordConfirm("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    disabled={
+                      adminResetPassword.isPending ||
+                      resetPasswordNew.length < 6 ||
+                      resetPasswordNew !== resetPasswordConfirm
+                    }
+                    onClick={() => {
+                      if (resetPasswordNew.length < 6 || resetPasswordNew !== resetPasswordConfirm) return;
+                      adminResetPassword.mutate(
+                        { userId: userToResetPassword.id, password: resetPasswordNew },
+                        {
+                          onSuccess: () => {
+                            const passwordToShow = resetPasswordNew;
+                            setResetPasswordDialogOpen(false);
+                            setUserToResetPassword(null);
+                            setResetPasswordNew("");
+                            setResetPasswordConfirm("");
+                            setGeneratedPassword(passwordToShow);
+                            setShowGeneratedPassword(false);
+                            setPasswordCopied(false);
+                            setPasswordDialogSource("reset");
+                            setIsPasswordDialogOpen(true);
+                          },
+                        }
+                      );
+                    }}
+                  >
+                    {adminResetPassword.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Redefinindo...
+                      </>
+                    ) : (
+                      "Redefinir senha"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
           </DialogContent>
         </Dialog>
 
@@ -842,23 +1049,23 @@ export default function UsersPage() {
                   const linkedStudent = selectedUser?.profile?.student_id
                     ? students.find((s) => s.id === selectedUser.profile?.student_id)
                     : null;
-                  const linkedTeacher = (selectedUser?.profile as any)?.teacher_id
+                  const linkedTeacher = selectedUser?.profile?.teacher_id
                     ? teachers.find(
-                        (t) => t.id === (selectedUser?.profile as any).teacher_id
+                        (t) => t.id === selectedUser.profile.teacher_id
                       )
                     : null;
                   const isStudentActive = linkedStudent?.status === "ativo";
                   const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
 
                   if (linkedStudent && isStudentActive) {
-                    return "Confirmar desativação";
+                    return "Confirmar arquivamento";
                   }
 
                   if (linkedTeacher && isTeacherActive) {
-                    return "Confirmar desativação";
+                    return "Confirmar arquivamento";
                   }
 
-                  return "Confirmar desativação do usuário";
+                  return "Confirmar arquivamento do usuário";
                 })()}
               </AlertDialogTitle>
               <AlertDialogDescription>
@@ -866,9 +1073,9 @@ export default function UsersPage() {
                   const linkedStudent = selectedUser?.profile?.student_id
                     ? students.find((s) => s.id === selectedUser.profile?.student_id)
                     : null;
-                  const linkedTeacher = (selectedUser?.profile as any)?.teacher_id
+                  const linkedTeacher = selectedUser?.profile?.teacher_id
                     ? teachers.find(
-                        (t) => t.id === (selectedUser?.profile as any).teacher_id
+                        (t) => t.id === selectedUser.profile.teacher_id
                       )
                     : null;
                   const isStudentActive = linkedStudent?.status === "ativo";
@@ -880,7 +1087,7 @@ export default function UsersPage() {
                   if (linkedStudent && isStudentActive) {
                     return (
                       <>
-                        Tem certeza que deseja desativar o usuário <strong>{displayName}</strong>?
+                        Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
                         Ele será removido da lista de ativos e aparecerá como aluno inativo.
                       </>
                     );
@@ -889,7 +1096,7 @@ export default function UsersPage() {
                   if (linkedTeacher && isTeacherActive) {
                     return (
                       <>
-                        Tem certeza que deseja desativar o usuário <strong>{displayName}</strong>?
+                        Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
                         Ele será removido da lista de ativos e aparecerá como professor inativo.
                       </>
                     );
@@ -897,8 +1104,8 @@ export default function UsersPage() {
 
                   return (
                     <>
-                      Tem certeza que deseja desativar o usuário <strong>{displayName}</strong>?
-                      Esta ação não remove a conta do Supabase Auth, apenas desativa o acesso no painel.
+                      Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
+                      Esta ação não remove a conta do Supabase Auth, apenas arquiva o usuário no painel.
                     </>
                   );
                 })()}
@@ -934,16 +1141,15 @@ export default function UsersPage() {
                 deleteTeacher.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Desativando...
+                    Arquivando...
                   </>
                 ) : (
-                  "Desativar"
+                  "Arquivar"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </PageContainer>
-    </AdminLayout>
+    </>
   );
 }

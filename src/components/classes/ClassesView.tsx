@@ -1,7 +1,9 @@
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyClassesState } from "@/components/ui/contextual-empty-states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,12 +20,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt } from "lucide-react";
-import { useState } from "react";
+import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, Check, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import {
+  ClassesFilters,
+  type ClassesFiltersState,
+  type ClassStatusFilter,
+} from "@/components/filters/ClassesFilters";
+import { defaultClassesFilters } from "@/components/filters/filterDefaults";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
-import { useTeachers } from "@/hooks/useTeachers";
+import { PostClassDialog } from "@/components/classes/PostClassDialog";
+import { useTeachers, Teacher } from "@/hooks/useTeachers";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   useClassLogs,
   useClassLogsSummary,
@@ -35,16 +46,20 @@ import {
   ClassLogWithStudent,
   ClassLogWithFinancialData,
 } from "@/hooks/useClassLogs";
+import { isClassEvaluationBlocked, getClassStatusWithTime } from "@/lib/utils/classTime";
 
-function formatDate(dateString: string): string {
-  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+function formatClassDateAndTime(log: {
+  class_date: string;
+  start_at?: string | null;
+  end_at?: string | null;
+}): { date: string; timeRange: string | null } {
+  const date = format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+  if (log.start_at && log.end_at) {
+    const start = format(new Date(log.start_at), "HH:mm", { locale: ptBR });
+    const end = format(new Date(log.end_at), "HH:mm", { locale: ptBR });
+    return { date, timeRange: `${start} às ${end}` };
+  }
+  return { date, timeRange: null };
 }
 
 function getPaymentStatusVariant(status: string | null): "success" | "warning" | "destructive" {
@@ -60,6 +75,14 @@ function getPaymentStatusVariant(status: string | null): "success" | "warning" |
   }
 }
 
+function formatDuration(minutes: number | null | undefined): string {
+  if (minutes == null || minutes < 0) return "—";
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}min` : `${h}h`;
+}
+
 function getPaymentStatusLabel(status: string | null): string {
   switch (status) {
     case "pago":
@@ -73,12 +96,24 @@ function getPaymentStatusLabel(status: string | null): string {
   }
 }
 
+/** Badge de status: Concluída, Agendada, Em andamento, Avaliação pendente (usa horário quando disponível) */
+function getClassStatusBadge(log: {
+  class_date: string;
+  attendance: boolean | null;
+  start_at?: string | null;
+  end_at?: string | null;
+}) {
+  return getClassStatusWithTime(log);
+}
+
 interface ClassesViewProps {
   title?: string;
   subtitle?: string;
   viewMode?: "table" | "cards";
   showTeacherColumn?: boolean;
   enableTeacherSelection?: boolean;
+  /** Status inicial vindo da URL (ex.: notificações) */
+  initialStatus?: ClassStatusFilter;
 }
 
 export function ClassesView({
@@ -87,38 +122,116 @@ export function ClassesView({
   viewMode = "table",
   showTeacherColumn = true,
   enableTeacherSelection = true,
+  initialStatus,
 }: ClassesViewProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<ClassesFiltersState>({
+    ...defaultClassesFilters,
+    ...(initialStatus && { status: initialStatus }),
+  });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ClassLogWithStudent | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [logToDelete, setLogToDelete] = useState<ClassLogWithStudent | null>(null);
+  const [postClassDialogOpen, setPostClassDialogOpen] = useState(false);
+  const [logForPostClass, setLogForPostClass] = useState<ClassLogWithStudent | null>(null);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
-  const { data: logs = [], isLoading, error } = useClassLogs();
+  useEffect(() => {
+    if (initialStatus) setFilters((prev) => ({ ...prev, status: initialStatus }));
+  }, [initialStatus]);
+
+  const {
+    data: logs = [],
+    isLoading,
+    error,
+    page,
+    setPage,
+    hasMore,
+    totalCount,
+    isFetching,
+  } = useClassLogs(undefined, {
+    pageSize: 20,
+    filters: { teacherId: filters.teacherId, period: filters.period },
+  });
   const { data: teachers = [] } = useTeachers();
+
+  useEffect(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [page]);
   const { data: summary } = useClassLogsSummary();
   const createLog = useCreateClassLog();
   const createLogWithFinancial = useCreateClassLogWithFinancial();
   const updateLog = useUpdateClassLog();
   const deleteLog = useDeleteClassLog();
 
-  const filteredLogs = logs.filter((log) => {
-    const studentName = log.students?.name || "";
-    return studentName.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const logsPendingRegistration = logs.filter(
+    (log) => !isClassEvaluationBlocked(log) && log.attendance == null
+  );
+
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      const searchLower = filters.search.toLowerCase();
+      const studentName = log.students?.name || "";
+      const title = log.title || "";
+      const matchesSearch =
+        !searchLower ||
+        studentName.toLowerCase().includes(searchLower) ||
+        title.toLowerCase().includes(searchLower);
+      if (!matchesSearch) return false;
+
+      if (filters.teacherId !== "all" && log.teacher_id !== filters.teacherId) return false;
+
+      const badge = getClassStatusBadge(log);
+      const status =
+        badge.label === "Concluída"
+          ? "concluida"
+          : badge.label === "Agendada" || badge.label === "Em andamento"
+            ? "agendada"
+            : "avaliacao_pendente";
+
+      if (filters.status !== "all" && filters.status !== status) return false;
+
+      if (filters.period !== "all") {
+        const classDate = new Date(log.class_date + "T12:00:00");
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        let from: Date;
+        let to: Date;
+        if (filters.period === "week") {
+          from = new Date(today);
+          from.setDate(from.getDate() - from.getDay());
+          to = new Date(from);
+          to.setDate(to.getDate() + 6);
+        } else if (filters.period === "month") {
+          from = new Date(today.getFullYear(), today.getMonth(), 1);
+          to = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        } else {
+          from = new Date(today);
+          from.setMonth(from.getMonth() - 3);
+          to = new Date(today);
+        }
+        to.setHours(23, 59, 59, 999);
+        if (classDate < from || classDate > to) return false;
+      }
+      return true;
+    });
+  }, [logs, filters]);
 
   // Mapa de professores para fallback (caso o join não traga o nome)
   const teacherMap = new Map<string, string>();
-  teachers.forEach((t: any) => {
+  teachers.forEach((t: Teacher) => {
     if (t.id && t.name) {
-      teacherMap.set(t.id as string, t.name as string);
+      teacherMap.set(t.id, t.name);
     }
   });
 
-  const handleCreateOrUpdate = (data: ClassLogInsert) => {
+  const handleCreateOrUpdate = (
+    data: ClassLogInsert,
+    financialUpdate?: { financialRecordId: string; dueDate: string }
+  ) => {
     if (selectedLog) {
       updateLog.mutate(
-        { id: selectedLog.id, ...data },
+        { id: selectedLog.id, ...data, ...financialUpdate },
         {
           onSuccess: () => {
             setIsFormOpen(false);
@@ -219,27 +332,47 @@ export function ClassesView({
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por aluno..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Loading state */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      {/* Conferência: alerta de aulas passadas sem presença marcada */}
+      {logsPendingRegistration.length > 0 && (
+        <div className="rounded-lg border border-warning/50 bg-warning/10 p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-warning" />
+            <p className="text-sm font-medium">
+              <span className="font-semibold">{logsPendingRegistration.length}</span>{" "}
+              {logsPendingRegistration.length === 1
+                ? "aula pendentes de feedback"
+                : "aulas pendentes de feedback "}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const first = logsPendingRegistration[0];
+              if (first) handleEdit(first);
+            }}
+          >
+            Ver e registrar
+          </Button>
         </div>
       )}
 
-      {/* Error state */}
+      {/* Filtros avançados */}
+      <ClassesFilters
+        filters={filters}
+        onChange={(newFilters) => {
+          setFilters(newFilters);
+          setPage(0);
+        }}
+        onReset={() => {
+          setFilters(defaultClassesFilters);
+          setPage(0);
+        }}
+        teachers={teachers}
+        showTeacherFilter={showTeacherColumn}
+      />
+
+        {/* Error state */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <p className="text-destructive">
@@ -248,54 +381,59 @@ export function ClassesView({
         </div>
       )}
 
-      {/* Table View (Admin) */}
-      {!isLoading && !error && viewMode === "table" && (
-        <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+        {/* Table View (Admin) */}
+        {isLoading ? (
+          <TableSkeleton rows={8} columns={8} />
+        ) : !error && viewMode === "table" && (
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                     Aluno
                   </th>
                   {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
                       Aula / Professor
                     </th>
                   )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Data
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden sm:table-cell whitespace-nowrap">
+                    Duração
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Nota
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden xl:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
                     Financeiro
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden 2xl:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell whitespace-nowrap">
                     Valor
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
                     Feedback
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 whitespace-nowrap">
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Ações
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody>
                 {filteredLogs.map((log) => {
-                  const lastUpdatedAt = (log as any).updated_at as string | null | undefined;
+                  const lastUpdatedAt = log.updated_at;
                   // Prioriza o nome do professor do join direto do class_log, depois fallback via teacher_id
                   const teacherName = 
-                    (log as any).teachers?.name ?? 
+                    log.teachers?.name ?? 
                     (log.teacher_id ? teacherMap.get(log.teacher_id) : null) ?? 
                     (log.students?.teacher_id ? teacherMap.get(log.students.teacher_id) : null) ?? 
                     "Sem professor";
 
                   return (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 align-top">
+                      <td className="px-6 py-4 align-top">
                         <div className="flex items-start gap-3">
                           <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-medium text-accent-foreground">
@@ -307,10 +445,8 @@ export function ClassesView({
                               <p className="text-sm font-medium">
                                 {log.students?.name || "Aluno não encontrado"}
                               </p>
-                              <StatusBadge
-                                variant={log.attendance ? "success" : "destructive"}
-                              >
-                                {log.attendance ? "Presente" : "Ausente"}
+                              <StatusBadge variant={getClassStatusBadge(log).variant}>
+                                {getClassStatusBadge(log).label}
                               </StatusBadge>
                             </div>
                             {lastUpdatedAt && (
@@ -322,7 +458,7 @@ export function ClassesView({
                         </div>
                       </td>
                       {showTeacherColumn && (
-                        <td className="px-4 py-3 align-top hidden lg:table-cell">
+                        <td className="px-6 py-4 align-top hidden lg:table-cell">
                           <div className="space-y-1 min-w-[200px]">
                             {log.title && (
                               <p className="text-sm font-semibold text-foreground whitespace-normal">
@@ -335,19 +471,36 @@ export function ClassesView({
                           </div>
                         </td>
                       )}
-                      <td className="px-4 py-3 align-top whitespace-nowrap">
+                      <td className="px-6 py-4 align-top whitespace-nowrap">
+                        {(() => {
+                          const { date, timeRange } = formatClassDateAndTime(log);
+                          return (
+                            <div className="flex flex-col gap-0.5 text-sm text-muted-foreground">
+                              <span>{date}</span>
+                              {timeRange && <span className="text-xs">{timeRange}</span>}
+                            </div>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 align-top hidden sm:table-cell whitespace-nowrap">
                         <span className="text-sm text-muted-foreground">
-                          {formatDate(log.class_date)}
+                          {formatDuration(log.duration_minutes)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top whitespace-nowrap">
-                        <span className="text-sm font-medium">
-                          {log.grade !== null
+                      <td className="px-6 py-4 align-top whitespace-nowrap">
+                        <span
+                          className={`text-sm font-medium ${
+                            log.attendance === false ? "text-destructive" : ""
+                          }`}
+                        >
+                          {log.grade != null
                             ? Number(log.grade).toFixed(1)
-                            : "—"}
+                            : log.attendance === false
+                              ? "Não compareceu"
+                              : "—"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top hidden xl:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 align-top hidden xl:table-cell whitespace-nowrap">
                         {log.financial_records ? (
                           <StatusBadge
                             variant={getPaymentStatusVariant(log.financial_records.status)}
@@ -359,39 +512,69 @@ export function ClassesView({
                           <span className="text-sm text-muted-foreground">Sem cobrança</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 align-top hidden 2xl:table-cell whitespace-nowrap">
-                        <span className="text-sm text-muted-foreground">
+                      <td className="px-6 py-4 align-top hidden lg:table-cell whitespace-nowrap">
+                        <span className={log.financial_records ? "text-sm font-medium tabular-nums" : "text-sm font-medium text-foreground"}>
                           {log.financial_records
-                            ? `R$ ${formatCurrency(log.financial_records.amount)}`
-                            : "—"}
+                            ? formatCurrency(log.financial_records.amount)
+                            : "Sem cobrança"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top hidden lg:table-cell">
+                      <td className="px-6 py-4 align-top hidden lg:table-cell">
                         <span className="text-sm text-muted-foreground line-clamp-2 max-w-xs">
                           {log.feedback || "—"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(log)}>
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => openDeleteDialog(log)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <td className="px-6 py-4 align-top text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(log)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => openDeleteDialog(log)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <Button
+                            size="sm"
+                            className={`h-8 border-none ${
+                              isClassEvaluationBlocked(log) && log.attendance == null
+                                ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                : log.attendance != null
+                                  ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+                                  : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
+                            }`}
+                            disabled={isClassEvaluationBlocked(log) && log.attendance == null}
+                            onClick={() => {
+                              if (isClassEvaluationBlocked(log)) return;
+                              setLogForPostClass(log);
+                              setPostClassDialogOpen(true);
+                            }}
+                          >
+                            {isClassEvaluationBlocked(log) && log.attendance == null ? (
+                              <>
+                                <Lock className="h-3.5 w-3.5 mr-1.5" />
+                                Avaliar
+                              </>
+                            ) : (
+                              <>
+                                <Check className="h-3.5 w-3.5 mr-1.5" />
+                                {log.attendance != null ? "Atualizar" : "Avaliar"}
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -401,21 +584,59 @@ export function ClassesView({
           </div>
           {filteredLogs.length === 0 && (
             <div className="border-t">
-              <EmptyState
-                icon={Search}
-                title={logs.length === 0 ? "Nenhuma aula registrada" : "Nenhum resultado"}
-                message={logs.length === 0
-                  ? "Clique no botão 'Registrar Aula' para adicionar a primeira"
-                  : "Ajuste os filtros acima ou limpe a busca"}
-              />
+              {logs.length === 0 ? (
+                <EmptyClassesState
+                  onAction={() => {
+                    setSelectedLog(null);
+                    setIsFormOpen(true);
+                  }}
+                  actionLabel="Registrar primeira aula"
+                />
+              ) : (
+                <EmptyState
+                  icon={Search}
+                  title="Nenhum resultado"
+                  message="Ajuste os filtros acima ou limpe a busca"
+                />
+              )}
+            </div>
+          )}
+          {/* Paginação */}
+          {(totalCount > 0 || page > 0) && (
+            <div className="border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
+              <p className="text-sm text-muted-foreground">
+                {totalCount > 0
+                  ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}`
+                  : "0 registros"}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0 || isFetching}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!hasMore || isFetching}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Próximo
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
             </div>
           )}
         </div>
-      )}
+        )}
 
-      {/* Cards View (Teacher) */}
+        {/* Cards View (Teacher) */}
       {!isLoading && !error && viewMode === "cards" && (
-        <div className="space-y-4">
+        <div className="space-y-4" ref={listTopRef}>
           {filteredLogs.map((log, index) => (
             <div
               key={log.id}
@@ -432,10 +653,8 @@ export function ClassesView({
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold">{log.students?.name || "Aluno não encontrado"}</h3>
-                      <StatusBadge
-                        variant={log.attendance ? "success" : "destructive"}
-                      >
-                        {log.attendance ? "Presente" : "Ausente"}
+                      <StatusBadge variant={getClassStatusBadge(log).variant}>
+                        {getClassStatusBadge(log).label}
                       </StatusBadge>
                       {log.financial_records && (
                         <StatusBadge
@@ -448,15 +667,30 @@ export function ClassesView({
                       )}
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="h-4 w-4" />
-                        {formatDate(log.class_date)}
-                      </span>
-                      {log.financial_records && (
-                        <span className="flex items-center gap-1.5 text-xs">
-                          <Receipt className="h-3.5 w-3.5" />
-                          R$ {formatCurrency(log.financial_records.amount)}
+                      {(() => {
+                        const { date, timeRange } = formatClassDateAndTime(log);
+                        return (
+                          <span className="flex flex-col gap-0.5">
+                            <span className="flex items-center gap-1.5">
+                              <Calendar className="h-4 w-4" />
+                              {date}
+                            </span>
+                            {timeRange && <span className="text-xs pl-6">{timeRange}</span>}
+                          </span>
+                        );
+                      })()}
+                      {log.duration_minutes != null && (
+                        <span className="flex items-center gap-1.5">
+                          {formatDuration(log.duration_minutes)}
                         </span>
+                      )}
+                      {log.financial_records ? (
+                        <span className="flex items-center gap-1.5 font-medium text-foreground">
+                          <Receipt className="h-3.5 w-3.5" />
+                          {formatCurrency(log.financial_records.amount)}
+                        </span>
+                      ) : (
+                        <span className="text-foreground">Sem cobrança</span>
                       )}
                     </div>
                     {log.feedback && (
@@ -466,23 +700,29 @@ export function ClassesView({
                     )}
                   </div>
                 </div>
-                <div className="flex items-start gap-4">
-                  {log.grade !== null && (
+                <div className="flex items-start gap-2">
+                  {log.attendance != null && (
                     <div className="text-right">
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">
                         Nota
                       </p>
-                      <p
-                        className={`text-3xl font-bold ${
-                          Number(log.grade) >= 7
-                            ? "text-success"
-                            : Number(log.grade) >= 5
-                            ? "text-warning"
-                            : "text-destructive"
-                        }`}
-                      >
-                        {Number(log.grade).toFixed(1)}
-                      </p>
+                      {log.grade != null ? (
+                        <p
+                          className={`text-3xl font-bold ${
+                            Number(log.grade) >= 7
+                              ? "text-success"
+                              : Number(log.grade) >= 5
+                              ? "text-warning"
+                              : "text-destructive"
+                          }`}
+                        >
+                          {Number(log.grade).toFixed(1)}
+                        </p>
+                      ) : (
+                        <p className="text-sm font-medium text-destructive">
+                          Não compareceu
+                        </p>
+                      )}
                     </div>
                   )}
                   <DropdownMenu>
@@ -505,6 +745,34 @@ export function ClassesView({
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  <Button
+                    size="sm"
+                    className={`h-8 border-none ${
+                      isClassEvaluationBlocked(log) && log.attendance == null
+                        ? "bg-muted text-muted-foreground cursor-not-allowed"
+                        : log.attendance != null
+                          ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+                          : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
+                    }`}
+                    disabled={isClassEvaluationBlocked(log) && log.attendance == null}
+                    onClick={() => {
+                      if (isClassEvaluationBlocked(log)) return;
+                      setLogForPostClass(log);
+                      setPostClassDialogOpen(true);
+                    }}
+                  >
+                    {isClassEvaluationBlocked(log) && log.attendance == null ? (
+                      <>
+                        <Lock className="h-3.5 w-3.5 mr-1.5" />
+                        Avaliar
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-3.5 w-3.5 mr-1.5" />
+                        {log.attendance != null ? "Atualizar" : "Avaliar"}
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
             </div>
@@ -512,19 +780,67 @@ export function ClassesView({
 
           {filteredLogs.length === 0 && (
             <div className="rounded-lg border bg-card">
-              <EmptyState
-                icon={BookOpen}
-                title={logs.length === 0 ? "Nenhuma aula registrada" : "Nenhum resultado"}
-                message={logs.length === 0
-                  ? "Suas aulas aparecerão aqui"
-                  : "Ajuste os filtros acima ou limpe a busca"}
-              />
+              {logs.length === 0 ? (
+                <EmptyClassesState
+                  onAction={() => {
+                    setSelectedLog(null);
+                    setIsFormOpen(true);
+                  }}
+                  actionLabel="Registrar primeira aula"
+                />
+              ) : (
+                <EmptyState
+                  icon={BookOpen}
+                  title="Nenhum resultado"
+                  message="Ajuste os filtros acima ou limpe a busca"
+                />
+              )}
+            </div>
+          )}
+          {(totalCount > 0 || page > 0) && (
+            <div className="rounded-lg border bg-card px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
+              <p className="text-sm text-muted-foreground">
+                {totalCount > 0 ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}` : "0 registros"}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 0 || isFetching}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!hasMore || isFetching}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Próximo
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Form Dialog */}
+      {/* Post-class Dialog */}
+      <PostClassDialog
+        open={postClassDialogOpen}
+        onOpenChange={(open) => {
+          setPostClassDialogOpen(open);
+          if (!open) setLogForPostClass(null);
+        }}
+        classLog={logForPostClass}
+        onSuccess={() => {
+          setLogForPostClass(null);
+        }}
+      />
+
+      {/* Form Dialog (pré-aula) */}
       <ClassLogFormDialog
         open={isFormOpen}
         onOpenChange={(open) => {
@@ -543,15 +859,24 @@ export function ClassesView({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o registro de aula de{" "}
-              <strong>{logToDelete?.students?.name}</strong> do dia{" "}
-              <strong>{logToDelete ? formatDate(logToDelete.class_date) : ""}</strong>?
-              {logToDelete?.financial_records && (
-                <span className="block mt-2 text-warning">
-                  ⚠️ Esta aula possui uma cobrança vinculada que também será afetada.
-                </span>
-              )}
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Tem certeza que deseja excluir o registro de aula de{" "}
+                  <strong>{logToDelete?.students?.name}</strong> do dia{" "}
+                  <strong>{logToDelete ? formatDate(logToDelete.class_date) : ""}</strong>?
+                </p>
+                {logToDelete?.financial_records?.status === "pago" ? (
+                  <p className="text-destructive font-medium">
+                    Esta aula possui uma cobrança já paga. A exclusão da aula também exclui a cobrança.
+                    Deseja excluir mesmo assim?
+                  </p>
+                ) : logToDelete?.financial_records ? (
+                  <span className="block text-warning">
+                    ⚠️ Esta aula possui uma cobrança vinculada que também será afetada.
+                  </span>
+                ) : null}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -22,11 +22,9 @@ export function AuthRedirect({ children }: AuthRedirectProps) {
 
   // If user is logged in, redirect based on role
   if (user && role) {
-    if (role === "admin") {
-      return <Navigate to="/admin" replace />;
-    } else if (role === "student") {
-      return <Navigate to="/student" replace />;
-    }
+    if (role === "admin") return <Navigate to="/admin" replace />;
+    if (role === "student") return <Navigate to="/student" replace />;
+    if (role === "teacher") return <Navigate to="/teacher" replace />;
   }
 
   return <>{children}</>;

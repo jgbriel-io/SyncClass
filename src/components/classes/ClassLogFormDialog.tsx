@@ -12,8 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -22,21 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Receipt } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useStudents } from "@/hooks/useStudents";
-import { useTeachers } from "@/hooks/useTeachers";
+import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { ClassLogInsert, ClassLogWithStudent, ClassLogWithFinancialData } from "@/hooks/useClassLogs";
+import { maskDate, isValidDateString, parseMoneyToNumber, REGEX_PATTERNS } from "@/lib/utils/patterns";
+import { formatCurrency } from "@/lib/utils/formatters";
 
-const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-function isValidDateString(value: string) {
-  if (!dateRegex.test(value)) return false;
-  const [day, month, year] = value.split("/").map(Number);
-  const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-}
+const REGEX_TIME = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
@@ -53,57 +44,100 @@ function isoDateToBr(value: string): string {
   return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
 }
 
-function maskDate(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-
-  if (digits.length <= 2) {
-    return digits;
-  }
-
-  if (digits.length <= 4) {
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  }
-
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+/** Retorna true se a data (dd/mm/yyyy) for futura em relação a hoje */
+function isDateFuture(brDate: string): boolean {
+  if (!brDate || !REGEX_PATTERNS.date.test(brDate)) return false;
+  const iso = brDateToIso(brDate);
+  const d = new Date(iso + "T12:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  d.setHours(0, 0, 0, 0);
+  return d > today;
 }
-const classLogSchema = z.object({
+
+/** Vencimento padrão: dia do pagamento do aluno no mês da aula (dd/mm/yyyy). pay_day 1–31; se mês tem menos dias, usa último dia. */
+function getDefaultDueDateForClassMonth(classDateBr: string, payDay: number | null): string {
+  if (!classDateBr || !REGEX_PATTERNS.date.test(classDateBr)) return classDateBr;
+  if (payDay == null || payDay < 1 || payDay > 31) return classDateBr;
+  const iso = brDateToIso(classDateBr);
+  const [y, m] = iso.split("-").map(Number);
+  const lastDay = new Date(y, m, 0).getDate();
+  const day = Math.min(payDay, lastDay);
+  const dd = day.toString().padStart(2, "0");
+  const mm = m.toString().padStart(2, "0");
+  return `${dd}/${mm}/${y}`;
+}
+const classLogBaseSchema = z.object({
   student_id: z.string().min(1, "Selecione um aluno"),
   class_date: z.string()
     .min(1, "Informe a data da aula")
-    .regex(dateRegex, "Formato deve ser dd/mm/aaaa")
+    .regex(REGEX_PATTERNS.date, "Formato deve ser dd/mm/aaaa")
     .refine(isValidDateString, { message: "Data inválida" }),
   title: z.string().optional(),
-  attendance: z.boolean(),
-  grade: z
-    .string()
-    .optional()
-    .refine((val) => {
-      if (!val) return true;
-      const normalized = val.replace(",", ".");
-      const num = parseFloat(normalized);
-      return !isNaN(num) && num >= 0 && num <= 10;
-    }, {
-      message: "Nota deve ser entre 0 e 10",
-    }),
-  feedback: z.string().max(1000, "Feedback deve ter no máximo 1000 caracteres").optional(),
-  // Campos de cobrança
-  createFinancial: z.boolean().optional(),
+  observations: z.string().max(1000, "Máximo 1000 caracteres").optional(),
+  start_time: z.string().optional().refine((v) => !v || REGEX_TIME.test(v), { message: "Formato HH:mm" }),
+  end_time: z.string().optional().refine((v) => !v || REGEX_TIME.test(v), { message: "Formato HH:mm" }),
   financial_amount: z.string().optional(),
   financial_due_date: z.string().optional().refine(
-    (val) => !val || (dateRegex.test(val) && isValidDateString(val)),
+    (val) => !val || isValidDateString(val),
     { message: "Data inválida" }
   ),
   financial_description: z.string().optional(),
   financial_payment_method: z.string().optional(),
-});
+  semCobranca: z.boolean().optional(),
+}).refine(
+  (data) => {
+    if (!data.start_time || !data.end_time) return true;
+    const [sh, sm] = data.start_time.split(":").map(Number);
+    const [eh, em] = data.end_time.split(":").map(Number);
+    return eh > sh || (eh === sh && em > sm);
+  },
+  { message: "Horário de término deve ser posterior ao início", path: ["end_time"] }
+);
 
-type ClassLogFormData = z.infer<typeof classLogSchema>;
+function createClassLogSchema(isEditing: boolean) {
+  return classLogBaseSchema.refine(
+    (data) => {
+      if (isEditing || data.semCobranca) return true;
+      const a = parseMoneyToNumber(data.financial_amount || "");
+      return !isNaN(a) && a > 0;
+    },
+    { message: "Informe o valor da cobrança", path: ["financial_amount"] }
+  ).refine(
+    (data) => {
+      if (isEditing || data.semCobranca) return true;
+      return !!(data.financial_due_date && data.financial_due_date.trim());
+    },
+    { message: "Informe a data de vencimento", path: ["financial_due_date"] }
+  );
+}
+
+type ClassLogFormData = z.infer<ReturnType<typeof createClassLogSchema>>;
+
+function buildTimestamptzFromDateAndTime(classDateIso: string, time: string): string {
+  const [y, m, d] = classDateIso.split("-").map(Number);
+  const [h, min] = time.split(":").map(Number);
+  return new Date(y, m - 1, d, h, min, 0).toISOString();
+}
+
+function extractTimeFromIso(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const h = d.getHours().toString().padStart(2, "0");
+  const m = d.getMinutes().toString().padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+export interface ClassLogFinancialUpdate {
+  financialRecordId: string;
+  dueDate: string;
+}
 
 interface ClassLogFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   classLog?: ClassLogWithStudent | null;
-  onSubmit: (data: ClassLogInsert) => void;
+  onSubmit: (data: ClassLogInsert, financialUpdate?: ClassLogFinancialUpdate) => void;
   teacherId?: string;
   onSubmitWithFinancial?: (data: ClassLogWithFinancialData) => void;
   isLoading: boolean;
@@ -123,11 +157,12 @@ export function ClassLogFormDialog({
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>(teacherId || "");
   const [teacherError, setTeacherError] = useState<string | null>(null);
-  const [attendance, setAttendance] = useState(true);
-  const [createFinancial, setCreateFinancial] = useState(false);
   const { data: students = [], isLoading: loadingStudents } = useStudents();
   const { data: teachers = [], isLoading: loadingTeachers } = useTeachers();
-  const selectedTeacherName = teachers.find((t: any) => t.id === selectedTeacherId)?.name as string | undefined;
+  const selectedTeacherName = teachers.find((t: Teacher) => t.id === selectedTeacherId)?.name;
+  const activeStudents = students.filter((s) => s.status === "ativo");
+
+  const isEditing = !!classLog;
 
   const {
     register,
@@ -137,14 +172,55 @@ export function ClassLogFormDialog({
     watch,
     formState: { errors },
   } = useForm<ClassLogFormData>({
-    resolver: zodResolver(classLogSchema),
-    defaultValues: {
-      attendance: true,
-      createFinancial: false,
-    },
+    resolver: zodResolver(createClassLogSchema(isEditing)),
+    defaultValues: { semCobranca: false },
   });
 
   const classDate = watch("class_date");
+  const startTime = watch("start_time");
+  const endTime = watch("end_time");
+  const financialAmount = watch("financial_amount");
+  const semCobranca = watch("semCobranca");
+  const isFutureDate = isDateFuture(classDate || "");
+
+  const selectedStudent = activeStudents.find((s) => s.id === selectedStudentId);
+  const hourlyRate = selectedStudent?.hourly_rate ?? null;
+
+  // Duração efetiva: calculada de início e término
+  const effectiveDurationMinutes = (() => {
+    if (startTime && endTime && classDate && REGEX_PATTERNS.date.test(classDate)) {
+      const iso = brDateToIso(classDate);
+      const [y, m, d] = iso.split("-").map(Number);
+      const [sh, sm] = startTime.split(":").map(Number);
+      const [eh, em] = endTime.split(":").map(Number);
+      const startMs = new Date(y, m - 1, d, sh, sm, 0).getTime();
+      const endMs = new Date(y, m - 1, d, eh, em, 0).getTime();
+      if (endMs > startMs) return Math.round((endMs - startMs) / (60 * 1000));
+    }
+    return null;
+  })();
+
+  // Valor puramente calculado a partir da duração (sem override manual)
+  const calculatedFromDuration = (() => {
+    if (isEditing) return null;
+    if (
+      hourlyRate != null &&
+      hourlyRate > 0 &&
+      effectiveDurationMinutes != null &&
+      effectiveDurationMinutes > 0
+    ) {
+      return hourlyRate * (effectiveDurationMinutes / 60);
+    }
+    return null;
+  })();
+
+  // Valor efetivo: manual override ?? calculado
+  const computedAmount = (() => {
+    if (isEditing) return null;
+    const manual = financialAmount ? parseMoneyToNumber(financialAmount) : null;
+    if (manual != null && !isNaN(manual) && manual > 0) return manual;
+    return calculatedFromDuration;
+  })();
 
   useEffect(() => {
     if (open && classLog) {
@@ -162,61 +238,77 @@ export function ClassLogFormDialog({
           setSelectedTeacherId("");
         }
       }
-      setAttendance(classLog.attendance ?? true);
-      setCreateFinancial(false);
       setValue("student_id", classLog.student_id);
       setValue("class_date", isoDateToBr(classLog.class_date));
-      setValue("attendance", classLog.attendance ?? true);
       setValue("title", classLog.title || "");
-      setValue("grade", classLog.grade?.toString() || "");
-      setValue("feedback", classLog.feedback || "");
-      setValue("createFinancial", false);
+      setValue("observations", (classLog as { observations?: string | null }).observations || "");
+      setValue("start_time", extractTimeFromIso(classLog.start_at));
+      setValue("end_time", extractTimeFromIso(classLog.end_at));
+      if (classLog.financial_records?.due_date) {
+        setValue("financial_due_date", isoDateToBr(classLog.financial_records.due_date));
+      }
     } else if (!open) {
       reset();
       setSelectedStudentId("");
       setSelectedTeacherId(teacherId || "");
-      setAttendance(true);
-      setCreateFinancial(false);
       setTeacherError(null);
     }
-  }, [open, classLog, reset, setValue]);
+  }, [open, classLog, reset, setValue, enableTeacherSelection, teacherId]);
 
-  // Auto-fill due date when class date changes
+  // Vencimento padrão: dia do pagamento do aluno no mês da aula (só ao criar; usuário pode alterar)
   useEffect(() => {
-    if (classDate && createFinancial) {
-      setValue("financial_due_date", classDate);
+    if (!isEditing && classDate && selectedStudent) {
+      const due = getDefaultDueDateForClassMonth(classDate, selectedStudent.pay_day ?? null);
+      setValue("financial_due_date", due);
     }
-  }, [classDate, createFinancial, setValue]);
+  }, [classDate, isEditing, selectedStudent, setValue]);
+
+  // Auto-fill valor quando horário/duração muda (sempre atualiza com o calculado)
+  useEffect(() => {
+    if (!isEditing && calculatedFromDuration != null) {
+      setValue("financial_amount", calculatedFromDuration.toFixed(2).replace(".", ","));
+    }
+  }, [isEditing, calculatedFromDuration, setValue]);
 
   const handleFormSubmit = (data: ClassLogFormData) => {
-    // Se a tela exige seleção de professor (admin), bloqueia sem professor
     if (enableTeacherSelection && !selectedTeacherId) {
       setTeacherError("Selecione um professor");
       return;
     }
-    let grade: number | null = null;
-    if (data.grade && data.attendance) {
-      const parsed = parseFloat(data.grade.replace(",", "."));
-      if (!isNaN(parsed) && parsed >= 0 && parsed <= 10) {
-        grade = parsed;
-      }
-    }
 
     const effectiveTeacherId = teacherId || (enableTeacherSelection ? selectedTeacherId || null : null);
+    const classDateIso = brDateToIso(data.class_date);
 
     const classLogData: ClassLogInsert = {
       student_id: data.student_id,
-      class_date: brDateToIso(data.class_date),
+      class_date: classDateIso,
       title: data.title?.trim() || null,
-      attendance: data.attendance,
-      grade: data.attendance ? grade : null,
-      feedback: data.feedback?.trim() || null,
+      attendance: isEditing ? (classLog?.attendance ?? null) : null,
+      grade: isEditing ? (classLog?.grade ?? null) : null,
+      feedback: isEditing ? (classLog?.feedback ?? null) : null,
+      observations: data.observations?.trim() || null,
       teacher_id: effectiveTeacherId,
+      start_at:
+        data.start_time && classDateIso
+          ? buildTimestamptzFromDateAndTime(classDateIso, data.start_time)
+          : null,
+      end_at:
+        data.end_time && classDateIso
+          ? buildTimestamptzFromDateAndTime(classDateIso, data.end_time)
+          : null,
+      duration_minutes: effectiveDurationMinutes ?? null, // preenchido pelo trigger no DB se start_at/end_at presentes
+      billed_amount:
+        !isEditing && data.financial_amount
+          ? (() => {
+              const a = parseMoneyToNumber(data.financial_amount!);
+              return !isNaN(a) && a > 0 ? a : null;
+            })()
+          : null,
     };
 
-    // Se está criando cobrança junto
-    if (createFinancial && onSubmitWithFinancial && data.financial_amount && data.financial_due_date) {
-      const amount = parseFloat(data.financial_amount.replace(",", "."));
+    // Criar aula com cobrança
+    if (!isEditing && onSubmitWithFinancial && !data.semCobranca && data.financial_amount && data.financial_due_date) {
+      const amount = parseMoneyToNumber(data.financial_amount);
       if (!isNaN(amount) && amount > 0) {
         onSubmitWithFinancial({
           classLog: classLogData,
@@ -232,7 +324,15 @@ export function ClassLogFormDialog({
       }
     }
 
-    onSubmit(classLogData);
+    // Edição: atualizar aula e, se tiver cobrança vinculada, atualizar vencimento
+    if (isEditing && classLog?.financial_records?.id && data.financial_due_date?.trim()) {
+      onSubmit(classLogData, {
+        financialRecordId: classLog.financial_records.id,
+        dueDate: brDateToIso(data.financial_due_date),
+      });
+    } else {
+      onSubmit(classLogData);
+    }
   };
 
   const handleStudentChange = (value: string) => {
@@ -240,25 +340,6 @@ export function ClassLogFormDialog({
     setValue("student_id", value);
   };
 
-  const handleAttendanceChange = (checked: boolean) => {
-    setAttendance(checked);
-    setValue("attendance", checked);
-    if (!checked) {
-      setValue("grade", "");
-    }
-  };
-
-  const handleCreateFinancialChange = (checked: boolean) => {
-    setCreateFinancial(checked);
-    setValue("createFinancial", checked);
-    if (checked && classDate) {
-      setValue("financial_due_date", classDate);
-    }
-  };
-
-  // Filter only active students
-  const activeStudents = students.filter((s) => s.status === "ativo");
-  const isEditing = !!classLog;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -366,81 +447,118 @@ export function ClassLogFormDialog({
             )}
           </div>
 
-          {/* Attendance Toggle */}
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="attendance">Presença</Label>
-              <p className="text-sm text-muted-foreground">
-                O aluno compareceu à aula?
+          {/* Início e término da aula */}
+          <div className="space-y-3 rounded-lg border p-3">
+            <p className="text-sm font-medium">Horário</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="start_time">Início</Label>
+                <Input id="start_time" type="time" {...register("start_time")} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="end_time">Término</Label>
+                <Input id="end_time" type="time" {...register("end_time")} />
+                {errors.end_time && (
+                  <p className="text-xs text-destructive">{errors.end_time.message}</p>
+                )}
+              </div>
+            </div>
+            {effectiveDurationMinutes != null && (
+              <p className="text-xs text-muted-foreground">
+                Duração: {effectiveDurationMinutes} min
               </p>
-            </div>
-            <Switch
-              id="attendance"
-              checked={attendance}
-              onCheckedChange={handleAttendanceChange}
-            />
-          </div>
-
-          {/* Grade - only show if present */}
-          {attendance && (
-            <div className="space-y-2">
-              <Label htmlFor="grade">Nota (0 a 10)</Label>
-              <Input
-                id="grade"
-                type="text"
-                placeholder="8.5"
-                {...register("grade")}
-              />
-              {errors.grade ? (
-                <p className="text-xs text-destructive">
-                  {errors.grade.message}
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Deixe em branco se não houver avaliação
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Feedback */}
-          <div className="space-y-2">
-            <Label htmlFor="feedback">Feedback</Label>
-            <Textarea
-              id="feedback"
-              placeholder="Observações sobre a aula..."
-              rows={3}
-              {...register("feedback")}
-            />
-            {errors.feedback && (
-              <p className="text-sm text-destructive">{errors.feedback.message}</p>
             )}
           </div>
 
-          {/* Create Financial Checkbox - only for new records */}
-          {!isEditing && onSubmitWithFinancial && (
-            <>
-              <div className="flex items-center space-x-3 rounded-lg border border-dashed p-4 bg-muted/30">
-                <Checkbox
-                  id="createFinancial"
-                  checked={createFinancial}
-                  onCheckedChange={(checked) => handleCreateFinancialChange(checked === true)}
-                />
-                <div className="flex items-center gap-2">
-                  <Receipt className="h-4 w-4 text-muted-foreground" />
-                  <Label htmlFor="createFinancial" className="cursor-pointer font-medium">
-                    Criar cobrança para esta aula
-                  </Label>
-                </div>
-              </div>
+          {/* Observações pré-aula */}
+          <div className="space-y-2">
+            <Label htmlFor="observations">Observações</Label>
+            <Textarea
+              id="observations"
+              placeholder="Notas pré-aula (opcional)..."
+              rows={2}
+              {...register("observations")}
+            />
+            {errors.observations && (
+              <p className="text-sm text-destructive">{errors.observations.message}</p>
+            )}
+          </div>
 
-              {/* Financial Fields - show when checkbox is checked */}
-              {createFinancial && (
-                <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
+          {/* Ao editar: vencimento da cobrança vinculada (pode alterar) */}
+          {isEditing && classLog?.financial_records && (
+            <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Receipt className="h-4 w-4" />
+                Cobrança vinculada
+              </h4>
+
+              <div className="space-y-2">
+                <Label htmlFor="financial_due_date_edit">Vencimento</Label>
+                <Input
+                  id="financial_due_date_edit"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="dd/mm/aaaa"
+                  {...register("financial_due_date")}
+                  onChange={(e) => {
+                    const masked = maskDate(e.target.value);
+                    setValue("financial_due_date", masked, { shouldValidate: true });
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Alterar a data da aula não altera o vencimento automaticamente; edite aqui se quiser.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Cobrança ao registrar aula */}
+          {!isEditing && onSubmitWithFinancial && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="semCobranca"
+                  checked={!!semCobranca}
+                  onCheckedChange={(checked) =>
+                    setValue("semCobranca", !!checked, { shouldValidate: true })
+                  }
+                />
+                <Label htmlFor="semCobranca" className="cursor-pointer font-normal">
+                  Sem cobrança
+                </Label>
+              </div>
+              {!semCobranca && (
+            <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
                   <h4 className="font-medium text-sm flex items-center gap-2">
                     <Receipt className="h-4 w-4" />
-                    Dados da Cobrança
+                    Dados da Cobrança *
                   </h4>
+                  {isFutureDate && (
+                    <p className="text-xs text-muted-foreground">
+                      Para aula agendada: a cobrança fica em aberto; presença e feedback podem ser marcados depois.
+                    </p>
+                  )}
+
+                  {/* Preview do valor calculado */}
+                  {computedAmount != null ? (
+                    <p className="text-sm text-muted-foreground">
+                      Valor calculado: <span className="font-semibold text-foreground">{formatCurrency(computedAmount)}</span>
+                      {effectiveDurationMinutes && hourlyRate ? (
+                        <span className="ml-1">
+                          ({formatCurrency(hourlyRate)}/h × {effectiveDurationMinutes} min)
+                        </span>
+                      ) : null}
+                    </p>
+                  ) : hourlyRate == null || hourlyRate <= 0 ? (
+                    <p className="text-sm text-amber-600">
+                      Aluno sem valor/hora cadastrado. Informe o valor manualmente.
+                    </p>
+                  ) : !effectiveDurationMinutes ? (
+                    <p className="text-sm text-muted-foreground">
+                      Informe início e término para calcular o valor.
+                    </p>
+                  ) : null}
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
@@ -486,7 +604,7 @@ export function ClassLogFormDialog({
                   <div className="space-y-2">
                     <Label htmlFor="financial_payment_method">Método de Pagamento</Label>
                     <Select
-                      onValueChange={(value) => setValue("financial_payment_method", value as any)}
+                      onValueChange={(value) => setValue("financial_payment_method", value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione (opcional)" />
@@ -502,7 +620,7 @@ export function ClassLogFormDialog({
                   </div>
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {/* Actions */}
@@ -523,8 +641,6 @@ export function ClassLogFormDialog({
                 </>
               ) : isEditing ? (
                 "Salvar Alterações"
-              ) : createFinancial ? (
-                "Registrar Aula e Cobrança"
               ) : (
                 "Registrar Aula"
               )}
