@@ -171,6 +171,37 @@ ALTER TABLE public.class_logs
   WHERE (teacher_id IS NOT NULL AND start_at IS NOT NULL AND end_at IS NOT NULL);
 
 -- ============================================================
+-- VIEWS (criadas aqui antes das funções que as usam)
+-- ============================================================
+
+CREATE VIEW public.student_financial_balance WITH (security_invoker = true) AS
+SELECT s.id AS student_id, s.name AS student_name,
+  COALESCE(SUM(CASE WHEN fr.status = 'pago' THEN fr.amount ELSE 0 END), 0) AS total_paid,
+  COALESCE(SUM(CASE WHEN fr.status = 'pendente' AND fr.due_date >= CURRENT_DATE THEN fr.amount ELSE 0 END), 0) AS total_pending,
+  COALESCE(SUM(CASE WHEN fr.status = 'pendente' AND fr.due_date < CURRENT_DATE THEN fr.amount ELSE 0 END), 0) AS total_overdue,
+  COALESCE(SUM(CASE WHEN fr.status = 'pendente' THEN fr.amount ELSE 0 END), 0) AS total_unpaid,
+  COUNT(CASE WHEN fr.status = 'pago' THEN 1 END) AS count_paid,
+  COUNT(CASE WHEN fr.status = 'pendente' AND fr.due_date >= CURRENT_DATE THEN 1 END) AS count_pending,
+  COUNT(CASE WHEN fr.status = 'pendente' AND fr.due_date < CURRENT_DATE THEN 1 END) AS count_overdue
+FROM public.students s
+LEFT JOIN public.financial_records fr ON fr.student_id = s.id
+GROUP BY s.id, s.name;
+
+CREATE VIEW public.student_class_stats WITH (security_invoker = true) AS
+SELECT s.id AS student_id, s.name AS student_name,
+  COUNT(cl.id) AS total_classes,
+  COUNT(CASE WHEN cl.attendance = true THEN 1 END) AS present_classes,
+  COUNT(CASE WHEN cl.attendance = false THEN 1 END) AS absent_classes,
+  CASE WHEN COUNT(cl.id) > 0 THEN ROUND((COUNT(CASE WHEN cl.attendance = true THEN 1 END)::NUMERIC / COUNT(cl.id)::NUMERIC) * 100, 1) ELSE 0 END AS attendance_rate,
+  ROUND(AVG(CASE WHEN cl.grade IS NOT NULL THEN cl.grade ELSE NULL END), 1) AS average_grade,
+  COUNT(CASE WHEN cl.grade IS NOT NULL THEN 1 END) AS graded_classes,
+  MAX(cl.class_date) AS last_class_date,
+  MIN(cl.class_date) AS first_class_date
+FROM public.students s
+LEFT JOIN public.class_logs cl ON cl.student_id = s.id
+GROUP BY s.id, s.name;
+
+-- ============================================================
 -- FUNCTIONS (auth helpers, triggers, RPCs, LGPD, checks)
 -- ============================================================
 
@@ -509,37 +540,7 @@ CREATE POLICY "class_logs_admin_teacher_all" ON public.class_logs FOR ALL
     OR EXISTS (SELECT 1 FROM public.students s WHERE s.id = class_logs.student_id AND s.teacher_id = (SELECT public.get_my_teacher_id()))
   );
 
--- ============================================================
--- VIEWS (security_invoker = true; professor vê telefone dos seus alunos)
--- ============================================================
-
-CREATE VIEW public.student_financial_balance WITH (security_invoker = true) AS
-SELECT s.id AS student_id, s.name AS student_name,
-  COALESCE(SUM(CASE WHEN fr.status = 'pago' THEN fr.amount ELSE 0 END), 0) AS total_paid,
-  COALESCE(SUM(CASE WHEN fr.status = 'pendente' AND fr.due_date >= CURRENT_DATE THEN fr.amount ELSE 0 END), 0) AS total_pending,
-  COALESCE(SUM(CASE WHEN fr.status = 'pendente' AND fr.due_date < CURRENT_DATE THEN fr.amount ELSE 0 END), 0) AS total_overdue,
-  COALESCE(SUM(CASE WHEN fr.status = 'pendente' THEN fr.amount ELSE 0 END), 0) AS total_unpaid,
-  COUNT(CASE WHEN fr.status = 'pago' THEN 1 END) AS count_paid,
-  COUNT(CASE WHEN fr.status = 'pendente' AND fr.due_date >= CURRENT_DATE THEN 1 END) AS count_pending,
-  COUNT(CASE WHEN fr.status = 'pendente' AND fr.due_date < CURRENT_DATE THEN 1 END) AS count_overdue
-FROM public.students s
-LEFT JOIN public.financial_records fr ON fr.student_id = s.id
-GROUP BY s.id, s.name;
-
-CREATE VIEW public.student_class_stats WITH (security_invoker = true) AS
-SELECT s.id AS student_id, s.name AS student_name,
-  COUNT(cl.id) AS total_classes,
-  COUNT(CASE WHEN cl.attendance = true THEN 1 END) AS present_classes,
-  COUNT(CASE WHEN cl.attendance = false THEN 1 END) AS absent_classes,
-  CASE WHEN COUNT(cl.id) > 0 THEN ROUND((COUNT(CASE WHEN cl.attendance = true THEN 1 END)::NUMERIC / COUNT(cl.id)::NUMERIC) * 100, 1) ELSE 0 END AS attendance_rate,
-  ROUND(AVG(CASE WHEN cl.grade IS NOT NULL THEN cl.grade ELSE NULL END), 1) AS average_grade,
-  COUNT(CASE WHEN cl.grade IS NOT NULL THEN 1 END) AS graded_classes,
-  MAX(cl.class_date) AS last_class_date,
-  MIN(cl.class_date) AS first_class_date
-FROM public.students s
-LEFT JOIN public.class_logs cl ON cl.student_id = s.id
-GROUP BY s.id, s.name;
-
+-- Adicionais views com complementos de dados
 CREATE VIEW public.student_complete_balance WITH (security_invoker = true) AS
 SELECT s.id, s.name, s.email, s.phone, s.cpf, s.status, s.origin, s.birth_date, s.city, s.state, s.hourly_rate, s.classes_per_week, s.pay_day, s.teacher_id, s.created_at, s.updated_at,
   COALESCE(fb.total_paid, 0) AS total_paid, COALESCE(fb.total_pending, 0) AS total_pending, COALESCE(fb.total_overdue, 0) AS total_overdue, COALESCE(fb.total_unpaid, 0) AS total_unpaid,
