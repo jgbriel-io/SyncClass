@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/integrations/supabase/env";
 import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { validateCpfPhonePlatform } from "@/lib/validate-cpf-phone-platform";
@@ -572,9 +573,8 @@ export function useAdminResetPassword() {
       // Em dev usa proxy (same-origin) para evitar CORS; em prod chama Supabase direto
       const functionsBase = import.meta.env.DEV && typeof window !== "undefined"
         ? `${window.location.origin}/supabase-functions`
-        : `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+        : `${SUPABASE_URL}/functions/v1`;
       const url = `${functionsBase}/admin-reset-password`;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       
       try {
         const res = await fetch(url, {
@@ -582,7 +582,7 @@ export function useAdminResetPassword() {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
-            apikey: anonKey ?? "",
+            apikey: SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({
             userId,

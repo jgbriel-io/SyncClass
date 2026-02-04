@@ -1,8 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./env";
 
 // Map-backed memory storage to avoid conflicts with localStorage from main client
 const memoryStorageMap = new Map<string, string>();
@@ -15,7 +13,7 @@ const memoryStorage = {
 // Cliente separado para signUp sem afetar a sessão principal
 export const supabaseSignupClient = createClient<Database>(
   SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_ANON_KEY,
   {
     auth: {
       storage: memoryStorage,
