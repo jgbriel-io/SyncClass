@@ -101,12 +101,28 @@ function isEdgeFunctionNetworkError(err: unknown): boolean {
   );
 }
 
+type InviteResponseBody = {
+  error?: string;
+  userId?: string;
+  email?: string;
+  password?: string;
+  createdStudent?: { id: string } | null;
+  createdTeacher?: { id: string } | null;
+  permissionsWarning?: boolean;
+};
+
 async function getFunctionError(err: unknown): Promise<string | null> {
-  const e = err as { context?: { json?: () => Promise<{ error?: string }>; body?: unknown } };
+  const body = await getFunctionResponseBody(err);
+  if (body?.error && typeof body.error === "string") return body.error;
+  return null;
+}
+
+/** Obtém o body da resposta da Edge Function quando ela retorna 4xx/5xx (vem em error.context). */
+async function getFunctionResponseBody(err: unknown): Promise<InviteResponseBody | null> {
+  const e = err as { context?: { json?: () => Promise<InviteResponseBody>; body?: unknown } };
   if (e?.context?.json) {
     try {
-      const body = await e.context.json();
-      if (body?.error && typeof body.error === "string") return body.error;
+      return await e.context.json();
     } catch {
       /* ignore */
     }
@@ -114,10 +130,25 @@ async function getFunctionError(err: unknown): Promise<string | null> {
   return null;
 }
 
+/** Se a função retornou erro mas criou o usuário (ex.: 500 após falha em profile/roles), trata como sucesso parcial. */
+function inviteResultFromBody(body: InviteResponseBody, bodyEmail: string): InviteUserResult | null {
+  if (body?.userId && body?.password) {
+    return {
+      userId: body.userId,
+      email: body.email ?? bodyEmail,
+      password: body.password,
+      createdStudent: body.createdStudent ?? null,
+      createdTeacher: body.createdTeacher ?? null,
+      permissionsWarning: body.permissionsWarning ?? true,
+    };
+  }
+  return null;
+}
+
 async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult> {
   try {
     const { data, error } = await supabase.functions.invoke("invite-user", { body });
-    const parsed = data as { error?: string; userId?: string; email?: string; password?: string; createdStudent?: { id: string } | null; createdTeacher?: { id: string } | null; permissionsWarning?: boolean } | null;
+    const parsed = data as InviteResponseBody | null;
     if (parsed?.userId && parsed?.password) {
       return {
         userId: parsed.userId,
@@ -130,6 +161,9 @@ async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult>
     }
     if (parsed?.error) throw new Error(parsed.error);
     if (error) {
+      const errorBody = await getFunctionResponseBody(error);
+      const partial = errorBody ? inviteResultFromBody(errorBody, body.email) : null;
+      if (partial) return partial;
       const fnMsg = await getFunctionError(error);
       throw new Error(fnMsg || (error as Error).message || "Erro ao criar usuário");
     }
@@ -138,6 +172,9 @@ async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult>
     if (isEdgeFunctionNetworkError(err)) {
       return createUserLegacy(body);
     }
+    const errorBody = await getFunctionResponseBody(err);
+    const partial = errorBody ? inviteResultFromBody(errorBody, body.email) : null;
+    if (partial) return partial;
     const fnMsg = await getFunctionError(err);
     if (fnMsg) throw new Error(fnMsg);
     if (err instanceof Error) throw err;
