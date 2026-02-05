@@ -152,22 +152,26 @@ serve(async (req) => {
     return jsonResponse({ error: "Configuração do servidor incompleta" }, 500);
   }
 
-  const authHeader = req.headers.get("Authorization");
+  const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization");
   const jwt = authHeader?.replace(/^Bearer\s+/i, "").trim();
   if (!jwt) {
     log("No Authorization header");
-    return jsonResponse({ error: "Não autenticado" }, 401);
+    return jsonResponse({ error: "Não autenticado. Envie o header Authorization com o token do usuário logado." }, 401);
   }
 
   const supabaseAuthed = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
+    global: { headers: { Authorization: authHeader! } },
   });
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
   const { data: { user: caller }, error: authError } = await supabaseAuthed.auth.getUser(jwt);
   if (authError || !caller) {
-    log("Not authenticated", { error: authError?.message });
-    return jsonResponse({ error: "Não autenticado" }, 401);
+    log("Not authenticated", { error: authError?.message, hasJwt: !!jwt });
+    const detail = authError?.message ?? (caller ? null : "Usuário não encontrado");
+    return jsonResponse({
+      error: "Não autenticado",
+      ...(detail && { detail }),
+    }, 401);
   }
 
   const { data: callerRoleRow } = await supabaseAdmin
