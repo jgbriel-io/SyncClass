@@ -4,6 +4,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/integrations/supabase/env";
 import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { validateCpfPhonePlatform } from "@/lib/validate-cpf-phone-platform";
+import { isValidEmailFormat } from "@/lib/utils/patterns";
 import { validateAndResizeAvatar, type AvatarValidationError } from "@/lib/utils/avatarUpload";
 import { toast } from "sonner";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
@@ -147,7 +148,14 @@ function inviteResultFromBody(body: InviteResponseBody, bodyEmail: string): Invi
   return null;
 }
 
+function validateEmailForInvite(email: string): void {
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) throw new Error("Email é obrigatório");
+  if (!isValidEmailFormat(trimmed)) throw new Error("Email inválido");
+}
+
 async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult> {
+  validateEmailForInvite(body.email);
   try {
     const { data, error } = await supabase.functions.invoke("invite-user", { body });
     const parsed = data as InviteResponseBody | null;
@@ -189,6 +197,7 @@ async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult>
 
 // Fallback quando Edge Function indisponível (não deployada, rede, etc.)
 async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult> {
+  validateEmailForInvite(body.email);
   const fullName = body.full_name;
   const normalizedEmail = body.email.trim().toLowerCase();
   const password = (body.password && body.password.length >= 6) ? body.password : generateRandomPassword();

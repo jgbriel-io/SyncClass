@@ -33,7 +33,10 @@ export const REGEX_PATTERNS = {
   
   // Limpeza de texto
   nonAlphanumeric: /[^A-Za-zÀ-ÿ0-9]/g, // Remove caracteres especiais
-  specialChars: /:/g, // Remove caracteres especiais específicos (usado em IDs)
+  specialChars: /:/g, // Remove caracteres especiais específicos (usado em IDs),
+
+  // Email (formato válido para cadastro; alinhado ao Zod .email())
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
 } as const;
 
 // ============================================================
@@ -114,6 +117,15 @@ export function isValidCPFFormat(value: string): boolean {
  */
 export function isValidPhoneFormat(value: string): boolean {
   return REGEX_PATTERNS.phone.test(value);
+}
+
+/**
+ * Valida formato de email (uso em backend e validação extra no frontend)
+ */
+export function isValidEmailFormat(value: string): boolean {
+  const trimmed = value?.trim() ?? "";
+  if (trimmed.length === 0 || trimmed.length > 255) return false;
+  return REGEX_PATTERNS.email.test(trimmed);
 }
 
 // ============================================================

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { emailSchema } from "@/lib/validation/email";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +39,7 @@ function brDateToIso(value: string): string {
 
 // Schema para Admin (simples)
 const adminSchema = z.object({
-  email: z.string().email("Email inválido"),
+  email: emailSchema,
   fullName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   role: z.literal("admin"),
 });
@@ -56,11 +57,7 @@ const studentSchema = z.object({
     .min(14, "Telefone inválido")
     .max(15, "Telefone inválido")
     .regex(REGEX_PATTERNS.phone, "Formato deve ser (00) 00000-0000"),
-  email: z
-    .string()
-    .min(1, "Email é obrigatório")
-    .email("Email inválido")
-    .max(255),
+  email: emailSchema,
   hourly_rate: z.string().optional().nullable(),
   classes_per_week: z
     .string()
@@ -85,11 +82,7 @@ const studentSchema = z.object({
 // Schema para Teacher (completo)
 const teacherSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
-  email: z
-    .string()
-    .min(1, "Email é obrigatório")
-    .email("Email inválido")
-    .max(255),
+  email: emailSchema,
   phone: z
     .string()
     .optional()
@@ -192,12 +185,11 @@ export function UserFormDialog({
   const [cities, setCities] = useState<BrCityOption[]>([]);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
 
-  // Determinar schema baseado no role
-  const getSchema = () => {
+  const currentSchema = useMemo(() => {
     if (selectedRole === "admin") return adminSchema;
     if (selectedRole === "student") return studentSchema;
     return teacherSchema;
-  };
+  }, [selectedRole]);
 
   const {
     register,
@@ -207,7 +199,7 @@ export function UserFormDialog({
     watch,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: zodResolver(getSchema()),
+    resolver: zodResolver(currentSchema),
     defaultValues: {
       email: user?.email || "",
       fullName: user?.profile?.full_name || "",

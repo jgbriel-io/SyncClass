@@ -27,6 +27,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronsUpDown } from "lucide-react";
 import { REGEX_PATTERNS, maskCPF, maskPhone, maskDate, isValidDateString } from "@/lib/utils/patterns";
+import { emailSchema } from "@/lib/validation/email";
 
 // Type for student origin from database enum
 type StudentOrigin = Enums<"student_origin">;
@@ -60,11 +61,7 @@ const studentSchema = z.object({
       },
       "Telefone deve ter 10 ou 11 dígitos no formato (00) 00000-0000"
     ),
-  email: z
-    .string()
-    .min(1, "Email é obrigatório")
-    .email("Email inválido")
-    .max(255),
+  email: emailSchema,
   hourly_rate: z.string().optional().nullable(),
   classes_per_week: z
     .string()

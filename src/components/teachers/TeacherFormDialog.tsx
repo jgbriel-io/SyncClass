@@ -9,14 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Loader2 } from "lucide-react";
 import { Teacher, TeacherInsert } from "@/hooks/useTeachers";
 import { REGEX_PATTERNS, maskCPF } from "@/lib/utils/patterns";
+import { emailSchema } from "@/lib/validation/email";
 
 const teacherSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
-  email: z
-    .string()
-    .min(1, "Email é obrigatório")
-    .email("Email inválido")
-    .max(255),
+  email: emailSchema,
   phone: z
     .string()
     .optional()

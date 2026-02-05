@@ -37,6 +37,15 @@ function normalizeDigits(val: string | null | undefined): string {
   return val.replace(/\D/g, "");
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_MAX_LENGTH = 255;
+
+function isValidEmailFormat(email: string): boolean {
+  const trimmed = email?.trim() ?? "";
+  if (trimmed.length === 0 || trimmed.length > EMAIL_MAX_LENGTH) return false;
+  return EMAIL_REGEX.test(trimmed);
+}
+
 // Remove empty strings and convert them to null to avoid unique index conflicts
 function cleanInsertData(data: Record<string, unknown>): Record<string, unknown> {
   const cleaned: Record<string, unknown> = {};
@@ -184,11 +193,20 @@ serve(async (req) => {
   }
 
   const { email, full_name, role, teacher_id, teacherId, studentId, teacherData, studentData } = body;
-  const normalizedEmail = (email ?? "").trim().toLowerCase();
+  const rawEmail = (email ?? "").trim();
+  if (!rawEmail) {
+    log("Missing email");
+    return jsonResponse({ error: "Email é obrigatório" }, 400);
+  }
+  if (!isValidEmailFormat(rawEmail)) {
+    log("Invalid email format", { email: rawEmail });
+    return jsonResponse({ error: "Email inválido" }, 400);
+  }
+  const normalizedEmail = rawEmail.toLowerCase();
 
-  if (!normalizedEmail || !full_name || !role || !ROLES.includes(role)) {
-    log("Missing required fields", { email: normalizedEmail, full_name, role, roleValid: ROLES.includes(role as Role) });
-    return jsonResponse({ error: "email, full_name e role são obrigatórios" }, 400);
+  if (!full_name || !role || !ROLES.includes(role)) {
+    log("Missing required fields", { full_name, role, roleValid: ROLES.includes(role as Role) });
+    return jsonResponse({ error: "Nome completo e tipo de conta são obrigatórios" }, 400);
   }
 
   if (callerRole === "teacher") {
