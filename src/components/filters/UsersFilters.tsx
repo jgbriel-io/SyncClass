@@ -36,19 +36,24 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome ou email..."
+      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+        <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
+          <span className="text-xs font-medium text-muted-foreground">Busca</span>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou email..."
             className="pl-9"
             value={filters.search}
             onChange={(e) => onChange({ ...filters, search: e.target.value })}
           />
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Select
-            value={filters.role}
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Privilégio</span>
+            <Select
+              value={filters.role}
             onValueChange={(v) => onChange({ ...filters, role: v as UserRoleFilter })}
           >
             <SelectTrigger className="w-[140px]">
@@ -61,8 +66,11 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
               <SelectItem value="student">Aluno</SelectItem>
             </SelectContent>
           </Select>
-          <Select
-            value={filters.status}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Status</span>
+            <Select
+              value={filters.status}
             onValueChange={(v) => onChange({ ...filters, status: v as UserStatusFilter })}
           >
             <SelectTrigger className="w-[130px]">
@@ -74,8 +82,11 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
               <SelectItem value="inactive">Inativos</SelectItem>
             </SelectContent>
           </Select>
-          <Select
-            value={filters.sortBy}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Ordenar</span>
+            <Select
+              value={filters.sortBy}
             onValueChange={(v) => onChange({ ...filters, sortBy: v as UserSortBy })}
           >
             <SelectTrigger className="w-[180px]">
@@ -88,8 +99,9 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
               <SelectItem value="name_desc">Nome (Z-A)</SelectItem>
             </SelectContent>
           </Select>
+          </div>
           {hasActiveFilters && onReset && (
-            <Button variant="ghost" size="sm" onClick={onReset} className="h-9">
+            <Button variant="ghost" size="sm" onClick={onReset} className="h-9 self-end">
               <X className="h-4 w-4 mr-1" />
               Limpar
             </Button>

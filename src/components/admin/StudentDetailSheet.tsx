@@ -428,12 +428,22 @@ export function StudentDetailSheet({
                         return (
                           <div
                             key={record.id}
-                            className="rounded-lg border bg-card p-3"
+                            className="rounded-lg border bg-card p-3 flex gap-3"
                           >
-                            <div className="flex items-center justify-between mb-1">
+                            <div className="flex-1 min-w-0 flex flex-col gap-1">
                               <span className="font-medium">
                                 {formatCurrency(record.amount)}
                               </span>
+                              <span className="text-xs text-muted-foreground">
+                                {record.description || "Mensalidade"}
+                              </span>
+                              {record.paid_at && (
+                                <p className="text-xs text-success">
+                                  Pago em {formatDate(record.paid_at)}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col justify-between items-end shrink-0">
                               <StatusBadge
                                 variant={
                                   actualStatus === "pago"
@@ -449,16 +459,10 @@ export function StudentDetailSheet({
                                   ? "Atrasado"
                                   : "Pendente"}
                               </StatusBadge>
+                              <span className="text-xs text-muted-foreground">
+                                Venc: {formatDate(record.due_date)}
+                              </span>
                             </div>
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>{record.description || "Mensalidade"}</span>
-                              <span>Venc: {formatDate(record.due_date)}</span>
-                            </div>
-                            {record.paid_at && (
-                              <p className="text-xs text-success mt-1">
-                                Pago em {formatDate(record.paid_at)}
-                              </p>
-                            )}
                           </div>
                         );
                       })}

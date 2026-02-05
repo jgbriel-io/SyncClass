@@ -11,6 +11,8 @@ export type StudentsListFilters = {
   teacherId?: string;
   status?: "all" | "ativo" | "inativo";
   sortBy?: "name_asc" | "name_desc" | "created_desc" | "last_payment_asc" | "last_payment_desc";
+  /** Busca por nome ou e-mail (ilike no backend); dígitos (CPF/telefone) continuam no filtro client-side */
+  search?: string;
 };
 
 export type Student = Tables<"students">;
@@ -72,6 +74,13 @@ export function useStudentsPaginated(options?: UseStudentsPaginatedOptions): Use
       }
       if (filters?.status && filters.status !== "all") {
         q = q.eq("status", filters.status);
+      }
+
+      const searchTerm = filters?.search?.trim().replace(/,/g, " ");
+      if (searchTerm) {
+        const escaped = searchTerm.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+        const pattern = `%${escaped}%`;
+        q = q.or(`name.ilike.${pattern},email.ilike.${pattern}`);
       }
 
       const sortBy = filters?.sortBy ?? "name_asc";

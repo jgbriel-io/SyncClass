@@ -210,7 +210,7 @@ export function DashboardView({
               <Bell className="h-5 w-5 text-primary shrink-0" />
               <p className="text-sm font-medium">
                 {basePath === "/teacher" ? "Sua próxima aula" : "Próxima aula do dia"}{" "}
-                é com o aluno{" "}
+                é com o(a) aluno(a){" "}
                 <span className="font-semibold text-primary">{todayClasses.nextClass.studentName}</span>
                 {todayClasses.nextClass.timeLabel !== "Horário não definido" && (
                   <span className="font-normal">

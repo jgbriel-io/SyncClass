@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -58,7 +58,14 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signOut, user } = useAuth();
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/teacher/students")) {
+      setSearchQuery(searchParams.get("search") ?? "");
+    }
+  }, [location.pathname, searchParams]);
   const { data: profile } = useCurrentUserProfile(user?.id);
   const { data: teacherProfile } = useQuery({
     queryKey: ["teacher-profile", user?.id],
@@ -238,11 +245,11 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <Input
                   type="search"
-                  placeholder="Buscar alunos, aulas..."
+                  placeholder="Buscar aluno (nome, e-mail...)"
                   className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  aria-label="Buscar alunos, aulas"
+                  aria-label="Buscar aluno por nome ou e-mail"
                 />
               </div>
             </form>
@@ -287,7 +294,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                             to="/teacher/classes?status=avaliacao_pendente"
                             className="block rounded-md px-2 py-2 text-sm hover:bg-muted focus:bg-muted focus:outline-none"
                           >
-                            <span className="font-medium text-foreground">Aula em aberto para avaliação</span>
+                            <span className="font-medium text-foreground">Avaliação pendente</span>
                             <p className="mt-0.5 truncate text-muted-foreground">
                               {(log.students as { name?: string } | null)?.name ?? "Aluno"} · {log.class_date && format(new Date(log.class_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
                             </p>

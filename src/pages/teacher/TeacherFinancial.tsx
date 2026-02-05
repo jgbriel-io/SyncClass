@@ -52,8 +52,8 @@ const TeacherFinancialPage = () => {
 
   return (
     <FinancialView
-        title="Meu Financeiro"
-        subtitle="Visualize as cobranças dos seus alunos"
+        title="Financeiro"
+        subtitle="Gerencie cobranças e pagamentos"
         showTeacherColumn={false}
         enableTeacherSelection={false}
         autoTeacherId={teacherId}

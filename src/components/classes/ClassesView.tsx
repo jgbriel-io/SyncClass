@@ -112,6 +112,8 @@ interface ClassesViewProps {
   viewMode?: "table" | "cards";
   showTeacherColumn?: boolean;
   enableTeacherSelection?: boolean;
+  /** Quando definido (ex.: perfil professor), fixa o professor e oculta filtro/coluna */
+  autoTeacherId?: string | null;
   /** Status inicial vindo da URL (ex.: notificações) */
   initialStatus?: ClassStatusFilter;
 }
@@ -122,6 +124,7 @@ export function ClassesView({
   viewMode = "table",
   showTeacherColumn = true,
   enableTeacherSelection = true,
+  autoTeacherId = null,
   initialStatus,
 }: ClassesViewProps) {
   const [filters, setFilters] = useState<ClassesFiltersState>({
@@ -136,6 +139,8 @@ export function ClassesView({
   const [logForPostClass, setLogForPostClass] = useState<ClassLogWithStudent | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
 
+  const effectiveTeacherId = autoTeacherId ?? (filters.teacherId !== "all" ? filters.teacherId : undefined);
+
   useEffect(() => {
     if (initialStatus) setFilters((prev) => ({ ...prev, status: initialStatus }));
   }, [initialStatus]);
@@ -149,16 +154,16 @@ export function ClassesView({
     hasMore,
     totalCount,
     isFetching,
-  } = useClassLogs(undefined, {
+  } = useClassLogs(effectiveTeacherId ?? undefined, {
     pageSize: 20,
-    filters: { teacherId: filters.teacherId, period: filters.period },
+    filters: { teacherId: effectiveTeacherId ?? filters.teacherId, period: filters.period },
   });
   const { data: teachers = [] } = useTeachers();
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [page]);
-  const { data: summary } = useClassLogsSummary();
+  const { data: summary } = useClassLogsSummary(effectiveTeacherId ?? undefined);
   const createLog = useCreateClassLog();
   const createLogWithFinancial = useCreateClassLogWithFinancial();
   const updateLog = useUpdateClassLog();

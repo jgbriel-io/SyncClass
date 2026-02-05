@@ -132,6 +132,7 @@ export function StudentsListView({
       teacherId: autoTeacherId ?? filters.teacherId,
       status: filters.status,
       sortBy: filters.sortBy,
+      search: filters.search || undefined,
     },
   });
 

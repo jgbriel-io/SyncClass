@@ -13,6 +13,8 @@ export interface StudentStatementEntry {
   student_id: string;
   teacher_id: string | null;
   class_date: string;
+  start_at: string | null;
+  end_at: string | null;
   attendance: boolean | null;
   title: string | null;
   grade: number | null;

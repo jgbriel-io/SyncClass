@@ -51,19 +51,24 @@ export function OverviewFilters({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
+      <div className="flex flex-col md:flex-row gap-3 flex-wrap">
+        <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
+          <span className="text-xs font-medium text-muted-foreground">Busca</span>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
             placeholder="Buscar por nome..."
             className="pl-9"
             value={filters.search}
             onChange={(e) => onChange({ ...filters, search: e.target.value })}
           />
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Select
-            value={filters.status}
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Status</span>
+            <Select
+              value={filters.status}
             onValueChange={(v) => onChange({ ...filters, status: v })}
           >
             <SelectTrigger className="w-[130px] pl-3 text-left">
@@ -75,8 +80,11 @@ export function OverviewFilters({
               <SelectItem value="inativo" className="pl-6">Inativos</SelectItem>
             </SelectContent>
           </Select>
-          <Select
-            value={filters.period}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Período</span>
+            <Select
+              value={filters.period}
             onValueChange={(v) => onChange({ ...filters, period: v as OverviewPeriodFilter })}
           >
             <SelectTrigger className="w-[150px] pl-3 text-left">
@@ -89,9 +97,12 @@ export function OverviewFilters({
               <SelectItem value="90" className="pl-6">Últimos 90 dias</SelectItem>
             </SelectContent>
           </Select>
+          </div>
           {showTeacherFilter && teachers.length > 0 && (
-            <Select
-              value={filters.teacherId}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Professores</span>
+              <Select
+                value={filters.teacherId}
               onValueChange={(v) => onChange({ ...filters, teacherId: v })}
             >
               <SelectTrigger className="w-[200px] pl-3 text-left">
@@ -108,23 +119,27 @@ export function OverviewFilters({
                 ))}
               </SelectContent>
             </Select>
+            </div>
           )}
-          <Select
-            value={filters.sortBy}
-            onValueChange={(v) => onChange({ ...filters, sortBy: v as OverviewSortBy })}
-          >
-            <SelectTrigger className="w-[200px] pl-3 text-left">
-              <SelectValue placeholder="Ordenar" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent" className="pl-6">Crescimento (mais recentes)</SelectItem>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Ordenar</span>
+            <Select
+              value={filters.sortBy}
+              onValueChange={(v) => onChange({ ...filters, sortBy: v as OverviewSortBy })}
+            >
+              <SelectTrigger className="w-[240px] pl-3 text-left">
+                <SelectValue placeholder="Ordenar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent" className="pl-6">Crescimento (mais recentes)</SelectItem>
               <SelectItem value="oldest" className="pl-6">Antigos primeiro</SelectItem>
               <SelectItem value="name_asc" className="pl-6">Nome (A-Z)</SelectItem>
               <SelectItem value="name_desc" className="pl-6">Nome (Z-A)</SelectItem>
             </SelectContent>
           </Select>
+          </div>
           {hasActiveFilters && onReset && (
-            <Button variant="ghost" size="sm" onClick={onReset} className="h-9">
+            <Button variant="ghost" size="sm" onClick={onReset} className="h-9 self-end">
               <X className="h-4 w-4 mr-1" />
               Limpar
             </Button>

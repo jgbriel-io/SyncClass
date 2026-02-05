@@ -32,7 +32,7 @@ const TeacherHome = lazy(() => import("./pages/teacher/TeacherHome"));
 const TeacherStudentsPage = lazy(() => import("./pages/teacher/TeacherStudents"));
 const TeacherFinancialPage = lazy(() => import("./pages/teacher/TeacherFinancial"));
 const TeacherOverviewPage = lazy(() => import("./pages/teacher/TeacherOverview"));
-const TeacherPedagogicalPage = lazy(() => import("./pages/teacher/TeacherPedagogical"));
+const TeacherClassesPage = lazy(() => import("./pages/teacher/TeacherClasses"));
 
 // Lazy loading - páginas de estudante
 const StudentHome = lazy(() => import("./pages/student/StudentHome"));
@@ -119,7 +119,7 @@ const App = () => (
               <Route path="students" element={<TeacherStudentsPage />} />
               <Route path="overview" element={<TeacherOverviewPage />} />
               <Route path="financial" element={<TeacherFinancialPage />} />
-              <Route path="classes" element={<TeacherPedagogicalPage />} />
+              <Route path="classes" element={<TeacherClassesPage />} />
             </Route>
 
             {/* Student Routes - layout persistente */}

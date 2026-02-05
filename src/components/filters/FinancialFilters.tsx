@@ -36,19 +36,24 @@ export function FinancialFilters({ filters, onChange, onReset }: FinancialFilter
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por aluno..."
+      <div className="flex flex-col md:flex-row gap-3 flex-wrap">
+        <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
+          <span className="text-xs font-medium text-muted-foreground">Busca</span>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por aluno..."
             className="pl-9"
             value={filters.search}
             onChange={(e) => onChange({ ...filters, search: e.target.value })}
           />
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Select
-            value={filters.periodPreset}
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Período</span>
+            <Select
+              value={filters.periodPreset}
             onValueChange={(v) => {
               const preset = v as FinancialPeriodPreset;
               const now = new Date();
@@ -80,8 +85,11 @@ export function FinancialFilters({ filters, onChange, onReset }: FinancialFilter
               <SelectItem value="this_month">Este mês</SelectItem>
             </SelectContent>
           </Select>
-          <Select
-            value={filters.status}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Status</span>
+            <Select
+              value={filters.status}
             onValueChange={(v) => onChange({ ...filters, status: v as FinancialStatusFilter })}
           >
             <SelectTrigger className="w-[130px]">
@@ -94,22 +102,26 @@ export function FinancialFilters({ filters, onChange, onReset }: FinancialFilter
               <SelectItem value="atrasado">Atrasado</SelectItem>
             </SelectContent>
           </Select>
-          <Select
-            value={filters.sortBy}
-            onValueChange={(v) => onChange({ ...filters, sortBy: v as FinancialSortBy })}
-          >
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Ordenar por" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="due_asc">Vencimento (mais próximo)</SelectItem>
-              <SelectItem value="due_desc">Vencimento (mais distante)</SelectItem>
-              <SelectItem value="amount_desc">Valor (maior)</SelectItem>
-              <SelectItem value="amount_asc">Valor (menor)</SelectItem>
-            </SelectContent>
-          </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Ordenar</span>
+            <Select
+              value={filters.sortBy}
+              onValueChange={(v) => onChange({ ...filters, sortBy: v as FinancialSortBy })}
+            >
+              <SelectTrigger className="w-[220px] pl-3 text-left">
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="due_asc">Vencimento (mais próximo)</SelectItem>
+                <SelectItem value="due_desc">Vencimento (mais distante)</SelectItem>
+                <SelectItem value="amount_desc">Valor (maior)</SelectItem>
+                <SelectItem value="amount_asc">Valor (menor)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           {hasActiveFilters && onReset && (
-            <Button variant="ghost" size="sm" onClick={onReset} className="h-9">
+            <Button variant="ghost" size="sm" onClick={onReset} className="h-9 self-end">
               <X className="h-4 w-4 mr-1" />
               Limpar
             </Button>

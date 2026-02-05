@@ -54,31 +54,39 @@ export function StudentsFilters({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome ou CPF..."
+      <div className="flex flex-col md:flex-row gap-3 flex-wrap">
+        <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
+          <span className="text-xs font-medium text-muted-foreground">Busca</span>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou CPF..."
             className="pl-9"
             value={filters.search}
             onChange={(e) => onChange({ ...filters, search: e.target.value })}
           />
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Select
-            value={filters.filterPreset}
-            onValueChange={(v) => onChange({ ...filters, filterPreset: v as StudentFilterPreset })}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Ver" />
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Filtros adicionais</span>
+            <Select
+              value={filters.filterPreset}
+              onValueChange={(v) => onChange({ ...filters, filterPreset: v as StudentFilterPreset })}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtros adicionais" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="aniversariantes">Aniversariantes do mês</SelectItem>
             </SelectContent>
           </Select>
-          <Select
-            value={filters.status}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Status</span>
+            <Select
+              value={filters.status}
             onValueChange={(v) => onChange({ ...filters, status: v as StudentStatusFilter })}
           >
             <SelectTrigger className="w-[140px]">
@@ -90,9 +98,12 @@ export function StudentsFilters({
               <SelectItem value="inativo">Inativos</SelectItem>
             </SelectContent>
           </Select>
+          </div>
           {showTeacherFilter && !autoTeacherId && (
-            <Select
-              value={filters.teacherId}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Professores</span>
+              <Select
+                value={filters.teacherId}
               onValueChange={(v) => onChange({ ...filters, teacherId: v })}
             >
               <SelectTrigger className="w-[200px] pl-3 text-left">
@@ -109,9 +120,12 @@ export function StudentsFilters({
                 ))}
               </SelectContent>
             </Select>
+            </div>
           )}
-          <Select
-            value={filters.sortBy}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Ordenar</span>
+            <Select
+              value={filters.sortBy}
             onValueChange={(v) => onChange({ ...filters, sortBy: v as StudentSortBy })}
           >
             <SelectTrigger className="w-[180px]">
@@ -124,8 +138,9 @@ export function StudentsFilters({
               <SelectItem value="last_payment_asc">Último pagamento (mais antigo)</SelectItem>
             </SelectContent>
           </Select>
+          </div>
           {hasActiveFilters && onReset && (
-            <Button variant="ghost" size="sm" onClick={onReset} className="h-9">
+            <Button variant="ghost" size="sm" onClick={onReset} className="h-9 self-end">
               <X className="h-4 w-4 mr-1" />
               Limpar
             </Button>
