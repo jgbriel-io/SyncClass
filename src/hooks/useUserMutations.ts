@@ -139,8 +139,6 @@ function isClientError(body: InviteResponseBody): boolean {
   const err = (body?.error ?? "").toLowerCase();
   return (
     err.includes("já cadastrado") ||
-    err.includes("rate limit") ||
-    err.includes("muitas tentativas") ||
     err.includes("inválido") ||
     err.includes("already")
   );
@@ -160,14 +158,6 @@ function inviteResultFromBody(body: InviteResponseBody, bodyEmail: string): Invi
     };
   }
   return null;
-}
-
-function friendlyInviteErrorMessage(message: string): string {
-  const lower = message.toLowerCase();
-  if (lower.includes("rate limit") || lower.includes("rate_limit") || lower.includes("too many") || lower.includes("muitas tentativas")) {
-    return "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.";
-  }
-  return message;
 }
 
 function validateEmailForInvite(email: string): void {
@@ -194,7 +184,7 @@ async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult>
       };
     }
     if (parsed?.error) {
-      throw new Error(friendlyInviteErrorMessage(parsed.error));
+      throw new Error(parsed.error);
     }
     if (error) {
       const errorBody = await getFunctionResponseBody(error);
@@ -202,7 +192,7 @@ async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult>
       if (partial) return partial;
 
       const msg = errorBody?.error ?? (error as Error).message ?? "Erro ao criar usuário";
-      throw new Error(friendlyInviteErrorMessage(msg));
+      throw new Error(msg);
     }
     throw new Error("Resposta inválida da função");
   } catch (err) {
@@ -242,9 +232,6 @@ async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult>
   if (authError) {
     const msg = authError.message?.toLowerCase() ?? "";
     if (msg.includes("already") || msg.includes("already been registered")) throw new Error(MSG_EMAIL);
-    if (msg.includes("rate limit") || msg.includes("too many")) {
-      throw new Error("Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.");
-    }
     throw authError;
   }
   if (!authData.user) throw new Error("Falha ao criar usuário");

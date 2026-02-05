@@ -302,12 +302,9 @@ serve(async (req) => {
 
   if (createError) {
     const msg = createError.message ?? "";
-    const lower = msg.toLowerCase();
-    let friendly = msg;
-    if (lower.includes("already") || lower.includes("already been registered")) friendly = "Email já cadastrado";
-    else if (lower.includes("rate limit") || lower.includes("rate_limit") || lower.includes("too many")) {
-      friendly = "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.";
-    }
+    const friendly = msg.toLowerCase().includes("already") || msg.toLowerCase().includes("already been registered")
+      ? "Email já cadastrado"
+      : msg;
     log("Auth createUser failed", { error: createError.message });
     return jsonResponse({ error: friendly }, 400);
   }
