@@ -117,10 +117,22 @@ export function StudentDetailSheet({
                   {(() => {
                     const hourlyRate = student.hourly_rate;
                     const classesPerWeek = student.classes_per_week;
+                    const now = new Date();
+                    const currentYear = now.getFullYear();
+                    const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+                    const monthlyFromCharges =
+                      student.financialRecords?.reduce((sum, r) => {
+                        if (r.due_date == null || r.amount == null) return sum;
+                        const [y, m] = r.due_date.split("-");
+                        if (y !== String(currentYear) || m !== currentMonth) return sum;
+                        return sum + Number(r.amount);
+                      }, 0) ?? 0;
                     const monthlyTotal =
-                      hourlyRate != null && classesPerWeek != null
-                        ? hourlyRate * classesPerWeek * 4
-                        : null;
+                      monthlyFromCharges > 0
+                        ? monthlyFromCharges
+                        : hourlyRate != null && classesPerWeek != null
+                          ? hourlyRate * classesPerWeek * 4
+                          : null;
                     const payDay = student.pay_day;
                     const city = student.city;
                     const state = student.state;

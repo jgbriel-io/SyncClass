@@ -255,6 +255,23 @@ export function StudentsListView({
   }, [financialRecords]);
 
   const currentMonth = useMemo(() => new Date().getMonth() + 1, []);
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
+
+  /** Soma das cobranças (amount) do mês atual por aluno (due_date no mês/ano atual). Atualiza quando cobranças mudam. */
+  const monthlyTotalFromChargesByStudent = useMemo(() => {
+    const map: Record<string, number> = {};
+    const monthStr = String(currentMonth).padStart(2, "0");
+    const yearStr = String(currentYear);
+    financialRecords.forEach((record: FinancialRecordWithRelations) => {
+      if (!record.student_id || record.amount == null) return;
+      const due = record.due_date;
+      if (!due) return;
+      const [y, m] = due.split("-");
+      if (y !== yearStr || m !== monthStr) return;
+      map[record.student_id] = (map[record.student_id] ?? 0) + Number(record.amount);
+    });
+    return map;
+  }, [financialRecords, currentMonth, currentYear]);
 
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
@@ -496,10 +513,13 @@ export function StudentsListView({
                   const lastUpdatedAt = student.updated_at;
                   const hourlyRate = student.hourly_rate;
                   const classesPerWeek = student.classes_per_week;
+                  const monthlyFromCharges = monthlyTotalFromChargesByStudent[student.id];
                   const monthlyTotal =
-                    hourlyRate != null && classesPerWeek != null
-                      ? hourlyRate * classesPerWeek * 4
-                      : null;
+                    monthlyFromCharges != null
+                      ? monthlyFromCharges
+                      : hourlyRate != null && classesPerWeek != null
+                        ? hourlyRate * classesPerWeek * 4
+                        : null;
 
                   const teacherName = student.teacher_id
                     ? teacherMap[student.teacher_id] || "—"

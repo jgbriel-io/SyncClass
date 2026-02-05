@@ -172,6 +172,7 @@ function extractTimeFromIso(iso: string | null | undefined): string {
 export interface ClassLogFinancialUpdate {
   financialRecordId: string;
   dueDate: string;
+  amount?: number;
 }
 
 interface ClassLogFormDialogProps {
@@ -241,9 +242,8 @@ export function ClassLogFormDialog({
     return null;
   })();
 
-  // Valor puramente calculado a partir da duração (sem override manual)
+  // Valor puramente calculado a partir da duração (nova aula ou edição com horário alterado)
   const calculatedFromDuration = (() => {
-    if (isEditing) return null;
     if (
       hourlyRate != null &&
       hourlyRate > 0 &&
@@ -255,9 +255,8 @@ export function ClassLogFormDialog({
     return null;
   })();
 
-  // Valor efetivo: manual override ?? calculado
+  // Valor efetivo: manual override ?? calculado (em edição usa o do formulário)
   const computedAmount = (() => {
-    if (isEditing) return null;
     const manual = financialAmount ? parseMoneyToNumber(financialAmount) : null;
     if (manual != null && !isNaN(manual) && manual > 0) return manual;
     return calculatedFromDuration;
@@ -288,6 +287,9 @@ export function ClassLogFormDialog({
       if (classLog.financial_records?.due_date) {
         setValue("financial_due_date", isoDateToBr(classLog.financial_records.due_date));
       }
+      if (classLog.financial_records?.amount != null) {
+        setValue("financial_amount", Number(classLog.financial_records.amount).toFixed(2).replace(".", ","));
+      }
     } else if (!open) {
       reset();
       setSelectedStudentId("");
@@ -304,12 +306,12 @@ export function ClassLogFormDialog({
     }
   }, [classDate, isEditing, selectedStudent, setValue]);
 
-  // Auto-fill valor quando horário/duração muda (sempre atualiza com o calculado)
+  // Auto-fill valor quando horário/duração muda (nova aula ou edição)
   useEffect(() => {
-    if (!isEditing && calculatedFromDuration != null) {
+    if (calculatedFromDuration != null) {
       setValue("financial_amount", calculatedFromDuration.toFixed(2).replace(".", ","));
     }
-  }, [isEditing, calculatedFromDuration, setValue]);
+  }, [calculatedFromDuration, setValue]);
 
   const handleFormSubmit = (data: ClassLogFormData) => {
     if (enableTeacherSelection && !selectedTeacherId) {
@@ -338,13 +340,10 @@ export function ClassLogFormDialog({
           ? buildTimestamptzFromDateAndTime(classDateIso, data.end_time)
           : null,
       duration_minutes: effectiveDurationMinutes ?? null, // preenchido pelo trigger no DB se start_at/end_at presentes
-      billed_amount:
-        !isEditing && data.financial_amount
-          ? (() => {
-              const a = parseMoneyToNumber(data.financial_amount!);
-              return !isNaN(a) && a > 0 ? a : null;
-            })()
-          : null,
+      billed_amount: (() => {
+        const a = data.financial_amount ? parseMoneyToNumber(data.financial_amount) : null;
+        return a != null && !isNaN(a) && a > 0 ? a : null;
+      })(),
     };
 
     // Criar aula com cobrança
@@ -365,11 +364,16 @@ export function ClassLogFormDialog({
       }
     }
 
-    // Edição: atualizar aula e, se tiver cobrança vinculada, atualizar vencimento
-    if (isEditing && classLog?.financial_records?.id && data.financial_due_date?.trim()) {
+    // Edição: atualizar aula e, se tiver cobrança vinculada, atualizar vencimento e valor
+    if (isEditing && classLog?.financial_records?.id) {
+      const dueDate = data.financial_due_date?.trim()
+        ? brDateToIso(data.financial_due_date)
+        : (classLog.financial_records.due_date ?? "");
+      const amount = data.financial_amount ? parseMoneyToNumber(data.financial_amount) : undefined;
       onSubmit(classLogData, {
         financialRecordId: classLog.financial_records.id,
-        dueDate: brDateToIso(data.financial_due_date),
+        dueDate,
+        ...(amount != null && !isNaN(amount) && amount > 0 && { amount }),
       });
     } else {
       onSubmit(classLogData);

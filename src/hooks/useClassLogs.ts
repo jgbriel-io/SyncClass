@@ -416,17 +416,22 @@ export function useCreateClassLogWithFinancial() {
       // Se deve criar cobrança, cria vinculada à aula.
       // financialData.amount = classLog.billed_amount ?? (hourly_rate * duration_minutes/60) — calculado no frontend.
       if (createFinancial && financialData) {
+        const [y, m, d] = (classLog.class_date || "").split("-");
+        const defaultDescription =
+          y && m && d ? `Aula do dia ${d}/${m}/${y}` : `Aula do dia ${classLog.class_date || ""}`;
+        const description =
+          (typeof financialData.description === "string" && financialData.description.trim())
+            ? financialData.description.trim()
+            : defaultDescription;
+
         const { error: financialError } = await supabase
           .from("financial_records")
           .insert({
             student_id: classLog.student_id,
             class_log_id: createdLog.id,
-            amount: financialData.amount, // computedAmount do frontend
+            amount: financialData.amount,
             due_date: financialData.due_date,
-            description: financialData.description || (() => {
-              const [y, m, d] = (classLog.class_date || "").split("-");
-              return y && m && d ? `Aula do dia ${d}/${m}/${y}` : `Aula do dia ${classLog.class_date}`;
-            })(),
+            description,
             payment_method: financialData.payment_method || null,
             status: "pendente",
           });
@@ -445,9 +450,11 @@ export function useCreateClassLogWithFinancial() {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
       queryClient.invalidateQueries({ queryKey: ["available_class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });
-      
+
       if (variables.createFinancial) {
         toast.success("Aula e cobrança registradas com sucesso!");
       } else {
@@ -479,13 +486,14 @@ export type UpdateClassLogPayload = ClassLogUpdate & {
   id: string;
   financialRecordId?: string;
   dueDate?: string;
+  amount?: number;
 };
 
 export function useUpdateClassLog() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, financialRecordId, dueDate, ...updates }: UpdateClassLogPayload) => {
+    mutationFn: async ({ id, financialRecordId, dueDate, amount, ...updates }: UpdateClassLogPayload) => {
       const hasTimeChange = "start_at" in updates || "end_at" in updates || "class_date" in updates || "teacher_id" in updates;
       if (hasTimeChange) {
         const { data: current } = await supabase.from("class_logs").select("teacher_id, class_date, start_at, end_at").eq("id", id).single();
@@ -509,14 +517,19 @@ export function useUpdateClassLog() {
         throw error;
       }
 
-      if (financialRecordId && dueDate) {
-        const { error: financialError } = await supabase
-          .from("financial_records")
-          .update({ due_date: dueDate })
-          .eq("id", financialRecordId);
-        if (financialError) {
-          console.error("Error updating financial due_date:", financialError);
-          toast.error("Aula atualizada, mas não foi possível atualizar o vencimento da cobrança.");
+      if (financialRecordId) {
+        const financialUpdate: { due_date?: string; amount?: number } = {};
+        if (dueDate) financialUpdate.due_date = dueDate;
+        if (amount != null && amount > 0) financialUpdate.amount = amount;
+        if (Object.keys(financialUpdate).length > 0) {
+          const { error: financialError } = await supabase
+            .from("financial_records")
+            .update(financialUpdate)
+            .eq("id", financialRecordId);
+          if (financialError) {
+            console.error("Error updating financial record:", financialError);
+            toast.error("Aula atualizada, mas não foi possível atualizar a cobrança.");
+          }
         }
       }
 
@@ -527,7 +540,9 @@ export function useUpdateClassLog() {
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_pending_evaluation"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
       toast.success("Registro atualizado com sucesso!");
     },
     onError: (error) => {

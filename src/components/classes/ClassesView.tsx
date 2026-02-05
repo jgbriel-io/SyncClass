@@ -227,7 +227,7 @@ export function ClassesView({
 
   const handleCreateOrUpdate = (
     data: ClassLogInsert,
-    financialUpdate?: { financialRecordId: string; dueDate: string }
+    financialUpdate?: { financialRecordId: string; dueDate: string; amount?: number }
   ) => {
     if (selectedLog) {
       updateLog.mutate(

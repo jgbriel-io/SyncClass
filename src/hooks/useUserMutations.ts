@@ -169,8 +169,15 @@ function validateEmailForInvite(email: string): void {
 
 async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult> {
   validateEmailForInvite(body.email);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error("Sessão expirada. Faça login novamente.");
+  }
   try {
-    const { data, error } = await supabase.functions.invoke("invite-user", { body });
+    const { data, error } = await supabase.functions.invoke("invite-user", {
+      body,
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
     const parsed = data as InviteResponseBody | null;
     
     if (parsed?.userId && parsed?.password) {
