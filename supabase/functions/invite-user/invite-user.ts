@@ -40,10 +40,31 @@ function normalizeDigits(val: string | null | undefined): string {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_MAX_LENGTH = 255;
 
+const ALLOWED_EMAIL_DOMAINS = new Set([
+  "gmail.com", "googlemail.com",
+  "outlook.com", "hotmail.com", "hotmail.com.br", "live.com", "live.com.br", "outlook.com.br", "outlook.pt", "msn.com",
+  "yahoo.com", "yahoo.com.br", "ymail.com",
+  "icloud.com", "me.com", "mac.com",
+  "protonmail.com", "proton.me",
+  "uol.com.br", "bol.com.br", "terra.com.br", "ig.com.br",
+  "aol.com", "zoho.com", "mail.com", "i.ua", "inbox.com",
+]);
+
+function getEmailDomain(email: string): string {
+  const trimmed = email?.trim()?.toLowerCase() ?? "";
+  const i = trimmed.lastIndexOf("@");
+  return i >= 0 ? trimmed.slice(i + 1) : "";
+}
+
 function isValidEmailFormat(email: string): boolean {
   const trimmed = email?.trim() ?? "";
   if (trimmed.length === 0 || trimmed.length > EMAIL_MAX_LENGTH) return false;
   return EMAIL_REGEX.test(trimmed);
+}
+
+function isAllowedEmailDomain(email: string): boolean {
+  const domain = getEmailDomain(email);
+  return domain.length > 0 && ALLOWED_EMAIL_DOMAINS.has(domain);
 }
 
 // Remove empty strings and convert them to null to avoid unique index conflicts
@@ -202,6 +223,10 @@ serve(async (req) => {
     log("Invalid email format", { email: rawEmail });
     return jsonResponse({ error: "Email inválido" }, 400);
   }
+  if (!isAllowedEmailDomain(rawEmail)) {
+    log("Email domain not allowed", { email: rawEmail });
+    return jsonResponse({ error: "Use um email de provedor real (Gmail, Outlook, Yahoo, etc.)" }, 400);
+  }
   const normalizedEmail = rawEmail.toLowerCase();
 
   if (!full_name || !role || !ROLES.includes(role)) {
@@ -236,6 +261,27 @@ serve(async (req) => {
     return jsonResponse({ error: "Email já cadastrado" }, 400);
   }
 
+  if (role === "teacher" && !teacherId) {
+    const { data: existingTeacher } = await supabaseAdmin
+      .from("teachers")
+      .select("id")
+      .ilike("email", normalizedEmail)
+      .maybeSingle();
+    if (existingTeacher) {
+      return jsonResponse({ error: "Email já cadastrado" }, 400);
+    }
+  }
+  if (role === "student" && !studentId) {
+    const { data: existingStudent } = await supabaseAdmin
+      .from("students")
+      .select("id")
+      .ilike("email", normalizedEmail)
+      .maybeSingle();
+    if (existingStudent) {
+      return jsonResponse({ error: "Email já cadastrado" }, 400);
+    }
+  }
+
   if (role === "student" && !studentId) {
     const err = await validateCpfPhonePlatform(supabaseAdmin, studentData as Record<string, unknown> | undefined);
     if (err) return jsonResponse({ error: err }, 400);
@@ -255,7 +301,13 @@ serve(async (req) => {
   });
 
   if (createError) {
-    const friendly = createError.message?.toLowerCase().includes("already") ? "Email já cadastrado" : createError.message;
+    const msg = createError.message ?? "";
+    const lower = msg.toLowerCase();
+    let friendly = msg;
+    if (lower.includes("already") || lower.includes("already been registered")) friendly = "Email já cadastrado";
+    else if (lower.includes("rate limit") || lower.includes("rate_limit") || lower.includes("too many")) {
+      friendly = "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.";
+    }
     log("Auth createUser failed", { error: createError.message });
     return jsonResponse({ error: friendly }, 400);
   }

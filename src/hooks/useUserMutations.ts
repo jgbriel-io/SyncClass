@@ -5,6 +5,7 @@ import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { validateCpfPhonePlatform } from "@/lib/validate-cpf-phone-platform";
 import { isValidEmailFormat } from "@/lib/utils/patterns";
+import { isAllowedEmailDomain } from "@/lib/validation/email";
 import { validateAndResizeAvatar, type AvatarValidationError } from "@/lib/utils/avatarUpload";
 import { toast } from "sonner";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
@@ -133,8 +134,21 @@ async function getFunctionResponseBody(err: unknown): Promise<InviteResponseBody
   return null;
 }
 
-/** Se a função retornou erro mas criou o usuário (ex.: 500 após falha em profile/roles), trata como sucesso parcial. */
+/** Erros que indicam 4xx (nunca tratar como sucesso parcial). */
+function isClientError(body: InviteResponseBody): boolean {
+  const err = (body?.error ?? "").toLowerCase();
+  return (
+    err.includes("já cadastrado") ||
+    err.includes("rate limit") ||
+    err.includes("muitas tentativas") ||
+    err.includes("inválido") ||
+    err.includes("already")
+  );
+}
+
+/** Se a função retornou erro mas criou o usuário (ex.: 500 após falha em profile/roles), trata como sucesso parcial. Nunca para 4xx. */
 function inviteResultFromBody(body: InviteResponseBody, bodyEmail: string): InviteUserResult | null {
+  if (isClientError(body)) return null;
   if (body?.userId && body?.password) {
     return {
       userId: body.userId,
@@ -148,10 +162,19 @@ function inviteResultFromBody(body: InviteResponseBody, bodyEmail: string): Invi
   return null;
 }
 
+function friendlyInviteErrorMessage(message: string): string {
+  const lower = message.toLowerCase();
+  if (lower.includes("rate limit") || lower.includes("rate_limit") || lower.includes("too many") || lower.includes("muitas tentativas")) {
+    return "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.";
+  }
+  return message;
+}
+
 function validateEmailForInvite(email: string): void {
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) throw new Error("Email é obrigatório");
   if (!isValidEmailFormat(trimmed)) throw new Error("Email inválido");
+  if (!isAllowedEmailDomain(trimmed)) throw new Error("Use um email de provedor real (Gmail, Outlook, Yahoo, etc.)");
 }
 
 async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult> {
@@ -171,19 +194,15 @@ async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult>
       };
     }
     if (parsed?.error) {
-      throw new Error(parsed.error);
+      throw new Error(friendlyInviteErrorMessage(parsed.error));
     }
     if (error) {
       const errorBody = await getFunctionResponseBody(error);
       const partial = errorBody ? inviteResultFromBody(errorBody, body.email) : null;
       if (partial) return partial;
-      
-      // Get error message from errorBody first
-      if (errorBody?.error) {
-        throw new Error(errorBody.error);
-      }
-      
-      throw new Error((error as Error).message || "Erro ao criar usuário");
+
+      const msg = errorBody?.error ?? (error as Error).message ?? "Erro ao criar usuário";
+      throw new Error(friendlyInviteErrorMessage(msg));
     }
     throw new Error("Resposta inválida da função");
   } catch (err) {
@@ -195,7 +214,8 @@ async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult>
   }
 }
 
-// Fallback quando Edge Function indisponível (não deployada, rede, etc.)
+// Fallback quando Edge Function indisponível (não deployada, rede, etc.).
+// Ordem igual à Edge Function: auth primeiro; só depois insert em teachers/students, para nunca deixar registro órfão.
 async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult> {
   validateEmailForInvite(body.email);
   const fullName = body.full_name;
@@ -204,6 +224,38 @@ async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult>
 
   const { data: existingProfile } = await supabase.from("profiles").select("id").ilike("email", normalizedEmail).maybeSingle();
   if (existingProfile) throw new Error(MSG_EMAIL);
+
+  if (body.role === "teacher" && !body.teacherId && body.teacherData) {
+    const { data: existingTeacher } = await supabase.from("teachers").select("id").ilike("email", normalizedEmail).maybeSingle();
+    if (existingTeacher) throw new Error(MSG_EMAIL);
+  }
+  if (body.role === "student" && !body.studentId && body.studentData) {
+    const { data: existingStudent } = await supabase.from("students").select("id").ilike("email", normalizedEmail).maybeSingle();
+    if (existingStudent) throw new Error(MSG_EMAIL);
+  }
+
+  const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
+    email: normalizedEmail,
+    password,
+    options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/login` },
+  });
+  if (authError) {
+    const msg = authError.message?.toLowerCase() ?? "";
+    if (msg.includes("already") || msg.includes("already been registered")) throw new Error(MSG_EMAIL);
+    if (msg.includes("rate limit") || msg.includes("too many")) {
+      throw new Error("Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.");
+    }
+    throw authError;
+  }
+  if (!authData.user) throw new Error("Falha ao criar usuário");
+  const userId = authData.user.id;
+
+  for (let i = 0; i < 8; i++) {
+    const { data: p } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
+    if (p) break;
+    await new Promise((r) => setTimeout(r, 150 + i * 100));
+  }
+  await new Promise((r) => setTimeout(r, 400));
 
   let createdStudent: { id: string } | null = null;
   let createdTeacher: { id: string } | null = null;
@@ -237,22 +289,6 @@ async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult>
       throw new Error("teacherId ou teacherData é obrigatório para role teacher");
     }
   }
-
-  const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
-    email: normalizedEmail,
-    password,
-    options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/login` },
-  });
-  if (authError) throw authError;
-  if (!authData.user) throw new Error("Falha ao criar usuário");
-  const userId = authData.user.id;
-
-  for (let i = 0; i < 8; i++) {
-    const { data: p } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
-    if (p) break;
-    await new Promise((r) => setTimeout(r, 150 + i * 100));
-  }
-  await new Promise((r) => setTimeout(r, 400));
 
   let roleOk = false;
   const { error: rpcErr } = await supabase.rpc("set_user_role", {
