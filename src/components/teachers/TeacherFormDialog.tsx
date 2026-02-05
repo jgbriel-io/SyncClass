@@ -19,15 +19,21 @@ const teacherSchema = z.object({
     .max(255),
   phone: z
     .string()
-    .max(20)
     .optional()
-    .or(z.literal("").transform(() => undefined)),
+    .refine((val) => {
+      if (!val || val.trim() === "") return true;
+      return (val.length === 14 || val.length === 15) && REGEX_PATTERNS.phone.test(val);
+    }, {
+      message: "Telefone deve ter 10 ou 11 dígitos no formato (00) 00000-0000",
+    }),
   cpf: z
     .string()
-    .max(14)
     .optional()
-    .refine((val) => !val || REGEX_PATTERNS.cpf.test(val), {
-      message: "Formato deve ser 000.000.000-00",
+    .refine((val) => {
+      if (!val || val.trim() === "") return true;
+      return val.length === 14 && REGEX_PATTERNS.cpf.test(val);
+    }, {
+      message: "CPF deve ter 11 dígitos no formato 000.000.000-00",
     }),
 });
 

@@ -156,6 +156,22 @@ export function useUpdateStudent() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: StudentUpdate & { id: string }) => {
       const safeUpdates = sanitizeStudentUpdateForEdit(updates as Record<string, unknown>) as StudentUpdate;
+      
+      // Verifica se pay_day foi alterado
+      const payDayChanged = 'pay_day' in updates && updates.pay_day !== undefined;
+      let oldPayDay: number | null = null;
+      const newPayDay: number | null = updates.pay_day ?? null;
+      
+      if (payDayChanged) {
+        // Busca o pay_day antigo
+        const { data: currentStudent } = await supabase
+          .from("students")
+          .select("pay_day")
+          .eq("id", id)
+          .single();
+        oldPayDay = currentStudent?.pay_day ?? null;
+      }
+      
       const { data, error } = await supabase
         .from("students")
         .update(safeUpdates)
@@ -216,6 +232,59 @@ export function useUpdateStudent() {
           }
         }
       }
+      
+      // Atualizar vencimentos de cobranças pendentes se pay_day mudou
+      if (payDayChanged && oldPayDay !== newPayDay && newPayDay !== null) {
+        console.log(`[useUpdateStudent] pay_day mudou de ${oldPayDay} para ${newPayDay}`);
+        try {
+          // Busca cobranças pendentes deste aluno
+          const { data: pendingRecords, error: fetchError } = await supabase
+            .from("financial_records")
+            .select("id, due_date")
+            .eq("student_id", id)
+            .eq("status", "pendente");
+          
+          if (fetchError) {
+            console.error("[useUpdateStudent] Erro ao buscar cobranças:", fetchError);
+            throw fetchError;
+          }
+          
+          console.log(`[useUpdateStudent] Encontradas ${pendingRecords?.length || 0} cobranças pendentes`);
+          
+          if (pendingRecords && pendingRecords.length > 0) {
+            // Atualiza cada cobrança com o novo dia de vencimento
+            const updates = [];
+            for (const record of pendingRecords) {
+              if (record.due_date) {
+                const dueDate = new Date(record.due_date + "T00:00:00");
+                const year = dueDate.getFullYear();
+                const month = dueDate.getMonth() + 1;
+                const lastDay = new Date(year, month, 0).getDate();
+                const newDay = Math.min(newPayDay, lastDay);
+                const newDueDate = `${year}-${String(month).padStart(2, '0')}-${String(newDay).padStart(2, '0')}`;
+                
+                console.log(`[useUpdateStudent] Atualizando cobrança ${record.id}: ${record.due_date} -> ${newDueDate}`);
+                
+                const { error: updateError } = await supabase
+                  .from("financial_records")
+                  .update({ due_date: newDueDate })
+                  .eq("id", record.id);
+                
+                if (updateError) {
+                  console.error(`[useUpdateStudent] Erro ao atualizar cobrança ${record.id}:`, updateError);
+                } else {
+                  updates.push(record.id);
+                }
+              }
+            }
+            
+            console.log(`[useUpdateStudent] Atualizadas ${updates.length} cobranças com sucesso`);
+          }
+        } catch (updateError) {
+          // Não falha a operação principal se a atualização de cobranças falhar
+          console.error("[useUpdateStudent] Erro ao atualizar vencimentos das cobranças:", updateError);
+        }
+      }
 
       return data;
     },
@@ -223,6 +292,8 @@ export function useUpdateStudent() {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Aluno atualizado com sucesso!");
     },
     onError: (error: unknown) => {

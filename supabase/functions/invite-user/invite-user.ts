@@ -37,6 +37,19 @@ function normalizeDigits(val: string | null | undefined): string {
   return val.replace(/\D/g, "");
 }
 
+// Remove empty strings and convert them to null to avoid unique index conflicts
+function cleanInsertData(data: Record<string, unknown>): Record<string, unknown> {
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value === "" || value === undefined) {
+      // Skip empty strings and undefined to let DB handle defaults
+      continue;
+    }
+    cleaned[key] = value;
+  }
+  return cleaned;
+}
+
 // Validação platform-wide: CPF e telefone únicos em students + teachers
 async function validateCpfPhonePlatform(
   admin: ReturnType<typeof createClient>,
@@ -45,6 +58,17 @@ async function validateCpfPhonePlatform(
   if (!data) return null;
   const cpf = normalizeDigits(data.cpf as string);
   const phone = normalizeDigits(data.phone as string);
+  
+  // Validar comprimento do CPF (deve ter exatamente 11 dígitos)
+  if (cpf && cpf.length > 0 && cpf.length !== 11) {
+    return "CPF deve ter exatamente 11 dígitos";
+  }
+  
+  // Validar comprimento do telefone (deve ter 10 ou 11 dígitos)
+  if (phone && phone.length > 0 && (phone.length < 10 || phone.length > 11)) {
+    return "Telefone deve ter 10 ou 11 dígitos";
+  }
+  
   if (cpf.length === 11) {
     const { data: cpfExists } = await admin.rpc("check_cpf_exists_platform", { p_cpf_digits: cpf });
     if (cpfExists === true) return "CPF já cadastrado na plataforma";
@@ -153,7 +177,9 @@ serve(async (req) => {
   let body: Body;
   try {
     body = await req.json();
-  } catch {
+    log("Request body received", { email: body.email, role: body.role, hasTeacherData: !!body.teacherData, hasStudentData: !!body.studentData });
+  } catch (err) {
+    log("Failed to parse JSON body", { error: (err as Error).message });
     return jsonResponse({ error: "Corpo JSON inválido" }, 400);
   }
 
@@ -161,6 +187,7 @@ serve(async (req) => {
   const normalizedEmail = (email ?? "").trim().toLowerCase();
 
   if (!normalizedEmail || !full_name || !role || !ROLES.includes(role)) {
+    log("Missing required fields", { email: normalizedEmail, full_name, role, roleValid: ROLES.includes(role as Role) });
     return jsonResponse({ error: "email, full_name e role são obrigatórios" }, 400);
   }
 
@@ -238,12 +265,13 @@ serve(async (req) => {
     } else {
       const sd = (studentData ?? {}) as Record<string, unknown>;
       const tid = (teacher_id ?? teacherId ?? sd.teacher_id) as string | undefined;
-      const insertData: Record<string, unknown> = {
+      const rawInsertData: Record<string, unknown> = {
         name: full_name,
         email: normalizedEmail,
         teacher_id: tid ?? null,
         ...sd,
       };
+      const insertData = cleanInsertData(rawInsertData);
       const { data: student, error: studentErr } = await supabaseAdmin
         .from("students")
         .insert(insertData)
@@ -265,11 +293,12 @@ serve(async (req) => {
       resolvedTeacherId = teacherId;
     } else {
       const td = (teacherData ?? {}) as Record<string, unknown>;
-      const insertData: Record<string, unknown> = {
+      const rawInsertData: Record<string, unknown> = {
         name: full_name,
         email: normalizedEmail,
         ...td,
       };
+      const insertData = cleanInsertData(rawInsertData);
       const { data: teacher, error: teacherErr } = await supabaseAdmin
         .from("teachers")
         .insert(insertData)

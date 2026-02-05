@@ -46,13 +46,19 @@ const studentSchema = z.object({
   state: z.string().max(2).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
   cpf: z.string()
-    .max(14)
-    .refine((v) => !v || v.trim() === "" || REGEX_PATTERNS.cpf.test(v), "Formato deve ser 000.000.000-00"),
+    .refine((v) => {
+      if (!v || v.trim() === "") return true;
+      if (isMasked(v)) return true;
+      return v.length === 14 && REGEX_PATTERNS.cpf.test(v);
+    }, "CPF deve ter 11 dígitos no formato 000.000.000-00"),
   phone: z.string()
-    .max(20)
     .refine(
-      (v) => !v || v.trim() === "" || isMasked(v) || REGEX_PATTERNS.phone.test(v),
-      "Formato deve ser (00) 00000-0000"
+      (v) => {
+        if (!v || v.trim() === "") return true;
+        if (isMasked(v)) return true;
+        return (v.length === 14 || v.length === 15) && REGEX_PATTERNS.phone.test(v);
+      },
+      "Telefone deve ter 10 ou 11 dígitos no formato (00) 00000-0000"
     ),
   email: z
     .string()

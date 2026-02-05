@@ -120,11 +120,13 @@ async function getFunctionError(err: unknown): Promise<string | null> {
 /** Obtém o body da resposta da Edge Function quando ela retorna 4xx/5xx (vem em error.context). */
 async function getFunctionResponseBody(err: unknown): Promise<InviteResponseBody | null> {
   const e = err as { context?: { json?: () => Promise<InviteResponseBody>; body?: unknown } };
+  
   if (e?.context?.json) {
     try {
-      return await e.context.json();
-    } catch {
-      /* ignore */
+      const result = await e.context.json();
+      return result;
+    } catch (jsonErr) {
+      /* ignore - body already read */
     }
   }
   return null;
@@ -149,6 +151,7 @@ async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult>
   try {
     const { data, error } = await supabase.functions.invoke("invite-user", { body });
     const parsed = data as InviteResponseBody | null;
+    
     if (parsed?.userId && parsed?.password) {
       return {
         userId: parsed.userId,
@@ -159,24 +162,26 @@ async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult>
         permissionsWarning: parsed.permissionsWarning ?? false,
       };
     }
-    if (parsed?.error) throw new Error(parsed.error);
+    if (parsed?.error) {
+      throw new Error(parsed.error);
+    }
     if (error) {
       const errorBody = await getFunctionResponseBody(error);
       const partial = errorBody ? inviteResultFromBody(errorBody, body.email) : null;
       if (partial) return partial;
-      const fnMsg = await getFunctionError(error);
-      throw new Error(fnMsg || (error as Error).message || "Erro ao criar usuário");
+      
+      // Get error message from errorBody first
+      if (errorBody?.error) {
+        throw new Error(errorBody.error);
+      }
+      
+      throw new Error((error as Error).message || "Erro ao criar usuário");
     }
     throw new Error("Resposta inválida da função");
   } catch (err) {
     if (isEdgeFunctionNetworkError(err)) {
       return createUserLegacy(body);
     }
-    const errorBody = await getFunctionResponseBody(err);
-    const partial = errorBody ? inviteResultFromBody(errorBody, body.email) : null;
-    if (partial) return partial;
-    const fnMsg = await getFunctionError(err);
-    if (fnMsg) throw new Error(fnMsg);
     if (err instanceof Error) throw err;
     throw new Error("Erro ao criar usuário");
   }

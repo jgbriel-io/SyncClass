@@ -92,15 +92,21 @@ const teacherSchema = z.object({
     .max(255),
   phone: z
     .string()
-    .max(20)
     .optional()
-    .or(z.literal("").transform(() => undefined)),
+    .refine((val) => {
+      if (!val || val.trim() === "") return true;
+      return val.length >= 14 && val.length <= 15 && REGEX_PATTERNS.phone.test(val);
+    }, {
+      message: "Telefone deve estar no formato (00) 00000-0000 ou (00) 0000-0000",
+    }),
   cpf: z
     .string()
-    .max(14)
     .optional()
-    .refine((val) => !val || REGEX_PATTERNS.cpf.test(val), {
-      message: "Formato deve ser 000.000.000-00",
+    .refine((val) => {
+      if (!val || val.trim() === "") return true;
+      return val.length === 14 && REGEX_PATTERNS.cpf.test(val);
+    }, {
+      message: "CPF deve estar no formato 000.000.000-00",
     }),
   role: z.literal("teacher"),
 });
@@ -372,16 +378,29 @@ export function UserFormDialog({
         },
       });
     } else if (selectedRole === "teacher" && "name" in data) {
+      const teacherData: {
+        name: string;
+        email: string;
+        phone?: string;
+        cpf?: string;
+      } = {
+        name: data.name,
+        email: data.email,
+      };
+
+      // Apenas adicionar phone/cpf se tiverem conteúdo (não vazios)
+      if (data.phone && data.phone.trim().length > 0) {
+        teacherData.phone = data.phone;
+      }
+      if (data.cpf && data.cpf.trim().length > 0) {
+        teacherData.cpf = data.cpf;
+      }
+
       onSubmit({
         email: data.email,
         fullName: data.name,
         role: "teacher",
-        teacherData: {
-          name: data.name,
-          email: data.email,
-          phone: data.phone || undefined,
-          cpf: data.cpf || undefined,
-        },
+        teacherData,
       });
     }
   };

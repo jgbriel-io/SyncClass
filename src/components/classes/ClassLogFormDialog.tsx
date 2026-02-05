@@ -55,12 +55,47 @@ function isDateFuture(brDate: string): boolean {
   return d > today;
 }
 
-/** Vencimento padrão: dia do pagamento do aluno no mês da aula (dd/mm/yyyy). pay_day 1–31; se mês tem menos dias, usa último dia. */
+/** Vencimento padrão: dia do pagamento do aluno no mês/ano da aula. 
+ * Se a data da aula for muito antiga ou inválida, usa mês/ano atual.
+ * pay_day 1–31; se mês tem menos dias, usa último dia. 
+ */
 function getDefaultDueDateForClassMonth(classDateBr: string, payDay: number | null): string {
-  if (!classDateBr || !REGEX_PATTERNS.date.test(classDateBr)) return classDateBr;
-  if (payDay == null || payDay < 1 || payDay > 31) return classDateBr;
+  if (!classDateBr || !REGEX_PATTERNS.date.test(classDateBr)) {
+    // Se data inválida, usa hoje
+    const today = new Date();
+    const dd = String(payDay && payDay >= 1 && payDay <= 31 ? Math.min(payDay, new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()) : today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yyyy = today.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+  
+  if (payDay == null || payDay < 1 || payDay > 31) {
+    // Se não tem pay_day, retorna a própria data da aula
+    return classDateBr;
+  }
+  
   const iso = brDateToIso(classDateBr);
-  const [y, m] = iso.split("-").map(Number);
+  const classDate = new Date(iso + "T12:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  classDate.setHours(0, 0, 0, 0);
+  
+  // Se a data da aula for muito antiga (mais de 1 ano atrás), usa mês/ano atual
+  const oneYearAgo = new Date(today);
+  oneYearAgo.setFullYear(today.getFullYear() - 1);
+  
+  let y, m;
+  if (classDate < oneYearAgo) {
+    // Data muito antiga, usa mês/ano atual
+    y = today.getFullYear();
+    m = today.getMonth() + 1;
+  } else {
+    // Data válida, usa mês/ano da aula
+    const [year, month] = iso.split("-").map(Number);
+    y = year;
+    m = month;
+  }
+  
   const lastDay = new Date(y, m, 0).getDate();
   const day = Math.min(payDay, lastDay);
   const dd = day.toString().padStart(2, "0");
@@ -72,7 +107,13 @@ const classLogBaseSchema = z.object({
   class_date: z.string()
     .min(1, "Informe a data da aula")
     .regex(REGEX_PATTERNS.date, "Formato deve ser dd/mm/aaaa")
-    .refine(isValidDateString, { message: "Data inválida" }),
+    .refine(isValidDateString, { message: "Data inválida" })
+    .refine((val) => {
+      if (!val || !REGEX_PATTERNS.date.test(val)) return true;
+      const [day, month, year] = val.split("/").map(Number);
+      const currentYear = new Date().getFullYear();
+      return year >= currentYear;
+    }, { message: "Não é possível cadastrar aulas em anos anteriores" }),
   title: z.string().optional(),
   observations: z.string().max(1000, "Máximo 1000 caracteres").optional(),
   start_time: z.string().optional().refine((v) => !v || REGEX_TIME.test(v), { message: "Formato HH:mm" }),
