@@ -9,7 +9,7 @@ export const defaultClassesFilters: ClassesFiltersState = {
   search: "",
   period: "all",
   teacherId: "all",
-  status: "all",
+  status: "em_aberto",
 };
 
 export const defaultFinancialFilters: FinancialFiltersState = {

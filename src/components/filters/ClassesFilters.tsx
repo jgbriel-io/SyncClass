@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export type ClassStatusFilter = "all" | "agendada" | "avaliacao_pendente" | "concluida";
+export type ClassStatusFilter = "all" | "em_aberto" | "agendada" | "avaliacao_pendente" | "concluida";
 export type ClassPeriodFilter = "all" | "week" | "month" | "3months";
 
 export interface ClassesFiltersState {
@@ -42,7 +42,7 @@ export function ClassesFilters({
   const hasActiveFilters =
     filters.period !== "all" ||
     (showTeacherFilter && filters.teacherId !== "all") ||
-    filters.status !== "all";
+    filters.status !== "em_aberto";
 
   return (
     <div className="space-y-3">
@@ -93,6 +93,7 @@ export function ClassesFilters({
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
+              <SelectItem value="em_aberto">Em aberto</SelectItem>
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="agendada">Agendada</SelectItem>
               <SelectItem value="avaliacao_pendente">Avaliação pendente</SelectItem>

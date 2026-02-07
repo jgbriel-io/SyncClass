@@ -1,4 +1,5 @@
 import { StatusBadge } from "@/components/ui/status-badge";
+import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyClassesState } from "@/components/ui/contextual-empty-states";
 import { Button } from "@/components/ui/button";
@@ -156,9 +157,21 @@ export function ClassesView({
     isFetching,
   } = useClassLogs(effectiveTeacherId ?? undefined, {
     pageSize: 20,
-    filters: { teacherId: effectiveTeacherId ?? filters.teacherId, period: filters.period },
+    filters: useMemo(
+      () => ({
+        teacherId: effectiveTeacherId ?? filters.teacherId,
+        period: filters.period,
+        status: filters.status,
+      }),
+      [effectiveTeacherId, filters.teacherId, filters.period, filters.status]
+    ),
   });
   const { data: teachers = [] } = useTeachers();
+
+  // Ao mudar filtro de status, voltar para a primeira página
+  useEffect(() => {
+    setPage(0);
+  }, [filters.status, setPage]);
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -194,7 +207,12 @@ export function ClassesView({
             ? "agendada"
             : "avaliacao_pendente";
 
-      if (filters.status !== "all" && filters.status !== status) return false;
+      // Filtro de status:
+      // - "all": mostra tudo (agendada + avaliação pendente + concluídas)
+      // - "em_aberto": mostra apenas agendada ou avaliação pendente (não concluída)
+      // - valores específicos: filtram por esse status exato
+      if (filters.status === "em_aberto" && status === "concluida") return false;
+      if (filters.status !== "all" && filters.status !== "em_aberto" && filters.status !== status) return false;
 
       if (filters.period !== "all") {
         const classDate = new Date(log.class_date + "T12:00:00");
@@ -508,10 +526,20 @@ export function ClassesView({
                       <td className="px-6 py-4 align-top hidden xl:table-cell whitespace-nowrap">
                         {log.financial_records ? (
                           <StatusBadge
-                            variant={getPaymentStatusVariant(log.financial_records.status)}
+                            variant={getPaymentStatusVariant(
+                              getFinancialActualStatus({
+                                status: log.financial_records.status,
+                                due_date: log.financial_records.due_date,
+                              })
+                            )}
                           >
                             <Receipt className="h-3 w-3" />
-                            {getPaymentStatusLabel(log.financial_records.status)}
+                            {getPaymentStatusLabel(
+                              getFinancialActualStatus({
+                                status: log.financial_records.status,
+                                due_date: log.financial_records.due_date,
+                              })
+                            )}
                           </StatusBadge>
                         ) : (
                           <span className="text-sm text-muted-foreground">Sem cobrança</span>
@@ -663,11 +691,21 @@ export function ClassesView({
                       </StatusBadge>
                       {log.financial_records && (
                         <StatusBadge
-                          variant={getPaymentStatusVariant(log.financial_records.status)}
+                          variant={getPaymentStatusVariant(
+                            getFinancialActualStatus({
+                              status: log.financial_records.status,
+                              due_date: log.financial_records.due_date,
+                            })
+                          )}
                           className="flex items-center gap-1"
                         >
                           <Receipt className="h-3 w-3" />
-                          {getPaymentStatusLabel(log.financial_records.status)}
+                          {getPaymentStatusLabel(
+                            getFinancialActualStatus({
+                              status: log.financial_records.status,
+                              due_date: log.financial_records.due_date,
+                            })
+                          )}
                         </StatusBadge>
                       )}
                     </div>

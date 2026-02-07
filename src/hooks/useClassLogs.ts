@@ -7,9 +7,12 @@ import { getClassStatusWithTime } from "@/lib/utils/classTime";
 
 const DEFAULT_PAGE_SIZE = 20;
 
+export type ClassLogsStatusFilter = "all" | "agendada" | "avaliacao_pendente" | "concluida";
+
 export type ClassLogsFilters = {
   teacherId?: string;
   period?: "all" | "week" | "month" | "3months";
+  status?: ClassLogsStatusFilter;
 };
 
 function getDateRangeForPeriod(period: "week" | "month" | "3months"): { from: string; to: string } {
@@ -166,6 +169,11 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
       if (filters?.period && filters.period !== "all") {
         const { from, to } = getDateRangeForPeriod(filters.period);
         q = q.gte("class_date", from).lte("class_date", to);
+      }
+
+      // Status: "all" = todas (agendada + avaliação pendente + concluídas); "concluida" = só com presença registrada
+      if (filters?.status === "concluida") {
+        q = q.not("attendance", "is", null);
       }
 
       const from = page * pageSize;
