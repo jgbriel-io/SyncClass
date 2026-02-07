@@ -65,8 +65,9 @@ export function useStudentsPaginated(options?: UseStudentsPaginatedOptions): Use
   const query = useQuery({
     queryKey: ["students_paginated", page, pageSize, filters],
     queryFn: async () => {
+      // students_masked inclui todos (deleted_at ou não) para o filtro "Inativos" mostrar arquivados
       let q = supabase
-        .from("students_active_masked")
+        .from("students_masked")
         .select("*", { count: "exact" });
 
       if (filters?.teacherId && filters.teacherId !== "all") {
@@ -391,6 +392,63 @@ export function useSoftDeleteStudent() {
       const err = error as PostgresError;
       console.error("Erro ao arquivar aluno:", err);
       toast.error("Erro ao arquivar aluno. Tente novamente.");
+    },
+  });
+}
+
+/**
+ * Hard delete student — physically removes from DB.
+ * FK CASCADE removes class_logs and financial_records.
+ * If there's a linked auth user (via profiles), also deletes the auth user
+ * via the admin-delete-user Edge Function (which cascades profile + user_roles).
+ * Admin-only (RLS policy students_admin_all).
+ */
+export function useHardDeleteStudent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // 1) Check if there's a linked auth user via profiles
+      const { data: linkedProfile } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("student_id", id)
+        .maybeSingle();
+
+      // 2) Delete the student record (CASCADE removes class_logs + financial_records)
+      const { error } = await supabase
+        .from("students")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      // 3) If there's a linked user, hard-delete the auth account too
+      if (linkedProfile?.user_id) {
+        const { data, error: fnError } = await supabase.functions.invoke("admin-delete-user", {
+          body: { userId: linkedProfile.user_id },
+        });
+        // Edge Function may return { error: "..." } in body
+        const msg = (data as { error?: string } | null)?.error;
+        if (fnError) {
+          console.error("Erro ao excluir conta vinculada:", fnError);
+        } else if (msg) {
+          console.error("Erro ao excluir conta vinculada:", msg);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles_linked_ids"] });
+      toast.success("Aluno excluído definitivamente.");
+    },
+    onError: () => {
+      toast.error("Erro ao excluir aluno definitivamente. Tente novamente.");
     },
   });
 }

@@ -614,22 +614,27 @@ export function useDeleteUser() {
   });
 }
 
-// Hard delete user via Edge Function
+// Hard delete user via Edge Function (só pela aba Usuários). Remove conta + registros vinculados (student/teacher).
 export function useHardDeleteUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase.functions.invoke("admin-delete-user", {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
         body: { userId },
       });
-
       if (error) throw error;
+      const msg = (data as { error?: string } | null)?.error;
+      if (msg) throw new Error(msg);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["teachers_paginated"] });
       toast.success("Usuário excluído definitivamente.");
     },
     onError: (error: Error) => {

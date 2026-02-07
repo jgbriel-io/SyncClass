@@ -123,10 +123,18 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
   const query = useQuery({
     queryKey: ["users_paginated", page, pageSize, filters],
     queryFn: async () => {
-      const q = supabase
-        .from("profiles")
-        .select("*", { count: "exact" })
-        .order("created_at", { ascending: false });
+      let q = supabase.from("profiles").select("*", { count: "exact" });
+
+      if (filters?.status === "active") {
+        q = q.eq("active", true);
+      } else if (filters?.status === "inactive") {
+        q = q.eq("active", false);
+      }
+
+      const sortBy = filters?.sortBy ?? "created_desc";
+      const orderCol = sortBy === "name_asc" || sortBy === "name_desc" ? "full_name" : "created_at";
+      const ascending = sortBy === "created_asc" || sortBy === "name_asc";
+      q = q.order(orderCol, { ascending, nullsFirst: false });
 
       const from = page * pageSize;
       const to = from + pageSize - 1;

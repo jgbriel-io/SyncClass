@@ -54,7 +54,7 @@ import {
   useLinkUserToTeacher,
   UserWithProfile,
 } from "@/hooks/useUsers";
-import { useStudents, useUpdateStudent } from "@/hooks/useStudents";
+import { useStudents, useUpdateStudent, useHardDeleteStudent } from "@/hooks/useStudents";
 import { useTeachers, useUpdateTeacher, useDeleteTeacher } from "@/hooks/useTeachers";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
@@ -106,7 +106,7 @@ export default function UsersPage() {
     hasMore,
     totalCount,
     isFetching,
-  } = useUsersPaginated({ pageSize: 20 });
+  } = useUsersPaginated({ pageSize: 20, filters });
   const { data: students = [] } = useStudents();
   const { data: teachers = [] } = useTeachers();
   const { data: linkedIds } = useLinkedProfileIds();
@@ -120,6 +120,7 @@ export default function UsersPage() {
   const deleteUser = useDeleteUser();
   const hardDeleteUser = useHardDeleteUser();
   const updateStudent = useUpdateStudent();
+  const hardDeleteStudent = useHardDeleteStudent();
   const updateTeacher = useUpdateTeacher();
   const linkToStudent = useLinkUserToStudent();
   const linkToTeacher = useLinkUserToTeacher();
@@ -312,21 +313,10 @@ export default function UsersPage() {
   const handleDeleteConfirm = () => {
     if (!selectedUser) return;
 
-    const linkedStudent = selectedUser.profile?.student_id
-      ? students.find((s) => s.id === selectedUser.profile?.student_id)
-      : null;
-    const linkedTeacher = selectedUser.profile?.teacher_id
-      ? teachers.find((t) => t.id === selectedUser.profile.teacher_id)
-      : null;
-
-    const isStudentActive = linkedStudent?.status === "ativo";
-    const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
-    const canHardDelete =
-      (linkedStudent && linkedStudent.status === "inativo") ||
-      (linkedTeacher && linkedTeacher.status === "inativo");
+    const { linkedStudent, linkedTeacher, isStudentActive, isTeacherActive, isHardDelete } = deleteDialogInfo;
 
     if (linkedStudent && isStudentActive) {
-      // Soft deactivate via student status so it reflects in both tabs
+      // Arquiva: muda status para inativo (updateStudent já sincroniza profile.active = false)
       updateStudent.mutate(
         { id: linkedStudent.id, status: "inativo" },
         {
@@ -350,14 +340,31 @@ export default function UsersPage() {
       return;
     }
 
-    if (canHardDelete) {
-      // Hard delete auth user (admin-only Edge Function)
-      hardDeleteUser.mutate(selectedUser.id, {
-        onSuccess: () => {
-          setDeleteDialogOpen(false);
-          setSelectedUser(null);
-        },
-      });
+    if (isHardDelete) {
+      // Pega student_id/teacher_id direto do profile (a lista students filtra deleted_at IS NULL)
+      const profileStudentId = selectedUser.profile?.student_id ?? null;
+
+      const doHardDeleteUser = () => {
+        hardDeleteUser.mutate(selectedUser.id, {
+          onSuccess: () => {
+            setDeleteDialogOpen(false);
+            setSelectedUser(null);
+          },
+        });
+      };
+
+      if (profileStudentId) {
+        // Exclui o registro do aluno ANTES de remover a conta (senão o CASCADE do auth apaga o profile e perde a referência)
+        hardDeleteStudent.mutate(profileStudentId, {
+          onSuccess: doHardDeleteUser,
+          onError: () => {
+            // Mesmo se falhar, tenta excluir a conta
+            doHardDeleteUser();
+          },
+        });
+      } else {
+        doHardDeleteUser();
+      }
       return;
     }
 
@@ -375,6 +382,31 @@ export default function UsersPage() {
     setLinkType(type);
     setIsLinkDialogOpen(true);
   };
+
+  // Calcula se o dialog deve mostrar "Excluir definitivamente" ou "Arquivar".
+  // Arquivar NÃO seta deleted_at, então o aluno permanece em students_active_masked
+  // e linkedStudent sempre será encontrado enquanto existir.
+  const deleteDialogInfo = useMemo(() => {
+    const linkedStudent = selectedUser?.profile?.student_id
+      ? students.find((s) => s.id === selectedUser.profile?.student_id)
+      : null;
+    const linkedTeacher = selectedUser?.profile?.teacher_id
+      ? teachers.find((t) => t.id === selectedUser.profile?.teacher_id)
+      : null;
+    const isStudentActive = linkedStudent?.status === "ativo";
+    const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
+    const userIsInactive = !(selectedUser?.profile?.active ?? true);
+
+    const isHardDelete =
+      (linkedStudent && linkedStudent.status === "inativo") ||
+      (linkedTeacher && linkedTeacher.status === "inativo") ||
+      (!linkedStudent && !linkedTeacher && userIsInactive);
+
+    const displayName =
+      selectedUser?.profile?.full_name || selectedUser?.email || "este usuário";
+
+    return { linkedStudent, linkedTeacher, isStudentActive, isTeacherActive, userIsInactive, isHardDelete, displayName };
+  }, [selectedUser, students, teachers]);
 
   const linkedStudentIds = linkedIds?.linkedStudentIds ?? new Set<string>();
   const linkedTeacherIds = linkedIds?.linkedTeacherIds ?? new Set<string>();
@@ -653,9 +685,11 @@ export default function UsersPage() {
                                 const isStudentActive = linkedStudent?.status === "ativo";
                                 const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
                                 const userIsActive = isActive;
+                                const userIsInactive = !userIsActive;
                                 const canHardDelete =
                                   (linkedStudent && linkedStudent.status === "inativo") ||
-                                  (linkedTeacher && linkedTeacher.status === "inativo");
+                                  (linkedTeacher && linkedTeacher.status === "inativo") ||
+                                  (!linkedStudent && !linkedTeacher && userIsInactive);
 
                                 const shouldShowDeactivate =
                                   userIsActive && (isStudentActive || isTeacherActive || (!linkedStudent && !linkedTeacher));
@@ -1045,76 +1079,43 @@ export default function UsersPage() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                {(() => {
-                  const linkedStudent = selectedUser?.profile?.student_id
-                    ? students.find((s) => s.id === selectedUser.profile?.student_id)
-                    : null;
-                  const linkedTeacher = selectedUser?.profile?.teacher_id
-                    ? teachers.find(
-                        (t) => t.id === selectedUser.profile.teacher_id
-                      )
-                    : null;
-                  const isStudentActive = linkedStudent?.status === "ativo";
-                  const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
-
-                  if (linkedStudent && isStudentActive) {
-                    return "Confirmar arquivamento";
-                  }
-
-                  if (linkedTeacher && isTeacherActive) {
-                    return "Confirmar arquivamento";
-                  }
-
-                  return "Confirmar arquivamento do usuário";
-                })()}
+                {deleteDialogInfo.isHardDelete
+                  ? "Excluir definitivamente?"
+                  : deleteDialogInfo.linkedStudent && deleteDialogInfo.isStudentActive
+                    ? "Confirmar arquivamento"
+                    : deleteDialogInfo.linkedTeacher && deleteDialogInfo.isTeacherActive
+                      ? "Confirmar arquivamento"
+                      : "Confirmar arquivamento do usuário"}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                {(() => {
-                  const linkedStudent = selectedUser?.profile?.student_id
-                    ? students.find((s) => s.id === selectedUser.profile?.student_id)
-                    : null;
-                  const linkedTeacher = selectedUser?.profile?.teacher_id
-                    ? teachers.find(
-                        (t) => t.id === selectedUser.profile.teacher_id
-                      )
-                    : null;
-                  const isStudentActive = linkedStudent?.status === "ativo";
-                  const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
-
-                  const displayName =
-                    selectedUser?.profile?.full_name || selectedUser?.email || "este usuário";
-
-                  if (linkedStudent && isStudentActive) {
-                    return (
-                      <>
-                        Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
-                        Ele será removido da lista de ativos e aparecerá como aluno inativo.
-                      </>
-                    );
-                  }
-
-                  if (linkedTeacher && isTeacherActive) {
-                    return (
-                      <>
-                        Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
-                        Ele será removido da lista de ativos e aparecerá como professor inativo.
-                      </>
-                    );
-                  }
-
-                  return (
-                    <>
-                      Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
-                      Esta ação não remove a conta do Supabase Auth, apenas arquiva o usuário no painel.
-                    </>
-                  );
-                })()}
+                {deleteDialogInfo.isHardDelete ? (
+                  <>
+                    A conta do usuário <strong>{deleteDialogInfo.displayName}</strong> será removida do sistema
+                    (Supabase Auth, perfil e vínculos). Esta ação não pode ser desfeita.
+                  </>
+                ) : deleteDialogInfo.linkedStudent && deleteDialogInfo.isStudentActive ? (
+                  <>
+                    Tem certeza que deseja arquivar o usuário <strong>{deleteDialogInfo.displayName}</strong>?
+                    Ele será removido da lista de ativos e aparecerá como aluno inativo.
+                  </>
+                ) : deleteDialogInfo.linkedTeacher && deleteDialogInfo.isTeacherActive ? (
+                  <>
+                    Tem certeza que deseja arquivar o usuário <strong>{deleteDialogInfo.displayName}</strong>?
+                    Ele será removido da lista de ativos e aparecerá como professor inativo.
+                  </>
+                ) : (
+                  <>
+                    Tem certeza que deseja arquivar o usuário <strong>{deleteDialogInfo.displayName}</strong>?
+                    Esta ação não remove a conta do Supabase Auth, apenas arquiva o usuário no painel.
+                  </>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel
                 disabled={
                   deleteUser.isPending ||
+                  hardDeleteStudent.isPending ||
                   updateStudent.isPending ||
                   hardDeleteUser.isPending ||
                   updateTeacher.isPending ||
@@ -1127,6 +1128,7 @@ export default function UsersPage() {
                 onClick={handleDeleteConfirm}
                 disabled={
                   deleteUser.isPending ||
+                  hardDeleteStudent.isPending ||
                   updateStudent.isPending ||
                   hardDeleteUser.isPending ||
                   updateTeacher.isPending ||
@@ -1135,16 +1137,17 @@ export default function UsersPage() {
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 {deleteUser.isPending ||
+                hardDeleteStudent.isPending ||
                 updateStudent.isPending ||
                 hardDeleteUser.isPending ||
                 updateTeacher.isPending ||
                 deleteTeacher.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Arquivando...
+                    {deleteDialogInfo.isHardDelete ? "Excluindo..." : "Arquivando..."}
                   </>
                 ) : (
-                  "Arquivar"
+                  deleteDialogInfo.isHardDelete ? "Excluir definitivamente" : "Arquivar"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

@@ -51,7 +51,7 @@ import {
   useStudentsPaginated,
   useCreateStudent,
   useUpdateStudent,
-  useSoftDeleteStudent,
+  useHardDeleteStudent,
   Student,
   StudentInsert,
 } from "@/hooks/useStudents";
@@ -115,6 +115,8 @@ export function StudentsListView({
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
+  const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
+  const [studentToHardDelete, setStudentToHardDelete] = useState<Student | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -151,7 +153,7 @@ export function StudentsListView({
   const createStudent = useCreateStudent();
   const inviteStudent = useInviteStudent();
   const updateStudent = useUpdateStudent();
-  const softDeleteStudent = useSoftDeleteStudent();
+  const hardDeleteStudent = useHardDeleteStudent();
   const createStudentUser = useCreateAuthUserForStudent();
 
   const teacherMap = useMemo(() => {
@@ -393,13 +395,16 @@ export function StudentsListView({
     const isActive = studentToArchive.status === "ativo";
 
     if (isActive) {
-      // Soft delete: preserva histórico de aulas e cobranças
-      softDeleteStudent.mutate(studentToArchive.id, {
-        onSuccess: () => {
-          setArchiveDialogOpen(false);
-          setStudentToArchive(null);
-        },
-      });
+      // Arquivar: muda status para inativo (preserva histórico, updateStudent sincroniza profile.active)
+      updateStudent.mutate(
+        { id: studentToArchive.id, status: "inativo" },
+        {
+          onSuccess: () => {
+            setArchiveDialogOpen(false);
+            setStudentToArchive(null);
+          },
+        }
+      );
     } else {
       // Reativar aluno
       updateStudent.mutate(
@@ -674,6 +679,18 @@ export function StudentsListView({
                               )}
                               {student.status === "ativo" ? "Arquivar" : "Reativar aluno"}
                             </DropdownMenuItem>
+                            {student.status === "inativo" && (
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => {
+                                  setStudentToHardDelete(student);
+                                  setHardDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir definitivamente
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -823,6 +840,51 @@ onClick={() => {
         autoTeacherId={autoTeacherId}
       />
 
+      {/* Hard Delete Confirmation Dialog */}
+      <AlertDialog open={hardDeleteDialogOpen} onOpenChange={setHardDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir definitivamente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir definitivamente o aluno{" "}
+              <strong>{studentToHardDelete?.name}</strong>?
+              <br />
+              <br />
+              <strong className="text-destructive">Atenção:</strong> Todo o histórico de aulas e
+              cobranças deste aluno será <strong>permanentemente removido</strong>. Esta ação não
+              pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={hardDeleteStudent.isPending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!studentToHardDelete) return;
+                hardDeleteStudent.mutate(studentToHardDelete.id, {
+                  onSuccess: () => {
+                    setHardDeleteDialogOpen(false);
+                    setStudentToHardDelete(null);
+                  },
+                });
+              }}
+              disabled={hardDeleteStudent.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {hardDeleteStudent.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                "Excluir definitivamente"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Archive Confirmation Dialog */}
       <AlertDialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
         <AlertDialogContent>
@@ -852,15 +914,15 @@ onClick={() => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={softDeleteStudent.isPending || updateStudent.isPending}>
+            <AlertDialogCancel disabled={updateStudent.isPending}>
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleArchiveConfirm}
-              disabled={softDeleteStudent.isPending || updateStudent.isPending}
+              disabled={updateStudent.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {softDeleteStudent.isPending || updateStudent.isPending ? (
+              {updateStudent.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {studentToArchive?.status === "ativo"
