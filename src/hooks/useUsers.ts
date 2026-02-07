@@ -259,6 +259,7 @@ export {
   useResetPassword,
   useAdminResetPassword,
   useTeacherResetPassword,
+  useResetOwnPassword,
   useLinkUserToStudent,
   useLinkUserToTeacher,
   useCreateAuthUserForStudent,

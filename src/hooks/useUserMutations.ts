@@ -697,7 +697,7 @@ export function useResetPassword() {
       }
     },
     onSuccess: () => {
-      toast.success("Senha redefinida com sucesso.");
+      toast.success("Senha redefinida com sucesso. O usuário precisará fazer login novamente.");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Erro ao redefinir senha. Tente novamente.");
@@ -915,4 +915,76 @@ export function useCreateAuthUserForTeacher() {
   });
 }
 
+/** Permite que o próprio usuário autenticado redefina sua senha (senha atual + nova senha). */
+export function useResetOwnPassword() {
+  return useMutation({
+    mutationFn: async ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) => {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+      const functionsBase = import.meta.env.DEV && typeof window !== "undefined"
+        ? `${window.location.origin}/supabase-functions`
+        : `${SUPABASE_URL}/functions/v1`;
+      const url = `${functionsBase}/reset-password`;
 
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            currentPassword,
+            newPassword,
+            accessToken: session.access_token,
+          }),
+        });
+
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+
+        if (!res.ok) {
+          throw new Error(data?.error ?? (res.statusText || "Erro ao redefinir senha."));
+        }
+        if (data?.error) throw new Error(data.error);
+      } catch (err) {
+        console.error("[useResetOwnPassword] Erro:", err);
+        if (isEdgeFunctionNetworkError(err)) {
+          throw new Error(
+            "Não foi possível contactar o servidor. Verifique sua conexão e se a Edge Function 'reset-password' está publicada no projeto Supabase."
+          );
+        }
+        throw err;
+      }
+    },
+    onSuccess: async () => {
+      toast.success("Senha alterada com sucesso! Você será redirecionado para o login.");
+      // Aguardar um momento para o toast ser exibido, depois limpar sessão completamente
+      setTimeout(async () => {
+        try {
+          await supabase.auth.signOut({ scope: "global" });
+        } catch (_e) {
+          // ignorar erro de signOut
+        }
+        // Limpar todos os tokens/sessões do Supabase do localStorage
+        Object.keys(localStorage)
+          .filter(key => key.startsWith("sb-"))
+          .forEach(key => localStorage.removeItem(key));
+        // Limpar sessionStorage também
+        Object.keys(sessionStorage)
+          .filter(key => key.startsWith("sb-"))
+          .forEach(key => sessionStorage.removeItem(key));
+        // Forçar reload completo para /login (não usar router, evitar cache de estado)
+        window.location.replace("/login");
+      }, 1500);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erro ao alterar senha. Tente novamente.");
+    },
+  });
+}

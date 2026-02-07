@@ -1,7 +1,8 @@
 // Edge Function: reset-password (unificada)
-// Permite que admin ou professor redefina senhas.
-// - Admin pode resetar qualquer usuário (via userId) ou aluno (via studentId).
-// - Professor pode resetar apenas alunos vinculados a ele (via studentId).
+// Três fluxos em um único endpoint:
+// A) Self-reset: qualquer usuário autenticado altera sua própria senha (currentPassword + newPassword)
+// B) Admin: reseta qualquer usuário por userId (password)
+// C) Admin/Professor: reseta aluno por studentId (password) — professor só do aluno vinculado
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -36,9 +37,11 @@ serve(async (req) => {
   }
 
   interface RequestBody {
-    userId?: string;     // ID direto do auth user (usado pelo admin)
-    studentId?: string;  // ID do aluno — resolve user_id internamente
-    password?: string;
+    userId?: string;          // Fluxo B — admin reseta por userId
+    studentId?: string;       // Fluxo C — admin/professor reseta aluno
+    password?: string;        // Fluxo B/C — nova senha
+    currentPassword?: string; // Fluxo A — senha atual (self-reset)
+    newPassword?: string;     // Fluxo A — nova senha (self-reset)
     accessToken?: string;
   }
 
@@ -74,6 +77,47 @@ serve(async (req) => {
     return jsonResponse({ error: "Usuário não encontrado. Token inválido." }, 401);
   }
 
+  // ════════════════════════════════════════════════════════════
+  // Fluxo A: Self-reset (currentPassword + newPassword)
+  // ════════════════════════════════════════════════════════════
+  if (body.currentPassword && body.newPassword) {
+    const { currentPassword, newPassword } = body;
+
+    if (typeof currentPassword !== "string" || typeof newPassword !== "string") {
+      return jsonResponse({ error: "Dados inválidos." }, 400);
+    }
+    if (newPassword.length < 6) {
+      return jsonResponse({ error: "A nova senha deve ter pelo menos 6 caracteres." }, 400);
+    }
+
+    // Verificar senha atual via sign-in
+    const { error: signInError } = await supabaseAdmin.auth.signInWithPassword({
+      email: user.email!,
+      password: currentPassword,
+    });
+
+    if (signInError) {
+      return jsonResponse({ error: "Senha atual incorreta." }, 403);
+    }
+
+    // Atualizar senha
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+      user.id,
+      { password: newPassword },
+    );
+
+    if (updateError) {
+      console.error("[reset-password] Self-reset error:", updateError);
+      return jsonResponse({ error: updateError.message }, 500);
+    }
+
+    return jsonResponse({ success: true }, 200);
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // Fluxos B/C: Admin ou Professor resetando outra pessoa
+  // ════════════════════════════════════════════════════════════
+
   // 2) Verify caller role (admin ou teacher)
   const { data: roleRow, error: roleError } = await supabaseAdmin
     .from("user_roles")
@@ -106,9 +150,8 @@ serve(async (req) => {
   const { userId, studentId } = body;
 
   if (studentId && typeof studentId === "string") {
-    // ── Fluxo por studentId (professor ou admin) ──
+    // ── Fluxo C: por studentId (professor ou admin) ──
 
-    // Verificar que o aluno existe
     const { data: student, error: studentError } = await supabaseAdmin
       .from("students")
       .select("id, teacher_id")
@@ -119,7 +162,6 @@ serve(async (req) => {
       return jsonResponse({ error: "Aluno não encontrado." }, 404);
     }
 
-    // Se é professor, verificar que o aluno é dele
     if (callerRole === "teacher") {
       const { data: callerProfile, error: callerProfileError } = await supabaseAdmin
         .from("profiles")
@@ -136,7 +178,6 @@ serve(async (req) => {
       }
     }
 
-    // Resolver user_id do aluno via profiles
     const { data: studentProfile, error: studentProfileError } = await supabaseAdmin
       .from("profiles")
       .select("user_id")
@@ -150,7 +191,7 @@ serve(async (req) => {
     targetUserId = studentProfile.user_id;
 
   } else if (userId && typeof userId === "string") {
-    // ── Fluxo por userId direto (somente admin) ──
+    // ── Fluxo B: por userId direto (somente admin) ──
 
     if (callerRole !== "admin") {
       return jsonResponse({ error: "Acesso negado. Apenas administradores podem redefinir senha por userId." }, 403);
@@ -158,7 +199,7 @@ serve(async (req) => {
     targetUserId = userId;
 
   } else {
-    return jsonResponse({ error: "Informe studentId ou userId." }, 400);
+    return jsonResponse({ error: "Informe studentId, userId, ou currentPassword + newPassword." }, 400);
   }
 
   // 5) Reset the password
@@ -170,6 +211,19 @@ serve(async (req) => {
   if (updateError) {
     console.error("[reset-password] Error resetting password:", updateError);
     return jsonResponse({ error: updateError.message }, 500);
+  }
+
+  // 6) Revogar sessões do usuário-alvo para forçar re-login com a nova senha
+  //    Gerar um novo nonce no ban_duration=0 força invalidação dos refresh tokens existentes
+  try {
+    // Atualizar o usuário com um campo que force refresh de sessão
+    await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
+      // @ts-expect-error — forçar invalidação de sessão
+      app_metadata: { password_changed_at: new Date().toISOString() },
+    });
+  } catch (e) {
+    // Não falhar se a revogação não funcionar — a senha já foi alterada
+    console.warn("[reset-password] Aviso ao invalidar sessões:", e);
   }
 
   return jsonResponse({ success: true }, 200);

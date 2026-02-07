@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, BookOpen, CreditCard, LogOut, Loader2 } from "lucide-react";
+import { Home, BookOpen, CreditCard, LogOut, Loader2, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { SettingsModal } from "@/components/layout/SettingsModal";
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ const navigation = [
 
 export function StudentLayout({ children }: StudentLayoutProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
 
@@ -43,18 +45,27 @@ export function StudentLayout({ children }: StudentLayoutProps) {
             </div>
             <span className="text-base font-semibold">EduCore</span>
           </Link>
-          <button
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            aria-label={isLoggingOut ? "Saindo..." : "Sair da conta"}
-            className="text-muted-foreground hover:text-foreground p-2 disabled:opacity-50"
-          >
-            {isLoggingOut ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <LogOut className="h-5 w-5" />
-            )}
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Configurações"
+              className="text-muted-foreground hover:text-foreground p-2"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              aria-label={isLoggingOut ? "Saindo..." : "Sair da conta"}
+              className="text-muted-foreground hover:text-foreground p-2 disabled:opacity-50"
+            >
+              {isLoggingOut ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <LogOut className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -89,6 +100,8 @@ export function StudentLayout({ children }: StudentLayoutProps) {
           })}
         </div>
       </nav>
+
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }

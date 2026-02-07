@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrentUserProfile, useUploadAvatar, useUpdateMyProfile } from "@/hooks/useUsers";
+import { useCurrentUserProfile, useUploadAvatar, useUpdateMyProfile, useResetOwnPassword } from "@/hooks/useUsers";
 import { getAvatarLetter } from "@/lib/utils/patterns";
 import { AVATAR_MAX_SIZE_BYTES, AVATAR_MAX_PX } from "@/lib/utils/avatarUpload";
-import { User, Palette, Loader2, Upload, Trash2 } from "lucide-react";
+import { User, Palette, Loader2, Upload, Trash2, Lock, Eye, EyeOff } from "lucide-react";
 
 interface SettingsModalProps {
   open: boolean;
@@ -29,6 +29,13 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const { data: profile } = useCurrentUserProfile(user?.id);
   const uploadAvatar = useUploadAvatar();
   const updateAvatar = useUpdateMyProfile();
+  const resetOwnPassword = useResetOwnPassword();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const displayName = user?.user_metadata?.full_name ?? profile?.full_name ?? user?.email?.split("@")[0] ?? "";
   const email = user?.email ?? profile?.email ?? "";
   const avatarUrl = profile?.avatar_url ?? "";
@@ -54,10 +61,14 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
           <DialogTitle>Configurações</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="perfil" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="perfil" className="gap-2">
               <User className="h-4 w-4" />
               Perfil
+            </TabsTrigger>
+            <TabsTrigger value="senha" className="gap-2">
+              <Lock className="h-4 w-4" />
+              Senha
             </TabsTrigger>
             <TabsTrigger value="preferencias" className="gap-2">
               <Palette className="h-4 w-4" />
@@ -140,6 +151,113 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             <p className="text-xs text-muted-foreground">
               Alteração de nome e email pode ser feita na conta do provedor de autenticação.
             </p>
+          </TabsContent>
+          <TabsContent value="senha" className="space-y-4 pt-4">
+            <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                Ao alterar sua senha, sua sessão será encerrada e você precisará fazer login novamente com a nova senha.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Senha atual</Label>
+              <div className="relative">
+                <Input
+                  id="current-password"
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Digite sua senha atual"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowCurrentPassword(v => !v)}
+                  aria-label={showCurrentPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Nova senha</Label>
+              <div className="relative">
+                <Input
+                  id="new-password"
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowNewPassword(v => !v)}
+                  aria-label={showNewPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirmar nova senha</Label>
+              <div className="relative">
+                <Input
+                  id="confirm-password"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repita a nova senha"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowConfirmPassword(v => !v)}
+                  aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            {newPassword && confirmPassword && newPassword !== confirmPassword && (
+              <p className="text-sm text-destructive">As senhas não coincidem.</p>
+            )}
+            <Button
+              onClick={() => {
+                resetOwnPassword.mutate(
+                  { currentPassword, newPassword },
+                  {
+                    onSuccess: () => {
+                      setCurrentPassword("");
+                      setNewPassword("");
+                      setConfirmPassword("");
+                    },
+                  }
+                );
+              }}
+              disabled={
+                resetOwnPassword.isPending ||
+                !currentPassword ||
+                !newPassword ||
+                newPassword.length < 6 ||
+                newPassword !== confirmPassword
+              }
+              className="w-full"
+            >
+              {resetOwnPassword.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Alterando...
+                </>
+              ) : (
+                "Alterar senha"
+              )}
+            </Button>
           </TabsContent>
           <TabsContent value="preferencias" className="space-y-4 pt-4">
             <p className="text-sm text-muted-foreground">
