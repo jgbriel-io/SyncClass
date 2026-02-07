@@ -197,23 +197,9 @@ export function ClassesView({
         title.toLowerCase().includes(searchLower);
       if (!matchesSearch) return false;
 
-      if (filters.teacherId !== "all" && log.teacher_id !== filters.teacherId) return false;
+      if (filters.teacherId !== "all" && log.teacher_id !== filters.teacherId && log.students?.teacher_id !== filters.teacherId) return false;
 
-      const badge = getClassStatusBadge(log);
-      const status =
-        badge.label === "Concluída"
-          ? "concluida"
-          : badge.label === "Agendada" || badge.label === "Em andamento"
-            ? "agendada"
-            : "avaliacao_pendente";
-
-      // Filtro de status:
-      // - "all": mostra tudo (agendada + avaliação pendente + concluídas)
-      // - "em_aberto": mostra apenas agendada ou avaliação pendente (não concluída)
-      // - valores específicos: filtram por esse status exato
-      if (filters.status === "em_aberto" && status === "concluida") return false;
-      if (filters.status !== "all" && filters.status !== "em_aberto" && filters.status !== status) return false;
-
+      // Filtro de período primeiro (antes de verificar status)
       if (filters.period !== "all") {
         const classDate = new Date(log.class_date + "T12:00:00");
         const now = new Date();
@@ -236,6 +222,40 @@ export function ClassesView({
         to.setHours(23, 59, 59, 999);
         if (classDate < from || classDate > to) return false;
       }
+
+      const badge = getClassStatusBadge(log);
+      const status =
+        badge.label === "Concluída"
+          ? "concluida"
+          : badge.label === "Agendada" || badge.label === "Em andamento"
+            ? "agendada"
+            : "avaliacao_pendente";
+
+      // Filtro de status:
+      // - "all": mostra tudo (agendada + avaliação pendente + concluídas)
+      // - "em_aberto": mostra aulas não concluídas OU aulas concluídas com pagamento não finalizado
+      // - valores específicos: filtram por esse status exato
+      if (filters.status === "em_aberto") {
+        const isNotCompleted = status !== "concluida";
+        if (isNotCompleted) {
+          // Aula não concluída, mostra
+          return true;
+        }
+        // Aula concluída: só mostra se tem cobrança pendente/atrasada
+        if (!log.financial_records) {
+          return false;
+        }
+        const financialStatus = getFinancialActualStatus({
+          status: log.financial_records.status,
+          due_date: log.financial_records.due_date
+        });
+        return financialStatus !== "pago";
+      }
+      
+      if (filters.status !== "all" && filters.status !== status) {
+        return false;
+      }
+
       return true;
     });
   }, [logs, filters]);

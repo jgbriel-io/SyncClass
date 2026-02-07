@@ -13,6 +13,7 @@ import {
   GraduationCap,
   Clock,
   ChevronRight,
+  ChevronDown,
   Bell,
   Link2,
   UserPlus,
@@ -137,6 +138,7 @@ interface FinancialSummary {
   totalPaid: number;
   totalPending: number;
   totalOverdue: number;
+  totalReceivable: number; // pending + overdue
 }
 
 interface DashboardViewProps {
@@ -182,6 +184,7 @@ export function DashboardView({
   );
   const lines = chartLines ?? internalChartLines;
   const setLines = onChartLinesChange ?? setInternalChartLines;
+  const [isQuickActionsExpanded, setIsQuickActionsExpanded] = useState(true);
 
   const overduePercentage = stats && stats.activeStudents > 0
     ? ((stats.overdueCount / stats.activeStudents) * 100).toFixed(1)
@@ -193,6 +196,91 @@ export function DashboardView({
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         <p className="text-muted-foreground">{subtitle}</p>
+      </div>
+
+      {/* Ações Rápidas - linha separada com layout horizontal */}
+      <div className="rounded-xl border bg-card shadow-card">
+        <button
+          onClick={() => setIsQuickActionsExpanded(!isQuickActionsExpanded)}
+          className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Zap className="h-4 w-4 text-primary" />
+            </div>
+            <h2 className="font-semibold">Ações Rápidas</h2>
+          </div>
+          <ChevronDown
+            className={cn(
+              "h-5 w-5 text-muted-foreground transition-transform duration-200",
+              isQuickActionsExpanded && "rotate-180"
+            )}
+          />
+        </button>
+        {isQuickActionsExpanded && (
+        <div className="p-6 border-t">
+          <div className="flex flex-wrap gap-6 justify-center sm:justify-start">
+          <Link
+            to={`${basePath}/students`}
+            className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+          >
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
+            <p className="text-sm">Cadastrar Aluno</p>
+          </Link>
+          <Link
+            to={`${basePath}/classes`}
+            className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+          >
+            <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+              <GraduationCap className="h-4 w-4 text-success" />
+            </div>
+            <p className="text-sm">Registrar Aula</p>
+          </Link>
+          <Link
+            to={`${basePath}/financial`}
+            className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+          >
+            <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+              <DollarSign className="h-4 w-4 text-warning" />
+            </div>
+            <p className="text-sm">Visualizar cobranças</p>
+          </Link>
+          <Link
+            to={basePath === "/admin" ? "/admin/students/overview" : "/teacher/overview"}
+            className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+          >
+            <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
+              <TrendingUp className="h-4 w-4 text-accent-foreground" />
+            </div>
+            <p className="text-sm">Visão Geral</p>
+          </Link>
+          {basePath === "/admin" && (
+            <>
+              <Link
+                to="/admin/teachers"
+                className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+              >
+                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <UserPlus className="h-4 w-4 text-primary" />
+                </div>
+                <p className="text-sm">Cadastrar professor</p>
+              </Link>
+              <Link
+                to="/admin/users"
+                className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+              >
+                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
+                  <Link2 className="h-4 w-4 text-accent-foreground" />
+                </div>
+                <p className="text-sm">Cadastrar usuário</p>
+              </Link>
+            </>
+          )}
+          </div>
+        </div>
+        )}
       </div>
 
       {/* Loading */}
@@ -258,7 +346,7 @@ export function DashboardView({
 
           {/* Financeiro */}
           {financialSummary != null && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
@@ -277,11 +365,24 @@ export function DashboardView({
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">A receber</p>
                     <p className="text-2xl font-bold tracking-tight">
-                      {formatCurrency(financialSummary.totalPending)}
+                      {formatCurrency(financialSummary.totalReceivable)}
                     </p>
                   </div>
                   <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-warning/10">
                     <DollarSign className="h-5 w-5 text-warning" />
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">Pendente</p>
+                    <p className="text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                      {formatCurrency(financialSummary.totalPending)}
+                    </p>
+                  </div>
+                  <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-blue-500/10">
+                    <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>
                 </div>
               </div>
@@ -371,8 +472,8 @@ export function DashboardView({
             </div>
           </div>
 
-          {/* Terceira linha: Próximos Vencimentos 40% + Aniversariantes 40% + Ações Rápidas 20% */}
-          <div className="grid gap-6 lg:grid-cols-[2fr_2fr_1fr]">
+          {/* Terceira linha: Próximos Vencimentos + Aniversariantes */}
+          <div className="grid gap-6 lg:grid-cols-2">
             {/* Upcoming Payments */}
             <div className="rounded-xl border bg-card shadow-card">
               <div className="flex items-center justify-between border-b px-6 py-4">
@@ -490,80 +591,6 @@ export function DashboardView({
                 </div>
               )}
             </div>
-
-            {/* Ações Rápidas */}
-            <div className="rounded-xl border bg-card shadow-card flex flex-col">
-              <div className="border-b px-6 py-4 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Zap className="h-4 w-4 text-primary" />
-                  </div>
-                  <h2 className="font-semibold">Ações Rápidas</h2>
-                </div>
-              </div>
-              <div className="flex-1 flex items-center justify-center p-4 min-h-0">
-                <div className="grid grid-cols-3 gap-x-4 gap-y-5 w-full max-w-[280px]">
-                <Link
-                  to={`${basePath}/students`}
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Users className="h-4 w-4 text-primary" />
-                  </div>
-                  <p className="text-center text-xs leading-tight">Cadastrar Aluno</p>
-                </Link>
-                <Link
-                  to={`${basePath}/classes`}
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center">
-                    <GraduationCap className="h-4 w-4 text-success" />
-                  </div>
-                  <p className="text-center text-xs leading-tight">Registrar Aula</p>
-                </Link>
-                <Link
-                  to={`${basePath}/financial`}
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center">
-                    <DollarSign className="h-4 w-4 text-warning" />
-                  </div>
-                  <p className="text-center text-xs leading-tight">Visualizar cobranças</p>
-                </Link>
-                <Link
-                  to={basePath === "/admin" ? "/admin/students/overview" : "/teacher/overview"}
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center">
-                    <TrendingUp className="h-4 w-4 text-accent-foreground" />
-                  </div>
-                  <p className="text-center text-xs leading-tight">Visão Geral</p>
-                </Link>
-                {basePath === "/admin" && (
-                  <>
-                    <Link
-                      to="/admin/teachers"
-                      className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                    >
-                      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <UserPlus className="h-4 w-4 text-primary" />
-                      </div>
-                      <p className="text-center text-xs leading-tight">Cadastrar professor</p>
-                    </Link>
-                    <Link
-                      to="/admin/users"
-                      className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                    >
-                      <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center">
-                        <Link2 className="h-4 w-4 text-accent-foreground" />
-                      </div>
-                      <p className="text-center text-xs leading-tight">Cadastrar usuário</p>
-                    </Link>
-                  </>
-                )}
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Gráfico de crescimento - ao final da página */}
@@ -575,7 +602,7 @@ export function DashboardView({
                 </div>
                 <div>
                   <h2 className="font-semibold">
-                    {basePath === "/admin" ? "Crescimento da plataforma" : "Crescimento de Alunos e Aulas"}
+                    {basePath === "/admin" ? "Crescimento da plataforma" : "Evolução de Alunos e Aulas"}
                   </h2>
                   <p className="text-sm text-muted-foreground">
                     {chartMonths === 1 ? "Mês atual (por dia)" : `Últimos ${chartMonths} meses`}

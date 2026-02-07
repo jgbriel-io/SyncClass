@@ -200,6 +200,7 @@ export function useFinancialSummary(teacherId?: string | null) {
         totalPending: 0,
         totalPaid: 0,
         totalOverdue: 0,
+        totalReceivable: 0, // pending + overdue (tudo a receber)
         countPending: 0,
         countPaid: 0,
         countOverdue: 0,
@@ -213,6 +214,9 @@ export function useFinancialSummary(teacherId?: string | null) {
       records.forEach((record) => {
         accumulateSummary(record, summary);
       });
+
+      // Calcula total a receber (pendente + atrasado)
+      summary.totalReceivable = summary.totalPending + summary.totalOverdue;
 
       return summary;
     },

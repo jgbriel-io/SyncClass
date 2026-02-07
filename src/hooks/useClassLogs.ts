@@ -162,8 +162,20 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
         .order("class_date", { ascending: false });
 
       const effectiveTeacherId = teacherId ?? (filters?.teacherId !== "all" ? filters?.teacherId : undefined);
+      
+      // Filtra por students.teacher_id (professor do aluno) em vez de class_logs.teacher_id
+      // porque class_logs.teacher_id pode ser NULL mesmo quando a aula pertence a um aluno desse professor
       if (effectiveTeacherId) {
-        q = q.eq("teacher_id", effectiveTeacherId);
+        const { data: teacherStudentIds } = await supabase
+          .from("students")
+          .select("id")
+          .eq("teacher_id", effectiveTeacherId);
+        
+        if (teacherStudentIds && teacherStudentIds.length > 0) {
+          q = q.in("student_id", teacherStudentIds.map(s => s.id));
+        } else {
+          return { list: [] as ClassLogWithStudent[], count: 0 };
+        }
       }
 
       if (filters?.period && filters.period !== "all") {
@@ -171,13 +183,12 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
         q = q.gte("class_date", from).lte("class_date", to);
       }
 
-      // Status: "all" = todas (agendada + avaliação pendente + concluídas); "concluida" = só com presença registrada
-      if (filters?.status === "concluida") {
-        q = q.not("attendance", "is", null);
-      }
+      // NÃO aplicar filtro de status no banco - deixar tudo client-side
+      // Isso garante que todas as aulas sejam retornadas e filtradas no componente
 
       const from = page * pageSize;
       const to = from + pageSize - 1;
+      
       const { data, error, count } = await q.range(from, to);
 
       if (error) throw error;
@@ -261,18 +272,13 @@ export function useAvailableClassLogsForStudent(studentId: string | null, teache
     queryFn: async () => {
       if (!studentId) return [];
 
-      // Buscar todas as aulas do aluno (e, se informado, do professor)
-      let classLogsQuery = supabase
+      // Buscar todas as aulas do aluno. Não filtrar por class_logs.teacher_id:
+      // o aluno já está definido; se o contexto exige um professor, o student_id já implica alunos desse professor.
+      const { data: classLogs, error: classLogsError } = await supabase
         .from("class_logs")
         .select("*")
         .eq("student_id", studentId)
         .order("class_date", { ascending: false });
-
-      if (teacherId) {
-        classLogsQuery = classLogsQuery.eq("teacher_id", teacherId);
-      }
-
-      const { data: classLogs, error: classLogsError } = await classLogsQuery;
 
       if (classLogsError) throw classLogsError;
 
@@ -302,7 +308,22 @@ export function useClassLogsSummary(teacherId?: string | null) {
         .from("class_logs")
         .select("attendance, grade");
       if (teacherId) {
-        query = query.eq("teacher_id", teacherId);
+        const { data: teacherStudentIds } = await supabase
+          .from("students")
+          .select("id")
+          .eq("teacher_id", teacherId);
+        if (teacherStudentIds && teacherStudentIds.length > 0) {
+          query = query.in("student_id", teacherStudentIds.map((s) => s.id));
+        } else {
+          return {
+            totalClasses: 0,
+            totalPresent: 0,
+            totalAbsent: 0,
+            averageGrade: 0,
+            gradesCount: 0,
+            gradesSum: 0,
+          };
+        }
       }
       const { data, error } = await query;
 
