@@ -10,6 +10,7 @@ import {
   useNewStudentsByMonth,
 } from "@/hooks/useDashboardStats";
 import { useFinancialSummary } from "@/hooks/useFinancialRecords";
+import { useForecastedBilling } from "@/hooks/useForecastedBilling";
 import { useTodayClasses } from "@/hooks/useTodayClasses";
 import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
 import type { ChartMonthsFilter } from "@/components/dashboard/DashboardView";
@@ -35,6 +36,7 @@ export default function AdminDashboard() {
 
   const { data: stats, isLoading: loadingStats } = useDashboardStats();
   const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary();
+  const { data: forecastedBilling } = useForecastedBilling();
   const { data: upcomingPayments = [], isLoading: loadingPayments } = useUpcomingPayments();
   const { data: birthdays = [], isLoading: loadingBirthdays } = useBirthdaysThisMonth();
   const { data: chartData = [], isLoading: loadingChart } = useNewStudentsByMonth(chartMonths);
@@ -50,6 +52,7 @@ export default function AdminDashboard() {
         subtitle={`Bem-vindo de volta, ${displayName}! Aqui está o resumo da sua instituição.`}
         stats={stats}
         financialSummary={financialSummary}
+        forecastedBilling={forecastedBilling}
         upcomingPayments={upcomingPayments}
         birthdays={birthdays}
         chartData={chartData}

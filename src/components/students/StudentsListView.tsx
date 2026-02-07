@@ -45,7 +45,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check, KeyRound } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check, KeyRound, Users, UserCheck, UserX, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
@@ -62,6 +62,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFinancialRecordsByStudentIds, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import { useClassLogsByStudentIds } from "@/hooks/useClassLogs";
+import { useStudentsStats } from "@/hooks/useStudentsStats";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { Teacher } from "@/hooks/useTeachers";
@@ -152,6 +153,7 @@ export function StudentsListView({
   const studentIds = useMemo(() => students.map((s) => s.id), [students]);
   const { data: financialRecords = [] } = useFinancialRecordsByStudentIds(studentIds);
   const { data: classLogs = [] } = useClassLogsByStudentIds(studentIds);
+  const { data: studentsStats } = useStudentsStats(autoTeacherId);
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -450,6 +452,56 @@ export function StudentsListView({
           Novo Aluno
         </Button>
       </div>
+
+      {/* Cards de estatísticas */}
+      {studentsStats && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Total de Alunos</p>
+                <p className="text-2xl font-bold tracking-tight">{studentsStats.totalStudents}</p>
+              </div>
+              <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Alunos Ativos</p>
+                <p className="text-2xl font-bold tracking-tight text-success">{studentsStats.activeStudents}</p>
+              </div>
+              <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-success/10">
+                <UserCheck className="h-5 w-5 text-success" />
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Alunos Inativos</p>
+                <p className="text-2xl font-bold tracking-tight text-muted-foreground">{studentsStats.inactiveStudents}</p>
+              </div>
+              <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-muted">
+                <UserX className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Novos este Mês</p>
+                <p className="text-2xl font-bold tracking-tight text-primary">{studentsStats.newStudentsThisMonth}</p>
+              </div>
+              <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filtros avançados */}
       <StudentsFilters

@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Check, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Check, Loader2, ChevronLeft, ChevronRight, DollarSign } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   FinancialFilters,
@@ -42,14 +42,10 @@ import {
   FinancialRecordInsert,
   FinancialRecordWithRelations,
 } from "@/hooks/useFinancialRecords";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Pencil, Trash2, TrendingUp } from "lucide-react";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { useForecastedBilling } from "@/hooks/useForecastedBilling";
 
 type PaymentStatus = "pendente" | "atrasado" | "pago";
 
@@ -91,6 +87,7 @@ export function FinancialView({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [undoDialogOpen, setUndoDialogOpen] = useState(false);
   const listTopRef = useRef<HTMLDivElement>(null);
+  const { data: forecastedBilling } = useForecastedBilling(autoTeacherId);
 
   const {
     data: records = [],
@@ -262,33 +259,97 @@ export function FinancialView({
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border bg-card p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">A receber</p>
-          <p className="text-2xl font-semibold mt-1">
-            {formatCurrency(actualSummary.totalPending)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {actualSummary.countPending} cobrança{actualSummary.countPending !== 1 && "s"} pendente{actualSummary.countPending !== 1 && "s"}
-          </p>
+
+      {/* Card grande de Previsão de Faturamento Mensal */}
+      {forecastedBilling && (
+        <div className="rounded-lg border bg-gradient-to-br from-primary/5 to-primary/10 p-6 shadow-card mb-4">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                <p className="text-sm font-medium text-muted-foreground">Previsão de Faturamento Mensal</p>
+              </div>
+              <p className="text-3xl font-bold tracking-tight text-primary">
+                {formatCurrency(forecastedBilling.totalForecast)}
+              </p>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="text-success font-medium">
+                  {formatCurrency(forecastedBilling.receivedThisMonth)} recebido
+                </span>
+                <span>•</span>
+                <span className="font-medium">
+                  {formatCurrency(forecastedBilling.pendingThisMonth)} pendente
+                </span>
+              </div>
+              {/* Barra de progresso */}
+              <div className="w-full bg-muted rounded-full h-2">
+                <div
+                  className="bg-primary h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(forecastedBilling.receivedPercentage, 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {forecastedBilling.receivedPercentage}% recebido ({forecastedBilling.paidCount}/{forecastedBilling.totalCount} cobranças)
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="rounded-lg border bg-card p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">Recebido</p>
-          <p className="text-2xl font-semibold mt-1 text-success">
-            {formatCurrency(actualSummary.totalPaid)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {actualSummary.countPaid} pagamento{actualSummary.countPaid !== 1 && "s"}
-          </p>
+      )}
+
+      {/* Cards financeiros padrão dashboard (exceto previsão mensal) */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Total recebido</p>
+              <p className="text-2xl font-bold tracking-tight text-success">
+                {formatCurrency(actualSummary.totalPaid)}
+              </p>
+            </div>
+            <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-success/10">
+              <DollarSign className="h-5 w-5 text-success" />
+            </div>
+          </div>
         </div>
-        <div className="rounded-lg border bg-card p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">Em atraso</p>
-          <p className="text-2xl font-semibold mt-1 text-destructive">
-            {formatCurrency(actualSummary.totalOverdue)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {actualSummary.countOverdue} cobrança{actualSummary.countOverdue !== 1 && "s"}
-          </p>
+        <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Total a receber</p>
+              <p className="text-2xl font-bold tracking-tight">
+                {formatCurrency(actualSummary.totalPending + actualSummary.totalOverdue)}
+              </p>
+              <p className="text-xs text-muted-foreground">Pendentes + Em atraso</p>
+            </div>
+            <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-warning/10">
+              <DollarSign className="h-5 w-5 text-warning" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Pendente</p>
+              <p className="text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {formatCurrency(actualSummary.totalPending)}
+              </p>
+            </div>
+            <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-blue-500/10">
+              <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Em atraso</p>
+              <p className="text-2xl font-bold tracking-tight text-destructive">
+                {formatCurrency(actualSummary.totalOverdue)}
+              </p>
+            </div>
+            <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-destructive/10">
+              <DollarSign className="h-5 w-5 text-destructive" />
+            </div>
+          </div>
         </div>
       </div>
 
