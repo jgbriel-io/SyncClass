@@ -27,7 +27,6 @@ import {
   Trash2,
   Loader2,
   Receipt,
-  BookOpen,
   Check,
   Lock,
   ChevronLeft,
@@ -146,7 +145,7 @@ const TeacherPedagogicalPage = () => {
     hasMore,
     totalCount,
     isFetching,
-  } = useClassLogs(teacherId ?? undefined, { pageSize: 20 });
+  } = useClassLogs(teacherId ?? undefined, { pageSize: 10 });
   const { data: summary } = useClassLogsSummary(teacherId);
 
   useEffect(() => {
@@ -156,10 +155,6 @@ const TeacherPedagogicalPage = () => {
   const createLogWithFinancial = useCreateClassLogWithFinancial();
   const updateLog = useUpdateClassLog();
   const deleteLog = useDeleteClassLog();
-
-  const logsPendingRegistration = logs.filter(
-    (log) => !isClassEvaluationBlocked(log) && log.attendance == null
-  );
 
   const filteredLogs = logs.filter((log) => {
     const studentName = log.students?.name || "";
@@ -284,31 +279,6 @@ const TeacherPedagogicalPage = () => {
             </p>
           </div>
         </div>
-
-        {/* Conferência: aulas passadas sem presença */}
-        {logsPendingRegistration.length > 0 && (
-          <div className="rounded-lg border border-warning/50 bg-warning/10 p-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-warning" />
-              <p className="text-sm font-medium">
-                <span className="font-semibold">{logsPendingRegistration.length}</span>{" "}
-                {logsPendingRegistration.length === 1
-                  ? "aula pendente de feedback"
-                  : "aulas pendentes de feedback"}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const first = logsPendingRegistration[0];
-                if (first) handleEdit(first);
-              }}
-            >
-              Ver e registrar
-            </Button>
-          </div>
-        )}
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
@@ -535,7 +505,7 @@ const TeacherPedagogicalPage = () => {
               <div className="border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
                 <p className="text-sm text-muted-foreground">
                   {totalCount > 0
-                    ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}`
+                    ? `${page * 10 + 1}-${Math.min((page + 1) * 10, totalCount)} de ${totalCount}`
                     : "0 registros"}
                 </p>
                 <div className="flex items-center gap-2">

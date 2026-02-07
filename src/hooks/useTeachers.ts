@@ -5,7 +5,7 @@ import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 10;
 
 export type TeachersListFilters = {
   status?: "all" | "ativo" | "inativo";

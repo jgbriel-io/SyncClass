@@ -19,6 +19,7 @@ import {
   UserPlus,
   Zap,
   Filter,
+  BookOpen,
 } from "lucide-react";
 import {
   Select,
@@ -150,6 +151,8 @@ interface DashboardViewProps {
   birthdays: Birthday[];
   chartData: ChartDataPoint[];
   todayClasses: TodayClassesData | undefined;
+  /** Número de aulas pendentes de feedback (avaliação). Exibido no topo do dashboard. */
+  pendingFeedbackCount?: number;
   isLoading: boolean;
   chartLoading?: boolean;
   basePath: "/admin" | "/teacher";
@@ -171,6 +174,7 @@ export function DashboardView({
   birthdays,
   chartData,
   todayClasses,
+  pendingFeedbackCount = 0,
   isLoading,
   chartLoading = false,
   basePath,
@@ -197,6 +201,26 @@ export function DashboardView({
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         <p className="text-muted-foreground">{subtitle}</p>
       </div>
+
+      {/* Aviso: aulas pendentes de feedback */}
+      {pendingFeedbackCount > 0 && (
+        <div className="rounded-lg border border-warning/50 bg-warning/10 px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-warning shrink-0" />
+            <p className="text-sm font-medium">
+              <span className="font-semibold">{pendingFeedbackCount}</span>{" "}
+              {pendingFeedbackCount === 1 ? "aula pendente de feedback" : "aulas pendentes de feedback"}
+            </p>
+          </div>
+          <Link
+            to={`${basePath}/classes?status=avaliacao_pendente`}
+            className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary shrink-0 transition-colors"
+          >
+            Ver e avaliar
+            <ChevronRight className="h-3 w-3" />
+          </Link>
+        </div>
+      )}
 
       {/* Ações Rápidas - linha separada com layout horizontal */}
       <div className="rounded-xl border bg-card shadow-card">

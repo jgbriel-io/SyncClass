@@ -105,7 +105,7 @@ export default function TeachersPage() {
     totalCount,
     isFetching,
   } = useTeachersPaginated({
-    pageSize: 20,
+    pageSize: 10,
     filters: { status: filters.status, sortBy: filters.sortBy },
   });
   const createTeacher = useCreateTeacher();
@@ -428,7 +428,7 @@ export default function TeachersPage() {
             )}
             <TablePaginationBar
               page={page}
-              pageSize={20}
+              pageSize={10}
               totalCount={totalCount}
               hasMore={hasMore}
               isFetching={isFetching}

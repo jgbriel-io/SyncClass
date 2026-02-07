@@ -106,7 +106,7 @@ export default function UsersPage() {
     hasMore,
     totalCount,
     isFetching,
-  } = useUsersPaginated({ pageSize: 20, filters });
+  } = useUsersPaginated({ pageSize: 10, filters });
   const { data: students = [] } = useStudents();
   const { data: teachers = [] } = useTeachers();
   const { data: linkedIds } = useLinkedProfileIds();
@@ -756,7 +756,7 @@ export default function UsersPage() {
             )}
             <TablePaginationBar
               page={page}
-              pageSize={20}
+              pageSize={10}
               totalCount={totalCount}
               hasMore={hasMore}
               isFetching={isFetching}

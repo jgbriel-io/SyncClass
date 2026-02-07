@@ -135,7 +135,7 @@ export function StudentsListView({
     totalCount,
     isFetching,
   } = useStudentsPaginated({
-    pageSize: 20,
+    pageSize: 10,
     filters: {
       teacherId: autoTeacherId ?? filters.teacherId,
       status: filters.status,
@@ -743,7 +743,7 @@ export function StudentsListView({
           )}
           <TablePaginationBar
             page={page}
-            pageSize={20}
+            pageSize={10}
             totalCount={totalCount}
             hasMore={hasMore}
             isFetching={isFetching}

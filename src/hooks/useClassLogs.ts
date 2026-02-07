@@ -5,7 +5,7 @@ import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/type
 import { toast } from "sonner";
 import { getClassStatusWithTime } from "@/lib/utils/classTime";
 
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 10;
 
 export type ClassLogsStatusFilter = "all" | "agendada" | "avaliacao_pendente" | "concluida";
 

@@ -30,7 +30,7 @@ import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 function StudentOverviewPage() {
   const [filters, setFilters] = useState<OverviewFiltersState>(defaultOverviewFilters);

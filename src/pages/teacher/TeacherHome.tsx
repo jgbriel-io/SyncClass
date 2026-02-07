@@ -11,6 +11,7 @@ import {
 } from "@/hooks/useTeacherDashboard";
 import { useFinancialSummary } from "@/hooks/useFinancialRecords";
 import { useTodayClasses } from "@/hooks/useTodayClasses";
+import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
 import type { ChartMonthsFilter } from "@/components/dashboard/DashboardView";
 
 const TeacherHome = () => {
@@ -43,11 +44,12 @@ const TeacherHome = () => {
   const { data: birthdays = [], isLoading: loadingBirthdays } = useTeacherBirthdaysThisMonth(teacherId);
   const { data: chartData = [], isLoading: loadingChart } = useTeacherNewStudentsByMonth(teacherId, chartMonths);
   const { data: todayClasses } = useTodayClasses(teacherId);
+  const { data: pendingEvaluationLogs = [] } = usePendingEvaluationClassLogs(teacherId ?? null);
 
   const isLoading = loadingStats || loadingFinancial || loadingPayments || loadingBirthdays || !teacherId;
 
   return (
-    <DashboardView
+      <DashboardView
         title="Dashboard"
         subtitle={`Bem-vindo de volta, ${displayName}! Aqui está o resumo dos seus alunos.`}
         stats={stats}
@@ -56,6 +58,7 @@ const TeacherHome = () => {
         birthdays={birthdays}
         chartData={chartData}
         todayClasses={todayClasses}
+        pendingFeedbackCount={pendingEvaluationLogs.length}
         isLoading={isLoading}
         chartLoading={loadingChart}
         basePath="/teacher"

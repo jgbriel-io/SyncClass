@@ -102,7 +102,7 @@ export function FinancialView({
     totalCount,
     isFetching,
   } = useFinancialRecords(autoTeacherId, {
-    pageSize: 20,
+    pageSize: 10,
     filters: {
       dateFrom: filters.dateFrom || undefined,
       dateTo: filters.dateTo || undefined,
@@ -501,7 +501,7 @@ export function FinancialView({
             <div className="border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
               <p className="text-sm text-muted-foreground">
                 {totalCount > 0
-                  ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}`
+                  ? `${page * 10 + 1}-${Math.min((page + 1) * 10, totalCount)} de ${totalCount}`
                   : "0 registros"}
               </p>
               <div className="flex items-center gap-2">

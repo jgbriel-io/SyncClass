@@ -156,7 +156,7 @@ export function ClassesView({
     totalCount,
     isFetching,
   } = useClassLogs(effectiveTeacherId ?? undefined, {
-    pageSize: 20,
+    pageSize: 10,
     filters: useMemo(
       () => ({
         teacherId: effectiveTeacherId ?? filters.teacherId,
@@ -181,10 +181,6 @@ export function ClassesView({
   const createLogWithFinancial = useCreateClassLogWithFinancial();
   const updateLog = useUpdateClassLog();
   const deleteLog = useDeleteClassLog();
-
-  const logsPendingRegistration = logs.filter(
-    (log) => !isClassEvaluationBlocked(log) && log.attendance == null
-  );
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
@@ -374,31 +370,6 @@ export function ClassesView({
           </p>
         </div>
       </div>
-
-      {/* Conferência: alerta de aulas passadas sem presença marcada */}
-      {logsPendingRegistration.length > 0 && (
-        <div className="rounded-lg border border-warning/50 bg-warning/10 p-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-warning" />
-            <p className="text-sm font-medium">
-              <span className="font-semibold">{logsPendingRegistration.length}</span>{" "}
-              {logsPendingRegistration.length === 1
-                ? "aula pendentes de feedback"
-                : "aulas pendentes de feedback "}
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const first = logsPendingRegistration[0];
-              if (first) handleEdit(first);
-            }}
-          >
-            Ver e registrar
-          </Button>
-        </div>
-      )}
 
       {/* Filtros avançados */}
       <ClassesFilters
@@ -659,7 +630,7 @@ export function ClassesView({
             <div className="border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
               <p className="text-sm text-muted-foreground">
                 {totalCount > 0
-                  ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}`
+                  ? `${page * 10 + 1}-${Math.min((page + 1) * 10, totalCount)} de ${totalCount}`
                   : "0 registros"}
               </p>
               <div className="flex items-center gap-2">
@@ -863,7 +834,7 @@ export function ClassesView({
           {(totalCount > 0 || page > 0) && (
             <div className="rounded-lg border bg-card px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
               <p className="text-sm text-muted-foreground">
-                {totalCount > 0 ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}` : "0 registros"}
+                {totalCount > 0 ? `${page * 10 + 1}-${Math.min((page + 1) * 10, totalCount)} de ${totalCount}` : "0 registros"}
               </p>
               <div className="flex items-center gap-2">
                 <Button

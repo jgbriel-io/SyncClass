@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isOverdue } from "@/lib/utils/financialStatus";
 import { Student } from "./useStudents";
 
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 10;
 
 export interface StudentClassLog {
   id: string;

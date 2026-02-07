@@ -11,6 +11,7 @@ import {
 } from "@/hooks/useDashboardStats";
 import { useFinancialSummary } from "@/hooks/useFinancialRecords";
 import { useTodayClasses } from "@/hooks/useTodayClasses";
+import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
 import type { ChartMonthsFilter } from "@/components/dashboard/DashboardView";
 
 export default function AdminDashboard() {
@@ -38,12 +39,13 @@ export default function AdminDashboard() {
   const { data: birthdays = [], isLoading: loadingBirthdays } = useBirthdaysThisMonth();
   const { data: chartData = [], isLoading: loadingChart } = useNewStudentsByMonth(chartMonths);
   const { data: todayClasses } = useTodayClasses(null);
+  const { data: pendingEvaluationLogs = [] } = usePendingEvaluationClassLogs(null);
 
   const isLoading = loadingStats || loadingFinancial || loadingPayments || loadingBirthdays;
   const displayName = profile?.full_name?.trim() || "Admin";
 
   return (
-    <DashboardView
+      <DashboardView
         title="Dashboard"
         subtitle={`Bem-vindo de volta, ${displayName}! Aqui está o resumo da sua instituição.`}
         stats={stats}
@@ -52,6 +54,7 @@ export default function AdminDashboard() {
         birthdays={birthdays}
         chartData={chartData}
         todayClasses={todayClasses}
+        pendingFeedbackCount={pendingEvaluationLogs.length}
         isLoading={isLoading}
         chartLoading={loadingChart}
         basePath="/admin"
