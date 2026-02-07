@@ -95,7 +95,7 @@ export function StudentsFilters({
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="ativo">Ativos</SelectItem>
-              <SelectItem value="inativo">Inativos</SelectItem>
+              <SelectItem value="inativo">Arquivados</SelectItem>
             </SelectContent>
           </Select>
           </div>

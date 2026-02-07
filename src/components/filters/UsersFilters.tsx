@@ -79,7 +79,7 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="active">Ativos</SelectItem>
-              <SelectItem value="inactive">Inativos</SelectItem>
+              <SelectItem value="inactive">Arquivados</SelectItem>
             </SelectContent>
           </Select>
           </div>
@@ -89,7 +89,7 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
               value={filters.sortBy}
             onValueChange={(v) => onChange({ ...filters, sortBy: v as UserSortBy })}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[220px] pl-3 text-left">
               <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
             <SelectContent>
