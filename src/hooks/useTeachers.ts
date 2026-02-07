@@ -230,3 +230,59 @@ export function useDeleteTeacher() {
     },
   });
 }
+
+/**
+ * Hard delete teacher — physically removes from DB.
+ * FK CASCADE removes class_logs linked to this teacher.
+ * If there's a linked auth user (via profiles), also deletes the auth user
+ * via the admin-delete-user Edge Function (which cascades profile + user_roles).
+ * Admin-only.
+ */
+export function useHardDeleteTeacher() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // 1) Check if there's a linked auth user via profiles
+      const { data: linkedProfile } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("teacher_id", id)
+        .maybeSingle();
+
+      // 2) Delete the teacher record (CASCADE removes class_logs)
+      const { error } = await supabase
+        .from("teachers")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      // 3) If there's a linked user, hard-delete the auth account too
+      if (linkedProfile?.user_id) {
+        const { data, error: fnError } = await supabase.functions.invoke("admin-delete-user", {
+          body: { userId: linkedProfile.user_id },
+        });
+        const msg = (data as { error?: string } | null)?.error;
+        if (fnError) {
+          console.error("Erro ao excluir conta vinculada:", fnError);
+        } else if (msg) {
+          console.error("Erro ao excluir conta vinculada:", msg);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["teachers_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles_linked_ids"] });
+      toast.success("Professor excluído definitivamente.");
+    },
+    onError: () => {
+      toast.error("Erro ao excluir professor definitivamente. Tente novamente.");
+    },
+  });
+}

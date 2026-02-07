@@ -3,7 +3,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
@@ -43,11 +42,22 @@ import {
 import { TeacherFormDialog } from "@/components/teachers/TeacherFormDialog";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   useTeachers,
   useTeachersPaginated,
   useCreateTeacher,
   useUpdateTeacher,
   useDeleteTeacher,
+  useHardDeleteTeacher,
   Teacher,
   TeacherInsert,
 } from "@/hooks/useTeachers";
@@ -65,6 +75,8 @@ export default function TeachersPage() {
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
+  const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
+  const [teacherToHardDelete, setTeacherToHardDelete] = useState<Teacher | null>(null);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
@@ -90,6 +102,7 @@ export default function TeachersPage() {
   const inviteTeacher = useInviteTeacher();
   const updateTeacher = useUpdateTeacher();
   const deleteTeacher = useDeleteTeacher();
+  const hardDeleteTeacher = useHardDeleteTeacher();
   const createTeacherUser = useCreateAuthUserForTeacher();
 
   useEffect(() => {
@@ -354,8 +367,25 @@ export default function TeachersPage() {
                               {status === "ativo" && (
                                 <Trash2 className="h-4 w-4 mr-2" />
                               )}
-                              {status === "ativo" ? "Arquivar" : "Reativar professor"}
+                              {status === "ativo" ? "Arquivar" : (
+                                <>
+                                  <Check className="h-4 w-4 mr-2" />
+                                  Reativar professor
+                                </>
+                              )}
                             </DropdownMenuItem>
+                            {status === "inativo" && (
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => {
+                                  setTeacherToHardDelete(teacher);
+                                  setHardDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir definitivamente
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -494,42 +524,38 @@ export default function TeachersPage() {
         </Dialog>
 
         {/* Modal de confirmação de status (arquivar/reativar) */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent aria-describedby={undefined}>
-            <DialogHeader>
-              <DialogTitle>
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
                 {(teacherToDelete?.status ?? "ativo") === "ativo"
                   ? "Confirmar arquivamento"
                   : "Confirmar reativação"}
-              </DialogTitle>
-            </DialogHeader>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {(teacherToDelete?.status ?? "ativo") === "ativo" ? (
-                <>
-                  Tem certeza que deseja arquivar o professor{" "}
-                  <strong>{teacherToDelete?.name}</strong>? Ele será removido da
-                  lista de ativos, mas poderá ser visualizado em "Inativos".
-                </>
-              ) : (
-                <>
-                  Tem certeza que deseja reativar o professor{" "}
-                  <strong>{teacherToDelete?.name}</strong>? Ele voltará para a
-                  lista de ativos e terá o acesso reativado.
-                </>
-              )}
-            </p>
-            <DialogFooter className="mt-4">
-              <Button
-                variant="ghost"
-                onClick={() => setDeleteDialogOpen(false)}
-                disabled={deleteTeacher.isPending || updateTeacher.isPending}
-              >
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {(teacherToDelete?.status ?? "ativo") === "ativo" ? (
+                  <>
+                    Tem certeza que deseja arquivar o professor{" "}
+                    <strong>{teacherToDelete?.name}</strong>? Ele será removido da
+                    lista de ativos, mas poderá ser visualizado em "Inativos".
+                  </>
+                ) : (
+                  <>
+                    Tem certeza que deseja reativar o professor{" "}
+                    <strong>{teacherToDelete?.name}</strong>? Ele voltará para a
+                    lista de ativos e terá o acesso reativado.
+                  </>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteTeacher.isPending || updateTeacher.isPending}>
                 Cancelar
-              </Button>
-              <Button
-                variant="destructive"
+              </AlertDialogCancel>
+              <AlertDialogAction
                 onClick={handleStatusChangeConfirm}
                 disabled={deleteTeacher.isPending || updateTeacher.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 {deleteTeacher.isPending || updateTeacher.isPending ? (
                   <>
@@ -543,10 +569,55 @@ export default function TeachersPage() {
                 ) : (
                   "Reativar"
                 )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Hard Delete Confirmation Dialog */}
+        <AlertDialog open={hardDeleteDialogOpen} onOpenChange={setHardDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir definitivamente?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir definitivamente o professor{" "}
+                <strong>{teacherToHardDelete?.name}</strong>?
+                <br />
+                <br />
+                <strong className="text-destructive">Atenção:</strong> Todo o histórico de aulas
+                deste professor será <strong>permanentemente removido</strong>. Esta ação não
+                pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={hardDeleteTeacher.isPending}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (!teacherToHardDelete) return;
+                  hardDeleteTeacher.mutate(teacherToHardDelete.id, {
+                    onSuccess: () => {
+                      setHardDeleteDialogOpen(false);
+                      setTeacherToHardDelete(null);
+                    },
+                  });
+                }}
+                disabled={hardDeleteTeacher.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {hardDeleteTeacher.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  "Excluir definitivamente"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
     </>
   );
 }

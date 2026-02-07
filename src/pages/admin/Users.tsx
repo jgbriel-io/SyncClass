@@ -55,7 +55,7 @@ import {
   UserWithProfile,
 } from "@/hooks/useUsers";
 import { useStudents, useUpdateStudent, useHardDeleteStudent } from "@/hooks/useStudents";
-import { useTeachers, useUpdateTeacher, useDeleteTeacher } from "@/hooks/useTeachers";
+import { useTeachers, useUpdateTeacher, useDeleteTeacher, useHardDeleteTeacher } from "@/hooks/useTeachers";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
   DropdownMenu,
@@ -122,6 +122,7 @@ export default function UsersPage() {
   const updateStudent = useUpdateStudent();
   const hardDeleteStudent = useHardDeleteStudent();
   const updateTeacher = useUpdateTeacher();
+  const hardDeleteTeacher = useHardDeleteTeacher();
   const linkToStudent = useLinkUserToStudent();
   const linkToTeacher = useLinkUserToTeacher();
   const deleteTeacher = useDeleteTeacher();
@@ -343,6 +344,7 @@ export default function UsersPage() {
     if (isHardDelete) {
       // Pega student_id/teacher_id direto do profile (a lista students filtra deleted_at IS NULL)
       const profileStudentId = selectedUser.profile?.student_id ?? null;
+      const profileTeacherId = selectedUser.profile?.teacher_id ?? null;
 
       const doHardDeleteUser = () => {
         hardDeleteUser.mutate(selectedUser.id, {
@@ -353,17 +355,31 @@ export default function UsersPage() {
         });
       };
 
+      const doHardDeleteTeacherThenUser = () => {
+        if (profileTeacherId) {
+          hardDeleteTeacher.mutate(profileTeacherId, {
+            onSuccess: doHardDeleteUser,
+            onError: () => {
+              // Mesmo se falhar, tenta excluir a conta
+              doHardDeleteUser();
+            },
+          });
+        } else {
+          doHardDeleteUser();
+        }
+      };
+
       if (profileStudentId) {
         // Exclui o registro do aluno ANTES de remover a conta (senão o CASCADE do auth apaga o profile e perde a referência)
         hardDeleteStudent.mutate(profileStudentId, {
-          onSuccess: doHardDeleteUser,
+          onSuccess: doHardDeleteTeacherThenUser,
           onError: () => {
-            // Mesmo se falhar, tenta excluir a conta
-            doHardDeleteUser();
+            // Mesmo se falhar, tenta continuar
+            doHardDeleteTeacherThenUser();
           },
         });
       } else {
-        doHardDeleteUser();
+        doHardDeleteTeacherThenUser();
       }
       return;
     }
@@ -666,6 +682,7 @@ export default function UsersPage() {
                                     });
                                   }}
                                 >
+                                  <Check className="h-4 w-4 mr-2" />
                                   Reativar aluno
                                 </DropdownMenuItem>
                               )}
@@ -678,6 +695,7 @@ export default function UsersPage() {
                                     });
                                   }}
                                 >
+                                  <Check className="h-4 w-4 mr-2" />
                                   Reativar professor
                                 </DropdownMenuItem>
                               )}
