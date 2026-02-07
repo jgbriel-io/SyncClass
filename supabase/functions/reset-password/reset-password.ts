@@ -213,18 +213,7 @@ serve(async (req) => {
     return jsonResponse({ error: updateError.message }, 500);
   }
 
-  // 6) Revogar sessões do usuário-alvo para forçar re-login com a nova senha
-  //    Gerar um novo nonce no ban_duration=0 força invalidação dos refresh tokens existentes
-  try {
-    // Atualizar o usuário com um campo que force refresh de sessão
-    await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
-      // @ts-expect-error — forçar invalidação de sessão
-      app_metadata: { password_changed_at: new Date().toISOString() },
-    });
-  } catch (e) {
-    // Não falhar se a revogação não funcionar — a senha já foi alterada
-    console.warn("[reset-password] Aviso ao invalidar sessões:", e);
-  }
+
 
   return jsonResponse({ success: true }, 200);
 });

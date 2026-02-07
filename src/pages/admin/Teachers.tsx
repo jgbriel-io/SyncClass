@@ -1,6 +1,8 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -30,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check, KeyRound } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -61,7 +63,7 @@ import {
   Teacher,
   TeacherInsert,
 } from "@/hooks/useTeachers";
-import { useCreateAuthUserForTeacher, useInviteTeacher } from "@/hooks/useUsers";
+import { useCreateAuthUserForTeacher, useInviteTeacher, useAdminResetPassword } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
@@ -81,7 +83,15 @@ export default function TeachersPage() {
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const [passwordDialogContext, setPasswordDialogContext] = useState<"create" | "reset">("create");
   const passwordInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset password state
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [teacherToResetPassword, setTeacherToResetPassword] = useState<Teacher | null>(null);
+  const [resetPasswordNew, setResetPasswordNew] = useState("");
+  const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
 
   const listTopRef = useRef<HTMLDivElement>(null);
   const { data: allTeachers = [] } = useTeachers();
@@ -104,6 +114,7 @@ export default function TeachersPage() {
   const deleteTeacher = useDeleteTeacher();
   const hardDeleteTeacher = useHardDeleteTeacher();
   const createTeacherUser = useCreateAuthUserForTeacher();
+  const adminResetPassword = useAdminResetPassword();
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -196,6 +207,7 @@ export default function TeachersPage() {
                 setGeneratedPassword(result.password);
                 setShowGeneratedPassword(false);
                 setPasswordCopied(false);
+                setPasswordDialogContext("create");
                 setIsPasswordDialogOpen(true);
               }
             },
@@ -354,6 +366,17 @@ export default function TeachersPage() {
                               Editar
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              onClick={() => {
+                                setTeacherToResetPassword(teacher);
+                                setResetPasswordNew("");
+                                setResetPasswordConfirm("");
+                                setResetPasswordDialogOpen(true);
+                              }}
+                            >
+                              <KeyRound className="h-4 w-4 mr-2" />
+                              Redefinir senha
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               className={
                                 status === "ativo"
                                   ? "text-destructive focus:text-destructive"
@@ -431,14 +454,16 @@ export default function TeachersPage() {
           open={isPasswordDialogOpen}
           onOpenChange={(open) => {
             setIsPasswordDialogOpen(open);
-            if (!open && generatedPassword) {
+            if (!open && generatedPassword && passwordDialogContext === "create") {
               toast.success("Conta criada para o professor.");
             }
           }}
         >
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Senha criada para o professor</DialogTitle>
+              <DialogTitle>
+                {passwordDialogContext === "reset" ? "Senha redefinida" : "Senha criada para o professor"}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
@@ -573,6 +598,143 @@ export default function TeachersPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Redefinir senha do professor */}
+        <Dialog
+          open={resetPasswordDialogOpen}
+          onOpenChange={(open) => {
+            setResetPasswordDialogOpen(open);
+            if (!open) {
+              setTeacherToResetPassword(null);
+              setResetPasswordNew("");
+              setResetPasswordConfirm("");
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Redefinir senha do professor</DialogTitle>
+              {teacherToResetPassword && (
+                <DialogDescription>
+                  Nova senha para <strong>{teacherToResetPassword.name}</strong>. Mínimo 6 caracteres.
+                </DialogDescription>
+              )}
+            </DialogHeader>
+            {teacherToResetPassword && (
+              <>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-pw-teacher-new">Nova senha</Label>
+                    <Input
+                      id="reset-pw-teacher-new"
+                      type="password"
+                      placeholder="••••••••"
+                      value={resetPasswordNew}
+                      onChange={(e) => setResetPasswordNew(e.target.value)}
+                      minLength={6}
+                      disabled={resetPasswordLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-pw-teacher-confirm">Confirmar senha</Label>
+                    <Input
+                      id="reset-pw-teacher-confirm"
+                      type="password"
+                      placeholder="••••••••"
+                      value={resetPasswordConfirm}
+                      onChange={(e) => setResetPasswordConfirm(e.target.value)}
+                      minLength={6}
+                      disabled={resetPasswordLoading}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+                      let p = "";
+                      for (let i = 0; i < 10; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
+                      setResetPasswordNew(p);
+                      setResetPasswordConfirm(p);
+                    }}
+                  >
+                    Gerar senha
+                  </Button>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setResetPasswordDialogOpen(false);
+                      setTeacherToResetPassword(null);
+                      setResetPasswordNew("");
+                      setResetPasswordConfirm("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    disabled={
+                      resetPasswordLoading ||
+                      resetPasswordNew.length < 6 ||
+                      resetPasswordNew !== resetPasswordConfirm
+                    }
+                    onClick={async () => {
+                      if (!teacherToResetPassword) return;
+                      setResetPasswordLoading(true);
+                      try {
+                        // Buscar user_id vinculado ao professor via profiles
+                        const { data: profile, error: profileError } = await supabase
+                          .from("profiles")
+                          .select("user_id")
+                          .eq("teacher_id", teacherToResetPassword.id)
+                          .maybeSingle();
+
+                        if (profileError || !profile?.user_id) {
+                          toast.error("Este professor não possui conta de acesso vinculada.");
+                          setResetPasswordLoading(false);
+                          return;
+                        }
+
+                        adminResetPassword.mutate(
+                          { userId: profile.user_id, password: resetPasswordNew },
+                          {
+                            onSuccess: () => {
+                              setResetPasswordDialogOpen(false);
+                              setTeacherToResetPassword(null);
+                              setResetPasswordNew("");
+                              setResetPasswordConfirm("");
+                              setGeneratedPassword(resetPasswordNew);
+                              setPasswordDialogContext("reset");
+                              setIsPasswordDialogOpen(true);
+                              setResetPasswordLoading(false);
+                            },
+                            onError: () => {
+                              setResetPasswordLoading(false);
+                            },
+                          }
+                        );
+                      } catch {
+                        toast.error("Erro ao buscar conta do professor.");
+                        setResetPasswordLoading(false);
+                      }
+                    }}
+                  >
+                    {resetPasswordLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Redefinindo...
+                      </>
+                    ) : (
+                      "Redefinir senha"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Hard Delete Confirmation Dialog */}
         <AlertDialog open={hardDeleteDialogOpen} onOpenChange={setHardDeleteDialogOpen}>
