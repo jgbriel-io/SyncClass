@@ -61,6 +61,9 @@ export interface FinancialRecordWithRelations extends FinancialRecord {
     feedback: string | null;
     title?: string | null;
   } | null;
+  confirmed_by?: {
+    full_name: string;
+  } | null;
 }
 
 export interface UseFinancialRecordsOptions {
@@ -162,6 +165,33 @@ export function useFinancialRecords(
       if (teacherId && list.length) {
         list = list.filter((record) => record.students?.teacher_id === teacherId);
       }
+
+      // Buscar nomes dos usuários que confirmaram os pagamentos
+      const confirmedByUserIds = Array.from(
+        new Set(
+          list
+            .filter((r) => r.confirmed_by_user_id)
+            .map((r) => r.confirmed_by_user_id!)
+        )
+      );
+
+      if (confirmedByUserIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", confirmedByUserIds);
+
+        if (profiles) {
+          const profileMap = new Map(profiles.map((p) => [p.user_id, p.full_name]));
+          list = list.map((record) => ({
+            ...record,
+            confirmed_by: record.confirmed_by_user_id
+              ? { full_name: profileMap.get(record.confirmed_by_user_id) || "" }
+              : null,
+          }));
+        }
+      }
+
       return { list, count: count ?? 0 };
     },
     placeholderData: keepPreviousData,
@@ -285,11 +315,17 @@ export function useMarkAsPaid() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Obter o usuário atual para auditoria
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from("financial_records")
         .update({
           status: "pago",
-          paid_at: new Date().toISOString(),
+          paid_at: now,
+          confirmed_by_user_id: user?.id || null,
+          confirmed_at: now,
         })
         .eq("id", id)
         .select()

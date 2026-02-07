@@ -405,6 +405,11 @@ export function FinancialView({
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Status
                   </th>
+                  {showTeacherColumn && (
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
+                      Histórico de Pagamento
+                    </th>
+                  )}
                   <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
                     Ações
                   </th>
@@ -476,6 +481,24 @@ export function FinancialView({
                           {statusLabels[record.actualStatus]}
                         </StatusBadge>
                       </td>
+                      {showTeacherColumn && (
+                        <td className="px-6 py-4 hidden xl:table-cell">
+                          {record.actualStatus === "pago" && record.confirmed_at ? (
+                            <div className="flex flex-col text-sm text-muted-foreground">
+                              <span className="text-xs">
+                                Confirmado em {formatDateTime(record.confirmed_at)}
+                              </span>
+                              {record.confirmed_by?.full_name && (
+                                <span className="text-xs text-muted-foreground/80">
+                                  por {record.confirmed_by.full_name}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      )}
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {record.actualStatus !== "pago" ? (
