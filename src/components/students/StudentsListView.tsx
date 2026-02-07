@@ -42,8 +42,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check, KeyRound } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
@@ -55,7 +57,7 @@ import {
   Student,
   StudentInsert,
 } from "@/hooks/useStudents";
-import { useCreateAuthUserForStudent, useInviteStudent } from "@/hooks/useUsers";
+import { useCreateAuthUserForStudent, useInviteStudent, useTeacherResetPassword } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFinancialRecordsByStudentIds, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
@@ -117,6 +119,10 @@ export function StudentsListView({
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
   const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
   const [studentToHardDelete, setStudentToHardDelete] = useState<Student | null>(null);
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [studentToResetPassword, setStudentToResetPassword] = useState<Student | null>(null);
+  const [resetPasswordNew, setResetPasswordNew] = useState("");
+  const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
   const listTopRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -155,6 +161,7 @@ export function StudentsListView({
   const updateStudent = useUpdateStudent();
   const hardDeleteStudent = useHardDeleteStudent();
   const createStudentUser = useCreateAuthUserForStudent();
+  const teacherResetPassword = useTeacherResetPassword();
 
   const teacherMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -667,6 +674,17 @@ export function StudentsListView({
                               Editar
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              onClick={() => {
+                                setStudentToResetPassword(student);
+                                setResetPasswordNew("");
+                                setResetPasswordConfirm("");
+                                setResetPasswordDialogOpen(true);
+                              }}
+                            >
+                              <KeyRound className="h-4 w-4 mr-2" />
+                              Redefinir senha
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               className={
                                 student.status === "ativo"
                                   ? "text-destructive focus:text-destructive"
@@ -943,6 +961,122 @@ onClick={() => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Redefinir senha do aluno (professor) */}
+      <Dialog
+        open={resetPasswordDialogOpen}
+        onOpenChange={(open) => {
+          setResetPasswordDialogOpen(open);
+          if (!open) {
+            setStudentToResetPassword(null);
+            setResetPasswordNew("");
+            setResetPasswordConfirm("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Redefinir senha do aluno</DialogTitle>
+            {studentToResetPassword && (
+              <DialogDescription>
+                Nova senha para <strong>{studentToResetPassword.name}</strong>. Mínimo 6 caracteres.
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          {studentToResetPassword && (
+            <>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-password-new">Nova senha</Label>
+                  <Input
+                    id="reset-password-new"
+                    type="password"
+                    placeholder="••••••••"
+                    value={resetPasswordNew}
+                    onChange={(e) => setResetPasswordNew(e.target.value)}
+                    minLength={6}
+                    disabled={teacherResetPassword.isPending}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reset-password-confirm">Confirmar senha</Label>
+                  <Input
+                    id="reset-password-confirm"
+                    type="password"
+                    placeholder="••••••••"
+                    value={resetPasswordConfirm}
+                    onChange={(e) => setResetPasswordConfirm(e.target.value)}
+                    minLength={6}
+                    disabled={teacherResetPassword.isPending}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+                    let p = "";
+                    for (let i = 0; i < 10; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
+                    setResetPasswordNew(p);
+                    setResetPasswordConfirm(p);
+                  }}
+                >
+                  Gerar senha
+                </Button>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setResetPasswordDialogOpen(false);
+                    setStudentToResetPassword(null);
+                    setResetPasswordNew("");
+                    setResetPasswordConfirm("");
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  disabled={
+                    teacherResetPassword.isPending ||
+                    resetPasswordNew.length < 6 ||
+                    resetPasswordNew !== resetPasswordConfirm
+                  }
+                  onClick={() => {
+                    if (resetPasswordNew.length < 6 || resetPasswordNew !== resetPasswordConfirm) return;
+                    teacherResetPassword.mutate(
+                      { studentId: studentToResetPassword.id, password: resetPasswordNew },
+                      {
+                        onSuccess: () => {
+                          const passwordToShow = resetPasswordNew;
+                          setResetPasswordDialogOpen(false);
+                          setStudentToResetPassword(null);
+                          setResetPasswordNew("");
+                          setResetPasswordConfirm("");
+                          setGeneratedPassword(passwordToShow);
+                          setShowGeneratedPassword(false);
+                          setPasswordCopied(false);
+                          setIsPasswordDialogOpen(true);
+                        },
+                      }
+                    );
+                  }}
+                >
+                  {teacherResetPassword.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Redefinindo...
+                    </>
+                  ) : (
+                    "Redefinir senha"
+                  )}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

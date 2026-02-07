@@ -263,4 +263,5 @@ export {
   useCreateAuthUserForTeacher,
   useInviteStudent,
   useInviteTeacher,
+  useTeacherResetPassword,
 } from "./useUserMutations";
