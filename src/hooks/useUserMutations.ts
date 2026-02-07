@@ -645,10 +645,15 @@ export function useHardDeleteUser() {
   });
 }
 
-/** Redefinir senha de um usuário (admin via Edge Function). Usa fetch para garantir envio do Authorization. */
-export function useAdminResetPassword() {
+/**
+ * Hook unificado para redefinir senha.
+ * - Admin pode enviar { userId, password } para qualquer usuário.
+ * - Admin ou Professor pode enviar { studentId, password } para aluno.
+ * Chama a Edge Function unificada 'reset-password'.
+ */
+export function useResetPassword() {
   return useMutation({
-    mutationFn: async ({ userId, password }: { userId: string; password: string }) => {
+    mutationFn: async (params: { userId?: string; studentId?: string; password: string }) => {
       const {
         data: { session },
         error: sessionError,
@@ -656,12 +661,11 @@ export function useAdminResetPassword() {
       if (sessionError || !session?.access_token) {
         throw new Error("Sessão expirada. Faça login novamente.");
       }
-      // Em dev usa proxy (same-origin) para evitar CORS; em prod chama Supabase direto
       const functionsBase = import.meta.env.DEV && typeof window !== "undefined"
         ? `${window.location.origin}/supabase-functions`
         : `${SUPABASE_URL}/functions/v1`;
-      const url = `${functionsBase}/admin-reset-password`;
-      
+      const url = `${functionsBase}/reset-password`;
+
       try {
         const res = await fetch(url, {
           method: "POST",
@@ -671,23 +675,22 @@ export function useAdminResetPassword() {
             apikey: SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({
-            userId,
-            password,
+            ...params,
             accessToken: session.access_token,
           }),
         });
-        
+
         const data = (await res.json().catch(() => ({}))) as { error?: string };
-        
+
         if (!res.ok) {
           throw new Error(data?.error ?? (res.statusText || "Erro ao redefinir senha."));
         }
         if (data?.error) throw new Error(data.error);
       } catch (err) {
-        console.error("[useAdminResetPassword] Erro:", err);
+        console.error("[useResetPassword] Erro:", err);
         if (isEdgeFunctionNetworkError(err)) {
           throw new Error(
-            "Não foi possível contactar o servidor. Verifique sua conexão e se a Edge Function 'admin-reset-password' está publicada no projeto Supabase."
+            "Não foi possível contactar o servidor. Verifique sua conexão e se a Edge Function 'reset-password' está publicada no projeto Supabase."
           );
         }
         throw err;
@@ -701,6 +704,12 @@ export function useAdminResetPassword() {
     },
   });
 }
+
+/** @deprecated Use useResetPassword em vez disso. Mantido para compatibilidade temporária. */
+export const useAdminResetPassword = useResetPassword;
+
+/** @deprecated Use useResetPassword em vez disso. Mantido para compatibilidade temporária. */
+export const useTeacherResetPassword = useResetPassword;
 
 // Link user to student
 export function useLinkUserToStudent() {
@@ -906,58 +915,4 @@ export function useCreateAuthUserForTeacher() {
   });
 }
 
-/** Redefinir senha de um aluno vinculado ao professor (via Edge Function teacher-reset-password). */
-export function useTeacherResetPassword() {
-  return useMutation({
-    mutationFn: async ({ studentId, password }: { studentId: string; password: string }) => {
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-      if (sessionError || !session?.access_token) {
-        throw new Error("Sessão expirada. Faça login novamente.");
-      }
-      const functionsBase = import.meta.env.DEV && typeof window !== "undefined"
-        ? `${window.location.origin}/supabase-functions`
-        : `${SUPABASE_URL}/functions/v1`;
-      const url = `${functionsBase}/teacher-reset-password`;
 
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-            apikey: SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            studentId,
-            password,
-            accessToken: session.access_token,
-          }),
-        });
-
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
-
-        if (!res.ok) {
-          throw new Error(data?.error ?? (res.statusText || "Erro ao redefinir senha."));
-        }
-        if (data?.error) throw new Error(data.error);
-      } catch (err) {
-        console.error("[useTeacherResetPassword] Erro:", err);
-        if (isEdgeFunctionNetworkError(err)) {
-          throw new Error(
-            "Não foi possível contactar o servidor. Verifique sua conexão e se a Edge Function 'teacher-reset-password' está publicada no projeto Supabase."
-          );
-        }
-        throw err;
-      }
-    },
-    onSuccess: () => {
-      toast.success("Senha do aluno redefinida com sucesso.");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Erro ao redefinir senha. Tente novamente.");
-    },
-  });
-}

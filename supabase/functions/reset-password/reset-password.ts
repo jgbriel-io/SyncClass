@@ -1,5 +1,7 @@
-// Edge Function: teacher-reset-password
-// Permite que um professor redefina a senha de um aluno vinculado a ele
+// Edge Function: reset-password (unificada)
+// Permite que admin ou professor redefina senhas.
+// - Admin pode resetar qualquer usuário (via userId) ou aluno (via studentId).
+// - Professor pode resetar apenas alunos vinculados a ele (via studentId).
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -34,7 +36,8 @@ serve(async (req) => {
   }
 
   interface RequestBody {
-    studentId?: string;
+    userId?: string;     // ID direto do auth user (usado pelo admin)
+    studentId?: string;  // ID do aluno — resolve user_id internamente
     password?: string;
     accessToken?: string;
   }
@@ -71,7 +74,7 @@ serve(async (req) => {
     return jsonResponse({ error: "Usuário não encontrado. Token inválido." }, 401);
   }
 
-  // 2) Verify caller is a teacher (or admin — admins can also use this endpoint)
+  // 2) Verify caller role (admin ou teacher)
   const { data: roleRow, error: roleError } = await supabaseAdmin
     .from("user_roles")
     .select("role")
@@ -79,20 +82,17 @@ serve(async (req) => {
     .single();
 
   if (roleError) {
-    console.error("[teacher-reset-password] Role error:", roleError);
+    console.error("[reset-password] Role error:", roleError);
     return jsonResponse({ error: "Erro ao verificar permissões." }, 500);
   }
-  if (!roleRow || (roleRow.role !== "teacher" && roleRow.role !== "admin")) {
-    return jsonResponse({ error: "Acesso negado. Apenas professores ou administradores podem usar esta função." }, 403);
+
+  const callerRole = roleRow?.role;
+  if (!callerRole || (callerRole !== "admin" && callerRole !== "teacher")) {
+    return jsonResponse({ error: "Acesso negado. Apenas administradores ou professores podem redefinir senhas." }, 403);
   }
 
-  // 3) Validate input
-  const studentId = body?.studentId;
+  // 3) Validate password
   const newPassword = body?.password;
-
-  if (!studentId || typeof studentId !== "string") {
-    return jsonResponse({ error: "Missing studentId" }, 400);
-  }
   if (!newPassword || typeof newPassword !== "string") {
     return jsonResponse({ error: "Missing password" }, 400);
   }
@@ -100,55 +100,75 @@ serve(async (req) => {
     return jsonResponse({ error: "A senha deve ter pelo menos 6 caracteres." }, 400);
   }
 
-  // 4) Verify student exists and get the linked user_id
-  const { data: student, error: studentError } = await supabaseAdmin
-    .from("students")
-    .select("id, teacher_id")
-    .eq("id", studentId)
-    .maybeSingle();
+  // 4) Determine target user ID to update
+  let targetUserId: string | null = null;
 
-  if (studentError || !student) {
-    return jsonResponse({ error: "Aluno não encontrado." }, 404);
-  }
+  const { userId, studentId } = body;
 
-  // 5) If caller is a teacher, verify the student belongs to them
-  if (roleRow.role === "teacher") {
-    const { data: callerProfile, error: callerProfileError } = await supabaseAdmin
-      .from("profiles")
-      .select("teacher_id")
-      .eq("user_id", user.id)
+  if (studentId && typeof studentId === "string") {
+    // ── Fluxo por studentId (professor ou admin) ──
+
+    // Verificar que o aluno existe
+    const { data: student, error: studentError } = await supabaseAdmin
+      .from("students")
+      .select("id, teacher_id")
+      .eq("id", studentId)
       .maybeSingle();
 
-    if (callerProfileError || !callerProfile?.teacher_id) {
-      return jsonResponse({ error: "Perfil de professor não encontrado." }, 403);
+    if (studentError || !student) {
+      return jsonResponse({ error: "Aluno não encontrado." }, 404);
     }
 
-    if (student.teacher_id !== callerProfile.teacher_id) {
-      return jsonResponse({ error: "Acesso negado. Este aluno não está vinculado a você." }, 403);
+    // Se é professor, verificar que o aluno é dele
+    if (callerRole === "teacher") {
+      const { data: callerProfile, error: callerProfileError } = await supabaseAdmin
+        .from("profiles")
+        .select("teacher_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (callerProfileError || !callerProfile?.teacher_id) {
+        return jsonResponse({ error: "Perfil de professor não encontrado." }, 403);
+      }
+
+      if (student.teacher_id !== callerProfile.teacher_id) {
+        return jsonResponse({ error: "Acesso negado. Este aluno não está vinculado a você." }, 403);
+      }
     }
+
+    // Resolver user_id do aluno via profiles
+    const { data: studentProfile, error: studentProfileError } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id")
+      .eq("student_id", studentId)
+      .maybeSingle();
+
+    if (studentProfileError || !studentProfile?.user_id) {
+      return jsonResponse({ error: "Este aluno não possui conta de acesso vinculada." }, 404);
+    }
+
+    targetUserId = studentProfile.user_id;
+
+  } else if (userId && typeof userId === "string") {
+    // ── Fluxo por userId direto (somente admin) ──
+
+    if (callerRole !== "admin") {
+      return jsonResponse({ error: "Acesso negado. Apenas administradores podem redefinir senha por userId." }, 403);
+    }
+    targetUserId = userId;
+
+  } else {
+    return jsonResponse({ error: "Informe studentId ou userId." }, 400);
   }
 
-  // 6) Find the auth user linked to this student via profiles
-  const { data: studentProfile, error: studentProfileError } = await supabaseAdmin
-    .from("profiles")
-    .select("user_id")
-    .eq("student_id", studentId)
-    .maybeSingle();
-
-  if (studentProfileError || !studentProfile?.user_id) {
-    return jsonResponse({ error: "Este aluno não possui conta de acesso vinculada." }, 404);
-  }
-
-  const studentUserId = studentProfile.user_id;
-
-  // 7) Reset the password
+  // 5) Reset the password
   const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-    studentUserId,
+    targetUserId,
     { password: newPassword },
   );
 
   if (updateError) {
-    console.error("[teacher-reset-password] Error resetting password:", updateError);
+    console.error("[reset-password] Error resetting password:", updateError);
     return jsonResponse({ error: updateError.message }, 500);
   }
 
