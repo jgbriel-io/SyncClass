@@ -73,12 +73,12 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
   const hasDetails = !!classLog.feedback?.trim();
 
   const badgeLabel = isConcluida
-    ? (classLog.attendance ? "Concluída" : "Falta")
+    ? "Concluída"
     : status.label === "Avaliação pendente"
       ? "Pagamento pendente"
       : status.label;
   const badgeVariant = isConcluida
-    ? (classLog.attendance ? "success" : "destructive")
+    ? "success"
     : status.variant;
 
   const handleToggleExpand = (e: React.MouseEvent) => {
@@ -106,6 +106,23 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
             </h3>
           </div>
 
+          {/* Presença (só quando concluída) */}
+          {isConcluida && (
+            <div className="flex flex-wrap items-center gap-3">
+              {classLog.attendance ? (
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                  <span className="text-sm font-medium text-success">Presente</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <XCircle className="h-4 w-4 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">Não compareceu</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Data */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
@@ -118,48 +135,13 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
             <span>{timeRange}</span>
           </div>
 
-          {/* Professor */}
-          {classLog.teacher_name && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-              <span>{classLog.teacher_name}</span>
-            </div>
-          )}
-
-          {/* Presença e nota (só quando concluída) */}
-          {isConcluida && (
-            <div className="flex flex-wrap items-center gap-3 pt-1 border-t">
-              {classLog.attendance ? (
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                  <span className="text-sm font-medium text-success">Presente</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5">
-                  <XCircle className="h-4 w-4 text-destructive" />
-                  <span className="text-sm font-medium text-destructive">Faltou</span>
-                </div>
-              )}
-              {classLog.grade != null ? (
-                <div className="flex items-center gap-1.5">
-                  <Star className="h-4 w-4 text-warning" />
-                  <span className="text-sm font-medium">Nota: {Number(classLog.grade).toFixed(1)}</span>
-                </div>
-              ) : classLog.attendance === false ? (
-                <span className="text-sm font-medium text-destructive">Não compareceu</span>
-              ) : null}
-            </div>
-          )}
-
           {/* Detalhes expandidos: mesmo fluxo vertical (sem caixa) */}
           {expanded && (
             <>
-              {!classLog.teacher_name && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                  <span>Professor: —</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                <span>Professor: {classLog.teacher_name || "—"}</span>
+              </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <DollarSign className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                 <span>Valor da aula: {classLog.amount != null ? formatCurrency(classLog.amount) : "—"}</span>

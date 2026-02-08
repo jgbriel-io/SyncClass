@@ -11,9 +11,14 @@ export interface StudentClassLog {
   class_date: string;
   start_at: string | null;
   end_at: string | null;
+  duration_minutes: number | null;
   attendance: boolean | null;
   grade: number | null;
   feedback: string | null;
+  title: string | null;
+  billed_amount: number | null;
+  teacher_id: string | null;
+  teacher_name?: string;
   created_at: string | null;
 }
 
@@ -61,11 +66,53 @@ export function useStudentDetails(studentId: string | null) {
       // Fetch class logs
       const { data: classLogs, error: classLogsError } = await supabase
         .from("class_logs")
-        .select("id, class_date, start_at, end_at, attendance, grade, feedback, created_at")
+        .select(`
+          id,
+          class_date,
+          start_at,
+          end_at,
+          duration_minutes,
+          attendance,
+          grade,
+          feedback,
+          title,
+          billed_amount,
+          teacher_id,
+          teachers(name),
+          created_at
+        `)
         .eq("student_id", studentId)
         .order("class_date", { ascending: false });
 
       if (classLogsError) throw classLogsError;
+
+      // Buscar nome do professor do aluno como fallback
+      let studentTeacherName: string | undefined;
+      if (student.teacher_id) {
+        const { data: teacherData } = await supabase
+          .from("teachers")
+          .select("name")
+          .eq("id", student.teacher_id)
+          .maybeSingle();
+        studentTeacherName = teacherData?.name ?? undefined;
+      }
+
+      // Map class logs to include teacher name
+      const mappedClassLogs: StudentClassLog[] = (classLogs || []).map((log: StudentClassLog) => ({
+        id: log.id,
+        class_date: log.class_date,
+        start_at: log.start_at,
+        end_at: log.end_at,
+        duration_minutes: log.duration_minutes,
+        attendance: log.attendance,
+        grade: log.grade,
+        feedback: log.feedback,
+        title: log.title,
+        billed_amount: log.billed_amount,
+        teacher_id: log.teacher_id ?? student.teacher_id,
+        teacher_name: log.teachers?.name ?? studentTeacherName,
+        created_at: log.created_at,
+      }));
 
       // Fetch financial records
       const { data: financialRecords, error: financialError } = await supabase
@@ -105,7 +152,7 @@ export function useStudentDetails(studentId: string | null) {
 
       return {
         ...student,
-        classLogs: classLogs || [],
+        classLogs: mappedClassLogs,
         financialRecords: financialRecords || [],
         stats: {
           totalClasses,

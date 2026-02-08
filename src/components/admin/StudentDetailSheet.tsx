@@ -5,7 +5,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
-import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,16 +16,12 @@ import {
   Calendar,
   CreditCard,
   BookOpen,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
   TrendingUp,
   MapPin,
-  CalendarClock,
 } from "lucide-react";
 import { useStudentDetails } from "@/hooks/useStudentDetails";
 import { StudentStatementTab } from "@/components/student/StudentStatementTab";
-import { getClassStatusWithTime } from "@/lib/utils/classTime";
+import { ClassHistoryList } from "@/components/classes/ClassHistoryList";
 
 interface StudentDetailSheetProps {
   studentId: string | null;
@@ -91,7 +86,7 @@ export function StudentDetailSheet({
           </div>
         ) : student ? (
           <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="mx-6 mt-4 grid grid-cols-4">
+            <TabsList className="mx-6 mt-4 grid grid-cols-3">
               <TabsTrigger value="info" className="text-xs">
                 <User className="h-3.5 w-3.5 mr-1.5" />
                 Dados
@@ -103,10 +98,6 @@ export function StudentDetailSheet({
               <TabsTrigger value="financial" className="text-xs">
                 <CreditCard className="h-3.5 w-3.5 mr-1.5" />
                 Financeiro
-              </TabsTrigger>
-              <TabsTrigger value="statement" className="text-xs">
-                <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
-                Extrato
               </TabsTrigger>
             </TabsList>
 
@@ -300,7 +291,7 @@ export function StudentDetailSheet({
             {/* Aulas */}
             <TabsContent value="classes" className="flex-1 overflow-auto m-0">
               <ScrollArea className="h-full">
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-6">
                   {/* Summary */}
                   <div className="grid grid-cols-3 gap-2">
                     <div className="rounded-lg bg-muted/50 p-3 text-center">
@@ -322,70 +313,28 @@ export function StudentDetailSheet({
                   </div>
 
                   {/* Class List */}
-                  {student.classLogs.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Nenhuma aula registrada
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {student.classLogs.map((log) => {
-                        const status = getClassStatusWithTime(log);
-                        const isConcluida = status.label === "Concluída";
-                        return (
-                          <div
-                            key={log.id}
-                            className="rounded-lg border bg-card p-3 space-y-2"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                {isConcluida ? (
-                                  log.attendance ? (
-                                    <CheckCircle className="h-4 w-4 text-success" />
-                                  ) : (
-                                    <XCircle className="h-4 w-4 text-rose-500" />
-                                  )
-                                ) : status.label === "Agendada" || status.label === "Em andamento" ? (
-                                  <CalendarClock className="h-4 w-4 text-blue-600" />
-                                ) : (
-                                  <AlertCircle className="h-4 w-4 text-amber-600" />
-                                )}
-                                <span className="text-sm font-medium">
-                                  {formatDate(log.class_date)}
-                                </span>
-                                {!isConcluida && (
-                                  <span className="text-xs text-muted-foreground">
-                                    {status.label}
-                                  </span>
-                                )}
-                              </div>
-                              {log.grade != null ? (
-                                <span
-                                  className={`text-sm font-bold ${
-                                    log.grade >= 7
-                                      ? "text-success"
-                                      : log.grade >= 5
-                                      ? "text-amber-600"
-                                      : "text-rose-600"
-                                  }`}
-                                >
-                                  {Number(log.grade).toFixed(1)}
-                                </span>
-                              ) : isConcluida && log.attendance === false ? (
-                                <span className="text-sm font-medium text-destructive">
-                                  Não compareceu
-                                </span>
-                              ) : null}
-                            </div>
-                            {log.feedback && (
-                              <p className="text-xs text-muted-foreground pl-6">
-                                {log.feedback}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                      Histórico de Aulas
+                    </h3>
+                    <ClassHistoryList
+                      classLogs={student.classLogs.map((log) => ({
+                        id: log.id,
+                        class_date: log.class_date,
+                        start_at: log.start_at,
+                        end_at: log.end_at,
+                        duration_minutes: log.duration_minutes,
+                        attendance: log.attendance,
+                        grade: log.grade,
+                        title: log.title,
+                        feedback: log.feedback,
+                        teacher_name: log.teacher_name,
+                        amount: log.billed_amount,
+                      }))}
+                      emptyMessage="Nenhuma aula registrada"
+                      groupByMonth={true}
+                    />
+                  </div>
                 </div>
               </ScrollArea>
             </TabsContent>
@@ -393,8 +342,8 @@ export function StudentDetailSheet({
             {/* Financeiro */}
             <TabsContent value="financial" className="flex-1 overflow-auto m-0">
               <ScrollArea className="h-full">
-                <div className="p-6 space-y-4">
-                  {/* Summary */}
+                <div className="p-6 space-y-6">
+                  {/* Cards coloridos */}
                   <div className="grid grid-cols-3 gap-2">
                     <div className="rounded-lg bg-success/10 p-3 text-center">
                       <p className="text-sm font-bold text-success">
@@ -416,69 +365,21 @@ export function StudentDetailSheet({
                     </div>
                   </div>
 
-                  {/* Records List */}
-                  {student.financialRecords.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Nenhum registro financeiro
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {student.financialRecords.map((record) => {
-                        const actualStatus = getFinancialActualStatus(record);
-                        return (
-                          <div
-                            key={record.id}
-                            className="rounded-lg border bg-card p-3 flex gap-3"
-                          >
-                            <div className="flex-1 min-w-0 flex flex-col gap-1">
-                              <span className="font-medium">
-                                {formatCurrency(record.amount)}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {record.description || "Mensalidade"}
-                              </span>
-                              {record.paid_at && (
-                                <p className="text-xs text-success">
-                                  Pago em {formatDate(record.paid_at)}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex flex-col justify-between items-end shrink-0">
-                              <StatusBadge
-                                variant={
-                                  actualStatus === "pago"
-                                    ? "success"
-                                    : actualStatus === "atrasado"
-                                    ? "destructive"
-                                    : "warning"
-                                }
-                              >
-                                {actualStatus === "pago"
-                                  ? "Pago"
-                                  : actualStatus === "atrasado"
-                                  ? "Atrasado"
-                                  : "Pendente"}
-                              </StatusBadge>
-                              <span className="text-xs text-muted-foreground">
-                                Venc: {formatDate(record.due_date)}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  {/* Timeline com cobranças integradas */}
+                  <StudentStatementTab
+                    studentId={student.id}
+                    studentName={student.name}
+                    embedded={true}
+                    totalAmount={
+                      student.stats.totalPaid +
+                      student.stats.totalPending +
+                      student.stats.totalOverdue
+                    }
+                  />
                 </div>
               </ScrollArea>
             </TabsContent>
 
-            {/* Extrato Consolidado */}
-            <TabsContent value="statement" className="flex-1 overflow-auto m-0">
-              <StudentStatementTab
-                studentId={student.id}
-                studentName={student.name}
-              />
-            </TabsContent>
           </Tabs>
         ) : (
           <div className="p-6 text-center text-muted-foreground">
