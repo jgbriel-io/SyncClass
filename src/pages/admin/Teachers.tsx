@@ -32,8 +32,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check, KeyRound } from "lucide-react";
-import { format } from "date-fns";
+import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check, KeyRound, Users, UserCheck, UserX, TrendingUp } from "lucide-react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   DropdownMenu,
@@ -67,6 +67,7 @@ import { useCreateAuthUserForTeacher, useInviteTeacher, useAdminResetPassword } 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
+import { StatCard } from "@/components/ui/stat-card";
 
 export default function TeachersPage() {
   const [filters, setFilters] = useState<TeachersFiltersState>({
@@ -161,6 +162,21 @@ export default function TeachersPage() {
     });
     return result;
   }, [teachers, filters]);
+
+  const teachersStats = useMemo(() => {
+    const now = new Date();
+    const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
+    const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+    const total = allTeachers.length;
+    const ativos = allTeachers.filter((t) => (t.status ?? "ativo") === "ativo").length;
+    const inativos = allTeachers.filter((t) => t.status === "inativo").length;
+    const novos = allTeachers.filter((t) => {
+      if (!t.created_at) return false;
+      const createdDate = String(t.created_at).split("T")[0];
+      return createdDate >= monthStart && createdDate <= monthEnd;
+    }).length;
+    return { total, ativos, inativos, novos };
+  }, [allTeachers]);
 
   const handleCreateOrUpdate = (data: TeacherInsert) => {
     const run = async () => {
@@ -275,6 +291,34 @@ export default function TeachersPage() {
             >
               <Plus className="h-4 w-4 mr-2" /> Novo Professor
             </Button>
+          </div>
+
+          {/* Cards informativos */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              title="Total de professores"
+              value={teachersStats.total}
+              icon={Users}
+              variant="primary"
+            />
+            <StatCard
+              title="Professores ativos"
+              value={teachersStats.ativos}
+              icon={UserCheck}
+              variant="success"
+            />
+            <StatCard
+              title="Professores inativos"
+              value={teachersStats.inativos}
+              icon={UserX}
+              variant="muted"
+            />
+            <StatCard
+              title="Novos este mês"
+              value={teachersStats.novos}
+              icon={TrendingUp}
+              variant="primaryHighlight"
+            />
           </div>
 
           {/* Filtros avançados */}

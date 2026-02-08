@@ -36,13 +36,14 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil, KeyRound } from "lucide-react";
+import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil, KeyRound, Users, UserCheck, UserX, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
 import { getAvatarLetter } from "@/lib/utils/patterns";
 import {
   useUsersPaginated,
+  useUsersStats,
   useLinkedProfileIds,
   useCreateUser,
   useUpdateUserRole,
@@ -71,6 +72,7 @@ import {
 } from "@/components/filters/UsersFilters";
 import { defaultUsersFilters } from "@/components/filters/filterDefaults";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
+import { StatCard } from "@/components/ui/stat-card";
 
 export default function UsersPage() {
   const [filters, setFilters] = useState<UsersFiltersState>({
@@ -110,6 +112,7 @@ export default function UsersPage() {
   const { data: students = [] } = useStudents();
   const { data: teachers = [] } = useTeachers();
   const { data: linkedIds } = useLinkedProfileIds();
+  const { data: usersStats } = useUsersStats();
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -463,7 +466,7 @@ export default function UsersPage() {
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">Usuários</h1>
               <p className="text-muted-foreground mt-1">
-                Gerencie usuários, privilégios e vínculos
+                Gerencie usuários e privilégios
               </p>
             </div>
             <Button onClick={() => {
@@ -474,6 +477,36 @@ export default function UsersPage() {
               Novo Usuário
             </Button>
           </div>
+
+          {/* Cards informativos */}
+          {usersStats && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                title="Total de usuários"
+                value={usersStats.total}
+                icon={Users}
+                variant="primary"
+              />
+              <StatCard
+                title="Usuários ativos"
+                value={usersStats.active}
+                icon={UserCheck}
+                variant="success"
+              />
+              <StatCard
+                title="Usuários inativos"
+                value={usersStats.inactive}
+                icon={UserX}
+                variant="muted"
+              />
+              <StatCard
+                title="Novos este mês"
+                value={usersStats.newThisMonth}
+                icon={TrendingUp}
+                variant="primaryHighlight"
+              />
+            </div>
+          )}
 
           {/* Filtros avançados */}
           <UsersFilters

@@ -1,7 +1,44 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, Enums } from "@/integrations/supabase/types";
+
+export interface UsersStats {
+  total: number;
+  active: number;
+  inactive: number;
+  newThisMonth: number;
+}
+
+export function useUsersStats() {
+  return useQuery({
+    queryKey: ["users_stats"],
+    queryFn: async (): Promise<UsersStats> => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("active, created_at");
+
+      if (error) throw error;
+
+      const rows = data ?? [];
+      const now = new Date();
+      const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
+      const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+
+      const total = rows.length;
+      const active = rows.filter((r) => r.active === true).length;
+      const inactive = rows.filter((r) => r.active === false).length;
+      const newThisMonth = rows.filter((r) => {
+        if (!r.created_at) return false;
+        const createdDate = String(r.created_at).split("T")[0];
+        return createdDate >= monthStart && createdDate <= monthEnd;
+      }).length;
+
+      return { total, active, inactive, newThisMonth };
+    },
+  });
+}
 
 const DEFAULT_PAGE_SIZE = 10;
 

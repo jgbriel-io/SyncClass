@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, Check, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, Check, Lock, ChevronLeft, ChevronRight, UserCheck, Percent, Award } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   ClassesFilters,
@@ -48,6 +48,7 @@ import {
   ClassLogWithFinancialData,
 } from "@/hooks/useClassLogs";
 import { isClassEvaluationBlocked, getClassStatusWithTime } from "@/lib/utils/classTime";
+import { StatCard } from "@/components/ui/stat-card";
 
 function formatClassDateAndTime(log: {
   class_date: string;
@@ -344,31 +345,31 @@ export function ClassesView({
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-4">
-        <div className="rounded-lg border bg-card p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">Total de Aulas</p>
-          <p className="text-2xl font-semibold mt-1">
-            {summary?.totalClasses || 0}
-          </p>
-        </div>
-        <div className="rounded-lg border bg-card p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">Presenças</p>
-          <p className="text-2xl font-semibold mt-1 text-success">
-            {summary?.totalPresent || 0}
-          </p>
-        </div>
-        <div className="rounded-lg border bg-card p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">Taxa de Presença</p>
-          <p className="text-2xl font-semibold mt-1">
-            {attendanceRate}%
-          </p>
-        </div>
-        <div className="rounded-lg border bg-card p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">Média Geral</p>
-          <p className="text-2xl font-semibold mt-1 text-primary">
-            {summary?.averageGrade?.toFixed(1) || "—"}
-          </p>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Total de Aulas"
+          value={summary?.totalClasses ?? 0}
+          icon={BookOpen}
+          variant="primary"
+        />
+        <StatCard
+          title="Presenças"
+          value={summary?.totalPresent ?? 0}
+          icon={UserCheck}
+          variant="success"
+        />
+        <StatCard
+          title="Taxa de Presença"
+          value={`${attendanceRate}%`}
+          icon={Percent}
+          variant="default"
+        />
+        <StatCard
+          title="Média Geral"
+          value={summary?.averageGrade != null ? summary.averageGrade.toFixed(1) : "—"}
+          icon={Award}
+          variant="primaryHighlight"
+        />
       </div>
 
       {/* Filtros avançados */}
