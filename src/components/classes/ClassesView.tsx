@@ -525,7 +525,6 @@ export function ClassesView({
                               })
                             )}
                           >
-                            <Receipt className="h-3 w-3" />
                             {getPaymentStatusLabel(
                               getFinancialActualStatus({
                                 status: log.financial_records.status,
@@ -689,9 +688,7 @@ export function ClassesView({
                               due_date: log.financial_records.due_date,
                             })
                           )}
-                          className="flex items-center gap-1"
                         >
-                          <Receipt className="h-3 w-3" />
                           {getPaymentStatusLabel(
                             getFinancialActualStatus({
                               status: log.financial_records.status,
