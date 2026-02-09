@@ -43,9 +43,15 @@ import {
   FinancialRecordWithRelations,
 } from "@/hooks/useFinancialRecords";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2, TrendingUp } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, TrendingUp, Eye } from "lucide-react";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { useForecastedBilling } from "@/hooks/useForecastedBilling";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type PaymentStatus = "pendente" | "atrasado" | "pago";
 
@@ -86,6 +92,7 @@ export function FinancialView({
   const [recordToUndo, setRecordToUndo] = useState<FinancialRecordWithRelations | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [undoDialogOpen, setUndoDialogOpen] = useState(false);
+  const [historyRecord, setHistoryRecord] = useState<FinancialRecordWithRelations | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
   const { data: forecastedBilling } = useForecastedBilling(autoTeacherId);
 
@@ -405,11 +412,6 @@ export function FinancialView({
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Status
                   </th>
-                  {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
-                      Histórico de Pagamento
-                    </th>
-                  )}
                   <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Ações
                   </th>
@@ -481,26 +483,17 @@ export function FinancialView({
                           {statusLabels[record.actualStatus]}
                         </StatusBadge>
                       </td>
-                      {showTeacherColumn && (
-                        <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell">
-                          {record.actualStatus === "pago" && record.confirmed_at ? (
-                            <div className="flex flex-col text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                              <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px]">
-                                Confirmado em {formatDateTime(record.confirmed_at)}
-                              </span>
-                              {record.confirmed_by?.full_name && (
-                                <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground/80">
-                                  por {record.confirmed_by.full_name}
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">—</span>
-                          )}
-                        </td>
-                      )}
                       <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => setHistoryRecord(record)}
+                            title="Ver histórico de pagamento"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           {record.actualStatus !== "pago" ? (
                             <>
                               <DropdownMenu>
@@ -773,6 +766,38 @@ export function FinancialView({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Mini modal: Histórico de pagamento */}
+      <Dialog open={!!historyRecord} onOpenChange={(open) => !open && setHistoryRecord(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base">Histórico de pagamento</DialogTitle>
+          </DialogHeader>
+          {historyRecord && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {historyRecord.students?.name} · {formatCurrency(Number(historyRecord.amount))}
+              </p>
+              {historyRecord.actualStatus === "pago" && historyRecord.confirmed_at ? (
+                <div className="rounded-lg border bg-muted/50 p-3 text-sm">
+                  <p className="font-medium text-foreground">
+                    Confirmado em {formatDateTime(historyRecord.confirmed_at)}
+                  </p>
+                  {historyRecord.confirmed_by?.full_name && (
+                    <p className="text-muted-foreground mt-0.5">
+                      por {historyRecord.confirmed_by.full_name}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum pagamento registrado para esta cobrança.
+                </p>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
