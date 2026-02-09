@@ -87,8 +87,8 @@ export default function UsersPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Usuários</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">Usuários</h1>
+          <p className="text-sm mobile:text-xs tablet:text-xs mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">
             Gerencie os usuários do sistema
           </p>
         </div>
@@ -134,6 +134,7 @@ export default function UsersPage() {
         {/* Table */}
         {!isLoading && !error && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+            <div className="overflow-x-auto min-w-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -154,19 +155,19 @@ export default function UsersPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-medium text-accent-foreground">
-                              {profile.full_name?.charAt(0) || "?"}
-                            </span>
+<span className="text-xs font-medium text-accent-foreground">
+                            {profile.full_name?.charAt(0) || "?"}
+                          </span>
                           </div>
                           <div className="min-w-0">
-                            <p className="font-medium text-sm truncate">
-                              {profile.full_name || "Sem nome"}
-                            </p>
+<p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs truncate">
+                            {profile.full_name || "Sem nome"}
+                          </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell">
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {profile.created_at
                             ? format(new Date(profile.created_at), "dd/MM/yyyy", { locale: ptBR })
                             : "—"}
@@ -201,6 +202,7 @@ export default function UsersPage() {
                   ))}
               </TableBody>
             </Table>
+            </div>
             {filteredProfiles.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
                 {profiles.length === 0

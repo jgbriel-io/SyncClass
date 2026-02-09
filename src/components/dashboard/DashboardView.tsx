@@ -68,8 +68,8 @@ function MetricCard({ title, value, change, changeLabel, icon: Icon, iconColor =
     <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">{title}</p>
+          <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">{value}</p>
           {change !== undefined && (
             <div className="flex items-center gap-1">
               {isPositive ? (
@@ -201,8 +201,8 @@ export function DashboardView({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        <p className="text-muted-foreground">{subtitle}</p>
+        <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-bold tracking-tight">{title}</h1>
+        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground">{subtitle}</p>
       </div>
 
       {/* Aviso: aulas pendentes de feedback */}
@@ -235,7 +235,7 @@ export function DashboardView({
             <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <Zap className="h-4 w-4 text-primary" />
             </div>
-            <h2 className="font-semibold">Ações Rápidas</h2>
+            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Ações Rápidas</h2>
           </div>
           <ChevronDown
             className={cn(
@@ -337,7 +337,7 @@ export function DashboardView({
           )}
 
           {/* Estatísticas */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
             <MetricCard
               title="Alunos Ativos"
               value={stats?.activeStudents || 0}
@@ -373,14 +373,14 @@ export function DashboardView({
 
           {/* Financeiro */}
           {(financialSummary != null || forecastedBilling != null) && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 grid-cols-1 laptop:grid-cols-5">
               {/* Previsão de Faturamento Mensal */}
               {forecastedBilling != null && (
                 <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between">
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-muted-foreground">Previsão Mensal</p>
-                      <p className="text-2xl font-bold tracking-tight text-primary">
+                      <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Previsão Mensal</p>
+                      <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-primary">
                         {formatCurrency(forecastedBilling.totalForecast)}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -398,8 +398,8 @@ export function DashboardView({
                   <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between">
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">Total recebido</p>
-                        <p className="text-2xl font-bold tracking-tight text-success">
+                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total recebido</p>
+                        <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-success">
                           {formatCurrency(financialSummary.totalPaid)}
                         </p>
                       </div>
@@ -411,8 +411,8 @@ export function DashboardView({
                   <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between">
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">Total a receber</p>
-                        <p className="text-2xl font-bold tracking-tight">
+                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total a receber</p>
+                        <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">
                           {formatCurrency(financialSummary.totalReceivable)}
                         </p>
                         <p className="text-xs text-muted-foreground">Pendentes + Em atraso</p>
@@ -425,8 +425,8 @@ export function DashboardView({
                   <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between">
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">Pendente</p>
-                        <p className="text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Pendente</p>
+                        <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
                           {formatCurrency(financialSummary.totalPending)}
                         </p>
                       </div>
@@ -438,8 +438,8 @@ export function DashboardView({
                   <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between">
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">Em atraso</p>
-                        <p className="text-2xl font-bold tracking-tight text-destructive">
+                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Em atraso</p>
+                        <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-destructive">
                           {formatCurrency(financialSummary.totalOverdue)}
                         </p>
                       </div>
@@ -461,8 +461,8 @@ export function DashboardView({
                   <Clock className="h-4 w-4 text-warning" />
                 </div>
                 <div>
-                  <h2 className="font-semibold">Aulas de Hoje</h2>
-                  <p className="text-xs text-muted-foreground">
+                  <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Aulas de Hoje</h2>
+                  <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
                     {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
                   </p>
                 </div>
@@ -488,15 +488,15 @@ export function DashboardView({
                         >
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-                              <span className="text-sm font-medium">
+                              <span className="text-xs font-medium">
                                 {item.studentName.charAt(0)}
                               </span>
                             </div>
                             <div>
-                              <p className="font-medium text-sm">
+                              <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
                                 {item.timeLabel} — {item.studentName}
                               </p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
                                 {item.title?.trim() || "Aula"}
                               </p>
                             </div>
@@ -524,7 +524,7 @@ export function DashboardView({
           </div>
 
           {/* Terceira linha: Próximos Vencimentos + Aniversariantes */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 grid-cols-1 laptop:grid-cols-2">
             {/* Upcoming Payments */}
             <div className="rounded-xl border bg-card shadow-card">
               <div className="flex items-center justify-between border-b px-6 py-4">
@@ -533,8 +533,8 @@ export function DashboardView({
                     <Clock className="h-4 w-4 text-warning" />
                   </div>
                   <div>
-                    <h2 className="font-semibold">Próximos Vencimentos</h2>
-                    <p className="text-xs text-muted-foreground">Pagamentos pendentes desta semana</p>
+                    <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Próximos Vencimentos</h2>
+                    <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">Pagamentos pendentes desta semana</p>
                   </div>
                 </div>
                 <StatusBadge variant="warning">{upcomingPayments.length}</StatusBadge>
@@ -554,18 +554,18 @@ export function DashboardView({
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-                          <span className="text-sm font-medium">
+                          <span className="text-xs font-medium">
                             {payment.studentName.charAt(0)}
                           </span>
                         </div>
                         <div>
-                          <p className="font-medium text-sm">{payment.studentName}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">{payment.studentName}</p>
+                          <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
                             Vence em {formatDate(payment.dueDate)}
                           </p>
                         </div>
                       </div>
-                      <span className="font-semibold text-sm">
+                      <span className="font-semibold text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
                         {formatCurrency(payment.amount)}
                       </span>
                     </div>
@@ -593,8 +593,8 @@ export function DashboardView({
                     <span className="text-lg">🎂</span>
                   </div>
                   <div>
-                    <h2 className="font-semibold">Aniversariantes</h2>
-                    <p className="text-xs text-muted-foreground">Este mês</p>
+                    <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Aniversariantes</h2>
+                    <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">Este mês</p>
                   </div>
                 </div>
                 <StatusBadge variant="warning">{birthdays.length}</StatusBadge>
@@ -614,14 +614,14 @@ export function DashboardView({
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center">
-                          <span className="text-sm font-medium">
+                          <span className="text-xs font-medium">
                             {birthday.name.charAt(0)}
                           </span>
                         </div>
-                        <p className="font-medium text-sm">{birthday.name}</p>
+                        <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">{birthday.name}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {formatBirthday(birthday.birthDate)}
                         </span>
                         <span className="text-lg">🎉</span>
@@ -652,10 +652,10 @@ export function DashboardView({
                   <TrendingUp className="h-4 w-4 text-success" />
                 </div>
                 <div>
-                  <h2 className="font-semibold">
+                  <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">
                     {basePath === "/admin" ? "Crescimento da plataforma" : "Evolução de Alunos e Aulas"}
                   </h2>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground">
                     {chartMonths === 1 ? "Mês atual (por dia)" : `Últimos ${chartMonths} meses`}
                   </p>
                 </div>

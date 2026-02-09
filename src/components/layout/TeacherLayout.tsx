@@ -126,7 +126,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm laptop:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -136,7 +136,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
           sidebarCollapsed ? "w-[72px]" : "w-64",
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          mobileOpen ? "translate-x-0" : "-translate-x-full laptop:translate-x-0"
         )}
       >
         {/* Logo */}
@@ -158,7 +158,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
           {/* Mobile close */}
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
+            className="laptop:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
           >
             <X className="h-5 w-5" />
           </button>
@@ -196,7 +196,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             className={cn(
-              "hidden lg:flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors",
+              "hidden laptop:flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors",
               sidebarCollapsed && "justify-center px-2"
             )}
           >
@@ -226,21 +226,21 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
       {/* Main content */}
       <div className={cn(
         "transition-all duration-300 ease-in-out",
-        sidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-64"
+        sidebarCollapsed ? "laptop:pl-[72px]" : "laptop:pl-64"
       )}>
         {/* Top bar - alinhado ao AdminLayout */}
-        <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
+        <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 tablet:px-5 laptop:px-6 desktop:px-8">
           {/* Left: menu + search */}
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden shrink-0 text-muted-foreground hover:text-foreground"
+              className="laptop:hidden shrink-0 text-muted-foreground hover:text-foreground"
               type="button"
               aria-label="Abrir menu"
             >
               <Menu className="h-6 w-6" />
             </button>
-            <form onSubmit={handleSearchSubmit} className="hidden md:block w-full max-w-sm">
+            <form onSubmit={handleSearchSubmit} className="hidden tablet:block w-full max-w-sm">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <Input
@@ -348,7 +348,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="p-4 lg:p-6 animate-fade-in">{children}</main>
+        <main className="p-4 tablet:p-5 laptop:p-6 desktop:p-8 animate-fade-in">{children}</main>
       </div>
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>

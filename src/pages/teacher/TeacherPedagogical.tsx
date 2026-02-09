@@ -233,8 +233,8 @@ const TeacherPedagogicalPage = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Aulas</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">Aulas</h1>
+            <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">
               Registro de aulas, presença e desempenho dos seus alunos.
             </p>
           </div>
@@ -309,7 +309,7 @@ const TeacherPedagogicalPage = () => {
         {/* Tabela de aulas */}
         {!isLoading && !error && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto min-w-0">
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-muted/50">

@@ -437,8 +437,8 @@ export function StudentsListView({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="text-muted-foreground mt-1">{subtitle}</p>
+          <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">{title}</h1>
+          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">{subtitle}</p>
         </div>
         <Button
           onClick={() => {
@@ -454,12 +454,12 @@ export function StudentsListView({
 
       {/* Cards de estatísticas */}
       {studentsStats && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
           <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Total de Alunos</p>
-                <p className="text-2xl font-bold tracking-tight">{studentsStats.totalStudents}</p>
+                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total de Alunos</p>
+                <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">{studentsStats.totalStudents}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10">
                 <Users className="h-5 w-5 text-primary" />
@@ -469,8 +469,8 @@ export function StudentsListView({
           <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Alunos Ativos</p>
-                <p className="text-2xl font-bold tracking-tight text-success">{studentsStats.activeStudents}</p>
+                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Alunos Ativos</p>
+                <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-success">{studentsStats.activeStudents}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-success/10">
                 <UserCheck className="h-5 w-5 text-success" />
@@ -480,8 +480,8 @@ export function StudentsListView({
           <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Alunos Inativos</p>
-                <p className="text-2xl font-bold tracking-tight text-muted-foreground">{studentsStats.inactiveStudents}</p>
+                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Alunos Inativos</p>
+                <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-muted-foreground">{studentsStats.inactiveStudents}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-muted">
                 <UserX className="h-5 w-5 text-muted-foreground" />
@@ -491,8 +491,8 @@ export function StudentsListView({
           <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Novos este Mês</p>
-                <p className="text-2xl font-bold tracking-tight text-primary">{studentsStats.newStudentsThisMonth}</p>
+                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Novos este Mês</p>
+                <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-primary">{studentsStats.newStudentsThisMonth}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10">
                 <TrendingUp className="h-5 w-5 text-primary" />
@@ -537,37 +537,37 @@ export function StudentsListView({
       {/* Table */}
       {!isLoading && !error && (
         <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto min-w-0">
+            <table className="w-full text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
                     Aluno
                   </th>
                   {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
                       Professor
                     </th>
                   )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
                     Valor/hora
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
                     Aulas/semana
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
                     Total mensal
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden 2xl:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
                     Dia pagto
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
                     Financeiro
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Última aula
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Ações
                   </th>
                 </tr>
@@ -608,16 +608,16 @@ export function StudentsListView({
                       key={student.id}
                       className="hover:bg-muted/30 transition-colors"
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-medium text-accent-foreground">
+                            <span className="text-xs font-medium text-accent-foreground">
                               {student.name.charAt(0)}
                             </span>
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="font-medium text-sm truncate">
+                              <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs truncate">
                                 {student.name}
                               </p>
                               <StatusBadge
@@ -629,7 +629,7 @@ export function StudentsListView({
                               </StatusBadge>
                             </div>
                             {lastUpdatedAt && (
-                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5">
                                 {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
                               </p>
                             )}
@@ -650,56 +650,56 @@ export function StudentsListView({
                         </div>
                       </td>
                       {showTeacherColumn && (
-                        <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
-                          <span className="text-sm text-muted-foreground">
+                        <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
+                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                             {teacherName}
                           </span>
                         </td>
                       )}
-                      <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
-                        <span className="text-sm text-muted-foreground">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {hourlyRate != null ? formatCurrency(hourlyRate) : "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
-                        <span className="text-sm text-muted-foreground">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {classesPerWeek ?? "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
-                        <span className="text-sm text-muted-foreground">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
-                        <span className="text-sm text-muted-foreground">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {student.pay_day ?? "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
                         {financialStatus ? (
                           <StatusBadge variant={financialStatus.variant}>
                             {financialStatus.label}
                           </StatusBadge>
                         ) : (
-                          <span className="text-sm text-muted-foreground">Sem cobranças</span>
+                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">Sem cobranças</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                         <div className="space-y-0.5">
-                          <span className="text-sm text-muted-foreground block">
+                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground block">
                             {lastClassDateRaw
                               ? format(new Date(lastClassDateRaw + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR })
                               : "—"}
                           </span>
                           {daysWithoutClass !== null && (
-                            <span className="text-[11px] text-muted-foreground block">
+                            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground block">
                               {daysWithoutClass} dia{daysWithoutClass === 1 ? "" : "s"} sem aula
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="ghost"

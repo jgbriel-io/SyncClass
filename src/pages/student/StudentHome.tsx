@@ -31,10 +31,10 @@ export default function StudentHome() {
           <>
             {/* Greeting */}
             <div className="text-center py-4">
-              <h1 className="text-2xl font-semibold">
+              <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold">
                 Olá, {studentName}! 👋
               </h1>
-              <p className="text-muted-foreground mt-1">
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">
                 Bom te ver por aqui
               </p>
             </div>
@@ -43,7 +43,7 @@ export default function StudentHome() {
             {!profile && (
               <div className="rounded-xl border bg-card p-5 shadow-card text-center">
                 <AlertCircle className="h-10 w-10 text-warning mx-auto mb-3" />
-                <h2 className="font-semibold">Perfil não vinculado</h2>
+                <h2 className="text-lg laptop:text-base desktop:text-lg font-semibold">Perfil não vinculado</h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   Seu usuário ainda não está vinculado a um cadastro de aluno.
                   Entre em contato com a secretaria.
@@ -75,7 +75,7 @@ export default function StudentHome() {
                           <BookOpen className="h-5 w-5 text-accent-foreground" />
                         </div>
                         <div>
-                          <h2 className="font-semibold">Última Aula</h2>
+                          <h2 className="text-lg laptop:text-base desktop:text-lg font-semibold">Última Aula</h2>
                           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                             <Calendar className="h-3.5 w-3.5" />
                             {formatDate(lastClass.class_date)}

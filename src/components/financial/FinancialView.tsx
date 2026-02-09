@@ -253,8 +253,8 @@ export function FinancialView({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="text-muted-foreground mt-1">{subtitle}</p>
+          <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">{title}</h1>
+          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">{subtitle}</p>
         </div>
       </div>
 
@@ -267,9 +267,9 @@ export function FinancialView({
             <div className="space-y-2 flex-1">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                <p className="text-sm font-medium text-muted-foreground">Previsão de Faturamento Mensal</p>
+                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Previsão de Faturamento Mensal</p>
               </div>
-              <p className="text-3xl font-bold tracking-tight text-primary">
+              <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-primary">
                 {formatCurrency(forecastedBilling.totalForecast)}
               </p>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -297,12 +297,12 @@ export function FinancialView({
       )}
 
       {/* Cards financeiros padrão dashboard (exceto previsão mensal) */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
         <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Total recebido</p>
-              <p className="text-2xl font-bold tracking-tight text-success">
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total recebido</p>
+              <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-success">
                 {formatCurrency(actualSummary.totalPaid)}
               </p>
             </div>
@@ -314,8 +314,8 @@ export function FinancialView({
         <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Total a receber</p>
-              <p className="text-2xl font-bold tracking-tight">
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total a receber</p>
+              <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">
                 {formatCurrency(actualSummary.totalPending + actualSummary.totalOverdue)}
               </p>
               <p className="text-xs text-muted-foreground">Pendentes + Em atraso</p>
@@ -328,8 +328,8 @@ export function FinancialView({
         <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Pendente</p>
-              <p className="text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Pendente</p>
+              <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
                 {formatCurrency(actualSummary.totalPending)}
               </p>
             </div>
@@ -341,8 +341,8 @@ export function FinancialView({
         <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Em atraso</p>
-              <p className="text-2xl font-bold tracking-tight text-destructive">
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Em atraso</p>
+              <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-destructive">
                 {formatCurrency(actualSummary.totalOverdue)}
               </p>
             </div>
@@ -380,37 +380,37 @@ export function FinancialView({
           <TableSkeleton rows={8} columns={8} />
         ) : !error ? (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto min-w-0">
+            <table className="w-full text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Aluno
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell whitespace-nowrap">
                     Aula Vinculada
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden sm:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell whitespace-nowrap">
                     Descrição
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Valor
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell whitespace-nowrap">
                     Método
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden md:table-cell whitespace-nowrap">
                     Vencimento
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Status
                   </th>
                   {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
                       Histórico de Pagamento
                     </th>
                   )}
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Ações
                   </th>
                 </tr>
@@ -424,14 +424,14 @@ export function FinancialView({
                       key={record.id}
                       className="hover:bg-muted/30 transition-colors"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <p className="font-medium text-sm">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
+                        <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
                           {record.students?.name || "—"}
                         </p>
                       </td>
-                      <td className="px-6 py-4 hidden lg:table-cell">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
                         {record.class_logs ? (
-                          <div className="flex flex-col text-sm text-muted-foreground">
+                          <div className="flex flex-col text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                             <span>
                               {record.students?.name}
                               {" | "}
@@ -440,66 +440,66 @@ export function FinancialView({
                                 : formatDate(record.class_logs.class_date)}
                             </span>
                             {showTeacherColumn && record.students?.teacher_id && (
-                              <span className="text-xs text-muted-foreground/80">
+                              <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground/80">
                                 Professor: {teacherMap.get(record.students.teacher_id) || "—"}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-sm text-muted-foreground/70">
+                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground/70">
                             Sem aula vinculada
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 hidden sm:table-cell">
-                        <div className="flex flex-col text-sm text-muted-foreground">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell">
+                        <div className="flex flex-col text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           <span>{record.description || "—"}</span>
                           {lastUpdatedAt && (
-                            <span className="text-[11px] mt-0.5">
+                            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] mt-0.5">
                               {`Editado em ${formatDateTime(lastUpdatedAt)}`}
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <p className="font-semibold text-sm">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
+                        <p className="font-semibold text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
                           {formatCurrency(Number(record.amount))}
                         </p>
                       </td>
-                      <td className="px-6 py-4 hidden lg:table-cell whitespace-nowrap">
-                        <p className="text-sm text-muted-foreground">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell whitespace-nowrap">
+                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {record.payment_method || "—"}
                         </p>
                       </td>
-                      <td className="px-6 py-4 hidden md:table-cell whitespace-nowrap">
-                        <p className="text-sm text-muted-foreground">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden md:table-cell whitespace-nowrap">
+                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {formatDate(record.due_date)}
                         </p>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                         <StatusBadge variant={statusVariants[record.actualStatus]}>
                           {statusLabels[record.actualStatus]}
                         </StatusBadge>
                       </td>
                       {showTeacherColumn && (
-                        <td className="px-6 py-4 hidden xl:table-cell">
+                        <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell">
                           {record.actualStatus === "pago" && record.confirmed_at ? (
-                            <div className="flex flex-col text-sm text-muted-foreground">
-                              <span className="text-xs">
+                            <div className="flex flex-col text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
+                              <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px]">
                                 Confirmado em {formatDateTime(record.confirmed_at)}
                               </span>
                               {record.confirmed_by?.full_name && (
-                                <span className="text-xs text-muted-foreground/80">
+                                <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground/80">
                                   por {record.confirmed_by.full_name}
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
+                            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">—</span>
                           )}
                         </td>
                       )}
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {record.actualStatus !== "pago" ? (
                             <>
@@ -582,7 +582,7 @@ export function FinancialView({
             )
           )}
           {(totalCount > 0 || page > 0) && (
-            <div className="border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
+            <div className="border-t px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 flex items-center justify-between gap-4 bg-muted/30">
               <p className="text-sm text-muted-foreground">
                 {totalCount > 0
                   ? `${page * 10 + 1}-${Math.min((page + 1) * 10, totalCount)} de ${totalCount}`

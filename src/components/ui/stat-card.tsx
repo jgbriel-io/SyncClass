@@ -62,8 +62,8 @@ export function StatCard({
     >
       <div className="flex items-start justify-between">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className={cn("text-3xl font-semibold tracking-tight", styles.value)}>
+          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">{title}</p>
+          <p className={cn("text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-semibold tracking-tight", styles.value)}>
             {value}
           </p>
           {description && (

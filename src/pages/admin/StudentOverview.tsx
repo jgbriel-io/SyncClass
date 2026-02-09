@@ -110,10 +110,10 @@ function StudentOverviewPage() {
     <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">
             Visão Geral dos Alunos
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm mobile:text-xs tablet:text-xs mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">
             Estatísticas completas de todos os alunos
           </p>
         </div>
@@ -145,19 +145,19 @@ function StudentOverviewPage() {
         ) : !error && (
           <>
             <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto min-w-0">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50">
-                      <TableHead className="whitespace-nowrap">Aluno</TableHead>
-                      <TableHead className="text-center whitespace-nowrap">Status</TableHead>
-                      <TableHead className="text-center whitespace-nowrap">Aulas</TableHead>
-                      <TableHead className="text-center whitespace-nowrap">Frequência</TableHead>
-                      <TableHead className="text-center whitespace-nowrap">Média</TableHead>
-                      <TableHead className="text-right whitespace-nowrap">Pago</TableHead>
-                      <TableHead className="text-right whitespace-nowrap">Pendente</TableHead>
-                      <TableHead className="text-right whitespace-nowrap">Atrasado</TableHead>
-                      <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Aluno</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-center whitespace-nowrap">Status</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-center whitespace-nowrap">Aulas</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-center whitespace-nowrap">Frequência</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-center whitespace-nowrap">Média</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right whitespace-nowrap">Pago</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right whitespace-nowrap">Pendente</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right whitespace-nowrap">Atrasado</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-center whitespace-nowrap">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -175,15 +175,15 @@ function StudentOverviewPage() {
                           <TableCell className="whitespace-nowrap">
                             <div className="flex items-center gap-3">
                               <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                                <span className="text-sm font-medium text-accent-foreground">
-                                  {student.name.charAt(0)}
-                                </span>
+<span className="text-xs font-medium text-accent-foreground">
+                                {student.name.charAt(0)}
+                              </span>
                               </div>
                               <div>
-                                <p className="font-medium text-sm">
+                                <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
                                   {student.name}
                                 </p>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
                                   {student.email || student.phone || "—"}
                                 </p>
                               </div>
@@ -199,7 +199,7 @@ function StudentOverviewPage() {
                             </StatusBadge>
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className="text-sm font-medium">
+                            <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium">
                               {student.stats.totalClasses}
                             </span>
                           </TableCell>
@@ -213,7 +213,7 @@ function StudentOverviewPage() {
                                     <TrendingUp className="h-3.5 w-3.5 text-success" />
                                   )}
                                   <span
-                                    className={`text-sm font-medium ${
+                                    className={`text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium ${
                                       lowAttendance
                                         ? "text-rose-600"
                                         : "text-success"
@@ -223,7 +223,7 @@ function StudentOverviewPage() {
                                   </span>
                                 </>
                               ) : (
-                                <span className="text-sm text-muted-foreground">
+                                <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                                   —
                                 </span>
                               )}
@@ -232,35 +232,35 @@ function StudentOverviewPage() {
                           <TableCell className="text-center">
                             {student.stats.averageGrade !== null ? (
                               <span
-                                className={`text-sm font-medium ${
-                                  student.stats.averageGrade >= 7
-                                    ? "text-success"
-                                    : student.stats.averageGrade >= 5
-                                    ? "text-amber-600"
-                                    : "text-rose-600"
-                                }`}
+className={`text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium ${
+                                    student.stats.averageGrade >= 7
+                                      ? "text-success"
+                                      : student.stats.averageGrade >= 5
+                                      ? "text-amber-600"
+                                      : "text-rose-600"
+                                  }`}
                               >
                                 {student.stats.averageGrade.toFixed(1)}
                               </span>
                             ) : (
-                              <span className="text-sm text-muted-foreground">
+                              <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                                 —
                               </span>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <span className="text-sm text-success font-medium">
+                            <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-success font-medium">
                               {formatCurrency(student.stats.totalPaid)}
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
-                            <span className="text-sm text-amber-600 font-medium">
+                            <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-amber-600 font-medium">
                               {formatCurrency(student.stats.totalPending)}
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
                             <span
-                              className={`text-sm font-medium ${
+                              className={`text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium ${
                                 hasOverdue ? "text-rose-600" : "text-muted-foreground"
                               }`}
                             >

@@ -274,8 +274,8 @@ export default function TeachersPage() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Professores</h1>
-              <p className="text-muted-foreground mt-1">
+              <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">Professores</h1>
+              <p className="text-sm mobile:text-xs tablet:text-xs mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">
                 Gerencie os professores do sistema
               </p>
             </div>
@@ -290,7 +290,7 @@ export default function TeachersPage() {
           </div>
 
           {/* Cards informativos */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
             <StatCard
               title="Total de professores"
               value={teachersStats.total}
@@ -333,6 +333,7 @@ export default function TeachersPage() {
 
           {/* Table */}
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
+            <div className="overflow-x-auto min-w-0">
             <Table>
             <TableHeader>
               <TableRow>
@@ -362,21 +363,21 @@ export default function TeachersPage() {
                     <TableRow key={teacher.id}>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-medium text-sm">
+                          <span className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
                             {teacher.name}
                           </span>
                           {lastUpdatedAt && (
-                            <span className="text-[11px] text-muted-foreground mt-0.5">
+                            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5">
                               {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
                             </span>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm">{teacher.email || "—"}</span>
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs">{teacher.email || "—"}</span>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm">{teacher.phone || "—"}</span>
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs">{teacher.phone || "—"}</span>
                       </TableCell>
                       <TableCell>
                         <StatusBadge
@@ -457,6 +458,7 @@ export default function TeachersPage() {
                 })}
               </TableBody>
             </Table>
+            </div>
             {filteredTeachers.length === 0 && (
               <EmptyState
                 icon={Search}

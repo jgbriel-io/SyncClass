@@ -330,8 +330,8 @@ export function ClassesView({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="text-muted-foreground mt-1">{subtitle}</p>
+          <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">{title}</h1>
+          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">{subtitle}</p>
         </div>
         <Button
           onClick={() => {
@@ -345,7 +345,7 @@ export function ClassesView({
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
         <StatCard
           title="Total de Aulas"
           value={summary?.totalClasses ?? 0}
@@ -401,37 +401,37 @@ export function ClassesView({
           <TableSkeleton rows={8} columns={8} />
         ) : !error && viewMode === "table" && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto min-w-0">
+            <table className="w-full text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
                     Aluno
                   </th>
                   {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
                       Aula / Professor
                     </th>
                   )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Data
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden sm:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell whitespace-nowrap">
                     Duração
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Nota
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden xl:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
                     Financeiro
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell whitespace-nowrap">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell whitespace-nowrap">
                     Valor
                   </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
                     Feedback
                   </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Ações
                   </th>
                 </tr>
@@ -448,7 +448,7 @@ export function ClassesView({
 
                   return (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 align-top">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top">
                         <div className="flex items-start gap-3">
                           <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-medium text-accent-foreground">
@@ -457,7 +457,7 @@ export function ClassesView({
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center gap-2 whitespace-nowrap">
-                              <p className="text-sm font-medium">
+                              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium">
                                 {log.students?.name || "Aluno não encontrado"}
                               </p>
                               <StatusBadge variant={getClassStatusBadge(log).variant}>
@@ -465,7 +465,7 @@ export function ClassesView({
                               </StatusBadge>
                             </div>
                             {lastUpdatedAt && (
-                              <p className="text-[11px] text-muted-foreground whitespace-nowrap">
+                              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground whitespace-nowrap">
                                 {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
                               </p>
                             )}
@@ -473,38 +473,38 @@ export function ClassesView({
                         </div>
                       </td>
                       {showTeacherColumn && (
-                        <td className="px-6 py-4 align-top hidden lg:table-cell">
+                        <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top hidden lg:table-cell">
                           <div className="space-y-1 min-w-[200px]">
                             {log.title && (
-                              <p className="text-sm font-semibold text-foreground whitespace-normal">
+                              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-semibold text-foreground whitespace-normal">
                                 {log.title}
                               </p>
                             )}
-                            <p className="text-xs text-muted-foreground whitespace-nowrap">
+                            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground whitespace-nowrap">
                               {teacherName}
                             </p>
                           </div>
                         </td>
                       )}
-                      <td className="px-6 py-4 align-top whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top whitespace-nowrap">
                         {(() => {
                           const { date, timeRange } = formatClassDateAndTime(log);
                           return (
-                            <div className="flex flex-col gap-0.5 text-sm text-muted-foreground">
+                            <div className="flex flex-col gap-0.5 text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                               <span>{date}</span>
-                              {timeRange && <span className="text-xs">{timeRange}</span>}
+                              {timeRange && <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px]">{timeRange}</span>}
                             </div>
                           );
                         })()}
                       </td>
-                      <td className="px-6 py-4 align-top hidden sm:table-cell whitespace-nowrap">
-                        <span className="text-sm text-muted-foreground">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top hidden sm:table-cell whitespace-nowrap">
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {formatDuration(log.duration_minutes)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 align-top whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top whitespace-nowrap">
                         <span
-                          className={`text-sm font-medium ${
+                          className={`text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium ${
                             log.attendance === false ? "text-destructive" : ""
                           }`}
                         >
@@ -515,7 +515,7 @@ export function ClassesView({
                               : "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 align-top hidden xl:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top hidden xl:table-cell whitespace-nowrap">
                         {log.financial_records ? (
                           <StatusBadge
                             variant={getPaymentStatusVariant(
@@ -534,22 +534,22 @@ export function ClassesView({
                             )}
                           </StatusBadge>
                         ) : (
-                          <span className="text-sm text-muted-foreground">Sem cobrança</span>
+                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">Sem cobrança</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 align-top hidden lg:table-cell whitespace-nowrap">
-                        <span className={log.financial_records ? "text-sm font-medium tabular-nums" : "text-sm font-medium text-foreground"}>
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top hidden lg:table-cell whitespace-nowrap">
+                        <span className={log.financial_records ? "text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium tabular-nums" : "text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium text-foreground"}>
                           {log.financial_records
                             ? formatCurrency(log.financial_records.amount)
                             : "Sem cobrança"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 align-top hidden lg:table-cell">
-                        <span className="text-sm text-muted-foreground line-clamp-2 max-w-xs">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top hidden lg:table-cell">
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground line-clamp-2 max-w-xs">
                           {log.feedback || "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 align-top text-right">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top text-right">
                         <div className="flex items-center justify-end gap-2">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -628,7 +628,7 @@ export function ClassesView({
           )}
           {/* Paginação */}
           {(totalCount > 0 || page > 0) && (
-            <div className="border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
+            <div className="border-t px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 flex items-center justify-between gap-4 bg-muted/30">
               <p className="text-sm text-muted-foreground">
                 {totalCount > 0
                   ? `${page * 10 + 1}-${Math.min((page + 1) * 10, totalCount)} de ${totalCount}`
@@ -833,7 +833,7 @@ export function ClassesView({
             </div>
           )}
           {(totalCount > 0 || page > 0) && (
-            <div className="rounded-lg border bg-card px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
+            <div className="rounded-lg border bg-card px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 flex items-center justify-between gap-4 bg-muted/30">
               <p className="text-sm text-muted-foreground">
                 {totalCount > 0 ? `${page * 10 + 1}-${Math.min((page + 1) * 10, totalCount)} de ${totalCount}` : "0 registros"}
               </p>

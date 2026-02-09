@@ -457,8 +457,8 @@ export default function UsersPage() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Usuários</h1>
-              <p className="text-muted-foreground mt-1">
+              <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">Usuários</h1>
+              <p className="text-sm mobile:text-xs tablet:text-xs mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">
                 Gerencie usuários e privilégios
               </p>
             </div>
@@ -473,7 +473,7 @@ export default function UsersPage() {
 
           {/* Cards informativos */}
           {usersStats && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
               <StatCard
                 title="Total de usuários"
                 value={usersStats.total}
@@ -533,6 +533,7 @@ export default function UsersPage() {
         {/* Table */}
         {!isLoading && !error && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
+            <div className="overflow-x-auto min-w-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -586,21 +587,21 @@ export default function UsersPage() {
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                              <span className="text-sm font-medium text-accent-foreground">
+                              <span className="text-xs font-medium text-accent-foreground">
                                 {avatarLetter}
                               </span>
                             </div>
                             <div className="space-y-0.5">
-                              <p className="font-medium text-sm whitespace-nowrap">
+                              <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs whitespace-nowrap">
                                 {displayName}
                               </p>
                               {subtitle && (
-                                <p className="text-xs text-muted-foreground whitespace-nowrap">
+                                <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground whitespace-nowrap">
                                   {subtitle}
                                 </p>
                               )}
                               {!isActive && (
-                                <p className="text-[11px] text-amber-600">
+                                <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-amber-600">
                                   Conta arquivada
                                 </p>
                               )}
@@ -613,7 +614,7 @@ export default function UsersPage() {
                               {getRoleLabel(role)}
                             </StatusBadge>
                             {!isActive && (
-                              <span className="text-[11px] text-muted-foreground">
+                              <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
                                 Arquivado
                               </span>
                             )}
@@ -625,22 +626,22 @@ export default function UsersPage() {
                               {linkedStudent && (
                                 <div className="flex items-center gap-2">
                                   <User className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm">Aluno: {linkedStudent.name}</span>
+                                  <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs">Aluno: {linkedStudent.name}</span>
                                 </div>
                               )}
                               {linkedTeacher && (
                                 <div className="flex items-center gap-2">
                                   <Shield className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm">Professor: {linkedTeacher.name}</span>
+                                  <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs">Professor: {linkedTeacher.name}</span>
                                 </div>
                               )}
                             </div>
                           ) : (
-                            <span className="text-sm text-muted-foreground">—</span>
+                            <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">—</span>
                           )}
                         </TableCell>
                         <TableCell className="hidden md:table-cell whitespace-nowrap">
-                          <div className="flex flex-col text-xs text-muted-foreground">
+                          <div className="flex flex-col text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
                             <span>
                               {user.created_at
                                 ? `Criado em ${format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })}`
@@ -771,6 +772,7 @@ export default function UsersPage() {
                   })}
               </TableBody>
             </Table>
+            </div>
             {filteredUsers.length === 0 && (
               <EmptyState
                 icon={User}

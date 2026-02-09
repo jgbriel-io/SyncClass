@@ -59,7 +59,7 @@ const TeacherStudentsPage = () => {
   return (
     <StudentsListView
         title="Alunos"
-        subtitle="Gerencie todos os alunos cadastrados"
+        subtitle="Gerencie seus alunos"
         showTeacherColumn={false}
         showTeacherFilter={false}
         autoTeacherId={teacherId}
