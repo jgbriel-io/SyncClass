@@ -111,8 +111,7 @@ export function PostClassDialog({
 
       onSuccess();
       onOpenChange(false);
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Erro ao registrar avaliação. Tente novamente.");
     }
   };

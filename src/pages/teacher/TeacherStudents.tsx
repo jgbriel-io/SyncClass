@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { StudentsListView } from "@/components/students/StudentsListView";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useTeachers } from "@/hooks/useTeachers";
 
 const TeacherStudentsPage = () => {
@@ -12,27 +14,24 @@ const TeacherStudentsPage = () => {
   const searchFromUrl = searchParams.get("search") ?? "";
   const { data: teachers = [] } = useTeachers();
 
-  // Fetch the teacher_id associated with the logged-in user
-  const { data: teacherId, isLoading: teacherIdLoading } = useQuery({
+  const { data: teacherId, isLoading: teacherIdLoading, isError: teacherIdError } = useQuery({
     queryKey: ["teacherId", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      
       const { data, error } = await supabase
         .from("profiles")
         .select("teacher_id")
         .eq("user_id", user.id)
         .single();
-
-      if (error) {
-        console.error("Error fetching teacher_id:", error);
-        return null;
-      }
-
+      if (error) throw error;
       return data?.teacher_id as string | null;
     },
     enabled: !!user?.id && role === "teacher",
   });
+
+  useEffect(() => {
+    if (teacherIdError) toast.error("Erro ao carregar seu perfil. Tente recarregar a página.");
+  }, [teacherIdError]);
 
   if (authLoading || teacherIdLoading) {
     return (

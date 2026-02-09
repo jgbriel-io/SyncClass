@@ -105,27 +105,24 @@ function getClassStatusBadge(log: {
 const TeacherPedagogicalPage = () => {
   const { user, role, isLoading: authLoading } = useAuth();
 
-  // Buscar o teacher_id vinculado ao usuário logado
-  const { data: teacherId, isLoading: teacherIdLoading } = useQuery({
+  const { data: teacherId, isLoading: teacherIdLoading, isError: teacherIdError } = useQuery({
     queryKey: ["teacherId", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-
       const { data, error } = await supabase
         .from("profiles")
         .select("teacher_id")
         .eq("user_id", user.id)
         .single();
-
-      if (error) {
-        console.error("Error fetching teacher_id:", error);
-        return null;
-      }
-
+      if (error) throw error;
       return data?.teacher_id as string | null;
     },
     enabled: !!user?.id && role === "teacher",
   });
+
+  useEffect(() => {
+    if (teacherIdError) toast.error("Erro ao carregar seu perfil. Tente recarregar a página.");
+  }, [teacherIdError]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ClassLogWithStudent | null>(null);

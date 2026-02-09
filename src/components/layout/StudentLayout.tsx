@@ -70,7 +70,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       </header>
 
       {/* Page content */}
-      <main id="main-content" className="p-4 lg:p-6 animate-fade-in">{children}</main>
+      <main id="main-content" className="pt-6 pb-6 px-4 animate-fade-in">{children}</main>
 
       {/* Bottom navigation */}
       <nav 

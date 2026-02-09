@@ -20,9 +20,9 @@ function classLogToCardProps(record: {
   attendance: boolean | null;
   grade?: number | null;
   title?: string | null;
-  teachers?: { name?: string } | null;
+  billed_amount?: number | null;
+  teacher_name?: string;
   feedback?: string | null;
-  financial_records?: { amount?: number | null }[] | null;
 }) {
   return {
     id: record.id,
@@ -33,9 +33,9 @@ function classLogToCardProps(record: {
     attendance: record.attendance,
     grade: record.grade,
     title: record.title ?? null,
-    teacher_name: record.teachers?.name ?? undefined,
+    teacher_name: record.teacher_name,
     feedback: record.feedback ?? null,
-    amount: record.financial_records?.[0]?.amount ?? null,
+    amount: record.billed_amount ?? null,
   };
 }
 

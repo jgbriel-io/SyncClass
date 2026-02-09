@@ -687,7 +687,6 @@ export function useResetPassword() {
         }
         if (data?.error) throw new Error(data.error);
       } catch (err) {
-        console.error("[useResetPassword] Erro:", err);
         if (isEdgeFunctionNetworkError(err)) {
           throw new Error(
             "Não foi possível contactar o servidor. Verifique sua conexão e se a Edge Function 'reset-password' está publicada no projeto Supabase."
@@ -953,7 +952,6 @@ export function useResetOwnPassword() {
         }
         if (data?.error) throw new Error(data.error);
       } catch (err) {
-        console.error("[useResetOwnPassword] Erro:", err);
         if (isEdgeFunctionNetworkError(err)) {
           throw new Error(
             "Não foi possível contactar o servidor. Verifique sua conexão e se a Edge Function 'reset-password' está publicada no projeto Supabase."

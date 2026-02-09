@@ -245,7 +245,6 @@ export function useUpdateStudent() {
       
       // Atualizar vencimentos de cobranças pendentes se pay_day mudou
       if (payDayChanged && oldPayDay !== newPayDay && newPayDay !== null) {
-        console.log(`[useUpdateStudent] pay_day mudou de ${oldPayDay} para ${newPayDay}`);
         try {
           // Busca cobranças pendentes deste aluno
           const { data: pendingRecords, error: fetchError } = await supabase
@@ -254,13 +253,8 @@ export function useUpdateStudent() {
             .eq("student_id", id)
             .eq("status", "pendente");
           
-          if (fetchError) {
-            console.error("[useUpdateStudent] Erro ao buscar cobranças:", fetchError);
-            throw fetchError;
-          }
-          
-          console.log(`[useUpdateStudent] Encontradas ${pendingRecords?.length || 0} cobranças pendentes`);
-          
+          if (fetchError) throw fetchError;
+
           if (pendingRecords && pendingRecords.length > 0) {
             // Atualiza cada cobrança com o novo dia de vencimento
             const updates = [];
@@ -272,27 +266,18 @@ export function useUpdateStudent() {
                 const lastDay = new Date(year, month, 0).getDate();
                 const newDay = Math.min(newPayDay, lastDay);
                 const newDueDate = `${year}-${String(month).padStart(2, '0')}-${String(newDay).padStart(2, '0')}`;
-                
-                console.log(`[useUpdateStudent] Atualizando cobrança ${record.id}: ${record.due_date} -> ${newDueDate}`);
-                
+
                 const { error: updateError } = await supabase
                   .from("financial_records")
                   .update({ due_date: newDueDate })
                   .eq("id", record.id);
                 
-                if (updateError) {
-                  console.error(`[useUpdateStudent] Erro ao atualizar cobrança ${record.id}:`, updateError);
-                } else {
-                  updates.push(record.id);
-                }
+                if (!updateError) updates.push(record.id);
               }
             }
-            
-            console.log(`[useUpdateStudent] Atualizadas ${updates.length} cobranças com sucesso`);
           }
-        } catch (updateError) {
+        } catch {
           // Não falha a operação principal se a atualização de cobranças falhar
-          console.error("[useUpdateStudent] Erro ao atualizar vencimentos das cobranças:", updateError);
         }
       }
 
@@ -388,9 +373,7 @@ export function useSoftDeleteStudent() {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Aluno arquivado com sucesso!");
     },
-    onError: (error: unknown) => {
-      const err = error as PostgresError;
-      console.error("Erro ao arquivar aluno:", err);
+    onError: () => {
       toast.error("Erro ao arquivar aluno. Tente novamente.");
     },
   });
@@ -430,10 +413,8 @@ export function useHardDeleteStudent() {
         });
         // Edge Function may return { error: "..." } in body
         const msg = (data as { error?: string } | null)?.error;
-        if (fnError) {
-          console.error("Erro ao excluir conta vinculada:", fnError);
-        } else if (msg) {
-          console.error("Erro ao excluir conta vinculada:", msg);
+        if (fnError || msg) {
+          toast.warning("Aluno removido. A conta de acesso vinculada não pôde ser excluída — remova manualmente se necessário.");
         }
       }
     },
@@ -487,9 +468,7 @@ export function useRestoreStudent() {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Aluno restaurado com sucesso!");
     },
-    onError: (error: unknown) => {
-      const err = error as PostgresError;
-      console.error("Erro ao restaurar aluno:", err);
+    onError: () => {
       toast.error("Erro ao restaurar aluno. Tente novamente.");
     },
   });

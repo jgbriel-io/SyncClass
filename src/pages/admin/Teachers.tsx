@@ -190,10 +190,6 @@ export default function TeachersPage() {
           .maybeSingle();
 
         if (profileError) {
-          console.error(
-            "Error checking email uniqueness for teacher:",
-            profileError
-          );
           toast.error("Erro ao validar email. Tente novamente.");
           return;
         }

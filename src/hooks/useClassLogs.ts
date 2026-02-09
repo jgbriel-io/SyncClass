@@ -393,7 +393,6 @@ export function useCreateClassLog() {
       toast.success("Aula registrada com sucesso!");
     },
     onError: (error) => {
-      console.error("Error creating class log:", error);
       const msg = (error as Error)?.message || "";
       const code = (error as { code?: string })?.code;
       const isOverlap =
@@ -467,7 +466,6 @@ export function useCreateClassLogWithFinancial() {
 
         if (financialError) {
           // Se falhar ao criar cobrança, ainda retorna a aula criada
-          console.error("Error creating financial record:", financialError);
           toast.error("Aula criada, mas erro ao criar cobrança.");
           return createdLog;
         }
@@ -491,7 +489,6 @@ export function useCreateClassLogWithFinancial() {
       }
     },
     onError: (error) => {
-      console.error("Error creating class log:", error);
       const msg = (error as Error)?.message || "";
       const code = (error as { code?: string })?.code;
       const isOverlap =
@@ -556,7 +553,6 @@ export function useUpdateClassLog() {
             .update(financialUpdate)
             .eq("id", financialRecordId);
           if (financialError) {
-            console.error("Error updating financial record:", financialError);
             toast.error("Aula atualizada, mas não foi possível atualizar a cobrança.");
           }
         }
@@ -575,7 +571,6 @@ export function useUpdateClassLog() {
       toast.success("Registro atualizado com sucesso!");
     },
     onError: (error) => {
-      console.error("Error updating class log:", error);
       const msg = (error as Error)?.message || "";
       const code = (error as { code?: string })?.code;
       const isOverlap =
@@ -622,8 +617,7 @@ export function useDeleteClassLog() {
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Registro removido com sucesso!");
     },
-    onError: (error) => {
-      console.error("Error deleting class log:", error);
+    onError: () => {
       toast.error("Erro ao remover registro. Tente novamente.");
     },
   });

@@ -20,8 +20,9 @@ interface StudentClassLog {
   grade: number | null;
   feedback: string | null;
   title?: string | null;
-  teachers?: { name: string | null } | null;
-  financial_records?: { amount: number; status: string }[] | null;
+  billed_amount?: number | null;
+  teacher_id?: string | null;
+  teacher_name?: string;
 }
 
 interface StudentFinancialRecord {
@@ -81,14 +82,77 @@ export function useStudentClassLogs() {
   return useQuery({
     queryKey: ["student_class_logs", user?.id],
     queryFn: async () => {
+      // First get the student_id from profiles
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("student_id")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      if (!profile?.student_id) return [];
+
+      // Student data: students_masked (aluno pode ler; teachers não)
+      const { data: student, error: studentError } = await supabase
+        .from("students_masked")
+        .select("teacher_id")
+        .eq("id", profile.student_id)
+        .maybeSingle();
+
+      if (studentError) throw studentError;
+
+      let studentTeacherName: string | undefined;
+      if (student?.teacher_id) {
+        const { data: teacher } = await supabase
+          .from("teachers_masked")
+          .select("name")
+          .eq("id", student.teacher_id)
+          .maybeSingle();
+        studentTeacherName = teacher?.name;
+      }
+
+      // Class logs com teachers_masked(name) por RLS
       const { data, error } = await supabase
         .from("class_logs")
-        .select("id, class_date, start_at, end_at, duration_minutes, attendance, grade, feedback, title, teachers(name), financial_records(amount, status)")
+        .select(`
+          id,
+          class_date,
+          start_at,
+          end_at,
+          duration_minutes,
+          attendance,
+          grade,
+          feedback,
+          title,
+          billed_amount,
+          teacher_id,
+          teachers_masked(name)
+        `)
+        .eq("student_id", profile.student_id)
         .order("class_date", { ascending: false });
 
       if (error) throw error;
 
-      return (data || []) as StudentClassLog[];
+      const mappedLogs = (data || []).map((log: Record<string, unknown> & { teachers_masked?: { name?: string } | null }) => {
+        const logTeacherName = log.teachers_masked?.name ?? studentTeacherName;
+        const logTeacherId = log.teacher_id ?? student?.teacher_id;
+        return {
+          id: log.id,
+          class_date: log.class_date,
+          start_at: log.start_at,
+          end_at: log.end_at,
+          duration_minutes: log.duration_minutes,
+          attendance: log.attendance,
+          grade: log.grade,
+          feedback: log.feedback,
+          title: log.title,
+          billed_amount: log.billed_amount,
+          teacher_id: logTeacherId,
+          teacher_name: logTeacherName,
+        };
+      });
+
+      return mappedLogs as StudentClassLog[];
     },
     enabled: !!user?.id,
   });
@@ -100,9 +164,21 @@ export function useStudentFinancialRecords() {
   return useQuery({
     queryKey: ["student_financial_records", user?.id],
     queryFn: async () => {
+      // First get the student_id from profiles
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("student_id")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      if (!profile?.student_id) return [];
+
+      // Then get the financial records for this student
       const { data, error } = await supabase
         .from("financial_records")
         .select("id, amount, due_date, description, status, paid_at")
+        .eq("student_id", profile.student_id)
         .order("due_date", { ascending: false });
 
       if (error) throw error;

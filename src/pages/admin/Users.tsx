@@ -222,13 +222,6 @@ export default function UsersPage() {
   }) => {
     if (selectedUser) {
       // Update existing user
-      if (data.password) {
-        // Update password via admin API
-        // Note: Supabase Admin API doesn't have a direct password update
-        // You might need to use resetPasswordForEmail or handle this differently
-        console.warn("Password update not implemented via admin API");
-      }
-      
       updateProfile.mutate(
         {
           userId: selectedUser.id,

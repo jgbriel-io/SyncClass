@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * PageContainer - Container padronizado para conteúdo de páginas
- * 
+ *
  * Uso:
  * - Substituir `<main className="p-4 lg:p-6">` por `<PageContainer>`
  * - Garante padding consistente em todas as páginas
@@ -36,11 +36,8 @@ export const PageContainer = React.forwardRef<HTMLDivElement, PageContainerProps
       <div
         ref={ref}
         className={cn(
-          // Padding padronizado responsivo
-          "p-4 lg:p-6",
-          // Animação fade-in consistente
+          // Removido padding, agora só animação e constraints
           "animate-fade-in",
-          // Constraint opcional
           constrained && ["mx-auto", maxWidthClasses[maxWidth]],
           className
         )}

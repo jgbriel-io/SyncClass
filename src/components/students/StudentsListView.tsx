@@ -348,7 +348,6 @@ export function StudentsListView({
           .maybeSingle();
 
         if (profileError) {
-          console.error("Error checking email uniqueness for student:", profileError);
           toast.error("Erro ao validar email. Tente novamente.");
           return;
         }

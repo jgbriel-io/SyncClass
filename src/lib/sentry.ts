@@ -5,13 +5,7 @@ export function initSentry() {
   const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
   const ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT || import.meta.env.MODE;
 
-  // Only initialize if DSN is provided
-  if (!SENTRY_DSN) {
-    console.warn(
-      "Sentry DSN not found. Error tracking disabled. Add VITE_SENTRY_DSN to .env to enable."
-    );
-    return;
-  }
+  if (!SENTRY_DSN) return;
 
   Sentry.init({
     dsn: SENTRY_DSN,
@@ -69,7 +63,6 @@ export function initSentry() {
 // Helper functions for manual logging
 export const logger = {
   info: (message: string, context?: Record<string, unknown>) => {
-    console.info(message, context);
     Sentry.captureMessage(message, {
       level: "info",
       extra: context,
@@ -77,7 +70,6 @@ export const logger = {
   },
 
   warn: (message: string, context?: Record<string, unknown>) => {
-    console.warn(message, context);
     Sentry.captureMessage(message, {
       level: "warning",
       extra: context,
@@ -85,8 +77,6 @@ export const logger = {
   },
 
   error: (error: Error | string, context?: Record<string, unknown>) => {
-    console.error(error, context);
-    
     if (typeof error === "string") {
       Sentry.captureMessage(error, {
         level: "error",

@@ -264,10 +264,8 @@ export function useHardDeleteTeacher() {
           body: { userId: linkedProfile.user_id },
         });
         const msg = (data as { error?: string } | null)?.error;
-        if (fnError) {
-          console.error("Erro ao excluir conta vinculada:", fnError);
-        } else if (msg) {
-          console.error("Erro ao excluir conta vinculada:", msg);
+        if (fnError || msg) {
+          toast.warning("Professor removido. A conta de acesso vinculada não pôde ser excluída — remova manualmente se necessário.");
         }
       }
     },

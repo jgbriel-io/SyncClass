@@ -63,7 +63,7 @@ export function useStudentDetails(studentId: string | null) {
       if (studentError) throw studentError;
       if (!student) return null;
 
-      // Fetch class logs
+      // Fetch class logs (teachers_masked por RLS: aluno não pode ler teachers)
       const { data: classLogs, error: classLogsError } = await supabase
         .from("class_logs")
         .select(`
@@ -78,7 +78,7 @@ export function useStudentDetails(studentId: string | null) {
           title,
           billed_amount,
           teacher_id,
-          teachers(name),
+          teachers_masked(name),
           created_at
         `)
         .eq("student_id", studentId)
@@ -86,32 +86,32 @@ export function useStudentDetails(studentId: string | null) {
 
       if (classLogsError) throw classLogsError;
 
-      // Buscar nome do professor do aluno como fallback
+      // Nome do professor do aluno como fallback (teachers_masked por RLS)
       let studentTeacherName: string | undefined;
       if (student.teacher_id) {
         const { data: teacherData } = await supabase
-          .from("teachers")
+          .from("teachers_masked")
           .select("name")
           .eq("id", student.teacher_id)
           .maybeSingle();
         studentTeacherName = teacherData?.name ?? undefined;
       }
 
-      // Map class logs to include teacher name
-      const mappedClassLogs: StudentClassLog[] = (classLogs || []).map((log: StudentClassLog) => ({
-        id: log.id,
-        class_date: log.class_date,
-        start_at: log.start_at,
-        end_at: log.end_at,
-        duration_minutes: log.duration_minutes,
-        attendance: log.attendance,
-        grade: log.grade,
-        feedback: log.feedback,
-        title: log.title,
-        billed_amount: log.billed_amount,
-        teacher_id: log.teacher_id ?? student.teacher_id,
-        teacher_name: log.teachers?.name ?? studentTeacherName,
-        created_at: log.created_at,
+      const rawLogs = (classLogs || []) as Array<Record<string, unknown> & { teachers_masked?: { name?: string } | null }>;
+      const mappedClassLogs: StudentClassLog[] = rawLogs.map((log) => ({
+        id: log.id as string,
+        class_date: log.class_date as string,
+        start_at: log.start_at as string | null,
+        end_at: log.end_at as string | null,
+        duration_minutes: log.duration_minutes as number | null,
+        attendance: log.attendance as boolean | null,
+        grade: log.grade as number | null,
+        feedback: log.feedback as string | null,
+        title: log.title as string | null,
+        billed_amount: log.billed_amount as number | null,
+        teacher_id: (log.teacher_id ?? student.teacher_id) as string | null,
+        teacher_name: log.teachers_masked?.name ?? studentTeacherName,
+        created_at: log.created_at as string | null,
       }));
 
       // Fetch financial records

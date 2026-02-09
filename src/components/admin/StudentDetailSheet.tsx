@@ -325,11 +325,13 @@ export function StudentDetailSheet({
                         end_at: log.end_at,
                         duration_minutes: log.duration_minutes,
                         attendance: log.attendance,
-                        grade: log.grade,
-                        title: log.title,
-                        feedback: log.feedback,
-                        teacher_name: log.teacher_name,
-                        amount: log.billed_amount,
+                        grade: log.grade ?? null,
+                        title: log.title ?? null,
+                        feedback: log.feedback ?? null,
+                        // Fallback para teacher_name: do log, senão do aluno
+                        teacher_name: log.teacher_name || student.teacher_name || undefined,
+                        // Fallback para amount: billed_amount, senão 0
+                        amount: typeof log.billed_amount === 'number' ? log.billed_amount : null,
                       }))}
                       emptyMessage="Nenhuma aula registrada"
                       groupByMonth={true}

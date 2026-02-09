@@ -21,24 +21,7 @@ export function validateEnvironment() {
     errors.push('VITE_SUPABASE_PUBLISHABLE_KEY appears to be invalid (too short)');
   }
   
-  // Check if both clients would use the same project
-  if (supabaseUrl && supabaseKey) {
-    console.log('✅ Supabase configuration:');
-    console.log('   URL:', supabaseUrl);
-    console.log('   Key prefix:', supabaseKey.substring(0, 20) + '...');
-    
-    // Extract project ref from URL (format: https://xxxxx.supabase.co)
-    const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
-    if (projectRef) {
-      console.log('   Project ref:', projectRef);
-    }
-  }
-  
   if (errors.length > 0) {
-    console.error('❌ Environment validation errors:');
-    errors.forEach(error => console.error(`   - ${error}`));
-    throw new Error('Invalid environment configuration. Check console for details.');
+    throw new Error(`Invalid environment configuration: ${errors.join('; ')}`);
   }
-  
-  console.log('✅ Environment validation passed');
 }

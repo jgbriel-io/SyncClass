@@ -20,8 +20,7 @@ export function useUndoFinancialPayment() {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança desfeita com sucesso!");
     },
-    onError: (error) => {
-      console.error("Erro ao desfazer cobrança:", error);
+    onError: () => {
       toast.error("Erro ao desfazer cobrança. Tente novamente.");
     },
   });
@@ -302,7 +301,6 @@ export function useCreateFinancialRecord() {
       toast.success("Cobrança criada com sucesso!");
     },
     onError: (error) => {
-      console.error("Error creating financial record:", error);
       toast.error(
         `Erro ao criar cobrança. ${error instanceof Error ? error.message : "Tente novamente."}`
       );
@@ -343,8 +341,7 @@ export function useMarkAsPaid() {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Pagamento registrado com sucesso!");
     },
-    onError: (error) => {
-      console.error("Error marking as paid:", error);
+    onError: () => {
       toast.error("Erro ao registrar pagamento. Tente novamente.");
     },
   });
@@ -374,8 +371,7 @@ export function useUpdateFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança atualizada com sucesso!");
     },
-    onError: (error) => {
-      console.error("Error updating financial record:", error);
+    onError: () => {
       toast.error("Erro ao atualizar cobrança. Tente novamente.");
     },
   });
@@ -401,8 +397,7 @@ export function useDeleteFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança removida com sucesso!");
     },
-    onError: (error) => {
-      console.error("Error deleting financial record:", error);
+    onError: () => {
       toast.error("Erro ao remover cobrança. Tente novamente.");
     },
   });

@@ -88,8 +88,7 @@ export function useLinkStudentToProfile() {
         description: "O usuário foi vinculado ao aluno com sucesso.",
       });
     },
-    onError: (error) => {
-      console.error("Error linking student:", error);
+    onError: () => {
       toast({
         variant: "destructive",
         title: "Erro ao vincular",
@@ -119,8 +118,7 @@ export function useUnlinkStudentFromProfile() {
         description: "O vínculo entre usuário e aluno foi removido.",
       });
     },
-    onError: (error) => {
-      console.error("Error unlinking student:", error);
+    onError: () => {
       toast({
         variant: "destructive",
         title: "Erro ao desvincular",
