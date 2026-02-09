@@ -459,7 +459,7 @@ export function StudentsListView({
             <div className="flex items-start justify-between">
               <div className="space-y-2">
                 <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total de Alunos</p>
-                <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">{studentsStats.totalStudents}</p>
+                <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">{studentsStats.totalStudents}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10">
                 <Users className="h-5 w-5 text-primary" />
@@ -470,7 +470,7 @@ export function StudentsListView({
             <div className="flex items-start justify-between">
               <div className="space-y-2">
                 <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Alunos Ativos</p>
-                <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-success">{studentsStats.activeStudents}</p>
+                <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-success">{studentsStats.activeStudents}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-success/10">
                 <UserCheck className="h-5 w-5 text-success" />
@@ -481,7 +481,7 @@ export function StudentsListView({
             <div className="flex items-start justify-between">
               <div className="space-y-2">
                 <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Alunos Inativos</p>
-                <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-muted-foreground">{studentsStats.inactiveStudents}</p>
+                <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-muted-foreground">{studentsStats.inactiveStudents}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-muted">
                 <UserX className="h-5 w-5 text-muted-foreground" />
@@ -492,7 +492,7 @@ export function StudentsListView({
             <div className="flex items-start justify-between">
               <div className="space-y-2">
                 <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Novos este Mês</p>
-                <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-primary">{studentsStats.newStudentsThisMonth}</p>
+                <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-primary">{studentsStats.newStudentsThisMonth}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10">
                 <TrendingUp className="h-5 w-5 text-primary" />

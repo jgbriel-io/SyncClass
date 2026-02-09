@@ -2,9 +2,9 @@ name: CI - Continuous Integration
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, homolog ]
   pull_request:
-    branches: [ main, dev ]
+    branches: [ main, dev, homolog ]
 
 jobs:
   quality-check:

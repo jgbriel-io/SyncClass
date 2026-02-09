@@ -250,28 +250,28 @@ const TeacherPedagogicalPage = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid gap-4 sm:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
           <div className="rounded-lg border bg-card p-4 shadow-card">
-            <p className="text-sm text-muted-foreground">Total de Aulas</p>
-            <p className="text-2xl font-semibold mt-1">
+            <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total de Aulas</p>
+            <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-semibold tracking-tight mt-1">
               {summary?.totalClasses || 0}
             </p>
           </div>
           <div className="rounded-lg border bg-card p-4 shadow-card">
-            <p className="text-sm text-muted-foreground">Presenças</p>
-            <p className="text-2xl font-semibold mt-1 text-success">
+            <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Presenças</p>
+            <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-semibold tracking-tight mt-1 text-success">
               {summary?.totalPresent || 0}
             </p>
           </div>
           <div className="rounded-lg border bg-card p-4 shadow-card">
-            <p className="text-sm text-muted-foreground">Taxa de Presença</p>
-            <p className="text-2xl font-semibold mt-1">
+            <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Taxa de Presença</p>
+            <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-semibold tracking-tight mt-1">
               {attendanceRate}%
             </p>
           </div>
           <div className="rounded-lg border bg-card p-4 shadow-card">
-            <p className="text-sm text-muted-foreground">Média Geral</p>
-            <p className="text-2xl font-semibold mt-1 text-primary">
+            <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Média Geral</p>
+            <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-semibold tracking-tight mt-1 text-primary">
               {summary?.averageGrade?.toFixed(1) || "—"}
             </p>
           </div>
