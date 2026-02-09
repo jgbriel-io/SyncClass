@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, FileText, CreditCard, AlertCircle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,7 @@ interface StudentFinancialCardProps {
 }
 
 const statusConfig: Record<FinancialStatus, {
-  variant: "default" | "success" | "warning" | "destructive";
+  variant: "success" | "warning" | "destructive";
   label: string;
   borderColor: string;
 }> = {
@@ -56,7 +56,7 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
         {/* Valor e Status */}
         <div className="flex items-center justify-between">
           <span className="text-2xl font-bold">{formatCurrency(record.amount)}</span>
-          <Badge variant={config.variant}>{config.label}</Badge>
+          <StatusBadge variant={config.variant}>{config.label}</StatusBadge>
         </div>
 
         {/* Informações */}

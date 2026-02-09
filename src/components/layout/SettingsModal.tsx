@@ -56,7 +56,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md rounded-lg w-[calc(100vw-2rem)] sm:w-full">
         <DialogHeader>
           <DialogTitle>Configurações</DialogTitle>
         </DialogHeader>

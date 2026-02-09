@@ -70,9 +70,14 @@ export function PostClassDialog({
   const chargeAbsence = watch("chargeAbsence");
   const confirmPayment = watch("confirmPayment");
 
-  const hasFinancialRecord = !!classLog?.financial_records?.id;
-
-  const isPaymentAlreadyPaid = classLog?.financial_records?.status === "pago";
+  // Supabase pode retornar financial_records como objeto ou array (1:1)
+  const financialRecord = classLog?.financial_records
+    ? Array.isArray(classLog.financial_records)
+      ? classLog.financial_records[0] ?? null
+      : classLog.financial_records
+    : null;
+  const hasFinancialRecord = !!financialRecord?.id;
+  const isPaymentAlreadyPaid = financialRecord?.status === "pago";
 
   useEffect(() => {
     if (open && classLog) {
@@ -103,10 +108,10 @@ export function PostClassDialog({
         feedback: feedbackValue,
       });
 
-      if (!attendanceValue && hasFinancialRecord && !data.chargeAbsence) {
-        await deleteFinancialRecord.mutateAsync(classLog.financial_records!.id);
-      } else if (attendanceValue && hasFinancialRecord && data.confirmPayment) {
-        await markAsPaid.mutateAsync(classLog.financial_records!.id);
+      if (!attendanceValue && hasFinancialRecord && !data.chargeAbsence && financialRecord?.id) {
+        await deleteFinancialRecord.mutateAsync(financialRecord.id);
+      } else if (attendanceValue && hasFinancialRecord && data.confirmPayment && financialRecord?.id) {
+        await markAsPaid.mutateAsync(financialRecord.id);
       }
 
       onSuccess();

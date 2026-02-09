@@ -15,7 +15,8 @@ export default function StudentFinancial() {
 
   return (
     <PageContainer constrained maxWidth="5xl">
-        {/* Header */}
+      <div className="space-y-6">
+        {/* Título + subtítulo */}
         <div>
           <h1 className="text-xl font-semibold">Financeiro</h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -41,16 +42,16 @@ export default function StudentFinancial() {
 
         {!isLoading && !error && (
           <>
-            {/* ⚡ P0-1: Summary usando StudentMetricCard */}
+            {/* Card resumo */}
             <StudentMetricCard
               icon={isFinancialOk ? CheckCircle : Wallet}
-              label={isFinancialOk ? "Você está em dia" : "Atenção"}
-              value={pendingCount > 0 ? `${pendingCount} pendente${pendingCount !== 1 ? "s" : ""}` : "Tudo certo"}
-              description={`${paidCount} pagamento${paidCount !== 1 ? "s" : ""} realizado${paidCount !== 1 ? "s" : ""}`}
+              label="Situação financeira"
+              value={isFinancialOk ? "Em dia" : `${pendingCount} pendência${pendingCount !== 1 ? "s" : ""}`}
+              description={isFinancialOk ? "Nenhuma cobrança pendente" : paidCount > 0 ? `${paidCount} quitada${paidCount !== 1 ? "s" : ""}. ${pendingCount} em aberto.` : `${pendingCount} cobrança${pendingCount !== 1 ? "s" : ""} aguardando pagamento.`}
               variant={isFinancialOk ? "success" : "warning"}
             />
 
-            {/* ⚡ P0-1: Payments List usando StudentFinancialCard */}
+            {/* Outro título + cards */}
             <div className="space-y-3">
               <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
                 Histórico de Pagamentos
@@ -79,12 +80,13 @@ export default function StudentFinancial() {
               )}
             </div>
 
-            {/* Help Text */}
+            {/* Último texto */}
             <p className="text-center text-sm text-muted-foreground px-4">
               Dúvidas sobre pagamentos? Entre em contato com a secretaria.
             </p>
           </>
         )}
+      </div>
     </PageContainer>
   );
 }

@@ -4,10 +4,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StudentClassCard } from "@/components/student/StudentClassCard";
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, BookOpen, TrendingUp, Award, Calendar as CalendarIcon, XCircle, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { startOfWeek } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Loader2, BookOpen, TrendingUp, TrendingDown, Award, Calendar as CalendarIcon, XCircle } from "lucide-react";
 import { useStudentClassLogs, useStudentStats, useLastClass } from "@/hooks/useStudentPortal";
 import { formatDate } from "@/lib/utils/formatters";
 
@@ -73,23 +70,6 @@ export default function StudentHistory() {
       trend = avgRecent >= avgPrevious ? "up" : "down";
     }
     return { best, worst, trend };
-  }, [classesWithGrade]);
-
-  const chartData = useMemo(() => {
-    const byWeek = new Map<string, number[]>();
-    for (const log of classesWithGrade) {
-      const d = new Date(log.class_date + "T12:00:00");
-      const weekStart = startOfWeek(d, { weekStartsOn: 1, locale: ptBR });
-      const key = weekStart.toISOString().slice(0, 10);
-      if (!byWeek.has(key)) byWeek.set(key, []);
-      byWeek.get(key)!.push(Number(log.grade));
-    }
-    return Array.from(byWeek.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([weekKey, grades]) => ({
-        week: formatDate(weekKey),
-        media: grades.reduce((a, b) => a + b, 0) / grades.length,
-      }));
   }, [classesWithGrade]);
 
   const renderClassCards = (records: typeof classLogs) =>
@@ -194,29 +174,9 @@ export default function StudentHistory() {
             </div>
           </TabsContent>
 
-          {/* Aba Médias: gráfico evolução + stats (média, melhor, pior, tendência) + cards só com nota */}
+          {/* Aba Médias: cards (média, melhor, pior) + lista de aulas com nota */}
           <TabsContent value="media" className="mt-0">
-            {chartData.length > 0 && (
-              <div className="mb-6 rounded-lg border bg-card p-4">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Evolução da média (por semana)</h3>
-                <div className="h-[200px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                      <XAxis dataKey="week" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                      <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                      <Tooltip
-                        formatter={(value: number) => [value.toFixed(1), "Média"]}
-                        labelFormatter={(label) => `Semana ${label}`}
-                        contentStyle={{ fontSize: 12 }}
-                      />
-                      <Line type="monotone" dataKey="media" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-            <div className="grid grid-cols-1 laptop:grid-cols-4 gap-3 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
               <StudentMetricCard
                 icon={Award}
                 label="Média geral"
@@ -224,22 +184,16 @@ export default function StudentHistory() {
                 variant="default"
               />
               <StudentMetricCard
-                icon={ArrowUpRight}
+                icon={TrendingUp}
                 label="Melhor nota"
                 value={classesWithGrade.length > 0 ? gradeStats.best.toFixed(1) : "—"}
                 variant="success"
               />
               <StudentMetricCard
-                icon={ArrowDownRight}
+                icon={TrendingDown}
                 label="Pior nota"
                 value={classesWithGrade.length > 0 ? gradeStats.worst.toFixed(1) : "—"}
-                variant="default"
-              />
-              <StudentMetricCard
-                icon={gradeStats.trend === "up" ? ArrowUpRight : gradeStats.trend === "down" ? ArrowDownRight : Award}
-                label="Tendência"
-                value={gradeStats.trend === "up" ? "Subindo" : gradeStats.trend === "down" ? "Caindo" : "—"}
-                variant={gradeStats.trend === "up" ? "success" : gradeStats.trend === "down" ? "destructive" : "default"}
+                variant="destructive"
               />
             </div>
             <div className="space-y-3">

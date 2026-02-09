@@ -68,7 +68,7 @@ export const StudentStatementTab = memo(function StudentStatementTab({
       <div className="rounded-lg border bg-card p-3 flex items-center justify-between gap-4">
         <p className="text-sm font-medium">{totalAmount != null ? "Total" : "Histórico de Movimentações"}</p>
         {(totalAmount != null ? totalAmount : totalBilled) > 0 && (
-          <p className="text-base font-semibold tabular-nums">
+          <p className="text-2xl font-semibold tabular-nums">
             {formatCurrency(totalAmount != null ? totalAmount : totalBilled)}
           </p>
         )}
