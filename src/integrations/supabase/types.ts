@@ -298,6 +298,93 @@ export type Database = {
         }
         Relationships: []
       }
+      activities: {
+        Row: {
+          id: string
+          student_id: string
+          teacher_id: string
+          title: string
+          description: string | null
+          file_url: string
+          file_name: string
+          file_type: string | null
+          file_size: number | null
+          status: string
+          feedback: string | null
+          grade: number | null
+          correction_file_url: string | null
+          correction_file_name: string | null
+          created_at: string
+          delivered_at: string | null
+          corrected_at: string | null
+          updated_at: string
+          student_response_text: string | null
+          student_response_file_url: string | null
+          student_response_file_name: string | null
+        }
+        Insert: {
+          id?: string
+          student_id: string
+          teacher_id: string
+          title: string
+          description?: string | null
+          file_url: string
+          file_name: string
+          file_type?: string | null
+          file_size?: number | null
+          status?: string
+          feedback?: string | null
+          grade?: number | null
+          correction_file_url?: string | null
+          correction_file_name?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          corrected_at?: string | null
+          updated_at?: string
+          student_response_text?: string | null
+          student_response_file_url?: string | null
+          student_response_file_name?: string | null
+        }
+        Update: {
+          id?: string
+          student_id?: string
+          teacher_id?: string
+          title?: string
+          description?: string | null
+          file_url?: string
+          file_name?: string
+          file_type?: string | null
+          file_size?: number | null
+          status?: string
+          feedback?: string | null
+          grade?: number | null
+          correction_file_url?: string | null
+          correction_file_name?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          corrected_at?: string | null
+          updated_at?: string
+          student_response_text?: string | null
+          student_response_file_url?: string | null
+          student_response_file_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           active: boolean

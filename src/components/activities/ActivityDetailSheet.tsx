@@ -19,10 +19,21 @@ import { ptBR } from "date-fns/locale";
 import { useAddActivityCorrection, uploadActivityFile, getActivityFileUrl, type ActivityWithRelations } from "@/hooks/useActivities";
 import { toast } from "sonner";
 
-const correctionSchema = z.object({
-  feedback: z.string().transform((s) => s.trim()).pipe(z.string().min(1, "Informe o feedback")),
-  correctionFile: z.any().optional(),
-});
+const correctionSchema = z
+  .object({
+    feedback: z.string().transform((s) => s.trim()).pipe(z.string().min(1, "Informe o feedback")),
+    grade: z.string().min(1, "Informe a nota (0–10)"),
+    correctionFile: z.any().optional(),
+  })
+  .refine(
+    (data) => {
+      const g = data.grade?.trim();
+      if (!g) return false;
+      const n = parseFloat(g.replace(",", "."));
+      return !Number.isNaN(n) && n >= 0 && n <= 10;
+    },
+    { message: "Informe a nota (0–10)", path: ["grade"] }
+  );
 
 type CorrectionFormData = z.infer<typeof correctionSchema>;
 
@@ -32,7 +43,7 @@ interface ActivityDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   onDownload: (filePath: string, fileName: string) => void;
   getStatusLabel: (status: string) => string;
-  getStatusVariant: (status: string) => "success" | "warning" | "default";
+  getStatusVariant: (status: string) => "success" | "warning" | "default" | "info";
   /** Abre o sheet já com o formulário de correção visível (ex.: ao clicar em Corrigir na tabela) */
   initialCorrectionMode?: boolean;
   /** Chamado após enviar a correção com sucesso (ex.: refetch + atualizar atividade) */
@@ -62,14 +73,14 @@ export function ActivityDetailSheet({
     formState: { errors },
   } = useForm<CorrectionFormData>({
     resolver: zodResolver(correctionSchema),
-    defaultValues: { feedback: "" },
+    defaultValues: { feedback: "", grade: "" },
   });
 
   useEffect(() => {
     if (open && activity && initialCorrectionMode && activity.status === "entregue") {
       setShowCorrectionForm(true);
     }
-  }, [open, activity?.id, initialCorrectionMode, activity?.status]);
+  }, [open, activity, initialCorrectionMode]);
 
   useEffect(() => {
     if (!open) {
@@ -91,9 +102,13 @@ export function ActivityDetailSheet({
         correctionFileUrl = url;
         correctionFileName = (file as File).name;
       }
+      const gradeValue = data.grade?.trim()
+        ? Math.min(10, Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0))
+        : null;
       await addCorrection.mutateAsync({
         activityId: activity.id,
         feedback: data.feedback.trim(),
+        grade: gradeValue,
         correctionFileUrl,
         correctionFileName,
       });
@@ -263,12 +278,22 @@ export function ActivityDetailSheet({
                 </div>
               )}
 
-            {activity.status === "corrigida" && (activity.feedback || (activity.correction_file_url && activity.correction_file_name)) && (
+            {activity.status === "corrigida" &&
+              (activity.feedback ||
+                activity.grade != null ||
+                (activity.correction_file_url && activity.correction_file_name)) && (
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
                   <MessageSquare className="h-3.5 w-3.5" />
                   Feedback / Correção
                 </p>
+                {activity.grade != null && (
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground">Nota:</span>
+                    <span className="text-sm font-semibold tabular-nums">{Number(activity.grade).toFixed(1)}</span>
+                    <span className="text-xs text-muted-foreground">/ 10</span>
+                  </div>
+                )}
                 {activity.feedback && (
                   <div className="rounded-lg border bg-muted/30 p-4 mb-3">
                     <p className="text-sm whitespace-pre-wrap text-foreground">
@@ -325,7 +350,7 @@ export function ActivityDetailSheet({
             {showCorrectionFormArea ? (
               <form
                 onSubmit={handleSubmit(handleCorrectionSubmit, (errors) => {
-                  const msg = errors.feedback?.message ?? "Preencha o feedback para enviar a correção.";
+                  const msg = errors.feedback?.message ?? errors.grade?.message ?? "Preencha o feedback e a nota para enviar a correção.";
                   toast.error(msg);
                 })}
                 className="space-y-4"
@@ -343,6 +368,19 @@ export function ActivityDetailSheet({
                   />
                   {errors.feedback && (
                     <p className="text-sm text-destructive">{errors.feedback.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="grade">Nota (0–10) *</Label>
+                  <Input
+                    id="grade"
+                    type="text"
+                    placeholder="Ex: 8.5"
+                    {...register("grade")}
+                    disabled={isCorrectionPending}
+                  />
+                  {errors.grade && (
+                    <p className="text-sm text-destructive">{errors.grade.message}</p>
                   )}
                 </div>
                 <div className="space-y-2">

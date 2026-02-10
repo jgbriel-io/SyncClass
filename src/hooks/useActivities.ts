@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
@@ -72,6 +73,36 @@ export async function getActivityFileUrl(filePathOrUrl: string): Promise<string>
   }
 
   return data.signedUrl;
+}
+
+/** Arquivo já usado em alguma atividade (para reutilizar no envio) */
+export interface ActivityFileOption {
+  file_url: string;
+  file_name: string;
+  file_type: string | null;
+  file_size: number | null;
+}
+
+/** Lista de arquivos distintos já enviados pelo professor (para seleção "arquivo da plataforma") */
+export function useActivityFilesForTeacher(teacherId: string | undefined) {
+  const { data: activities = [], ...rest } = useActivities(teacherId, undefined);
+  const files = useMemo(() => {
+    const seen = new Set<string>();
+    const list: ActivityFileOption[] = [];
+    for (const a of activities) {
+      if (a.file_url && !seen.has(a.file_url)) {
+        seen.add(a.file_url);
+        list.push({
+          file_url: a.file_url,
+          file_name: a.file_name,
+          file_type: a.file_type ?? null,
+          file_size: a.file_size ?? null,
+        });
+      }
+    }
+    return list;
+  }, [activities]);
+  return { data: files, ...rest };
 }
 
 /** Listar atividades (professor ou aluno) */
@@ -206,11 +237,13 @@ export function useAddActivityCorrection() {
     mutationFn: async ({
       activityId,
       feedback,
+      grade,
       correctionFileUrl,
       correctionFileName,
     }: {
       activityId: string;
       feedback?: string;
+      grade?: number | null;
       correctionFileUrl?: string;
       correctionFileName?: string;
     }) => {
@@ -219,6 +252,7 @@ export function useAddActivityCorrection() {
         .update({
           status: "corrigida",
           feedback: feedback || null,
+          grade: grade != null ? grade : null,
           correction_file_url: correctionFileUrl || null,
           correction_file_name: correctionFileName || null,
           corrected_at: new Date().toISOString(),

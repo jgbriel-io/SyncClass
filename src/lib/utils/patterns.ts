@@ -85,6 +85,16 @@ export function maskDate(value: string): string {
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
+/**
+ * Converte string dd/mm/yyyy para Date (meio-dia para evitar fuso).
+ * Retorna undefined se a string for vazia ou não estiver no formato válido.
+ */
+export function brDateStringToDate(br: string): Date | undefined {
+  if (!br || !REGEX_PATTERNS.date.test(br)) return undefined;
+  const [day, month, year] = br.split("/");
+  return new Date(`${year}-${month}-${day}T12:00:00`);
+}
+
 // ============================================================
 // VALIDATION FUNCTIONS - Validação de dados
 // ============================================================

@@ -18,7 +18,7 @@ export const defaultFinancialFilters: FinancialFiltersState = {
   dateFrom: "",
   dateTo: "",
   status: "all",
-  sortBy: "due_asc",
+  sortBy: "created_desc",
 };
 
 export const defaultOverviewFilters: OverviewFiltersState = {

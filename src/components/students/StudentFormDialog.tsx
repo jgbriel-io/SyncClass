@@ -25,8 +25,11 @@ import type { Enums } from "@/integrations/supabase/types";
 import { BR_STATES, fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib/br-locations";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronsUpDown } from "lucide-react";
-import { REGEX_PATTERNS, maskCPF, maskPhone, maskDate, isValidDateString } from "@/lib/utils/patterns";
+import { Calendar } from "@/components/ui/calendar";
+import { ChevronsUpDown, CalendarIcon } from "lucide-react";
+import { REGEX_PATTERNS, maskCPF, maskPhone, brDateStringToDate, isValidDateString } from "@/lib/utils/patterns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { emailSchema } from "@/lib/validation/email";
 
 // Type for student origin from database enum
@@ -149,6 +152,7 @@ export function StudentFormDialog({
   });
 
   const watchedCity = watch("city") || "";
+  const birthDate = watch("birth_date");
 
   useEffect(() => {
     // Sempre que o diálogo é fechado, garantimos que o formulário volte para o estado "novo aluno"
@@ -429,19 +433,35 @@ export function StudentFormDialog({
 
             <div className="space-y-2">
               <Label htmlFor="birth_date">Data de Nascimento</Label>
-              <Input
-                id="birth_date"
-                type="text"
-                inputMode="numeric"
-                maxLength={10}
-                placeholder="dd/mm/aaaa"
-                {...register("birth_date")}
-                onChange={(e) => {
-                  const masked = maskDate(e.target.value);
-                  setValue("birth_date", masked, { shouldValidate: true });
-                }}
-                disabled={isLoading}
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="birth_date"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal h-10",
+                      !birthDate && "text-muted-foreground"
+                    )}
+                    disabled={isLoading}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {birthDate || "Selecione a data"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={brDateStringToDate(birthDate || "") ?? undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        setValue("birth_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                      }
+                    }}
+                    locale={ptBR}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
               {errors.birth_date && (
                 <p className="text-sm text-destructive">{errors.birth_date.message}</p>
               )}

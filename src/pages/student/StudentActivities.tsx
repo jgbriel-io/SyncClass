@@ -272,7 +272,10 @@ const StudentActivitiesPage = () => {
                           )}
 
                           {/* Feedback/Correção do professor */}
-                          {activity.status === "corrigida" && (activity.feedback || (activity.correction_file_url && activity.correction_file_name)) && (
+                          {activity.status === "corrigida" &&
+                            (activity.feedback ||
+                              activity.grade != null ||
+                              (activity.correction_file_url && activity.correction_file_name)) && (
                             <div className="border-t pt-4 space-y-3">
                               <div className="flex items-center gap-2">
                                 <MessageSquare className="h-4 w-4 text-success" />
@@ -280,6 +283,13 @@ const StudentActivitiesPage = () => {
                                   Feedback do professor
                                 </span>
                               </div>
+                              {activity.grade != null && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-foreground">Nota:</span>
+                                  <span className="text-sm font-semibold tabular-nums">{Number(activity.grade).toFixed(1)}</span>
+                                  <span className="text-xs text-muted-foreground">/ 10</span>
+                                </div>
+                              )}
                               {activity.feedback && (
                                 <div className="rounded-lg p-4 bg-muted/30">
                                   <p className="text-sm whitespace-pre-wrap">{activity.feedback}</p>

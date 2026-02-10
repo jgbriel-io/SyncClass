@@ -18,10 +18,21 @@ import { Loader2, Upload, FileText } from "lucide-react";
 import { useAddActivityCorrection, uploadActivityFile, ActivityWithRelations } from "@/hooks/useActivities";
 import { toast } from "sonner";
 
-const correctionSchema = z.object({
-  feedback: z.string().min(1, "Informe o feedback"),
-  correctionFile: z.instanceof(File).optional(),
-});
+const correctionSchema = z
+  .object({
+    feedback: z.string().min(1, "Informe o feedback"),
+    grade: z.string().min(1, "Informe a nota (0–10)"),
+    correctionFile: z.instanceof(File).optional(),
+  })
+  .refine(
+    (data) => {
+      const g = data.grade?.trim();
+      if (!g) return false;
+      const n = parseFloat(g.replace(",", "."));
+      return !Number.isNaN(n) && n >= 0 && n <= 10;
+    },
+    { message: "Informe a nota (0–10)", path: ["grade"] }
+  );
 
 type CorrectionFormData = z.infer<typeof correctionSchema>;
 
@@ -49,6 +60,7 @@ export function AddCorrectionDialog({
     formState: { errors },
   } = useForm<CorrectionFormData>({
     resolver: zodResolver(correctionSchema),
+    defaultValues: { feedback: "", grade: "" },
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,9 +86,13 @@ export function AddCorrectionDialog({
         correctionFileName = data.correctionFile.name;
       }
 
+      const gradeValue = data.grade?.trim()
+        ? Math.min(10, Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0))
+        : null;
       await addCorrection.mutateAsync({
         activityId: activity.id,
         feedback: data.feedback.trim(),
+        grade: gradeValue,
         correctionFileUrl,
         correctionFileName,
       });
@@ -124,6 +140,21 @@ export function AddCorrectionDialog({
             />
             {errors.feedback && (
               <p className="text-sm text-destructive">{errors.feedback.message}</p>
+            )}
+          </div>
+
+          {/* Nota (opcional) */}
+          <div className="space-y-2">
+            <Label htmlFor="grade">Nota (0–10) *</Label>
+            <Input
+              id="grade"
+              type="text"
+              placeholder="Ex: 8.5"
+              {...register("grade")}
+              disabled={isPending}
+            />
+            {errors.grade && (
+              <p className="text-sm text-destructive">{errors.grade.message}</p>
             )}
           </div>
 

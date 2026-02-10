@@ -19,13 +19,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Receipt } from "lucide-react";
+import { Loader2, Receipt, CalendarIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { ClassLogInsert, ClassLogWithStudent, ClassLogWithFinancialData } from "@/hooks/useClassLogs";
-import { maskDate, isValidDateString, parseMoneyToNumber, REGEX_PATTERNS } from "@/lib/utils/patterns";
+import { brDateStringToDate, isValidDateString, parseMoneyToNumber, REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { formatCurrency } from "@/lib/utils/formatters";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const REGEX_TIME = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
@@ -226,6 +231,7 @@ export function ClassLogFormDialog({
   });
 
   const classDate = watch("class_date");
+  const financialDueDate = watch("financial_due_date");
   const startTime = watch("start_time");
   const endTime = watch("end_time");
   const financialAmount = watch("financial_amount");
@@ -482,18 +488,34 @@ export function ClassLogFormDialog({
           {/* Class Date */}
           <div className="space-y-2">
             <Label htmlFor="class_date">Data da Aula *</Label>
-            <Input
-              id="class_date"
-              type="text"
-              inputMode="numeric"
-              maxLength={10}
-              placeholder="dd/mm/aaaa"
-              {...register("class_date")}
-              onChange={(e) => {
-                const masked = maskDate(e.target.value);
-                setValue("class_date", masked, { shouldValidate: true });
-              }}
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="class_date"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal h-10",
+                    !classDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {classDate || "Selecione a data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={brDateStringToDate(classDate || "") ?? undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      setValue("class_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                    }
+                  }}
+                  locale={ptBR}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
             {errors.class_date && (
               <p className="text-sm text-destructive">{errors.class_date.message}</p>
             )}
@@ -546,18 +568,34 @@ export function ClassLogFormDialog({
 
               <div className="space-y-2">
                 <Label htmlFor="financial_due_date_edit">Vencimento</Label>
-                <Input
-                  id="financial_due_date_edit"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={10}
-                  placeholder="dd/mm/aaaa"
-                  {...register("financial_due_date")}
-                  onChange={(e) => {
-                    const masked = maskDate(e.target.value);
-                    setValue("financial_due_date", masked, { shouldValidate: true });
-                  }}
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="financial_due_date_edit"
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal h-10",
+                        !financialDueDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {financialDueDate || "Selecione a data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={brDateStringToDate(financialDueDate || "") ?? undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setValue("financial_due_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                        }
+                      }}
+                      locale={ptBR}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <p className="text-xs text-muted-foreground">
                   Alterar a data da aula não altera o vencimento automaticamente; edite aqui se quiser.
                 </p>
@@ -625,18 +663,34 @@ export function ClassLogFormDialog({
 
                     <div className="space-y-2">
                       <Label htmlFor="financial_due_date">Vencimento *</Label>
-                      <Input
-                        id="financial_due_date"
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={10}
-                        placeholder="dd/mm/aaaa"
-                        {...register("financial_due_date")}
-                        onChange={(e) => {
-                          const masked = maskDate(e.target.value);
-                          setValue("financial_due_date", masked, { shouldValidate: true });
-                        }}
-                      />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            id="financial_due_date"
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal h-10",
+                              !financialDueDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {financialDueDate || "Selecione a data"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={brDateStringToDate(financialDueDate || "") ?? undefined}
+                            onSelect={(date) => {
+                              if (date) {
+                                setValue("financial_due_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                              }
+                            }}
+                            locale={ptBR}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
 

@@ -11,7 +11,7 @@ import {
 
 export type FinancialPeriodPreset = "all" | "today" | "this_week" | "this_month";
 export type FinancialStatusFilter = "all" | "pendente" | "pago" | "atrasado";
-export type FinancialSortBy = "due_desc" | "due_asc" | "amount_desc" | "amount_asc";
+export type FinancialSortBy = "due_desc" | "due_asc" | "amount_desc" | "amount_asc" | "created_desc" | "created_asc";
 
 export interface FinancialFiltersState {
   search: string;
@@ -32,7 +32,7 @@ export function FinancialFilters({ filters, onChange, onReset }: FinancialFilter
   const hasActiveFilters =
     filters.periodPreset !== "all" ||
     filters.status !== "all" ||
-    filters.sortBy !== "due_asc";
+    filters.sortBy !== "created_desc";
 
   return (
     <div className="space-y-3">
@@ -117,6 +117,8 @@ export function FinancialFilters({ filters, onChange, onReset }: FinancialFilter
                 <SelectItem value="due_desc">Vencimento (mais distante)</SelectItem>
                 <SelectItem value="amount_desc">Valor (maior)</SelectItem>
                 <SelectItem value="amount_asc">Valor (menor)</SelectItem>
+                <SelectItem value="created_desc">Criação (mais recente)</SelectItem>
+                <SelectItem value="created_asc">Criação (mais antiga)</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -37,7 +37,7 @@ const DEFAULT_PAGE_SIZE = 10;
 export type FinancialRecordsFilters = {
   dateFrom?: string;
   dateTo?: string;
-  sortBy?: "due_desc" | "due_asc" | "amount_desc" | "amount_asc";
+  sortBy?: "due_desc" | "due_asc" | "amount_desc" | "amount_asc" | "created_desc" | "created_asc";
 };
 
 export type FinancialRecord = Tables<"financial_records">;
@@ -115,9 +115,12 @@ export function useFinancialRecords(
   const query = useQuery({
     queryKey: ["financial_records", teacherId, page, pageSize, filters],
     queryFn: async () => {
-      const sortBy = filters?.sortBy ?? "due_asc";
-      const orderCol = sortBy.startsWith("amount") ? "amount" : "due_date";
-      const ascending = sortBy === "due_asc" || sortBy === "amount_asc";
+      const sortBy = filters?.sortBy ?? "created_desc";
+      const orderCol =
+        sortBy.startsWith("amount") ? "amount"
+        : sortBy.startsWith("created") ? "created_at"
+        : "due_date";
+      const ascending = sortBy === "due_asc" || sortBy === "amount_asc" || sortBy === "created_asc";
 
       let q = supabase
         .from("financial_records")

@@ -168,11 +168,15 @@ export function FinancialView({
       const dueB = new Date((b.due_date || "") + "T12:00:00").getTime();
       const amtA = Number(a.amount) || 0;
       const amtB = Number(b.amount) || 0;
+      const createdA = new Date(a.created_at || 0).getTime();
+      const createdB = new Date(b.created_at || 0).getTime();
 
       if (filters.sortBy === "due_asc") return dueA - dueB;
       if (filters.sortBy === "due_desc") return dueB - dueA;
       if (filters.sortBy === "amount_desc") return amtB - amtA;
       if (filters.sortBy === "amount_asc") return amtA - amtB;
+      if (filters.sortBy === "created_desc") return createdB - createdA;
+      if (filters.sortBy === "created_asc") return createdA - createdB;
       return 0;
     });
     return result;
