@@ -345,7 +345,7 @@ const TeacherPedagogicalPage = () => {
 
                     return (
                       <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-6 py-4 align-top">
+                        <td className="px-6 py-4">
                           <div className="flex items-start gap-3">
                             <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                               <span className="text-xs font-medium text-accent-foreground">
@@ -373,7 +373,7 @@ const TeacherPedagogicalPage = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 align-top hidden lg:table-cell">
+                        <td className="px-6 py-4 hidden lg:table-cell">
                           <div className="min-w-0 space-y-1">
                             {log.title && (
                               <p className="text-sm font-semibold text-foreground break-all whitespace-normal">
@@ -385,7 +385,7 @@ const TeacherPedagogicalPage = () => {
                             </p>
                           </div>
                         </td>
-                        <td className="px-6 py-4 align-top">
+                        <td className="px-6 py-4">
                           {(() => {
                             const { date, timeRange } = formatClassDateAndTime(log);
                             return (
@@ -396,7 +396,7 @@ const TeacherPedagogicalPage = () => {
                             );
                           })()}
                         </td>
-                        <td className="px-6 py-4 align-top">
+                        <td className="px-6 py-4">
                           <span
                             className={`text-sm font-medium ${
                               log.attendance === false ? "text-destructive" : ""
@@ -409,7 +409,7 @@ const TeacherPedagogicalPage = () => {
                                 : "—"}
                           </span>
                         </td>
-                        <td className="px-6 py-4 align-top hidden xl:table-cell whitespace-nowrap">
+                        <td className="px-6 py-4 hidden xl:table-cell whitespace-nowrap">
                           {log.financial_records ? (
                             <StatusBadge
                               variant={getPaymentStatusVariant(log.financial_records.status)}
@@ -421,19 +421,19 @@ const TeacherPedagogicalPage = () => {
                             <span className="text-sm text-muted-foreground">Sem cobrança</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 align-top hidden 2xl:table-cell whitespace-nowrap">
+                        <td className="px-6 py-4 hidden 2xl:table-cell whitespace-nowrap">
                           <span className={log.financial_records ? "text-sm font-medium tabular-nums" : "text-sm font-medium text-foreground"}>
                             {log.financial_records
                               ? formatCurrency(Number(log.financial_records.amount))
                               : "sem cobrança"}
                           </span>
                         </td>
-                        <td className="px-6 py-4 align-top hidden lg:table-cell">
+                        <td className="px-6 py-4 hidden lg:table-cell">
                           <span className="text-sm text-muted-foreground line-clamp-2 max-w-xs">
                             {log.feedback || "—"}
                           </span>
                         </td>
-                        <td className="px-6 py-4 align-top text-right">
+                        <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>

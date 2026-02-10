@@ -89,21 +89,21 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
   return (
     <Card
       className={cn(
-        "p-4 transition-all hover:shadow-md",
+        "p-4 overflow-hidden transition-all hover:shadow-md",
         onClick && "cursor-pointer active:scale-[0.98]"
       )}
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-3 flex-1 min-w-0">
-          {/* Cabeçalho: no mobile badge + título; no desktop título | badge */}
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-            <StatusBadge variant={badgeVariant} className="sm:order-2 w-fit">
-              {badgeLabel}
-            </StatusBadge>
-            <h3 className="font-semibold text-sm text-foreground truncate sm:order-1">
+          {/* Título + Badge (cada um no seu canto) */}
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-semibold text-sm text-foreground truncate min-w-0">
               {classLog.title?.trim() || "Aula"}
             </h3>
+            <StatusBadge variant={badgeVariant} className="shrink-0">
+              {badgeLabel}
+            </StatusBadge>
           </div>
 
           {/* Presença (só quando concluída) */}

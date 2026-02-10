@@ -115,11 +115,16 @@ const classLogBaseSchema = z.object({
       return year >= currentYear;
     }, { message: "Não é possível cadastrar aulas em anos anteriores" }),
   title: z.string().optional(),
-  feedback: z.string().optional(),
+  feedback: z.string().max(1000).optional(),
   observations: z.string().max(1000, "Máximo 1000 caracteres").optional(),
   start_time: z.string().optional().refine((v) => !v || REGEX_TIME.test(v), { message: "Formato HH:mm" }),
   end_time: z.string().optional().refine((v) => !v || REGEX_TIME.test(v), { message: "Formato HH:mm" }),
-  grade: z.number().min(0, "Nota mínima é 0").max(10, "Nota máxima é 10").optional(),
+  grade: z
+    .number({ invalid_type_error: "Informe a nota" })
+    .min(0, "Nota mínima é 0")
+    .max(10, "Nota máxima é 10")
+    .optional()
+    .nullable(),
   financial_amount: z.string().optional(),
   financial_due_date: z.string().optional().refine(
     (val) => !val || isValidDateString(val),

@@ -448,7 +448,7 @@ export function ClassesView({
 
                   return (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
                         <div className="flex items-start gap-3">
                           <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-medium text-accent-foreground">
@@ -473,7 +473,7 @@ export function ClassesView({
                         </div>
                       </td>
                       {showTeacherColumn && (
-                        <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top hidden lg:table-cell">
+                        <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
                           <div className="space-y-1 min-w-[200px]">
                             {log.title && (
                               <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-semibold text-foreground whitespace-normal">
@@ -486,7 +486,7 @@ export function ClassesView({
                           </div>
                         </td>
                       )}
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                         {(() => {
                           const { date, timeRange } = formatClassDateAndTime(log);
                           return (
@@ -497,12 +497,12 @@ export function ClassesView({
                           );
                         })()}
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top hidden sm:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell whitespace-nowrap">
                         <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {formatDuration(log.duration_minutes)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                         <span
                           className={`text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium ${
                             log.attendance === false ? "text-destructive" : ""
@@ -515,7 +515,7 @@ export function ClassesView({
                               : "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top hidden xl:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
                         {log.financial_records ? (
                           <StatusBadge
                             variant={getPaymentStatusVariant(
@@ -525,6 +525,7 @@ export function ClassesView({
                               })
                             )}
                           >
+                            <Receipt className="h-3 w-3" />
                             {getPaymentStatusLabel(
                               getFinancialActualStatus({
                                 status: log.financial_records.status,
@@ -536,19 +537,19 @@ export function ClassesView({
                           <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">Sem cobrança</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top hidden lg:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell whitespace-nowrap">
                         <span className={log.financial_records ? "text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium tabular-nums" : "text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium text-foreground"}>
                           {log.financial_records
                             ? formatCurrency(log.financial_records.amount)
                             : "Sem cobrança"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top hidden lg:table-cell">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
                         <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground line-clamp-2 max-w-xs">
                           {log.feedback || "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-top text-right">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -688,7 +689,9 @@ export function ClassesView({
                               due_date: log.financial_records.due_date,
                             })
                           )}
+                          className="flex items-center gap-1"
                         >
+                          <Receipt className="h-3 w-3" />
                           {getPaymentStatusLabel(
                             getFinancialActualStatus({
                               status: log.financial_records.status,

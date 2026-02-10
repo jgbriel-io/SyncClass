@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,53 +21,36 @@ import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { useUpdateClassLog } from "@/hooks/useClassLogs";
 import { useMarkAsPaid, useDeleteFinancialRecord } from "@/hooks/useFinancialRecords";
 
-const postClassSchema = z.object({
-  attendance: z.boolean(),
-  grade: z.string().optional(),
-  feedback: z.string().max(500, "Máximo 500 caracteres").optional(),
-  chargeAbsence: z.boolean().optional(),
-  confirmPayment: z.boolean().optional(),
-}).refine(
-  (data) => {
-    // Se compareceu, nota é obrigatória
-    if (data.attendance) {
-      return data.grade && data.grade.trim().length > 0;
-    }
-    return true;
-  },
-  { message: "Informe a nota do aluno", path: ["grade"] }
-).refine(
-  (data) => {
-    // Se compareceu, nota deve ser um número válido
-    if (data.attendance && data.grade) {
-      const numValue = parseFloat(data.grade.replace(",", "."));
-      return !isNaN(numValue);
-    }
-    return true;
-  },
-  { message: "Nota deve ser um número válido", path: ["grade"] }
-).refine(
-  (data) => {
-    // Se compareceu, nota deve estar entre 0 e 10
-    if (data.attendance && data.grade) {
-      const numValue = parseFloat(data.grade.replace(",", "."));
-      return !isNaN(numValue) && numValue >= 0 && numValue <= 10;
-    }
-    return true;
-  },
-  { message: "Nota deve estar entre 0 e 10", path: ["grade"] }
-).refine(
-  (data) => {
-    // Se compareceu, feedback é obrigatório
-    if (data.attendance) {
-      return data.feedback && data.feedback.trim().length > 0;
-    }
-    return true;
-  },
-  { message: "Informe o feedback da aula", path: ["feedback"] }
-);
+/** Schema do modal Avaliar aula: nota, feedback e confirmar pagamento obrigatórios quando aplicável */
+function createPostClassSchema(requirePaymentConfirmation: boolean) {
+  return z
+    .object({
+      attendance: z.boolean(),
+      grade: z.string().optional(),
+      feedback: z.string().min(1, "Informe o feedback").max(500, "Máximo 500 caracteres"),
+      chargeAbsence: z.boolean().optional(),
+      confirmPayment: z.boolean().optional(),
+    })
+    .refine(
+      (data) => {
+        if (!data.attendance) return true;
+        const g = data.grade?.trim();
+        if (!g) return false;
+        const n = parseFloat(g.replace(",", "."));
+        return !Number.isNaN(n) && n >= 0 && n <= 10;
+      },
+      { message: "Informe a nota (0–10)", path: ["grade"] }
+    )
+    .refine(
+      (data) => {
+        if (!requirePaymentConfirmation) return true;
+        return data.attendance && data.confirmPayment === true;
+      },
+      { message: "Marque a opção para confirmar pagamento", path: ["confirmPayment"] }
+    );
+}
 
-type PostClassFormData = z.infer<typeof postClassSchema>;
+type PostClassFormData = z.infer<ReturnType<typeof createPostClassSchema>>;
 
 interface PostClassDialogProps {
   open: boolean;
@@ -85,6 +68,21 @@ export function PostClassDialog({
   const updateClassLog = useUpdateClassLog();
   const markAsPaid = useMarkAsPaid();
   const deleteFinancialRecord = useDeleteFinancialRecord();
+
+  // Supabase pode retornar financial_records como objeto ou array (1:1)
+  const financialRecord = classLog?.financial_records
+    ? Array.isArray(classLog.financial_records)
+      ? classLog.financial_records[0] ?? null
+      : classLog.financial_records
+    : null;
+  const hasFinancialRecord = !!financialRecord?.id;
+  const isPaymentAlreadyPaid = financialRecord?.status === "pago";
+  const requirePaymentConfirmation = !!(classLog && hasFinancialRecord && !isPaymentAlreadyPaid);
+
+  const postClassSchema = useMemo(
+    () => createPostClassSchema(requirePaymentConfirmation),
+    [requirePaymentConfirmation]
+  );
 
   const {
     register,
@@ -107,15 +105,6 @@ export function PostClassDialog({
   const attendance = watch("attendance");
   const chargeAbsence = watch("chargeAbsence");
   const confirmPayment = watch("confirmPayment");
-
-  // Supabase pode retornar financial_records como objeto ou array (1:1)
-  const financialRecord = classLog?.financial_records
-    ? Array.isArray(classLog.financial_records)
-      ? classLog.financial_records[0] ?? null
-      : classLog.financial_records
-    : null;
-  const hasFinancialRecord = !!financialRecord?.id;
-  const isPaymentAlreadyPaid = financialRecord?.status === "pago";
 
   useEffect(() => {
     if (open && classLog) {
@@ -175,7 +164,7 @@ export function PostClassDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Avaliar aula</DialogTitle>
         </DialogHeader>
@@ -208,55 +197,18 @@ export function PostClassDialog({
           </div>
 
           {attendance && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="grade">Nota (0–10) *</Label>
-                <Input
-                  id="grade"
-                  type="number"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  placeholder="Ex: 8.5"
-                  {...register("grade")}
-                />
-                {errors.grade && (
-                  <p className="text-sm text-destructive">{errors.grade.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="feedback">Feedback *</Label>
-                <Textarea
-                  id="feedback"
-                  placeholder="Observações sobre a aula..."
-                  rows={3}
-                  {...register("feedback")}
-                />
-                {errors.feedback && (
-                  <p className="text-sm text-destructive">{errors.feedback.message}</p>
-                )}
-              </div>
-
-              {hasFinancialRecord && (
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="confirmPayment"
-                    checked={confirmPayment}
-                    disabled={isPaymentAlreadyPaid}
-                    onCheckedChange={(checked) =>
-                      setValue("confirmPayment", !!checked)
-                    }
-                  />
-                  <Label
-                    htmlFor="confirmPayment"
-                    className={isPaymentAlreadyPaid ? "cursor-default text-muted-foreground" : "cursor-pointer"}
-                  >
-                    Confirmar pagamento
-                  </Label>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="grade">Nota (0–10)</Label>
+              <Input
+                id="grade"
+                type="text"
+                placeholder="Ex: 8.5"
+                {...register("grade")}
+              />
+              {errors.grade && (
+                <p className="text-sm text-destructive">{errors.grade.message}</p>
               )}
-            </>
+            </div>
           )}
 
           {!attendance && hasFinancialRecord && (
@@ -274,17 +226,39 @@ export function PostClassDialog({
             </div>
           )}
 
-          {!attendance && (
+          <div className="space-y-2">
+            <Label htmlFor="feedback">Feedback</Label>
+            <Textarea
+              id="feedback"
+              placeholder="Observações sobre a aula..."
+              rows={3}
+              {...register("feedback")}
+            />
+            {errors.feedback && (
+              <p className="text-sm text-destructive">{errors.feedback.message}</p>
+            )}
+          </div>
+
+          {attendance && hasFinancialRecord && (
             <div className="space-y-2">
-              <Label htmlFor="feedback">Observações sobre a falta (opcional)</Label>
-              <Textarea
-                id="feedback"
-                placeholder="Ex: Aluno avisou com antecedência..."
-                rows={3}
-                {...register("feedback")}
-              />
-              {errors.feedback && (
-                <p className="text-sm text-destructive">{errors.feedback.message}</p>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="confirmPayment"
+                  checked={confirmPayment}
+                  disabled={isPaymentAlreadyPaid}
+                  onCheckedChange={(checked) =>
+                    setValue("confirmPayment", !!checked)
+                  }
+                />
+                <Label
+                  htmlFor="confirmPayment"
+                  className={isPaymentAlreadyPaid ? "cursor-default text-muted-foreground" : "cursor-pointer"}
+                >
+                  Confirmar pagamento
+                </Label>
+              </div>
+              {errors.confirmPayment && (
+                <p className="text-sm text-destructive">{errors.confirmPayment.message}</p>
               )}
             </div>
           )}

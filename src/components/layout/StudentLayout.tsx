@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, BookOpen, CreditCard, LogOut, Loader2, Settings } from "lucide-react";
+import { Home, BookOpen, CreditCard, LogOut, Loader2, Settings, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { SettingsModal } from "@/components/layout/SettingsModal";
 
@@ -12,6 +12,7 @@ interface StudentLayoutProps {
 const navigation = [
   { name: "Início", href: "/student", icon: Home },
   { name: "Histórico", href: "/student/history", icon: BookOpen },
+  { name: "Atividades", href: "/student/activities", icon: FileText },
   { name: "Financeiro", href: "/student/financial", icon: CreditCard },
 ];
 

@@ -33,11 +33,13 @@ const TeacherStudentsPage = lazy(() => import("./pages/teacher/TeacherStudents")
 const TeacherFinancialPage = lazy(() => import("./pages/teacher/TeacherFinancial"));
 const TeacherOverviewPage = lazy(() => import("./pages/teacher/TeacherOverview"));
 const TeacherClassesPage = lazy(() => import("./pages/teacher/TeacherClasses"));
+const TeacherActivitiesPage = lazy(() => import("./pages/teacher/TeacherActivities"));
 
 // Lazy loading - páginas de estudante
 const StudentHome = lazy(() => import("./pages/student/StudentHome"));
 const StudentHistory = lazy(() => import("./pages/student/StudentHistory"));
 const StudentFinancial = lazy(() => import("./pages/student/StudentFinancial"));
+const StudentActivitiesPage = lazy(() => import("./pages/student/StudentActivities"));
 const StudentPanel = lazy(() => import("./pages/StudentPanel"));
 
 // Lazy loading - outras páginas
@@ -120,6 +122,7 @@ const App = () => (
               <Route path="overview" element={<TeacherOverviewPage />} />
               <Route path="financial" element={<TeacherFinancialPage />} />
               <Route path="classes" element={<TeacherClassesPage />} />
+              <Route path="activities" element={<TeacherActivitiesPage />} />
             </Route>
 
             {/* Student Routes - layout persistente */}
@@ -130,6 +133,7 @@ const App = () => (
               <Route index element={<StudentHome />} />
               <Route path="history" element={<StudentHistory />} />
               <Route path="financial" element={<StudentFinancial />} />
+              <Route path="activities" element={<StudentActivitiesPage />} />
             </Route>
 
             {/* Catch-all */}

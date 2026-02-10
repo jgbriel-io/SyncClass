@@ -608,7 +608,7 @@ export function StudentsListView({
                       key={student.id}
                       className="hover:bg-muted/30 transition-colors"
                     >
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-medium text-accent-foreground">
@@ -633,50 +633,37 @@ export function StudentsListView({
                                 {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
                               </p>
                             )}
-                            <div className="mt-1">
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="px-0 h-5 text-xs"
-                                onClick={() => {
-                                  setDetailStudentId(student.id);
-                                  setDetailSheetOpen(true);
-                                }}
-                              >
-                                Ver detalhes
-                              </Button>
-                            </div>
                           </div>
                         </div>
                       </td>
                       {showTeacherColumn && (
-                        <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
+                        <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden xl:table-cell whitespace-nowrap">
                           <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                             {teacherName}
                           </span>
                         </td>
                       )}
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden xl:table-cell whitespace-nowrap">
                         <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {hourlyRate != null ? formatCurrency(hourlyRate) : "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {classesPerWeek ?? "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden 2xl:table-cell whitespace-nowrap">
                         <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {student.pay_day ?? "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden xl:table-cell whitespace-nowrap">
                         {financialStatus ? (
                           <StatusBadge variant={financialStatus.variant}>
                             {financialStatus.label}
@@ -685,7 +672,7 @@ export function StudentsListView({
                           <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">Sem cobranças</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle whitespace-nowrap">
                         <div className="space-y-0.5">
                           <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground block">
                             {lastClassDateRaw
@@ -699,7 +686,7 @@ export function StudentsListView({
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 text-right">
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="ghost"

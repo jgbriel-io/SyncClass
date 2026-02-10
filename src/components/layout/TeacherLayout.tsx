@@ -18,6 +18,7 @@ import {
   Search,
   Bell,
   Settings,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -46,6 +47,7 @@ const navigation = [
   { name: "Visão Geral", href: "/teacher/overview", icon: ClipboardList },
   { name: "Alunos", href: "/teacher/students", icon: Users },
   { name: "Aulas", href: "/teacher/classes", icon: BookOpen },
+  { name: "Atividades", href: "/teacher/activities", icon: FileText },
   { name: "Financeiro", href: "/teacher/financial", icon: CreditCard },
 ];
 
@@ -100,6 +102,8 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
     } else if (path.startsWith("/teacher/classes")) {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
+    } else if (path.startsWith("/teacher/activities")) {
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
     } else if (path.startsWith("/teacher/financial")) {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });

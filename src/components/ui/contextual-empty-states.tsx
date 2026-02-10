@@ -6,6 +6,7 @@ import {
   EmptyFinancialIllustration,
   EmptyHistoryIllustration,
   EmptySearchIllustration,
+  EmptyActivitiesIllustration,
 } from "@/components/ui/empty-state-illustrations";
 import { Plus, Search, Calendar, DollarSign } from "lucide-react";
 
@@ -88,6 +89,30 @@ export function EmptySearchState({ query }: { query?: string }) {
           : "Ajuste os filtros para ver os resultados."
       }
       size="default"
+    />
+  );
+}
+
+export function EmptyActivitiesState({ onAction, actionLabel = "Enviar primeira atividade" }: EmptyStateWithActionProps) {
+  return (
+    <EmptyState
+      illustration={<EmptyActivitiesIllustration />}
+      title="Nenhuma atividade enviada"
+      message="Envie materiais e tarefas para seus alunos. Eles poderão entregar as respostas e você poderá corrigir aqui."
+      actionLabel={onAction ? actionLabel : undefined}
+      onAction={onAction}
+      size="lg"
+    />
+  );
+}
+
+export function EmptyActivitiesStudentState() {
+  return (
+    <EmptyState
+      illustration={<EmptyActivitiesIllustration />}
+      title="Nenhuma atividade recebida"
+      message="Quando seu professor enviar atividades, elas aparecerão aqui para você visualizar e entregar."
+      size="lg"
     />
   );
 }
