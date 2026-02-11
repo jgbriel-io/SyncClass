@@ -63,6 +63,12 @@ export interface FinancialRecordWithRelations extends FinancialRecord {
   confirmed_by?: {
     full_name: string;
   } | null;
+  /** Aulas vinculadas quando é uma cobrança de pacote (class_log_id = null) */
+  package_classes?: Array<{
+    id: string;
+    class_date: string;
+    title?: string | null;
+  }>;
 }
 
 export interface UseFinancialRecordsOptions {
@@ -190,6 +196,50 @@ export function useFinancialRecords(
             confirmed_by: record.confirmed_by_user_id
               ? { full_name: profileMap.get(record.confirmed_by_user_id) || "" }
               : null,
+          }));
+        }
+      }
+
+      // Buscar aulas vinculadas aos pacotes (quando class_log_id = null)
+      const packageRecordIds = list
+        .filter((r) => r.class_log_id === null)
+        .map((r) => r.id);
+
+      if (packageRecordIds.length > 0) {
+        const { data: packageLinks } = await supabase
+          .from("financial_record_class_logs")
+          .select(
+            `
+            financial_record_id,
+            class_logs (
+              id,
+              class_date,
+              title
+            )
+          `
+          )
+          .in("financial_record_id", packageRecordIds);
+
+        if (packageLinks) {
+          // Agrupar aulas por financial_record_id
+          const packageClassesMap = new Map<string, Array<{ id: string; class_date: string; title?: string | null }>>();
+          
+          packageLinks.forEach((link: { financial_record_id: string; class_logs: { id: string; class_date: string; title: string | null } | null }) => {
+            if (link.class_logs) {
+              const existing = packageClassesMap.get(link.financial_record_id) || [];
+              existing.push({
+                id: link.class_logs.id,
+                class_date: link.class_logs.class_date,
+                title: link.class_logs.title,
+              });
+              packageClassesMap.set(link.financial_record_id, existing);
+            }
+          });
+
+          // Adicionar as aulas aos registros
+          list = list.map((record) => ({
+            ...record,
+            package_classes: packageClassesMap.get(record.id) || undefined,
           }));
         }
       }

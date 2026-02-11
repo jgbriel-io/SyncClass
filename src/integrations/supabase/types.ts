@@ -140,6 +140,39 @@ export type Database = {
           },
         ]
       }
+      financial_record_class_logs: {
+        Row: {
+          id: string
+          financial_record_id: string
+          class_log_id: string
+        }
+        Insert: {
+          id?: string
+          financial_record_id: string
+          class_log_id: string
+        }
+        Update: {
+          id?: string
+          financial_record_id?: string
+          class_log_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_record_class_logs_financial_record_id_fkey"
+            columns: ["financial_record_id"]
+            isOneToOne: false
+            referencedRelation: "financial_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_record_class_logs_class_log_id_fkey"
+            columns: ["class_log_id"]
+            isOneToOne: true
+            referencedRelation: "class_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active: boolean
@@ -321,6 +354,7 @@ export type Database = {
           student_response_text: string | null
           student_response_file_url: string | null
           student_response_file_name: string | null
+          due_date: string
         }
         Insert: {
           id?: string
@@ -344,6 +378,7 @@ export type Database = {
           student_response_text?: string | null
           student_response_file_url?: string | null
           student_response_file_name?: string | null
+          due_date: string
         }
         Update: {
           id?: string
@@ -367,6 +402,7 @@ export type Database = {
           student_response_text?: string | null
           student_response_file_url?: string | null
           student_response_file_name?: string | null
+          due_date?: string
         }
         Relationships: [
           {

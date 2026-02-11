@@ -42,8 +42,8 @@ interface ActivityDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDownload: (filePath: string, fileName: string) => void;
-  getStatusLabel: (status: string) => string;
-  getStatusVariant: (status: string) => "success" | "warning" | "default" | "info";
+  getStatusLabel: (activity: ActivityWithRelations | null) => string;
+  getStatusVariant: (activity: ActivityWithRelations | null) => "success" | "warning" | "default" | "info" | "destructive";
   /** Abre o sheet já com o formulário de correção visível (ex.: ao clicar em Corrigir na tabela) */
   initialCorrectionMode?: boolean;
   /** Chamado após enviar a correção com sucesso (ex.: refetch + atualizar atividade) */
@@ -158,8 +158,8 @@ export function ActivityDetailSheet({
             <p className="text-sm font-normal text-muted-foreground">
               {activity.students?.name}
             </p>
-            <StatusBadge variant={getStatusVariant(activity.status)}>
-              {getStatusLabel(activity.status)}
+            <StatusBadge variant={getStatusVariant(activity)}>
+              {getStatusLabel(activity)}
             </StatusBadge>
           </SheetTitle>
         </SheetHeader>
@@ -176,6 +176,17 @@ export function ActivityDetailSheet({
                 })}
               </p>
             </div>
+
+            {activity.due_date && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                  Prazo de entrega
+                </p>
+                <p className="text-sm text-foreground">
+                  {format(new Date(activity.due_date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </p>
+              </div>
+            )}
 
             {activity.description && (
               <div>

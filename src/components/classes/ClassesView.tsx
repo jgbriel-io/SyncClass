@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, Check, Lock, ChevronLeft, ChevronRight, UserCheck, Percent, Award } from "lucide-react";
+import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, Check, Lock, ChevronLeft, ChevronRight, UserCheck, Percent, Award, Package } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   ClassesFilters,
@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
+import { PackageClassesDialog } from "@/components/classes/PackageClassesDialog";
 import { PostClassDialog } from "@/components/classes/PostClassDialog";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
@@ -108,6 +109,13 @@ function getClassStatusBadge(log: {
   return getClassStatusWithTime(log);
 }
 
+/** Título para exibição: usa o salvo ou fallback "Aula - dd/mm/yyyy" */
+function getClassLogDisplayTitle(log: { title?: string | null; class_date?: string }): string {
+  if (log.title?.trim()) return log.title;
+  const d = log.class_date ? format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "";
+  return d ? `Aula - ${d}` : "Aula";
+}
+
 interface ClassesViewProps {
   title?: string;
   subtitle?: string;
@@ -139,6 +147,8 @@ export function ClassesView({
   const [logToDelete, setLogToDelete] = useState<ClassLogWithStudent | null>(null);
   const [postClassDialogOpen, setPostClassDialogOpen] = useState(false);
   const [logForPostClass, setLogForPostClass] = useState<ClassLogWithStudent | null>(null);
+  const [packageDialogOpen, setPackageDialogOpen] = useState(false);
+  const [packageDialogKey, setPackageDialogKey] = useState(0);
   const listTopRef = useRef<HTMLDivElement>(null);
 
   const effectiveTeacherId = autoTeacherId ?? (filters.teacherId !== "all" ? filters.teacherId : undefined);
@@ -333,15 +343,24 @@ export function ClassesView({
           <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">{title}</h1>
           <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">{subtitle}</p>
         </div>
-        <Button
-          onClick={() => {
-            setSelectedLog(null);
-            setIsFormOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Registrar Aula
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setPackageDialogOpen(true)}
+          >
+            <Package className="h-4 w-4 mr-2" />
+            Cadastrar pacote
+          </Button>
+          <Button
+            onClick={() => {
+              setSelectedLog(null);
+              setIsFormOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Registrar Aula
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -408,9 +427,12 @@ export function ClassesView({
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
                     Aluno
                   </th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell">
+                    Título da aula
+                  </th>
                   {showTeacherColumn && (
                     <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
-                      Aula / Professor
+                      Professor
                     </th>
                   )}
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
@@ -472,18 +494,16 @@ export function ClassesView({
                           </div>
                         </div>
                       </td>
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell">
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium text-foreground whitespace-normal line-clamp-2 max-w-[200px]" title={getClassLogDisplayTitle(log)}>
+                          {getClassLogDisplayTitle(log)}
+                        </span>
+                      </td>
                       {showTeacherColumn && (
                         <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
-                          <div className="space-y-1 min-w-[200px]">
-                            {log.title && (
-                              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-semibold text-foreground whitespace-normal">
-                                {log.title}
-                              </p>
-                            )}
-                            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground whitespace-nowrap">
-                              {teacherName}
-                            </p>
-                          </div>
+                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground whitespace-nowrap">
+                            {teacherName}
+                          </span>
                         </td>
                       )}
                       <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
@@ -886,6 +906,18 @@ export function ClassesView({
         onSubmit={handleCreateOrUpdate}
         onSubmitWithFinancial={handleCreateWithFinancial}
         isLoading={isMutating}
+        enableTeacherSelection={enableTeacherSelection}
+      />
+
+      {/* Pacote de aulas */}
+      <PackageClassesDialog
+        key={packageDialogKey}
+        open={packageDialogOpen}
+        onOpenChange={(open) => {
+          setPackageDialogOpen(open);
+          if (!open) setPackageDialogKey((k) => k + 1);
+        }}
+        teacherId={effectiveTeacherId ?? undefined}
         enableTeacherSelection={enableTeacherSelection}
       />
 

@@ -98,7 +98,10 @@ export interface ClassLogWithStudent extends ClassLog {
     status: "pendente" | "pago" | "atrasado" | null;
     amount: number;
     due_date: string;
+    description?: string | null;
   } | null;
+  /** true quando a cobrança foi vinculada via pacote (financial_record_class_logs) */
+  financial_record_via_package?: boolean;
 }
 
 export interface ClassLogWithFinancialData {
@@ -192,7 +195,9 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
       const { data, error, count } = await q.range(from, to);
 
       if (error) throw error;
-      return { list: (data ?? []) as ClassLogWithStudent[], count: count ?? 0 };
+      const list = (data ?? []) as ClassLogWithStudent[];
+      await enrichWithPackageFinancial(list);
+      return { list, count: count ?? 0 };
     },
     placeholderData: keepPreviousData,
   });
@@ -214,6 +219,36 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
   };
 }
 
+/** Enriquece lista de aulas com financial_records vindos de pacote (financial_record_class_logs). */
+async function enrichWithPackageFinancial(
+  list: ClassLogWithStudent[]
+): Promise<ClassLogWithStudent[]> {
+  const withoutFinancial = list.filter((log) => !log.financial_records);
+  if (withoutFinancial.length === 0) return list;
+  const logIds = withoutFinancial.map((l) => l.id);
+  const { data: links } = await supabase
+    .from("financial_record_class_logs")
+    .select("class_log_id, financial_record_id")
+    .in("class_log_id", logIds);
+  if (!links?.length) return list;
+  const frIds = [...new Set(links.map((r) => r.financial_record_id))];
+  const { data: frs } = await supabase
+    .from("financial_records")
+    .select("id, status, amount, due_date, description")
+    .in("id", frIds);
+  const frMap = new Map((frs ?? []).map((fr) => [fr.id, fr]));
+  const logToFr = new Map(links.map((r) => [r.class_log_id, r.financial_record_id]));
+  withoutFinancial.forEach((log) => {
+    const frId = logToFr.get(log.id);
+    const fr = frId ? frMap.get(frId) : null;
+    if (fr) {
+      (log as ClassLogWithStudent).financial_records = fr;
+      (log as ClassLogWithStudent).financial_record_via_package = true;
+    }
+  });
+  return list;
+}
+
 /** Busca aulas por lista de student_ids (ex.: para enriquecer lista paginada de alunos) */
 export function useClassLogsByStudentIds(studentIds: string[]) {
   return useQuery({
@@ -231,7 +266,8 @@ export function useClassLogsByStudentIds(studentIds: string[]) {
         .in("student_id", studentIds)
         .order("class_date", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as ClassLogWithStudent[];
+      const list = (data ?? []) as ClassLogWithStudent[];
+      return enrichWithPackageFinancial(list);
     },
     enabled: studentIds.length > 0,
   });
@@ -259,7 +295,8 @@ export function usePendingEvaluationClassLogs(teacherId?: string | null) {
         .limit(50);
       if (error) throw error;
       const list = (data ?? []) as ClassLogWithStudent[];
-      return list.filter((log) => getClassStatusWithTime(log).label === "Avaliação pendente");
+      const enriched = await enrichWithPackageFinancial(list);
+      return enriched.filter((log) => getClassStatusWithTime(log).label === "Avaliação pendente");
     },
   });
 }
@@ -282,7 +319,7 @@ export function useAvailableClassLogsForStudent(studentId: string | null, teache
 
       if (classLogsError) throw classLogsError;
 
-      // Buscar IDs de aulas que já têm cobrança
+      // Buscar IDs de aulas que já têm cobrança (direta ou via pacote)
       const { data: financialRecords, error: financialError } = await supabase
         .from("financial_records")
         .select("class_log_id")
@@ -291,7 +328,14 @@ export function useAvailableClassLogsForStudent(studentId: string | null, teache
 
       if (financialError) throw financialError;
 
-      const usedClassLogIds = new Set(financialRecords?.map(r => r.class_log_id) || []);
+      const usedClassLogIds = new Set(financialRecords?.map(r => r.class_log_id).filter(Boolean) || []);
+
+      const { data: packageLinks } = await supabase
+        .from("financial_record_class_logs")
+        .select("class_log_id")
+        .in("class_log_id", classLogs?.map((l) => l.id) ?? []);
+
+      packageLinks?.forEach((r) => usedClassLogIds.add(r.class_log_id));
 
       // Filtrar aulas disponíveis (sem cobrança)
       return classLogs?.filter(log => !usedClassLogIds.has(log.id)) || [];
@@ -586,6 +630,178 @@ export function useUpdateClassLog() {
           ? "Já existe outra aula neste horário para este professor. Escolha outro intervalo."
           : "Erro ao atualizar registro. Tente novamente."
       );
+    },
+  });
+}
+
+/** Payload para criar um pacote de aulas em lote */
+export interface CreateClassLogPackageItem {
+  classLog: ClassLogInsert;
+}
+
+/** Cobrança única do pacote (uma linha no financeiro; aulas vinculadas via financial_record_class_logs) */
+export interface PackageFinancialData {
+  amount: number;
+  due_date: string;
+  description: string;
+  payment_method: string | null;
+}
+
+export interface CreateClassLogPackagePayload {
+  items: CreateClassLogPackageItem[];
+  packageFinancial?: PackageFinancialData | null;
+}
+
+export function useCreateClassLogPackage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: CreateClassLogPackagePayload) => {
+      const { items, packageFinancial } = payload;
+      if (items.length === 0) throw new Error("Nenhuma aula no pacote.");
+
+      // Verificar sobreposição de cada aula com as existentes e entre si
+      for (let i = 0; i < items.length; i++) {
+        const { classLog } = items[i];
+        const overlap = await checkClassOverlap(
+          classLog.teacher_id,
+          classLog.class_date,
+          classLog.start_at,
+          classLog.end_at
+        );
+        if (overlap.overlap) throw new Error(overlap.message);
+
+        for (let j = i + 1; j < items.length; j++) {
+          const other = items[j].classLog;
+          if (
+            classLog.teacher_id &&
+            other.teacher_id === classLog.teacher_id &&
+            classLog.class_date === other.class_date &&
+            classLog.start_at &&
+            classLog.end_at &&
+            other.start_at &&
+            other.end_at
+          ) {
+            const start = new Date(classLog.start_at).getTime();
+            const end = new Date(classLog.end_at).getTime();
+            const oStart = new Date(other.start_at).getTime();
+            const oEnd = new Date(other.end_at).getTime();
+            if (start < oEnd && oStart < end) {
+              throw new Error(
+                "Duas aulas do pacote têm o mesmo professor e horários que se sobrepõem. Ajuste as datas/horários."
+              );
+            }
+          }
+        }
+      }
+
+      const insertPayload = items.map((it) => {
+        const tid = it.classLog.teacher_id;
+        return {
+          ...it.classLog,
+          teacher_id: tid != null && String(tid).trim() !== "" ? tid : null,
+        };
+      });
+      const { data: insertedLogs, error: insertError } = await supabase
+        .from("class_logs")
+        .insert(insertPayload)
+        .select("id, student_id, class_date, start_at");
+
+      if (insertError) throw insertError;
+      if (!insertedLogs || insertedLogs.length !== items.length) {
+        throw new Error("Erro ao criar registros de aula.");
+      }
+
+      if (packageFinancial && packageFinancial.amount > 0) {
+        const studentId = insertedLogs[0]?.student_id;
+        if (!studentId) throw new Error("Erro ao obter aluno do pacote.");
+        
+        // Avoid relying on RETURNING/select() after insert due to RLS issues.
+        // Insert the financial record without select, then query it back.
+        const { error: frError } = await supabase
+          .from("financial_records")
+          .insert({
+            student_id: studentId,
+            class_log_id: null,
+            amount: packageFinancial.amount,
+            due_date: packageFinancial.due_date,
+            description: packageFinancial.description?.trim() || `Pacote mensal - ${items.length} aulas`,
+            payment_method: packageFinancial.payment_method ?? null,
+            status: "pendente",
+          });
+        
+        if (frError) {
+          toast.error(`Aulas criadas, erro ao criar cobrança: ${frError.message}`);
+          return insertedLogs;
+        }
+        
+        // Query back the financial record we just created
+        // Use a small delay to ensure the insert is committed
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const { data: financialRecord, error: queryError } = await supabase
+          .from("financial_records")
+          .select("id")
+          .eq("student_id", studentId)
+          .eq("amount", packageFinancial.amount)
+          .eq("due_date", packageFinancial.due_date)
+          .is("class_log_id", null)
+          .eq("status", "pendente")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (queryError) {
+          toast.error(`Cobrança pode ter sido criada, erro ao buscar: ${queryError.message}`);
+          return insertedLogs;
+        }
+        
+        if (!financialRecord?.id) {
+          toast.error("Cobrança pode ter sido criada mas não foi encontrada. Verifique a aba Financeiro.");
+          return insertedLogs;
+        }
+        
+        // Link the classes to the package financial record
+        const links = insertedLogs.map((log) => ({
+          financial_record_id: financialRecord.id,
+          class_log_id: log.id,
+        }));
+        
+        const { error: linkError } = await supabase
+          .from("financial_record_class_logs")
+          .insert(links);
+        
+        if (linkError) {
+          toast.error(`Aulas e cobrança criadas, erro ao vincular: ${linkError.message}`);
+        }
+      }
+
+      return insertedLogs;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["available_class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
+      const withFinancial = !!variables.packageFinancial;
+      toast.success(
+        `${variables.items.length} aula(s) registrada(s)${withFinancial ? " com cobrança do pacote" : ""} com sucesso!`
+      );
+    },
+    onError: (error) => {
+      const err = error as Error & { details?: string; code?: string };
+      const msg = err?.message || "";
+      const details = err?.details ? ` (${err.details})` : "";
+      const isOverlap =
+        msg.includes("neste horário") ||
+        msg.includes("sobrepõem") ||
+        msg.includes("overlap") ||
+        msg.includes("Duas aulas");
+      const displayMsg = isOverlap ? msg : (msg ? `${msg}${details}` : "Erro ao cadastrar pacote de aulas. Tente novamente.");
+      toast.error(displayMsg);
     },
   });
 }

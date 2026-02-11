@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useActivities, useMarkActivityAsDelivered, ActivityWithRelations, getActivityFileUrl } from "@/hooks/useActivities";
+import { useActivities, useMarkActivityAsDelivered, getActivityDisplayStatus, formatActivityDueDate, ActivityWithRelations, getActivityFileUrl } from "@/hooks/useActivities";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyActivitiesStudentState } from "@/components/ui/contextual-empty-states";
 import { Button } from "@/components/ui/button";
@@ -97,32 +97,6 @@ const StudentActivitiesPage = () => {
     });
   };
 
-  const getStatusVariant = (status: string): "success" | "warning" | "default" | "info" => {
-    switch (status) {
-      case "corrigida":
-        return "success";
-      case "entregue":
-        return "info";
-      case "enviada":
-        return "warning";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusLabel = (status: string): string => {
-    switch (status) {
-      case "enviada":
-        return "Em andamento";
-      case "entregue":
-        return "Entregue";
-      case "corrigida":
-        return "Corrigida";
-      default:
-        return status;
-    }
-  };
-
   return (
     <PageContainer constrained maxWidth="5xl">
       {/* Header */}
@@ -167,8 +141,8 @@ const StudentActivitiesPage = () => {
                         <h3 className="font-semibold text-sm text-foreground truncate min-w-0">
                           {activity.title}
                         </h3>
-                        <StatusBadge variant={getStatusVariant(activity.status)} className="shrink-0">
-                          {getStatusLabel(activity.status)}
+                        <StatusBadge variant={getActivityDisplayStatus(activity).variant} className="shrink-0">
+                          {getActivityDisplayStatus(activity).label}
                         </StatusBadge>
                       </div>
 
@@ -181,6 +155,12 @@ const StudentActivitiesPage = () => {
                         <Calendar className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                         <span>Enviada em {format(new Date(activity.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
                       </div>
+                      {activity.due_date && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                          <span>Prazo: {formatActivityDueDate(activity.due_date)}</span>
+                        </div>
+                      )}
                       {activity.delivered_at && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Clock className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
@@ -209,7 +189,7 @@ const StudentActivitiesPage = () => {
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium truncate">{activity.file_name}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {activity.file_type} • {(activity.file_size / 1024).toFixed(1)} KB
+                                  {activity.file_type} • {((activity.file_size ?? 0) / 1024).toFixed(1)} KB
                                 </p>
                               </div>
                               <Button

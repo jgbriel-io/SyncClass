@@ -25,12 +25,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, MoreHorizontal, Download, FileText, Loader2, Edit, Trash2, Clock, Eye, Search, FileStack, Inbox, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, MoreHorizontal, Download, FileText, Loader2, Edit, Trash2, Clock, Eye, Search, FileStack, Inbox, CheckCircle2, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useActivities, useDeleteActivity, getActivityFileUrl, ActivityWithRelations } from "@/hooks/useActivities";
+import { useActivities, useDeleteActivity, getActivityFileUrl, getActivityDisplayStatus, formatActivityDueDate, ActivityWithRelations } from "@/hooks/useActivities";
 import { SendActivityDialog } from "@/components/activities/SendActivityDialog";
+import { EditActivityDialog } from "@/components/activities/EditActivityDialog";
 import { AddCorrectionDialog } from "@/components/activities/AddCorrectionDialog";
 import { ActivityDetailSheet } from "@/components/activities/ActivityDetailSheet";
 import { EmptyActivitiesState } from "@/components/ui/contextual-empty-states";
@@ -41,15 +42,19 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 10;
-type StatusFilterValue = "all" | "enviada" | "entregue" | "corrigida";
+type StatusFilterValue = "all" | "enviada" | "vencida" | "entregue" | "corrigida";
 
 const TeacherActivitiesPage = () => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const isAdmin = role === "admin";
+
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [correctionDialogOpen, setCorrectionDialogOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ActivityWithRelations | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [activityToDelete, setActivityToDelete] = useState<ActivityWithRelations | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [activityToEdit, setActivityToEdit] = useState<ActivityWithRelations | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [activityForDetail, setActivityForDetail] = useState<ActivityWithRelations | null>(null);
   const [openSheetInCorrectionMode, setOpenSheetInCorrectionMode] = useState(false);
@@ -70,10 +75,14 @@ const TeacherActivitiesPage = () => {
       if (error) throw error;
       return data?.teacher_id as string | null;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !isAdmin,
   });
 
-  const { data: activities = [], isLoading, refetch } = useActivities(teacherId || undefined);
+  const { data: activities = [], isLoading, refetch } = useActivities(
+    isAdmin ? undefined : (teacherId || undefined),
+    undefined,
+    isAdmin ? { fetchAll: true } : undefined
+  );
   const deleteActivity = useDeleteActivity();
 
   const handleViewFile = async (filePath: string) => {
@@ -125,46 +134,26 @@ const TeacherActivitiesPage = () => {
     }
   };
 
-  const getStatusVariant = (status: string): "success" | "warning" | "default" | "info" => {
-    switch (status) {
-      case "corrigida":
-        return "success";
-      case "entregue":
-        return "info";
-      case "enviada":
-        return "warning";
-      default:
-        return "default";
-    }
-  };
+  const isOverdue = (a: ActivityWithRelations) =>
+    a.status === "enviada" && a.due_date && new Date(a.due_date).getTime() < Date.now();
 
-  const getStatusLabel = (status: string): string => {
-    switch (status) {
-      case "enviada":
-        return "Em andamento";
-      case "entregue":
-        return "Entregue";
-      case "corrigida":
-        return "Corrigida";
-      default:
-        return status;
-    }
-  };
-
-  // Estatísticas (todas as atividades do professor)
+  // Estatísticas por status de exibição (prazo / atraso)
   const totalActivities = activities.length;
-  const countEnviada = activities.filter((a) => a.status === "enviada").length;
+  const countEmAndamento = activities.filter((a) => a.status === "enviada" && !isOverdue(a)).length;
+  const countVencida = activities.filter((a) => isOverdue(a)).length;
   const countEntregue = activities.filter((a) => a.status === "entregue").length;
   const countCorrigida = activities.filter((a) => a.status === "corrigida").length;
 
-  // Filtro: busca (aluno ou título) + status
+  // Filtro: busca + status (vencida = enviada com prazo passado)
   const filteredActivities = activities.filter((a) => {
     const matchSearch =
       !searchQuery.trim() ||
       (a.students?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (a.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (a.description || "").toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = statusFilter === "all" || a.status === statusFilter;
+    const matchStatus =
+      statusFilter === "all" ||
+      (statusFilter === "vencida" ? isOverdue(a) : a.status === statusFilter);
     return matchSearch && matchStatus;
   });
 
@@ -189,28 +178,36 @@ const TeacherActivitiesPage = () => {
             Atividades
           </h1>
           <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">
-            Envie materiais e correções para seus alunos
+            {isAdmin ? "Todas as atividades da plataforma" : "Envie materiais e correções para seus alunos"}
           </p>
         </div>
-        <Button onClick={() => setSendDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Enviar Atividade
-        </Button>
+        {!isAdmin && (
+          <Button onClick={() => setSendDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Enviar Atividade
+          </Button>
+        )}
       </div>
 
-      {/* 4 Cards de estatísticas */}
-      <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
+      {/* 5 Cards de estatísticas */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 laptop:grid-cols-5">
         <StatCard
-          title="Total de Atividades"
+          title="Total"
           value={totalActivities}
           icon={FileStack}
           variant="primary"
         />
         <StatCard
           title="Em andamento"
-          value={countEnviada}
+          value={countEmAndamento}
           icon={Inbox}
           variant="muted"
+        />
+        <StatCard
+          title="Vencidas"
+          value={countVencida}
+          icon={Clock}
+          variant="default"
         />
         <StatCard
           title="Entregues"
@@ -244,6 +241,7 @@ const TeacherActivitiesPage = () => {
           <SelectContent>
             <SelectItem value="all">Todos os status</SelectItem>
             <SelectItem value="enviada">Em andamento</SelectItem>
+            <SelectItem value="vencida">Vencida</SelectItem>
             <SelectItem value="entregue">Entregue</SelectItem>
             <SelectItem value="corrigida">Corrigida</SelectItem>
           </SelectContent>
@@ -271,6 +269,11 @@ const TeacherActivitiesPage = () => {
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
                     Aluno
                   </th>
+                  {isAdmin && (
+                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell">
+                      Professor
+                    </th>
+                  )}
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
                     Atividade
                   </th>
@@ -278,7 +281,7 @@ const TeacherActivitiesPage = () => {
                     Arquivo
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell whitespace-nowrap">
-                    Data
+                    Prazo
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
                     Status
@@ -294,6 +297,11 @@ const TeacherActivitiesPage = () => {
                     <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
                       <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium">{activity.students?.name}</span>
                     </td>
+                    {isAdmin && (
+                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell">
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">{activity.teachers?.name ?? "—"}</span>
+                      </td>
+                    )}
                     <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
                       <div className="min-w-0">
                         <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium">{activity.title}</p>
@@ -311,16 +319,13 @@ const TeacherActivitiesPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell whitespace-nowrap">
-                      <div className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                        <p>{format(new Date(activity.created_at), "dd/MM/yyyy", { locale: ptBR })}</p>
-                        <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px]">
-                          {format(new Date(activity.created_at), "HH:mm", { locale: ptBR })}
-                        </p>
-                      </div>
+                      <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
+                        {formatActivityDueDate(activity.due_date)}
+                      </span>
                     </td>
                     <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
-                      <StatusBadge variant={getStatusVariant(activity.status)}>
-                        {getStatusLabel(activity.status)}
+                      <StatusBadge variant={getActivityDisplayStatus(activity).variant}>
+                        {getActivityDisplayStatus(activity).label}
                       </StatusBadge>
                     </td>
                     <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 text-right">
@@ -337,13 +342,23 @@ const TeacherActivitiesPage = () => {
                               onClick={() => handleViewFile(activity.file_url)}
                               aria-label="Visualizar arquivo"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-4 w-4 mr-2" />
+                              Ver anexo
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDownload(activity.file_url, activity.file_name)}
                             >
                               <Download className="h-4 w-4 mr-2" />
                               Baixar arquivo
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setActivityToEdit(activity);
+                                setEditDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Editar atividade
                             </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
@@ -454,6 +469,16 @@ const TeacherActivitiesPage = () => {
         teacherId={teacherId || ""}
       />
 
+      <EditActivityDialog
+        activity={activityToEdit}
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open);
+          if (!open) setActivityToEdit(null);
+        }}
+        teacherId={teacherId ?? activityToEdit?.teacher_id ?? ""}
+      />
+
       <AddCorrectionDialog
         open={correctionDialogOpen}
         onOpenChange={setCorrectionDialogOpen}
@@ -500,8 +525,8 @@ const TeacherActivitiesPage = () => {
           if (!open) setOpenSheetInCorrectionMode(false);
         }}
         onDownload={handleDownload}
-        getStatusLabel={getStatusLabel}
-        getStatusVariant={getStatusVariant}
+        getStatusLabel={(a) => (a ? getActivityDisplayStatus(a).label : "")}
+        getStatusVariant={(a) => (a ? getActivityDisplayStatus(a).variant : "default")}
         initialCorrectionMode={openSheetInCorrectionMode}
         onCorrectionSuccess={() => {
           setDetailSheetOpen(false);

@@ -17,6 +17,47 @@ export interface ActivityWithRelations extends Activity {
   } | null;
 }
 
+/** Atividade com pelo menos status, due_date e delivered_at (para exibição de status) */
+type ActivityForDisplay = Pick<Activity, "status" | "due_date" | "delivered_at">;
+
+/** Formata due_date (ISO ou YYYY-MM-DD) para exibição: "dd/MM/yyyy às HH:mm" ou só data se legado */
+export function formatActivityDueDate(dueDate: string | null | undefined): string {
+  if (!dueDate) return "—";
+  const d = new Date(dueDate);
+  if (Number.isNaN(d.getTime())) return dueDate;
+  const hasTime = dueDate.includes("T");
+  return hasTime
+    ? `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()} às ${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
+    : `${dueDate.slice(8, 10)}/${dueDate.slice(5, 7)}/${dueDate.slice(0, 4)}`;
+}
+
+/** Retorna label e variant do badge considerando prazo (data+hora) e entrega (no prazo / atraso / vencida). */
+export function getActivityDisplayStatus(
+  activity: ActivityForDisplay
+): { label: string; variant: "success" | "warning" | "default" | "info" | "destructive" } {
+  const dueTime = activity.due_date ? new Date(activity.due_date).getTime() : 0;
+  const now = Date.now();
+  const deliveredAt = activity.delivered_at;
+
+  if (activity.status === "corrigida") {
+    return { label: "Corrigida", variant: "success" };
+  }
+  if (activity.status === "entregue" && deliveredAt) {
+    const deliveredTime = new Date(deliveredAt).getTime();
+    const onTime = deliveredTime <= dueTime;
+    return onTime
+      ? { label: "Entregue", variant: "success" }
+      : { label: "Entregue com atraso", variant: "warning" };
+  }
+  if (activity.status === "enviada") {
+    if (dueTime > 0 && dueTime < now) {
+      return { label: "Vencida", variant: "destructive" };
+    }
+    return { label: "Em andamento", variant: "warning" };
+  }
+  return { label: activity.status, variant: "default" };
+}
+
 /** Upload de arquivo para o Supabase Storage */
 export async function uploadActivityFile(file: File): Promise<{ path: string; url: string }> {
   const fileExt = file.name.split(".").pop();
@@ -105,10 +146,19 @@ export function useActivityFilesForTeacher(teacherId: string | undefined) {
   return { data: files, ...rest };
 }
 
-/** Listar atividades (professor ou aluno) */
-export function useActivities(teacherId?: string, studentId?: string) {
+/** Opções para listagem: fetchAll = true (admin) busca todas as atividades da plataforma */
+export type UseActivitiesOptions = { fetchAll?: boolean };
+
+/** Listar atividades (professor, aluno ou admin) */
+export function useActivities(
+  teacherId?: string,
+  studentId?: string,
+  options?: UseActivitiesOptions
+) {
+  const fetchAll = options?.fetchAll === true;
+
   return useQuery({
-    queryKey: ["activities", teacherId, studentId],
+    queryKey: ["activities", teacherId, studentId, fetchAll],
     queryFn: async () => {
       let query = supabase
         .from("activities")
@@ -119,12 +169,9 @@ export function useActivities(teacherId?: string, studentId?: string) {
         `)
         .order("created_at", { ascending: false });
 
-      if (teacherId) {
-        query = query.eq("teacher_id", teacherId);
-      }
-
-      if (studentId) {
-        query = query.eq("student_id", studentId);
+      if (!fetchAll) {
+        if (teacherId) query = query.eq("teacher_id", teacherId);
+        if (studentId) query = query.eq("student_id", studentId);
       }
 
       const { data, error } = await query;
@@ -132,7 +179,7 @@ export function useActivities(teacherId?: string, studentId?: string) {
       if (error) throw error;
       return (data ?? []) as ActivityWithRelations[];
     },
-    enabled: !!(teacherId || studentId),
+    enabled: fetchAll || !!(teacherId || studentId),
   });
 }
 

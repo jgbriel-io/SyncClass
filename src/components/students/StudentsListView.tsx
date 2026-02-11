@@ -794,6 +794,7 @@ export function StudentsListView({
         studentId={detailStudentId}
         open={detailSheetOpen}
         onOpenChange={setDetailSheetOpen}
+        teacherId={autoTeacherId}
       />
 
       {/* Generated Password Dialog */}

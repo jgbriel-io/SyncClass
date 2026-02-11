@@ -451,6 +451,10 @@ export function FinancialView({
                               </span>
                             )}
                           </div>
+                        ) : record.package_classes && record.package_classes.length > 0 ? (
+                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
+                            Pacote mensal - {record.package_classes.length} aula(s)
+                          </span>
                         ) : (
                           <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground/70">
                             Sem aula vinculada
@@ -459,7 +463,11 @@ export function FinancialView({
                       </td>
                       <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell">
                         <div className="flex flex-col text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                          <span>{record.description || "—"}</span>
+                          <span>
+                            {record.package_classes && record.package_classes.length > 0
+                              ? record.package_classes.map((cls) => formatDate(cls.class_date)).join(", ")
+                              : (record.description || "—")}
+                          </span>
                           {lastUpdatedAt && (
                             <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] mt-0.5">
                               {`Editado em ${formatDateTime(lastUpdatedAt)}`}

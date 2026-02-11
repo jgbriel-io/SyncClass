@@ -116,9 +116,12 @@ const classLogBaseSchema = z.object({
     .refine((val) => {
       if (!val || !REGEX_PATTERNS.date.test(val)) return true;
       const [day, month, year] = val.split("/").map(Number);
-      const currentYear = new Date().getFullYear();
-      return year >= currentYear;
-    }, { message: "Não é possível cadastrar aulas em anos anteriores" }),
+      const d = new Date(year, month - 1, day);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      d.setHours(0, 0, 0, 0);
+      return d >= today;
+    }, { message: "Informe uma data de hoje em diante (não é possível cadastrar aulas em datas passadas)" }),
   title: z.string().optional(),
   feedback: z.string().max(1000).optional(),
   observations: z.string().max(1000, "Máximo 1000 caracteres").optional(),
@@ -335,10 +338,11 @@ export function ClassLogFormDialog({
     const effectiveTeacherId = teacherId || (enableTeacherSelection ? selectedTeacherId || null : null);
     const classDateIso = brDateToIso(data.class_date);
 
+    const defaultTitleAvulsa = `Aula - ${data.class_date}`;
     const classLogData: ClassLogInsert = {
       student_id: data.student_id,
       class_date: classDateIso,
-      title: data.title?.trim() || null,
+      title: data.title?.trim() || defaultTitleAvulsa,
       attendance: isEditing ? (classLog?.attendance ?? null) : null,
       grade: isEditing ? (classLog?.grade ?? null) : null,
       feedback: isEditing ? (classLog?.feedback ?? null) : null,
@@ -513,6 +517,13 @@ export function ClassLogFormDialog({
                   }}
                   locale={ptBR}
                   initialFocus
+                  disabled={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const d = new Date(date);
+                    d.setHours(0, 0, 0, 0);
+                    return d < today;
+                  }}
                 />
               </PopoverContent>
             </Popover>

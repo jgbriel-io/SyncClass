@@ -19,6 +19,7 @@ import {
   Search,
   Bell,
   Settings,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
@@ -45,6 +46,7 @@ const navigation = [
   { name: "Visão Geral", href: "/admin/students/overview", icon: ClipboardList },
   { name: "Alunos", href: "/admin/students", icon: Users },
   { name: "Aulas", href: "/admin/classes", icon: BookOpen },
+  { name: "Atividades", href: "/admin/activities", icon: FileText },
   { name: "Financeiro", href: "/admin/financial", icon: CreditCard },
   { name: "Professores", href: "/admin/teachers", icon: Users },
   { name: "Usuários", href: "/admin/users", icon: Link2 },
@@ -91,6 +93,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
     } else if (path.startsWith("/admin/teachers")) {
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
+    } else if (path.startsWith("/admin/activities")) {
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
     } else if (path.startsWith("/admin/users")) {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     }
