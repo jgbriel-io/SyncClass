@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { useUndoFinancialPayment } from "@/hooks/useFinancialRecords";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
+import { useStudents } from "@/hooks/useStudents";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -110,6 +111,7 @@ export function FinancialView({
     filters: {
       dateFrom: filters.dateFrom || undefined,
       dateTo: filters.dateTo || undefined,
+      studentId: filters.studentId,
       sortBy: filters.sortBy,
     },
   });
@@ -119,6 +121,8 @@ export function FinancialView({
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [page]);
   const { data: teachers = [] } = useTeachers();
+  const { data: students = [] } = useStudents();
+  const activeStudents = students.filter((s) => s.status === "ativo");
   const createRecord = useCreateFinancialRecord();
   const markAsPaid = useMarkAsPaid();
   const updateRecord = useUpdateFinancialRecord();
@@ -375,6 +379,7 @@ export function FinancialView({
           setFilters(defaultFinancialFilters);
           setPage(0);
         }}
+        students={activeStudents}
       />
 
         {/* Error state */}

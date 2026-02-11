@@ -19,19 +19,27 @@ export interface FinancialFiltersState {
   dateFrom: string;
   dateTo: string;
   status: FinancialStatusFilter;
+  studentId: string;
   sortBy: FinancialSortBy;
+}
+
+interface Student {
+  id: string;
+  name: string | null;
 }
 
 interface FinancialFiltersProps {
   filters: FinancialFiltersState;
   onChange: (f: FinancialFiltersState) => void;
   onReset?: () => void;
+  students?: Student[];
 }
 
-export function FinancialFilters({ filters, onChange, onReset }: FinancialFiltersProps) {
+export function FinancialFilters({ filters, onChange, onReset, students = [] }: FinancialFiltersProps) {
   const hasActiveFilters =
     filters.periodPreset !== "all" ||
     filters.status !== "all" ||
+    filters.studentId !== "all" ||
     filters.sortBy !== "created_desc";
 
   return (
@@ -102,6 +110,27 @@ export function FinancialFilters({ filters, onChange, onReset }: FinancialFilter
               <SelectItem value="atrasado">Atrasado</SelectItem>
             </SelectContent>
           </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Aluno</span>
+            <Select
+              value={filters.studentId}
+              onValueChange={(v) => onChange({ ...filters, studentId: v })}
+            >
+              <SelectTrigger className="w-[200px] pl-3 text-left">
+                <SelectValue placeholder="Aluno" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="pl-6">
+                  Todos os alunos
+                </SelectItem>
+                {students.map((s) => (
+                  <SelectItem key={s.id} value={s.id} className="pl-6">
+                    {s.name || "—"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">Ordenar</span>

@@ -11,15 +11,23 @@ import {
 
 export type ClassStatusFilter = "all" | "em_aberto" | "agendada" | "avaliacao_pendente" | "concluida";
 export type ClassPeriodFilter = "all" | "week" | "month" | "3months";
+export type ClassTypeFilter = "all" | "pacote" | "individual";
 
 export interface ClassesFiltersState {
   search: string;
   period: ClassPeriodFilter;
   teacherId: string;
+  studentId: string;
+  classType: ClassTypeFilter;
   status: ClassStatusFilter;
 }
 
 interface Teacher {
+  id: string;
+  name: string | null;
+}
+
+interface Student {
   id: string;
   name: string | null;
 }
@@ -29,6 +37,7 @@ interface ClassesFiltersProps {
   onChange: (f: ClassesFiltersState) => void;
   onReset?: () => void;
   teachers: Teacher[];
+  students: Student[];
   showTeacherFilter?: boolean;
 }
 
@@ -37,11 +46,14 @@ export function ClassesFilters({
   onChange,
   onReset,
   teachers,
+  students,
   showTeacherFilter = true,
 }: ClassesFiltersProps) {
   const hasActiveFilters =
     filters.period !== "all" ||
     (showTeacherFilter && filters.teacherId !== "all") ||
+    filters.studentId !== "all" ||
+    filters.classType !== "all" ||
     filters.status !== "em_aberto";
 
   return (
@@ -83,6 +95,43 @@ export function ClassesFilters({
               </Select>
             </div>
           )}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Aluno</span>
+            <Select
+              value={filters.studentId}
+              onValueChange={(v) => onChange({ ...filters, studentId: v })}
+            >
+              <SelectTrigger className="w-[200px] pl-3 text-left">
+                <SelectValue placeholder="Aluno" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="pl-6">
+                  Todos os alunos
+                </SelectItem>
+                {students.map((s) => (
+                  <SelectItem key={s.id} value={s.id} className="pl-6">
+                    {s.name || "—"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Tipo</span>
+            <Select
+              value={filters.classType}
+              onValueChange={(v) => onChange({ ...filters, classType: v as ClassTypeFilter })}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="pacote">Pacote</SelectItem>
+                <SelectItem value="individual">Individual</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">Status</span>
             <Select

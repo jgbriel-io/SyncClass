@@ -37,6 +37,7 @@ const DEFAULT_PAGE_SIZE = 10;
 export type FinancialRecordsFilters = {
   dateFrom?: string;
   dateTo?: string;
+  studentId?: string;
   sortBy?: "due_desc" | "due_asc" | "amount_desc" | "amount_asc" | "created_desc" | "created_asc";
 };
 
@@ -155,6 +156,9 @@ export function useFinancialRecords(
 
       if (teacherId) {
         q = q.eq("students.teacher_id", teacherId);
+      }
+      if (filters?.studentId && filters.studentId !== "all") {
+        q = q.eq("student_id", filters.studentId);
       }
       if (filters?.dateFrom) {
         q = q.gte("due_date", filters.dateFrom);

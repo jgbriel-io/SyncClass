@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, Eye, TrendingUp, TrendingDown } from "lucide-react";
 import { useStudentsWithStatsPaginated } from "@/hooks/useStudentDetails";
+import { useStudents } from "@/hooks/useStudents";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
@@ -49,6 +50,8 @@ function StudentOverviewPage() {
     isFetching,
   } = useStudentsWithStatsPaginated({ pageSize: PAGE_SIZE });
   const { data: teachers = [] } = useTeachers();
+  const { data: allStudents = [] } = useStudents();
+  const activeStudentsForFilter = allStudents.filter((s) => s.status === "ativo");
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -56,6 +59,8 @@ function StudentOverviewPage() {
 
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
+      if (filters.studentId !== "all" && student.id !== filters.studentId) return false;
+
       const searchLower = filters.search.toLowerCase().trim();
       const searchDigits = searchLower.replace(/\D/g, "");
       const matchesSearch =
@@ -127,6 +132,7 @@ function StudentOverviewPage() {
             setPage(0);
           }}
           teachers={teachers}
+          students={activeStudentsForFilter}
           showTeacherFilter={true}
         />
 

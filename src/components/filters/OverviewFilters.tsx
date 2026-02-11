@@ -17,10 +17,16 @@ export interface OverviewFiltersState {
   status: string;
   period: OverviewPeriodFilter;
   teacherId: string;
+  studentId: string;
   sortBy: OverviewSortBy;
 }
 
 interface Teacher {
+  id: string;
+  name: string | null;
+}
+
+interface Student {
   id: string;
   name: string | null;
 }
@@ -30,6 +36,7 @@ interface OverviewFiltersProps {
   onChange: (f: OverviewFiltersState) => void;
   onReset?: () => void;
   teachers?: Teacher[];
+  students?: Student[];
   showTeacherFilter?: boolean;
   /** Status principal - quando all, não mostra botão Limpar; use ativo para priorizar ativos */
   primaryStatus?: "ativo" | "all";
@@ -40,6 +47,7 @@ export function OverviewFilters({
   onChange,
   onReset,
   teachers = [],
+  students = [],
   showTeacherFilter = false,
   primaryStatus = "all",
 }: OverviewFiltersProps) {
@@ -47,6 +55,7 @@ export function OverviewFilters({
     filters.status !== primaryStatus ||
     filters.period !== "all" ||
     (showTeacherFilter && filters.teacherId !== "all") ||
+    filters.studentId !== "all" ||
     filters.sortBy !== "recent";
 
   return (
@@ -119,6 +128,29 @@ export function OverviewFilters({
                 ))}
               </SelectContent>
             </Select>
+            </div>
+          )}
+          {students.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Aluno</span>
+              <Select
+                value={filters.studentId}
+                onValueChange={(v) => onChange({ ...filters, studentId: v })}
+              >
+                <SelectTrigger className="w-[200px] pl-3 text-left">
+                  <SelectValue placeholder="Aluno" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="pl-6">
+                    Todos os alunos
+                  </SelectItem>
+                  {students.map((s) => (
+                    <SelectItem key={s.id} value={s.id} className="pl-6">
+                      {s.name || "—"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
           <div className="flex flex-col gap-1.5">

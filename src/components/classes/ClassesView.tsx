@@ -36,6 +36,7 @@ import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
 import { PackageClassesDialog } from "@/components/classes/PackageClassesDialog";
 import { PostClassDialog } from "@/components/classes/PostClassDialog";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
+import { useStudents } from "@/hooks/useStudents";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   useClassLogs,
@@ -171,13 +172,16 @@ export function ClassesView({
     filters: useMemo(
       () => ({
         teacherId: effectiveTeacherId ?? filters.teacherId,
+        studentId: filters.studentId,
         period: filters.period,
         status: filters.status,
       }),
-      [effectiveTeacherId, filters.teacherId, filters.period, filters.status]
+      [effectiveTeacherId, filters.teacherId, filters.studentId, filters.period, filters.status]
     ),
   });
   const { data: teachers = [] } = useTeachers();
+  const { data: students = [] } = useStudents();
+  const activeStudents = students.filter((s) => s.status === "ativo");
 
   // Ao mudar filtro de status, voltar para a primeira página
   useEffect(() => {
@@ -205,6 +209,10 @@ export function ClassesView({
       if (!matchesSearch) return false;
 
       if (filters.teacherId !== "all" && log.teacher_id !== filters.teacherId && log.students?.teacher_id !== filters.teacherId) return false;
+
+      // Filtro pacote / individual (financial_record_via_package = true → pacote)
+      if (filters.classType === "pacote" && !log.financial_record_via_package) return false;
+      if (filters.classType === "individual" && log.financial_record_via_package) return false;
 
       // Filtro de período primeiro (antes de verificar status)
       if (filters.period !== "all") {
@@ -403,6 +411,7 @@ export function ClassesView({
           setPage(0);
         }}
         teachers={teachers}
+        students={activeStudents}
         showTeacherFilter={showTeacherColumn}
       />
 

@@ -11,6 +11,7 @@ export type ClassLogsStatusFilter = "all" | "agendada" | "avaliacao_pendente" | 
 
 export type ClassLogsFilters = {
   teacherId?: string;
+  studentId?: string;
   period?: "all" | "week" | "month" | "3months";
   status?: ClassLogsStatusFilter;
 };
@@ -179,6 +180,10 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
         } else {
           return { list: [] as ClassLogWithStudent[], count: 0 };
         }
+      }
+
+      if (filters?.studentId && filters.studentId !== "all") {
+        q = q.eq("student_id", filters.studentId);
       }
 
       if (filters?.period && filters.period !== "all") {

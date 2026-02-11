@@ -1,14 +1,16 @@
+import { useNavigate } from "react-router-dom";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StudentFinancialCard } from "@/components/student/StudentFinancialCard";
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
-import { CheckCircle, AlertCircle, Loader2, DollarSign, Wallet } from "lucide-react";
+import { CheckCircle, Loader2, DollarSign, Wallet } from "lucide-react";
 import { useStudentFinancialRecords, useStudentStats } from "@/hooks/useStudentPortal";
 
 export default function StudentFinancial() {
   const { data: records = [], isLoading, error } = useStudentFinancialRecords();
   const stats = useStudentStats();
 
+  const navigate = useNavigate();
   const paidCount = records.filter((p) => p.status === "pago").length;
   const pendingCount = records.filter((p) => p.status !== "pago").length;
   const isFinancialOk = !stats.hasPendingPayments;
@@ -51,7 +53,7 @@ export default function StudentFinancial() {
               variant={isFinancialOk ? "success" : "warning"}
             />
 
-            {/* Outro título + cards */}
+            {/* Lista de cobranças */}
             <div className="space-y-3">
               <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
                 Histórico de Pagamentos
@@ -75,6 +77,11 @@ export default function StudentFinancial() {
                       description: payment.description,
                       payment_date: payment.paid_at,
                     }}
+                    onPayClick={
+                      payment.status !== "pago"
+                        ? () => navigate(`/student/financial/checkout/${payment.id}`)
+                        : undefined
+                    }
                   />
                 ))
               )}

@@ -30,6 +30,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivities, useDeleteActivity, getActivityFileUrl, getActivityDisplayStatus, formatActivityDueDate, ActivityWithRelations } from "@/hooks/useActivities";
+import { useStudents } from "@/hooks/useStudents";
 import { SendActivityDialog } from "@/components/activities/SendActivityDialog";
 import { EditActivityDialog } from "@/components/activities/EditActivityDialog";
 import { AddCorrectionDialog } from "@/components/activities/AddCorrectionDialog";
@@ -60,8 +61,12 @@ const TeacherActivitiesPage = () => {
   const [openSheetInCorrectionMode, setOpenSheetInCorrectionMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("all");
+  const [studentFilter, setStudentFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
   const listTopRef = useRef<HTMLDivElement>(null);
+
+  const { data: students = [] } = useStudents();
+  const activeStudents = students.filter((s) => s.status === "ativo");
 
   const { data: teacherId, isLoading: teacherIdLoading } = useQuery({
     queryKey: ["teacherId", user?.id],
@@ -78,10 +83,11 @@ const TeacherActivitiesPage = () => {
     enabled: !!user?.id && !isAdmin,
   });
 
+  const effectiveStudentId = studentFilter !== "all" ? studentFilter : undefined;
   const { data: activities = [], isLoading, refetch } = useActivities(
     isAdmin ? undefined : (teacherId || undefined),
-    undefined,
-    isAdmin ? { fetchAll: true } : undefined
+    effectiveStudentId,
+    isAdmin && !effectiveStudentId ? { fetchAll: true } : undefined
   );
   const deleteActivity = useDeleteActivity();
 
@@ -163,7 +169,7 @@ const TeacherActivitiesPage = () => {
 
   useEffect(() => {
     setPage(0);
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, studentFilter]);
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -244,6 +250,19 @@ const TeacherActivitiesPage = () => {
             <SelectItem value="vencida">Vencida</SelectItem>
             <SelectItem value="entregue">Entregue</SelectItem>
             <SelectItem value="corrigida">Corrigida</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={studentFilter} onValueChange={setStudentFilter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Aluno" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os alunos</SelectItem>
+            {activeStudents.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.name || "—"}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

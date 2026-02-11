@@ -39,6 +39,7 @@ const TeacherActivitiesPage = lazy(() => import("./pages/teacher/TeacherActiviti
 const StudentHome = lazy(() => import("./pages/student/StudentHome"));
 const StudentHistory = lazy(() => import("./pages/student/StudentHistory"));
 const StudentFinancial = lazy(() => import("./pages/student/StudentFinancial"));
+const StudentCheckout = lazy(() => import("./pages/student/StudentCheckout"));
 const StudentActivitiesPage = lazy(() => import("./pages/student/StudentActivities"));
 const StudentPanel = lazy(() => import("./pages/StudentPanel"));
 
@@ -134,6 +135,7 @@ const App = () => (
               <Route index element={<StudentHome />} />
               <Route path="history" element={<StudentHistory />} />
               <Route path="financial" element={<StudentFinancial />} />
+              <Route path="financial/checkout/:recordId" element={<StudentCheckout />} />
               <Route path="activities" element={<StudentActivitiesPage />} />
             </Route>
 

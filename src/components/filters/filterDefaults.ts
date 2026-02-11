@@ -9,6 +9,8 @@ export const defaultClassesFilters: ClassesFiltersState = {
   search: "",
   period: "all",
   teacherId: "all",
+  studentId: "all",
+  classType: "all",
   status: "em_aberto",
 };
 
@@ -18,6 +20,7 @@ export const defaultFinancialFilters: FinancialFiltersState = {
   dateFrom: "",
   dateTo: "",
   status: "all",
+  studentId: "all",
   sortBy: "created_desc",
 };
 
@@ -26,6 +29,7 @@ export const defaultOverviewFilters: OverviewFiltersState = {
   status: "all",
   period: "all",
   teacherId: "all",
+  studentId: "all",
   sortBy: "recent",
 };
 
