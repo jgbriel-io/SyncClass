@@ -53,7 +53,7 @@ export function getActivityDisplayStatus(
     if (dueTime > 0 && dueTime < now) {
       return { label: "Vencida", variant: "destructive" };
     }
-    return { label: "Em andamento", variant: "warning" };
+    return { label: "Aguardando", variant: "warning" };
   }
   return { label: activity.status, variant: "default" };
 }

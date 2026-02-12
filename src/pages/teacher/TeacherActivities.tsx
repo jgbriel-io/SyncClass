@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, MoreHorizontal, Download, FileText, Loader2, Edit, Trash2, Clock, Eye, Search, FileStack, Inbox, CheckCircle2, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import { Plus, MoreHorizontal, Download, FileText, Loader2, Trash2, Clock, Eye, Search, FileStack, Inbox, CheckCircle2, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +41,17 @@ import { StatCard } from "@/components/ui/stat-card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import {
+  tableThLarge,
+  tableThMedium,
+  tableThSmall,
+  tableThSmallRight,
+  tableTdLarge,
+  tableTdMedium,
+  tableTdSmall,
+  tableTdActions,
+} from "@/lib/utils/tableColumns";
+import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
 type StatusFilterValue = "all" | "enviada" | "vencida" | "entregue" | "corrigida";
@@ -204,7 +215,7 @@ const TeacherActivitiesPage = () => {
           variant="primary"
         />
         <StatCard
-          title="Em andamento"
+          title="Aguardando"
           value={countEmAndamento}
           icon={Inbox}
           variant="muted"
@@ -230,41 +241,50 @@ const TeacherActivitiesPage = () => {
       </div>
 
       {/* Barra de pesquisa e filtros */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por aluno, título ou descrição..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-1.5 flex-1 min-w-0 max-w-sm">
+          <span className="text-xs font-medium text-muted-foreground">Buscar</span>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Aluno, título ou descrição..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilterValue)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="enviada">Em andamento</SelectItem>
-            <SelectItem value="vencida">Vencida</SelectItem>
-            <SelectItem value="entregue">Entregue</SelectItem>
-            <SelectItem value="corrigida">Corrigida</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={studentFilter} onValueChange={setStudentFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Aluno" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os alunos</SelectItem>
-            {activeStudents.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.name || "—"}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Status</span>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilterValue)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="enviada">Aguardando</SelectItem>
+              <SelectItem value="vencida">Vencida</SelectItem>
+              <SelectItem value="entregue">Entregue</SelectItem>
+              <SelectItem value="corrigida">Corrigida</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Aluno</span>
+          <Select value={studentFilter} onValueChange={setStudentFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Aluno" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os alunos</SelectItem>
+              {activeStudents.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name || "—"}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Lista de Atividades */}
@@ -282,46 +302,54 @@ const TeacherActivitiesPage = () => {
       ) : (
         <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto min-w-0">
-            <table className="w-full text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
+            <table className="w-full table-auto text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
+              <colgroup>
+                <col style={{ width: "28%" }} />
+                <col style={{ width: "28%" }} />
+                <col style={{ width: "14%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "8%" }} />
+              </colgroup>
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
-                    Aluno
-                  </th>
-                  {isAdmin && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell">
-                      Professor
-                    </th>
-                  )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
-                    Atividade
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell max-w-[180px]">
-                    Arquivo
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell whitespace-nowrap">
-                    Prazo
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
-                    Status
-                  </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
-                    Ações
-                  </th>
+                  <th className={tableThLarge}>Aluno</th>
+                  <th className={tableThMedium}>Atividade</th>
+                  <th className={cn(tableThMedium, "hidden sm:table-cell")}>Arquivo</th>
+                  <th className={cn(tableThMedium, "hidden sm:table-cell")}>Prazo</th>
+                  <th className={tableThSmall}>Status</th>
+                  <th className={tableThSmallRight}>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedActivities.map((activity) => (
+                {paginatedActivities.map((activity) => {
+                  const lastUpdatedAt = activity.updated_at || activity.created_at;
+                  return (
                   <tr key={activity.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
-                      <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium">{activity.students?.name}</span>
+                    <td className={tableTdLarge}>
+                      <div className="flex items-start gap-3">
+                        <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-medium text-accent-foreground">
+                            {activity.students?.name?.charAt(0) || "?"}
+                          </span>
+                        </div>
+                        <div className="space-y-1 min-w-0">
+                          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium truncate">
+                            {activity.students?.name || "—"}
+                          </p>
+                          {isAdmin ? (
+                            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground whitespace-nowrap">
+                              {activity.teachers?.name ?? "—"}
+                            </p>
+                          ) : lastUpdatedAt ? (
+                            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground whitespace-nowrap">
+                              {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
                     </td>
-                    {isAdmin && (
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell">
-                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">{activity.teachers?.name ?? "—"}</span>
-                      </td>
-                    )}
-                    <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
+                    <td className={tableTdMedium}>
                       <div className="min-w-0">
                         <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium">{activity.title}</p>
                         {activity.description && (
@@ -331,31 +359,30 @@ const TeacherActivitiesPage = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell max-w-[180px]">
+                    <td className={cn(tableTdMedium, "hidden sm:table-cell max-w-[180px]")}>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
                         <FileText className="h-3.5 w-3.5 flex-shrink-0" />
                         <span className="truncate" title={activity.file_name}>{activity.file_name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell whitespace-nowrap">
+                    <td className={cn(tableTdSmall, "hidden sm:table-cell")}>
                       <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                         {formatActivityDueDate(activity.due_date)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
-                      <StatusBadge variant={getActivityDisplayStatus(activity).variant}>
+                    <td className={cn(tableTdSmall, "min-w-[7rem]")}>
+                      <StatusBadge variant={getActivityDisplayStatus(activity).variant} className="whitespace-nowrap">
                         {getActivityDisplayStatus(activity).label}
                       </StatusBadge>
                     </td>
-                    <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <div className="flex items-center -space-x-1">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
+                    <td className={tableTdActions}>
+                      <div className="flex items-center justify-end gap-2 h-10">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
                               onClick={() => handleViewFile(activity.file_url)}
@@ -379,71 +406,68 @@ const TeacherActivitiesPage = () => {
                               <Pencil className="h-4 w-4 mr-2" />
                               Editar atividade
                             </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setActivityToDelete(activity);
-                                  setDeleteDialogOpen(true);
-                                }}
-                                className="text-destructive focus:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => {
-                              setActivityForDetail(activity);
-                              setDetailSheetOpen(true);
-                            }}
-                            title="Ver detalhes"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setActivityToDelete(activity);
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={() => {
+                            setActivityForDetail(activity);
+                            setDetailSheetOpen(true);
+                          }}
+                          title="Ver detalhes"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         {activity.status === "enviada" ? (
                           <Button
                             size="sm"
                             variant="outline"
                             disabled
-                            className="h-8 opacity-50 cursor-not-allowed"
+                            className="h-8 w-[7rem] shrink-0 opacity-50 cursor-not-allowed"
                           >
-                            <Clock className="h-3.5 w-3.5 mr-1.5" />
                             Aguardando
                           </Button>
                         ) : activity.status === "entregue" ? (
                           <Button
                             size="sm"
-                            className="h-8 border-none bg-[#25D366] text-white hover:bg-[#1ebe57]"
+                            className="h-8 w-[7rem] shrink-0 border-none bg-[#25D366] text-white hover:bg-[#1ebe57]"
                             onClick={() => {
                               setActivityForDetail(activity);
                               setOpenSheetInCorrectionMode(true);
                               setDetailSheetOpen(true);
                             }}
                           >
-                            <Edit className="h-3.5 w-3.5 mr-1.5" />
                             Corrigir
                           </Button>
                         ) : (
                           <Button
                             size="sm"
-                            className="h-8 border-none bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+                            className="h-8 w-[7rem] shrink-0 border-none bg-warning text-white font-semibold hover:bg-warning/90 shadow"
                             onClick={() => {
                               setSelectedActivity(activity);
                               setCorrectionDialogOpen(true);
                             }}
                           >
-                            <Edit className="h-3.5 w-3.5 mr-1.5" />
                             Atualizar
                           </Button>
                         )}
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

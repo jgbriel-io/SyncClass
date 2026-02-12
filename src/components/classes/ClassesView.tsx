@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, Check, Lock, ChevronLeft, ChevronRight, UserCheck, Percent, Award, Package } from "lucide-react";
+import { Search, Plus, Calendar, MoreHorizontal, Pencil, Trash2, Loader2, Receipt, BookOpen, ChevronLeft, ChevronRight, UserCheck, Percent, Award, Package, Eye } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   ClassesFilters,
@@ -35,6 +35,7 @@ import { ptBR } from "date-fns/locale";
 import { ClassLogFormDialog } from "@/components/classes/ClassLogFormDialog";
 import { PackageClassesDialog } from "@/components/classes/PackageClassesDialog";
 import { PostClassDialog } from "@/components/classes/PostClassDialog";
+import { ClassDetailSheet } from "@/components/classes/ClassDetailSheet";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { useStudents } from "@/hooks/useStudents";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
@@ -50,6 +51,17 @@ import {
   ClassLogWithFinancialData,
 } from "@/hooks/useClassLogs";
 import { isClassEvaluationBlocked, getClassStatusWithTime } from "@/lib/utils/classTime";
+import {
+  tableThLarge,
+  tableThMedium,
+  tableThSmall,
+  tableThSmallRight,
+  tableTdLarge,
+  tableTdMedium,
+  tableTdSmall,
+  tableTdActions,
+} from "@/lib/utils/tableColumns";
+import { cn } from "@/lib/utils";
 import { StatCard } from "@/components/ui/stat-card";
 
 function formatClassDateAndTime(log: {
@@ -150,6 +162,8 @@ export function ClassesView({
   const [logForPostClass, setLogForPostClass] = useState<ClassLogWithStudent | null>(null);
   const [packageDialogOpen, setPackageDialogOpen] = useState(false);
   const [packageDialogKey, setPackageDialogKey] = useState(0);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [logForDetailSheet, setLogForDetailSheet] = useState<ClassLogWithStudent | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
 
   const effectiveTeacherId = autoTeacherId ?? (filters.teacherId !== "all" ? filters.teacherId : undefined);
@@ -430,41 +444,29 @@ export function ClassesView({
         ) : !error && viewMode === "table" && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto min-w-0">
-            <table className="w-full text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
+            <table className="w-full table-auto text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
+              <colgroup>
+                <col style={{ width: "22%" }} />
+                <col style={{ width: "28%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "10%" }} />
+              </colgroup>
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
-                    Aluno
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell">
-                    Título da aula
-                  </th>
-                  {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
-                      Professor
-                    </th>
+                  <th className={tableThLarge}>Aluno</th>
+                  {showTeacherColumn ? (
+                    <th className={cn(tableThLarge, "hidden sm:table-cell")}>Informações</th>
+                  ) : (
+                    <th className={cn(tableThLarge, "hidden sm:table-cell")}>Título da aula</th>
                   )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
-                    Data
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell whitespace-nowrap">
-                    Duração
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
-                    Nota
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
-                    Financeiro
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell whitespace-nowrap">
-                    Valor
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
-                    Feedback
-                  </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
-                    Ações
-                  </th>
+                  <th className={tableThSmall}>Data</th>
+                  <th className={cn(tableThSmall, "hidden sm:table-cell")}>Duração</th>
+                  <th className={tableThSmall}>Nota</th>
+                  <th className={cn(tableThSmall, "hidden xl:table-cell")}>Financeiro</th>
+                  <th className={tableThSmallRight}>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -479,7 +481,7 @@ export function ClassesView({
 
                   return (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
+                      <td className={tableTdLarge}>
                         <div className="flex items-start gap-3">
                           <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-medium text-accent-foreground">
@@ -503,19 +505,25 @@ export function ClassesView({
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell">
-                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium text-foreground whitespace-normal line-clamp-2 max-w-[200px]" title={getClassLogDisplayTitle(log)}>
-                          {getClassLogDisplayTitle(log)}
-                        </span>
-                      </td>
-                      {showTeacherColumn && (
-                        <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
-                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground whitespace-nowrap">
-                            {teacherName}
+                      {showTeacherColumn ? (
+                        <td className={cn(tableTdLarge, "hidden sm:table-cell")}>
+                          <div className="flex flex-col gap-0.5 max-w-[200px]">
+                            <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium text-foreground whitespace-normal line-clamp-2" title={getClassLogDisplayTitle(log)}>
+                              {getClassLogDisplayTitle(log)}
+                            </span>
+                            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground whitespace-nowrap">
+                              {teacherName}
+                            </span>
+                          </div>
+                        </td>
+                      ) : (
+                        <td className={cn(tableTdLarge, "hidden sm:table-cell")}>
+                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium text-foreground whitespace-normal line-clamp-2 max-w-[200px]" title={getClassLogDisplayTitle(log)}>
+                            {getClassLogDisplayTitle(log)}
                           </span>
                         </td>
                       )}
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
+                      <td className={tableTdSmall}>
                         {(() => {
                           const { date, timeRange } = formatClassDateAndTime(log);
                           return (
@@ -526,12 +534,12 @@ export function ClassesView({
                           );
                         })()}
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell whitespace-nowrap">
+                      <td className={cn(tableTdSmall, "hidden sm:table-cell")}>
                         <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {formatDuration(log.duration_minutes)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
+                      <td className={tableTdSmall}>
                         <span
                           className={`text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium ${
                             log.attendance === false ? "text-destructive" : ""
@@ -544,7 +552,7 @@ export function ClassesView({
                               : "—"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
+                      <td className={cn(tableTdSmall, "hidden xl:table-cell")}>
                         {log.financial_records ? (
                           <StatusBadge
                             variant={getPaymentStatusVariant(
@@ -566,23 +574,23 @@ export function ClassesView({
                           <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">Sem cobrança</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell whitespace-nowrap">
-                        <span className={log.financial_records ? "text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium tabular-nums" : "text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium text-foreground"}>
-                          {log.financial_records
-                            ? formatCurrency(log.financial_records.amount)
-                            : "Sem cobrança"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
-                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground line-clamp-2 max-w-xs">
-                          {log.feedback || "—"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className={tableTdActions}>
+                        <div className="flex items-center justify-end gap-2 h-10">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => {
+                              setLogForDetailSheet(log);
+                              setDetailSheetOpen(true);
+                            }}
+                            title="Ver detalhes"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -602,7 +610,7 @@ export function ClassesView({
                           </DropdownMenu>
                           <Button
                             size="sm"
-                            className={`h-8 border-none ${
+                            className={`h-8 w-[7rem] shrink-0 border-none ${
                               isClassEvaluationBlocked(log) && log.attendance == null
                                 ? "bg-muted text-muted-foreground cursor-not-allowed"
                                 : log.attendance != null
@@ -616,17 +624,11 @@ export function ClassesView({
                               setPostClassDialogOpen(true);
                             }}
                           >
-                            {isClassEvaluationBlocked(log) && log.attendance == null ? (
-                              <>
-                                <Lock className="h-3.5 w-3.5 mr-1.5" />
-                                Avaliar
-                              </>
-                            ) : (
-                              <>
-                                <Check className="h-3.5 w-3.5 mr-1.5" />
-                                {log.attendance != null ? "Atualizar" : "Avaliar"}
-                              </>
-                            )}
+                            {isClassEvaluationBlocked(log) && log.attendance == null
+                              ? "Avaliar"
+                              : log.attendance != null
+                                ? "Atualizar"
+                                : "Avaliar"}
                           </Button>
                         </div>
                       </td>
@@ -764,7 +766,7 @@ export function ClassesView({
                     )}
                   </div>
                 </div>
-                <div className="flex items-start gap-2">
+                <div className="flex items-center gap-2">
                   {log.attendance != null && (
                     <div className="text-right">
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">
@@ -789,9 +791,21 @@ export function ClassesView({
                       )}
                     </div>
                   )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => {
+                      setLogForDetailSheet(log);
+                      setDetailSheetOpen(true);
+                    }}
+                    title="Ver detalhes"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -811,7 +825,7 @@ export function ClassesView({
                   </DropdownMenu>
                   <Button
                     size="sm"
-                    className={`h-8 border-none ${
+                    className={`h-8 w-[7rem] shrink-0 border-none ${
                       isClassEvaluationBlocked(log) && log.attendance == null
                         ? "bg-muted text-muted-foreground cursor-not-allowed"
                         : log.attendance != null
@@ -825,17 +839,11 @@ export function ClassesView({
                       setPostClassDialogOpen(true);
                     }}
                   >
-                    {isClassEvaluationBlocked(log) && log.attendance == null ? (
-                      <>
-                        <Lock className="h-3.5 w-3.5 mr-1.5" />
-                        Avaliar
-                      </>
-                    ) : (
-                      <>
-                        <Check className="h-3.5 w-3.5 mr-1.5" />
-                        {log.attendance != null ? "Atualizar" : "Avaliar"}
-                      </>
-                    )}
+                    {isClassEvaluationBlocked(log) && log.attendance == null
+                      ? "Avaliar"
+                      : log.attendance != null
+                        ? "Atualizar"
+                        : "Avaliar"}
                   </Button>
                 </div>
               </div>
@@ -902,6 +910,25 @@ export function ClassesView({
         onSuccess={() => {
           setLogForPostClass(null);
         }}
+      />
+
+      {/* Detalhes da aula (sheet lateral) */}
+      <ClassDetailSheet
+        classLog={logForDetailSheet}
+        open={detailSheetOpen}
+        onOpenChange={(open) => {
+          setDetailSheetOpen(open);
+          if (!open) setLogForDetailSheet(null);
+        }}
+        showTeacherColumn={showTeacherColumn}
+        teacherName={
+          logForDetailSheet
+            ? logForDetailSheet.teachers?.name ??
+              (logForDetailSheet.teacher_id ? teacherMap.get(logForDetailSheet.teacher_id) : null) ??
+              (logForDetailSheet.students?.teacher_id ? teacherMap.get(logForDetailSheet.students.teacher_id) : null) ??
+              "Sem professor"
+            : "—"
+        }
       />
 
       {/* Form Dialog (pré-aula) */}

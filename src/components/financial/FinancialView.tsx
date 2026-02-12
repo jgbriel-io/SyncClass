@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Check, Loader2, ChevronLeft, ChevronRight, DollarSign } from "lucide-react";
+import { Search, Loader2, ChevronLeft, ChevronRight, DollarSign } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   FinancialFilters,
@@ -46,6 +46,17 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, Trash2, TrendingUp, Eye } from "lucide-react";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import {
+  tableThLarge,
+  tableThMedium,
+  tableThSmall,
+  tableThSmallRight,
+  tableTdLarge,
+  tableTdMedium,
+  tableTdSmall,
+  tableTdActions,
+} from "@/lib/utils/tableColumns";
+import { cn } from "@/lib/utils";
 import { useForecastedBilling } from "@/hooks/useForecastedBilling";
 import {
   Dialog,
@@ -397,33 +408,17 @@ export function FinancialView({
         ) : !error ? (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto min-w-0">
-            <table className="w-full text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
+            <table className="w-full table-auto text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
-                    Aluno
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell whitespace-nowrap">
-                    Aula Vinculada
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell whitespace-nowrap">
-                    Descrição
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
-                    Valor
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell whitespace-nowrap">
-                    Método
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden md:table-cell whitespace-nowrap">
-                    Vencimento
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
-                    Status
-                  </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
-                    Ações
-                  </th>
+                  <th className={tableThLarge}>Aluno</th>
+                  <th className={cn(tableThMedium, "hidden lg:table-cell")}>Aula Vinculada</th>
+                  <th className={cn(tableThMedium, "hidden sm:table-cell")}>Descrição</th>
+                  <th className={tableThSmall}>Valor</th>
+                  <th className={cn(tableThSmall, "hidden lg:table-cell")}>Método</th>
+                  <th className={cn(tableThSmall, "hidden md:table-cell")}>Vencimento</th>
+                  <th className={tableThSmall}>Status</th>
+                  <th className={tableThSmallRight}>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -435,12 +430,12 @@ export function FinancialView({
                       key={record.id}
                       className="hover:bg-muted/30 transition-colors"
                     >
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
+                      <td className={tableTdLarge}>
                         <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
                           {record.students?.name || "—"}
                         </p>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell">
+                      <td className={cn(tableTdMedium, "hidden lg:table-cell")}>
                         {record.class_logs ? (
                           <div className="flex flex-col text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                             <span>
@@ -466,11 +461,18 @@ export function FinancialView({
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden sm:table-cell">
+                      <td className={cn(tableTdMedium, "hidden sm:table-cell")}>
                         <div className="flex flex-col text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           <span>
                             {record.package_classes && record.package_classes.length > 0
-                              ? record.package_classes.map((cls) => formatDate(cls.class_date)).join(", ")
+                              ? (() => {
+                                  const sorted = [...record.package_classes].sort((a, b) =>
+                                    a.class_date.localeCompare(b.class_date)
+                                  );
+                                  const first = formatDate(sorted[0].class_date);
+                                  const last = formatDate(sorted[sorted.length - 1].class_date);
+                                  return sorted.length === 1 ? first : `${first} a ${last}`;
+                                })()
                               : (record.description || "—")}
                           </span>
                           {lastUpdatedAt && (
@@ -480,28 +482,28 @@ export function FinancialView({
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
+                      <td className={tableTdSmall}>
                         <p className="font-semibold text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
                           {formatCurrency(Number(record.amount))}
                         </p>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden lg:table-cell whitespace-nowrap">
+                      <td className={cn(tableTdSmall, "hidden lg:table-cell")}>
                         <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {record.payment_method || "—"}
                         </p>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden md:table-cell whitespace-nowrap">
+                      <td className={cn(tableTdSmall, "hidden md:table-cell")}>
                         <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {formatDate(record.due_date)}
                         </p>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
+                      <td className={tableTdSmall}>
                         <StatusBadge variant={statusVariants[record.actualStatus]}>
                           {statusLabels[record.actualStatus]}
                         </StatusBadge>
                       </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className={tableTdActions}>
+                        <div className="flex items-center justify-end gap-2 h-10">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -515,7 +517,7 @@ export function FinancialView({
                             <>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
@@ -543,32 +545,61 @@ export function FinancialView({
                               </DropdownMenu>
                               <Button
                                 size="sm"
-                                className="h-8 bg-[#25D366] text-white hover:bg-[#1ebe57] border-none"
+                                className="h-8 w-[7rem] shrink-0 bg-[#25D366] text-white hover:bg-[#1ebe57] border-none"
                                 onClick={() => openConfirmPayment(record)}
                               >
-                                <Check className="h-3.5 w-3.5 mr-1.5" />
                                 Confirmar
                               </Button>
                             </>
                           ) : (
-                            <Button
-                              size="sm"
-                              className="h-8 bg-warning text-white font-semibold hover:bg-warning/90 border-none shadow"
-                              disabled={undoPayment.isPending}
-                              onClick={() => {
-                                setRecordToUndo(record);
-                                setUndoDialogOpen(true);
-                              }}
-                            >
-                              {undoPayment.isPending ? (
-                                <>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Desfazendo...
-                                </>
-                              ) : (
-                                "Desfazer Cobrança"
-                              )}
-                            </Button>
+                            <>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setRecordToEdit(record);
+                                      setIsFormOpen(true);
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4 mr-2" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => {
+                                      setRecordToDelete(record);
+                                      setDeleteDialogOpen(true);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Excluir
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              <Button
+                                size="sm"
+                                className="h-8 w-[7rem] shrink-0 whitespace-nowrap bg-warning text-white font-semibold hover:bg-warning/90 border-none shadow"
+                                disabled={undoPayment.isPending}
+                                onClick={() => {
+                                  setRecordToUndo(record);
+                                  setUndoDialogOpen(true);
+                                }}
+                              >
+                                {undoPayment.isPending ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" />
+                                    Desfazendo...
+                                  </>
+                                ) : (
+                                  "Desfazer"
+                                )}
+                              </Button>
+                            </>
                           )}
                         </div>
                       </td>
