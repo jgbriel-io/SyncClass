@@ -3,26 +3,14 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils/formatters";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, Trash2, Eye, Loader2 } from "lucide-react";
-import { TableRow, TableCell } from "@/components/ui/table";
 import { FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
-
-export const COL = {
-  ALUNO: 240,
-  AULA: 220,
-  DESCR: 240,
-  VALOR: 120,
-  METODO: 120,
-  VENCIMENTO: 140,
-  STATUS: 120,
-  AVALIAR: 120,
-  ACOES: 100,
-} as const;
-
-export const TABLE_MIN_W = COL.ALUNO + COL.AULA + COL.DESCR + COL.VALOR + COL.METODO + COL.VENCIMENTO + COL.STATUS + COL.AVALIAR + COL.ACOES;
-
-const CELL_BASE = "px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap";
-const STICKY_CELL = "sticky left-0 z-20 bg-card group-hover:bg-muted transition-colors";
-const STICKY_SHADOW = { boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" };
+import {
+  CELL_BASE,
+  STICKY_CELL,
+  STICKY_SHADOW,
+  getXLColumnClasses,
+} from "@/lib/design-tokens/table-columns";
+import { COL } from "./FinancialTableRow.constants";
 
 const statusVariants: Record<string, "success" | "warning" | "destructive" | "default"> = {
   pago: "success",
@@ -62,24 +50,29 @@ export function FinancialTableRow({
   const lastUpdatedAt = record.updated_at || record.created_at;
 
   return (
-    <TableRow>
-      {/* Aluno (sticky) */}
-      <TableCell className={`${CELL_BASE} ${STICKY_CELL}`} style={{ ...STICKY_SHADOW, width: COL.ALUNO, minWidth: COL.ALUNO }}>
+    <tr className="group hover:bg-muted/30 transition-colors">
+      {/* Aluno (sticky) - XL */}
+      <td className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`} style={STICKY_SHADOW}>
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-medium text-accent-foreground">{record.students?.name?.charAt(0) || "?"}</span>
           </div>
-          <div className="min-w-0">
-            <p className="font-medium truncate" title={record.students?.name || "—"}>{record.students?.name || "—"}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium truncate" title={record.students?.name || "—"}>{record.students?.name || "—"}</p>
+            {lastUpdatedAt && (
+              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={`Editado em ${formatDateTime(lastUpdatedAt)}`}>
+                {`Editado em ${formatDateTime(lastUpdatedAt)}`}
+              </p>
+            )}
           </div>
         </div>
-      </TableCell>
+      </td>
 
-      {/* Aula Vinculada */}
-      <TableCell className={`${CELL_BASE} hidden lg:table-cell`}>
+      {/* Aula Vinculada - L */}
+      <td className={`${CELL_BASE} hidden lg:table-cell`} style={{ width: COL.AULA, minWidth: COL.AULA }}>
         {record.class_logs ? (
           <div className="flex flex-col text-xs text-muted-foreground">
-            <span>
+            <span className="truncate" title={`${record.students?.name} | ${record.class_logs.title?.trim() ? record.class_logs.title : formatDate(record.class_logs.class_date)}`}>
               {record.students?.name}
               {" | "}
               {record.class_logs.title?.trim()
@@ -87,90 +80,88 @@ export function FinancialTableRow({
                 : formatDate(record.class_logs.class_date)}
             </span>
             {showTeacherColumn && record.students?.teacher_id && (
-              <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground/80">
+              <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground/80 truncate" title={`Professor: ${teacherMap.get(record.students.teacher_id) || "—"}`}>
                 Professor: {teacherMap.get(record.students.teacher_id) || "—"}
               </span>
             )}
           </div>
         ) : record.package_classes && record.package_classes.length > 0 ? (
-          <span className="text-xs text-muted-foreground">
-            Pacote mensal - {record.package_classes.length} aula(s)
-          </span>
+          <div className="flex flex-col text-xs text-muted-foreground">
+            <span className="truncate" title={`Pacote mensal - ${record.package_classes.length} aula(s)`}>
+              Pacote mensal - {record.package_classes.length} aula(s)
+            </span>
+            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] mt-0.5 truncate" title={(() => {
+              const sorted = [...record.package_classes].sort((a, b) =>
+                a.class_date.localeCompare(b.class_date)
+              );
+              const first = formatDate(sorted[0].class_date);
+              const last = formatDate(sorted[sorted.length - 1].class_date);
+              return sorted.length === 1 ? first : `${first} a ${last}`;
+            })()}>
+              {(() => {
+                const sorted = [...record.package_classes].sort((a, b) =>
+                  a.class_date.localeCompare(b.class_date)
+                );
+                const first = formatDate(sorted[0].class_date);
+                const last = formatDate(sorted[sorted.length - 1].class_date);
+                return sorted.length === 1 ? first : `${first} a ${last}`;
+              })()}
+            </span>
+          </div>
         ) : (
-          <span className="text-xs text-muted-foreground/70">
+          <span className="text-xs text-muted-foreground/70 truncate block" title="Sem aula vinculada">
             Sem aula vinculada
           </span>
         )}
-      </TableCell>
+      </td>
 
-      {/* Descrição */}
-      <TableCell className={`${CELL_BASE} hidden sm:table-cell`}>
-        <div className="flex flex-col text-xs text-muted-foreground">
-          <span>
-            {record.package_classes && record.package_classes.length > 0
-              ? (() => {
-                  const sorted = [...record.package_classes].sort((a, b) =>
-                    a.class_date.localeCompare(b.class_date)
-                  );
-                  const first = formatDate(sorted[0].class_date);
-                  const last = formatDate(sorted[sorted.length - 1].class_date);
-                  return sorted.length === 1 ? first : `${first} a ${last}`;
-                })()
-              : (record.description || "—")}
-          </span>
-          {lastUpdatedAt && (
-            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] mt-0.5">
-              {`Editado em ${formatDateTime(lastUpdatedAt)}`}
-            </span>
-          )}
-        </div>
-      </TableCell>
-
-      {/* Valor */}
-      <TableCell className={CELL_BASE}>
-        <p className="font-semibold text-xs">
+      {/* Valor - S */}
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.VALOR, minWidth: COL.VALOR }}>
+        <p className="font-semibold text-xs truncate" title={formatCurrency(Number(record.amount))}>
           {formatCurrency(Number(record.amount))}
         </p>
-      </TableCell>
+      </td>
 
-      {/* Método */}
-      <TableCell className={`${CELL_BASE} hidden lg:table-cell`}>
-        <p className="text-xs text-muted-foreground">
+      {/* Método - S */}
+      <td className={`${CELL_BASE} hidden lg:table-cell`} style={{ width: COL.METODO, minWidth: COL.METODO }}>
+        <p className="text-xs text-muted-foreground truncate" title={record.payment_method || "—"}>
           {record.payment_method || "—"}
         </p>
-      </TableCell>
+      </td>
 
-      {/* Vencimento */}
-      <TableCell className={`${CELL_BASE} hidden md:table-cell`}>
-        <p className="text-xs text-muted-foreground">
+      {/* Vencimento - M */}
+      <td className={`${CELL_BASE} hidden md:table-cell tabular-nums`} style={{ width: COL.VENCIMENTO, minWidth: COL.VENCIMENTO }}>
+        <p className="text-xs text-muted-foreground truncate" title={formatDate(record.due_date)}>
           {formatDate(record.due_date)}
         </p>
-      </TableCell>
+      </td>
 
-      {/* Status */}
-      <TableCell className={CELL_BASE} style={{ width: COL.STATUS, minWidth: COL.STATUS }}>
+      {/* Status - M */}
+      <td className={CELL_BASE} style={{ width: COL.STATUS, minWidth: COL.STATUS }}>
         <StatusBadge variant={statusVariants[record.actualStatus]}>
           {statusLabels[record.actualStatus]}
         </StatusBadge>
-      </TableCell>
+      </td>
 
-      {/* Confirm / Undo (separate column) */}
-      <TableCell className={CELL_BASE} style={{ width: COL.AVALIAR, minWidth: COL.AVALIAR }}>
+      {/* Confirm / Undo - S */}
+      <td className={CELL_BASE} style={{ width: COL.AVALIAR, minWidth: COL.AVALIAR }}>
         <div className="flex items-center justify-end">
           {record.actualStatus !== "pago" ? (
             <Button
               size="sm"
-              className="h-8 w-[7rem] shrink-0 bg-[#25D366] text-white hover:bg-[#1ebe57] border-none"
+              className="h-8 w-[7rem] shrink-0 bg-[#25D366] text-white hover:bg-[#1ebe57] border-none text-xs"
               onClick={() => onConfirmPayment(record)}
+              title="Confirmar"
             >
               Confirmar
             </Button>
           ) : (
             <Button
               size="sm"
-              className="h-8 w-[7rem] shrink-0 whitespace-nowrap bg-warning text-white font-semibold hover:bg-warning/90 border-none shadow"
+              className="h-8 w-[7rem] shrink-0 whitespace-nowrap bg-warning text-white font-semibold hover:bg-warning/90 border-none shadow text-xs"
               disabled={isUndoing}
               onClick={() => onUndoPayment(record)}
+              title={isUndoing ? "Desfazendo..." : "Desfazer"}
             >
               {isUndoing ? (
                 <>
@@ -183,10 +174,10 @@ export function FinancialTableRow({
             </Button>
           )}
         </div>
-      </TableCell>
+      </td>
 
-      {/* Ações (only eye + menu) */}
-      <TableCell className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
+      {/* Ações - XS */}
+      <td className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -218,8 +209,7 @@ export function FinancialTableRow({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </TableCell>
-      <TableCell style={{ width: 'auto' }}></TableCell>
-    </TableRow>
+      </td>
+    </tr>
   );
 }

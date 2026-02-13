@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,12 +29,15 @@ import {
 } from "lucide-react";
 import { useActivities, useDeleteActivity, getActivityFileUrl, getActivityDisplayStatus, formatActivityDueDate, ActivityWithRelations } from "@/hooks/useActivities";
 import { useStudents } from "@/hooks/useStudents";
+import { useTeachers } from "@/hooks/useTeachers";
 import { SendActivityDialog } from "@/components/activities/SendActivityDialog";
 import { EditActivityDialog } from "@/components/activities/EditActivityDialog";
 import { AddCorrectionDialog } from "@/components/activities/AddCorrectionDialog";
 import { ActivityDetailSheet } from "@/components/activities/ActivityDetailSheet";
 import { EmptyActivitiesState } from "@/components/ui/contextual-empty-states";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   tableThLarge,
   tableThMedium,
@@ -43,10 +46,16 @@ import {
 } from "@/lib/utils/tableColumns";
 import { cn } from "@/lib/utils";
 import { Table, TableHeader, TableHead, TableBody, TableRow } from "@/components/ui/table";
-import { ActivitiesTableRow, COL as ACT_COL, TABLE_MIN_W as ACT_TABLE_MIN_W } from "@/components/activities/ActivitiesTableRow";
+import { ActivitiesTableRow } from "@/components/activities/ActivitiesTableRow";
+import { COL as ACT_COL, TABLE_MIN_W as ACT_TABLE_MIN_W } from "@/components/activities/ActivitiesTableRow.constants";
+import {
+  ActivitiesFilters,
+  type ActivitiesFiltersState,
+} from "@/components/filters/ActivitiesFilters";
+import { defaultActivitiesFilters } from "@/components/filters/filterDefaults";
+import { toast } from "sonner";
 
 const PAGE_SIZE = 10;
-type StatusFilterValue = "all" | "enviada" | "vencida" | "entregue" | "corrigida";
 
 interface ActivitiesViewProps {
   title?: string;
@@ -63,6 +72,7 @@ export function ActivitiesView({
   autoTeacherId = null,
   isAdmin = false,
 }: ActivitiesViewProps) {
+  const [filters, setFilters] = useState<ActivitiesFiltersState>(defaultActivitiesFilters);
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [correctionDialogOpen, setCorrectionDialogOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ActivityWithRelations | null>(null);
@@ -73,22 +83,27 @@ export function ActivitiesView({
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [activityForDetail, setActivityForDetail] = useState<ActivityWithRelations | null>(null);
   const [openSheetInCorrectionMode, setOpenSheetInCorrectionMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("all");
-  const [studentFilter, setStudentFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
   const listTopRef = useRef<HTMLDivElement>(null);
 
   const { data: students = [] } = useStudents();
+  const { data: teachers = [] } = useTeachers();
   const activeStudents = students.filter((s) => s.status === "ativo");
 
-  const effectiveStudentId = studentFilter !== "all" ? studentFilter : undefined;
+  const effectiveStudentId = filters.studentId !== "all" ? filters.studentId : undefined;
+  const effectiveTeacherId = isAdmin && filters.teacherId !== "all" ? filters.teacherId : (autoTeacherId || undefined);
+  
   const { data: activities = [], isLoading, refetch } = useActivities(
-    isAdmin ? undefined : (autoTeacherId || undefined),
+    effectiveTeacherId,
     effectiveStudentId,
     isAdmin && !effectiveStudentId ? { fetchAll: true } : undefined,
   );
   const deleteActivity = useDeleteActivity();
+
+  const isOverdue = useCallback((a: ActivityWithRelations) =>
+    a.status === "enviada" && a.due_date && new Date(a.due_date).getTime() < Date.now(),
+    []
+  );
 
   const handleViewFile = async (filePath: string) => {
     try {
@@ -133,26 +148,63 @@ export function ActivitiesView({
     }
   };
 
-  const isOverdue = (a: ActivityWithRelations) =>
-    a.status === "enviada" && a.due_date && new Date(a.due_date).getTime() < Date.now();
-
   const totalActivities = activities.length;
   const countEmAndamento = activities.filter((a) => a.status === "enviada" && !isOverdue(a)).length;
   const countVencida = activities.filter((a) => isOverdue(a)).length;
   const countEntregue = activities.filter((a) => a.status === "entregue").length;
   const countCorrigida = activities.filter((a) => a.status === "corrigida").length;
 
-  const filteredActivities = activities.filter((a) => {
-    const matchSearch =
-      !searchQuery.trim() ||
-      (a.students?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (a.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (a.description || "").toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus =
-      statusFilter === "all" ||
-      (statusFilter === "vencida" ? isOverdue(a) : a.status === statusFilter);
-    return matchSearch && matchStatus;
-  });
+  const filteredActivities = useMemo(() => {
+    let result = activities.filter((a) => {
+      // Busca
+      const searchLower = filters.search.toLowerCase().trim();
+      const matchSearch =
+        !searchLower ||
+        (a.students?.name || "").toLowerCase().includes(searchLower) ||
+        (a.title || "").toLowerCase().includes(searchLower) ||
+        (a.description || "").toLowerCase().includes(searchLower);
+      if (!matchSearch) return false;
+
+      // Status
+      const matchStatus =
+        filters.status === "all" ||
+        (filters.status === "vencida" ? isOverdue(a) : a.status === filters.status);
+      if (!matchStatus) return false;
+
+      // Período
+      if (filters.period !== "all" && a.created_at) {
+        const now = new Date();
+        const createdDate = new Date(a.created_at);
+        const diffDays = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (filters.period === "week" && diffDays > 7) return false;
+        if (filters.period === "month" && diffDays > 30) return false;
+        if (filters.period === "3months" && diffDays > 90) return false;
+      }
+
+      return true;
+    });
+
+    // Ordenação
+    result = [...result].sort((a, b) => {
+      const studentA = (a.students?.name || "").toLowerCase();
+      const studentB = (b.students?.name || "").toLowerCase();
+      const dueA = a.due_date ? new Date(a.due_date).getTime() : 0;
+      const dueB = b.due_date ? new Date(b.due_date).getTime() : 0;
+      const createdA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const createdB = b.created_at ? new Date(b.created_at).getTime() : 0;
+
+      if (filters.sortBy === "due_asc") return dueA - dueB;
+      if (filters.sortBy === "due_desc") return dueB - dueA;
+      if (filters.sortBy === "created_desc") return createdB - createdA;
+      if (filters.sortBy === "created_asc") return createdA - createdB;
+      if (filters.sortBy === "student_asc") return studentA.localeCompare(studentB);
+      if (filters.sortBy === "student_desc") return studentB.localeCompare(studentA);
+      return 0;
+    });
+
+    return result;
+  }, [activities, filters, isOverdue]);
 
   const totalFiltered = filteredActivities.length;
   const paginatedActivities = filteredActivities.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -160,7 +212,7 @@ export function ActivitiesView({
 
   useEffect(() => {
     setPage(0);
-  }, [searchQuery, statusFilter, studentFilter]);
+  }, [filters]);
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -194,68 +246,63 @@ export function ActivitiesView({
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="flex flex-col gap-1.5 flex-1 min-w-0 max-w-sm">
-          <span className="text-xs font-medium text-muted-foreground">Buscar</span>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Aluno, título ou descrição..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
+      <ActivitiesFilters
+        filters={filters}
+        onChange={setFilters}
+        onReset={() => setFilters(defaultActivitiesFilters)}
+        students={activeStudents}
+        teachers={teachers}
+        showTeacherFilter={isAdmin}
+        primaryStatus="all"
+      />
 
       {/* Table */}
+      {isLoading ? (
+        <TableSkeleton rows={10} columns={8} />
+      ) : (
       <div className="rounded-lg border bg-card shadow-card overflow-hidden">
-        <div className="overflow-x-auto min-w-0 w-full">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b bg-muted/50">
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ boxShadow: '2px 0 5px -2px rgba(0,0,0,0.1)', width: ACT_COL.ALUNO, minWidth: ACT_COL.ALUNO }}>Aluno</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.ATIVIDADE, minWidth: ACT_COL.ATIVIDADE }}>Atividade</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.ARQUIVO, minWidth: ACT_COL.ARQUIVO }}>Arquivo</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.PRAZO, minWidth: ACT_COL.PRAZO }}>Prazo</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.STATUS, minWidth: ACT_COL.STATUS }}>Status</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.ENTREGUE_EM, minWidth: ACT_COL.ENTREGUE_EM }}>Entregue em</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden xl:table-cell" style={{ width: ACT_COL.AVALIAR, minWidth: ACT_COL.AVALIAR }} aria-label="Avaliar" />
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.ACOES, minWidth: ACT_COL.ACOES }}>Ações</TableHead>
-                <TableHead style={{ width: 'auto' }}></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="divide-y divide-border/40">
-              {paginatedActivities.map((activity) => (
-                <ActivitiesTableRow
-                  key={activity.id}
-                  activity={activity}
-                  isAdmin={isAdmin}
-                  onViewFile={handleViewFile}
-                  onDownload={handleDownload}
-                  onEdit={(activity) => {
-                    setActivityToEdit(activity);
-                    setEditDialogOpen(true);
-                  }}
-                  onDelete={(activity) => {
-                    setActivityToDelete(activity);
-                    setDeleteDialogOpen(true);
-                  }}
-                  onViewDetail={(activity, correctionMode) => {
-                    setActivityForDetail(activity);
-                    setOpenSheetInCorrectionMode(Boolean(correctionMode));
-                    setDetailSheetOpen(true);
-                  }}
-                  onUpdateCorrection={(activity) => {
-                    setSelectedActivity(activity);
-                    setCorrectionDialogOpen(true);
-                  }}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <Table style={{ minWidth: ACT_TABLE_MIN_W }}>
+          <TableHeader>
+            <TableRow className="border-b bg-muted/50">
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ boxShadow: '2px 0 5px -2px rgba(0,0,0,0.1)', width: ACT_COL.ALUNO, minWidth: ACT_COL.ALUNO }}>Aluno</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.ATIVIDADE, minWidth: ACT_COL.ATIVIDADE }}>Atividade</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.ARQUIVO, minWidth: ACT_COL.ARQUIVO }}>Arquivo</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.PRAZO, minWidth: ACT_COL.PRAZO }}>Prazo</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.STATUS, minWidth: ACT_COL.STATUS }}>Status</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.ENTREGUE_EM, minWidth: ACT_COL.ENTREGUE_EM }}>Entregue em</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden xl:table-cell" style={{ width: ACT_COL.AVALIAR, minWidth: ACT_COL.AVALIAR }} aria-label="Avaliar" />
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.ACOES, minWidth: ACT_COL.ACOES }}>Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/40">
+            {paginatedActivities.map((activity) => (
+              <ActivitiesTableRow
+                key={activity.id}
+                activity={activity}
+                isAdmin={isAdmin}
+                onViewFile={handleViewFile}
+                onDownload={handleDownload}
+                onEdit={(activity) => {
+                  setActivityToEdit(activity);
+                  setEditDialogOpen(true);
+                }}
+                onDelete={(activity) => {
+                  setActivityToDelete(activity);
+                  setDeleteDialogOpen(true);
+                }}
+                onViewDetail={(activity, correctionMode) => {
+                  setActivityForDetail(activity);
+                  setOpenSheetInCorrectionMode(Boolean(correctionMode));
+                  setDetailSheetOpen(true);
+                }}
+                onUpdateCorrection={(activity) => {
+                  setSelectedActivity(activity);
+                  setCorrectionDialogOpen(true);
+                }}
+              />
+            ))}
+          </TableBody>
+        </Table>
 
         <TablePaginationBar
           page={page}
@@ -266,6 +313,7 @@ export function ActivitiesView({
           onPageChange={setPage}
         />
       </div>
+      )}
 
       {/* Dialogs */}
       <SendActivityDialog

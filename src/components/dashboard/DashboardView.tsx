@@ -275,7 +275,7 @@ export function DashboardView({
             <p className="text-sm">Visualizar cobranças</p>
           </Link>
           <Link
-            to={basePath === "/admin" ? "/admin/students/overview" : "/teacher/overview"}
+            to={basePath === "/admin" ? "/admin/overview" : "/teacher/overview"}
             className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
           >
             <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">

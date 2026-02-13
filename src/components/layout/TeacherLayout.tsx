@@ -95,7 +95,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
       queryClient.invalidateQueries({ queryKey: ["teacher-birthdays"] });
       queryClient.invalidateQueries({ queryKey: ["teacher-new-students-and-classes-by-month"] });
       queryClient.invalidateQueries({ queryKey: ["today_classes"] });
-    } else if (path.startsWith("/teacher/overview") || path.startsWith("/teacher/students")) {
+    } else if (path.startsWith("/teacher/overview") || path.startsWith("/teacher/students") || path.startsWith("/admin/overview") || path.startsWith("/admin/students")) {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["students_with_stats"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_by_student_ids"] });

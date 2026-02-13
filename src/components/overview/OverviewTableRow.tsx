@@ -1,42 +1,13 @@
 import { formatCurrency } from "@/lib/utils/formatters";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Eye, TrendingUp, TrendingDown } from "lucide-react";
 import {
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
-
-export const COL = {
-  ALUNO: 240,
-  STATUS: 'auto' as const,
-  ENTRADA: 140,
-  AULAS: 100,
-  FREQUENCIA: 120,
-  MEDIA: 100,
-  PAGO: 120,
-  PENDENTE: 120,
-  ATRASADO: 120,
-  ACOES: 100,
-} as const;
-
-export const TABLE_MIN_W =
-  COL.ALUNO +
-  (typeof COL.STATUS === 'number' ? COL.STATUS : 90) + // fallback para cálculo
-  (typeof COL.ENTRADA === 'number' ? COL.ENTRADA : 140) +
-  COL.AULAS + COL.FREQUENCIA + COL.MEDIA + COL.PAGO + COL.PENDENTE + COL.ATRASADO + COL.ACOES;
-
-const CELL_BASE = "px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap";
-const STICKY_CELL = "sticky left-0 z-20 bg-card group-hover:bg-muted transition-colors";
-const STICKY_SHADOW = { boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" };
-
-// Helper function to get column styles
-const getColumnStyle = (colWidth: string | number) => {
-  if (colWidth === 'auto') {
-    return { width: 'fit-content', minWidth: '60px', maxWidth: '120px' };
-  }
-  return { width: colWidth, minWidth: colWidth };
-};
+  CELL_BASE,
+  STICKY_CELL,
+  STICKY_SHADOW,
+  getXLColumnClasses,
+} from "@/lib/design-tokens/table-columns";
+import { COL } from "./OverviewTableRow.constants";
 
 interface StudentWithStats {
   id: string;
@@ -83,16 +54,9 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
   };
 
   return (
-    <TableRow className="group hover:bg-muted/30 transition-colors">
-      {/* Status */}
-      <TableCell className="px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>
-        <StatusBadge variant={student.status === "ativo" ? "success" : "default"}>
-          {student.status === "ativo" ? "Ativo" : "Inativo"}
-        </StatusBadge>
-      </TableCell>
-
-      {/* Aluno — sticky */}
-      <TableCell className={`${CELL_BASE} ${STICKY_CELL}`} style={{ ...STICKY_SHADOW, ...getColumnStyle(COL.ALUNO) }}>
+    <tr className="group hover:bg-muted/30 transition-colors">
+      {/* Aluno — sticky XL */}
+      <td className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`} style={STICKY_SHADOW}>
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-medium text-accent-foreground">
@@ -100,115 +64,121 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium truncate" title={student.name}>
+            <p className="text-xs font-medium truncate" title={student.name}>
               {student.name}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+            <p className="text-xs text-muted-foreground mt-0.5 truncate" title={student.email || student.phone || "—"}>
               {student.email || student.phone || "—"}
             </p>
           </div>
         </div>
-      </TableCell>
+      </td>
 
-      {/* Entrada */}
-      <TableCell className={CELL_BASE} style={getColumnStyle(COL.ENTRADA)}>
-        <span className="text-xs text-muted-foreground">
+      {/* Entrada - M */}
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.ENTRADA, minWidth: COL.ENTRADA }}>
+        <span className="text-xs text-muted-foreground truncate block" title={formatSince(student.created_at)}>
           {formatSince(student.created_at)}
         </span>
-      </TableCell>
+      </td>
 
-      {/* Aulas */}
-      <TableCell className={CELL_BASE} style={getColumnStyle(COL.AULAS)}>
-        <span className="text-xs font-medium">
+      {/* Aulas - S */}
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.AULAS, minWidth: COL.AULAS }}>
+        <span className="text-xs font-medium truncate block" title={String(student.stats.totalClasses)}>
           {student.stats.totalClasses}
         </span>
-      </TableCell>
+      </td>
 
-      {/* Frequência */}
-      <TableCell className={CELL_BASE} style={getColumnStyle(COL.FREQUENCIA)}>
+      {/* Frequência - M */}
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.FREQUENCIA, minWidth: COL.FREQUENCIA }}>
         <div className="flex items-center gap-1">
           {student.stats.attendanceRate !== null ? (
             <>
               {lowAttendance ? (
-                <TrendingDown className="h-3.5 w-3.5 text-rose-500" />
+                <TrendingDown className="h-3.5 w-3.5 text-rose-500 flex-shrink-0" />
               ) : (
-                <TrendingUp className="h-3.5 w-3.5 text-success" />
+                <TrendingUp className="h-3.5 w-3.5 text-success flex-shrink-0" />
               )}
               <span
-                className={`text-xs font-medium ${
+                className={`text-xs font-medium truncate ${
                   lowAttendance
                     ? "text-rose-600"
                     : "text-success"
                 }`}
+                title={`${student.stats.attendanceRate.toFixed(0)}%`}
               >
                 {student.stats.attendanceRate.toFixed(0)}%
               </span>
             </>
           ) : (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground truncate" title="—">
               —
             </span>
           )}
         </div>
-      </TableCell>
+      </td>
 
-      {/* Média */}
-      <TableCell className={CELL_BASE} style={getColumnStyle(COL.MEDIA)}>
+      {/* Média - S */}
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.MEDIA, minWidth: COL.MEDIA }}>
         {student.stats.averageGrade !== null ? (
           <span
-            className={`text-xs font-medium ${
+            className={`text-xs font-medium truncate block ${
               student.stats.averageGrade >= 7
                 ? "text-success"
                 : student.stats.averageGrade >= 5
                 ? "text-amber-600"
                 : "text-rose-600"
             }`}
+            title={student.stats.averageGrade.toFixed(1)}
           >
             {student.stats.averageGrade.toFixed(1)}
           </span>
         ) : (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-muted-foreground truncate block" title="—">
             —
           </span>
         )}
-      </TableCell>
+      </td>
 
-      {/* Pago */}
-      <TableCell className={CELL_BASE} style={getColumnStyle(COL.PAGO)}>
-        <span className="text-xs text-success font-medium">
+      {/* Pago - S */}
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.PAGO, minWidth: COL.PAGO }}>
+        <span className="text-xs text-success font-medium truncate block" title={formatCurrency(student.stats.totalPaid)}>
           {formatCurrency(student.stats.totalPaid)}
         </span>
-      </TableCell>
+      </td>
 
-      {/* Pendente */}
-      <TableCell className={CELL_BASE} style={getColumnStyle(COL.PENDENTE)}>
-        <span className="text-xs text-amber-600 font-medium">
+      {/* Pendente - S */}
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.PENDENTE, minWidth: COL.PENDENTE }}>
+        <span className="text-xs text-amber-600 font-medium truncate block" title={formatCurrency(student.stats.totalPending)}>
           {formatCurrency(student.stats.totalPending)}
         </span>
-      </TableCell>
+      </td>
 
-      {/* Atrasado */}
-      <TableCell className={CELL_BASE} style={getColumnStyle(COL.ATRASADO)}>
+      {/* Atrasado - S */}
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.ATRASADO, minWidth: COL.ATRASADO }}>
         <span
-          className={`text-xs font-medium ${
+          className={`text-xs font-medium truncate block ${
             hasOverdue ? "text-rose-600" : "text-muted-foreground"
           }`}
+          title={formatCurrency(student.stats.totalOverdue)}
         >
           {formatCurrency(student.stats.totalOverdue)}
         </span>
-      </TableCell>
+      </td>
 
-      {/* Ações */}
-      <TableCell className={CELL_BASE} style={getColumnStyle(COL.ACOES)}>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onViewStudent(student.id)}
-          title="Ver detalhes"
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      </TableCell>
-    </TableRow>
+      {/* Ações - XS */}
+      <td className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onViewStudent(student.id)}
+            title="Ver detalhes"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+        </div>
+      </td>
+    </tr>
   );
 }

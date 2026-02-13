@@ -64,7 +64,8 @@ import {
 import { cn } from "@/lib/utils";
 import { StatCard } from "@/components/ui/stat-card";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
-import { ClassesTableRow, COL as CL_COL, TABLE_MIN_W as CL_TABLE_MIN_W } from "@/components/classes/ClassesTableRow";
+import { ClassesTableRow } from "@/components/classes/ClassesTableRow";
+import { COL as CL_COL, TABLE_MIN_W as CL_TABLE_MIN_W } from "@/components/classes/ClassesTableRow.constants";
 
 function formatClassDateAndTime(log: {
   class_date: string;
@@ -445,11 +446,11 @@ export function ClassesView({
           <TableSkeleton rows={8} columns={8} />
         ) : !error && viewMode === "table" && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-          <div className="overflow-x-auto min-w-0">
+          <div className="overflow-x-auto">
             <Table style={{ minWidth: CL_TABLE_MIN_W }}>
               <TableHeader>
                 <TableRow className="border-b bg-muted/50">
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: CL_COL.STATUS, minWidth: CL_COL.STATUS }}>Status</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>Status</TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: CL_COL.ALUNO, minWidth: CL_COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>Aluno</TableHead>
                   {showTeacherColumn ? (
                     <TableHead className={cn(tableThLarge, "hidden sm:table-cell")} style={{ width: CL_COL.INFORMACOES, minWidth: CL_COL.INFORMACOES }}>Informações</TableHead>

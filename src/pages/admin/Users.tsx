@@ -40,7 +40,6 @@ import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
-import { UsersTableRow } from "@/components/users/UsersTableRow";
 import { getAvatarLetter } from "@/lib/utils/patterns";
 import {
   useUsersPaginated,
@@ -72,7 +71,11 @@ import {
 } from "@/components/filters/UsersFilters";
 import { defaultUsersFilters } from "@/components/filters/filterDefaults";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { StatCard } from "@/components/ui/stat-card";
+import { UsersTableRow } from "@/components/users/UsersTableRow";
+import { COL as USER_COL, TABLE_MIN_W as USER_TABLE_MIN_W } from "@/components/users/UsersTableRow.constants";
+import { UserDetailSheet } from "@/components/admin/UserDetailSheet";
 
 export default function UsersPage() {
   const [filters, setFilters] = useState<UsersFiltersState>({
@@ -96,6 +99,10 @@ export default function UsersPage() {
   const [userToResetPassword, setUserToResetPassword] = useState<UserWithProfile | null>(null);
   const [resetPasswordNew, setResetPasswordNew] = useState("");
   const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
+
+  // Detail sheet state
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [detailUserId, setDetailUserId] = useState<string | null>(null);
 
   const listTopRef = useRef<HTMLDivElement>(null);
   const adminResetPassword = useAdminResetPassword();
@@ -518,13 +525,6 @@ export default function UsersPage() {
             }}
           />
 
-        {/* Loading state */}
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
-
         {/* Error state */}
         {error && (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
@@ -535,26 +535,34 @@ export default function UsersPage() {
         )}
 
         {/* Table */}
-        {!isLoading && !error && (
+        {isLoading ? (
+          <TableSkeleton rows={10} columns={7} />
+        ) : !error && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-            <div className="overflow-x-auto min-w-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Usuário</TableHead>
-                  <TableHead className="whitespace-nowrap">Privilégio</TableHead>
-                  <TableHead className="hidden lg:table-cell whitespace-nowrap">Vínculo</TableHead>
-                  <TableHead className="hidden md:table-cell whitespace-nowrap">Cadastro</TableHead>
-                  <TableHead className="whitespace-nowrap">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <div className="overflow-x-auto">
+              <Table style={{ minWidth: USER_TABLE_MIN_W }}>
+                <TableHeader>
+                  <TableRow className="border-b bg-muted/50">
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>Status</TableHead>
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: USER_COL.USUARIO, minWidth: USER_COL.USUARIO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>Usuário</TableHead>
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.PRIVILEGIO, minWidth: USER_COL.PRIVILEGIO }}>Privilégio</TableHead>
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: USER_COL.VINCULO, minWidth: USER_COL.VINCULO }}>Vínculo</TableHead>
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: USER_COL.CADASTRO, minWidth: USER_COL.CADASTRO }}>Cadastro</TableHead>
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.PLACEHOLDER, minWidth: USER_COL.PLACEHOLDER }} aria-label="Placeholder" />
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.ACOES, minWidth: USER_COL.ACOES }}>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+              <TableBody className="divide-y divide-border/40">
                 {filteredUsers.map((user) => (
                   <UsersTableRow
                     key={user.id}
                     user={user}
                     students={students}
                     teachers={teachers}
+                    onViewDetail={(id) => {
+                      setDetailUserId(id);
+                      setDetailSheetOpen(true);
+                    }}
                     onEdit={(u) => {
                       setSelectedUser(u);
                       setIsFormOpen(true);
@@ -582,7 +590,7 @@ export default function UsersPage() {
                   />
                 ))}
               </TableBody>
-            </Table>
+              </Table>
             </div>
             {filteredUsers.length === 0 && (
               <EmptyState
@@ -1010,6 +1018,13 @@ export default function UsersPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* User Detail Sheet */}
+        <UserDetailSheet
+          userId={detailUserId}
+          open={detailSheetOpen}
+          onOpenChange={setDetailSheetOpen}
+        />
     </>
   );
 }

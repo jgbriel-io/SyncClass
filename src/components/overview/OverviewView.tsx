@@ -17,17 +17,11 @@ import { useStudents } from "@/hooks/useStudents";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { OverviewTableRow, COL as OVERVIEW_COL, TABLE_MIN_W as OVERVIEW_TABLE_MIN_W } from "@/components/overview/OverviewTableRow";
+import { OverviewTableRow } from "@/components/overview/OverviewTableRow";
+import { COL as OVERVIEW_COL, TABLE_MIN_W as OVERVIEW_TABLE_MIN_W } from "@/components/overview/OverviewTableRow.constants";
+import { TABLE_HEAD_BASE, STICKY_HEADER, STICKY_SHADOW } from "@/lib/design-tokens/table-columns";
 
 const PAGE_SIZE = 10;
-
-// Helper function to get column styles
-const getColumnStyle = (colWidth: string | number) => {
-  if (colWidth === 'auto') {
-    return { width: 'fit-content', minWidth: '60px', maxWidth: '120px' };
-  }
-  return { width: colWidth, minWidth: colWidth };
-};
 
 interface OverviewViewProps {
   title?: string;
@@ -157,20 +151,19 @@ export function OverviewView({
         !error && (
           <>
             <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-              <div className="overflow-x-auto min-w-0">
-                <Table style={{ minWidth: OVERVIEW_TABLE_MIN_W }}>
+              <div className="overflow-x-auto">
+                <Table className="table-fixed" style={{ minWidth: OVERVIEW_TABLE_MIN_W }}>
                   <TableHeader>
                     <TableRow className="border-b bg-muted/50">
-                      <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>Status</TableHead>
-                      <TableHead className="text-left font-medium text-muted-foreground uppercase tracking-wider sticky left-0 z-30 bg-muted" style={{ boxShadow: '2px 0 5px -2px rgba(0,0,0,0.1)', ...getColumnStyle(OVERVIEW_COL.ALUNO) }}>Aluno</TableHead>
-                      <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={getColumnStyle(OVERVIEW_COL.ENTRADA)}>Entrada</TableHead>
-                      <TableHead className="text-left font-medium text-muted-foreground uppercase tracking-wider" style={getColumnStyle(OVERVIEW_COL.AULAS)}>Aulas</TableHead>
-                      <TableHead className="text-left font-medium text-muted-foreground uppercase tracking-wider" style={getColumnStyle(OVERVIEW_COL.FREQUENCIA)}>Frequência</TableHead>
-                      <TableHead className="text-left font-medium text-muted-foreground uppercase tracking-wider" style={getColumnStyle(OVERVIEW_COL.MEDIA)}>Média</TableHead>
-                      <TableHead className="text-left font-medium text-muted-foreground uppercase tracking-wider" style={getColumnStyle(OVERVIEW_COL.PAGO)}>Pago</TableHead>
-                      <TableHead className="text-left font-medium text-muted-foreground uppercase tracking-wider" style={getColumnStyle(OVERVIEW_COL.PENDENTE)}>Pendente</TableHead>
-                      <TableHead className="text-left font-medium text-muted-foreground uppercase tracking-wider" style={getColumnStyle(OVERVIEW_COL.ATRASADO)}>Atrasado</TableHead>
-                      <TableHead className="text-left font-medium text-muted-foreground uppercase tracking-wider" style={getColumnStyle(OVERVIEW_COL.ACOES)}>Ações</TableHead>
+                      <TableHead className={`${TABLE_HEAD_BASE} ${STICKY_HEADER}`} style={{ ...STICKY_SHADOW, width: OVERVIEW_COL.ALUNO, minWidth: OVERVIEW_COL.ALUNO }}>Aluno</TableHead>
+                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ENTRADA, minWidth: OVERVIEW_COL.ENTRADA }}>Entrada</TableHead>
+                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.AULAS, minWidth: OVERVIEW_COL.AULAS }}>Aulas</TableHead>
+                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.FREQUENCIA, minWidth: OVERVIEW_COL.FREQUENCIA }}>Frequência</TableHead>
+                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.MEDIA, minWidth: OVERVIEW_COL.MEDIA }}>Média</TableHead>
+                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PAGO, minWidth: OVERVIEW_COL.PAGO }}>Pago</TableHead>
+                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PENDENTE, minWidth: OVERVIEW_COL.PENDENTE }}>Pendente</TableHead>
+                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ATRASADO, minWidth: OVERVIEW_COL.ATRASADO }}>Atrasado</TableHead>
+                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ACOES, minWidth: OVERVIEW_COL.ACOES }}>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -185,7 +178,7 @@ export function OverviewView({
                 </Table>
               </div>
               {filteredStudents.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
+                <div className="text-center py-12 text-muted-foreground border-t">
                   {students.length === 0
                     ? showTeacherFilter
                       ? "Nenhum aluno cadastrado ainda"

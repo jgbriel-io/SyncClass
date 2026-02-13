@@ -64,8 +64,10 @@ import { useFinancialRecordsByStudentIds, FinancialRecordWithRelations } from "@
 import { useClassLogsByStudentIds } from "@/hooks/useClassLogs";
 import { useStudentsStats } from "@/hooks/useStudentsStats";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { StudentsTableRow, COL as STUD_COL, TABLE_MIN_W as STUD_TABLE_MIN_W } from "@/components/students/StudentsTableRow";
+import { StudentsTableRow } from "@/components/students/StudentsTableRow";
+import { COL as STUD_COL, TABLE_MIN_W as STUD_TABLE_MIN_W } from "@/components/students/StudentsTableRow.constants";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { Teacher } from "@/hooks/useTeachers";
 
@@ -558,13 +560,6 @@ export function StudentsListView({
         autoTeacherId={autoTeacherId}
       />
 
-      {/* Loading state */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      )}
-
       {/* Error state */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
@@ -575,7 +570,9 @@ export function StudentsListView({
       )}
 
       {/* Table — horizontal scroll com sticky column "Aluno" */}
-      {!isLoading && !error && (
+      {isLoading ? (
+        <TableSkeleton rows={10} columns={showTeacherColumn ? 10 : 9} />
+      ) : !error && (
         <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto">
                 <Table style={{ minWidth: TABLE_MIN_W }}>

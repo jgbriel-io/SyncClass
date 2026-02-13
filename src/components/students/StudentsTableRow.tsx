@@ -11,25 +11,13 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatCurrency } from "@/lib/utils/formatters";
 import type { Student } from "@/hooks/useStudents";
-
-export const COL = {
-  ALUNO: 280,
-  PROFESSOR: 200,
-  VALOR_HORA: 120,
-  AULAS_SEMANA: 120,
-  TOTAL_MENSAL: 140,
-  DIA_PAGTO: 100,
-  FINANCEIRO: 140,
-  ULTIMA_AULA: 150,
-  ACOES: 100,
-} as const;
-
-export const TABLE_MIN_W =
-  COL.ALUNO + COL.PROFESSOR + COL.VALOR_HORA + COL.AULAS_SEMANA + COL.TOTAL_MENSAL + COL.DIA_PAGTO + COL.FINANCEIRO + COL.ULTIMA_AULA + COL.ACOES;
-
-const CELL_BASE = "px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap";
-const STICKY_CELL = "sticky left-0 z-20 bg-card group-hover:bg-muted transition-colors";
-const STICKY_SHADOW = { boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" };
+import {
+  CELL_BASE,
+  STICKY_CELL,
+  STICKY_SHADOW,
+  getXLColumnClasses,
+} from "@/lib/design-tokens/table-columns";
+import { COL } from "./StudentsTableRow.constants";
 
 interface StudentsTableRowProps {
   student: Student;
@@ -66,15 +54,16 @@ export function StudentsTableRow({
 
   return (
     <tr className="group hover:bg-muted/30 transition-colors">
-      <td className="px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>
+      {/* Status Badge */}
+      <td className={CELL_BASE} style={{ width: '1%' }}>
         <StatusBadge variant={student.status === "ativo" ? "success" : "default"}>
           {student.status === "ativo" ? "Ativo" : "Inativo"}
         </StatusBadge>
       </td>
 
-      {/* Aluno — sticky */}
+      {/* Aluno — sticky XL */}
       <td
-        className={`${CELL_BASE} ${STICKY_CELL} w-[280px] min-w-[280px] max-w-[280px] desktop:w-[360px] desktop:min-w-[360px] desktop:max-w-[360px]`}
+        className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`}
         style={STICKY_SHADOW}
       >
         <div className="flex items-center gap-3 overflow-hidden">
@@ -82,9 +71,9 @@ export function StudentsTableRow({
             <span className="text-xs font-medium text-accent-foreground">{student.name.charAt(0)}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium truncate" title={student.name}>{student.name}</p>
+            <p className="text-xs font-medium truncate" title={student.name}>{student.name}</p>
             {lastUpdatedAt && (
-              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}>
                 {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
               </p>
             )}
@@ -98,35 +87,35 @@ export function StudentsTableRow({
         </td>
       )}
 
-      <td className={CELL_BASE} style={{ width: COL.VALOR_HORA, minWidth: COL.VALOR_HORA }}>
-        <span className="text-muted-foreground">{hourlyRate != null ? formatCurrency(hourlyRate) : "—"}</span>
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.VALOR_HORA, minWidth: COL.VALOR_HORA }}>
+        <span className="text-muted-foreground truncate block" title={hourlyRate != null ? formatCurrency(hourlyRate) : "—"}>{hourlyRate != null ? formatCurrency(hourlyRate) : "—"}</span>
       </td>
 
-      <td className={CELL_BASE} style={{ width: COL.AULAS_SEMANA, minWidth: COL.AULAS_SEMANA }}>
-        <span className="text-muted-foreground">{classesPerWeek ?? "—"}</span>
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.AULAS_SEMANA, minWidth: COL.AULAS_SEMANA }}>
+        <span className="text-muted-foreground truncate block" title={String(classesPerWeek ?? "—")}>{classesPerWeek ?? "—"}</span>
       </td>
 
-      <td className={CELL_BASE} style={{ width: COL.TOTAL_MENSAL, minWidth: COL.TOTAL_MENSAL }}>
-        <span className="text-muted-foreground">{monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}</span>
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.TOTAL_MENSAL, minWidth: COL.TOTAL_MENSAL }}>
+        <span className="text-muted-foreground truncate block" title={monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}>{monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}</span>
       </td>
 
-      <td className={CELL_BASE} style={{ width: COL.DIA_PAGTO, minWidth: COL.DIA_PAGTO }}>
-        <span className="text-muted-foreground">{student.pay_day ?? "—"}</span>
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.DIA_PAGTO, minWidth: COL.DIA_PAGTO }}>
+        <span className="text-muted-foreground truncate block" title={String(student.pay_day ?? "—")}>{student.pay_day ?? "—"}</span>
       </td>
 
       <td className={CELL_BASE} style={{ width: COL.FINANCEIRO, minWidth: COL.FINANCEIRO }}>
         {financialStatus ? (
           <StatusBadge variant={financialStatus.variant}>{financialStatus.label}</StatusBadge>
         ) : (
-          <span className="text-muted-foreground">Sem cobranças</span>
+          <span className="text-muted-foreground truncate block" title="Sem cobranças">Sem cobranças</span>
         )}
       </td>
 
-      <td className={CELL_BASE} style={{ width: COL.ULTIMA_AULA, minWidth: COL.ULTIMA_AULA }}>
+      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.ULTIMA_AULA, minWidth: COL.ULTIMA_AULA }}>
         <div className="space-y-0.5">
-          <span className="text-muted-foreground block">{lastClassDateRaw ? format(new Date(lastClassDateRaw + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "—"}</span>
+          <span className="text-muted-foreground block truncate" title={lastClassDateRaw ? format(new Date(lastClassDateRaw + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "—"}>{lastClassDateRaw ? format(new Date(lastClassDateRaw + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "—"}</span>
           {daysWithoutClass !== null && (
-            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground block">{daysWithoutClass} dia{daysWithoutClass === 1 ? "" : "s"} sem aula</span>
+            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground block truncate" title={`${daysWithoutClass} dia${daysWithoutClass === 1 ? "" : "s"} sem aula`}>{daysWithoutClass} dia{daysWithoutClass === 1 ? "" : "s"} sem aula</span>
           )}
         </div>
       </td>

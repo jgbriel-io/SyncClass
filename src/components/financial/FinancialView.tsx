@@ -72,7 +72,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FinancialTableRow, COL as FIN_COL, TABLE_MIN_W as FIN_TABLE_MIN_W } from "@/components/financial/FinancialTableRow";
+import { FinancialTableRow } from "@/components/financial/FinancialTableRow";
+import { COL as FIN_COL, TABLE_MIN_W as FIN_TABLE_MIN_W } from "@/components/financial/FinancialTableRow.constants";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 
 interface FinancialViewProps {
@@ -403,8 +404,7 @@ export function FinancialView({
           <TableSkeleton rows={8} columns={8} />
         ) : !error ? (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-          <div className="overflow-x-auto min-w-0 w-full">
-            <Table>
+            <Table style={{ minWidth: FIN_TABLE_MIN_W }}>
               <TableHeader>
                 <TableRow>
                   <TableHead
@@ -414,17 +414,15 @@ export function FinancialView({
                     Aluno
                   </TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.AULA, minWidth: FIN_COL.AULA }}>Aula Vinculada</TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: FIN_COL.DESCR, minWidth: FIN_COL.DESCR }}>Descrição</TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.VALOR, minWidth: FIN_COL.VALOR }}>Valor</TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.METODO, minWidth: FIN_COL.METODO }}>Método</TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: FIN_COL.VENCIMENTO, minWidth: FIN_COL.VENCIMENTO }}>Vencimento</TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.STATUS, minWidth: FIN_COL.STATUS }}>Status</TableHead>
                   <TableHead className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }} aria-label="Avaliar" />
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.ACOES, minWidth: FIN_COL.ACOES }}>Ações</TableHead>
-                  <TableHead style={{ width: 'auto' }}></TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="divide-y divide-border/40">
                 {filteredRecords.map((record) => (
                   <FinancialTableRow
                     key={record.id}
@@ -450,28 +448,29 @@ export function FinancialView({
                 ))}
               </TableBody>
             </Table>
-          </div>
-          {filteredRecords.length === 0 && (
-            records.length === 0 ? (
-              <EmptyFinancialState
-                message="As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças."
-              />
-            ) : (
-              <EmptyState
-                icon={Search}
-                title="Nenhum resultado"
-                message="Ajuste os filtros acima ou limpe a busca"
-              />
-            )
-          )}
-          <TablePaginationBar
-            page={page}
-            pageSize={10}
-            totalCount={totalCount}
-            hasMore={!!hasMore}
-            isFetching={isFetching}
-            onPageChange={setPage}
-          />
+            {filteredRecords.length === 0 && (
+              <div className="border-t">
+                {records.length === 0 ? (
+                  <EmptyFinancialState
+                    message="As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças."
+                  />
+                ) : (
+                  <EmptyState
+                    icon={Search}
+                    title="Nenhum resultado"
+                    message="Ajuste os filtros acima ou limpe a busca"
+                  />
+                )}
+              </div>
+            )}
+            <TablePaginationBar
+              page={page}
+              pageSize={10}
+              totalCount={totalCount}
+              hasMore={!!hasMore}
+              isFetching={isFetching}
+              onPageChange={setPage}
+            />
           </div>
         ) : null}
 

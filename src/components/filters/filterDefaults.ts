@@ -1,9 +1,19 @@
+import type { ActivitiesFiltersState } from "./ActivitiesFilters";
 import type { ClassesFiltersState } from "./ClassesFilters";
 import type { FinancialFiltersState } from "./FinancialFilters";
 import type { OverviewFiltersState } from "./OverviewFilters";
 import type { StudentsFiltersState } from "./StudentsFilters";
 import type { TeachersFiltersState } from "./TeachersFilters";
 import type { UsersFiltersState } from "./UsersFilters";
+
+export const defaultActivitiesFilters: ActivitiesFiltersState = {
+  search: "",
+  status: "all",
+  studentId: "all",
+  teacherId: "all",
+  period: "all",
+  sortBy: "due_asc",
+};
 
 export const defaultClassesFilters: ClassesFiltersState = {
   search: "",

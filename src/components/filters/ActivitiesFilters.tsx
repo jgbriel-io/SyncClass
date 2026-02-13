@@ -15,22 +15,17 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
-export type ClassStatusFilter = "all" | "em_aberto" | "agendada" | "avaliacao_pendente" | "concluida";
-export type ClassPeriodFilter = "all" | "week" | "month" | "3months";
-export type ClassTypeFilter = "all" | "pacote" | "individual";
+export type ActivityStatusFilter = "all" | "enviada" | "vencida" | "entregue" | "corrigida";
+export type ActivityPeriodFilter = "all" | "week" | "month" | "3months";
+export type ActivitySortBy = "due_asc" | "due_desc" | "created_desc" | "created_asc" | "student_asc" | "student_desc";
 
-export interface ClassesFiltersState {
+export interface ActivitiesFiltersState {
   search: string;
-  period: ClassPeriodFilter;
-  teacherId: string;
+  status: ActivityStatusFilter;
   studentId: string;
-  classType: ClassTypeFilter;
-  status: ClassStatusFilter;
-}
-
-interface Teacher {
-  id: string;
-  name: string | null;
+  teacherId: string;
+  period: ActivityPeriodFilter;
+  sortBy: ActivitySortBy;
 }
 
 interface Student {
@@ -38,31 +33,39 @@ interface Student {
   name: string | null;
 }
 
-interface ClassesFiltersProps {
-  filters: ClassesFiltersState;
-  onChange: (f: ClassesFiltersState) => void;
-  onReset?: () => void;
-  teachers: Teacher[];
-  students: Student[];
-  showTeacherFilter?: boolean;
+interface Teacher {
+  id: string;
+  name: string | null;
 }
 
-export function ClassesFilters({
+interface ActivitiesFiltersProps {
+  filters: ActivitiesFiltersState;
+  onChange: (f: ActivitiesFiltersState) => void;
+  onReset?: () => void;
+  students: Student[];
+  teachers?: Teacher[];
+  showTeacherFilter?: boolean;
+  /** Status principal - quando all, não mostra botão Limpar */
+  primaryStatus?: "all";
+}
+
+export function ActivitiesFilters({
   filters,
   onChange,
   onReset,
-  teachers,
   students,
-  showTeacherFilter = true,
-}: ClassesFiltersProps) {
+  teachers = [],
+  showTeacherFilter = false,
+  primaryStatus = "all",
+}: ActivitiesFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const hasActiveFilters =
-    filters.period !== "all" ||
-    (showTeacherFilter && filters.teacherId !== "all") ||
+    filters.status !== primaryStatus ||
     filters.studentId !== "all" ||
-    filters.classType !== "all" ||
-    filters.status !== "em_aberto";
+    (showTeacherFilter && filters.teacherId !== "all") ||
+    filters.period !== "all" ||
+    filters.sortBy !== "due_asc";
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-3">
@@ -74,7 +77,7 @@ export function ClassesFilters({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por título ou aluno..."
+              placeholder="Buscar por aluno, título ou descrição..."
               className="pl-9"
               value={filters.search}
               onChange={(e) => onChange({ ...filters, search: e.target.value })}
@@ -89,17 +92,17 @@ export function ClassesFilters({
             <span className="text-xs font-medium text-muted-foreground">Status</span>
             <Select
               value={filters.status}
-              onValueChange={(v) => onChange({ ...filters, status: v as ClassStatusFilter })}
+              onValueChange={(v) => onChange({ ...filters, status: v as ActivityStatusFilter })}
             >
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="em_aberto">Em aberto</SelectItem>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="agendada">Agendada</SelectItem>
-                <SelectItem value="avaliacao_pendente">Avaliação pendente</SelectItem>
-                <SelectItem value="concluida">Concluída</SelectItem>
+                <SelectItem value="enviada">Enviada</SelectItem>
+                <SelectItem value="vencida">Vencida</SelectItem>
+                <SelectItem value="entregue">Entregue</SelectItem>
+                <SelectItem value="corrigida">Corrigida</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -154,8 +157,8 @@ export function ClassesFilters({
       <CollapsibleContent>
         <div className="rounded-lg border bg-muted/30 p-4">
           <div className="flex flex-wrap gap-3">
-            {/* Professor */}
-            {showTeacherFilter && (
+            {/* Professor (se admin) */}
+            {showTeacherFilter && teachers.length > 0 && (
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-medium text-muted-foreground">Professor</span>
                 <Select
@@ -163,7 +166,7 @@ export function ClassesFilters({
                   onValueChange={(v) => onChange({ ...filters, teacherId: v })}
                 >
                   <SelectTrigger className="w-[200px] pl-3 text-left">
-                    <SelectValue placeholder="Professor responsável" />
+                    <SelectValue placeholder="Professor" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" className="pl-6">
@@ -179,39 +182,42 @@ export function ClassesFilters({
               </div>
             )}
 
-            {/* Tipo */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Tipo</span>
-              <Select
-                value={filters.classType}
-                onValueChange={(v) => onChange({ ...filters, classType: v as ClassTypeFilter })}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="pacote">Pacote</SelectItem>
-                  <SelectItem value="individual">Individual</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Período */}
             <div className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-muted-foreground">Período</span>
               <Select
                 value={filters.period}
-                onValueChange={(v) => onChange({ ...filters, period: v as ClassPeriodFilter })}
+                onValueChange={(v) => onChange({ ...filters, period: v as ActivityPeriodFilter })}
               >
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="week">Semana</SelectItem>
-                  <SelectItem value="month">Mês</SelectItem>
-                  <SelectItem value="3months">3 meses</SelectItem>
+                  <SelectItem value="week">Esta semana</SelectItem>
+                  <SelectItem value="month">Este mês</SelectItem>
+                  <SelectItem value="3months">Últimos 3 meses</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Ordenar */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Ordenar</span>
+              <Select
+                value={filters.sortBy}
+                onValueChange={(v) => onChange({ ...filters, sortBy: v as ActivitySortBy })}
+              >
+                <SelectTrigger className="w-[220px] pl-3 text-left">
+                  <SelectValue placeholder="Ordenar por" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="due_asc">Prazo (mais próximo)</SelectItem>
+                  <SelectItem value="due_desc">Prazo (mais distante)</SelectItem>
+                  <SelectItem value="created_desc">Enviada (mais recente)</SelectItem>
+                  <SelectItem value="created_asc">Enviada (mais antiga)</SelectItem>
+                  <SelectItem value="student_asc">Aluno (A-Z)</SelectItem>
+                  <SelectItem value="student_desc">Aluno (Z-A)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

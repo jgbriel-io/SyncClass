@@ -43,7 +43,7 @@ interface AdminLayoutProps {
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { name: "Visão Geral", href: "/admin/students/overview", icon: ClipboardList },
+  { name: "Visão Geral", href: "/admin/overview", icon: ClipboardList },
   { name: "Alunos", href: "/admin/students", icon: Users },
   { name: "Aulas", href: "/admin/classes", icon: BookOpen },
   { name: "Atividades", href: "/admin/activities", icon: FileText },

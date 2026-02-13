@@ -64,10 +64,17 @@ import {
   TeacherInsert,
 } from "@/hooks/useTeachers";
 import { useCreateAuthUserForTeacher, useInviteTeacher, useAdminResetPassword } from "@/hooks/useUsers";
+import { useStudents } from "@/hooks/useStudents";
+import { useClassLogs } from "@/hooks/useClassLogs";
+import { useFinancialRecords } from "@/hooks/useFinancialRecords";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { StatCard } from "@/components/ui/stat-card";
+import { TeachersTableRow } from "@/components/teachers/TeachersTableRow";
+import { COL as TEACH_COL, TABLE_MIN_W as TEACH_TABLE_MIN_W } from "@/components/teachers/TeachersTableRow.constants";
+import { TeacherDetailSheet } from "@/components/admin/TeacherDetailSheet";
 
 export default function TeachersPage() {
   const [filters, setFilters] = useState<TeachersFiltersState>({
@@ -94,8 +101,13 @@ export default function TeachersPage() {
   const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
 
+  // Detail sheet state
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [detailTeacherId, setDetailTeacherId] = useState<string | null>(null);
+
   const listTopRef = useRef<HTMLDivElement>(null);
   const { data: allTeachers = [] } = useTeachers();
+  const { data: allStudents = [] } = useStudents();
   const {
     data: teachers = [],
     isLoading,
@@ -117,9 +129,48 @@ export default function TeachersPage() {
   const createTeacherUser = useCreateAuthUserForTeacher();
   const adminResetPassword = useAdminResetPassword();
 
+  // Buscar todas as aulas e registros financeiros
+  const { data: allClassLogs = [] } = useClassLogs();
+  const { data: allFinancialRecords = [] } = useFinancialRecords();
+
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [page]);
+
+  // Mapa de contagem de alunos ativos por professor
+  const studentCountByTeacher = useMemo(() => {
+    const map = new Map<string, number>();
+    allStudents.forEach((student) => {
+      if (student.teacher_id && student.status === "ativo") {
+        map.set(student.teacher_id, (map.get(student.teacher_id) || 0) + 1);
+      }
+    });
+    return map;
+  }, [allStudents]);
+
+  // Mapa de total de aulas por professor
+  const totalClassesByTeacher = useMemo(() => {
+    const map = new Map<string, number>();
+    allClassLogs.forEach((log) => {
+      const teacherId = log.students?.teacher_id;
+      if (teacherId && log.attendance) {
+        map.set(teacherId, (map.get(teacherId) || 0) + 1);
+      }
+    });
+    return map;
+  }, [allClassLogs]);
+
+  // Mapa de valor total recebido por professor (cobranças pagas)
+  const totalReceivedByTeacher = useMemo(() => {
+    const map = new Map<string, number>();
+    allFinancialRecords.forEach((record) => {
+      const teacherId = record.students?.teacher_id;
+      if (teacherId && record.status === "pago" && record.amount) {
+        map.set(teacherId, (map.get(teacherId) || 0) + Number(record.amount));
+      }
+    });
+    return map;
+  }, [allFinancialRecords]);
 
   const specializations = useMemo(() => {
     const set = new Set<string>();
@@ -331,123 +382,66 @@ export default function TeachersPage() {
             specializations={specializations}
           />
 
-          {/* Table */}
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-            <div className="overflow-x-auto min-w-0">
-            <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-              <TableBody>
-                {filteredTeachers.map((teacher) => {
-                  const status = teacher.status ?? "ativo";
-                  const lastUpdatedAt = teacher.updated_at;
+          {/* Error state */}
+          {error && (
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+              <p className="text-destructive">
+                Erro ao carregar professores. Tente novamente.
+              </p>
+            </div>
+          )}
 
-                  return (
-                    <TableRow key={teacher.id}>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
-                            {teacher.name}
-                          </span>
-                          {lastUpdatedAt && (
-                            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5">
-                              {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs">{teacher.email || "—"}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs">{teacher.phone || "—"}</span>
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge
-                          variant={
-                            status === "inativo" ? "default" : "success"
-                          }
-                        >
-                          {status === "inativo" ? "Inativo" : "Ativo"}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleEdit(teacher)}
-                            >
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setTeacherToResetPassword(teacher);
-                                setResetPasswordNew("");
-                                setResetPasswordConfirm("");
-                                setResetPasswordDialogOpen(true);
-                              }}
-                            >
-                              <KeyRound className="h-4 w-4 mr-2" />
-                              Redefinir senha
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className={
-                                status === "ativo"
-                                  ? "text-destructive focus:text-destructive"
-                                  : "focus:text-primary"
-                              }
-                              onClick={() => {
-                                setTeacherToDelete(teacher);
-                                setDeleteDialogOpen(true);
-                              }}
-                            >
-                              {status === "ativo" && (
-                                <Trash2 className="h-4 w-4 mr-2" />
-                              )}
-                              {status === "ativo" ? "Arquivar" : (
-                                <>
-                                  <Check className="h-4 w-4 mr-2" />
-                                  Reativar professor
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            {status === "inativo" && (
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => {
-                                  setTeacherToHardDelete(teacher);
-                                  setHardDeleteDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Excluir definitivamente
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          {/* Table */}
+          {isLoading ? (
+            <TableSkeleton rows={10} columns={9} />
+          ) : !error && (
+          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
+            <div className="overflow-x-auto">
+              <Table style={{ minWidth: TEACH_TABLE_MIN_W }}>
+                <TableHeader>
+                  <TableRow className="border-b bg-muted/50">
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>Status</TableHead>
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: TEACH_COL.NOME, minWidth: TEACH_COL.NOME, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>Nome</TableHead>
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: TEACH_COL.EMAIL, minWidth: TEACH_COL.EMAIL }}>Email</TableHead>
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: TEACH_COL.TELEFONE, minWidth: TEACH_COL.TELEFONE }}>Telefone</TableHead>
+                    <TableHead className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: TEACH_COL.TOTAL_ALUNOS, minWidth: TEACH_COL.TOTAL_ALUNOS }}>Total Alunos</TableHead>
+                    <TableHead className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: TEACH_COL.TOTAL_AULAS, minWidth: TEACH_COL.TOTAL_AULAS }}>Total Aulas</TableHead>
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: TEACH_COL.VALOR_RECEBIDO, minWidth: TEACH_COL.VALOR_RECEBIDO }}>Valor Recebido</TableHead>
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: TEACH_COL.PLACEHOLDER, minWidth: TEACH_COL.PLACEHOLDER }} aria-label="Placeholder" />
+                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: TEACH_COL.ACOES, minWidth: TEACH_COL.ACOES }}>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-border/40">
+                  {filteredTeachers.map((teacher) => (
+                    <TeachersTableRow
+                      key={teacher.id}
+                      teacher={teacher}
+                      studentCount={studentCountByTeacher.get(teacher.id) || 0}
+                      totalClasses={totalClassesByTeacher.get(teacher.id) || 0}
+                      totalReceived={totalReceivedByTeacher.get(teacher.id) || 0}
+                      onViewDetail={(id) => {
+                        setDetailTeacherId(id);
+                        setDetailSheetOpen(true);
+                      }}
+                      onEdit={handleEdit}
+                      onResetPassword={(t) => {
+                        setTeacherToResetPassword(t);
+                        setResetPasswordNew("");
+                        setResetPasswordConfirm("");
+                        setResetPasswordDialogOpen(true);
+                      }}
+                      onDelete={(t) => {
+                        setTeacherToDelete(t);
+                        setDeleteDialogOpen(true);
+                      }}
+                      onHardDelete={(t) => {
+                        setTeacherToHardDelete(t);
+                        setHardDeleteDialogOpen(true);
+                      }}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
             </div>
             {filteredTeachers.length === 0 && (
               <EmptyState
@@ -467,6 +461,7 @@ export default function TeachersPage() {
               onPageChange={setPage}
             />
           </div>
+          )}
         </div>
 
         {/* Formulário de cadastro/edição */}
@@ -812,6 +807,13 @@ export default function TeachersPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Teacher Detail Sheet */}
+        <TeacherDetailSheet
+          teacherId={detailTeacherId}
+          open={detailSheetOpen}
+          onOpenChange={setDetailSheetOpen}
+        />
     </>
   );
 }

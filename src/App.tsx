@@ -21,7 +21,7 @@ const StudentShell = lazy(() => import("@/components/layout/StudentShell"));
 // Lazy - páginas administrativas
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const StudentsPage = lazy(() => import("./pages/admin/Students"));
-const StudentOverviewPage = lazy(() => import("./pages/admin/StudentOverview"));
+const OverviewPage = lazy(() => import("./pages/admin/Overview"));
 const UsersPage = lazy(() => import("./pages/admin/Users"));
 const FinancialPage = lazy(() => import("./pages/admin/Financial"));
 const ClassesPage = lazy(() => import("./pages/admin/Classes"));
@@ -107,7 +107,7 @@ const App = () => (
             <Route path="/admin" element={<AdminShell />}>
               <Route index element={<AdminDashboard />} />
               <Route path="students" element={<StudentsPage />} />
-              <Route path="students/overview" element={<StudentOverviewPage />} />
+              <Route path="overview" element={<OverviewPage />} />
               <Route path="financial" element={<FinancialPage />} />
               <Route path="classes" element={<ClassesPage />} />
               <Route path="activities" element={<AdminActivitiesPage />} />
