@@ -40,6 +40,7 @@ import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
+import { UsersTableRow } from "@/components/users/UsersTableRow";
 import { getAvatarLetter } from "@/lib/utils/patterns";
 import {
   useUsersPaginated,
@@ -67,7 +68,6 @@ import {
 import { toast } from "sonner";
 import {
   UsersFilters,
-  defaultFilters,
   type UsersFiltersState,
 } from "@/components/filters/UsersFilters";
 import { defaultUsersFilters } from "@/components/filters/filterDefaults";
@@ -252,7 +252,11 @@ export default function UsersPage() {
           password: "",
           fullName: data.fullName,
           role: data.role,
-          studentData: data.studentData,
+          studentData: {
+            ...data.studentData,
+            origin: (data.studentData?.origin || "outro") as "indicacao" | "google" | "instagram" | "passante" | "outro",
+            status: (data.studentData?.status || "ativo") as "ativo" | "inativo",
+          },
           teacherData: data.teacherData,
         },
         {
@@ -537,239 +541,46 @@ export default function UsersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs uppercase tracking-wider">
-                    Usuário
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider whitespace-nowrap">
-                    Privilégio
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider hidden lg:table-cell whitespace-nowrap">
-                    Vínculo
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider hidden md:table-cell whitespace-nowrap">
-                    Cadastro
-                  </TableHead>
-                  <TableHead className="text-right text-xs uppercase tracking-wider whitespace-nowrap">
-                    Ações
-                  </TableHead>
+                  <TableHead>Usuário</TableHead>
+                  <TableHead className="whitespace-nowrap">Privilégio</TableHead>
+                  <TableHead className="hidden lg:table-cell whitespace-nowrap">Vínculo</TableHead>
+                  <TableHead className="hidden md:table-cell whitespace-nowrap">Cadastro</TableHead>
+                  <TableHead className="whitespace-nowrap">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                  {filteredUsers.map((user) => {
-                    const linkedStudent = user.profile?.student_id
-                      ? students.find((s) => s.id === user.profile?.student_id)
-                      : null;
-                    const linkedTeacher = user.profile?.teacher_id
-                      ? teachers.find((t) => t.id === user.profile.teacher_id)
-                      : null;
-
-                    const storedRole = (user.role?.role ?? user.profile?.role) as string | null ?? null;
-                    const role = storedRole === "admin"
-                      ? "admin"
-                      : storedRole === "teacher"
-                      ? "teacher"
-                      : storedRole === "student"
-                      ? "student"
-                      : linkedTeacher
-                      ? "teacher"
-                      : linkedStudent
-                      ? "student"
-                      : storedRole;
-
-                    const displayName = (user.profile?.full_name || "").trim() || "(sem nome)";
-                    const avatarLetter = getAvatarLetter(displayName);
-                    const subtitle = user.email || getRoleLabel(role);
-                    const isActive = user.profile?.active ?? true;
-                    const lastUpdatedAt = user.profile?.updated_at;
-
-                    return (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                              <span className="text-xs font-medium text-accent-foreground">
-                                {avatarLetter}
-                              </span>
-                            </div>
-                            <div className="space-y-0.5">
-                              <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs whitespace-nowrap">
-                                {displayName}
-                              </p>
-                              {subtitle && (
-                                <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground whitespace-nowrap">
-                                  {subtitle}
-                                </p>
-                              )}
-                              {!isActive && (
-                                <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-amber-600">
-                                  Conta arquivada
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <div className="flex flex-col gap-1 items-start">
-                            <StatusBadge variant={getRoleVariant(role)}>
-                              {getRoleLabel(role)}
-                            </StatusBadge>
-                            {!isActive && (
-                              <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
-                                Arquivado
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell whitespace-nowrap">
-                          {linkedStudent || linkedTeacher ? (
-                            <div className="flex flex-col gap-1">
-                              {linkedStudent && (
-                                <div className="flex items-center gap-2">
-                                  <User className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs">Aluno: {linkedStudent.name}</span>
-                                </div>
-                              )}
-                              {linkedTeacher && (
-                                <div className="flex items-center gap-2">
-                                  <Shield className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs">Professor: {linkedTeacher.name}</span>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell whitespace-nowrap">
-                          <div className="flex flex-col text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
-                            <span>
-                              {user.created_at
-                                ? `Criado em ${format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })}`
-                                : "—"}
-                            </span>
-                            {lastUpdatedAt && (
-                              <span className="mt-0.5">
-                                {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-60">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setIsFormOpen(true);
-                                }}
-                              >
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setUserToResetPassword(user);
-                                  setResetPasswordNew("");
-                                  setResetPasswordConfirm("");
-                                  setResetPasswordDialogOpen(true);
-                                }}
-                              >
-                                <KeyRound className="h-4 w-4 mr-2" />
-                                Redefinir senha
-                              </DropdownMenuItem>
-                              {role === "student" && !linkedStudent && (
-                                <DropdownMenuItem
-                                  onClick={() => openLinkDialog(user, "student")}
-                                >
-                                  Vincular aluno
-                                </DropdownMenuItem>
-                              )}
-                              {role === "teacher" && !linkedTeacher && (
-                                <DropdownMenuItem
-                                  onClick={() => openLinkDialog(user, "teacher")}
-                                >
-                                  Vincular professor
-                                </DropdownMenuItem>
-                              )}
-                              {linkedStudent && linkedStudent.status === "inativo" && (
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    updateStudent.mutate({
-                                      id: linkedStudent.id,
-                                      status: "ativo",
-                                    });
-                                  }}
-                                >
-                                  <Check className="h-4 w-4 mr-2" />
-                                  Reativar aluno
-                                </DropdownMenuItem>
-                              )}
-                              {linkedTeacher && linkedTeacher.status === "inativo" && (
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    updateTeacher.mutate({
-                                      id: linkedTeacher.id,
-                                      status: "ativo",
-                                    });
-                                  }}
-                                >
-                                  <Check className="h-4 w-4 mr-2" />
-                                  Reativar professor
-                                </DropdownMenuItem>
-                              )}
-                              {(() => {
-                                const isStudentActive = linkedStudent?.status === "ativo";
-                                const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
-                                const userIsActive = isActive;
-                                const userIsInactive = !userIsActive;
-                                const canHardDelete =
-                                  (linkedStudent && linkedStudent.status === "inativo") ||
-                                  (linkedTeacher && linkedTeacher.status === "inativo") ||
-                                  (!linkedStudent && !linkedTeacher && userIsInactive);
-
-                                const shouldShowDeactivate =
-                                  userIsActive && (isStudentActive || isTeacherActive || (!linkedStudent && !linkedTeacher));
-
-                                const label = shouldShowDeactivate
-                                  ? "Arquivar"
-                                  : canHardDelete
-                                  ? "Excluir definitivamente"
-                                  : "Inativo";
-
-                                const disabled = !shouldShowDeactivate && !canHardDelete;
-
-                                return (
-                                  <DropdownMenuItem
-                                    className="text-destructive hover:bg-destructive/10 data-[highlighted]:!bg-destructive/10 data-[highlighted]:!text-destructive"
-                                    disabled={disabled}
-                                    onClick={() => {
-                                      if (disabled) return;
-                                      setSelectedUser(user);
-                                      setDeleteDialogOpen(true);
-                                    }}
-                                  >
-                                    {(!disabled && (shouldShowDeactivate || canHardDelete)) && (
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                    )}
-                                    {label}
-                                  </DropdownMenuItem>
-                                );
-                              })()}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                {filteredUsers.map((user) => (
+                  <UsersTableRow
+                    key={user.id}
+                    user={user}
+                    students={students}
+                    teachers={teachers}
+                    onEdit={(u) => {
+                      setSelectedUser(u);
+                      setIsFormOpen(true);
+                    }}
+                    onResetPassword={(u) => {
+                      setUserToResetPassword(u);
+                      setResetPasswordNew("");
+                      setResetPasswordConfirm("");
+                      setResetPasswordDialogOpen(true);
+                    }}
+                    onLinkStudent={(u) => openLinkDialog(u, "student")}
+                    onLinkTeacher={(u) => openLinkDialog(u, "teacher")}
+                    onReactivateStudent={(studentId) => updateStudent.mutate({ id: studentId, status: "ativo" })}
+                    onReactivateTeacher={(teacherId) => updateTeacher.mutate({ id: teacherId, status: "ativo" })}
+                    onDelete={(u) => {
+                      setSelectedUser(u);
+                      setDeleteDialogOpen(true);
+                    }}
+                    onHardDelete={(u) => {
+                      setSelectedUser(u);
+                      setDeleteDialogOpen(true);
+                    }}
+                    getRoleLabel={getRoleLabel}
+                    getRoleVariant={getRoleVariant}
+                  />
+                ))}
               </TableBody>
             </Table>
             </div>

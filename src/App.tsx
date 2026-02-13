@@ -26,6 +26,7 @@ const UsersPage = lazy(() => import("./pages/admin/Users"));
 const FinancialPage = lazy(() => import("./pages/admin/Financial"));
 const ClassesPage = lazy(() => import("./pages/admin/Classes"));
 const AdminTeachersPage = lazy(() => import("./pages/admin/Teachers"));
+const AdminActivitiesPage = lazy(() => import("./pages/admin/Activities"));
 
 // Lazy loading - páginas de professor
 const TeacherHome = lazy(() => import("./pages/teacher/TeacherHome"));
@@ -109,7 +110,7 @@ const App = () => (
               <Route path="students/overview" element={<StudentOverviewPage />} />
               <Route path="financial" element={<FinancialPage />} />
               <Route path="classes" element={<ClassesPage />} />
-              <Route path="activities" element={<TeacherActivitiesPage />} />
+              <Route path="activities" element={<AdminActivitiesPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="teachers" element={<AdminTeachersPage />} />
             </Route>

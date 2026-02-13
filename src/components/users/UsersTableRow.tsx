@@ -1,0 +1,253 @@
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { TableRow, TableCell } from "@/components/ui/table";
+import {
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Check,
+  KeyRound,
+  Shield,
+  User,
+} from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { getAvatarLetter } from "@/lib/utils/patterns";
+import type { UserWithProfile } from "@/hooks/useUsers";
+
+interface Student {
+  id: string;
+  name: string;
+  status: string;
+}
+
+interface Teacher {
+  id: string;
+  name: string;
+}
+
+interface UsersTableRowProps {
+  user: UserWithProfile;
+  students: Student[];
+  teachers: Teacher[];
+  onEdit: (user: UserWithProfile) => void;
+  onResetPassword: (user: UserWithProfile) => void;
+  onLinkStudent: (user: UserWithProfile) => void;
+  onLinkTeacher: (user: UserWithProfile) => void;
+  onReactivateStudent: (studentId: string) => void;
+  onReactivateTeacher: (teacherId: string) => void;
+  onDelete: (user: UserWithProfile) => void;
+  onHardDelete: (user: UserWithProfile) => void;
+  getRoleLabel: (role: string | null) => string;
+  getRoleVariant: (role: string | null) => "default" | "success" | "warning" | "destructive" | "info";
+}
+
+export function UsersTableRow({
+  user,
+  students,
+  teachers,
+  onEdit,
+  onResetPassword,
+  onLinkStudent,
+  onLinkTeacher,
+  onReactivateStudent,
+  onReactivateTeacher,
+  onDelete,
+  onHardDelete,
+  getRoleLabel,
+  getRoleVariant,
+}: UsersTableRowProps) {
+  const linkedStudent = user.profile?.student_id
+    ? students.find((s) => s.id === user.profile?.student_id)
+    : null;
+  const linkedTeacher = user.profile?.teacher_id
+    ? teachers.find((t) => t.id === user.profile.teacher_id)
+    : null;
+
+  const storedRole = (user.role?.role ?? user.profile?.role) as string | null ?? null;
+  const role = storedRole === "admin"
+    ? "admin"
+    : storedRole === "teacher"
+    ? "teacher"
+    : storedRole === "student"
+    ? "student"
+    : linkedTeacher
+    ? "teacher"
+    : linkedStudent
+    ? "student"
+    : storedRole;
+
+  const displayName = (user.profile?.full_name || "").trim() || "(sem nome)";
+  const avatarLetter = getAvatarLetter(displayName);
+  const subtitle = user.email || getRoleLabel(role);
+  const isActive = user.profile?.active ?? true;
+  const lastUpdatedAt = user.profile?.updated_at;
+
+  return (
+    <TableRow>
+      {/* Usuário */}
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-medium text-accent-foreground">
+              {avatarLetter}
+            </span>
+          </div>
+          <div className="space-y-0.5">
+            <p className="font-medium text-xs whitespace-nowrap">
+              {displayName}
+            </p>
+            {subtitle && (
+              <p className="text-xs text-muted-foreground whitespace-nowrap">
+                {subtitle}
+              </p>
+            )}
+            {!isActive && (
+              <p className="text-xs text-amber-600">
+                Conta arquivada
+              </p>
+            )}
+          </div>
+        </div>
+      </TableCell>
+
+      {/* Função */}
+      <TableCell className="whitespace-nowrap">
+        <div className="flex flex-col gap-1 items-start">
+          <StatusBadge variant={getRoleVariant(role)}>
+            {getRoleLabel(role)}
+          </StatusBadge>
+          {!isActive && (
+            <span className="text-xs text-muted-foreground">
+              Arquivado
+            </span>
+          )}
+        </div>
+      </TableCell>
+
+      {/* Vínculo */}
+      <TableCell className="hidden lg:table-cell whitespace-nowrap">
+        {linkedStudent || linkedTeacher ? (
+          <div className="flex flex-col gap-1">
+            {linkedStudent && (
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs">Aluno: {linkedStudent.name}</span>
+              </div>
+            )}
+            {linkedTeacher && (
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs">Professor: {linkedTeacher.name}</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
+      </TableCell>
+
+      {/* Cadastro */}
+      <TableCell className="hidden md:table-cell whitespace-nowrap">
+        <div className="flex flex-col text-xs text-muted-foreground">
+          <span>
+            {user.created_at
+              ? `Criado em ${format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })}`
+              : "—"}
+          </span>
+          {lastUpdatedAt && (
+            <span className="mt-0.5">
+              {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
+            </span>
+          )}
+        </div>
+      </TableCell>
+
+      {/* Ações */}
+      <TableCell>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuItem onClick={() => onEdit(user)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Editar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onResetPassword(user)}>
+              <KeyRound className="h-4 w-4 mr-2" />
+              Redefinir senha
+            </DropdownMenuItem>
+            {role === "student" && !linkedStudent && (
+              <DropdownMenuItem onClick={() => onLinkStudent(user)}>
+                Vincular aluno
+              </DropdownMenuItem>
+            )}
+            {role === "teacher" && !linkedTeacher && (
+              <DropdownMenuItem onClick={() => onLinkTeacher(user)}>
+                Vincular professor
+              </DropdownMenuItem>
+            )}
+            {linkedStudent && linkedStudent.status === "inativo" && (
+              <DropdownMenuItem
+                onClick={() => onReactivateStudent(linkedStudent.id)}
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Reativar aluno vinculado
+              </DropdownMenuItem>
+            )}
+            {linkedTeacher && (
+              <DropdownMenuItem
+                onClick={() => onReactivateTeacher(linkedTeacher.id)}
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Reativar professor vinculado
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem
+              className={
+                isActive
+                  ? "text-destructive focus:text-destructive"
+                  : "focus:text-primary"
+              }
+              onClick={() => onDelete(user)}
+            >
+              {isActive ? (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Arquivar usuário
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Reativar usuário
+                </>
+              )}
+            </DropdownMenuItem>
+            {!isActive && (
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => onHardDelete(user)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir definitivamente
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
+}

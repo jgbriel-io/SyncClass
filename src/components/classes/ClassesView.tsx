@@ -63,6 +63,8 @@ import {
 } from "@/lib/utils/tableColumns";
 import { cn } from "@/lib/utils";
 import { StatCard } from "@/components/ui/stat-card";
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import { ClassesTableRow, COL as CL_COL, TABLE_MIN_W as CL_TABLE_MIN_W } from "@/components/classes/ClassesTableRow";
 
 function formatClassDateAndTime(log: {
   class_date: string;
@@ -444,199 +446,48 @@ export function ClassesView({
         ) : !error && viewMode === "table" && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto min-w-0">
-            <table className="w-full table-auto text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
-              <colgroup>
-                <col style={{ width: "22%" }} />
-                <col style={{ width: "28%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "10%" }} />
-              </colgroup>
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className={tableThLarge}>Aluno</th>
+            <Table style={{ minWidth: CL_TABLE_MIN_W }}>
+              <TableHeader>
+                <TableRow className="border-b bg-muted/50">
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: CL_COL.STATUS, minWidth: CL_COL.STATUS }}>Status</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: CL_COL.ALUNO, minWidth: CL_COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>Aluno</TableHead>
                   {showTeacherColumn ? (
-                    <th className={cn(tableThLarge, "hidden sm:table-cell")}>Informações</th>
+                    <TableHead className={cn(tableThLarge, "hidden sm:table-cell")} style={{ width: CL_COL.INFORMACOES, minWidth: CL_COL.INFORMACOES }}>Informações</TableHead>
                   ) : (
-                    <th className={cn(tableThLarge, "hidden sm:table-cell")}>Título da aula</th>
+                    <TableHead className={cn(tableThLarge, "hidden sm:table-cell")} style={{ width: CL_COL.INFORMACOES, minWidth: CL_COL.INFORMACOES }}>Título da aula</TableHead>
                   )}
-                  <th className={tableThSmall}>Data</th>
-                  <th className={cn(tableThSmall, "hidden sm:table-cell")}>Duração</th>
-                  <th className={tableThSmall}>Nota</th>
-                  <th className={cn(tableThSmall, "hidden xl:table-cell")}>Financeiro</th>
-                  <th className={tableThSmallRight}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: CL_COL.DATA, minWidth: CL_COL.DATA }}>Data</TableHead>
+                  <TableHead className={cn(tableThSmall, "hidden sm:table-cell")} style={{ width: CL_COL.DURACAO, minWidth: CL_COL.DURACAO }}>Duração</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: CL_COL.NOTA, minWidth: CL_COL.NOTA }}>Nota</TableHead>
+                  <TableHead className={cn(tableThSmall, "hidden xl:table-cell")} style={{ width: CL_COL.FINANCEIRO, minWidth: CL_COL.FINANCEIRO }}>Financeiro</TableHead>
+                  <TableHead className={cn(tableThSmall, "hidden xl:table-cell")} style={{ width: CL_COL.AVALIAR, minWidth: CL_COL.AVALIAR }} aria-label="Avaliar" />
+                  <TableHead className={tableThSmall} style={{ width: CL_COL.ACOES, minWidth: CL_COL.ACOES }}>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredLogs.map((log) => {
-                  const lastUpdatedAt = log.updated_at;
-                  // Prioriza o nome do professor do join direto do class_log, depois fallback via teacher_id
                   const teacherName = 
                     log.teachers?.name ?? 
                     (log.teacher_id ? teacherMap.get(log.teacher_id) : null) ?? 
                     (log.students?.teacher_id ? teacherMap.get(log.students.teacher_id) : null) ?? 
                     "Sem professor";
-
                   return (
-                    <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className={tableTdLarge}>
-                        <div className="flex items-start gap-3">
-                          <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-medium text-accent-foreground">
-                              {log.students?.name?.charAt(0) || "?"}
-                            </span>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 whitespace-nowrap">
-                              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium">
-                                {log.students?.name || "Aluno não encontrado"}
-                              </p>
-                              <StatusBadge variant={getClassStatusBadge(log).variant}>
-                                {getClassStatusBadge(log).label}
-                              </StatusBadge>
-                            </div>
-                            {lastUpdatedAt && (
-                              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground whitespace-nowrap">
-                                {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      {showTeacherColumn ? (
-                        <td className={cn(tableTdLarge, "hidden sm:table-cell")}>
-                          <div className="flex flex-col gap-0.5 max-w-[200px]">
-                            <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium text-foreground whitespace-normal line-clamp-2" title={getClassLogDisplayTitle(log)}>
-                              {getClassLogDisplayTitle(log)}
-                            </span>
-                            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground whitespace-nowrap">
-                              {teacherName}
-                            </span>
-                          </div>
-                        </td>
-                      ) : (
-                        <td className={cn(tableTdLarge, "hidden sm:table-cell")}>
-                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium text-foreground whitespace-normal line-clamp-2 max-w-[200px]" title={getClassLogDisplayTitle(log)}>
-                            {getClassLogDisplayTitle(log)}
-                          </span>
-                        </td>
-                      )}
-                      <td className={tableTdSmall}>
-                        {(() => {
-                          const { date, timeRange } = formatClassDateAndTime(log);
-                          return (
-                            <div className="flex flex-col gap-0.5 text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                              <span>{date}</span>
-                              {timeRange && <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px]">{timeRange}</span>}
-                            </div>
-                          );
-                        })()}
-                      </td>
-                      <td className={cn(tableTdSmall, "hidden sm:table-cell")}>
-                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                          {formatDuration(log.duration_minutes)}
-                        </span>
-                      </td>
-                      <td className={tableTdSmall}>
-                        <span
-                          className={`text-sm mobile:text-xs tablet:text-xs laptop:text-xs font-medium ${
-                            log.attendance === false ? "text-destructive" : ""
-                          }`}
-                        >
-                          {log.grade != null
-                            ? Number(log.grade).toFixed(1)
-                            : log.attendance === false
-                              ? "Não compareceu"
-                              : "—"}
-                        </span>
-                      </td>
-                      <td className={cn(tableTdSmall, "hidden xl:table-cell")}>
-                        {log.financial_records ? (
-                          <StatusBadge
-                            variant={getPaymentStatusVariant(
-                              getFinancialActualStatus({
-                                status: log.financial_records.status,
-                                due_date: log.financial_records.due_date,
-                              })
-                            )}
-                          >
-                            <Receipt className="h-3 w-3" />
-                            {getPaymentStatusLabel(
-                              getFinancialActualStatus({
-                                status: log.financial_records.status,
-                                due_date: log.financial_records.due_date,
-                              })
-                            )}
-                          </StatusBadge>
-                        ) : (
-                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">Sem cobrança</span>
-                        )}
-                      </td>
-                      <td className={tableTdActions}>
-                        <div className="flex items-center justify-end gap-2 h-10">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 shrink-0"
-                            onClick={() => {
-                              setLogForDetailSheet(log);
-                              setDetailSheetOpen(true);
-                            }}
-                            title="Ver detalhes"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(log)}>
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => openDeleteDialog(log)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                          <Button
-                            size="sm"
-                            className={`h-8 w-[7rem] shrink-0 border-none ${
-                              isClassEvaluationBlocked(log) && log.attendance == null
-                                ? "bg-muted text-muted-foreground cursor-not-allowed"
-                                : log.attendance != null
-                                  ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
-                                  : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
-                            }`}
-                            disabled={isClassEvaluationBlocked(log) && log.attendance == null}
-                            onClick={() => {
-                              if (isClassEvaluationBlocked(log)) return;
-                              setLogForPostClass(log);
-                              setPostClassDialogOpen(true);
-                            }}
-                          >
-                            {isClassEvaluationBlocked(log) && log.attendance == null
-                              ? "Avaliar"
-                              : log.attendance != null
-                                ? "Atualizar"
-                                : "Avaliar"}
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
+                    <ClassesTableRow
+                      key={log.id}
+                      log={log}
+                      showTeacherColumn={showTeacherColumn}
+                      teacherName={teacherName}
+                      statusBadge={getClassStatusBadge(log)}
+                      onViewDetail={(l) => { setLogForDetailSheet(l); setDetailSheetOpen(true); }}
+                      onEdit={handleEdit}
+                      onDelete={openDeleteDialog}
+                      onEvaluate={(l) => { setLogForPostClass(l); setPostClassDialogOpen(true); }}
+                      isEvaluationBlocked={isClassEvaluationBlocked(log)}
+                    />
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
           {filteredLogs.length === 0 && (
             <div className="border-t">

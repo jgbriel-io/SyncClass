@@ -337,21 +337,11 @@ export default function TeachersPage() {
             <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs uppercase tracking-wider">
-                  Nome
-                </TableHead>
-                <TableHead className="text-xs uppercase tracking-wider">
-                  Email
-                </TableHead>
-                <TableHead className="text-xs uppercase tracking-wider">
-                  Telefone
-                </TableHead>
-                <TableHead className="text-xs uppercase tracking-wider">
-                  Status
-                </TableHead>
-                <TableHead className="text-right text-xs uppercase tracking-wider">
-                  Ações
-                </TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Telefone</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
               <TableBody>
@@ -388,7 +378,7 @@ export default function TeachersPage() {
                           {status === "inativo" ? "Inativo" : "Ativo"}
                         </StatusBadge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button

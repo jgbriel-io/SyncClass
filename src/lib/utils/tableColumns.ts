@@ -8,9 +8,9 @@
  */
 
 const baseTh =
-  "text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2";
+  "text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2";
 const baseTd =
-  "px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2";
+  "px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 text-xs";
 
 /** Cabeçalho: coluna grande (ex.: Aluno, Título da aula, Informações) */
 export const tableThLarge = `${baseTh} text-left min-w-[200px]`;

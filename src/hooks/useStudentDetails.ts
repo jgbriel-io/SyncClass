@@ -258,6 +258,7 @@ export interface StudentWithStats extends Student {
 
 export interface UseStudentsWithStatsPaginatedOptions {
   pageSize?: number;
+  teacherId?: string | null;
 }
 
 export interface UseStudentsWithStatsPaginatedResult {
@@ -277,17 +278,26 @@ export function useStudentsWithStatsPaginated(
 ): UseStudentsWithStatsPaginatedResult {
   const [page, setPage] = useState(0);
   const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
+  const teacherId = options?.teacherId;
 
   const query = useQuery({
-    queryKey: ["students_with_stats_paginated", page, pageSize],
+    queryKey: ["students_with_stats_paginated", page, pageSize, teacherId],
     queryFn: async () => {
       const from = page * pageSize;
       const to = from + pageSize - 1;
-      const { data: students, error: studentsError, count } = await supabase
+      let q = supabase
         .from("students_masked")
-        .select("*", { count: "exact" })
+        .select("*", { count: "exact" });
+
+      if (teacherId) {
+        q = q.eq("teacher_id", teacherId);
+      }
+
+      q = q.eq("status", "ativo")
         .order("name", { ascending: true })
         .range(from, to);
+
+      const { data: students, error: studentsError, count } = await q;
 
       if (studentsError) throw studentsError;
 

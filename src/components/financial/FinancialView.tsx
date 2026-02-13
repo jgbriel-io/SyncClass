@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Loader2, ChevronLeft, ChevronRight, DollarSign } from "lucide-react";
+import { Search, Loader2, DollarSign } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   FinancialFilters,
@@ -47,6 +47,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreHorizontal, Pencil, Trash2, TrendingUp, Eye } from "lucide-react";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   tableThLarge,
   tableThMedium,
   tableThSmall,
@@ -64,20 +72,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-type PaymentStatus = "pendente" | "atrasado" | "pago";
-
-const statusLabels: Record<PaymentStatus, string> = {
-  pendente: "Pendente",
-  atrasado: "Atrasado",
-  pago: "Pago",
-};
-
-const statusVariants: Record<PaymentStatus, "warning" | "destructive" | "success"> = {
-  pendente: "warning",
-  atrasado: "destructive",
-  pago: "success",
-};
+import { FinancialTableRow, COL as FIN_COL, TABLE_MIN_W as FIN_TABLE_MIN_W } from "@/components/financial/FinancialTableRow";
+import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 
 interface FinancialViewProps {
   title?: string;
@@ -407,207 +403,53 @@ export function FinancialView({
           <TableSkeleton rows={8} columns={8} />
         ) : !error ? (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-          <div className="overflow-x-auto min-w-0">
-            <table className="w-full table-auto text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className={tableThLarge}>Aluno</th>
-                  <th className={cn(tableThMedium, "hidden lg:table-cell")}>Aula Vinculada</th>
-                  <th className={cn(tableThMedium, "hidden sm:table-cell")}>Descrição</th>
-                  <th className={tableThSmall}>Valor</th>
-                  <th className={cn(tableThSmall, "hidden lg:table-cell")}>Método</th>
-                  <th className={cn(tableThSmall, "hidden md:table-cell")}>Vencimento</th>
-                  <th className={tableThSmall}>Status</th>
-                  <th className={tableThSmallRight}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRecords.map((record) => {
-                  const lastUpdatedAt = record.updated_at || record.created_at;
-
-                  return (
-                    <tr
-                      key={record.id}
-                      className="hover:bg-muted/30 transition-colors"
-                    >
-                      <td className={tableTdLarge}>
-                        <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
-                          {record.students?.name || "—"}
-                        </p>
-                      </td>
-                      <td className={cn(tableTdMedium, "hidden lg:table-cell")}>
-                        {record.class_logs ? (
-                          <div className="flex flex-col text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                            <span>
-                              {record.students?.name}
-                              {" | "}
-                              {record.class_logs.title?.trim()
-                                ? record.class_logs.title
-                                : formatDate(record.class_logs.class_date)}
-                            </span>
-                            {showTeacherColumn && record.students?.teacher_id && (
-                              <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground/80">
-                                Professor: {teacherMap.get(record.students.teacher_id) || "—"}
-                              </span>
-                            )}
-                          </div>
-                        ) : record.package_classes && record.package_classes.length > 0 ? (
-                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                            Pacote mensal - {record.package_classes.length} aula(s)
-                          </span>
-                        ) : (
-                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground/70">
-                            Sem aula vinculada
-                          </span>
-                        )}
-                      </td>
-                      <td className={cn(tableTdMedium, "hidden sm:table-cell")}>
-                        <div className="flex flex-col text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                          <span>
-                            {record.package_classes && record.package_classes.length > 0
-                              ? (() => {
-                                  const sorted = [...record.package_classes].sort((a, b) =>
-                                    a.class_date.localeCompare(b.class_date)
-                                  );
-                                  const first = formatDate(sorted[0].class_date);
-                                  const last = formatDate(sorted[sorted.length - 1].class_date);
-                                  return sorted.length === 1 ? first : `${first} a ${last}`;
-                                })()
-                              : (record.description || "—")}
-                          </span>
-                          {lastUpdatedAt && (
-                            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] mt-0.5">
-                              {`Editado em ${formatDateTime(lastUpdatedAt)}`}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className={tableTdSmall}>
-                        <p className="font-semibold text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
-                          {formatCurrency(Number(record.amount))}
-                        </p>
-                      </td>
-                      <td className={cn(tableTdSmall, "hidden lg:table-cell")}>
-                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                          {record.payment_method || "—"}
-                        </p>
-                      </td>
-                      <td className={cn(tableTdSmall, "hidden md:table-cell")}>
-                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                          {formatDate(record.due_date)}
-                        </p>
-                      </td>
-                      <td className={tableTdSmall}>
-                        <StatusBadge variant={statusVariants[record.actualStatus]}>
-                          {statusLabels[record.actualStatus]}
-                        </StatusBadge>
-                      </td>
-                      <td className={tableTdActions}>
-                        <div className="flex items-center justify-end gap-2 h-10">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 shrink-0"
-                            onClick={() => setHistoryRecord(record)}
-                            title="Ver histórico de pagamento"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {record.actualStatus !== "pago" ? (
-                            <>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setRecordToEdit(record);
-                                      setIsFormOpen(true);
-                                    }}
-                                  >
-                                    <Pencil className="h-4 w-4 mr-2" />
-                                    Editar
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => {
-                                      setRecordToDelete(record);
-                                      setDeleteDialogOpen(true);
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Excluir
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                              <Button
-                                size="sm"
-                                className="h-8 w-[7rem] shrink-0 bg-[#25D366] text-white hover:bg-[#1ebe57] border-none"
-                                onClick={() => openConfirmPayment(record)}
-                              >
-                                Confirmar
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setRecordToEdit(record);
-                                      setIsFormOpen(true);
-                                    }}
-                                  >
-                                    <Pencil className="h-4 w-4 mr-2" />
-                                    Editar
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => {
-                                      setRecordToDelete(record);
-                                      setDeleteDialogOpen(true);
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Excluir
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                              <Button
-                                size="sm"
-                                className="h-8 w-[7rem] shrink-0 whitespace-nowrap bg-warning text-white font-semibold hover:bg-warning/90 border-none shadow"
-                                disabled={undoPayment.isPending}
-                                onClick={() => {
-                                  setRecordToUndo(record);
-                                  setUndoDialogOpen(true);
-                                }}
-                              >
-                                {undoPayment.isPending ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" />
-                                    Desfazendo...
-                                  </>
-                                ) : (
-                                  "Desfazer"
-                                )}
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="overflow-x-auto min-w-0 w-full">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead
+                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
+                    style={{ width: FIN_COL.ALUNO, minWidth: FIN_COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}
+                  >
+                    Aluno
+                  </TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.AULA, minWidth: FIN_COL.AULA }}>Aula Vinculada</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: FIN_COL.DESCR, minWidth: FIN_COL.DESCR }}>Descrição</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.VALOR, minWidth: FIN_COL.VALOR }}>Valor</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.METODO, minWidth: FIN_COL.METODO }}>Método</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: FIN_COL.VENCIMENTO, minWidth: FIN_COL.VENCIMENTO }}>Vencimento</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.STATUS, minWidth: FIN_COL.STATUS }}>Status</TableHead>
+                  <TableHead className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }} aria-label="Avaliar" />
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.ACOES, minWidth: FIN_COL.ACOES }}>Ações</TableHead>
+                  <TableHead style={{ width: 'auto' }}></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRecords.map((record) => (
+                  <FinancialTableRow
+                    key={record.id}
+                    record={record}
+                    showTeacherColumn={showTeacherColumn}
+                    teacherMap={teacherMap}
+                    isUndoing={undoPayment.isPending}
+                    onViewHistory={setHistoryRecord}
+                    onEdit={(record) => {
+                      setRecordToEdit(record);
+                      setIsFormOpen(true);
+                    }}
+                    onDelete={(record) => {
+                      setRecordToDelete(record);
+                      setDeleteDialogOpen(true);
+                    }}
+                    onConfirmPayment={openConfirmPayment}
+                    onUndoPayment={(record) => {
+                      setRecordToUndo(record);
+                      setUndoDialogOpen(true);
+                    }}
+                  />
+                ))}
+              </TableBody>
+            </Table>
           </div>
           {filteredRecords.length === 0 && (
             records.length === 0 ? (
@@ -622,35 +464,14 @@ export function FinancialView({
               />
             )
           )}
-          {(totalCount > 0 || page > 0) && (
-            <div className="border-t px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 flex items-center justify-between gap-4 bg-muted/30">
-              <p className="text-sm text-muted-foreground">
-                {totalCount > 0
-                  ? `${page * 10 + 1}-${Math.min((page + 1) * 10, totalCount)} de ${totalCount}`
-                  : "0 registros"}
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 0 || isFetching}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!hasMore || isFetching}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Próximo
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-          )}
+          <TablePaginationBar
+            page={page}
+            pageSize={10}
+            totalCount={totalCount}
+            hasMore={!!hasMore}
+            isFetching={isFetching}
+            onPageChange={setPage}
+          />
           </div>
         ) : null}
 
@@ -826,16 +647,14 @@ export function FinancialView({
               <p className="text-sm text-muted-foreground">
                 {historyRecord.students?.name} · {formatCurrency(Number(historyRecord.amount))}
               </p>
-              {historyRecord.actualStatus === "pago" && historyRecord.confirmed_at ? (
+              {historyRecord.status === "pago" && historyRecord.confirmed_by ? (
                 <div className="rounded-lg border bg-muted/50 p-3 text-sm">
                   <p className="font-medium text-foreground">
-                    Confirmado em {formatDateTime(historyRecord.confirmed_at)}
+                    Confirmado por {historyRecord.confirmed_by.full_name}
                   </p>
-                  {historyRecord.confirmed_by?.full_name && (
-                    <p className="text-muted-foreground mt-0.5">
-                      por {historyRecord.confirmed_by.full_name}
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {historyRecord.updated_at ? formatDateTime(historyRecord.updated_at) : "Data não disponível"}
+                  </p>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">

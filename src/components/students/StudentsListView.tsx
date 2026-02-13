@@ -64,6 +64,8 @@ import { useFinancialRecordsByStudentIds, FinancialRecordWithRelations } from "@
 import { useClassLogsByStudentIds } from "@/hooks/useClassLogs";
 import { useStudentsStats } from "@/hooks/useStudentsStats";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { StudentsTableRow, COL as STUD_COL, TABLE_MIN_W as STUD_TABLE_MIN_W } from "@/components/students/StudentsTableRow";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { Teacher } from "@/hooks/useTeachers";
 
@@ -88,6 +90,44 @@ const originLabels: Record<string, string> = {
   passante: "Passante",
   outro: "Outro",
 };
+
+/** Using StudentsTableRow exports for layout constants */
+const COL = STUD_COL;
+const TABLE_MIN_W = STUD_TABLE_MIN_W;
+
+
+
+/** Calcula dados derivados de uma linha (para evitar repetição no map) */
+function getStudentRowData(
+  student: Student,
+  teacherMap: Record<string, string>,
+  monthlyTotalFromChargesByStudent: Record<string, number>,
+  lastClassDateByStudent: Record<string, string>,
+  financialStatusByStudent: Record<string, { label: string; variant: "default" | "success" | "warning" | "destructive" }>
+) {
+  const monthlyFromCharges = monthlyTotalFromChargesByStudent[student.id];
+  const monthlyTotal =
+    monthlyFromCharges != null
+      ? monthlyFromCharges
+      : student.hourly_rate != null && student.classes_per_week != null
+        ? student.hourly_rate * student.classes_per_week * 4
+        : null;
+  const teacherName = student.teacher_id ? teacherMap[student.teacher_id] || "—" : "—";
+  const lastClassDateRaw = lastClassDateByStudent[student.id] ?? null;
+  const daysWithoutClass = lastClassDateRaw
+    ? (() => {
+        const last = new Date(lastClassDateRaw + "T00:00:00");
+        const today = new Date();
+        last.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        const diffMs = today.getTime() - last.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        return diffDays < 0 ? 0 : diffDays;
+      })()
+    : null;
+  const financialStatus = financialStatusByStudent[student.id] ?? null;
+  return { monthlyTotal, teacherName, lastClassDateRaw, daysWithoutClass, financialStatus };
+}
 
 export function StudentsListView({
   title,
@@ -438,7 +478,7 @@ export function StudentsListView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">{title}</h1>
-          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">{subtitle}</p>
+          <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </div>
         <Button
           onClick={() => {
@@ -458,7 +498,7 @@ export function StudentsListView({
           <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total de Alunos</p>
+                <p className="text-xs font-medium text-muted-foreground">Total de Alunos</p>
                 <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">{studentsStats.totalStudents}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10">
@@ -469,7 +509,7 @@ export function StudentsListView({
           <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Alunos Ativos</p>
+                <p className="text-xs font-medium text-muted-foreground">Alunos Ativos</p>
                 <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-success">{studentsStats.activeStudents}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-success/10">
@@ -480,7 +520,7 @@ export function StudentsListView({
           <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Alunos Inativos</p>
+                <p className="text-xs font-medium text-muted-foreground">Alunos Inativos</p>
                 <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-muted-foreground">{studentsStats.inactiveStudents}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-muted">
@@ -491,7 +531,7 @@ export function StudentsListView({
           <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Novos este Mês</p>
+                <p className="text-xs font-medium text-muted-foreground">Novos este Mês</p>
                 <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-primary">{studentsStats.newStudentsThisMonth}</p>
               </div>
               <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10">
@@ -534,234 +574,68 @@ export function StudentsListView({
         </div>
       )}
 
-      {/* Table */}
+      {/* Table — horizontal scroll com sticky column "Aluno" */}
       {!isLoading && !error && (
         <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-          <div className="overflow-x-auto min-w-0">
-            <table className="w-full text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2">
-                    Aluno
-                  </th>
-                  {showTeacherColumn && (
-                    <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
-                      Professor
-                    </th>
-                  )}
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
-                    Valor/hora
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
-                    Aulas/semana
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
-                    Total mensal
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden 2xl:table-cell whitespace-nowrap">
-                    Dia pagto
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 hidden xl:table-cell whitespace-nowrap">
-                    Financeiro
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
-                    Última aula
-                  </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 whitespace-nowrap">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {filteredStudents.map((student) => {
-                  const lastUpdatedAt = student.updated_at;
-                  const hourlyRate = student.hourly_rate;
-                  const classesPerWeek = student.classes_per_week;
-                  const monthlyFromCharges = monthlyTotalFromChargesByStudent[student.id];
-                  const monthlyTotal =
-                    monthlyFromCharges != null
-                      ? monthlyFromCharges
-                      : hourlyRate != null && classesPerWeek != null
-                        ? hourlyRate * classesPerWeek * 4
-                        : null;
-
-                  const teacherName = student.teacher_id
-                    ? teacherMap[student.teacher_id] || "—"
-                    : "—";
-
-                  const lastClassDateRaw = lastClassDateByStudent[student.id];
-                  const daysWithoutClass = lastClassDateRaw
-                    ? (() => {
-                        const last = new Date(lastClassDateRaw + "T00:00:00");
-                        const today = new Date();
-                        last.setHours(0, 0, 0, 0);
-                        today.setHours(0, 0, 0, 0);
-                        const diffMs = today.getTime() - last.getTime();
-                        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                        return diffDays < 0 ? 0 : diffDays;
-                      })()
-                    : null;
-                  const financialStatus = financialStatusByStudent[student.id];
-
-                  return (
-                    <tr
-                      key={student.id}
-                      className="hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-medium text-accent-foreground">
-                              {student.name.charAt(0)}
-                            </span>
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs truncate">
-                                {student.name}
-                              </p>
-                              <StatusBadge
-                                variant={
-                                  student.status === "ativo" ? "success" : "default"
-                                }
-                              >
-                                {student.status === "ativo" ? "Ativo" : "Inativo"}
-                              </StatusBadge>
-                            </div>
-                            {lastUpdatedAt && (
-                              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5">
-                                {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </td>
+          <div className="overflow-x-auto">
+                <Table style={{ minWidth: TABLE_MIN_W }}>
+                  <TableHeader>
+                    <TableRow className="border-b bg-muted/50">
+                      <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>Status</TableHead>
+                      <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: COL.ALUNO, minWidth: COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>Aluno</TableHead>
                       {showTeacherColumn && (
-                        <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden xl:table-cell whitespace-nowrap">
-                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                            {teacherName}
-                          </span>
-                        </td>
+                        <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.PROFESSOR, minWidth: COL.PROFESSOR }}>Professor</TableHead>
                       )}
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden xl:table-cell whitespace-nowrap">
-                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                          {hourlyRate != null ? formatCurrency(hourlyRate) : "—"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden 2xl:table-cell whitespace-nowrap">
-                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                          {classesPerWeek ?? "—"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden 2xl:table-cell whitespace-nowrap">
-                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                          {monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden 2xl:table-cell whitespace-nowrap">
-                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
-                          {student.pay_day ?? "—"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle hidden xl:table-cell whitespace-nowrap">
-                        {financialStatus ? (
-                          <StatusBadge variant={financialStatus.variant}>
-                            {financialStatus.label}
-                          </StatusBadge>
-                        ) : (
-                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">Sem cobranças</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle whitespace-nowrap">
-                        <div className="space-y-0.5">
-                          <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground block">
-                            {lastClassDateRaw
-                              ? format(new Date(lastClassDateRaw + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR })
-                              : "—"}
-                          </span>
-                          {daysWithoutClass !== null && (
-                            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground block">
-                              {daysWithoutClass} dia{daysWithoutClass === 1 ? "" : "s"} sem aula
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 align-middle text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => {
-                              setDetailStudentId(student.id);
-                              setDetailSheetOpen(true);
-                            }}
-                            title="Ver detalhes"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(student)}>
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setStudentToResetPassword(student);
-                                setResetPasswordNew("");
-                                setResetPasswordConfirm("");
-                                setResetPasswordDialogOpen(true);
-                              }}
-                            >
-                              <KeyRound className="h-4 w-4 mr-2" />
-                              Redefinir senha
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className={
-                                student.status === "ativo"
-                                  ? "text-destructive focus:text-destructive"
-                                  : "focus:text-primary"
-                              }
-                              onClick={() => openArchiveDialog(student)}
-                            >
-                              {student.status === "ativo" && (
-                                <Trash2 className="h-4 w-4 mr-2" />
-                              )}
-                              {student.status === "ativo" ? "Arquivar" : (
-                                <>
-                                  <Check className="h-4 w-4 mr-2" />
-                                  Reativar aluno
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            {student.status === "inativo" && (
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => {
-                                  setStudentToHardDelete(student);
-                                  setHardDeleteDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Excluir definitivamente
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.VALOR_HORA, minWidth: COL.VALOR_HORA }}>Valor/hora</TableHead>
+                      <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.AULAS_SEMANA, minWidth: COL.AULAS_SEMANA }}>Aulas</TableHead>
+                      <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.TOTAL_MENSAL, minWidth: COL.TOTAL_MENSAL }}>Total mensal</TableHead>
+                      <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.DIA_PAGTO, minWidth: COL.DIA_PAGTO }}>Dia pagto</TableHead>
+                      <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.FINANCEIRO, minWidth: COL.FINANCEIRO }}>Financeiro</TableHead>
+                      <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.ULTIMA_AULA, minWidth: COL.ULTIMA_AULA }}>Última aula</TableHead>
+                      <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.ACOES, minWidth: COL.ACOES }}>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border/40">
+                    {filteredStudents.map((student) => {
+                      const rowData = getStudentRowData(
+                        student,
+                        teacherMap,
+                        monthlyTotalFromChargesByStudent,
+                        lastClassDateByStudent,
+                        financialStatusByStudent
+                      );
+                      return (
+                        <StudentsTableRow
+                          key={student.id}
+                          student={student}
+                          showTeacherColumn={showTeacherColumn}
+                          teacherName={rowData.teacherName}
+                          monthlyTotal={rowData.monthlyTotal}
+                          lastClassDateRaw={rowData.lastClassDateRaw}
+                          daysWithoutClass={rowData.daysWithoutClass}
+                          financialStatus={rowData.financialStatus}
+                          onViewDetail={(id) => {
+                            setDetailStudentId(id);
+                            setDetailSheetOpen(true);
+                          }}
+                          onEdit={handleEdit}
+                          onResetPassword={(s) => {
+                            setStudentToResetPassword(s);
+                            setResetPasswordNew("");
+                            setResetPasswordConfirm("");
+                            setResetPasswordDialogOpen(true);
+                          }}
+                          onArchive={openArchiveDialog}
+                          onHardDelete={(s) => {
+                            setStudentToHardDelete(s);
+                            setHardDeleteDialogOpen(true);
+                          }}
+                        />
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
           {filteredStudents.length === 0 && (
             students.length === 0 ? (
               <EmptyStudentsState
