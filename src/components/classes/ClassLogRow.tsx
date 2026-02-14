@@ -168,14 +168,14 @@ export function ClassLogRow({
               {escapeHtml(log.title)}
             </p>
           )}
-          <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+          <p className="text-xs text-muted-foreground truncate max-w-[200px]" title={currentTeacherName}>
             {currentTeacherName}
           </p>
         </div>
       </td>
 
       {/* ── Data ───────────────────────────────────────────────────── */}
-      <td className={CELL} style={{ minWidth: COL.DATA }}>
+      <td className={`${CELL} tabular-nums`} style={{ minWidth: COL.DATA }}>
         <div className="flex flex-col gap-0.5 text-sm text-muted-foreground">
           <span>{date}</span>
           {timeRange && <span className="text-xs">{timeRange}</span>}
@@ -183,7 +183,7 @@ export function ClassLogRow({
       </td>
 
       {/* ── Nota ───────────────────────────────────────────────────── */}
-      <td className={CELL} style={{ minWidth: COL.NOTA }}>
+      <td className={`${CELL} tabular-nums`} style={{ minWidth: COL.NOTA }}>
         <span
           className={`text-sm font-medium ${
             log.attendance === false ? "text-destructive" : ""
@@ -212,7 +212,7 @@ export function ClassLogRow({
       </td>
 
       {/* ── Valor ──────────────────────────────────────────────────── */}
-      <td className={CELL} style={{ minWidth: COL.VALOR }}>
+      <td className={`${CELL} tabular-nums`} style={{ minWidth: COL.VALOR }}>
         <span
           className={
             log.financial_records
@@ -263,7 +263,7 @@ export function ClassLogRow({
                 ? "bg-muted text-muted-foreground cursor-not-allowed"
                 : log.attendance != null
                   ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
-                  : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
+                  : "bg-success-action text-white hover:bg-success-action/90"
             }`}
             disabled={isMutating || (blocked && log.attendance == null)}
             onClick={() => {

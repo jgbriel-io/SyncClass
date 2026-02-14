@@ -59,8 +59,8 @@ export function ActivitiesTableRow({
     <tr className="group hover:bg-muted/30 transition-colors">
       {/* Aluno sticky - XL */}
       <td className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`} style={STICKY_SHADOW}>
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-4 overflow-hidden">
+          <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-medium text-accent-foreground">
               {activity.students?.name?.charAt(0) || "?"}
             </span>
@@ -131,7 +131,7 @@ export function ActivitiesTableRow({
               Aguardando
             </Button>
           ) : activity.status === "entregue" ? (
-            <Button size="sm" className="h-8 w-[7rem] shrink-0 border-none bg-[#25D366] text-white hover:bg-[#1ebe57] text-xs" onClick={() => onViewDetail(activity, true)} title="Corrigir">
+            <Button size="sm" className="h-8 w-[7rem] shrink-0 border-none bg-success-action text-white hover:bg-success-action/90 text-xs" onClick={() => onViewDetail(activity, true)} title="Corrigir">
               Corrigir
             </Button>
           ) : (

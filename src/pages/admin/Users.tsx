@@ -671,7 +671,7 @@ export default function UsersPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between gap-3 pt-2">
+              <div className="flex justify-between gap-4 pt-2">
                 <Button
                   type="button"
                   variant="outline"

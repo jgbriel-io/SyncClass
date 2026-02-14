@@ -66,8 +66,8 @@ export function StudentsTableRow({
         className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`}
         style={STICKY_SHADOW}
       >
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-4 overflow-hidden">
+          <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-medium text-accent-foreground">{student.name.charAt(0)}</span>
           </div>
           <div className="flex-1 min-w-0">
@@ -122,31 +122,31 @@ export function StudentsTableRow({
 
       <td className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(student.id)} title="Ver detalhes">
-            <Eye className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(student.id)} title="Ver detalhes" aria-label="Ver detalhes">
+            <Eye className="h-4 w-4" aria-hidden="true" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Mais opções">
+                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(student)}>
-                <Pencil className="h-4 w-4 mr-2" />
+                <Pencil className="h-4 w-4 mr-2" aria-hidden="true" />
                 Editar
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onResetPassword(student)}>
-                <KeyRound className="h-4 w-4 mr-2" />
+                <KeyRound className="h-4 w-4 mr-2" aria-hidden="true" />
                 Redefinir senha
               </DropdownMenuItem>
               <DropdownMenuItem className={student.status === "ativo" ? "text-destructive focus:text-destructive" : "focus:text-primary"} onClick={() => onArchive(student)}>
-                {student.status === "ativo" && <Trash2 className="h-4 w-4 mr-2" />}
-                {student.status === "ativo" ? "Arquivar" : (<><Check className="h-4 w-4 mr-2" />Reativar aluno</>)}
+                {student.status === "ativo" && <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />}
+                {student.status === "ativo" ? "Arquivar" : (<><Check className="h-4 w-4 mr-2" aria-hidden="true" />Reativar aluno</>)}
               </DropdownMenuItem>
               {student.status === "inativo" && (
                 <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onHardDelete(student)}>
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
                   Excluir definitivamente
                 </DropdownMenuItem>
               )}

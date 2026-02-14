@@ -164,7 +164,7 @@ function ActivityCorrectionFormInline({
           {selectedFile && <span className="text-xs text-muted-foreground truncate max-w-[140px]">{selectedFile.name}</span>}
         </div>
       </div>
-      <Button type="submit" disabled={isPending} className="w-full border-none bg-[#25D366] text-white hover:bg-[#1ebe57]">
+      <Button type="submit" disabled={isPending} className="w-full border-none bg-success-action text-white hover:bg-success-action/90">
         {isPending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enviando...</> : <><Upload className="h-4 w-4 mr-2" />Enviar correção</>}
       </Button>
     </form>

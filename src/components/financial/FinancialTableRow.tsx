@@ -54,8 +54,8 @@ export function FinancialTableRow({
     <tr className="group hover:bg-muted/30 transition-colors">
       {/* Aluno (sticky) - XL */}
       <td className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`} style={STICKY_SHADOW}>
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-4 overflow-hidden">
+          <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-medium text-accent-foreground">{record.students?.name?.charAt(0) || "?"}</span>
           </div>
           <div className="flex-1 min-w-0">
@@ -150,7 +150,7 @@ export function FinancialTableRow({
           {record.actualStatus !== "pago" ? (
             <Button
               size="sm"
-              className="h-8 w-[7rem] shrink-0 bg-[#25D366] text-white hover:bg-[#1ebe57] border-none text-xs"
+              className="h-8 w-[7rem] shrink-0 bg-success-action text-white hover:bg-success-action/90 border-none text-xs"
               onClick={() => onConfirmPayment(record)}
               title="Confirmar"
             >
@@ -186,25 +186,26 @@ export function FinancialTableRow({
             className="h-8 w-8"
             onClick={() => onViewHistory(record)}
             title="Ver histórico de pagamento"
+            aria-label="Ver histórico de pagamento"
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-4 w-4" aria-hidden="true" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Mais opções">
+                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(record)}>
-                <Pencil className="h-4 w-4 mr-2" />
+                <Pencil className="h-4 w-4 mr-2" aria-hidden="true" />
                 Editar
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={() => onDelete(record)}
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
                 Excluir
               </DropdownMenuItem>
             </DropdownMenuContent>

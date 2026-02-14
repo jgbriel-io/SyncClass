@@ -682,7 +682,7 @@ export function ClassesView({
                         ? "bg-muted text-muted-foreground cursor-not-allowed"
                         : log.attendance != null
                           ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
-                          : "bg-[#25D366] text-white hover:bg-[#1ebe57]"
+                          : "bg-success-action text-white hover:bg-success-action/90"
                     }`}
                     disabled={isClassEvaluationBlocked(log) && log.attendance == null}
                     onClick={() => {

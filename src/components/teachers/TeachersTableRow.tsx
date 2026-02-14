@@ -59,8 +59,8 @@ export function TeachersTableRow({
         className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`}
         style={STICKY_SHADOW}
       >
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-4 overflow-hidden">
+          <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-medium text-accent-foreground">{teacher.name.charAt(0)}</span>
           </div>
           <div className="flex-1 min-w-0">

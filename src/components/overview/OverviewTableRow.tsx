@@ -57,7 +57,7 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
     <tr className="group hover:bg-muted/30 transition-colors">
       {/* Aluno — sticky XL */}
       <td className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`} style={STICKY_SHADOW}>
-        <div className="flex items-center gap-3 overflow-hidden">
+        <div className="flex items-center gap-4 overflow-hidden">
           <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-medium text-accent-foreground">
               {student.name.charAt(0)}

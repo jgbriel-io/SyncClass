@@ -38,15 +38,13 @@ export type StackSize = keyof typeof STACK;
  * 
  * Uso:
  * - TIGHT: Ícone + texto, badges (8px)
- * - DEFAULT: Botões, cards em grid (12px)
- * - LOOSE: Seções lado a lado (16px)
- * - RELAXED: Grandes blocos (24px)
+ * - DEFAULT: Botões, cards em grid (16px) - ATUALIZADO para consistência
+ * - LOOSE: Seções lado a lado (24px)
  */
 export const GAP = {
-  TIGHT: "gap-2",          // 8px - Ícone + texto
-  DEFAULT: "gap-3",        // 12px - Padrão
-  LOOSE: "gap-4",          // 16px - Seções
-  RELAXED: "gap-6",        // 24px - Grandes blocos
+  TIGHT: "gap-2",          // 8px - Ícone + texto, elementos muito próximos
+  DEFAULT: "gap-4",        // 16px - Espaçamento padrão (ATUALIZADO de gap-3)
+  LOOSE: "gap-6",          // 24px - Separação maior entre seções
 } as const;
 
 export type GapSize = keyof typeof GAP;

@@ -76,6 +76,9 @@
     --shadow-md: 0 4px 6px -1px hsl(220 25% 10% / 0.05), 0 2px 4px -2px hsl(220 25% 10% / 0.05);
     --shadow-lg: 0 10px 15px -3px hsl(220 25% 10% / 0.08), 0 4px 6px -4px hsl(220 25% 10% / 0.05);
     --shadow-card: 0 1px 3px 0 hsl(220 25% 10% / 0.04), 0 1px 2px -1px hsl(220 25% 10% / 0.04);
+    
+    /* Success Action - WhatsApp Green */
+    --success-action: 37 211 102; /* #25D366 */
   }
 
   .dark {

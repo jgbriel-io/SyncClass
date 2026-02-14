@@ -44,6 +44,10 @@ export const TYPOGRAPHY = {
   SMALL: "text-xs text-muted-foreground",  // 12px - Texto secundário
   SMALL_MEDIUM: "text-xs font-medium text-muted-foreground", // 12px - Secundário com ênfase
   
+  // Texto muito pequeno (11px)
+  MICRO: "text-[11px] leading-tight",      // 11px - Texto muito pequeno (timestamps, metadados)
+  MICRO_MUTED: "text-[11px] leading-tight text-muted-foreground", // 11px - Micro secundário
+  
   // Texto de tabela (uppercase)
   TABLE_HEADER: "text-xs font-medium text-muted-foreground uppercase tracking-wider",
   

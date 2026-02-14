@@ -431,7 +431,7 @@ export function ActivityDetailSheet({
                 <Button
                   type="submit"
                   disabled={isCorrectionPending}
-                  className={initialCorrectionMode ? "w-full" : "flex-1 border-none bg-[#25D366] text-white hover:bg-[#1ebe57]"}
+                  className={initialCorrectionMode ? "w-full" : "flex-1 border-none bg-success-action text-white hover:bg-success-action/90"}
                 >
                   {isCorrectionPending ? (
                     <>
@@ -449,7 +449,7 @@ export function ActivityDetailSheet({
             </form>
           ) : (
             <Button
-              className="w-full h-10 border-none bg-[#25D366] text-white hover:bg-[#1ebe57]"
+              className="w-full h-10 border-none bg-success-action text-white hover:bg-success-action/90"
               onClick={() => setShowCorrectionForm(true)}
             >
               <Edit className="h-4 w-4 mr-2" />
