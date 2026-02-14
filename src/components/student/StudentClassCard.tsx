@@ -8,6 +8,7 @@ import { ptBR } from "date-fns/locale";
 import { formatDate, formatCurrency } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils";
 import { getClassStatusWithTime } from "@/lib/utils/classTime";
+import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 
 interface StudentClassCardProps {
   classLog: {
@@ -99,7 +100,7 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
           {/* Título + Badge (cada um no seu canto) */}
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-semibold text-sm text-foreground truncate min-w-0">
-              {classLog.title?.trim() || "Aula"}
+              {escapeHtml(classLog.title?.trim() || "Aula")}
             </h3>
             <StatusBadge variant={badgeVariant} className="shrink-0">
               {badgeLabel}
@@ -159,7 +160,7 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
                 <div className="min-w-0 flex-1">
                   <span className="text-muted-foreground">
                     {hasDetails ? (
-                      <span className="whitespace-pre-wrap">{classLog.feedback}</span>
+                      <span className="whitespace-pre-wrap">{sanitizeText(classLog.feedback)}</span>
                     ) : (
                       <span className="italic">Nenhum feedback registrado para esta aula.</span>
                     )}

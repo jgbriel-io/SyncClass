@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Receipt, Calendar, Clock, User, BookOpen } from "lucide-react";
 import type { ClassLogWithStudent } from "@/hooks/useClassLogs";
+import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 
 function formatClassDateAndTime(log: {
   class_date: string;
@@ -58,7 +59,7 @@ function getPaymentStatusLabel(status: string | null): string {
 }
 
 function getClassLogDisplayTitle(log: { title?: string | null; class_date?: string }): string {
-  if (log.title?.trim()) return log.title;
+  if (log.title?.trim()) return escapeHtml(log.title);
   const d = log.class_date ? format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "";
   return d ? `Aula - ${d}` : "Aula";
 }
@@ -168,7 +169,7 @@ export function ClassDetailSheet({
             </p>
             {classLog.feedback ? (
               <p className="text-sm whitespace-pre-wrap text-foreground rounded-lg border bg-muted/30 p-3">
-                {classLog.feedback}
+                {sanitizeText(classLog.feedback)}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">—</p>

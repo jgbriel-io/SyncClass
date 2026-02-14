@@ -20,17 +20,22 @@ export function useUndoFinancialPayment() {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança desfeita com sucesso!");
     },
-    onError: () => {
-      toast.error("Erro ao desfazer cobrança. Tente novamente.");
+    onError: (error) => {
+      logger.error(error, { context: "useUndoFinancialPayment" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { isOverdue } from "@/lib/utils/financialStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
+import { logger } from "@/lib/sentry";
+import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
+import { useOptimisticMutation } from "@/hooks/useOptimisticMutation";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -49,9 +54,6 @@ export interface FinancialRecordWithRelations extends FinancialRecord {
   students: {
     name: string;
     teacher_id?: string | null;
-    cpf?: string | null;
-    phone?: string | null;
-    email?: string | null;
   } | null;
   class_logs: {
     id: string;
@@ -134,12 +136,9 @@ export function useFinancialRecords(
         .select(
           `
           *,
-          students (
+          students!inner (
             name,
-            teacher_id,
-            cpf,
-            phone,
-            email
+            teacher_id
           ),
           class_logs (
             id,
@@ -154,6 +153,7 @@ export function useFinancialRecords(
         )
         .order(orderCol, { ascending });
 
+      // SEGURANÇA: Filtrar no servidor usando !inner join
       if (teacherId) {
         q = q.eq("students.teacher_id", teacherId);
       }
@@ -174,9 +174,6 @@ export function useFinancialRecords(
       if (error) throw error;
 
       let list = (data ?? []) as FinancialRecordWithRelations[];
-      if (teacherId && list.length) {
-        list = list.filter((record) => record.students?.teacher_id === teacherId);
-      }
 
       // Buscar nomes dos usuários que confirmaram os pagamentos
       const confirmedByUserIds = Array.from(
@@ -282,20 +279,21 @@ export function useFinancialSummary(teacherId?: string | null) {
         throw error;
       }
 
-      const summary = {
-        totalPending: 0,
-        totalPaid: 0,
-        totalOverdue: 0,
-        totalReceivable: 0, // pending + overdue (tudo a receber)
-        countPending: 0,
-        countPaid: 0,
-        countOverdue: 0,
-      };
-
       let records = (data || []) as Array<{ amount: number; status: string; due_date: string; students?: { teacher_id?: string } }>;
       if (teacherId) {
         records = records.filter((r) => r.students?.teacher_id === teacherId);
       }
+
+      // Memoizar cálculo do summary
+      const summary = {
+        totalPending: 0,
+        totalPaid: 0,
+        totalOverdue: 0,
+        totalReceivable: 0,
+        countPending: 0,
+        countPaid: 0,
+        countOverdue: 0,
+      };
 
       records.forEach((record) => {
         accumulateSummary(record, summary);
@@ -306,6 +304,8 @@ export function useFinancialSummary(teacherId?: string | null) {
 
       return summary;
     },
+    // Cache de 5 minutos para dados que mudam pouco
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -340,6 +340,14 @@ export function useCreateFinancialRecord() {
 
   return useMutation({
     mutationFn: async (record: FinancialRecordInsert) => {
+      // Rate limiting: 3 chamadas por minuto
+      const rateLimitResult = checkRateLimit("createFinancialRecord", RATE_LIMIT_CONFIGS.CRITICAL);
+      if (!rateLimitResult.allowed) {
+        throw new Error(
+          `Muitas requisições. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
+        );
+      }
+
       // Avoid relying on RETURNING/select() here; depending on RLS policies,
       // the insert can succeed while the returning row is not selectable,
       // which makes the UX look like "nothing happened".
@@ -358,17 +366,14 @@ export function useCreateFinancialRecord() {
       toast.success("Cobrança criada com sucesso!");
     },
     onError: (error) => {
-      toast.error(
-        `Erro ao criar cobrança. ${error instanceof Error ? error.message : "Tente novamente."}`
-      );
+      logger.error(error, { context: "useCreateFinancialRecord" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
 
 export function useMarkAsPaid() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation<FinancialRecord, string>({
     mutationFn: async (id: string) => {
       // Obter o usuário atual para auditoria
       const { data: { user } } = await supabase.auth.getUser();
@@ -392,14 +397,22 @@ export function useMarkAsPaid() {
 
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
-      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
-      toast.success("Pagamento registrado com sucesso!");
+    queryKey: ["financial_records"],
+    optimisticUpdate: (oldData: { list: FinancialRecordWithRelations[]; count: number }, id: string) => {
+      const now = new Date().toISOString();
+      return {
+        ...oldData,
+        list: oldData.list.map((record) =>
+          record.id === id
+            ? { ...record, status: "pago" as const, paid_at: now }
+            : record
+        ),
+      };
     },
-    onError: () => {
-      toast.error("Erro ao registrar pagamento. Tente novamente.");
+    successMessage: "Pagamento registrado com sucesso!",
+    errorMessage: "Erro ao registrar pagamento",
+    onError: (error) => {
+      logger.error(error, { context: "useMarkAsPaid" });
     },
   });
 }
@@ -428,8 +441,9 @@ export function useUpdateFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança atualizada com sucesso!");
     },
-    onError: () => {
-      toast.error("Erro ao atualizar cobrança. Tente novamente.");
+    onError: (error) => {
+      logger.error(error, { context: "useUpdateFinancialRecord" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -439,6 +453,14 @@ export function useDeleteFinancialRecord() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Rate limiting: 3 chamadas por minuto
+      const rateLimitResult = checkRateLimit("deleteFinancialRecord", RATE_LIMIT_CONFIGS.CRITICAL);
+      if (!rateLimitResult.allowed) {
+        throw new Error(
+          `Muitas requisições. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
+        );
+      }
+
       const { error } = await supabase
         .from("financial_records")
         .delete()
@@ -454,8 +476,9 @@ export function useDeleteFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       toast.success("Cobrança removida com sucesso!");
     },
-    onError: () => {
-      toast.error("Erro ao remover cobrança. Tente novamente.");
+    onError: (error) => {
+      logger.error(error, { context: "useDeleteFinancialRecord" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }

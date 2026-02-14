@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAddActivityCorrection, uploadActivityFile, getActivityFileUrl, type ActivityWithRelations } from "@/hooks/useActivities";
 import { toast } from "sonner";
+import { sanitizeHtml, sanitizeText } from "@/lib/utils/sanitize";
 
 const correctionSchema = z
   .object({
@@ -191,9 +192,10 @@ export function ActivityDetailSheet({
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                   Descrição
                 </p>
-                <p className="text-sm whitespace-pre-wrap text-foreground">
-                  {activity.description}
-                </p>
+                <div 
+                  className="text-sm whitespace-pre-wrap text-foreground prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(activity.description) }}
+                />
               </div>
             )}
 
@@ -237,7 +239,7 @@ export function ActivityDetailSheet({
                   {activity.student_response_text && (
                     <div className="rounded-lg border bg-muted/30 p-4 mb-3">
                       <p className="text-sm whitespace-pre-wrap text-foreground">
-                        {activity.student_response_text}
+                        {sanitizeText(activity.student_response_text)}
                       </p>
                     </div>
                   )}
@@ -306,7 +308,7 @@ export function ActivityDetailSheet({
                 {activity.feedback && (
                   <div className="rounded-lg border bg-muted/30 p-4 mb-3">
                     <p className="text-sm whitespace-pre-wrap text-foreground">
-                      {activity.feedback}
+                      {sanitizeText(activity.feedback)}
                     </p>
                   </div>
                 )}

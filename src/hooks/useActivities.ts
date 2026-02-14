@@ -3,6 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
+import { logger } from "@/lib/sentry";
+import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
+import { useOptimisticMutation } from "@/hooks/useOptimisticMutation";
 
 export type Activity = Tables<"activities">;
 export type ActivityInsert = TablesInsert<"activities">;
@@ -58,17 +62,91 @@ export function getActivityDisplayStatus(
   return { label: activity.status, variant: "default" };
 }
 
+const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'] as const;
+const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+
+/**
+ * Valida magic bytes (assinatura do arquivo) para garantir que o tipo é real
+ */
+function validateMagicBytes(bytes: Uint8Array, mimeType: string): boolean {
+  // PDF: %PDF (0x25 0x50 0x44 0x46)
+  if (mimeType === 'application/pdf') {
+    return bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
+  }
+  
+  // JPEG: FF D8 FF
+  if (mimeType === 'image/jpeg') {
+    return bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+  }
+  
+  // PNG: 89 50 4E 47
+  if (mimeType === 'image/png') {
+    return bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47;
+  }
+  
+  // WebP: RIFF ... WEBP
+  if (mimeType === 'image/webp') {
+    return bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+           bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+  }
+  
+  // DOC: D0 CF 11 E0 (Microsoft Office)
+  if (mimeType === 'application/msword') {
+    return bytes[0] === 0xD0 && bytes[1] === 0xCF && bytes[2] === 0x11 && bytes[3] === 0xE0;
+  }
+  
+  // DOCX: PK (ZIP format - 50 4B)
+  if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    return bytes[0] === 0x50 && bytes[1] === 0x4B;
+  }
+  
+  // Text: permite qualquer coisa (não tem magic bytes específico)
+  if (mimeType === 'text/plain') {
+    return true;
+  }
+  
+  return false;
+}
+
 /** Upload de arquivo para o Supabase Storage */
 export async function uploadActivityFile(file: File): Promise<{ path: string; url: string }> {
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-  const filePath = `${fileName}`;
+  // Rate limiting: 5 uploads por 5 minutos
+  const rateLimitResult = checkRateLimit("uploadActivityFile", RATE_LIMIT_CONFIGS.UPLOAD);
+  if (!rateLimitResult.allowed) {
+    throw new Error(
+      `Muitos uploads. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
+    );
+  }
+
+  // Validar tipo MIME
+  if (!ALLOWED_TYPES.includes(file.type as typeof ALLOWED_TYPES[number])) {
+    throw new Error(`Tipo não permitido. Use: PDF, JPEG, PNG, WebP, TXT, DOC ou DOCX`);
+  }
+  
+  // Validar tamanho
+  if (file.size > MAX_SIZE) {
+    throw new Error(`Arquivo muito grande. Máximo: ${MAX_SIZE / 1024 / 1024}MB`);
+  }
+  
+  // Validar magic bytes (primeiros 12 bytes do arquivo)
+  const buffer = await file.slice(0, 12).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  
+  if (!validateMagicBytes(bytes, file.type)) {
+    throw new Error("Arquivo corrompido ou tipo inválido. O conteúdo não corresponde à extensão.");
+  }
+  
+  // Gerar nome seguro (sem usar nome original para evitar path traversal)
+  const ext = file.type.split('/')[1]?.replace('vnd.openxmlformats-officedocument.wordprocessingml.', '') || 'bin';
+  const fileName = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
+  const filePath = fileName;
 
   const { error: uploadError } = await supabase.storage
     .from("activities")
     .upload(filePath, file, {
       cacheControl: "3600",
       upsert: false,
+      contentType: file.type,
     });
 
   if (uploadError) {
@@ -189,6 +267,14 @@ export function useCreateActivity() {
 
   return useMutation({
     mutationFn: async (activity: ActivityInsert) => {
+      // Rate limiting: 10 chamadas por minuto
+      const rateLimitResult = checkRateLimit("createActivity", RATE_LIMIT_CONFIGS.NORMAL);
+      if (!rateLimitResult.allowed) {
+        throw new Error(
+          `Muitas requisições. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
+        );
+      }
+
       const { data, error } = await supabase
         .from("activities")
         .insert(activity)
@@ -203,7 +289,8 @@ export function useCreateActivity() {
       toast.success("Atividade enviada com sucesso!");
     },
     onError: (error) => {
-      toast.error("Erro ao enviar atividade: " + (error as Error).message);
+      logger.error(error, { context: "useCreateActivity" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -229,26 +316,25 @@ export function useUpdateActivity() {
       toast.success("Atividade atualizada com sucesso!");
     },
     onError: (error) => {
-      toast.error("Erro ao atualizar atividade: " + (error as Error).message);
+      logger.error(error, { context: "useUpdateActivity" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
 
 /** Marcar atividade como entregue (aluno) */
 export function useMarkActivityAsDelivered() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation<Activity, {
+    activityId: string;
+    responseText?: string;
+    responseFileUrl?: string;
+    responseFileName?: string;
+  }>({
     mutationFn: async ({
       activityId,
       responseText,
       responseFileUrl,
       responseFileName,
-    }: {
-      activityId: string;
-      responseText?: string;
-      responseFileUrl?: string;
-      responseFileName?: string;
     }) => {
       const { data, error } = await supabase
         .from("activities")
@@ -266,12 +352,22 @@ export function useMarkActivityAsDelivered() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["activities"] });
-      toast.success("Atividade marcada como entregue!");
+    queryKey: ["activities"],
+    optimisticUpdate: (oldData: ActivityWithRelations[], { activityId }) => {
+      return oldData.map((activity) =>
+        activity.id === activityId
+          ? {
+              ...activity,
+              status: "entregue" as const,
+              delivered_at: new Date().toISOString(),
+            }
+          : activity
+      );
     },
+    successMessage: "Atividade marcada como entregue!",
+    errorMessage: "Erro ao marcar atividade como entregue",
     onError: (error) => {
-      toast.error("Erro ao marcar atividade: " + (error as Error).message);
+      logger.error(error, { context: "useMarkActivityAsDelivered" });
     },
   });
 }
@@ -316,7 +412,8 @@ export function useAddActivityCorrection() {
       toast.success("Correção enviada com sucesso!");
     },
     onError: (error) => {
-      toast.error("Erro ao enviar correção: " + (error as Error).message);
+      logger.error(error, { context: "useAddActivityCorrection" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -339,7 +436,8 @@ export function useDeleteActivity() {
       toast.success("Atividade excluída com sucesso!");
     },
     onError: (error) => {
-      toast.error("Erro ao excluir atividade: " + (error as Error).message);
+      logger.error(error, { context: "useDeleteActivity" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import type { Tables, TablesInsert, Enums } from "@/integrations/supabase/types";
 import { logger } from "@/lib/sentry";
+import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
 
 // Types for mutations
 type AppRole = Enums<"app_role">;
@@ -61,14 +62,39 @@ interface CreateAuthUserParams {
   fullName: string;
 }
 
-// Helper function to generate random password
-function generateRandomPassword(length: number = 10): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+// Helper function to generate cryptographically secure random password
+function generateRandomPassword(length: number = 12): string {
+  const lowercase = "abcdefghijkmnpqrstuvwxyz";
+  const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const numbers = "23456789";
+  const symbols = "!@#$%&*";
+  const all = lowercase + uppercase + numbers + symbols;
+  
+  // Usar crypto.getRandomValues para segurança criptográfica
+  const array = new Uint32Array(length);
+  crypto.getRandomValues(array);
+  
   let password = "";
-  for (let i = 0; i < length; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  
+  // Garantir pelo menos 1 de cada tipo
+  password += lowercase[array[0] % lowercase.length];
+  password += uppercase[array[1] % uppercase.length];
+  password += numbers[array[2] % numbers.length];
+  password += symbols[array[3] % symbols.length];
+  
+  // Preencher o resto
+  for (let i = 4; i < length; i++) {
+    password += all[array[i] % all.length];
   }
-  return password;
+  
+  // Embaralhar usando Fisher-Yates com valores criptográficos
+  const chars = password.split('');
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = array[i] % (i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  
+  return chars.join('');
 }
 
 export interface InviteUserBody {
@@ -331,6 +357,14 @@ export function useCreateUser() {
       studentData,
       teacherData,
     }: CreateUserParams) => {
+      // Rate limiting: 5 criações de usuário por 5 minutos
+      const rateLimitResult = checkRateLimit("createUser", RATE_LIMIT_CONFIGS.AUTH);
+      if (!rateLimitResult.allowed) {
+        throw new Error(
+          `Muitas tentativas de criação de usuário. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
+        );
+      }
+
       const normalizedEmail = email.trim().toLowerCase();
       const finalPassword = (!password || password.length < 6) ? generateRandomPassword() : password;
 
@@ -548,6 +582,14 @@ export function useUploadAvatar() {
 
   return useMutation({
     mutationFn: async ({ userId, file }: UploadAvatarParams): Promise<void> => {
+      // Rate limiting: 5 uploads por 5 minutos
+      const rateLimitResult = checkRateLimit("uploadAvatar", RATE_LIMIT_CONFIGS.UPLOAD);
+      if (!rateLimitResult.allowed) {
+        throw new Error(
+          `Muitos uploads. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
+        );
+      }
+
       const blob = await validateAndResizeAvatar(file).catch((err: AvatarValidationError) => {
         toast.error(err.message);
         throw err;

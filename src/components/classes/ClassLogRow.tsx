@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { isClassEvaluationBlocked, getClassStatusWithTime } from "@/lib/utils/classTime";
+import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 
 /* ── Layout constants (espelhando o padrão da aba Alunos) ─────────── */
 
@@ -164,7 +165,7 @@ export function ClassLogRow({
         <div className="min-w-0 space-y-1">
           {log.title && (
             <p className="text-sm font-semibold text-foreground break-all whitespace-normal">
-              {log.title}
+              {escapeHtml(log.title)}
             </p>
           )}
           <p className="text-xs text-muted-foreground truncate max-w-[200px]">
@@ -228,7 +229,7 @@ export function ClassLogRow({
       {/* ── Feedback ───────────────────────────────────────────────── */}
       <td className={CELL} style={{ minWidth: COL.FEEDBACK }}>
         <span className="text-sm text-muted-foreground line-clamp-2 max-w-xs whitespace-normal">
-          {log.feedback || "—"}
+          {log.feedback ? sanitizeText(log.feedback) : "—"}
         </span>
       </td>
 

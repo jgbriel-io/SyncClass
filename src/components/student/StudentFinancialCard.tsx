@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, FileText, CreditCard, AlertCircle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
+import { sanitizeText } from "@/lib/utils/sanitize";
 
 type FinancialStatus = "pago" | "pendente" | "atrasado";
 
@@ -83,7 +84,7 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
           {record.description && (
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <span className="text-muted-foreground">{record.description}</span>
+              <span className="text-muted-foreground">{sanitizeText(record.description)}</span>
             </div>
           )}
 

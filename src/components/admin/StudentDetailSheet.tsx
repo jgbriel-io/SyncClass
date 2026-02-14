@@ -39,6 +39,7 @@ import { StudentStatementTab } from "@/components/student/StudentStatementTab";
 import { ClassHistoryList } from "@/components/classes/ClassHistoryList";
 import { useActivities, getActivityFileUrl, useAddActivityCorrection, uploadActivityFile, getActivityDisplayStatus, formatActivityDueDate, type ActivityWithRelations } from "@/hooks/useActivities";
 import { toast } from "sonner";
+import { sanitizeHtml, sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 
 interface StudentDetailSheetProps {
   studentId: string | null;
@@ -507,7 +508,7 @@ export function StudentDetailSheet({
                               <div className="space-y-3 flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-3">
                                   <h3 className="font-semibold text-sm text-foreground truncate min-w-0">
-                                    {activity.title}
+                                    {escapeHtml(activity.title)}
                                   </h3>
                                   <StatusBadge variant={getActivityDisplayStatus(activity).variant} className="shrink-0">
                                     {getActivityDisplayStatus(activity).label}
@@ -533,7 +534,10 @@ export function StudentDetailSheet({
                                       </div>
                                       {activity.description && (
                                         <div className="rounded-lg p-3 bg-muted/30">
-                                          <p className="text-sm whitespace-pre-wrap">{activity.description}</p>
+                                          <div 
+                                            className="text-sm whitespace-pre-wrap prose prose-sm max-w-none"
+                                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(activity.description) }}
+                                          />
                                         </div>
                                       )}
                                       <div className="flex items-center gap-3 rounded-lg p-3 bg-muted/30">
@@ -561,7 +565,7 @@ export function StudentDetailSheet({
                                         </div>
                                         {activity.student_response_text && (
                                           <div className="rounded-lg p-3 bg-muted/30">
-                                            <p className="text-sm whitespace-pre-wrap">{activity.student_response_text}</p>
+                                            <p className="text-sm whitespace-pre-wrap">{sanitizeText(activity.student_response_text)}</p>
                                           </div>
                                         )}
                                         {activity.student_response_file_url && activity.student_response_file_name && (
@@ -592,7 +596,7 @@ export function StudentDetailSheet({
                                         )}
                                         {activity.feedback && (
                                           <div className="rounded-lg p-3 bg-muted/30">
-                                            <p className="text-sm whitespace-pre-wrap">{activity.feedback}</p>
+                                            <p className="text-sm whitespace-pre-wrap">{sanitizeText(activity.feedback)}</p>
                                           </div>
                                         )}
                                         {activity.correction_file_url && activity.correction_file_name && (

@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import type { StudentStatementEntry } from "@/hooks/useStudentStatement";
 import { getClassStatusFromDate, getClassStatusWithTime } from "@/lib/utils/classTime";
 import { cn } from "@/lib/utils";
+import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 
 const BILLING_LABELS: Record<
   NonNullable<StudentStatementEntry["billing_status_consolidated"]>,
@@ -104,7 +105,7 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
               )}
             </div>
             <span className="text-sm text-muted-foreground truncate max-w-[180px] sm:max-w-none">
-              {title?.trim() || "Aula"}
+              {escapeHtml(title?.trim() || "Aula")}
             </span>
             <StatusBadge
               variant={
@@ -149,7 +150,7 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
         {feedback?.trim() && (
           <div className="px-3 pb-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              {feedback}
+              {sanitizeText(feedback)}
             </p>
           </div>
         )}

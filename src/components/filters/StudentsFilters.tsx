@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, X, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
   Select,
   SelectContent,
@@ -53,6 +54,23 @@ export function StudentsFilters({
   primaryStatus = "ativo",
 }: StudentsFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [localSearch, setLocalSearch] = useState(filters.search);
+  
+  // Debounce de 300ms para evitar queries excessivas
+  const debouncedSearch = useDebouncedValue(localSearch, 300);
+
+  // Atualizar filtros quando o debounced search mudar
+  useEffect(() => {
+    if (debouncedSearch !== filters.search) {
+      onChange({ ...filters, search: debouncedSearch });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+
+  // Sincronizar local search quando filters.search mudar externamente (ex: reset)
+  useEffect(() => {
+    setLocalSearch(filters.search);
+  }, [filters.search]);
 
   const hasActiveFilters =
     filters.filterPreset !== "all" ||
@@ -72,8 +90,8 @@ export function StudentsFilters({
             <Input
               placeholder="Buscar por nome ou CPF..."
               className="pl-9"
-              value={filters.search}
-              onChange={(e) => onChange({ ...filters, search: e.target.value })}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
             />
           </div>
         </div>

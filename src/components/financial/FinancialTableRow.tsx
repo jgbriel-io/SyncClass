@@ -2,6 +2,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils/formatters";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { sanitizeText } from "@/lib/utils/sanitize";
 import { MoreHorizontal, Pencil, Trash2, Eye, Loader2 } from "lucide-react";
 import { FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import {

@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { ActivityWithRelations } from "@/hooks/useActivities";
+import { escapeHtml } from "@/lib/utils/sanitize";
 import {
   getActivityDisplayStatus,
   formatActivityDueDate,
@@ -84,10 +85,10 @@ export function ActivitiesTableRow({
       {/* Atividade - L */}
       <td className={CELL_BASE} style={{ width: COL.ATIVIDADE, minWidth: COL.ATIVIDADE }}>
         <div className="min-w-0">
-          <p className="text-xs font-medium text-foreground truncate" title={activity.title}>{activity.title}</p>
+          <p className="text-xs font-medium text-foreground truncate" title={activity.title}>{escapeHtml(activity.title)}</p>
           {activity.description && (
             <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5" title={activity.description}>
-              {activity.description}
+              {escapeHtml(activity.description)}
             </p>
           )}
         </div>
