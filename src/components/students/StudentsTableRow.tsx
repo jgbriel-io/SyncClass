@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { AvatarCircle } from "@/components/ui/avatar-circle";
+import { NumericCell } from "@/components/ui/numeric-cell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +11,6 @@ import {
 import { MoreHorizontal, Pencil, Trash2, Eye, KeyRound, Check } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { formatCurrency } from "@/lib/utils/formatters";
 import type { Student } from "@/hooks/useStudents";
 import {
   CELL_BASE,
@@ -67,9 +68,7 @@ export function StudentsTableRow({
         style={STICKY_SHADOW}
       >
         <div className="flex items-center gap-4 overflow-hidden">
-          <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-medium text-accent-foreground">{student.name.charAt(0)}</span>
-          </div>
+          <AvatarCircle name={student.name} />
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium truncate" title={student.name}>{student.name}</p>
             {lastUpdatedAt && (
@@ -87,16 +86,16 @@ export function StudentsTableRow({
         </td>
       )}
 
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.VALOR_HORA, minWidth: COL.VALOR_HORA }}>
-        <span className="text-muted-foreground truncate block" title={hourlyRate != null ? formatCurrency(hourlyRate) : "—"}>{hourlyRate != null ? formatCurrency(hourlyRate) : "—"}</span>
+      <td className={CELL_BASE} style={{ width: COL.VALOR_HORA, minWidth: COL.VALOR_HORA }}>
+        <NumericCell value={hourlyRate} format="currency" className="text-muted-foreground" />
       </td>
 
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.AULAS_SEMANA, minWidth: COL.AULAS_SEMANA }}>
-        <span className="text-muted-foreground truncate block" title={String(classesPerWeek ?? "—")}>{classesPerWeek ?? "—"}</span>
+      <td className={CELL_BASE} style={{ width: COL.AULAS_SEMANA, minWidth: COL.AULAS_SEMANA }}>
+        <NumericCell value={classesPerWeek} className="text-muted-foreground" />
       </td>
 
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.TOTAL_MENSAL, minWidth: COL.TOTAL_MENSAL }}>
-        <span className="text-muted-foreground truncate block" title={monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}>{monthlyTotal != null ? formatCurrency(monthlyTotal) : "—"}</span>
+      <td className={CELL_BASE} style={{ width: COL.TOTAL_MENSAL, minWidth: COL.TOTAL_MENSAL }}>
+        <NumericCell value={monthlyTotal} format="currency" className="text-muted-foreground" />
       </td>
 
       <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.DIA_PAGTO, minWidth: COL.DIA_PAGTO }}>

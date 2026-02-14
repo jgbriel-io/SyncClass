@@ -1,8 +1,9 @@
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils/formatters";
+import { AvatarCircle } from "@/components/ui/avatar-circle";
+import { NumericCell } from "@/components/ui/numeric-cell";
+import { formatDate, formatDateTime } from "@/lib/utils/formatters";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { sanitizeText } from "@/lib/utils/sanitize";
 import { MoreHorizontal, Pencil, Trash2, Eye, Loader2 } from "lucide-react";
 import { FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import {
@@ -55,9 +56,7 @@ export function FinancialTableRow({
       {/* Aluno (sticky) - XL */}
       <td className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`} style={STICKY_SHADOW}>
         <div className="flex items-center gap-4 overflow-hidden">
-          <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-medium text-accent-foreground">{record.students?.name?.charAt(0) || "?"}</span>
-          </div>
+          <AvatarCircle name={record.students?.name || "?"} />
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium truncate" title={record.students?.name || "—"}>{record.students?.name || "—"}</p>
             {lastUpdatedAt && (
@@ -117,10 +116,8 @@ export function FinancialTableRow({
       </td>
 
       {/* Valor - S */}
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.VALOR, minWidth: COL.VALOR }}>
-        <p className="font-semibold text-xs truncate" title={formatCurrency(Number(record.amount))}>
-          {formatCurrency(Number(record.amount))}
-        </p>
+      <td className={CELL_BASE} style={{ width: COL.VALOR, minWidth: COL.VALOR }}>
+        <NumericCell value={Number(record.amount)} format="currency" className="font-semibold" />
       </td>
 
       {/* Método - S */}
