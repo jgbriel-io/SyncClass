@@ -2,12 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -163,15 +158,16 @@ export function PostClassDialog({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Avaliar aula</DialogTitle>
-        </DialogHeader>
-        <p className="text-sm text-muted-foreground">
-          {studentName} — {classDateFormatted}
-        </p>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Avaliar aula"
+      size="SM"
+    >
+      <p className="text-sm text-muted-foreground mb-4">
+        {studentName} — {classDateFormatted}
+      </p>
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label>Comparecimento</Label>
             <div className="flex gap-6">
@@ -278,7 +274,6 @@ export function PostClassDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

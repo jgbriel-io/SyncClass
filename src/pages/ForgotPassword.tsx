@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { GraduationCap, Loader2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { typography } from "@/lib/design-tokens/typography";
+import { stack, gap } from "@/lib/design-tokens/spacing";
+import { iconSize } from "@/lib/design-tokens/icon-sizes";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -57,37 +60,37 @@ export default function ForgotPassword() {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-sm space-y-8">
+        <div className={`w-full max-w-sm ${stack('RELAXED')}`}>
           <div className="lg:hidden flex justify-center">
-            <Link to="/login" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-              <GraduationCap className="h-8 w-8" />
-              <span className="text-xl font-semibold">EduCore</span>
+            <Link to="/login" className={`flex items-center ${gap('TIGHT')} text-muted-foreground hover:text-foreground`}>
+              <GraduationCap className={iconSize('XL')} />
+              <span className={typography('H1')}>EduCore</span>
             </Link>
           </div>
 
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold tracking-tight">Redefinir senha</h2>
-            <p className="text-muted-foreground text-sm">
+          <div className={stack('TIGHT')}>
+            <h2 className={typography('H2')}>Redefinir senha</h2>
+            <p className={typography('SMALL')}>
               Digite o email da sua conta. Enviaremos um link para criar uma nova senha.
             </p>
           </div>
 
           {sent ? (
-            <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
-              <p className="text-sm text-muted-foreground">
+            <div className={`${stack('LOOSE')} rounded-lg border bg-muted/30 p-4`}>
+              <p className={typography('SMALL')}>
                 Se existir uma conta com esse email, você receberá um link em instantes. Verifique a caixa de entrada e o
                 spam.
               </p>
               <Button variant="outline" className="w-full" asChild>
                 <Link to="/login">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  <ArrowLeft className={`mr-2 ${iconSize('SM')}`} />
                   Voltar ao login
                 </Link>
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
+            <form onSubmit={handleSubmit} className={stack('RELAXED')}>
+              <div className={stack('TIGHT')}>
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -103,7 +106,7 @@ export default function ForgotPassword() {
               <Button type="submit" className="w-full h-11" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className={`mr-2 ${iconSize('SM')} animate-spin`} />
                     Enviando...
                   </>
                 ) : (
@@ -114,8 +117,8 @@ export default function ForgotPassword() {
           )}
 
           <p className="text-center">
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-              <ArrowLeft className="h-4 w-4" />
+            <Link to="/login" className={`${typography('SMALL')} hover:text-foreground inline-flex items-center ${gap('TIGHT')}`}>
+              <ArrowLeft className={iconSize('SM')} />
               Voltar ao login
             </Link>
           </p>

@@ -1,9 +1,5 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
+import { DetailSection, DetailSectionGroup } from "@/components/ui/custom/DetailSection";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
@@ -95,111 +91,96 @@ export function ClassDetailSheet({
     : null;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col">
-        <SheetHeader className="p-6 pb-4 border-b">
-          <SheetTitle className="text-left space-y-1">
-            <p className="font-semibold">{getClassLogDisplayTitle(classLog)}</p>
-            <p className="text-sm font-normal text-muted-foreground">
-              {classLog.students?.name || "Aluno não encontrado"}
+    <BaseDetailSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={getClassLogDisplayTitle(classLog)}
+      subtitle={
+        <>
+          <p className="text-sm font-normal text-muted-foreground">
+            {classLog.students?.name || "Aluno não encontrado"}
+          </p>
+          <StatusBadge variant={statusBadge.variant}>
+            {statusBadge.label}
+          </StatusBadge>
+        </>
+      }
+      size="DEFAULT"
+    >
+      <DetailSectionGroup>
+        {showTeacherColumn && (
+          <DetailSection icon={User} label="Professor" value={teacherName} />
+        )}
+
+        <DetailSection
+          icon={Calendar}
+          label="Data e horário"
+          value={
+            <>
+              <p>{date}</p>
+              {timeRange && <p className="text-muted-foreground">{timeRange}</p>}
+            </>
+          }
+        />
+
+        <DetailSection
+          icon={Clock}
+          label="Duração"
+          value={formatDuration(classLog.duration_minutes)}
+        />
+
+        <DetailSection
+          icon={BookOpen}
+          label="Nota / Presença"
+          value={
+            classLog.grade != null
+              ? Number(classLog.grade).toFixed(1)
+              : classLog.attendance === false
+                ? "Não compareceu"
+                : "—"
+          }
+        />
+
+        {classLog.financial_records && (
+          <DetailSection
+            icon={Receipt}
+            label="Financeiro"
+            value={
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge variant={getPaymentStatusVariant(financialStatus)}>
+                  {getPaymentStatusLabel(financialStatus)}
+                </StatusBadge>
+                <span className="text-sm font-medium tabular-nums">
+                  {formatCurrency(classLog.financial_records.amount)}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  Venc.: {formatDate(classLog.financial_records.due_date)}
+                </span>
+              </div>
+            }
+          />
+        )}
+
+        {(classLog.feedback || classLog.updated_at) && (
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Feedback
             </p>
-            <StatusBadge variant={statusBadge.variant}>
-              {statusBadge.label}
-            </StatusBadge>
-          </SheetTitle>
-        </SheetHeader>
-
-        <div className="w-full max-h-full self-start overflow-auto px-6 py-4">
-          <div className="space-y-5">
-            {showTeacherColumn && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <User className="h-3.5 w-3.5" />
-                  Professor
-                </p>
-                <p className="text-sm text-foreground">{teacherName}</p>
-              </div>
+            {classLog.feedback ? (
+              <p className="text-sm whitespace-pre-wrap text-foreground rounded-lg border bg-muted/30 p-3">
+                {classLog.feedback}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">—</p>
             )}
-
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5" />
-                Data e horário
+            {classLog.updated_at && (
+              <p className="text-xs text-muted-foreground">
+                Editado em {format(new Date(classLog.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
               </p>
-              <p className="text-sm text-foreground">{date}</p>
-              {timeRange && (
-                <p className="text-sm text-muted-foreground">{timeRange}</p>
-              )}
-            </div>
-
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" />
-                Duração
-              </p>
-              <p className="text-sm text-foreground">
-                {formatDuration(classLog.duration_minutes)}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <BookOpen className="h-3.5 w-3.5" />
-                Nota / Presença
-              </p>
-              <p className="text-sm text-foreground">
-                {classLog.grade != null
-                  ? Number(classLog.grade).toFixed(1)
-                  : classLog.attendance === false
-                    ? "Não compareceu"
-                    : "—"}
-              </p>
-            </div>
-
-            {classLog.financial_records && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <Receipt className="h-3.5 w-3.5" />
-                  Financeiro
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusBadge
-                    variant={getPaymentStatusVariant(financialStatus)}
-                  >
-                    {getPaymentStatusLabel(financialStatus)}
-                  </StatusBadge>
-                  <span className="text-sm font-medium tabular-nums">
-                    {formatCurrency(classLog.financial_records.amount)}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    Venc.: {formatDate(classLog.financial_records.due_date)}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {(classLog.feedback || classLog.updated_at) && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
-                  Feedback
-                </p>
-                {classLog.feedback ? (
-                  <p className="text-sm whitespace-pre-wrap text-foreground rounded-lg border bg-muted/30 p-3">
-                    {classLog.feedback}
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">—</p>
-                )}
-                {classLog.updated_at && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Editado em {format(new Date(classLog.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                  </p>
-                )}
-              </div>
             )}
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        )}
+      </DetailSectionGroup>
+    </BaseDetailSheet>
   );
 }

@@ -5,6 +5,7 @@ import { Navigate, useSearchParams } from "react-router-dom";
 import { ClassesView } from "@/components/classes/ClassesView";
 import { Loader2 } from "lucide-react";
 import type { ClassStatusFilter } from "@/components/filters/ClassesFilters";
+import { typography } from "@/lib/design-tokens/typography";
 
 const VALID_STATUSES: ClassStatusFilter[] = ["all", "agendada", "avaliacao_pendente", "concluida"];
 
@@ -46,8 +47,8 @@ function TeacherClassesPage() {
 
   if (!teacherId) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <p>Não foi possível carregar seu perfil de professor.</p>
+      <div className="text-center py-12">
+        <p className={typography('SMALL')}>Não foi possível carregar seu perfil de professor.</p>
       </div>
     );
   }

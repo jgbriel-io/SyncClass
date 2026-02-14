@@ -6,12 +6,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import {
   Select,
   SelectContent,
@@ -280,14 +275,13 @@ export function StudentFormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>
-            {student ? "Editar Aluno" : "Cadastrar Novo Aluno"}
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={student ? "Editar Aluno" : "Cadastrar Novo Aluno"}
+      size="MD"
+    >
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2 space-y-2">
               <Label htmlFor="name">Nome completo *</Label>
@@ -608,7 +602,6 @@ export function StudentFormDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

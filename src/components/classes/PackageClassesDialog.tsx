@@ -1,10 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -354,11 +349,13 @@ export function PackageClassesDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Cadastrar pacote de aulas</DialogTitle>
-        </DialogHeader>
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Cadastrar pacote de aulas"
+      size="MD"
+      scrollable={true}
+    >
         <div className="space-y-4">
           {enableTeacherSelection && (
             <div className="space-y-2">
@@ -695,7 +692,6 @@ export function PackageClassesDialog({
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

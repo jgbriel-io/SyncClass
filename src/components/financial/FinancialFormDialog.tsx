@@ -4,12 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -185,12 +180,13 @@ export function FinancialFormDialog({
       : availableClassLogs;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>{initialData ? 'Editar Cobrança' : 'Nova Cobrança'}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={initialData ? 'Editar Cobrança' : 'Nova Cobrança'}
+      size="SM"
+    >
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Teacher Select - only when enabled (admin) */}
           {enableTeacherSelection && (
             <div className="space-y-2">
@@ -395,7 +391,6 @@ export function FinancialFormDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

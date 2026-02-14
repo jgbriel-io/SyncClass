@@ -2,14 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
+import { DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -112,22 +106,23 @@ export function AddCorrectionDialog({
   if (!activity) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Correção e feedback</DialogTitle>
-          <DialogDescription asChild>
-            <div className="space-y-1 mt-1">
-              <p className="text-sm text-muted-foreground">
-                Atividade: <span className="font-medium text-foreground">{activity.title}</span>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Aluno: <span className="font-medium text-foreground">{activity.students?.name}</span>
-              </p>
-            </div>
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Correção e feedback"
+      size="SM"
+    >
+      <DialogDescription asChild>
+        <div className="space-y-1 mb-4">
+          <p className="text-sm text-muted-foreground">
+            Atividade: <span className="font-medium text-foreground">{activity.title}</span>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Aluno: <span className="font-medium text-foreground">{activity.students?.name}</span>
+          </p>
+        </div>
+      </DialogDescription>
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Feedback */}
           <div className="space-y-2">
             <Label htmlFor="feedback">Feedback *</Label>
@@ -206,7 +201,6 @@ export function AddCorrectionDialog({
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

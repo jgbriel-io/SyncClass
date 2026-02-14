@@ -2,14 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -174,15 +167,14 @@ export function SendActivityDialog({
   const isPending = isUploading || createActivity.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Enviar atividade</DialogTitle>
-          <DialogDescription>
-            Selecione o aluno, preencha o título e anexe o arquivo da atividade.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Enviar atividade"
+      description="Selecione o aluno, preencha o título e anexe o arquivo da atividade."
+      size="SM"
+    >
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Seleção de Aluno */}
           <div className="space-y-2">
             <Label htmlFor="student_id">Aluno *</Label>
@@ -385,7 +377,6 @@ export function SendActivityDialog({
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

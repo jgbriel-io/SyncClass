@@ -6,6 +6,7 @@ import { Navigate } from "react-router-dom";
 import { FinancialView } from "@/components/financial/FinancialView";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { typography } from "@/lib/design-tokens/typography";
 
 const TeacherFinancialPage = () => {
   const { user, role, isLoading: authLoading } = useAuth();
@@ -43,8 +44,8 @@ const TeacherFinancialPage = () => {
 
   if (!teacherId) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <p>Não foi possível carregar seu perfil de professor.</p>
+      <div className="text-center py-12">
+        <p className={typography('SMALL')}>Não foi possível carregar seu perfil de professor.</p>
       </div>
     );
   }

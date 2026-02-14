@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, BookOpen, TrendingUp, TrendingDown, Award, Calendar as CalendarIcon, XCircle } from "lucide-react";
 import { useStudentClassLogs, useStudentStats, useLastClass } from "@/hooks/useStudentPortal";
 import { formatDate } from "@/lib/utils/formatters";
+import { typography } from "@/lib/design-tokens/typography";
+import { stack, gap } from "@/lib/design-tokens/spacing";
 
 function classLogToCardProps(record: {
   id: string;
@@ -78,7 +80,7 @@ export default function StudentHistory() {
         <EmptyState icon={BookOpen} message="Nenhuma aula registrada ainda" />
       </div>
     ) : (
-      <div className="space-y-3">
+      <div className={stack('DEFAULT')}>
         {records.map((record) => (
           <StudentClassCard key={record.id} classLog={classLogToCardProps(record)} />
         ))}
@@ -89,8 +91,8 @@ export default function StudentHistory() {
     <PageContainer constrained maxWidth="5xl">
       {/* Header */}
       <div className="mb-4">
-        <h1 className="text-xl font-semibold">Histórico Acadêmico</h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <h1 className={typography('H1')}>Histórico Acadêmico</h1>
+        <p className={`${typography('SMALL')} mt-1`}>
           Suas aulas e progresso
         </p>
       </div>
@@ -105,7 +107,7 @@ export default function StudentHistory() {
       {/* Error */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-          <p className="text-destructive text-sm">
+          <p className={typography('ERROR')}>
             Erro ao carregar histórico. Tente novamente.
           </p>
         </div>
@@ -130,8 +132,8 @@ export default function StudentHistory() {
                 variant="default"
               />
             </div>
-            <div className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            <div className={stack('DEFAULT')}>
+              <h2 className={typography('TABLE_HEADER')}>
                 Histórico de Aulas
               </h2>
               {renderClassCards(classLogs)}
@@ -140,7 +142,7 @@ export default function StudentHistory() {
 
           {/* Aba Presença: stats (taxa %, total faltas, última falta) + cards só faltas */}
           <TabsContent value="presenca" className="mt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            <div className={`grid grid-cols-1 sm:grid-cols-3 ${gap('DEFAULT')} mb-6`}>
               <StudentMetricCard
                 icon={TrendingUp}
                 label="Taxa de presença"
@@ -160,13 +162,13 @@ export default function StudentHistory() {
                 variant="default"
               />
             </div>
-            <div className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            <div className={stack('DEFAULT')}>
+              <h2 className={typography('TABLE_HEADER')}>
                 Aulas faltadas
               </h2>
               {missedClasses.length === 0 ? (
                 <div className="rounded-lg border bg-card p-6 text-center">
-                  <p className="text-sm text-muted-foreground">Nenhuma falta registrada.</p>
+                  <p className={typography('SMALL')}>Nenhuma falta registrada.</p>
                 </div>
               ) : (
                 renderClassCards(missedClasses)
@@ -176,7 +178,7 @@ export default function StudentHistory() {
 
           {/* Aba Médias: cards (média, melhor, pior) + lista de aulas com nota */}
           <TabsContent value="media" className="mt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${gap('DEFAULT')} mb-6`}>
               <StudentMetricCard
                 icon={Award}
                 label="Média geral"
@@ -196,13 +198,13 @@ export default function StudentHistory() {
                 variant="destructive"
               />
             </div>
-            <div className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            <div className={stack('DEFAULT')}>
+              <h2 className={typography('TABLE_HEADER')}>
                 Aulas com nota
               </h2>
               {classesWithGrade.length === 0 ? (
                 <div className="rounded-lg border bg-card p-6 text-center">
-                  <p className="text-sm text-muted-foreground">Nenhuma aula com nota registrada.</p>
+                  <p className={typography('SMALL')}>Nenhuma aula com nota registrada.</p>
                 </div>
               ) : (
                 renderClassCards(classesWithGrade)

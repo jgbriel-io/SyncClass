@@ -2,12 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -404,12 +399,14 @@ export function ClassLogFormDialog({
 
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Editar Registro" : "Registrar Aula"}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEditing ? "Editar Registro" : "Registrar Aula"}
+      size="SM"
+      scrollable={true}
+    >
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Teacher Select - only when enabled (admin) */}
           {enableTeacherSelection && (
             <div className="space-y-2">
@@ -764,7 +761,6 @@ export function ClassLogFormDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

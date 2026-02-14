@@ -1,12 +1,7 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
+import { DetailSection } from "@/components/ui/custom/DetailSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import {
@@ -94,166 +89,154 @@ export function UserDetailSheet({
   if (!open) return null;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-hidden flex flex-col p-0">
-        <SheetHeader className="px-6 py-4 border-b">
-          <SheetTitle className="text-xl font-semibold">
-            Detalhes do Usuário
-          </SheetTitle>
-        </SheetHeader>
+    <BaseDetailSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Detalhes do Usuário"
+      subtitle={
+        !user ? (
+          <Skeleton className="h-8 w-3/4" />
+        ) : (
+          <>
+            <h2 className="text-2xl font-bold">{displayName}</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {user.email || "Sem email"}
+            </p>
+            <div className="flex flex-col gap-2 items-start mt-2">
+              <StatusBadge variant={isActive ? "success" : "default"}>
+                {isActive ? "Ativo" : "Inativo"}
+              </StatusBadge>
+              <StatusBadge variant={getRoleVariant(role)}>
+                {getRoleLabel(role)}
+              </StatusBadge>
+            </div>
+          </>
+        )
+      }
+      size="XL"
+      noScroll
+    >
+      {!user ? (
+        <div className="p-6 space-y-4">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+      ) : (
+        <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
+          <TabsList className="mx-6 mt-4 grid w-full grid-cols-2">
+            <TabsTrigger value="info">Informações</TabsTrigger>
+            <TabsTrigger value="links">Vínculos</TabsTrigger>
+          </TabsList>
 
-        <ScrollArea className="flex-1">
-          <div className="px-6 py-4 space-y-6">
-            {!user ? (
-              <div className="space-y-4">
-                <Skeleton className="h-8 w-3/4" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            ) : (
-              <>
-                {/* Header com nome e status */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold">{displayName}</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {user.email || "Sem email"}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2 items-end">
-                    <StatusBadge variant={isActive ? "success" : "default"}>
-                      {isActive ? "Ativo" : "Inativo"}
-                    </StatusBadge>
-                    <StatusBadge variant={getRoleVariant(role)}>
-                      {getRoleLabel(role)}
-                    </StatusBadge>
-                  </div>
+          {/* Tab: Informações */}
+          <TabsContent value="info" className="flex-1 overflow-auto m-0 px-6 py-4">
+            <Card className="p-4 space-y-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Dados da Conta
+              </h3>
+              <div className="grid gap-3 text-sm">
+                <DetailSection icon={Mail} label="Email" value={user.email || "—"} inline />
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Privilégio:</span>
+                  <StatusBadge variant={getRoleVariant(role)} className="text-xs">
+                    {getRoleLabel(role)}
+                  </StatusBadge>
                 </div>
+                <DetailSection
+                  icon={FileText}
+                  label="Status"
+                  value={isActive ? "Conta ativa" : "Conta arquivada"}
+                  inline
+                />
+                <DetailSection
+                  icon={Calendar}
+                  label="Criado em"
+                  value={
+                    user.created_at
+                      ? format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })
+                      : "—"
+                  }
+                  inline
+                />
+                {user.profile?.updated_at && (
+                  <DetailSection
+                    icon={Calendar}
+                    label="Atualizado em"
+                    value={format(
+                      new Date(user.profile.updated_at),
+                      "dd/MM/yyyy HH:mm",
+                      { locale: ptBR }
+                    )}
+                    inline
+                  />
+                )}
+              </div>
+            </Card>
+          </TabsContent>
 
-                <Tabs defaultValue="info" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="info">Informações</TabsTrigger>
-                    <TabsTrigger value="links">Vínculos</TabsTrigger>
-                  </TabsList>
+          {/* Tab: Vínculos */}
+          <TabsContent value="links" className="flex-1 overflow-auto m-0 px-6 py-4">
+            <Card className="p-4">
+              <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
+                <Link2 className="h-4 w-4" />
+                Vínculos com Perfis
+              </h3>
 
-                  {/* Tab: Informações */}
-                  <TabsContent value="info" className="space-y-4 mt-4">
-                    <Card className="p-4 space-y-3">
-                      <h3 className="font-semibold text-sm flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        Dados da Conta
-                      </h3>
-                      <div className="grid gap-3 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">Email:</span>
-                          <span className="font-medium">{user.email || "—"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">Privilégio:</span>
-                          <StatusBadge variant={getRoleVariant(role)} className="text-xs">
-                            {getRoleLabel(role)}
-                          </StatusBadge>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">Status:</span>
-                          <span className="font-medium">
-                            {isActive ? "Conta ativa" : "Conta arquivada"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">Criado em:</span>
-                          <span className="font-medium">
-                            {user.created_at
-                              ? format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })
-                              : "—"}
-                          </span>
-                        </div>
-                        {user.profile?.updated_at && (
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Atualizado em:</span>
-                            <span className="font-medium">
-                              {format(
-                                new Date(user.profile.updated_at),
-                                "dd/MM/yyyy HH:mm",
-                                { locale: ptBR }
-                              )}
-                            </span>
-                          </div>
-                        )}
+              {!linkedStudent && !linkedTeacher ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum vínculo com aluno ou professor
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {linkedStudent && (
+                    <div className="p-3 rounded-lg border bg-muted/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-4 w-4 text-success" />
+                        <span className="text-sm font-medium">Aluno Vinculado</span>
                       </div>
-                    </Card>
-                  </TabsContent>
-
-                  {/* Tab: Vínculos */}
-                  <TabsContent value="links" className="space-y-4 mt-4">
-                    <Card className="p-4">
-                      <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
-                        <Link2 className="h-4 w-4" />
-                        Vínculos com Perfis
-                      </h3>
-
-                      {!linkedStudent && !linkedTeacher ? (
-                        <p className="text-sm text-muted-foreground">
-                          Nenhum vínculo com aluno ou professor
+                      <div className="space-y-1 text-sm">
+                        <p className="font-medium">{linkedStudent.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {linkedStudent.email || linkedStudent.phone || "—"}
                         </p>
-                      ) : (
-                        <div className="space-y-3">
-                          {linkedStudent && (
-                            <div className="p-3 rounded-lg border bg-muted/30">
-                              <div className="flex items-center gap-2 mb-2">
-                                <User className="h-4 w-4 text-success" />
-                                <span className="text-sm font-medium">Aluno Vinculado</span>
-                              </div>
-                              <div className="space-y-1 text-sm">
-                                <p className="font-medium">{linkedStudent.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {linkedStudent.email || linkedStudent.phone || "—"}
-                                </p>
-                                <StatusBadge
-                                  variant={linkedStudent.status === "ativo" ? "success" : "default"}
-                                  className="text-xs mt-2"
-                                >
-                                  {linkedStudent.status === "ativo" ? "Ativo" : "Inativo"}
-                                </StatusBadge>
-                              </div>
-                            </div>
-                          )}
+                        <StatusBadge
+                          variant={linkedStudent.status === "ativo" ? "success" : "default"}
+                          className="text-xs mt-2"
+                        >
+                          {linkedStudent.status === "ativo" ? "Ativo" : "Inativo"}
+                        </StatusBadge>
+                      </div>
+                    </div>
+                  )}
 
-                          {linkedTeacher && (
-                            <div className="p-3 rounded-lg border bg-muted/30">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Shield className="h-4 w-4 text-primary" />
-                                <span className="text-sm font-medium">Professor Vinculado</span>
-                              </div>
-                              <div className="space-y-1 text-sm">
-                                <p className="font-medium">{linkedTeacher.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {linkedTeacher.email || linkedTeacher.phone || "—"}
-                                </p>
-                                <StatusBadge
-                                  variant={linkedTeacher.status === "ativo" ? "success" : "default"}
-                                  className="text-xs mt-2"
-                                >
-                                  {linkedTeacher.status === "ativo" ? "Ativo" : "Inativo"}
-                                </StatusBadge>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </Card>
-                  </TabsContent>
-                </Tabs>
-              </>
-            )}
-          </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+                  {linkedTeacher && (
+                    <div className="p-3 rounded-lg border bg-muted/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Shield className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">Professor Vinculado</span>
+                      </div>
+                      <div className="space-y-1 text-sm">
+                        <p className="font-medium">{linkedTeacher.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {linkedTeacher.email || linkedTeacher.phone || "—"}
+                        </p>
+                        <StatusBadge
+                          variant={linkedTeacher.status === "ativo" ? "success" : "default"}
+                          className="text-xs mt-2"
+                        >
+                          {linkedTeacher.status === "ativo" ? "Ativo" : "Inativo"}
+                        </StatusBadge>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
+    </BaseDetailSheet>
   );
 }

@@ -2,12 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -201,48 +196,30 @@ export function StudentDetailSheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl p-0 flex flex-col">
-        <SheetHeader className="p-6 pb-4 border-b">
-          <SheetTitle className="flex items-center gap-3">
-            {isLoading ? (
-              <Skeleton className="h-12 w-12 rounded-full" />
-            ) : (
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-lg font-semibold text-primary">
-                  {student?.name?.charAt(0) || "?"}
-                </span>
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              {isLoading ? (
-                <>
-                  <Skeleton className="h-5 w-32 mb-1" />
-                  <Skeleton className="h-4 w-20" />
-                </>
-              ) : (
-                <>
-                  <p className="font-semibold truncate">{student?.name}</p>
-                  <StatusBadge
-                    variant={student?.status === "ativo" ? "success" : "default"}
-                  >
-                    {student?.status === "ativo" ? "Ativo" : "Inativo"}
-                  </StatusBadge>
-                </>
-              )}
-            </div>
-          </SheetTitle>
-        </SheetHeader>
-
-        {isLoading ? (
-          <div className="p-6 space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </div>
-        ) : student ? (
-          <>
-          <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
+    <BaseDetailSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isLoading ? "" : student?.name || ""}
+      subtitle={
+        isLoading ? (
+          <Skeleton className="h-4 w-20" />
+        ) : (
+          <StatusBadge variant={student?.status === "ativo" ? "success" : "default"}>
+            {student?.status === "ativo" ? "Ativo" : "Inativo"}
+          </StatusBadge>
+        )
+      }
+      size="LG"
+      noScroll={true}
+    >
+      {isLoading ? (
+        <div className="p-6 space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      ) : student ? (
+        <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
             <TabsList className="mx-6 mt-4 grid grid-cols-4">
               <TabsTrigger value="info" className="text-xs">
                 <User className="h-3.5 w-3.5 mr-1.5" />
@@ -702,13 +679,11 @@ export function StudentDetailSheet({
             </TabsContent>
 
           </Tabs>
-        </>
-        ) : (
-          <div className="p-6 text-center text-muted-foreground">
-            Aluno não encontrado
-          </div>
-        )}
-      </SheetContent>
-    </Sheet>
+      ) : (
+        <div className="p-6 text-center text-muted-foreground">
+          Aluno não encontrado
+        </div>
+      )}
+    </BaseDetailSheet>
   );
 }

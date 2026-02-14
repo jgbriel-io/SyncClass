@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Loader2 } from "lucide-react";
 import { Teacher, TeacherInsert } from "@/hooks/useTeachers";
 import { REGEX_PATTERNS, maskCPF } from "@/lib/utils/patterns";
@@ -119,14 +119,13 @@ export function TeacherFormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>
-            {teacher ? "Editar Professor" : "Cadastrar Novo Professor"}
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={teacher ? "Editar Professor" : "Cadastrar Novo Professor"}
+      size="MD"
+    >
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2 space-y-2">
               <Label htmlFor="name">Nome completo *</Label>
@@ -216,7 +215,6 @@ export function TeacherFormDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

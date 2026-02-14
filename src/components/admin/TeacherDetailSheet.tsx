@@ -1,13 +1,8 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
+import { DetailSection } from "@/components/ui/custom/DetailSection";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import {
@@ -73,177 +68,160 @@ export function TeacherDetailSheet({
   if (!open) return null;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-hidden flex flex-col p-0">
-        <SheetHeader className="px-6 py-4 border-b">
-          <SheetTitle className="text-xl font-semibold">
-            Detalhes do Professor
-          </SheetTitle>
-        </SheetHeader>
+    <BaseDetailSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Detalhes do Professor"
+      subtitle={
+        !teacher ? (
+          <Skeleton className="h-8 w-3/4" />
+        ) : (
+          <>
+            <h2 className="text-2xl font-bold">{teacher.name}</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {teacher.email || "Sem email"}
+            </p>
+            <StatusBadge
+              variant={teacher.status === "ativo" ? "success" : "default"}
+              className="mt-2"
+            >
+              {teacher.status === "ativo" ? "Ativo" : "Inativo"}
+            </StatusBadge>
+          </>
+        )
+      }
+      size="XL"
+      noScroll
+    >
+      {!teacher ? (
+        <div className="p-6 space-y-4">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+      ) : (
+        <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
+          <TabsList className="mx-6 mt-4 grid w-full grid-cols-3">
+            <TabsTrigger value="info">Informações</TabsTrigger>
+            <TabsTrigger value="students">Alunos</TabsTrigger>
+            <TabsTrigger value="stats">Estatísticas</TabsTrigger>
+          </TabsList>
 
-        <ScrollArea className="flex-1">
-          <div className="px-6 py-4 space-y-6">
-            {!teacher ? (
-              <div className="space-y-4">
-                <Skeleton className="h-8 w-3/4" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
+          {/* Tab: Informações */}
+          <TabsContent value="info" className="flex-1 overflow-auto m-0 px-6 py-4">
+            <Card className="p-4 space-y-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Dados Pessoais
+              </h3>
+              <div className="grid gap-3 text-sm">
+                <DetailSection icon={Mail} label="Email" value={teacher.email || "—"} inline />
+                <DetailSection icon={Phone} label="Telefone" value={teacher.phone || "—"} inline />
+                <DetailSection icon={FileText} label="CPF" value={teacher.cpf || "—"} inline />
+                <DetailSection
+                  icon={Calendar}
+                  label="Cadastrado em"
+                  value={
+                    teacher.created_at
+                      ? format(new Date(teacher.created_at), "dd/MM/yyyy", { locale: ptBR })
+                      : "—"
+                  }
+                  inline
+                />
               </div>
-            ) : (
-              <>
-                {/* Header com nome e status */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold">{teacher.name}</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {teacher.email || "Sem email"}
-                    </p>
-                  </div>
-                  <StatusBadge
-                    variant={teacher.status === "ativo" ? "success" : "default"}
-                  >
-                    {teacher.status === "ativo" ? "Ativo" : "Inativo"}
-                  </StatusBadge>
-                </div>
+            </Card>
+          </TabsContent>
 
-                <Tabs defaultValue="info" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="info">Informações</TabsTrigger>
-                    <TabsTrigger value="students">Alunos</TabsTrigger>
-                    <TabsTrigger value="stats">Estatísticas</TabsTrigger>
-                  </TabsList>
-
-                  {/* Tab: Informações */}
-                  <TabsContent value="info" className="space-y-4 mt-4">
-                    <Card className="p-4 space-y-3">
-                      <h3 className="font-semibold text-sm flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        Dados Pessoais
-                      </h3>
-                      <div className="grid gap-3 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">Email:</span>
-                          <span className="font-medium">{teacher.email || "—"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">Telefone:</span>
-                          <span className="font-medium">{teacher.phone || "—"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">CPF:</span>
-                          <span className="font-medium">{teacher.cpf || "—"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">Cadastrado em:</span>
-                          <span className="font-medium">
-                            {teacher.created_at
-                              ? format(new Date(teacher.created_at), "dd/MM/yyyy", { locale: ptBR })
-                              : "—"}
-                          </span>
-                        </div>
-                      </div>
-                    </Card>
-                  </TabsContent>
-
-                  {/* Tab: Alunos */}
-                  <TabsContent value="students" className="space-y-4 mt-4">
-                    <Card className="p-4">
-                      <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
-                        <Users className="h-4 w-4" />
-                        Alunos Ativos ({teacherStudents.length})
-                      </h3>
-                      {teacherStudents.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                          Nenhum aluno ativo vinculado
+          {/* Tab: Alunos */}
+          <TabsContent value="students" className="flex-1 overflow-auto m-0 px-6 py-4">
+            <Card className="p-4">
+              <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
+                <Users className="h-4 w-4" />
+                Alunos Ativos ({teacherStudents.length})
+              </h3>
+              {teacherStudents.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum aluno ativo vinculado
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {teacherStudents.map((student) => (
+                    <div
+                      key={student.id}
+                      className="flex items-center justify-between p-2 rounded-lg border"
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{student.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {student.email || student.phone || "—"}
                         </p>
-                      ) : (
-                        <div className="space-y-2">
-                          {teacherStudents.map((student) => (
-                            <div
-                              key={student.id}
-                              className="flex items-center justify-between p-2 rounded-lg border"
-                            >
-                              <div>
-                                <p className="text-sm font-medium">{student.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {student.email || student.phone || "—"}
-                                </p>
-                              </div>
-                              <div className="text-right text-xs text-muted-foreground">
-                                {student.hourly_rate && (
-                                  <p>{formatCurrency(student.hourly_rate)}/h</p>
-                                )}
-                                {student.classes_per_week && (
-                                  <p>{student.classes_per_week}x/semana</p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </Card>
-                  </TabsContent>
-
-                  {/* Tab: Estatísticas */}
-                  <TabsContent value="stats" className="space-y-4 mt-4">
-                    <div className="grid gap-4">
-                      <Card className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Users className="h-5 w-5 text-primary" />
-                            <span className="text-sm text-muted-foreground">Total de Alunos</span>
-                          </div>
-                          <span className="text-2xl font-bold">{teacherStudents.length}</span>
-                        </div>
-                      </Card>
-
-                      <Card className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <BookOpen className="h-5 w-5 text-primary" />
-                            <span className="text-sm text-muted-foreground">Total de Aulas</span>
-                          </div>
-                          <span className="text-2xl font-bold">{teacherClasses.length}</span>
-                        </div>
-                      </Card>
-
-                      <Card className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="h-5 w-5 text-success" />
-                            <span className="text-sm text-muted-foreground">Valor Recebido</span>
-                          </div>
-                          <span className="text-2xl font-bold text-success">
-                            {formatCurrency(totalReceived)}
-                          </span>
-                        </div>
-                      </Card>
-
-                      <Card className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5 text-primary" />
-                            <span className="text-sm text-muted-foreground">Média por Aula</span>
-                          </div>
-                          <span className="text-2xl font-bold">
-                            {teacherClasses.length > 0
-                              ? formatCurrency(totalReceived / teacherClasses.length)
-                              : "—"}
-                          </span>
-                        </div>
-                      </Card>
+                      </div>
+                      <div className="text-right text-xs text-muted-foreground">
+                        {student.hourly_rate && (
+                          <p>{formatCurrency(student.hourly_rate)}/h</p>
+                        )}
+                        {student.classes_per_week && (
+                          <p>{student.classes_per_week}x/semana</p>
+                        )}
+                      </div>
                     </div>
-                  </TabsContent>
-                </Tabs>
-              </>
-            )}
-          </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Estatísticas */}
+          <TabsContent value="stats" className="flex-1 overflow-auto m-0 px-6 py-4">
+            <div className="grid gap-4">
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    <span className="text-sm text-muted-foreground">Total de Alunos</span>
+                  </div>
+                  <span className="text-2xl font-bold">{teacherStudents.length}</span>
+                </div>
+              </Card>
+
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    <span className="text-sm text-muted-foreground">Total de Aulas</span>
+                  </div>
+                  <span className="text-2xl font-bold">{teacherClasses.length}</span>
+                </div>
+              </Card>
+
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-success" />
+                    <span className="text-sm text-muted-foreground">Valor Recebido</span>
+                  </div>
+                  <span className="text-2xl font-bold text-success">
+                    {formatCurrency(totalReceived)}
+                  </span>
+                </div>
+              </Card>
+
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    <span className="text-sm text-muted-foreground">Média por Aula</span>
+                  </div>
+                  <span className="text-2xl font-bold">
+                    {teacherClasses.length > 0
+                      ? formatCurrency(totalReceived / teacherClasses.length)
+                      : "—"}
+                  </span>
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      )}
+    </BaseDetailSheet>
   );
 }

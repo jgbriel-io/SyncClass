@@ -2,12 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -150,22 +145,25 @@ export function ActivityDetailSheet({
   const showCorrectionFormArea = activity.status === "entregue" && (showCorrectionForm || initialCorrectionMode);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col">
-        <SheetHeader className="p-6 pb-4 border-b">
-          <SheetTitle className="text-left space-y-1">
-            <p className="font-semibold">{activity.title}</p>
-            <p className="text-sm font-normal text-muted-foreground">
-              {activity.students?.name}
-            </p>
-            <StatusBadge variant={getStatusVariant(activity)}>
-              {getStatusLabel(activity)}
-            </StatusBadge>
-          </SheetTitle>
-        </SheetHeader>
-
-        <div className="w-full max-h-full self-start overflow-auto px-6 py-3">
-          <div className="space-y-4">
+    <BaseDetailSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={activity.title}
+      subtitle={
+        <>
+          <p className="text-sm font-normal text-muted-foreground">
+            {activity.students?.name}
+          </p>
+          <StatusBadge variant={getStatusVariant(activity)}>
+            {getStatusLabel(activity)}
+          </StatusBadge>
+        </>
+      }
+      size="DEFAULT"
+      noScroll={true}
+    >
+      <div className="w-full max-h-full self-start overflow-auto px-6 py-3">
+        <div className="space-y-4">
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                 Data de envio
@@ -353,112 +351,111 @@ export function ActivityDetailSheet({
                 )}
               </div>
             )}
-          </div>
         </div>
+      </div>
 
-        {activity.status === "entregue" && (
-          <div className="px-6 py-3 space-y-4">
-            {showCorrectionFormArea ? (
-              <form
-                onSubmit={handleSubmit(handleCorrectionSubmit, (errors) => {
-                  const msg = errors.feedback?.message ?? errors.grade?.message ?? "Preencha o feedback e a nota para enviar a correção.";
-                  toast.error(msg);
-                })}
-                className="space-y-4"
-              >
-                <p className="text-sm font-medium">Correção e feedback</p>
-                <div className="space-y-2">
-                  <Label htmlFor="feedback">Feedback</Label>
-                  <Textarea
-                    id="feedback"
-                    placeholder="Escreva sua correção, observações, elogios..."
-                    rows={4}
-                    {...register("feedback")}
-                    disabled={isCorrectionPending}
-                    className="resize-none"
-                  />
-                  {errors.feedback && (
-                    <p className="text-sm text-destructive">{errors.feedback.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="grade">Nota (0–10) *</Label>
+      {activity.status === "entregue" && (
+        <div className="px-6 py-3 space-y-4">
+          {showCorrectionFormArea ? (
+            <form
+              onSubmit={handleSubmit(handleCorrectionSubmit, (errors) => {
+                const msg = errors.feedback?.message ?? errors.grade?.message ?? "Preencha o feedback e a nota para enviar a correção.";
+                toast.error(msg);
+              })}
+              className="space-y-4"
+            >
+              <p className="text-sm font-medium">Correção e feedback</p>
+              <div className="space-y-2">
+                <Label htmlFor="feedback">Feedback</Label>
+                <Textarea
+                  id="feedback"
+                  placeholder="Escreva sua correção, observações, elogios..."
+                  rows={4}
+                  {...register("feedback")}
+                  disabled={isCorrectionPending}
+                  className="resize-none"
+                />
+                {errors.feedback && (
+                  <p className="text-sm text-destructive">{errors.feedback.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="grade">Nota (0–10) *</Label>
+                <Input
+                  id="grade"
+                  type="text"
+                  placeholder="Ex: 8.5"
+                  {...register("grade")}
+                  disabled={isCorrectionPending}
+                />
+                {errors.grade && (
+                  <p className="text-sm text-destructive">{errors.grade.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="correctionFile">Arquivo de correção (opcional)</Label>
+                <div className="flex items-center gap-2">
                   <Input
-                    id="grade"
-                    type="text"
-                    placeholder="Ex: 8.5"
-                    {...register("grade")}
+                    id="correctionFile"
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                    onChange={handleFileChange}
                     disabled={isCorrectionPending}
+                    className="cursor-pointer text-sm"
                   />
-                  {errors.grade && (
-                    <p className="text-sm text-destructive">{errors.grade.message}</p>
+                  {selectedFile && (
+                    <span className="text-xs text-muted-foreground truncate max-w-[140px]">
+                      {selectedFile.name}
+                    </span>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="correctionFile">Arquivo de correção (opcional)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="correctionFile"
-                      type="file"
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-                      onChange={handleFileChange}
-                      disabled={isCorrectionPending}
-                      className="cursor-pointer text-sm"
-                    />
-                    {selectedFile && (
-                      <span className="text-xs text-muted-foreground truncate max-w-[140px]">
-                        {selectedFile.name}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  {!initialCorrectionMode && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1"
-                      disabled={isCorrectionPending}
-                      onClick={() => {
-                        setShowCorrectionForm(false);
-                        setSelectedFile(null);
-                        reset();
-                      }}
-                    >
-                      Cancelar
-                    </Button>
-                  )}
+              </div>
+              <div className="flex gap-2">
+                {!initialCorrectionMode && (
                   <Button
-                    type="submit"
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
                     disabled={isCorrectionPending}
-                    className={initialCorrectionMode ? "w-full" : "flex-1 border-none bg-[#25D366] text-white hover:bg-[#1ebe57]"}
+                    onClick={() => {
+                      setShowCorrectionForm(false);
+                      setSelectedFile(null);
+                      reset();
+                    }}
                   >
-                    {isCorrectionPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Enviando...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Enviar correção
-                      </>
-                    )}
+                    Cancelar
                   </Button>
-                </div>
-              </form>
-            ) : (
-              <Button
-                className="w-full h-10 border-none bg-[#25D366] text-white hover:bg-[#1ebe57]"
-                onClick={() => setShowCorrectionForm(true)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Corrigir atividade
-              </Button>
-            )}
-          </div>
-        )}
-      </SheetContent>
-    </Sheet>
+                )}
+                <Button
+                  type="submit"
+                  disabled={isCorrectionPending}
+                  className={initialCorrectionMode ? "w-full" : "flex-1 border-none bg-[#25D366] text-white hover:bg-[#1ebe57]"}
+                >
+                  {isCorrectionPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Enviar correção
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <Button
+              className="w-full h-10 border-none bg-[#25D366] text-white hover:bg-[#1ebe57]"
+              onClick={() => setShowCorrectionForm(true)}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Corrigir atividade
+            </Button>
+          )}
+        </div>
+      )}
+    </BaseDetailSheet>
   );
 }

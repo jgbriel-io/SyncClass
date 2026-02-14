@@ -1,10 +1,5 @@
 import { useRef, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -55,11 +50,12 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const isPending = uploadAvatar.isPending || updateAvatar.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-lg w-[calc(100vw-2rem)] sm:w-full">
-        <DialogHeader>
-          <DialogTitle>Configurações</DialogTitle>
-        </DialogHeader>
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Configurações"
+      size="SM"
+    >
         <Tabs defaultValue="perfil" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="perfil" className="gap-2">
@@ -265,7 +261,6 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             </p>
           </TabsContent>
         </Tabs>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

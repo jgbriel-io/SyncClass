@@ -5,6 +5,8 @@ import { StudentFinancialCard } from "@/components/student/StudentFinancialCard"
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
 import { CheckCircle, Loader2, DollarSign, Wallet } from "lucide-react";
 import { useStudentFinancialRecords, useStudentStats } from "@/hooks/useStudentPortal";
+import { typography } from "@/lib/design-tokens/typography";
+import { stack } from "@/lib/design-tokens/spacing";
 
 export default function StudentFinancial() {
   const { data: records = [], isLoading, error } = useStudentFinancialRecords();
@@ -17,11 +19,11 @@ export default function StudentFinancial() {
 
   return (
     <PageContainer constrained maxWidth="5xl">
-      <div className="space-y-6">
+      <div className={stack('RELAXED')}>
         {/* Título + subtítulo */}
         <div>
-          <h1 className="text-xl font-semibold">Financeiro</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <h1 className={typography('H1')}>Financeiro</h1>
+          <p className={`${typography('SMALL')} mt-1`}>
             Seus pagamentos e cobranças
           </p>
         </div>
@@ -36,7 +38,7 @@ export default function StudentFinancial() {
         {/* Error */}
         {error && (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-            <p className="text-destructive text-sm">
+            <p className={typography('ERROR')}>
               Erro ao carregar dados financeiros. Tente novamente.
             </p>
           </div>
@@ -54,8 +56,8 @@ export default function StudentFinancial() {
             />
 
             {/* Lista de cobranças */}
-            <div className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            <div className={stack('DEFAULT')}>
+              <h2 className={typography('TABLE_HEADER')}>
                 Histórico de Pagamentos
               </h2>
               {records.length === 0 ? (
@@ -88,7 +90,7 @@ export default function StudentFinancial() {
             </div>
 
             {/* Último texto */}
-            <p className="text-center text-sm text-muted-foreground px-4">
+            <p className={`text-center ${typography('SMALL')} px-4`}>
               Dúvidas sobre pagamentos? Entre em contato com a secretaria.
             </p>
           </>

@@ -14,6 +14,9 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { DeliverActivityDialog } from "@/components/activities/DeliverActivityDialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { typography } from "@/lib/design-tokens/typography";
+import { stack, gap } from "@/lib/design-tokens/spacing";
+import { iconSize } from "@/lib/design-tokens/icon-sizes";
 
 const StudentActivitiesPage = () => {
   const { user } = useAuth();
@@ -101,8 +104,8 @@ const StudentActivitiesPage = () => {
     <PageContainer constrained maxWidth="5xl">
       {/* Header */}
       <div className="mb-4">
-        <h1 className="text-xl font-semibold">Minhas Atividades</h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <h1 className={typography('H1')}>Minhas Atividades</h1>
+        <p className={`${typography('SMALL')} mt-1`}>
           Visualize e entregue as atividades enviadas pelo seu professor
         </p>
       </div>
@@ -122,11 +125,11 @@ const StudentActivitiesPage = () => {
       )}
 
       {!studentIdLoading && !isLoading && activities.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+        <div className={stack('DEFAULT')}>
+          <h2 className={typography('TABLE_HEADER')}>
             Atividades
           </h2>
-          <div className="space-y-3">
+          <div className={stack('DEFAULT')}>
             {activities.map((activity) => (
               <Collapsible
                 key={activity.id}
@@ -134,11 +137,11 @@ const StudentActivitiesPage = () => {
                 onOpenChange={(open) => setExpandedId(open ? activity.id : null)}
               >
                 <Card className="p-4 overflow-hidden">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-3 flex-1 min-w-0">
+                  <div className={`flex items-start justify-between ${gap('LOOSE')}`}>
+                    <div className={`${stack('DEFAULT')} flex-1 min-w-0`}>
                       {/* Título + Badge (cada um no seu canto) */}
-                      <div className="flex items-center justify-between gap-3">
-                        <h3 className="font-semibold text-sm text-foreground truncate min-w-0">
+                      <div className={`flex items-center justify-between ${gap('DEFAULT')}`}>
+                        <h3 className={`${typography('BODY_SEMIBOLD')} truncate min-w-0`}>
                           {activity.title}
                         </h3>
                         <StatusBadge variant={getActivityDisplayStatus(activity).variant} className="shrink-0">
@@ -147,34 +150,34 @@ const StudentActivitiesPage = () => {
                       </div>
 
                       {/* Lista de informações com ícones */}
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                      <div className={`flex items-center ${gap('TIGHT')} ${typography('SMALL')}`}>
+                        <User className={`${iconSize('SM')} flex-shrink-0`} />
                         <span>Professor: {activity.teachers?.name || "—"}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                      <div className={`flex items-center ${gap('TIGHT')} ${typography('SMALL')}`}>
+                        <Calendar className={`${iconSize('SM')} flex-shrink-0`} />
                         <span>Enviada em {format(new Date(activity.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
                       </div>
                       {activity.due_date && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                        <div className={`flex items-center ${gap('TIGHT')} ${typography('SMALL')}`}>
+                          <Clock className={`${iconSize('SM')} flex-shrink-0`} />
                           <span>Prazo: {formatActivityDueDate(activity.due_date)}</span>
                         </div>
                       )}
                       {activity.delivered_at && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                        <div className={`flex items-center ${gap('TIGHT')} ${typography('SMALL')}`}>
+                          <Clock className={`${iconSize('SM')} flex-shrink-0`} />
                           <span>Entregue em {format(new Date(activity.delivered_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
                         </div>
                       )}
 
                       {/* Conteúdo expandido */}
                       <CollapsibleContent>
-                        <div className="pt-2 space-y-4">
+                        <div className={`pt-2 ${stack('LOOSE')}`}>
                           {/* Material da atividade (enviado pelo professor) */}
-                          <div className="border-t pt-4 space-y-3">
-                            <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-primary" />
+                          <div className={`border-t pt-4 ${stack('DEFAULT')}`}>
+                            <div className={`flex items-center ${gap('TIGHT')}`}>
+                              <FileText className={`${iconSize('SM')} text-primary`} />
                               <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
                                 Material da atividade
                               </span>

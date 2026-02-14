@@ -7,6 +7,9 @@ import { GraduationCap, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { typography } from "@/lib/design-tokens/typography";
+import { stack, gap } from "@/lib/design-tokens/spacing";
+import { iconSize } from "@/lib/design-tokens/icon-sizes";
 
 export default function ResetPassword() {
   const { user, isLoading: authLoading } = useAuth();
@@ -65,17 +68,17 @@ export default function ResetPassword() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center p-8">
-        <div className="w-full max-w-sm space-y-6 text-center">
-          <h2 className="text-xl font-semibold">Link expirado ou inválido</h2>
-          <p className="text-muted-foreground text-sm">
+        <div className={`w-full max-w-sm ${stack('RELAXED')} text-center`}>
+          <h2 className={typography('H1')}>Link expirado ou inválido</h2>
+          <p className={typography('SMALL')}>
             Solicite um novo link de redefinição de senha na página de login.
           </p>
           <Button asChild className="w-full">
             <Link to="/esqueci-senha">Solicitar novo link</Link>
           </Button>
           <p>
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-              <ArrowLeft className="h-4 w-4" />
+            <Link to="/login" className={`${typography('SMALL')} hover:text-foreground inline-flex items-center ${gap('TIGHT')}`}>
+              <ArrowLeft className={iconSize('SM')} />
               Voltar ao login
             </Link>
           </p>
@@ -106,21 +109,21 @@ export default function ResetPassword() {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-sm space-y-8">
+        <div className={`w-full max-w-sm ${stack('RELAXED')}`}>
           <div className="lg:hidden flex justify-center">
-            <Link to="/login" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-              <GraduationCap className="h-8 w-8" />
-              <span className="text-xl font-semibold">EduCore</span>
+            <Link to="/login" className={`flex items-center ${gap('TIGHT')} text-muted-foreground hover:text-foreground`}>
+              <GraduationCap className={iconSize('XL')} />
+              <span className={typography('H1')}>EduCore</span>
             </Link>
           </div>
 
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold tracking-tight">Definir nova senha</h2>
-            <p className="text-muted-foreground text-sm">Mínimo de 6 caracteres.</p>
+          <div className={stack('TIGHT')}>
+            <h2 className={typography('H2')}>Definir nova senha</h2>
+            <p className={typography('SMALL')}>Mínimo de 6 caracteres.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
+          <form onSubmit={handleSubmit} className={stack('RELAXED')}>
+            <div className={stack('TIGHT')}>
               <Label htmlFor="password">Nova senha</Label>
               <div className="relative">
                 <Input
@@ -140,11 +143,11 @@ export default function ResetPassword() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   disabled={isSubmitting}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? <EyeOff className={iconSize('SM')} /> : <Eye className={iconSize('SM')} />}
                 </button>
               </div>
             </div>
-            <div className="space-y-2">
+            <div className={stack('TIGHT')}>
               <Label htmlFor="confirm">Confirmar senha</Label>
               <Input
                 id="confirm"
@@ -161,7 +164,7 @@ export default function ResetPassword() {
             <Button type="submit" className="w-full h-11" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className={`mr-2 ${iconSize('SM')} animate-spin`} />
                   Salvando...
                 </>
               ) : (
@@ -171,8 +174,8 @@ export default function ResetPassword() {
           </form>
 
           <p className="text-center">
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-              <ArrowLeft className="h-4 w-4" />
+            <Link to="/login" className={`${typography('SMALL')} hover:text-foreground inline-flex items-center ${gap('TIGHT')}`}>
+              <ArrowLeft className={iconSize('SM')} />
               Voltar ao login
             </Link>
           </p>

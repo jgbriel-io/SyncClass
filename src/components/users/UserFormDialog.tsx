@@ -3,12 +3,7 @@ import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { emailSchema } from "@/lib/validation/email";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -403,11 +398,12 @@ export function UserFormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={selectedRole === "admin" ? "sm:max-w-md" : "sm:max-w-lg"}>
-        <DialogHeader>
-          <DialogTitle>{user ? "Editar Usuário" : "Novo Usuário"}</DialogTitle>
-        </DialogHeader>
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={user ? "Editar Usuário" : "Novo Usuário"}
+      size={selectedRole === "admin" ? "SM" : "MD"}
+    >
         
         {!isEdit && (
           <div className="mt-2 mb-4">
@@ -839,7 +835,6 @@ export function UserFormDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }
