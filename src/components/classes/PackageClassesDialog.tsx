@@ -451,7 +451,7 @@ export function PackageClassesDialog({
           {scheduleMode === "fixed" && (
             <div className="space-y-3">
               <p className="text-sm font-medium">Gerar aulas em horário fixo no mês</p>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>Mês</Label>
                   <Select
@@ -513,7 +513,7 @@ export function PackageClassesDialog({
                   ))}
                 </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>Horário início</Label>
                   <Input
@@ -671,7 +671,7 @@ export function PackageClassesDialog({
             );
           })()}
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-4 pt-4">
             <Button
               type="button"
               variant="outline"

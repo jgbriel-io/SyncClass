@@ -532,7 +532,7 @@ export function ClassLogFormDialog({
           {/* Início e término da aula */}
           <div className="space-y-3 rounded-lg border p-3">
             <p className="text-sm font-medium">Horário</p>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="start_time">Início</Label>
                 <Input id="start_time" type="time" {...register("start_time")} />
@@ -738,7 +738,7 @@ export function ClassLogFormDialog({
           )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-4 pt-4">
             <Button
               type="button"
               variant="outline"

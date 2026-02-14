@@ -71,7 +71,7 @@ import {
 } from "@/components/filters/UsersFilters";
 import { defaultUsersFilters } from "@/components/filters/filterDefaults";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { UsersTableSkeleton } from "@/components/ui/table-skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import { UsersTableRow } from "@/components/users/UsersTableRow";
 import { COL as USER_COL, TABLE_MIN_W as USER_TABLE_MIN_W } from "@/components/users/UsersTableRow.constants";
@@ -536,7 +536,7 @@ export default function UsersPage() {
 
         {/* Table */}
         {isLoading ? (
-          <TableSkeleton rows={10} columns={7} />
+          <UsersTableSkeleton rows={10} />
         ) : !error && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
             <div className="overflow-x-auto">
@@ -867,7 +867,7 @@ export default function UsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex justify-end gap-3">
+                <div className="flex justify-end gap-4">
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -910,7 +910,7 @@ export default function UsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex justify-end gap-3">
+                <div className="flex justify-end gap-4">
                   <Button
                     variant="outline"
                     onClick={() => {

@@ -39,7 +39,7 @@ describe('Design Tokens: Spacing', () => {
 
     it('deve ter os valores corretos', () => {
       expect(GAP.TIGHT).toBe('gap-2');
-      expect(GAP.DEFAULT).toBe('gap-3');
+      expect(GAP.DEFAULT).toBe('gap-4');
       expect(GAP.LOOSE).toBe('gap-4');
       expect(GAP.RELAXED).toBe('gap-6');
     });
@@ -138,7 +138,7 @@ describe('Design Tokens: Spacing', () => {
   describe('gap()', () => {
     it('deve retornar a classe correta', () => {
       expect(gap('TIGHT')).toBe('gap-2');
-      expect(gap('DEFAULT')).toBe('gap-3');
+      expect(gap('DEFAULT')).toBe('gap-4');
       expect(gap('LOOSE')).toBe('gap-4');
       expect(gap('RELAXED')).toBe('gap-6');
     });

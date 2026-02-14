@@ -231,7 +231,7 @@ export function DashboardView({
           onClick={() => setIsQuickActionsExpanded(!isQuickActionsExpanded)}
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <Zap className="h-4 w-4 text-primary" />
             </div>
@@ -321,7 +321,7 @@ export function DashboardView({
         <>
           {/* Alerta Próxima Aula */}
           {todayClasses?.nextClass && (
-            <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 flex items-center gap-3">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 flex items-center gap-4">
               <Bell className="h-5 w-5 text-primary shrink-0" />
               <p className="text-sm font-medium">
                 {basePath === "/teacher" ? "Sua próxima aula" : "Próxima aula do dia"}{" "}
@@ -456,7 +456,7 @@ export function DashboardView({
           {/* Aulas de Hoje - altura relativa à quantidade de aulas */}
           <div className="rounded-xl border bg-card shadow-card overflow-hidden">
             <div className="flex items-center justify-between border-b px-6 py-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center">
                   <Clock className="h-4 w-4 text-warning" />
                 </div>
@@ -486,7 +486,7 @@ export function DashboardView({
                           key={item.id}
                           className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-4">
                             <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
                               <span className="text-xs font-medium">
                                 {item.studentName.charAt(0)}
@@ -528,7 +528,7 @@ export function DashboardView({
             {/* Upcoming Payments */}
             <div className="rounded-xl border bg-card shadow-card">
               <div className="flex items-center justify-between border-b px-6 py-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center">
                     <Clock className="h-4 w-4 text-warning" />
                   </div>
@@ -552,7 +552,7 @@ export function DashboardView({
                       key={payment.id}
                       className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
                           <span className="text-xs font-medium">
                             {payment.studentName.charAt(0)}
@@ -588,7 +588,7 @@ export function DashboardView({
             {/* Birthdays */}
             <div className="rounded-xl border bg-card shadow-card flex flex-col min-h-0">
               <div className="flex items-center justify-between border-b px-6 py-4 shrink-0">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center">
                     <span className="text-lg">🎂</span>
                   </div>
@@ -612,7 +612,7 @@ export function DashboardView({
                       key={birthday.id}
                       className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center">
                           <span className="text-xs font-medium">
                             {birthday.name.charAt(0)}
@@ -647,7 +647,7 @@ export function DashboardView({
           {/* Gráfico de crescimento - ao final da página */}
           <div className="rounded-xl border bg-card shadow-card">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b px-6 py-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center">
                   <TrendingUp className="h-4 w-4 text-success" />
                 </div>
@@ -660,7 +660,7 @@ export function DashboardView({
                   </p>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-4">
                 {onChartMonthsChange && (
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4 text-muted-foreground" />

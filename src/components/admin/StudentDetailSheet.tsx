@@ -272,7 +272,7 @@ export function StudentDetailSheet({
                     return (
                       <>
                         {/* Stats Cards */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-4">
                           <div className="rounded-lg border bg-card p-4">
                             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                               <TrendingUp className="h-4 w-4" />
@@ -305,7 +305,7 @@ export function StudentDetailSheet({
                             Informações Pessoais
                           </h3>
                           <div className="space-y-3">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                               <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                                 <User className="h-4 w-4 text-muted-foreground" />
                               </div>
@@ -314,7 +314,7 @@ export function StudentDetailSheet({
                                 <p className="text-sm font-medium">{student.cpf || "—"}</p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                               <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                                 <Mail className="h-4 w-4 text-muted-foreground" />
                               </div>
@@ -323,7 +323,7 @@ export function StudentDetailSheet({
                                 <p className="text-sm font-medium">{student.email || "—"}</p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                               <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                                 <Phone className="h-4 w-4 text-muted-foreground" />
                               </div>
@@ -332,7 +332,7 @@ export function StudentDetailSheet({
                                 <p className="text-sm font-medium">{student.phone || "—"}</p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                               <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
                               </div>
@@ -351,7 +351,7 @@ export function StudentDetailSheet({
                           <h3 className="text-sm font-medium text-muted-foreground">
                             Localização
                           </h3>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-4">
                             <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                               <MapPin className="h-4 w-4 text-muted-foreground" />
                             </div>
@@ -371,7 +371,7 @@ export function StudentDetailSheet({
                           <h3 className="text-sm font-medium text-muted-foreground">
                             Plano de aulas e cobrança
                           </h3>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-2 gap-4">
                             <div className="rounded-lg border bg-card p-3">
                               <p className="text-xs text-muted-foreground mb-1">Valor por hora</p>
                               <p className="text-sm font-semibold">
@@ -506,7 +506,7 @@ export function StudentDetailSheet({
                           <Card className="p-4 overflow-hidden">
                             <div className="flex items-start justify-between gap-4">
                               <div className="space-y-3 flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center justify-between gap-4">
                                   <h3 className="font-semibold text-sm text-foreground truncate min-w-0">
                                     {escapeHtml(activity.title)}
                                   </h3>
@@ -540,7 +540,7 @@ export function StudentDetailSheet({
                                           />
                                         </div>
                                       )}
-                                      <div className="flex items-center gap-3 rounded-lg p-3 bg-muted/30">
+                                      <div className="flex items-center gap-4 rounded-lg p-3 bg-muted/30">
                                         <FileText className="h-5 w-5 text-muted-foreground" />
                                         <div className="flex-1 min-w-0">
                                           <p className="text-sm font-medium truncate">{activity.file_name}</p>
@@ -569,7 +569,7 @@ export function StudentDetailSheet({
                                           </div>
                                         )}
                                         {activity.student_response_file_url && activity.student_response_file_name && (
-                                          <div className="flex items-center gap-3 rounded-lg p-3 bg-muted/30">
+                                          <div className="flex items-center gap-4 rounded-lg p-3 bg-muted/30">
                                             <File className="h-5 w-5 text-muted-foreground" />
                                             <div className="flex-1 min-w-0">
                                               <p className="text-sm font-medium truncate">{activity.student_response_file_name}</p>
@@ -600,7 +600,7 @@ export function StudentDetailSheet({
                                           </div>
                                         )}
                                         {activity.correction_file_url && activity.correction_file_name && (
-                                          <div className="flex items-center gap-3 rounded-lg p-3 bg-muted/30">
+                                          <div className="flex items-center gap-4 rounded-lg p-3 bg-muted/30">
                                             <FileText className="h-5 w-5 text-muted-foreground" />
                                             <span className="text-sm truncate flex-1">{activity.correction_file_name}</span>
                                             <Button size="sm" variant="outline" onClick={() => handleActivityDownload(activity.correction_file_url!, activity.correction_file_name!)}>

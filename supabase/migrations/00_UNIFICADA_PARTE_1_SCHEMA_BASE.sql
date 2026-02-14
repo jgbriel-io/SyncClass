@@ -1,9 +1,17 @@
 -- ============================================================
--- MIGRATION UNIFICADA - Schema completo do banco (edu-core-zen)
+-- MIGRATION UNIFICADA - PARTE 1: SCHEMA BASE
 -- ============================================================
--- Uso: executar em um projeto Supabase NOVO para recriar toda
--- a estrutura (migrar de conta, novo ambiente, etc.).
--- Banco vazio: não inclui limpeza de dados nem correções retroativas.
+-- Consolidação de TODAS as migrations da pasta supabase/migrations
+-- Data: 2026-02-14
+-- 
+-- IMPORTANTE: Esta é a PARTE 1 de 2
+-- Execute na ordem: PARTE_1 → PARTE_2
+-- 
+-- Contém:
+-- - Schema completo (20260202000000_full_schema_unified.sql)
+-- - Correções e ajustes (2024-2026)
+-- - Sistema de atividades
+-- - Ajustes de RLS e constraints
 -- ============================================================
 
 -- ============================================================
@@ -90,9 +98,10 @@ CREATE TABLE public.class_logs (
     billed_amount NUMERIC NULL,
     observations TEXT NULL,
     title TEXT NULL,
-    attendance BOOLEAN DEFAULT true,
+    attendance BOOLEAN DEFAULT NULL,
     grade DECIMAL(4,2) CHECK (grade >= 0 AND grade <= 10),
     feedback TEXT,
+    notes TEXT,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -107,9 +116,51 @@ CREATE TABLE public.financial_records (
     status payment_status DEFAULT 'pendente',
     payment_method TEXT,
     paid_at TIMESTAMPTZ,
+    confirmed_by_user_id UUID,
+    confirmed_at TIMESTAMPTZ,
+    idempotency_key TEXT UNIQUE,
+    last_status_change_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
-    CONSTRAINT unique_class_log_id UNIQUE (class_log_id)
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Constraint FK para confirmed_by_user_id
+ALTER TABLE public.financial_records
+ADD CONSTRAINT fk_financial_records_confirmed_by_user
+FOREIGN KEY (confirmed_by_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+-- Tabela de vínculos de pacotes
+CREATE TABLE IF NOT EXISTS public.financial_record_class_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  financial_record_id UUID NOT NULL REFERENCES public.financial_records(id) ON DELETE CASCADE,
+  class_log_id UUID NOT NULL REFERENCES public.class_logs(id) ON DELETE CASCADE,
+  UNIQUE (class_log_id)
+);
+
+-- Tabela de atividades
+CREATE TABLE IF NOT EXISTS public.activities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
+  teacher_id UUID NOT NULL REFERENCES public.teachers(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  file_url TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  file_type TEXT,
+  file_size INTEGER,
+  status TEXT NOT NULL DEFAULT 'enviada' CHECK (status IN ('enviada', 'entregue', 'corrigida')),
+  feedback TEXT,
+  correction_file_url TEXT,
+  correction_file_name TEXT,
+  student_response_text TEXT,
+  student_response_file_url TEXT,
+  student_response_file_name TEXT,
+  grade NUMERIC(3,1) NULL,
+  due_date TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  delivered_at TIMESTAMPTZ,
+  corrected_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -150,13 +201,33 @@ CREATE INDEX idx_financial_records_student_status ON public.financial_records(st
 CREATE INDEX idx_class_logs_student_attendance ON public.class_logs(student_id, attendance);
 CREATE INDEX idx_students_teacher_status ON public.students(teacher_id, status) WHERE teacher_id IS NOT NULL;
 CREATE INDEX idx_students_not_deleted ON public.students(id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_financial_records_idempotency_key ON public.financial_records(idempotency_key) WHERE idempotency_key IS NOT NULL;
+
+-- Índices para financial_record_class_logs
+CREATE INDEX IF NOT EXISTS idx_frcl_financial_record_id ON public.financial_record_class_logs(financial_record_id);
+CREATE INDEX IF NOT EXISTS idx_frcl_class_log_id ON public.financial_record_class_logs(class_log_id);
+
+-- Índices para activities
+CREATE INDEX IF NOT EXISTS idx_activities_student_id ON public.activities(student_id);
+CREATE INDEX IF NOT EXISTS idx_activities_teacher_id ON public.activities(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_activities_status ON public.activities(status);
+CREATE INDEX IF NOT EXISTS idx_activities_created_at ON public.activities(created_at DESC);
+
+-- Índices otimizados para RLS
+CREATE INDEX IF NOT EXISTS idx_students_teacher_id ON public.students(teacher_id) WHERE teacher_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_profiles_teacher_id ON public.profiles(teacher_id) WHERE teacher_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_profiles_student_id ON public.profiles(student_id) WHERE student_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON public.profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_class_logs_student_id ON public.class_logs(student_id);
+CREATE INDEX IF NOT EXISTS idx_class_logs_teacher_id ON public.class_logs(teacher_id) WHERE teacher_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_financial_records_student_id ON public.financial_records(student_id);
 
 -- ============================================================
--- CONSTRAINTS (class_logs temporal + overlap)
+-- CONSTRAINTS
 -- ============================================================
 ALTER TABLE public.class_logs
   ADD CONSTRAINT chk_class_logs_no_future_attendance
-  CHECK ((attendance = false) OR (class_date <= (CURRENT_DATE)));
+  CHECK ((attendance IS DISTINCT FROM true) OR (class_date <= (CURRENT_DATE)));
 
 ALTER TABLE public.class_logs
   ADD CONSTRAINT chk_class_logs_grade_null_when_absent
@@ -170,8 +241,14 @@ ALTER TABLE public.class_logs
   )
   WHERE (teacher_id IS NOT NULL AND start_at IS NOT NULL AND end_at IS NOT NULL);
 
+-- Constraint para soft delete
+ALTER TABLE public.students
+ADD CONSTRAINT students_deleted_at_check 
+CHECK (deleted_at IS NULL OR deleted_at <= now());
+
+
 -- ============================================================
--- VIEWS (criadas aqui antes das funções que as usam)
+-- VIEWS
 -- ============================================================
 
 CREATE VIEW public.student_financial_balance WITH (security_invoker = true) AS
@@ -200,6 +277,54 @@ SELECT s.id AS student_id, s.name AS student_name,
 FROM public.students s
 LEFT JOIN public.class_logs cl ON cl.student_id = s.id
 GROUP BY s.id, s.name;
+
+CREATE VIEW public.student_complete_balance WITH (security_invoker = true) AS
+SELECT s.id, s.name, s.email, s.phone, s.cpf, s.status, s.origin, s.birth_date, s.city, s.state, s.hourly_rate, s.classes_per_week, s.pay_day, s.teacher_id, s.created_at, s.updated_at,
+  COALESCE(fb.total_paid, 0) AS total_paid, COALESCE(fb.total_pending, 0) AS total_pending, COALESCE(fb.total_overdue, 0) AS total_overdue, COALESCE(fb.total_unpaid, 0) AS total_unpaid,
+  COALESCE(fb.count_paid, 0) AS count_paid, COALESCE(fb.count_pending, 0) AS count_pending, COALESCE(fb.count_overdue, 0) AS count_overdue,
+  COALESCE(cs.total_classes, 0) AS total_classes, COALESCE(cs.present_classes, 0) AS present_classes, COALESCE(cs.absent_classes, 0) AS absent_classes,
+  COALESCE(cs.attendance_rate, 0) AS attendance_rate, COALESCE(cs.average_grade, 0) AS average_grade, COALESCE(cs.graded_classes, 0) AS graded_classes,
+  cs.last_class_date, cs.first_class_date
+FROM public.students s
+LEFT JOIN public.student_financial_balance fb ON fb.student_id = s.id
+LEFT JOIN public.student_class_stats cs ON cs.student_id = s.id
+WHERE s.deleted_at IS NULL;
+
+CREATE VIEW public.students_active WITH (security_invoker = true) AS
+SELECT id, name, cpf, phone, email, origin, status, birth_date, city, state, hourly_rate, classes_per_week, pay_day, teacher_id, created_at, updated_at
+FROM public.students WHERE deleted_at IS NULL;
+
+CREATE VIEW public.students_active_masked WITH (security_invoker = true) AS
+SELECT s.id, s.name,
+  CASE WHEN public.is_admin() THEN s.cpf ELSE public.mask_cpf(s.cpf) END AS cpf,
+  CASE WHEN public.is_admin() THEN s.phone WHEN (public.get_my_teacher_id() IS NOT NULL AND s.teacher_id = public.get_my_teacher_id()) THEN s.phone ELSE public.mask_phone(s.phone) END AS phone,
+  s.email, s.origin, s.status, s.birth_date, s.city, s.state, s.hourly_rate, s.classes_per_week, s.pay_day, s.teacher_id, s.created_at, s.updated_at
+FROM public.students s WHERE s.deleted_at IS NULL;
+
+CREATE VIEW public.students_masked WITH (security_invoker = true) AS
+SELECT s.id, s.name,
+  CASE WHEN public.is_admin() THEN s.cpf ELSE public.mask_cpf(s.cpf) END AS cpf,
+  CASE WHEN public.is_admin() THEN s.phone WHEN (public.get_my_teacher_id() IS NOT NULL AND s.teacher_id = public.get_my_teacher_id()) THEN s.phone ELSE public.mask_phone(s.phone) END AS phone,
+  s.email, s.origin, s.status, s.birth_date, s.city, s.state, s.hourly_rate, s.classes_per_week, s.pay_day, s.teacher_id, s.created_at, s.updated_at
+FROM public.students s;
+
+CREATE VIEW public.teachers_masked WITH (security_invoker = true) AS
+SELECT t.id, t.name, t.email,
+  CASE WHEN public.is_admin() THEN t.cpf ELSE public.mask_cpf(t.cpf) END AS cpf,
+  CASE WHEN public.is_admin() THEN t.phone ELSE public.mask_phone(t.phone) END AS phone,
+  t.specialization, t.status, t.created_at, t.updated_at
+FROM public.teachers t;
+
+CREATE VIEW public.class_logs_with_billing WITH (security_invoker = true) AS
+SELECT cl.id AS class_log_id, cl.student_id, cl.teacher_id, cl.class_date, cl.start_at, cl.end_at, cl.attendance, cl.title, cl.grade, cl.feedback, cl.created_at,
+  fr.id AS financial_record_id, fr.amount AS billed_amount, fr.status AS billing_status, fr.due_date AS billing_due_date, fr.paid_at AS billing_paid_at,
+  CASE WHEN fr.id IS NULL THEN 'not_billed' WHEN fr.status = 'pago' THEN 'paid' WHEN fr.status = 'pendente' AND fr.due_date >= CURRENT_DATE THEN 'pending' WHEN fr.status = 'pendente' AND fr.due_date < CURRENT_DATE THEN 'overdue' ELSE 'unknown' END AS billing_status_consolidated,
+  s.name AS student_name, t.name AS teacher_name
+FROM public.class_logs cl
+LEFT JOIN public.financial_records fr ON fr.class_log_id = cl.id
+LEFT JOIN public.students s ON s.id = cl.student_id
+LEFT JOIN public.teachers t ON t.id = cl.teacher_id
+ORDER BY cl.class_date DESC;
 
 -- ============================================================
 -- FUNCTIONS (auth helpers, triggers, RPCs, LGPD, checks)
@@ -236,23 +361,18 @@ DECLARE
     user_role TEXT;
     user_full_name TEXT;
 BEGIN
-    -- Try to get role from user metadata, default to 'student' if not provided
     user_role := COALESCE(NEW.raw_user_meta_data->>'role', 'student');
     
-    -- Ensure role is valid
     IF user_role NOT IN ('admin', 'student', 'teacher') THEN
         user_role := 'student';
     END IF;
     
-    -- Get full name from metadata
     user_full_name := COALESCE(NEW.raw_user_meta_data->>'full_name', '');
     
-    -- Insert into profiles (only if doesn't exist)
     INSERT INTO public.profiles (user_id, full_name, email, role, active)
     VALUES (NEW.id, user_full_name, NEW.email, user_role, true)
     ON CONFLICT (user_id) DO NOTHING;
     
-    -- Insert into user_roles (only if doesn't exist)
     INSERT INTO public.user_roles (user_id, role, full_name, email)
     VALUES (NEW.id, user_role, user_full_name, NEW.email)
     ON CONFLICT (user_id) DO UPDATE
@@ -263,7 +383,6 @@ BEGIN
     RETURN NEW;
 EXCEPTION
     WHEN OTHERS THEN
-        -- Log error but don't fail user creation
         RAISE WARNING 'Error in handle_new_user trigger: %', SQLERRM;
         RETURN NEW;
 END;
@@ -275,17 +394,6 @@ AS $$
 BEGIN
   IF NEW.start_at IS NOT NULL AND NEW.end_at IS NOT NULL AND NEW.start_at < NEW.end_at THEN
     NEW.duration_minutes := (EXTRACT(EPOCH FROM (NEW.end_at - NEW.start_at)) / 60)::integer;
-  END IF;
-  RETURN NEW;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.check_financial_requires_class_log()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
-AS $$
-BEGIN
-  IF NEW.class_log_id IS NULL THEN
-    RAISE EXCEPTION 'Cobranças devem ser vinculadas a uma aula. Registre a aula na aba Aulas.';
   END IF;
   RETURN NEW;
 END;
@@ -400,7 +508,23 @@ RETURNS TABLE (total_paid NUMERIC, total_pending NUMERIC, total_overdue NUMERIC,
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$ SELECT total_paid, total_pending, total_overdue, total_unpaid FROM public.student_financial_balance WHERE student_id = p_student_id $$;
 
--- Check CPF/phone exists (invite-user, etc.)
+CREATE OR REPLACE FUNCTION public.hard_delete_student_record(p_student_id UUID)
+RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  DELETE FROM public.students WHERE id = p_student_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.hard_delete_teacher_record(p_teacher_id UUID)
+RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  DELETE FROM public.teachers WHERE id = p_teacher_id;
+END;
+$$;
+
+-- Check CPF/phone exists
 CREATE OR REPLACE FUNCTION public.check_student_cpf_exists(p_cpf_digits TEXT)
 RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$ SELECT EXISTS (SELECT 1 FROM public.students WHERE cpf IS NOT NULL AND length(regexp_replace(trim(cpf), '\D', '', 'g')) = 11 AND regexp_replace(trim(cpf), '\D', '', 'g') = p_cpf_digits) $$;
@@ -463,6 +587,31 @@ BEGIN
 END;
 $$;
 
+-- Função para proteger soft delete
+CREATE OR REPLACE FUNCTION public.protect_soft_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT (SELECT public.is_admin()) THEN
+        IF (TG_OP = 'UPDATE' AND OLD.deleted_at IS DISTINCT FROM NEW.deleted_at) THEN
+            RAISE EXCEPTION 'Apenas admins podem modificar deleted_at';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Backfill class_logs.teacher_id
+DO $$
+BEGIN
+  UPDATE public.class_logs cl
+  SET teacher_id = s.teacher_id
+  FROM public.students s
+  WHERE cl.student_id = s.id
+    AND cl.teacher_id IS NULL
+    AND s.teacher_id IS NOT NULL;
+END $$;
+
+
 -- ============================================================
 -- TRIGGERS
 -- ============================================================
@@ -471,11 +620,12 @@ CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles FOR E
 CREATE TRIGGER update_financial_records_updated_at BEFORE UPDATE ON public.financial_records FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_class_logs_updated_at BEFORE UPDATE ON public.class_logs FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_teachers_updated_at BEFORE UPDATE ON public.teachers FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_activities_updated_at BEFORE UPDATE ON public.activities FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 CREATE TRIGGER trg_compute_class_log_duration BEFORE INSERT OR UPDATE OF start_at, end_at ON public.class_logs FOR EACH ROW EXECUTE FUNCTION public.compute_class_log_duration();
-CREATE TRIGGER trg_check_financial_requires_class_log BEFORE INSERT ON public.financial_records FOR EACH ROW EXECUTE FUNCTION public.check_financial_requires_class_log();
 CREATE TRIGGER trg_check_cpf_phone_platform_students BEFORE INSERT OR UPDATE OF cpf, phone ON public.students FOR EACH ROW EXECUTE FUNCTION public.check_cpf_phone_platform_trigger();
 CREATE TRIGGER trg_check_cpf_phone_platform_teachers BEFORE INSERT OR UPDATE OF cpf, phone ON public.teachers FOR EACH ROW EXECUTE FUNCTION public.check_cpf_phone_platform_trigger();
+CREATE TRIGGER protect_students_soft_delete BEFORE UPDATE ON public.students FOR EACH ROW EXECUTE FUNCTION public.protect_soft_delete();
 
 -- ============================================================
 -- ROW LEVEL SECURITY
@@ -486,7 +636,9 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.financial_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.class_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.teachers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.activities ENABLE ROW LEVEL SECURITY;
 
+-- user_roles policies
 CREATE POLICY "user_roles_select" ON public.user_roles FOR SELECT
   USING (user_id = (SELECT auth.uid()) OR (SELECT auth.role()) = 'service_role' OR (SELECT public.is_admin()));
 
@@ -506,6 +658,7 @@ CREATE POLICY "user_roles_teacher_sync_student" ON public.user_roles FOR ALL
     AND user_id IN (SELECT p.user_id FROM public.profiles p JOIN public.students s ON s.id = p.student_id WHERE s.teacher_id = (SELECT public.get_my_teacher_id()) AND p.user_id IS NOT NULL)
   );
 
+-- profiles policies
 CREATE POLICY "profiles_select" ON public.profiles FOR SELECT
   USING (user_id = (SELECT auth.uid()) OR (SELECT auth.role()) = 'service_role' OR (SELECT public.is_admin()));
 
@@ -518,22 +671,46 @@ CREATE POLICY "profiles_insert" ON public.profiles FOR INSERT
 CREATE POLICY "profiles_admin_all" ON public.profiles FOR ALL
   USING ((SELECT public.is_admin()));
 
+-- students policies
 CREATE POLICY "students_admin_all" ON public.students FOR ALL
   USING ((SELECT public.is_admin())) WITH CHECK ((SELECT public.is_admin()));
 
-CREATE POLICY "students_select" ON public.students FOR SELECT
-  USING (id = (SELECT public.get_my_student_id()) OR teacher_id = (SELECT public.get_my_teacher_id()));
+CREATE POLICY "students_select_secure" ON public.students FOR SELECT
+  USING (
+    id = (SELECT public.get_my_student_id())
+    OR (SELECT public.is_admin())
+    OR EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.teacher_id = students.teacher_id
+      AND p.user_id = auth.uid()
+    )
+  );
 
 CREATE POLICY "students_update_teacher" ON public.students FOR UPDATE
   USING (teacher_id = (SELECT public.get_my_teacher_id()))
   WITH CHECK (teacher_id = (SELECT public.get_my_teacher_id()));
 
+-- teachers policies
 CREATE POLICY "teachers_admin_all" ON public.teachers FOR ALL
   USING ((SELECT public.is_admin())) WITH CHECK ((SELECT public.is_admin()));
 
-CREATE POLICY "teachers_select" ON public.teachers FOR SELECT
-  USING (id = (SELECT public.get_my_teacher_id()) OR (SELECT public.is_admin()));
+CREATE POLICY "teachers_select_own" ON public.teachers FOR SELECT
+  USING (
+    id = (SELECT public.get_my_teacher_id())
+    OR (SELECT public.is_admin())
+  );
 
+CREATE POLICY "teachers_select_student_own_teacher" ON public.teachers FOR SELECT
+  USING (
+    id = (
+      SELECT s.teacher_id
+      FROM public.students s
+      WHERE s.id = (SELECT public.get_my_student_id())
+      LIMIT 1
+    )
+  );
+
+-- financial_records policies
 CREATE POLICY "financial_records_select" ON public.financial_records FOR SELECT
   USING (
     student_id = (SELECT public.get_my_student_id())
@@ -551,87 +728,159 @@ CREATE POLICY "financial_records_admin_teacher_all" ON public.financial_records 
     OR student_id IN (SELECT id FROM public.students WHERE teacher_id = (SELECT public.get_my_teacher_id()))
   );
 
-CREATE POLICY "class_logs_select" ON public.class_logs FOR SELECT
+-- class_logs policies
+CREATE POLICY "teacher_can_read_own_class_logs" ON public.class_logs FOR SELECT
   USING (
-    student_id = (SELECT public.get_my_student_id())
-    OR (SELECT public.is_admin())
-    OR EXISTS (SELECT 1 FROM public.students s WHERE s.id = class_logs.student_id AND s.teacher_id = (SELECT public.get_my_teacher_id()))
+    (is_admin()) OR
+    (EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid() AND profiles.teacher_id = class_logs.teacher_id)) OR
+    (EXISTS (SELECT 1 FROM students s JOIN profiles p ON s.teacher_id = p.teacher_id WHERE s.id = class_logs.student_id AND p.user_id = auth.uid())) OR
+    (EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid() AND profiles.student_id = class_logs.student_id))
   );
 
-CREATE POLICY "class_logs_admin_teacher_all" ON public.class_logs FOR ALL
+CREATE POLICY "teacher_can_manage_own_class_logs" ON public.class_logs FOR ALL
   USING (
-    (SELECT public.is_admin())
-    OR EXISTS (SELECT 1 FROM public.students s WHERE s.id = class_logs.student_id AND s.teacher_id = (SELECT public.get_my_teacher_id()))
+    (is_admin()) OR
+    (EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid() AND profiles.teacher_id = class_logs.teacher_id)) OR
+    (EXISTS (SELECT 1 FROM students s JOIN profiles p ON s.teacher_id = p.teacher_id WHERE s.id = class_logs.student_id AND p.user_id = auth.uid()))
   )
   WITH CHECK (
-    (SELECT public.is_admin())
-    OR EXISTS (SELECT 1 FROM public.students s WHERE s.id = class_logs.student_id AND s.teacher_id = (SELECT public.get_my_teacher_id()))
+    (is_admin()) OR
+    (EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid() AND profiles.teacher_id = class_logs.teacher_id)) OR
+    (EXISTS (SELECT 1 FROM students s JOIN profiles p ON s.teacher_id = p.teacher_id WHERE s.id = class_logs.student_id AND p.user_id = auth.uid()))
   );
 
--- Adicionais views com complementos de dados
-CREATE VIEW public.student_complete_balance WITH (security_invoker = true) AS
-SELECT s.id, s.name, s.email, s.phone, s.cpf, s.status, s.origin, s.birth_date, s.city, s.state, s.hourly_rate, s.classes_per_week, s.pay_day, s.teacher_id, s.created_at, s.updated_at,
-  COALESCE(fb.total_paid, 0) AS total_paid, COALESCE(fb.total_pending, 0) AS total_pending, COALESCE(fb.total_overdue, 0) AS total_overdue, COALESCE(fb.total_unpaid, 0) AS total_unpaid,
-  COALESCE(fb.count_paid, 0) AS count_paid, COALESCE(fb.count_pending, 0) AS count_pending, COALESCE(fb.count_overdue, 0) AS count_overdue,
-  COALESCE(cs.total_classes, 0) AS total_classes, COALESCE(cs.present_classes, 0) AS present_classes, COALESCE(cs.absent_classes, 0) AS absent_classes,
-  COALESCE(cs.attendance_rate, 0) AS attendance_rate, COALESCE(cs.average_grade, 0) AS average_grade, COALESCE(cs.graded_classes, 0) AS graded_classes,
-  cs.last_class_date, cs.first_class_date
-FROM public.students s
-LEFT JOIN public.student_financial_balance fb ON fb.student_id = s.id
-LEFT JOIN public.student_class_stats cs ON cs.student_id = s.id
-WHERE s.deleted_at IS NULL;
+-- activities policies
+CREATE POLICY "teachers_select_own_students_activities" ON public.activities FOR SELECT
+  USING (teacher_id IN (SELECT teacher_id FROM public.profiles WHERE user_id = auth.uid()));
 
-CREATE VIEW public.students_active WITH (security_invoker = true) AS
-SELECT id, name, cpf, phone, email, origin, status, birth_date, city, state, hourly_rate, classes_per_week, pay_day, teacher_id, created_at, updated_at
-FROM public.students WHERE deleted_at IS NULL;
+CREATE POLICY "teachers_insert_own_students_activities" ON public.activities FOR INSERT
+  WITH CHECK (teacher_id IN (SELECT teacher_id FROM public.profiles WHERE user_id = auth.uid()));
 
-CREATE VIEW public.students_active_masked WITH (security_invoker = true) AS
-SELECT s.id, s.name,
-  CASE WHEN public.is_admin() THEN s.cpf ELSE public.mask_cpf(s.cpf) END AS cpf,
-  CASE WHEN public.is_admin() THEN s.phone WHEN (public.get_my_teacher_id() IS NOT NULL AND s.teacher_id = public.get_my_teacher_id()) THEN s.phone ELSE public.mask_phone(s.phone) END AS phone,
-  s.email, s.origin, s.status, s.birth_date, s.city, s.state, s.hourly_rate, s.classes_per_week, s.pay_day, s.teacher_id, s.created_at, s.updated_at
-FROM public.students s WHERE s.deleted_at IS NULL;
+CREATE POLICY "teachers_update_own_students_activities" ON public.activities FOR UPDATE
+  USING (teacher_id IN (SELECT teacher_id FROM public.profiles WHERE user_id = auth.uid()));
 
-CREATE VIEW public.students_masked WITH (security_invoker = true) AS
-SELECT s.id, s.name,
-  CASE WHEN public.is_admin() THEN s.cpf ELSE public.mask_cpf(s.cpf) END AS cpf,
-  CASE WHEN public.is_admin() THEN s.phone WHEN (public.get_my_teacher_id() IS NOT NULL AND s.teacher_id = public.get_my_teacher_id()) THEN s.phone ELSE public.mask_phone(s.phone) END AS phone,
-  s.email, s.origin, s.status, s.birth_date, s.city, s.state, s.hourly_rate, s.classes_per_week, s.pay_day, s.teacher_id, s.created_at, s.updated_at
-FROM public.students s;
+CREATE POLICY "teachers_delete_own_students_activities" ON public.activities FOR DELETE
+  USING (teacher_id IN (SELECT teacher_id FROM public.profiles WHERE user_id = auth.uid()));
 
-CREATE VIEW public.teachers_masked WITH (security_invoker = true) AS
-SELECT t.id, t.name, t.email,
-  CASE WHEN public.is_admin() THEN t.cpf ELSE public.mask_cpf(t.cpf) END AS cpf,
-  CASE WHEN public.is_admin() THEN t.phone ELSE public.mask_phone(t.phone) END AS phone,
-  t.specialization, t.status, t.created_at, t.updated_at
-FROM public.teachers t;
+CREATE POLICY "students_select_own_activities" ON public.activities FOR SELECT
+  USING (student_id IN (SELECT student_id FROM public.profiles WHERE user_id = auth.uid()));
 
-CREATE VIEW public.class_logs_with_billing WITH (security_invoker = true) AS
-SELECT cl.id AS class_log_id, cl.student_id, cl.teacher_id, cl.class_date, cl.attendance, cl.title, cl.grade, cl.feedback, cl.created_at,
-  fr.id AS financial_record_id, fr.amount AS billed_amount, fr.status AS billing_status, fr.due_date AS billing_due_date, fr.paid_at AS billing_paid_at,
-  CASE WHEN fr.id IS NULL THEN 'not_billed' WHEN fr.status = 'pago' THEN 'paid' WHEN fr.status = 'pendente' AND fr.due_date >= CURRENT_DATE THEN 'pending' WHEN fr.status = 'pendente' AND fr.due_date < CURRENT_DATE THEN 'overdue' ELSE 'unknown' END AS billing_status_consolidated,
-  s.name AS student_name, t.name AS teacher_name
-FROM public.class_logs cl
-LEFT JOIN public.financial_records fr ON fr.class_log_id = cl.id
-LEFT JOIN public.students s ON s.id = cl.student_id
-LEFT JOIN public.teachers t ON t.id = cl.teacher_id
-ORDER BY cl.class_date DESC;
+CREATE POLICY "students_update_own_activities_status" ON public.activities FOR UPDATE
+  USING (student_id IN (SELECT student_id FROM public.profiles WHERE user_id = auth.uid()))
+  WITH CHECK (status = 'entregue' AND delivered_at IS NOT NULL);
+
+CREATE POLICY "admins_all_activities" ON public.activities FOR ALL
+  USING ((SELECT public.is_admin()))
+  WITH CHECK ((SELECT public.is_admin()));
 
 -- ============================================================
--- STORAGE (avatars bucket)
+-- STORAGE (avatars and activities buckets)
 -- ============================================================
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES ('avatars', 'avatars', true, 2097152, ARRAY['image/jpeg', 'image/png', 'image/webp'])
 ON CONFLICT (id) DO UPDATE SET file_size_limit = EXCLUDED.file_size_limit, allowed_mime_types = EXCLUDED.allowed_mime_types;
 
-CREATE POLICY "avatars_insert_own" ON storage.objects FOR INSERT TO authenticated
-  WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = (auth.uid())::text);
-CREATE POLICY "avatars_select_public" ON storage.objects FOR SELECT TO public USING (bucket_id = 'avatars');
-CREATE POLICY "avatars_update_own" ON storage.objects FOR UPDATE TO authenticated
-  USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = (auth.uid())::text)
-  WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = (auth.uid())::text);
-CREATE POLICY "avatars_delete_own" ON storage.objects FOR DELETE TO authenticated
-  USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = (auth.uid())::text);
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('activities', 'activities', false, 52428800, ARRAY[
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'text/plain'
+])
+ON CONFLICT (id) DO UPDATE SET 
+  file_size_limit = EXCLUDED.file_size_limit, 
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+-- Storage policies for avatars
+DROP POLICY IF EXISTS "avatars_insert_own" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_select_public" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_update_own" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_delete_own" ON storage.objects;
+
+CREATE POLICY "avatars_insert_secure" ON storage.objects FOR INSERT
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = (auth.uid())::text
+    AND auth.uid() IS NOT NULL
+  );
+
+CREATE POLICY "avatars_select_public" ON storage.objects FOR SELECT
+  USING (bucket_id = 'avatars');
+
+CREATE POLICY "avatars_update_secure" ON storage.objects FOR UPDATE
+  USING (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = (auth.uid())::text
+    AND owner = auth.uid()
+  )
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = (auth.uid())::text
+    AND owner = auth.uid()
+  );
+
+CREATE POLICY "avatars_delete_secure" ON storage.objects FOR DELETE
+  USING (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = (auth.uid())::text
+    AND owner = auth.uid()
+  );
+
+-- Storage policies for activities
+DROP POLICY IF EXISTS "teachers_upload_activities" ON storage.objects;
+DROP POLICY IF EXISTS "students_upload_responses" ON storage.objects;
+DROP POLICY IF EXISTS "teachers_view_activities" ON storage.objects;
+DROP POLICY IF EXISTS "students_view_own_activities" ON storage.objects;
+DROP POLICY IF EXISTS "students_update_own_responses" ON storage.objects;
+DROP POLICY IF EXISTS "students_delete_own_responses" ON storage.objects;
+DROP POLICY IF EXISTS "admins_all_activities_storage" ON storage.objects;
+
+CREATE POLICY "teachers_upload_activities" ON storage.objects FOR INSERT
+  WITH CHECK (
+    bucket_id = 'activities' AND
+    EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND teacher_id IS NOT NULL)
+  );
+
+CREATE POLICY "students_upload_responses" ON storage.objects FOR INSERT
+  WITH CHECK (
+    bucket_id = 'activities' AND
+    EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND student_id IS NOT NULL)
+  );
+
+CREATE POLICY "teachers_view_activities" ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'activities' AND
+    EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND teacher_id IS NOT NULL)
+  );
+
+CREATE POLICY "students_view_own_activities" ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'activities' AND
+    EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND student_id IS NOT NULL)
+  );
+
+CREATE POLICY "students_update_own_responses" ON storage.objects FOR UPDATE
+  USING (
+    bucket_id = 'activities' AND
+    EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND student_id IS NOT NULL)
+  );
+
+CREATE POLICY "students_delete_own_responses" ON storage.objects FOR DELETE
+  USING (
+    bucket_id = 'activities' AND
+    EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND student_id IS NOT NULL)
+  );
+
+CREATE POLICY "admins_all_activities_storage" ON storage.objects FOR ALL
+  USING (
+    bucket_id = 'activities' AND (SELECT public.is_admin())
+  )
+  WITH CHECK (
+    bucket_id = 'activities' AND (SELECT public.is_admin())
+  );
 
 -- ============================================================
 -- GRANTS
@@ -652,6 +901,8 @@ GRANT SELECT ON public.students_masked TO authenticated;
 GRANT SELECT ON public.teachers_masked TO authenticated;
 GRANT EXECUTE ON FUNCTION public.soft_delete_student(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.restore_student(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.hard_delete_student_record(UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION public.hard_delete_teacher_record(UUID) TO service_role;
 GRANT EXECUTE ON FUNCTION public.check_student_cpf_exists(TEXT) TO service_role;
 GRANT EXECUTE ON FUNCTION public.check_student_phone_exists(TEXT) TO service_role;
 GRANT EXECUTE ON FUNCTION public.check_teacher_cpf_exists(TEXT) TO service_role;
@@ -662,5 +913,7 @@ GRANT EXECUTE ON FUNCTION public.check_phone_exists_platform(TEXT) TO service_ro
 GRANT EXECUTE ON FUNCTION public.check_phone_exists_platform(TEXT) TO authenticated;
 
 -- ============================================================
--- FIM MIGRATION UNIFICADA
+-- FIM DA PARTE 1
 -- ============================================================
+-- Execute a PARTE 2 em seguida para completar a migration
+

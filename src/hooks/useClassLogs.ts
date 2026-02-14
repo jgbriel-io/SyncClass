@@ -43,44 +43,6 @@ function getDateRangeForPeriod(period: "week" | "month" | "3months"): { from: st
   };
 }
 
-/** Verifica se há sobreposição de horários para o mesmo professor na mesma data */
-async function checkClassOverlap(
-  teacherId: string | null,
-  classDate: string,
-  startAt: string | null,
-  endAt: string | null,
-  excludeId?: string
-): Promise<{ overlap: boolean; message?: string }> {
-  if (!teacherId || !startAt || !endAt) return { overlap: false };
-  const start = new Date(startAt).getTime();
-  const end = new Date(endAt).getTime();
-  if (start >= end) return { overlap: false };
-
-  const { data: existing, error } = await supabase
-    .from("class_logs")
-    .select("id, start_at, end_at")
-    .eq("teacher_id", teacherId)
-    .eq("class_date", classDate)
-    .not("start_at", "is", null)
-    .not("end_at", "is", null);
-
-  if (error) throw error;
-
-  for (const row of existing || []) {
-    if (excludeId && row.id === excludeId) continue;
-    const rowStart = new Date(row.start_at!).getTime();
-    const rowEnd = new Date(row.end_at!).getTime();
-    const overlaps = start < rowEnd && rowStart < end;
-    if (overlaps) {
-      return {
-        overlap: true,
-        message: "Já existe outra aula neste horário para este professor. Escolha outro intervalo.",
-      };
-    }
-  }
-  return { overlap: false };
-}
-
 export type ClassLog = Tables<"class_logs">;
 export type ClassLogInsert = TablesInsert<"class_logs">;
 export type ClassLogUpdate = TablesUpdate<"class_logs">;
@@ -415,15 +377,7 @@ export function useCreateClassLog() {
 
   return useMutation({
     mutationFn: async (log: ClassLogInsert) => {
-      const overlap = await checkClassOverlap(
-        log.teacher_id,
-        log.class_date,
-        log.start_at,
-        log.end_at
-      );
-      if (overlap.overlap) {
-        throw new Error(overlap.message);
-      }
+      // Validação de sobreposição agora é feita no banco via trigger
       const { data, error } = await supabase
         .from("class_logs")
         .insert(log)
@@ -451,7 +405,8 @@ export function useCreateClassLog() {
         msg.includes("overlap") ||
         msg.includes("class_logs_no_overlap") ||
         msg.includes("exclusion constraint") ||
-        msg.includes("conflicting key");
+        msg.includes("conflicting key") ||
+        msg.includes("agendada em");
       toast.error(
         isOverlap
           ? "Já existe outra aula neste horário para este professor. Escolha outro intervalo."
@@ -466,18 +421,9 @@ export function useCreateClassLogWithFinancial() {
 
   return useMutation({
     mutationFn: async ({ classLog, createFinancial, financialData }: ClassLogWithFinancialData) => {
+      // Validação de sobreposição agora é feita no banco via trigger
       // Permite cobrança para aulas agendadas (futuras): professor pode deixar em aberto
       // antes da aula; presença e feedback são marcados depois.
-
-      const overlap = await checkClassOverlap(
-        classLog.teacher_id,
-        classLog.class_date,
-        classLog.start_at,
-        classLog.end_at
-      );
-      if (overlap.overlap) {
-        throw new Error(overlap.message);
-      }
 
       // Primeiro cria a aula
       const { data: createdLog, error: logError } = await supabase
@@ -547,7 +493,8 @@ export function useCreateClassLogWithFinancial() {
         msg.includes("overlap") ||
         msg.includes("class_logs_no_overlap") ||
         msg.includes("exclusion constraint") ||
-        msg.includes("conflicting key");
+        msg.includes("conflicting key") ||
+        msg.includes("agendada em");
       toast.error(
         isOverlap
           ? "Já existe outra aula neste horário para este professor. Escolha outro intervalo."
@@ -569,18 +516,7 @@ export function useUpdateClassLog() {
 
   return useMutation({
     mutationFn: async ({ id, financialRecordId, dueDate, amount, ...updates }: UpdateClassLogPayload) => {
-      const hasTimeChange = "start_at" in updates || "end_at" in updates || "class_date" in updates || "teacher_id" in updates;
-      if (hasTimeChange) {
-        const { data: current } = await supabase.from("class_logs").select("teacher_id, class_date, start_at, end_at").eq("id", id).single();
-        const teacherId = updates.teacher_id ?? (current?.teacher_id ?? null);
-        const classDate = updates.class_date ?? (current?.class_date ?? null);
-        const startAt = updates.start_at ?? (current?.start_at ?? null);
-        const endAt = updates.end_at ?? (current?.end_at ?? null);
-        if (teacherId && classDate && startAt && endAt) {
-          const overlap = await checkClassOverlap(teacherId, classDate, startAt, endAt, id);
-          if (overlap.overlap) throw new Error(overlap.message);
-        }
-      }
+      // Validação de sobreposição agora é feita no banco via trigger
       const { data, error } = await supabase
         .from("class_logs")
         .update(updates)
@@ -629,7 +565,8 @@ export function useUpdateClassLog() {
         msg.includes("overlap") ||
         msg.includes("class_logs_no_overlap") ||
         msg.includes("exclusion constraint") ||
-        msg.includes("conflicting key");
+        msg.includes("conflicting key") ||
+        msg.includes("agendada em");
       toast.error(
         isOverlap
           ? "Já existe outra aula neste horário para este professor. Escolha outro intervalo."
@@ -665,136 +602,55 @@ export function useCreateClassLogPackage() {
       const { items, packageFinancial } = payload;
       if (items.length === 0) throw new Error("Nenhuma aula no pacote.");
 
-      // Verificar sobreposição de cada aula com as existentes e entre si
-      for (let i = 0; i < items.length; i++) {
-        const { classLog } = items[i];
-        const overlap = await checkClassOverlap(
-          classLog.teacher_id,
-          classLog.class_date,
-          classLog.start_at,
-          classLog.end_at
-        );
-        if (overlap.overlap) throw new Error(overlap.message);
+      // Gerar chave de idempotência usando crypto.randomUUID()
+      const idempotencyKey = crypto.randomUUID();
 
-        for (let j = i + 1; j < items.length; j++) {
-          const other = items[j].classLog;
-          if (
-            classLog.teacher_id &&
-            other.teacher_id === classLog.teacher_id &&
-            classLog.class_date === other.class_date &&
-            classLog.start_at &&
-            classLog.end_at &&
-            other.start_at &&
-            other.end_at
-          ) {
-            const start = new Date(classLog.start_at).getTime();
-            const end = new Date(classLog.end_at).getTime();
-            const oStart = new Date(other.start_at).getTime();
-            const oEnd = new Date(other.end_at).getTime();
-            if (start < oEnd && oStart < end) {
-              throw new Error(
-                "Duas aulas do pacote têm o mesmo professor e horários que se sobrepõem. Ajuste as datas/horários."
-              );
-            }
-          }
-        }
-      }
+      // Converter para formato do RPC
+      const classLogs = items.map((item) => ({
+        student_id: item.classLog.student_id,
+        teacher_id: item.classLog.teacher_id || null,
+        class_date: item.classLog.class_date,
+        start_at: item.classLog.start_at,
+        end_at: item.classLog.end_at,
+        attendance: item.classLog.attendance ?? true,
+        notes: item.classLog.notes || null,
+      }));
 
-      const insertPayload = items.map((it) => {
-        const tid = it.classLog.teacher_id;
-        return {
-          ...it.classLog,
-          teacher_id: tid != null && String(tid).trim() !== "" ? tid : null,
-        };
-      });
-      const { data: insertedLogs, error: insertError } = await supabase
-        .from("class_logs")
-        .insert(insertPayload)
-        .select("id, student_id, class_date, start_at");
-
-      if (insertError) throw insertError;
-      if (!insertedLogs || insertedLogs.length !== items.length) {
-        throw new Error("Erro ao criar registros de aula.");
-      }
-
-      if (packageFinancial && packageFinancial.amount > 0) {
-        const studentId = insertedLogs[0]?.student_id;
-        if (!studentId) throw new Error("Erro ao obter aluno do pacote.");
-        
-        // Avoid relying on RETURNING/select() after insert due to RLS issues.
-        // Insert the financial record without select, then query it back.
-        const { error: frError } = await supabase
-          .from("financial_records")
-          .insert({
-            student_id: studentId,
-            class_log_id: null,
+      const financialData = packageFinancial
+        ? {
             amount: packageFinancial.amount,
             due_date: packageFinancial.due_date,
             description: packageFinancial.description?.trim() || `Pacote mensal - ${items.length} aulas`,
-            payment_method: packageFinancial.payment_method ?? null,
-            status: "pendente",
-          });
-        
-        if (frError) {
-          toast.error(`Aulas criadas, erro ao criar cobrança: ${frError.message}`);
-          return insertedLogs;
-        }
-        
-        // Query back the financial record we just created
-        // Use a small delay to ensure the insert is committed
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        const { data: financialRecord, error: queryError } = await supabase
-          .from("financial_records")
-          .select("id")
-          .eq("student_id", studentId)
-          .eq("amount", packageFinancial.amount)
-          .eq("due_date", packageFinancial.due_date)
-          .is("class_log_id", null)
-          .eq("status", "pendente")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        if (queryError) {
-          toast.error(`Cobrança pode ter sido criada, erro ao buscar: ${queryError.message}`);
-          return insertedLogs;
-        }
-        
-        if (!financialRecord?.id) {
-          toast.error("Cobrança pode ter sido criada mas não foi encontrada. Verifique a aba Financeiro.");
-          return insertedLogs;
-        }
-        
-        // Link the classes to the package financial record
-        const links = insertedLogs.map((log) => ({
-          financial_record_id: financialRecord.id,
-          class_log_id: log.id,
-        }));
-        
-        const { error: linkError } = await supabase
-          .from("financial_record_class_logs")
-          .insert(links);
-        
-        if (linkError) {
-          toast.error(`Aulas e cobrança criadas, erro ao vincular: ${linkError.message}`);
-        }
-      }
+            payment_method: packageFinancial.payment_method || null,
+          }
+        : { amount: 0, due_date: null, description: null, payment_method: null };
 
-      return insertedLogs;
+      // Chamar RPC create_class_package (validação no banco via hooks)
+      const { data, error } = await supabase.rpc("create_class_package", {
+        p_class_logs: classLogs,
+        p_financial_data: financialData,
+        p_idempotency_key: idempotencyKey,
+      });
+
+      if (error) throw error;
+      return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs_pending_evaluation"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
       queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
       queryClient.invalidateQueries({ queryKey: ["available_class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });
-      const withFinancial = !!variables.packageFinancial;
-      toast.success(
-        `${variables.items.length} aula(s) registrada(s)${withFinancial ? " com cobrança do pacote" : ""} com sucesso!`
-      );
+      
+      // Usar mensagem do RPC
+      toast.success(data.message || `${variables.items.length} aula(s) registrada(s) com sucesso!`);
     },
     onError: (error) => {
       const err = error as Error & { details?: string; code?: string };
@@ -804,8 +660,9 @@ export function useCreateClassLogPackage() {
         msg.includes("neste horário") ||
         msg.includes("sobrepõem") ||
         msg.includes("overlap") ||
-        msg.includes("Duas aulas");
-      const displayMsg = isOverlap ? msg : (msg ? `${msg}${details}` : "Erro ao cadastrar pacote de aulas. Tente novamente.");
+        msg.includes("Duas aulas") ||
+        msg.includes("agendada em");
+      const displayMsg = isOverlap ? msg : msg ? `${msg}${details}` : "Erro ao cadastrar pacote de aulas. Tente novamente.";
       toast.error(displayMsg);
     },
   });
@@ -832,9 +689,16 @@ export function useDeleteClassLog() {
       }
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs_pending_evaluation"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Registro removido com sucesso!");
     },

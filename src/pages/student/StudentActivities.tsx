@@ -187,7 +187,7 @@ const StudentActivitiesPage = () => {
                                 <p className="text-sm whitespace-pre-wrap">{activity.description}</p>
                               </div>
                             )}
-                            <div className="flex items-center gap-3 rounded-lg p-4 bg-muted/30">
+                            <div className="flex items-center gap-4 rounded-lg p-4 bg-muted/30">
                               <FileText className="h-5 w-5 text-muted-foreground" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium truncate">{activity.file_name}</p>
@@ -222,7 +222,7 @@ const StudentActivitiesPage = () => {
                                 </div>
                               )}
                               {activity.student_response_file_url && activity.student_response_file_name && (
-                                <div className="flex items-center gap-3 rounded-lg p-4 bg-muted/30">
+                                <div className="flex items-center gap-4 rounded-lg p-4 bg-muted/30">
                                   <File className="h-5 w-5 text-muted-foreground" />
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium truncate">{activity.student_response_file_name}</p>
@@ -279,7 +279,7 @@ const StudentActivitiesPage = () => {
                                 </div>
                               )}
                               {activity.correction_file_url && activity.correction_file_name && (
-                                <div className="flex items-center gap-3 rounded-lg p-4 bg-muted/30">
+                                <div className="flex items-center gap-4 rounded-lg p-4 bg-muted/30">
                                   <File className="h-5 w-5 text-muted-foreground" />
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium truncate">{activity.correction_file_name}</p>

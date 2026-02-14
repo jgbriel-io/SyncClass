@@ -7,26 +7,29 @@ import {
 import { defaultStudentsFilters } from "@/components/filters/filterDefaults";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyStudentsState } from "@/components/ui/contextual-empty-states";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils/formatters";
-import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Search, Plus, Eye, EyeOff, Copy, Check, Users, UserCheck, UserX, TrendingUp, Loader2 } from "lucide-react";
+import { StudentFormDialog } from "@/components/students/StudentFormDialog";
+import {
+  useStudentsPaginated,
+  useCreateStudent,
+  useUpdateStudent,
+  useHardDeleteStudent,
+  Student,
+  StudentInsert,
+} from "@/hooks/useStudents";
+import { useInviteStudent, useCreateAuthUserForStudent, useTeacherResetPassword } from "@/hooks/useUsers";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,39 +40,30 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check, KeyRound, Users, UserCheck, UserX, TrendingUp } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { StudentFormDialog } from "@/components/students/StudentFormDialog";
-import {
-  useStudentsPaginated,
-  useCreateStudent,
-  useUpdateStudent,
-  useHardDeleteStudent,
-  Student,
-  StudentInsert,
-} from "@/hooks/useStudents";
-import { useCreateAuthUserForStudent, useInviteStudent, useTeacherResetPassword } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useFinancialRecordsByStudentIds, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
-import { useClassLogsByStudentIds } from "@/hooks/useClassLogs";
 import { useStudentsStats } from "@/hooks/useStudentsStats";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { StudentsTableSkeleton } from "@/components/ui/table-skeleton";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StudentsTableRow } from "@/components/students/StudentsTableRow";
 import { COL as STUD_COL, TABLE_MIN_W as STUD_TABLE_MIN_W } from "@/components/students/StudentsTableRow.constants";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { Teacher } from "@/hooks/useTeachers";
+
+/* ❌ ANTIGO: Imports não mais necessários (DEPRECATED - remover em 2026-03-01)
+import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
+import { useFinancialRecordsByStudentIds, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
+import { useClassLogsByStudentIds } from "@/hooks/useClassLogs";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { MoreHorizontal, Pencil, Trash2, Loader2, KeyRound } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useCreateAuthUserForStudent, useTeacherResetPassword } from "@/hooks/useUsers";
+*/
 
 interface StudentsListViewProps {
   title: string;
@@ -101,6 +95,34 @@ const TABLE_MIN_W = STUD_TABLE_MIN_W;
 
 /** Calcula dados derivados de uma linha (para evitar repetição no map) */
 function getStudentRowData(
+  student: Student & {
+    monthly_total_calculated?: number | null;
+    financial_status?: string | null;
+    financial_status_label?: string | null;
+    financial_status_variant?: "default" | "success" | "warning" | "destructive" | null;
+    last_class_date?: string | null;
+    days_without_class?: number | null;
+  },
+  teacherMap: Record<string, string>
+) {
+  // ✅ NOVO: Usar valores calculados pela view students_enriched
+  const monthlyTotal = student.monthly_total_calculated ?? null;
+  const teacherName = student.teacher_id ? teacherMap[student.teacher_id] || "—" : "—";
+  const lastClassDateRaw = student.last_class_date ?? null;
+  const daysWithoutClass = student.days_without_class ?? null;
+  
+  const financialStatus = student.financial_status_label && student.financial_status_variant
+    ? {
+        label: student.financial_status_label,
+        variant: student.financial_status_variant as "default" | "success" | "warning" | "destructive",
+      }
+    : null;
+  
+  return { monthlyTotal, teacherName, lastClassDateRaw, daysWithoutClass, financialStatus };
+}
+
+/* ❌ ANTIGO: Cálculos no front-end (DEPRECATED - remover em 2026-03-01)
+function getStudentRowData(
   student: Student,
   teacherMap: Record<string, string>,
   monthlyTotalFromChargesByStudent: Record<string, number>,
@@ -130,6 +152,7 @@ function getStudentRowData(
   const financialStatus = financialStatusByStudent[student.id] ?? null;
   return { monthlyTotal, teacherName, lastClassDateRaw, daysWithoutClass, financialStatus };
 }
+*/
 
 export function StudentsListView({
   title,
@@ -192,10 +215,15 @@ export function StudentsListView({
     setPage(0);
   }, [initialSearch, setPage]);
 
+  // ✅ NOVO: Não precisamos mais buscar financialRecords e classLogs
+  // A view students_enriched já traz tudo calculado
+  const { data: studentsStats } = useStudentsStats(autoTeacherId);
+
+  /* ❌ ANTIGO: Buscar dados para cálculos no front (DEPRECATED - remover em 2026-03-01)
   const studentIds = useMemo(() => students.map((s) => s.id), [students]);
   const { data: financialRecords = [] } = useFinancialRecordsByStudentIds(studentIds);
   const { data: classLogs = [] } = useClassLogsByStudentIds(studentIds);
-  const { data: studentsStats } = useStudentsStats(autoTeacherId);
+  */
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -217,115 +245,12 @@ export function StudentsListView({
     return map;
   }, [teachers]);
 
-  type InternalFinancialStatus = "none" | "pago" | "pendente" | "atrasado";
-
-  const financialStatusByStudent = useMemo(() => {
-    const statusMap: Record<
-      string,
-      { status: InternalFinancialStatus; label: string; variant: "default" | "success" | "warning" | "destructive" }
-    > = {};
-
-    const getPriority = (status: InternalFinancialStatus): number => {
-      switch (status) {
-        case "atrasado":
-          return 3;
-        case "pendente":
-          return 2;
-        case "pago":
-          return 1;
-        default:
-          return 0;
-      }
-    };
-
-    financialRecords.forEach((record: FinancialRecordWithRelations) => {
-      const studentId = record.student_id;
-      if (!studentId) return;
-
-      const actualStatus = getFinancialActualStatus(record) as InternalFinancialStatus;
-
-      const current = statusMap[studentId]?.status ?? "none";
-      if (getPriority(actualStatus) <= getPriority(current)) {
-        return;
-      }
-
-      let label = "Sem cobranças";
-      let variant: "default" | "success" | "warning" | "destructive" = "default";
-      if (actualStatus === "pago") {
-        label = "Em dia";
-        variant = "success";
-      } else if (actualStatus === "pendente") {
-        label = "Pendente";
-        variant = "warning";
-      } else if (actualStatus === "atrasado") {
-        label = "Em atraso";
-        variant = "destructive";
-      }
-
-      statusMap[studentId] = { status: actualStatus, label, variant };
-    });
-
-    return statusMap;
-  }, [financialRecords]);
-
-  const lastClassDateByStudent = useMemo(() => {
-    const map: Record<string, string> = {};
-
-    classLogs.forEach((log) => {
-      const studentId = log.student_id;
-      const classDate = log.class_date;
-      if (!studentId || !classDate || !log.attendance) return;
-
-      const current = map[studentId];
-      if (!current) {
-        map[studentId] = classDate;
-        return;
-      }
-
-      const currentDate = new Date(current + "T00:00:00");
-      const newDate = new Date(classDate + "T00:00:00");
-      if (newDate > currentDate) {
-        map[studentId] = classDate;
-      }
-    });
-
-    return map;
-  }, [classLogs]);
-
-  const lastPaymentDateByStudent = useMemo(() => {
-    const map: Record<string, string> = {};
-    financialRecords.forEach((record: FinancialRecordWithRelations) => {
-      if (record.status !== "pago" || !record.paid_at || !record.student_id) return;
-      const current = map[record.student_id];
-      if (!current) {
-        map[record.student_id] = record.paid_at;
-        return;
-      }
-      if (new Date(record.paid_at) > new Date(current)) {
-        map[record.student_id] = record.paid_at;
-      }
-    });
-    return map;
-  }, [financialRecords]);
-
+  // Mês atual para filtro de aniversariantes
   const currentMonth = useMemo(() => new Date().getMonth() + 1, []);
-  const currentYear = useMemo(() => new Date().getFullYear(), []);
 
-  /** Soma das cobranças (amount) do mês atual por aluno (due_date no mês/ano atual). Atualiza quando cobranças mudam. */
-  const monthlyTotalFromChargesByStudent = useMemo(() => {
-    const map: Record<string, number> = {};
-    const monthStr = String(currentMonth).padStart(2, "0");
-    const yearStr = String(currentYear);
-    financialRecords.forEach((record: FinancialRecordWithRelations) => {
-      if (!record.student_id || record.amount == null) return;
-      const due = record.due_date;
-      if (!due) return;
-      const [y, m] = due.split("-");
-      if (y !== yearStr || m !== monthStr) return;
-      map[record.student_id] = (map[record.student_id] ?? 0) + Number(record.amount);
-    });
-    return map;
-  }, [financialRecords, currentMonth, currentYear]);
+  /* ❌ ANTIGO: Cálculos de status financeiro, última aula e total mensal no front (DEPRECATED - remover em 2026-03-01)
+  ... código comentado ...
+  */
 
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
@@ -363,18 +288,34 @@ export function StudentsListView({
     result = [...result].sort((a, b) => {
       const nameA = (a.name || "").toLowerCase();
       const nameB = (b.name || "").toLowerCase();
-      const lastPayA = lastPaymentDateByStudent[a.id] || "";
-      const lastPayB = lastPaymentDateByStudent[b.id] || "";
 
       if (filters.sortBy === "name_asc") return nameA.localeCompare(nameB);
       if (filters.sortBy === "name_desc") return nameB.localeCompare(nameA);
-      if (filters.sortBy === "last_payment_desc") return lastPayB.localeCompare(lastPayA);
-      if (filters.sortBy === "last_payment_asc") return lastPayA.localeCompare(lastPayB);
+      // ✅ NOVO: Ordenação por último pagamento não é mais suportada
+      // (seria necessário adicionar last_payment_date na view students_enriched)
+      if (filters.sortBy === "last_payment_desc" || filters.sortBy === "last_payment_asc") {
+        return nameA.localeCompare(nameB); // Fallback para ordenação por nome
+      }
       return 0;
     });
 
     return result;
-  }, [students, filters, autoTeacherId, showTeacherFilter, lastPaymentDateByStudent, currentMonth]);
+  }, [students, filters, autoTeacherId, showTeacherFilter, currentMonth]);
+
+  /* ❌ ANTIGO: Ordenação por último pagamento (DEPRECATED)
+  result = [...result].sort((a, b) => {
+    const nameA = (a.name || "").toLowerCase();
+    const nameB = (b.name || "").toLowerCase();
+    const lastPayA = lastPaymentDateByStudent[a.id] || "";
+    const lastPayB = lastPaymentDateByStudent[b.id] || "";
+
+    if (filters.sortBy === "name_asc") return nameA.localeCompare(nameB);
+    if (filters.sortBy === "name_desc") return nameB.localeCompare(nameA);
+    if (filters.sortBy === "last_payment_desc") return lastPayB.localeCompare(lastPayA);
+    if (filters.sortBy === "last_payment_asc") return lastPayA.localeCompare(lastPayB);
+    return 0;
+  });
+  */
 
   const handleCreateOrUpdate = (data: StudentInsert) => {
     const run = async () => {
@@ -571,7 +512,7 @@ export function StudentsListView({
 
       {/* Table — horizontal scroll com sticky column "Aluno" */}
       {isLoading ? (
-        <TableSkeleton rows={10} columns={showTeacherColumn ? 10 : 9} />
+        <StudentsTableSkeleton rows={10} />
       ) : !error && (
         <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto">
@@ -594,6 +535,10 @@ export function StudentsListView({
                   </TableHeader>
                   <TableBody className="divide-y divide-border/40">
                     {filteredStudents.map((student) => {
+                      // ✅ NOVO: Apenas passar student e teacherMap
+                      const rowData = getStudentRowData(student, teacherMap);
+                      
+                      /* ❌ ANTIGO: Passar todos os maps calculados (DEPRECATED)
                       const rowData = getStudentRowData(
                         student,
                         teacherMap,
@@ -601,6 +546,8 @@ export function StudentsListView({
                         lastClassDateByStudent,
                         financialStatusByStudent
                       );
+                      */
+                      
                       return (
                         <StudentsTableRow
                           key={student.id}

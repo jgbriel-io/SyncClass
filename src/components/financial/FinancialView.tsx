@@ -38,6 +38,7 @@ import {
   useFinancialSummary,
   useCreateFinancialRecord,
   useMarkAsPaid,
+  useConfirmPayment,
   useUpdateFinancialRecord,
   useDeleteFinancialRecord,
   FinancialRecordInsert,
@@ -45,7 +46,7 @@ import {
 } from "@/hooks/useFinancialRecords";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, Trash2, TrendingUp, Eye } from "lucide-react";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { FinancialTableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -102,6 +103,7 @@ export function FinancialView({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [undoDialogOpen, setUndoDialogOpen] = useState(false);
   const [historyRecord, setHistoryRecord] = useState<FinancialRecordWithRelations | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState<string | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
   const { data: forecastedBilling } = useForecastedBilling(autoTeacherId);
 
@@ -133,6 +135,7 @@ export function FinancialView({
   const activeStudents = students.filter((s) => s.status === "ativo");
   const createRecord = useCreateFinancialRecord();
   const markAsPaid = useMarkAsPaid();
+  const confirmPayment = useConfirmPayment();
   const updateRecord = useUpdateFinancialRecord();
   const deleteRecord = useDeleteFinancialRecord();
 
@@ -237,11 +240,16 @@ export function FinancialView({
   };
 
   const handleConfirmPayment = () => {
-    if (confirmPaymentId) {
-      markAsPaid.mutate(confirmPaymentId, {
+    if (confirmPaymentId && !isProcessingPayment) {
+      setIsProcessingPayment(confirmPaymentId);
+      confirmPayment.mutate(confirmPaymentId, {
         onSuccess: () => {
           setConfirmPaymentId(null);
           setRecordToConfirm(null);
+          setIsProcessingPayment(null);
+        },
+        onError: () => {
+          setIsProcessingPayment(null);
         },
       });
     }
@@ -295,7 +303,7 @@ export function FinancialView({
               <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-primary">
                 {formatCurrency(forecastedBilling.totalForecast)}
               </p>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="text-success font-medium">
                   {formatCurrency(forecastedBilling.receivedThisMonth)} recebido
                 </span>
@@ -401,7 +409,7 @@ export function FinancialView({
 
         {/* Table */}
         {isLoading ? (
-          <TableSkeleton rows={8} columns={8} />
+          <FinancialTableSkeleton rows={8} />
         ) : !error ? (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
             <Table style={{ minWidth: FIN_TABLE_MIN_W }}>
@@ -615,14 +623,14 @@ export function FinancialView({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={markAsPaid.isPending}>
+            <AlertDialogCancel disabled={confirmPayment.isPending || isProcessingPayment === confirmPaymentId}>
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmPayment}
-              disabled={markAsPaid.isPending}
+              disabled={confirmPayment.isPending || isProcessingPayment === confirmPaymentId}
             >
-              {markAsPaid.isPending ? (
+              {confirmPayment.isPending || isProcessingPayment === confirmPaymentId ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Registrando...

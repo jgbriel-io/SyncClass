@@ -98,7 +98,7 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-3 flex-1 min-w-0">
           {/* Título + Badge (cada um no seu canto) */}
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-4">
             <h3 className="font-semibold text-sm text-foreground truncate min-w-0">
               {escapeHtml(classLog.title?.trim() || "Aula")}
             </h3>
@@ -109,7 +109,7 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
 
           {/* Presença (só quando concluída) */}
           {isConcluida && (
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-4">
               {classLog.attendance ? (
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-success" />

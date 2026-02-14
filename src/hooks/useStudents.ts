@@ -65,9 +65,9 @@ export function useStudentsPaginated(options?: UseStudentsPaginatedOptions): Use
   const query = useQuery({
     queryKey: ["students_paginated", page, pageSize, filters],
     queryFn: async () => {
-      // students_masked inclui todos (deleted_at ou não) para o filtro "Inativos" mostrar arquivados
+      // ✅ NOVO: Usar view students_enriched com cálculos no banco
       let q = supabase
-        .from("students_masked")
+        .from("students_enriched")
         .select("*", { count: "exact" });
 
       if (filters?.teacherId && filters.teacherId !== "all") {
@@ -243,10 +243,40 @@ export function useUpdateStudent() {
         }
       }
       
-      // Atualizar vencimentos de cobranças pendentes se pay_day mudou
+      // ✅ NOVO: Atualizar vencimentos usando RPC atômica
       if (payDayChanged && oldPayDay !== newPayDay && newPayDay !== null) {
         try {
-          // Busca cobranças pendentes deste aluno
+          const { data: rpcResult, error: rpcError } = await supabase.rpc(
+            'update_student_payment_day',
+            {
+              p_student_id: id,
+              p_new_pay_day: newPayDay,
+            }
+          );
+
+          if (rpcError) {
+            console.error('Erro ao atualizar vencimentos:', rpcError);
+            toast.warning('Aluno atualizado, mas não foi possível atualizar os vencimentos das cobranças.');
+          } else if (rpcResult) {
+            const updatedCount = rpcResult.updated_count || 0;
+            if (updatedCount > 0) {
+              console.log(`✅ MIGRATION_SUCCESS: update_student_payment_day moved to RPC`, {
+                migration_date: '2026-02-14',
+                old_method: 'loop_updates',
+                new_method: 'rpc',
+                updated_count: updatedCount,
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao chamar RPC update_student_payment_day:', error);
+          // Não falha a operação principal se a atualização de cobranças falhar
+        }
+      }
+
+      /* ❌ ANTIGO: Loop de updates (DEPRECATED - remover em 2026-03-01)
+      if (payDayChanged && oldPayDay !== newPayDay && newPayDay !== null) {
+        try {
           const { data: pendingRecords, error: fetchError } = await supabase
             .from("financial_records")
             .select("id, due_date")
@@ -256,7 +286,6 @@ export function useUpdateStudent() {
           if (fetchError) throw fetchError;
 
           if (pendingRecords && pendingRecords.length > 0) {
-            // Atualiza cada cobrança com o novo dia de vencimento
             const updates = [];
             for (const record of pendingRecords) {
               if (record.due_date) {
@@ -280,6 +309,7 @@ export function useUpdateStudent() {
           // Não falha a operação principal se a atualização de cobranças falhar
         }
       }
+      */
 
       return data;
     },
@@ -470,6 +500,66 @@ export function useRestoreStudent() {
     },
     onError: () => {
       toast.error("Erro ao restaurar aluno. Tente novamente.");
+    },
+  });
+}
+
+/**
+ * Hook para atualizar o dia de pagamento de um aluno e recalcular vencimentos de cobranças pendentes.
+ * Usa a RPC update_student_payment_day que atualiza atomicamente:
+ * - students.pay_day
+ * - financial_records.due_date (apenas pendentes)
+ * - Registra em audit_logs
+ */
+export function useUpdateStudentPaymentDay() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ studentId, newPayDay }: { studentId: string; newPayDay: number }) => {
+      if (newPayDay < 1 || newPayDay > 31) {
+        throw new Error("Dia de pagamento deve estar entre 1 e 31");
+      }
+
+      const { data, error } = await supabase.rpc("update_student_payment_day", {
+        p_student_id: studentId,
+        p_new_pay_day: newPayDay,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return data as {
+        success: boolean;
+        message: string;
+        old_pay_day: number;
+        new_pay_day: number;
+        updated_count: number;
+        updated_records: Array<{
+          id: string;
+          old_due_date: string;
+          new_due_date: string;
+          adjusted_day: number;
+        }>;
+      };
+    },
+    onSuccess: (data) => {
+      // Invalidar todas as queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
+      
+      toast.success(data.message || "Dia de pagamento atualizado com sucesso!");
+    },
+    onError: (error) => {
+      const err = error as Error;
+      toast.error(err.message || "Erro ao atualizar dia de pagamento");
     },
   });
 }

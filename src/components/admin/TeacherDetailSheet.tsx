@@ -113,7 +113,7 @@ export function TeacherDetailSheet({
                 <User className="h-4 w-4" />
                 Dados Pessoais
               </h3>
-              <div className="grid gap-3 text-sm">
+              <div className="grid gap-4 text-sm">
                 <DetailSection icon={Mail} label="Email" value={teacher.email || "—"} inline />
                 <DetailSection icon={Phone} label="Telefone" value={teacher.phone || "—"} inline />
                 <DetailSection icon={FileText} label="CPF" value={teacher.cpf || "—"} inline />

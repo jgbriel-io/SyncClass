@@ -160,7 +160,7 @@ export function DeliverActivityDialog({
                 </p>
               </div>
             ) : (
-              <div className="flex items-center gap-3 bg-accent rounded-lg p-4">
+              <div className="flex items-center gap-4 bg-accent rounded-lg p-4">
                 <FileText className="h-8 w-8 text-primary" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{selectedFile.name}</p>

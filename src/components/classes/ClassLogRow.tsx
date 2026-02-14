@@ -134,7 +134,7 @@ export function ClassLogRow({
         className={`${CELL} ${STICKY_CELL} w-[280px] desktop:w-[360px] group-hover:bg-muted transition-colors`}
         style={{ ...STICKY_SHADOW, minWidth: COL.ALUNO }}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-medium text-accent-foreground">
               {log.students?.name?.charAt(0) || "?"}

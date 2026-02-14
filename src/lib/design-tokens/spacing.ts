@@ -43,7 +43,7 @@ export type StackSize = keyof typeof STACK;
  */
 export const GAP = {
   TIGHT: "gap-2",          // 8px - Ícone + texto, elementos muito próximos
-  DEFAULT: "gap-4",        // 16px - Espaçamento padrão (ATUALIZADO de gap-3)
+  DEFAULT: "gap-4",        // 16px - Espaçamento padrão (ATUALIZADO de gap-4)
   LOOSE: "gap-6",          // 24px - Separação maior entre seções
 } as const;
 
@@ -212,7 +212,7 @@ export function marginBottom(size: MarginBottomSize): string {
  */
 export const SPACING_SCALE_PX = {
   2: 8,    // space-y-2, gap-2, px-2, py-2
-  3: 12,   // gap-3
+  3: 12,   // gap-4
   4: 16,   // space-y-4, gap-4, px-4, py-4
   6: 24,   // space-y-6, gap-6, px-6, py-6
   8: 32,   // space-y-8, px-8, py-8
@@ -280,7 +280,7 @@ export const SPACING_SCALE_PX = {
  * className="space-y-8"          className={stack('RELAXED')}
  * 
  * className="gap-2"              className={gap('TIGHT')}
- * className="gap-3"              className={gap('DEFAULT')}
+ * className="gap-4"              className={gap('DEFAULT')}
  * className="gap-4"              className={gap('LOOSE')}
  * className="gap-6"              className={gap('RELAXED')}
  * 

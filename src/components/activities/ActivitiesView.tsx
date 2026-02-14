@@ -36,7 +36,7 @@ import { AddCorrectionDialog } from "@/components/activities/AddCorrectionDialog
 import { ActivityDetailSheet } from "@/components/activities/ActivityDetailSheet";
 import { EmptyActivitiesState } from "@/components/ui/contextual-empty-states";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { ActivitiesTableSkeleton } from "@/components/ui/table-skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import {
   tableThLarge,
@@ -258,7 +258,7 @@ export function ActivitiesView({
 
       {/* Table */}
       {isLoading ? (
-        <TableSkeleton rows={10} columns={8} />
+        <ActivitiesTableSkeleton rows={10} />
       ) : (
       <div className="rounded-lg border bg-card shadow-card overflow-hidden">
         <Table style={{ minWidth: ACT_TABLE_MIN_W }}>

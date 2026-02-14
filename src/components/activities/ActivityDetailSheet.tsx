@@ -203,7 +203,7 @@ export function ActivityDetailSheet({
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                 Arquivo da atividade
               </p>
-              <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
+              <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-3">
                 <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                 <span className="text-sm truncate flex-1 min-w-0">
                   {activity.file_name}
@@ -245,7 +245,7 @@ export function ActivityDetailSheet({
                   )}
                   {activity.student_response_file_url &&
                     activity.student_response_file_name && (
-                      <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
+                      <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-3">
                         <File className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                         <span className="text-sm truncate flex-1 min-w-0">
                           {activity.student_response_file_name}
@@ -313,7 +313,7 @@ export function ActivityDetailSheet({
                   </div>
                 )}
                 {activity.correction_file_url && activity.correction_file_name && (
-                  <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
+                  <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-3">
                     <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                     <span className="text-sm truncate flex-1 min-w-0">
                       {activity.correction_file_name}

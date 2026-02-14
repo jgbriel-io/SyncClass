@@ -218,7 +218,7 @@ export function EditActivityDialog({
           <div className="space-y-2">
             <Label>Prazo de entrega *</Label>
             <p className="text-xs text-muted-foreground">Data e hora limite para o aluno entregar.</p>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button

@@ -3,21 +3,37 @@ export function useUndoFinancialPayment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
-        .from("financial_records")
-        .update({ status: "pendente", paid_at: null })
-        .eq("id", id)
-        .select()
-        .single();
+      // Gerar chave de idempotência usando crypto.randomUUID()
+      const idempotencyKey = crypto.randomUUID();
+
+      // Chamar RPC undo_payment_idempotent
+      const { data, error } = await supabase.rpc("undo_payment_idempotent", {
+        p_record_id: id,
+        p_idempotency_key: idempotencyKey,
+      });
+
       if (error) {
         throw error;
       }
+
+      // Verificar se houve erro na resposta do RPC
+      if (data && !data.success) {
+        throw new Error(data.error || "Erro ao desfazer pagamento");
+      }
+
       return data;
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Cobrança desfeita com sucesso!");
     },
     onError: (error) => {
@@ -360,9 +376,16 @@ export function useCreateFinancialRecord() {
       }
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Cobrança criada com sucesso!");
     },
     onError: (error) => {
@@ -375,27 +398,31 @@ export function useCreateFinancialRecord() {
 export function useMarkAsPaid() {
   return useOptimisticMutation<FinancialRecord, string>({
     mutationFn: async (id: string) => {
-      // Obter o usuário atual para auditoria
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      // Gerar chave de idempotência usando crypto.randomUUID()
+      const idempotencyKey = crypto.randomUUID();
       const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from("financial_records")
-        .update({
-          status: "pago",
-          paid_at: now,
-          confirmed_by_user_id: user?.id || null,
-          confirmed_at: now,
-        })
-        .eq("id", id)
-        .select()
-        .single();
+
+      // Chamar RPC mark_as_paid_idempotent
+      const { data, error } = await supabase.rpc("mark_as_paid_idempotent", {
+        p_record_id: id,
+        p_paid_at: now,
+        p_payment_method: null,
+        p_idempotency_key: idempotencyKey,
+      });
 
       if (error) {
         throw error;
       }
 
-      return data;
+      // Buscar registro atualizado para retornar
+      const { data: record, error: fetchError } = await supabase
+        .from("financial_records")
+        .select()
+        .eq("id", id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      return record;
     },
     queryKey: ["financial_records"],
     optimisticUpdate: (oldData: { list: FinancialRecordWithRelations[]; count: number }, id: string) => {
@@ -413,6 +440,50 @@ export function useMarkAsPaid() {
     errorMessage: "Erro ao registrar pagamento",
     onError: (error) => {
       logger.error(error, { context: "useMarkAsPaid" });
+    },
+  });
+}
+
+export function useConfirmPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Gerar chave de idempotência usando crypto.randomUUID()
+      const idempotencyKey = crypto.randomUUID();
+
+      // Chamar RPC confirm_payment_idempotent
+      const { data, error } = await supabase.rpc("confirm_payment_idempotent", {
+        p_record_id: id,
+        p_idempotency_key: idempotencyKey,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Verificar se houve erro na resposta do RPC
+      if (data && !data.success) {
+        throw new Error(data.error || "Erro ao confirmar pagamento");
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      // Invalidar todas as queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
+      toast.success("Pagamento confirmado com sucesso!");
+    },
+    onError: (error) => {
+      logger.error(error, { context: "useConfirmPayment" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -436,9 +507,16 @@ export function useUpdateFinancialRecord() {
       return data;
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Cobrança atualizada com sucesso!");
     },
     onError: (error) => {
@@ -471,9 +549,16 @@ export function useDeleteFinancialRecord() {
       }
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Cobrança removida com sucesso!");
     },
     onError: (error) => {

@@ -69,7 +69,7 @@ export function OverviewFilters({
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-3">
       {/* Linha 1: Busca + Filtros Básicos + Botão Mais Filtros */}
-      <div className="flex flex-col md:flex-row gap-3 flex-wrap">
+      <div className="flex flex-col md:flex-row gap-4 flex-wrap">
         {/* Busca */}
         <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
           <span className="text-xs font-medium text-muted-foreground">Busca</span>
@@ -149,7 +149,7 @@ export function OverviewFilters({
       {/* Linha 2: Filtros Avançados (expansível) */}
       <CollapsibleContent>
         <div className="rounded-lg border bg-muted/30 p-4">
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-4">
             {/* Professor */}
             {showTeacherFilter && teachers.length > 0 && (
               <div className="flex flex-col gap-1.5">

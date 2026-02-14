@@ -135,7 +135,7 @@ export function UserDetailSheet({
                 <User className="h-4 w-4" />
                 Dados da Conta
               </h3>
-              <div className="grid gap-3 text-sm">
+              <div className="grid gap-4 text-sm">
                 <DetailSection icon={Mail} label="Email" value={user.email || "—"} inline />
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-muted-foreground" />

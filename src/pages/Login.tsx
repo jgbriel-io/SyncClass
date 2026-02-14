@@ -63,7 +63,7 @@ export default function Login() {
       <div className="hidden lg:flex lg:w-1/2 bg-primary relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
         <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
               <GraduationCap className={iconSize('LG')} />
             </div>
@@ -94,7 +94,7 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-sm space-y-8">
           {/* Mobile logo */}
-          <div className="lg:hidden flex items-center justify-center gap-3">
+          <div className="lg:hidden flex items-center justify-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
               <GraduationCap className="h-7 w-7 text-primary-foreground" />
             </div>

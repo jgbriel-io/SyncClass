@@ -138,7 +138,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           "flex h-16 items-center border-b border-sidebar-border",
           sidebarCollapsed ? "justify-center px-2" : "justify-between px-4"
         )}>
-          <Link to="/admin" className="flex items-center gap-3">
+          <Link to="/admin" className="flex items-center gap-4">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 flex items-center justify-center shadow-lg">
               <span className="text-sidebar-primary-foreground font-bold text-base">E</span>
             </div>
@@ -169,7 +169,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   to={item.href}
                   title={sidebarCollapsed ? item.name : undefined}
                   className={cn(
-                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                    "group flex items-center gap-4 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                     sidebarCollapsed && "justify-center px-2",
                     isActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
@@ -190,7 +190,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             className={cn(
-              "hidden laptop:flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors",
+              "hidden laptop:flex w-full items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors",
               sidebarCollapsed && "justify-center px-2"
             )}
           >
@@ -203,7 +203,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             onClick={handleLogout}
             disabled={isLoggingOut}
             className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50",
+              "flex w-full items-center gap-4 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50",
               sidebarCollapsed && "justify-center px-2"
             )}
           >
@@ -225,7 +225,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* Top bar */}
         <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 tablet:px-5 laptop:px-6 desktop:px-8">
           {/* Left: menu + search */}
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-4">
             <button
               onClick={() => setMobileOpen(true)}
               className="laptop:hidden shrink-0 text-muted-foreground hover:text-foreground"

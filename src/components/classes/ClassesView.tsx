@@ -38,7 +38,7 @@ import { PostClassDialog } from "@/components/classes/PostClassDialog";
 import { ClassDetailSheet } from "@/components/classes/ClassDetailSheet";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { useStudents } from "@/hooks/useStudents";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { ClassesTableSkeleton } from "@/components/ui/table-skeleton";
 import {
   useClassLogs,
   useClassLogsSummary,
@@ -443,7 +443,7 @@ export function ClassesView({
 
         {/* Table View (Admin) */}
         {isLoading ? (
-          <TableSkeleton rows={8} columns={8} />
+          <ClassesTableSkeleton rows={8} />
         ) : !error && viewMode === "table" && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto">

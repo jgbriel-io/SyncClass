@@ -176,3 +176,25 @@ export function TeachersTableSkeleton({ rows = 5 }: { rows?: number }) {
     />
   );
 }
+
+/**
+ * Skeleton específico para OverviewTable
+ */
+export function OverviewTableSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <TableSkeleton
+      rows={rows}
+      columns={[
+        { width: '1%', minWidth: '80px' }, // Status
+        { width: '25%', minWidth: '200px', sticky: true, hasAvatar: true }, // Aluno
+        { width: '15%', minWidth: '120px' }, // Professor
+        { width: '12%', minWidth: '120px' }, // Próxima Aula
+        { width: '10%', minWidth: '100px' }, // Aulas Mês
+        { width: '10%', minWidth: '100px' }, // Presença
+        { width: '10%', minWidth: '100px' }, // Financeiro
+        { width: '10%', minWidth: '100px' }, // Última Aula
+        { width: '7%', minWidth: '80px' }, // Ações
+      ]}
+    />
+  );
+}

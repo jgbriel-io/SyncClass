@@ -16,7 +16,7 @@ import { useStudentsWithStatsPaginated } from "@/hooks/useStudentDetails";
 import { useStudents } from "@/hooks/useStudents";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { OverviewTableSkeleton } from "@/components/ui/table-skeleton";
 import { OverviewTableRow } from "@/components/overview/OverviewTableRow";
 import { COL as OVERVIEW_COL, TABLE_MIN_W as OVERVIEW_TABLE_MIN_W } from "@/components/overview/OverviewTableRow.constants";
 import { TABLE_HEAD_BASE, STICKY_HEADER, STICKY_SHADOW } from "@/lib/design-tokens/table-columns";
@@ -146,7 +146,7 @@ export function OverviewView({
 
       {/* Table */}
       {isLoading ? (
-        <TableSkeleton rows={10} columns={9} />
+        <OverviewTableSkeleton rows={10} />
       ) : (
         !error && (
           <>

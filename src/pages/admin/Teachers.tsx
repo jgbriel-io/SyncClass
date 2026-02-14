@@ -70,7 +70,7 @@ import { useFinancialRecords } from "@/hooks/useFinancialRecords";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { TeachersTableSkeleton } from "@/components/ui/table-skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import { TeachersTableRow } from "@/components/teachers/TeachersTableRow";
 import { COL as TEACH_COL, TABLE_MIN_W as TEACH_TABLE_MIN_W } from "@/components/teachers/TeachersTableRow.constants";
@@ -393,7 +393,7 @@ export default function TeachersPage() {
 
           {/* Table */}
           {isLoading ? (
-            <TableSkeleton rows={10} columns={9} />
+            <TeachersTableSkeleton rows={10} />
           ) : !error && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
             <div className="overflow-x-auto">
