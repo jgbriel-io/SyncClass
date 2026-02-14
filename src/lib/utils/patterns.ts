@@ -22,6 +22,9 @@ export const REGEX_PATTERNS = {
   date: /^\d{2}\/\d{2}\/\d{4}$/,
   dateDigits: /\D/g, // Remove tudo que não é dígito
   
+  // Horários
+  time: /^([01]?\d|2[0-3]):([0-5]\d)$/,
+  
   // Números e valores
   onlyDigits: /[^\d]/g, // Remove tudo que não é dígito
   leadingZeros: /^0+(?!$)/, // Remove zeros à esquerda, exceto se for apenas "0"
@@ -83,6 +86,31 @@ export function maskDate(value: string): string {
   if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
   
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+/**
+ * Máscara para valor monetário no formato R$ 1.234,56
+ */
+export function maskMoney(value: string): string {
+  // Remove tudo que não é dígito
+  const digits = value.replace(REGEX_PATTERNS.onlyDigits, "");
+  
+  if (!digits) return "";
+  
+  // Converte para número e formata
+  const number = parseInt(digits, 10) / 100;
+  
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(number);
+}
+
+/**
+ * Verifica se um valor contém asteriscos (dados sensíveis mascarados)
+ */
+export function isMasked(value: string | null | undefined): boolean {
+  return typeof value === "string" && value.includes("*");
 }
 
 /**

@@ -1,223 +1,279 @@
 /**
- * Mapeia erros técnicos do banco de dados para mensagens amigáveis
+ * Mapeia erros do Postgres para mensagens amigáveis ao usuário
  * 
- * Sprint 3: Validações no Banco
- * 
- * Este arquivo centraliza o tratamento de erros do Supabase/PostgreSQL,
- * convertendo códigos de erro técnicos em mensagens que o usuário entende.
+ * Códigos de erro PostgreSQL:
+ * - 23514: CHECK constraint violation
+ * - 23505: UNIQUE constraint violation
+ * - 23503: FOREIGN KEY constraint violation
+ * - 42501: Insufficient privilege (RLS)
+ * - 23P01: Exclusion constraint violation (sobreposição)
  */
 
-interface DatabaseError {
-  message?: string;
+interface PostgresError {
   code?: string;
+  message?: string;
   details?: string;
   hint?: string;
 }
 
-/**
- * Mapeia um erro do banco de dados para uma mensagem amigável
- * 
- * @param error - Erro retornado pelo Supabase
- * @returns Mensagem amigável para exibir ao usuário
- */
-export function mapDatabaseError(error: unknown): string {
-  if (!error) {
-    return 'Erro desconhecido';
+export function mapPostgresError(error: unknown): string {
+  const pgError = error as PostgresError;
+  const message = pgError?.message || "";
+  const code = pgError?.code;
+
+  // ========================================
+  // CHECK CONSTRAINTS (23514)
+  // ========================================
+  if (code === "23514") {
+    // Students constraints
+    if (message.includes("students_hourly_rate_positive")) {
+      return "O valor por hora deve ser maior que zero.";
+    }
+    if (message.includes("students_pay_day_valid")) {
+      return "O dia de pagamento deve estar entre 1 e 31.";
+    }
+    if (message.includes("students_classes_per_week_valid")) {
+      return "O número de aulas por semana deve estar entre 1 e 14.";
+    }
+
+    // Financial records constraints
+    if (message.includes("financial_records_amount_positive")) {
+      return "O valor da cobrança deve ser maior que zero.";
+    }
+    if (message.includes("financial_records_status_check")) {
+      return "Status de cobrança inválido. Use: pendente, pago ou atrasado.";
+    }
+
+    // Class logs constraints
+    if (message.includes("class_logs_grade_range")) {
+      return "A nota deve estar entre 0 e 10.";
+    }
+
+    // Generic check constraint
+    return "Os dados fornecidos não atendem aos requisitos do sistema. Verifique os valores e tente novamente.";
   }
 
-  const dbError = error as DatabaseError;
-  const message = dbError.message || '';
-  const code = dbError.code || '';
-
-  // =====================================================
-  // ERROS DE CONSTRAINT (23xxx)
-  // =====================================================
-
-  // 23514: CHECK constraint violation
-  if (code === '23514') {
-    if (message.includes('amount_positive')) {
-      return 'O valor da cobrança deve ser maior que zero';
+  // ========================================
+  // UNIQUE CONSTRAINTS (23505)
+  // ========================================
+  if (code === "23505") {
+    if (message.includes("students_cpf_key") || message.includes("cpf")) {
+      return "Este CPF já está cadastrado no sistema.";
     }
-    if (message.includes('hourly_rate_positive')) {
-      return 'O valor por hora deve ser maior que zero';
+    if (message.includes("students_email_key") || message.includes("email")) {
+      return "Este e-mail já está cadastrado no sistema.";
     }
-    if (message.includes('classes_per_week_positive')) {
-      return 'O número de aulas por semana deve ser maior que zero';
+    if (message.includes("students_phone_key") || message.includes("phone")) {
+      return "Este telefone já está cadastrado no sistema.";
     }
-    if (message.includes('pay_day_valid')) {
-      return 'O dia de pagamento deve estar entre 1 e 31';
+    if (message.includes("teachers_cpf_key")) {
+      return "Este CPF de professor já está cadastrado no sistema.";
     }
-    if (message.includes('due_date_valid')) {
-      return 'A data de vencimento não pode ser anterior à data de criação';
+    if (message.includes("teachers_email_key")) {
+      return "Este e-mail de professor já está cadastrado no sistema.";
     }
-    if (message.includes('paid_at_valid')) {
-      return 'A data de pagamento não pode ser anterior à data de criação';
+    if (message.includes("idempotency_key")) {
+      return "Esta operação já foi processada anteriormente.";
     }
-    if (message.includes('status_valid')) {
-      return 'Status inválido. Use: pendente, pago ou atrasado';
-    }
-    
-    // Erro genérico de validação
-    return 'Erro de validação: verifique os dados informados';
+    return "Já existe um registro com estes dados no sistema.";
   }
 
-  // 23505: UNIQUE constraint violation
-  if (code === '23505') {
-    if (message.includes('cpf')) {
-      return 'Este CPF já está cadastrado no sistema';
+  // ========================================
+  // FOREIGN KEY CONSTRAINTS (23503)
+  // ========================================
+  if (code === "23503") {
+    if (message.includes("teacher_id")) {
+      return "Professor não encontrado. Verifique se o professor está ativo no sistema.";
     }
-    if (message.includes('email')) {
-      return 'Este email já está cadastrado no sistema';
+    if (message.includes("student_id")) {
+      return "Aluno não encontrado. Verifique se o aluno está ativo no sistema.";
     }
-    
-    return 'Este registro já existe no sistema';
-  }
-
-  // 23503: FOREIGN KEY constraint violation
-  if (code === '23503') {
-    if (message.includes('student_id')) {
-      return 'Aluno não encontrado';
+    if (message.includes("class_log_id")) {
+      return "Aula não encontrada. Verifique se a aula existe no sistema.";
     }
-    if (message.includes('teacher_id')) {
-      return 'Professor não encontrado';
+    if (message.includes("user_id")) {
+      return "Usuário não encontrado. Verifique se o usuário está ativo.";
     }
-    
-    return 'Registro relacionado não encontrado';
+    return "Referência inválida. Verifique se os dados relacionados existem no sistema.";
   }
 
-  // =====================================================
-  // ERROS DE TRIGGER (P0001)
-  // =====================================================
-
-  // P0001: RAISE EXCEPTION (mensagens customizadas)
-  if (code === 'P0001') {
-    // Sobreposição de horários
-    if (message.includes('já tem aula agendada')) {
-      return message; // Já é amigável
+  // ========================================
+  // RLS - ROW LEVEL SECURITY (42501)
+  // ========================================
+  if (code === "42501" || message.includes("permission denied") || message.includes("insufficient privilege")) {
+    if (message.includes("students")) {
+      return "Você não tem permissão para acessar dados deste aluno.";
     }
-    
-    // CPF duplicado
-    if (message.includes('CPF') && message.includes('já está cadastrado')) {
-      return message; // Já é amigável
+    if (message.includes("financial_records")) {
+      return "Você não tem permissão para acessar dados financeiros deste registro.";
     }
-    
-    // Status financeiro
-    if (message.includes('status') && message.includes('paid_at')) {
-      return message; // Já é amigável
+    if (message.includes("class_logs")) {
+      return "Você não tem permissão para acessar dados desta aula.";
     }
-    
-    // Horário inválido
-    if (message.includes('Horário de término')) {
-      return message; // Já é amigável
+    return "Você não tem permissão para realizar esta operação. Entre em contato com o administrador.";
+  }
+
+  // ========================================
+  // EXCLUSION CONSTRAINTS (23P01) - Sobreposição de Aulas
+  // ========================================
+  if (
+    code === "23P01" ||
+    message.includes("neste horário") ||
+    message.includes("sobreposição") ||
+    message.includes("sobrepõem") ||
+    message.includes("overlap") ||
+    message.includes("class_logs_no_overlap") ||
+    message.includes("exclusion constraint") ||
+    message.includes("conflicting key") ||
+    message.includes("agendada em")
+  ) {
+    return "Já existe outra aula neste horário para este professor. Escolha outro intervalo de tempo.";
+  }
+
+  // ========================================
+  // NOT NULL CONSTRAINTS (23502)
+  // ========================================
+  if (code === "23502") {
+    if (message.includes("name")) {
+      return "O nome é obrigatório.";
     }
-    
-    // Outras exceções customizadas
-    return message;
+    if (message.includes("email")) {
+      return "O e-mail é obrigatório.";
+    }
+    if (message.includes("student_id")) {
+      return "O aluno é obrigatório.";
+    }
+    if (message.includes("teacher_id")) {
+      return "O professor é obrigatório.";
+    }
+    if (message.includes("amount")) {
+      return "O valor é obrigatório.";
+    }
+    if (message.includes("due_date")) {
+      return "A data de vencimento é obrigatória.";
+    }
+    return "Um campo obrigatório não foi preenchido. Verifique o formulário.";
   }
 
-  // =====================================================
-  // ERROS DE RPC
-  // =====================================================
-
-  // Erros de RPC (funções do banco)
-  if (message.includes('Nenhuma aula no pacote')) {
-    return 'É necessário adicionar pelo menos uma aula ao pacote';
-  }
-  
-  if (message.includes('Todas as aulas do pacote devem ser do mesmo aluno')) {
-    return 'Todas as aulas do pacote devem ser do mesmo aluno';
-  }
-  
-  if (message.includes('Operação já está sendo processada')) {
-    return 'Esta operação já está sendo processada. Aguarde alguns segundos.';
-  }
-  
-  if (message.includes('Aluno não encontrado')) {
-    return 'Aluno não encontrado';
-  }
-  
-  if (message.includes('Registro financeiro não encontrado')) {
-    return 'Registro financeiro não encontrado';
+  // ========================================
+  // INVALID TEXT REPRESENTATION (22P02)
+  // ========================================
+  if (code === "22P02") {
+    if (message.includes("uuid")) {
+      return "Identificador inválido. Tente recarregar a página.";
+    }
+    if (message.includes("numeric") || message.includes("integer")) {
+      return "Valor numérico inválido. Use apenas números.";
+    }
+    if (message.includes("date") || message.includes("timestamp")) {
+      return "Data inválida. Use o formato DD/MM/AAAA.";
+    }
+    return "Formato de dado inválido. Verifique os valores informados.";
   }
 
-  // =====================================================
-  // ERROS DE PERMISSÃO (42xxx)
-  // =====================================================
-
-  // 42501: Insufficient privilege
-  if (code === '42501') {
-    return 'Você não tem permissão para realizar esta operação';
+  // ========================================
+  // NUMERIC VALUE OUT OF RANGE (22003)
+  // ========================================
+  if (code === "22003") {
+    return "Valor numérico fora do intervalo permitido. Use valores menores.";
   }
 
-  // 42P01: Undefined table
-  if (code === '42P01') {
-    return 'Erro de configuração do sistema. Contate o suporte.';
+  // ========================================
+  // STRING DATA RIGHT TRUNCATION (22001)
+  // ========================================
+  if (code === "22001") {
+    return "Texto muito longo. Reduza o tamanho do campo.";
   }
 
-  // =====================================================
-  // ERROS DE CONEXÃO
-  // =====================================================
-
-  if (message.includes('Failed to fetch') || message.includes('Network')) {
-    return 'Erro de conexão. Verifique sua internet e tente novamente.';
+  // ========================================
+  // DIVISION BY ZERO (22012)
+  // ========================================
+  if (code === "22012") {
+    return "Erro de cálculo: divisão por zero. Verifique os valores informados.";
   }
 
-  if (message.includes('timeout')) {
-    return 'A operação demorou muito. Tente novamente.';
+  // ========================================
+  // UNDEFINED FUNCTION (42883)
+  // ========================================
+  if (code === "42883") {
+    return "Função do banco de dados não encontrada. Entre em contato com o suporte técnico.";
   }
 
-  // =====================================================
+  // ========================================
+  // UNDEFINED TABLE (42P01)
+  // ========================================
+  if (code === "42P01") {
+    return "Tabela não encontrada no banco de dados. Entre em contato com o suporte técnico.";
+  }
+
+  // ========================================
+  // ERROS DE REDE E CONEXÃO
+  // ========================================
+  if (
+    message.includes("network") ||
+    message.includes("timeout") ||
+    message.includes("connection") ||
+    message.includes("ECONNREFUSED") ||
+    message.includes("ETIMEDOUT")
+  ) {
+    return "Erro de conexão com o servidor. Verifique sua internet e tente novamente.";
+  }
+
+  // ========================================
+  // ERROS DE AUTENTICAÇÃO
+  // ========================================
+  if (
+    message.includes("JWT") ||
+    message.includes("token") ||
+    message.includes("authentication") ||
+    message.includes("unauthorized")
+  ) {
+    return "Sessão expirada. Faça login novamente.";
+  }
+
+  // ========================================
   // ERRO GENÉRICO
-  // =====================================================
-
-  // Se chegou aqui, retornar mensagem original ou genérica
+  // ========================================
+  // Se chegou aqui, não conseguimos mapear o erro específico
+  // Retornar mensagem genérica mas útil
   if (message && message.length > 0 && message.length < 200) {
-    return message;
+    // Se a mensagem é curta e legível, retornar ela
+    return `Erro: ${message}`;
   }
 
-  return 'Erro ao processar operação. Tente novamente.';
+  return "Erro ao processar operação. Verifique os dados e tente novamente.";
 }
 
 /**
- * Verifica se um erro é de sobreposição de horários
- * 
- * @param error - Erro retornado pelo Supabase
- * @returns true se for erro de sobreposição
+ * Verifica se um erro é de constraint do banco
  */
-export function isOverlapError(error: unknown): boolean {
-  const dbError = error as DatabaseError;
-  const message = dbError.message || '';
-  
-  return message.includes('já tem aula agendada') || 
-         message.includes('sobrepõem') ||
-         message.includes('overlap');
+export function isConstraintError(error: unknown): boolean {
+  const pgError = error as PostgresError;
+  const code = pgError?.code;
+  return code === "23514" || code === "23505" || code === "23503" || code === "23502";
 }
 
 /**
- * Verifica se um erro é de validação (constraint)
- * 
- * @param error - Erro retornado pelo Supabase
- * @returns true se for erro de validação
- */
-export function isValidationError(error: unknown): boolean {
-  const dbError = error as DatabaseError;
-  const code = dbError.code || '';
-  
-  return code === '23514' || // CHECK constraint
-         code === '23505' || // UNIQUE constraint
-         code === '23503';   // FOREIGN KEY constraint
-}
-
-/**
- * Verifica se um erro é de permissão
- * 
- * @param error - Erro retornado pelo Supabase
- * @returns true se for erro de permissão
+ * Verifica se um erro é de permissão (RLS)
  */
 export function isPermissionError(error: unknown): boolean {
-  const dbError = error as DatabaseError;
-  const code = dbError.code || '';
-  
-  return code === '42501' || // Insufficient privilege
-         code === 'PGRST301'; // JWT expired
+  const pgError = error as PostgresError;
+  const code = pgError?.code;
+  const message = pgError?.message || "";
+  return code === "42501" || message.includes("permission denied");
+}
+
+/**
+ * Verifica se um erro é de sobreposição de aulas
+ */
+export function isOverlapError(error: unknown): boolean {
+  const pgError = error as PostgresError;
+  const code = pgError?.code;
+  const message = pgError?.message || "";
+  return (
+    code === "23P01" ||
+    message.includes("neste horário") ||
+    message.includes("sobreposição") ||
+    message.includes("overlap")
+  );
 }

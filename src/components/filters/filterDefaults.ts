@@ -22,6 +22,7 @@ export const defaultClassesFilters: ClassesFiltersState = {
   studentId: "all",
   classType: "all",
   status: "em_aberto",
+  sort: "recent",
 };
 
 export const defaultFinancialFilters: FinancialFiltersState = {

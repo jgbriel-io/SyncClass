@@ -278,8 +278,8 @@ BEGIN
   
 EXCEPTION
   WHEN OTHERS THEN
-    INSERT INTO audit_logs (user_id, action, table_name, record_id, metadata)
-    VALUES (auth.uid(), 'update_payment_day_error', 'students', p_student_id,
+    INSERT INTO audit_logs (user_id, action_type, action, table_name, record_id, metadata)
+    VALUES (auth.uid(), 'UPDATE', 'update_payment_day_error', 'students', p_student_id,
             jsonb_build_object('error_message', SQLERRM, 'error_detail', SQLSTATE, 'new_pay_day', p_new_pay_day));
     RAISE;
 END;
@@ -465,8 +465,8 @@ BEGIN
     v_financial_record_id := NULL;
   END IF;
   
-  INSERT INTO audit_logs (user_id, action, table_name, record_id, metadata)
-  VALUES (auth.uid(), 'create_class_package', 'class_logs', v_student_id,
+  INSERT INTO audit_logs (user_id, action_type, action, table_name, record_id, metadata)
+  VALUES (auth.uid(), 'INSERT', 'create_class_package', 'class_logs', v_student_id,
           jsonb_build_object('class_logs_count', array_length(p_class_logs, 1), 'class_log_ids', v_inserted_logs, 'financial_record_id', v_financial_record_id, 'total_amount', p_financial_data.amount));
   
   v_result := jsonb_build_object(
@@ -493,8 +493,8 @@ EXCEPTION
       WHERE idempotency_key = p_idempotency_key;
     END IF;
     
-    INSERT INTO audit_logs (user_id, action, table_name, record_id, metadata)
-    VALUES (auth.uid(), 'create_class_package_error', 'class_logs', v_student_id,
+    INSERT INTO audit_logs (user_id, action_type, action, table_name, record_id, metadata)
+    VALUES (auth.uid(), 'INSERT', 'create_class_package_error', 'class_logs', v_student_id,
             jsonb_build_object('error_message', SQLERRM, 'error_detail', SQLSTATE, 'class_logs_count', array_length(p_class_logs, 1)));
     
     RAISE;
@@ -567,8 +567,8 @@ BEGIN
   SET status = 'pago', paid_at = p_paid_at, payment_method = COALESCE(p_payment_method, payment_method), updated_at = NOW()
   WHERE id = p_record_id;
   
-  INSERT INTO audit_logs (user_id, action, table_name, record_id, old_data, new_data)
-  VALUES (auth.uid(), 'mark_as_paid', 'financial_records', p_record_id,
+  INSERT INTO audit_logs (user_id, action_type, action, table_name, record_id, old_data, new_data)
+  VALUES (auth.uid(), 'UPDATE', 'mark_as_paid', 'financial_records', p_record_id,
           jsonb_build_object('status', v_old_status),
           jsonb_build_object('status', 'pago', 'paid_at', p_paid_at));
   
@@ -1000,8 +1000,8 @@ BEGIN
     v_financial_record_id := NULL;
   END IF;
   
-  INSERT INTO audit_logs (user_id, action, table_name, record_id, metadata)
-  VALUES (auth.uid(), 'create_class_package', 'class_logs', v_student_id,
+  INSERT INTO audit_logs (user_id, action_type, action, table_name, record_id, metadata)
+  VALUES (auth.uid(), 'INSERT', 'create_class_package', 'class_logs', v_student_id,
           jsonb_build_object('class_logs_count', array_length(p_class_logs, 1), 'class_log_ids', v_inserted_logs, 'financial_record_id', v_financial_record_id));
   
   v_result := jsonb_build_object(
@@ -1032,8 +1032,8 @@ EXCEPTION
       WHERE idempotency_key = p_idempotency_key;
     END IF;
     
-    INSERT INTO audit_logs (user_id, action, table_name, record_id, metadata)
-    VALUES (auth.uid(), 'create_class_package_error', 'class_logs', v_student_id,
+    INSERT INTO audit_logs (user_id, action_type, action, table_name, record_id, metadata)
+    VALUES (auth.uid(), 'INSERT', 'create_class_package_error', 'class_logs', v_student_id,
             jsonb_build_object('error_message', SQLERRM, 'class_logs_count', array_length(p_class_logs, 1)));
     
     RAISE;

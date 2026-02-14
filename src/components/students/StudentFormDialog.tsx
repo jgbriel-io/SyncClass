@@ -22,7 +22,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { ChevronsUpDown, CalendarIcon } from "lucide-react";
-import { REGEX_PATTERNS, maskCPF, maskPhone, brDateStringToDate, isValidDateString } from "@/lib/utils/patterns";
+import { REGEX_PATTERNS, maskCPF, maskPhone, brDateStringToDate, isValidDateString, isMasked } from "@/lib/utils/patterns";
+import { useDateMask } from "@/hooks/useDateMask";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { emailSchema } from "@/lib/validation/email";
@@ -34,10 +35,6 @@ type StudentStatus = Enums<"student_status">;
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
   return `${year}-${month}-${day}`;
-}
-
-function isMasked(value: string | null | undefined): boolean {
-  return typeof value === "string" && value.includes("*");
 }
 
 const studentSchema = z.object({
@@ -148,6 +145,9 @@ export function StudentFormDialog({
 
   const watchedCity = watch("city") || "";
   const birthDate = watch("birth_date");
+  const { handleChange: handleDateChange, handleKeyDown: handleDateKeyDown } = useDateMask(
+    (value, options) => setValue("birth_date", value, options)
+  );
 
   useEffect(() => {
     // Sempre que o diálogo é fechado, garantimos que o formulário volte para o estado "novo aluno"
@@ -427,35 +427,70 @@ export function StudentFormDialog({
 
             <div className="space-y-2">
               <Label htmlFor="birth_date">Data de Nascimento</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="birth_date"
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal h-10",
-                      !birthDate && "text-muted-foreground"
-                    )}
-                    disabled={isLoading}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {birthDate || "Selecione a data"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={brDateStringToDate(birthDate || "") ?? undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        setValue("birth_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
-                      }
-                    }}
-                    locale={ptBR}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="flex gap-2">
+                <Input
+                  id="birth_date"
+                  type="text"
+                  placeholder="dd/mm/aaaa"
+                  maxLength={10}
+                  value={birthDate || ""}
+                  onChange={handleDateChange}
+                  onKeyDown={handleDateKeyDown}
+                  disabled={isLoading}
+                  className="flex-1"
+                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0"
+                      disabled={isLoading}
+                    >
+                      <CalendarIcon className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <div className="p-3 border-b flex items-center justify-center gap-2">
+                      <Select
+                        value={birthDate ? brDateStringToDate(birthDate)?.getFullYear().toString() : "2000"}
+                        onValueChange={(year) => {
+                          const currentDate = birthDate ? brDateStringToDate(birthDate) : new Date(2000, 0, 1);
+                          const newDate = new Date(parseInt(year), currentDate?.getMonth() ?? 0, 1);
+                          setValue("birth_date", format(newDate, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Ano" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[200px]">
+                          {Array.from({ length: new Date().getFullYear() - 1920 + 1 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Calendar
+                      mode="single"
+                      selected={brDateStringToDate(birthDate || "") ?? undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setValue("birth_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                        }
+                      }}
+                      locale={ptBR}
+                      month={birthDate ? brDateStringToDate(birthDate) ?? new Date(2000, 0, 1) : new Date(2000, 0, 1)}
+                      onMonthChange={() => {}}
+                      fromYear={1920}
+                      toYear={new Date().getFullYear()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
               {errors.birth_date && (
                 <p className="text-sm text-destructive">{errors.birth_date.message}</p>
               )}

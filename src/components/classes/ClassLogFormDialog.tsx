@@ -27,8 +27,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
-const REGEX_TIME = /^([01]?\d|2[0-3]):([0-5]\d)$/;
-
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
   return `${year}-${month}-${day}`;
@@ -120,8 +118,8 @@ const classLogBaseSchema = z.object({
   title: z.string().optional(),
   feedback: z.string().max(1000).optional(),
   observations: z.string().max(1000, "Máximo 1000 caracteres").optional(),
-  start_time: z.string().optional().refine((v) => !v || REGEX_TIME.test(v), { message: "Formato HH:mm" }),
-  end_time: z.string().optional().refine((v) => !v || REGEX_TIME.test(v), { message: "Formato HH:mm" }),
+  start_time: z.string().optional().refine((v) => !v || REGEX_PATTERNS.time.test(v), { message: "Formato HH:mm" }),
+  end_time: z.string().optional().refine((v) => !v || REGEX_PATTERNS.time.test(v), { message: "Formato HH:mm" }),
   grade: z
     .number({ invalid_type_error: "Informe a nota" })
     .min(0, "Nota mínima é 0")

@@ -30,8 +30,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
-const REGEX_TIME = /^([01]?\d|2[0-3]):([0-5]\d)$/;
-
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
   return `${year}-${month}-${day}`;
@@ -105,7 +103,7 @@ function generateSlotsForMonth(
   startTime: string,
   endTime: string
 ): Slot[] {
-  if (weekdays.length === 0 || !REGEX_TIME.test(startTime) || !REGEX_TIME.test(endTime)) return [];
+  if (weekdays.length === 0 || !REGEX_PATTERNS.time.test(startTime) || !REGEX_PATTERNS.time.test(endTime)) return [];
   const first = new Date(year, month - 1, 1);
   const last = new Date(year, month, 0);
   const slots: Slot[] = [];
@@ -225,7 +223,7 @@ export function PackageClassesDialog({
       toast.error("Selecione pelo menos um dia da semana.");
       return;
     }
-    if (!REGEX_TIME.test(fixedStartTime) || !REGEX_TIME.test(fixedEndTime)) {
+    if (!REGEX_PATTERNS.time.test(fixedStartTime) || !REGEX_PATTERNS.time.test(fixedEndTime)) {
       toast.error("Informe o horário de início e término.");
       return;
     }
@@ -260,9 +258,9 @@ export function PackageClassesDialog({
       if (!REGEX_PATTERNS.date.test(s.class_date)) return `Data inválida na aula ${i + 1}.`;
       if (!isValidDateString(s.class_date)) return `Data inválida na aula ${i + 1}.`;
       if (!isDateTodayOrFuture(s.class_date)) return `A data da aula ${i + 1} deve ser de hoje em diante. Não é possível cadastrar aulas em datas passadas.`;
-      if (!s.start_time?.trim() || !REGEX_TIME.test(s.start_time))
+      if (!s.start_time?.trim() || !REGEX_PATTERNS.time.test(s.start_time))
         return `Informe o horário de início da aula ${i + 1} (HH:mm).`;
-      if (!s.end_time?.trim() || !REGEX_TIME.test(s.end_time))
+      if (!s.end_time?.trim() || !REGEX_PATTERNS.time.test(s.end_time))
         return `Informe o horário de término da aula ${i + 1} (HH:mm).`;
       const [sh, sm] = s.start_time.split(":").map(Number);
       const [eh, em] = s.end_time.split(":").map(Number);
@@ -636,14 +634,14 @@ export function PackageClassesDialog({
           {!semCobranca && selectedStudent && (() => {
             const hourlyRate = selectedStudent.hourly_rate ?? 0;
             const total = slots.reduce((sum, s) => {
-              if (!s.class_date || !s.start_time || !s.end_time || !REGEX_TIME.test(s.start_time) || !REGEX_TIME.test(s.end_time)) return sum;
+              if (!s.class_date || !s.start_time || !s.end_time || !REGEX_PATTERNS.time.test(s.start_time) || !REGEX_PATTERNS.time.test(s.end_time)) return sum;
               const classDateIso = brDateToIso(s.class_date);
               const startAt = buildTimestamptzFromDateAndTime(classDateIso, s.start_time);
               const endAt = buildTimestamptzFromDateAndTime(classDateIso, s.end_time);
               const min = Math.round((new Date(endAt).getTime() - new Date(startAt).getTime()) / (60 * 1000));
               return sum + (hourlyRate > 0 && min > 0 ? hourlyRate * (min / 60) : 0);
             }, 0);
-            const validSlots = slots.filter((s) => s.class_date && REGEX_TIME.test(s.start_time || "") && REGEX_TIME.test(s.end_time || ""));
+            const validSlots = slots.filter((s) => s.class_date && REGEX_PATTERNS.time.test(s.start_time || "") && REGEX_PATTERNS.time.test(s.end_time || ""));
             return (
               <div className="space-y-2">
                 <p className="text-sm font-medium">

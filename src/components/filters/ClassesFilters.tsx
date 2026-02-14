@@ -18,6 +18,7 @@ import {
 export type ClassStatusFilter = "all" | "em_aberto" | "agendada" | "avaliacao_pendente" | "concluida";
 export type ClassPeriodFilter = "all" | "week" | "month" | "3months";
 export type ClassTypeFilter = "all" | "pacote" | "individual";
+export type ClassSortFilter = "recent" | "oldest";
 
 export interface ClassesFiltersState {
   search: string;
@@ -26,6 +27,7 @@ export interface ClassesFiltersState {
   studentId: string;
   classType: ClassTypeFilter;
   status: ClassStatusFilter;
+  sort: ClassSortFilter;
 }
 
 interface Teacher {
@@ -123,6 +125,23 @@ export function ClassesFilters({
                     {s.name || "—"}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Ordenação */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Ordenar</span>
+            <Select
+              value={filters.sort}
+              onValueChange={(v) => onChange({ ...filters, sort: v as ClassSortFilter })}
+            >
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Ordenação" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">Mais recente</SelectItem>
+                <SelectItem value="oldest">Mais antigo</SelectItem>
               </SelectContent>
             </Select>
           </div>

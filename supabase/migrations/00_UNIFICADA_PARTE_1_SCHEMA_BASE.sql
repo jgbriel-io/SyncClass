@@ -248,6 +248,59 @@ CHECK (deleted_at IS NULL OR deleted_at <= now());
 
 
 -- ============================================================
+-- FUNCTIONS (criar ANTES das views que as usam)
+-- ============================================================
+
+-- Função auxiliar: verificar se usuário tem role específica
+CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$ SELECT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = _user_id AND role = _role) $$;
+
+-- Função: verificar se usuário é admin
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$ SELECT public.has_role(auth.uid(), 'admin') $$;
+
+-- Função: verificar se usuário é professor
+CREATE OR REPLACE FUNCTION public.is_teacher()
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$ SELECT public.has_role(auth.uid(), 'teacher') $$;
+
+-- Função: obter student_id do usuário logado
+CREATE OR REPLACE FUNCTION public.get_my_student_id()
+RETURNS UUID LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$ SELECT student_id FROM public.profiles WHERE user_id = auth.uid() $$;
+
+-- Função: obter teacher_id do usuário logado
+CREATE OR REPLACE FUNCTION public.get_my_teacher_id()
+RETURNS UUID LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$ SELECT teacher_id FROM public.profiles WHERE user_id = auth.uid() $$;
+
+-- Função: mascarar CPF (LGPD)
+CREATE OR REPLACE FUNCTION public.mask_cpf(cpf TEXT)
+RETURNS TEXT LANGUAGE plpgsql IMMUTABLE
+AS $$
+BEGIN
+  IF cpf IS NULL OR LENGTH(cpf) < 11 THEN
+    RETURN cpf;
+  END IF;
+  RETURN SUBSTRING(cpf FROM 1 FOR 3) || '.***.***-' || SUBSTRING(cpf FROM LENGTH(cpf) - 1);
+END;
+$$;
+
+-- Função: mascarar telefone (LGPD)
+CREATE OR REPLACE FUNCTION public.mask_phone(phone TEXT)
+RETURNS TEXT LANGUAGE plpgsql IMMUTABLE
+AS $$
+BEGIN
+  IF phone IS NULL OR LENGTH(phone) < 8 THEN
+    RETURN phone;
+  END IF;
+  RETURN SUBSTRING(phone FROM 1 FOR 2) || ' ****-' || SUBSTRING(phone FROM LENGTH(phone) - 3);
+END;
+$$;
+
+-- ============================================================
 -- VIEWS
 -- ============================================================
 

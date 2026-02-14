@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
@@ -596,14 +596,19 @@ export interface CreateClassLogPackagePayload {
 
 export function useCreateClassLogPackage() {
   const queryClient = useQueryClient();
+  // Gerar chave de idempotência FORA do mutationFn para garantir idempotência em retries
+  const idempotencyKeyRef = useRef<string | null>(null);
 
   return useMutation({
     mutationFn: async (payload: CreateClassLogPackagePayload) => {
       const { items, packageFinancial } = payload;
       if (items.length === 0) throw new Error("Nenhuma aula no pacote.");
 
-      // Gerar chave de idempotência usando crypto.randomUUID()
-      const idempotencyKey = crypto.randomUUID();
+      // Usar chave existente ou gerar nova apenas na primeira tentativa
+      if (!idempotencyKeyRef.current) {
+        idempotencyKeyRef.current = crypto.randomUUID();
+      }
+      const idempotencyKey = idempotencyKeyRef.current;
 
       // Converter para formato do RPC
       const classLogs = items.map((item) => ({
@@ -612,7 +617,7 @@ export function useCreateClassLogPackage() {
         class_date: item.classLog.class_date,
         start_at: item.classLog.start_at,
         end_at: item.classLog.end_at,
-        attendance: item.classLog.attendance ?? true,
+        attendance: item.classLog.attendance ?? null,
         notes: item.classLog.notes || null,
       }));
 
@@ -636,6 +641,9 @@ export function useCreateClassLogPackage() {
       return data;
     },
     onSuccess: (data, variables) => {
+      // Limpar chave após sucesso para permitir nova operação
+      idempotencyKeyRef.current = null;
+      
       // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
@@ -653,6 +661,9 @@ export function useCreateClassLogPackage() {
       toast.success(data.message || `${variables.items.length} aula(s) registrada(s) com sucesso!`);
     },
     onError: (error) => {
+      // Limpar chave após erro para permitir nova tentativa com nova chave
+      idempotencyKeyRef.current = null;
+      
       const err = error as Error & { details?: string; code?: string };
       const msg = err?.message || "";
       const details = err?.details ? ` (${err.details})` : "";

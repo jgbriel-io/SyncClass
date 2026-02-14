@@ -215,7 +215,7 @@ export function ClassesView({
   const deleteLog = useDeleteClassLog();
 
   const filteredLogs = useMemo(() => {
-    return logs.filter((log) => {
+    const filtered = logs.filter((log) => {
       const searchLower = filters.search.toLowerCase();
       const studentName = log.students?.name || "";
       const title = log.title || "";
@@ -289,6 +289,17 @@ export function ClassesView({
       }
 
       return true;
+    });
+
+    // Aplicar ordenação baseada no filtro sort (por data de criação)
+    return filtered.sort((a, b) => {
+      const createdA = new Date(a.created_at).getTime();
+      const createdB = new Date(b.created_at).getTime();
+      
+      if (filters.sort === "oldest") {
+        return createdA - createdB; // Mais antigo primeiro (ascendente)
+      }
+      return createdB - createdA; // Mais recente primeiro (descendente) - default
     });
   }, [logs, filters]);
 
