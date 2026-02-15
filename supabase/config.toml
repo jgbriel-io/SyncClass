@@ -1,4 +1,4 @@
-project_id = "xobasqtrsasutjhhdqsv"
+project_id = "yxwtxewwszoovqrjrrfb"
 
 # Gateway não valida JWT; a função valida internamente (evita 401 do gateway)
 [functions.invite-user]

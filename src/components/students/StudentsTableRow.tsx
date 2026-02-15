@@ -24,6 +24,7 @@ interface StudentsTableRowProps {
   student: Student;
   showTeacherColumn: boolean;
   teacherName: string;
+  totalClasses: number;
   monthlyTotal: number | null;
   lastClassDateRaw: string | null;
   daysWithoutClass: number | null;
@@ -39,6 +40,7 @@ export function StudentsTableRow({
   student,
   showTeacherColumn,
   teacherName,
+  totalClasses,
   monthlyTotal,
   lastClassDateRaw,
   daysWithoutClass,
@@ -51,7 +53,6 @@ export function StudentsTableRow({
 }: StudentsTableRowProps) {
   const lastUpdatedAt = student.updated_at;
   const hourlyRate = student.hourly_rate;
-  const classesPerWeek = student.classes_per_week;
 
   return (
     <tr className="group hover:bg-muted/30 transition-colors">
@@ -91,7 +92,7 @@ export function StudentsTableRow({
       </td>
 
       <td className={CELL_BASE} style={{ width: COL.AULAS_SEMANA, minWidth: COL.AULAS_SEMANA }}>
-        <NumericCell value={classesPerWeek} className="text-muted-foreground" />
+        <NumericCell value={totalClasses} className="text-muted-foreground" />
       </td>
 
       <td className={CELL_BASE} style={{ width: COL.TOTAL_MENSAL, minWidth: COL.TOTAL_MENSAL }}>

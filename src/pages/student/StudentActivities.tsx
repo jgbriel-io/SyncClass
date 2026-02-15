@@ -195,14 +195,25 @@ const StudentActivitiesPage = () => {
                                   {activity.file_type} • {((activity.file_size ?? 0) / 1024).toFixed(1)} KB
                                 </p>
                               </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDownload(activity.file_url, activity.file_name)}
-                              >
-                                <Download className="h-4 w-4 mr-2" />
-                                Baixar
-                              </Button>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleViewFile(activity.file_url)}
+                                  title="Visualizar na web"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDownload(activity.file_url, activity.file_name)}
+                                >
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Baixar
+                                </Button>
+                              </div>
                             </div>
                           </div>
 

@@ -257,9 +257,6 @@ export function ActivitiesView({
       />
 
       {/* Table */}
-      {isLoading ? (
-        <ActivitiesTableSkeleton rows={10} />
-      ) : (
       <div className="rounded-lg border bg-card shadow-card overflow-hidden">
         <Table style={{ minWidth: ACT_TABLE_MIN_W }}>
           <TableHeader>
@@ -275,7 +272,19 @@ export function ActivitiesView({
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/40">
-            {paginatedActivities.map((activity) => (
+            {isLoading ? (
+              <ActivitiesTableSkeleton rows={10} />
+            ) : paginatedActivities.length === 0 ? (
+              <TableRow>
+                <td colSpan={10} className="p-0">
+                  <EmptyActivitiesState 
+                    onAction={!isAdmin ? () => setSendDialogOpen(true) : undefined}
+                    actionLabel="Enviar primeira atividade"
+                  />
+                </td>
+              </TableRow>
+            ) : (
+              paginatedActivities.map((activity) => (
               <ActivitiesTableRow
                 key={activity.id}
                 activity={activity}
@@ -300,7 +309,8 @@ export function ActivitiesView({
                   setCorrectionDialogOpen(true);
                 }}
               />
-            ))}
+            ))
+            )}
           </TableBody>
         </Table>
 
@@ -313,7 +323,6 @@ export function ActivitiesView({
           onPageChange={setPage}
         />
       </div>
-      )}
 
       {/* Dialogs */}
       <SendActivityDialog

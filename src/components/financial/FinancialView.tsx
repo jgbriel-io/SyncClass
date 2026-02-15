@@ -147,6 +147,7 @@ export function FinancialView({
 
   const filteredRecords = useMemo(() => {
     let result = recordsWithActualStatus.filter((record) => {
+      // Apenas busca por texto (não está no banco - CPF/telefone com dígitos)
       const searchLower = filters.search.toLowerCase().trim();
       const studentName = record.students?.name || "";
       const studentEmail = (record.students as { email?: string | null })?.email || "";
@@ -162,22 +163,10 @@ export function FinancialView({
             studentPhone.replace(/\D/g, "").includes(searchDigits)));
       if (!matchesSearch) return false;
 
-      const matchesStatus = filters.status === "all" || record.actualStatus === filters.status;
-      if (!matchesStatus) return false;
-
-      const dueDate = record.due_date ? new Date(record.due_date + "T12:00:00") : null;
-      if (filters.dateFrom && dueDate) {
-        const from = new Date(filters.dateFrom);
-        if (dueDate < from) return false;
-      }
-      if (filters.dateTo && dueDate) {
-        const to = new Date(filters.dateTo);
-        to.setHours(23, 59, 59, 999);
-        if (dueDate > to) return false;
-      }
       return true;
     });
 
+    // Ordenação (não está no banco)
     result = [...result].sort((a, b) => {
       const dueA = new Date((a.due_date || "") + "T12:00:00").getTime();
       const dueB = new Date((b.due_date || "") + "T12:00:00").getTime();
@@ -408,30 +397,30 @@ export function FinancialView({
       )}
 
         {/* Table */}
-        {isLoading ? (
-          <FinancialTableSkeleton rows={8} />
-        ) : !error ? (
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-            <Table style={{ minWidth: FIN_TABLE_MIN_W }}>
-              <TableHeader>
-                <TableRow>
-                  <TableHead
-                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
-                    style={{ width: FIN_COL.ALUNO, minWidth: FIN_COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}
-                  >
-                    Aluno
-                  </TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.AULA, minWidth: FIN_COL.AULA }}>Aula Vinculada</TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.VALOR, minWidth: FIN_COL.VALOR }}>Valor</TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.METODO, minWidth: FIN_COL.METODO }}>Método</TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: FIN_COL.VENCIMENTO, minWidth: FIN_COL.VENCIMENTO }}>Vencimento</TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.STATUS, minWidth: FIN_COL.STATUS }}>Status</TableHead>
-                  <TableHead className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }} aria-label="Avaliar" />
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.ACOES, minWidth: FIN_COL.ACOES }}>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/40">
-                {filteredRecords.map((record) => (
+        <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
+          <Table style={{ minWidth: FIN_TABLE_MIN_W }}>
+            <TableHeader>
+              <TableRow>
+                <TableHead
+                  className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
+                  style={{ width: FIN_COL.ALUNO, minWidth: FIN_COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}
+                >
+                  Aluno
+                </TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.AULA, minWidth: FIN_COL.AULA }}>Aula Vinculada</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.VALOR, minWidth: FIN_COL.VALOR }}>Valor</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.METODO, minWidth: FIN_COL.METODO }}>Método</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: FIN_COL.VENCIMENTO, minWidth: FIN_COL.VENCIMENTO }}>Vencimento</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.STATUS, minWidth: FIN_COL.STATUS }}>Status</TableHead>
+                <TableHead className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }} aria-label="Avaliar" />
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.ACOES, minWidth: FIN_COL.ACOES }}>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/40">
+              {isLoading ? (
+                <FinancialTableSkeleton rows={8} />
+              ) : (
+                filteredRecords.map((record) => (
                   <FinancialTableRow
                     key={record.id}
                     record={record}
@@ -453,36 +442,36 @@ export function FinancialView({
                       setDeleteDialogOpen(true);
                     }}
                   />
-                ))}
-              </TableBody>
-            </Table>
-            {filteredRecords.length === 0 && (
-              <div className="border-t">
-                {records.length === 0 ? (
-                  <EmptyFinancialState
-                    message="As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças."
-                  />
-                ) : (
-                  <EmptyState
-                    icon={Search}
-                    title="Nenhum resultado"
-                    message="Ajuste os filtros acima ou limpe a busca"
-                  />
-                )}
-              </div>
-            )}
-            <TablePaginationBar
-              page={page}
-              pageSize={10}
-              totalCount={totalCount}
-              hasMore={!!hasMore}
-              isFetching={isFetching}
-              onPageChange={setPage}
-            />
-          </div>
-        ) : null}
+                ))
+              )}
+            </TableBody>
+          </Table>
+          {!isLoading && filteredRecords.length === 0 && (
+            <div className="border-t">
+              {records.length === 0 ? (
+                <EmptyFinancialState
+                  message="As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças."
+                />
+              ) : (
+                <EmptyState
+                  icon={Search}
+                  title="Nenhum resultado"
+                  message="Ajuste os filtros acima ou limpe a busca"
+                />
+              )}
+            </div>
+          )}
+          <TablePaginationBar
+            page={page}
+            pageSize={10}
+            totalCount={totalCount}
+            hasMore={!!hasMore}
+            isFetching={isFetching}
+            onPageChange={setPage}
+          />
+        </div>
 
-        {/* Create Form Dialog */}
+      {/* Create Form Dialog */}
       <FinancialFormDialog
         open={isFormOpen}
         onOpenChange={(open) => {

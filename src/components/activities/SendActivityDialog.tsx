@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,6 +22,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { useStudents } from "@/hooks/useStudents";
+import { useAuth } from "@/contexts/AuthContext";
+import { validateFile, checkUploadRateLimit, FILE_TYPES, formatFileSize } from "@/lib/utils/fileValidation";
 import {
   useCreateActivity,
   uploadActivityFile,
@@ -73,6 +75,7 @@ export function SendActivityDialog({
 }: SendActivityDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const { user } = useAuth();
 
   const { data: students = [], isLoading: loadingStudents } = useStudents();
   const { data: existingFiles = [], isLoading: loadingFiles } = useActivityFilesForTeacher(teacherId);
@@ -95,19 +98,48 @@ export function SendActivityDialog({
     },
   });
 
+  // Limpar formulário quando o modal fecha
+  useEffect(() => {
+    if (!open) {
+      reset({
+        fileSource: "new",
+        due_date: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "dd/MM/yyyy", { locale: ptBR }),
+        due_time: "23:59",
+      });
+      setSelectedFile(null);
+    }
+  }, [open, reset]);
+
   const fileSource = watch("fileSource");
   const dueDate = watch("due_date");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setValue("file", file);
-      setValue("existingFileUrl", undefined);
+    if (!file) return;
+
+    // Validar tipo e tamanho do arquivo
+    const validation = validateFile(file, 'ACTIVITY_PDF');
+    if (!validation.valid) {
+      toast.error(validation.error);
+      e.target.value = ''; // Limpar input
+      return;
     }
+
+    setSelectedFile(file);
+    setValue("file", file);
+    setValue("existingFileUrl", undefined);
   };
 
   const handleFormSubmit = async (data: ActivityFormData) => {
+    // Verificar rate limiting
+    if (user?.id) {
+      const rateLimit = checkUploadRateLimit(user.id, 10, 60000); // 10 uploads por minuto
+      if (!rateLimit.allowed) {
+        toast.error(`Muitos uploads. Aguarde ${rateLimit.retryAfter} segundos.`);
+        return;
+      }
+    }
+
     setIsUploading(true);
     try {
       let file_url: string;
@@ -304,21 +336,27 @@ export function SendActivityDialog({
             </RadioGroup>
 
             {fileSource === "new" && (
-              <div className="flex items-center gap-2">
-                <Input
-                  id="file"
-                  type="file"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-                  onChange={handleFileChange}
-                  disabled={isPending}
-                  className="cursor-pointer"
-                />
-                {selectedFile && (
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <FileText className="h-4 w-4 shrink-0" />
-                    <span className="truncate max-w-[150px]">{selectedFile.name}</span>
-                  </div>
-                )}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="file"
+                    type="file"
+                    accept={FILE_TYPES.ACTIVITY_PDF.accept}
+                    onChange={handleFileChange}
+                    disabled={isPending}
+                    className="cursor-pointer"
+                  />
+                  {selectedFile && (
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <FileText className="h-4 w-4 shrink-0" />
+                      <span className="truncate max-w-[150px]">{selectedFile.name}</span>
+                      <span className="text-xs">({formatFileSize(selectedFile.size)})</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {FILE_TYPES.ACTIVITY_PDF.description}
+                </p>
               </div>
             )}
 

@@ -23,7 +23,7 @@ import { useAvailableClassLogsForStudent } from "@/hooks/useClassLogs";
 import { FinancialRecordInsert, FinancialRecord, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { brDateStringToDate, isValidDateString, parseMoneyToNumber, formatNumberToMoney, REGEX_PATTERNS } from "@/lib/utils/patterns";
+import { brDateStringToDate, isValidDateString, parseMoneyToNumber, formatNumberToMoneyBR, REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { cn } from "@/lib/utils";
 
 function brDateToIso(value: string): string {
@@ -115,12 +115,18 @@ export function FinancialFormDialog({
     if (open && initialData) {
       setSelectedStudentId(initialData.student_id || "");
       setSelectedClassLogId(initialData.class_log_id || "");
+      
+      // Garantir que o amount seja formatado corretamente com separador de milhar
+      const amountValue = initialData.amount ? Number(initialData.amount) : 0;
+      const formattedAmount = formatNumberToMoneyBR(amountValue);
+      
       reset({
         student_id: initialData.student_id || "",
         class_log_id: initialData.class_log_id || "",
-        amount: initialData.amount ? formatNumberToMoney(Number(initialData.amount)) : "",
+        amount: formattedAmount,
         due_date: initialData.due_date ? format(new Date(initialData.due_date + "T00:00:00"), "dd/MM/yyyy") : "",
         description: initialData.description || "",
+        payment_method: initialData.payment_method || "",
       });
     }
   }, [open, initialData, reset]);
@@ -142,7 +148,7 @@ export function FinancialFormDialog({
     
     onSubmit({
       student_id: data.student_id,
-      // Preservar class_log_id original ao editar, ou usar o novo valor ao criar
+      // Preservar class_log_id original ao editar
       class_log_id: initialData ? (initialData.class_log_id || null) : (data.class_log_id || null),
       amount: amount,
       due_date: brDateToIso(data.due_date),
@@ -173,8 +179,14 @@ export function FinancialFormDialog({
           class_date: initialData.class_logs.class_date,
           attendance: initialData.class_logs.attendance,
           grade: initialData.class_logs.grade,
+          title: initialData.class_logs.title,
         }
       : null;
+  
+  // Para cobranças de pacote, pegar a primeira aula do pacote
+  const packageClasses = initialData && "package_classes" in initialData ? initialData.package_classes : null;
+  const isPackage = !initialData?.class_log_id && packageClasses && packageClasses.length > 0;
+  
   const classLogOptions =
     currentClassLog && !availableClassLogs.some((a) => a.id === currentClassLog.id)
       ? [currentClassLog, ...availableClassLogs]
@@ -245,33 +257,57 @@ export function FinancialFormDialog({
           {/* Class Log Select */}
           <div className="space-y-2">
             <Label>Aula Vinculada *</Label>
-            <Select
-              value={selectedClassLogId}
-              onValueChange={handleClassLogChange}
-              disabled={!selectedStudentId || loadingClassLogs || (requireClassLog && classLogOptions.length === 0) || !!initialData}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={
-                  !selectedStudentId 
-                    ? "Selecione um aluno primeiro" 
-                    : loadingClassLogs 
-                      ? "Carregando aulas..." 
-                      : requireClassLog && classLogOptions.length === 0
-                        ? "Nenhuma aula disponível"
-                        : "Selecione uma aula"
-                } />
-              </SelectTrigger>
-              <SelectContent>
-                {classLogOptions.map((log) => (
-                  <SelectItem key={log.id} value={log.id}>
-                    {formatClassLogDate(log.class_date)}
-                    {log.attendance === false && " (Falta)"}
-                    {log.grade && ` - Nota: ${log.grade}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedStudentId && classLogOptions.length === 0 && !loadingClassLogs && (
+            {initialData ? (
+              // Ao editar: mostrar input travado com o título da aula
+              <Input
+                value={
+                  isPackage && packageClasses
+                    ? (() => {
+                        const firstClass = packageClasses[0];
+                        const rawTitle = firstClass.title?.trim();
+                        const displayTitle = rawTitle || `Aula - ${formatClassLogDate(firstClass.class_date)}`;
+                        return `${displayTitle} (Pacote)`;
+                      })()
+                    : currentClassLog
+                      ? (() => {
+                          const rawTitle = currentClassLog.title?.trim();
+                          return rawTitle || `Aula - ${formatClassLogDate(currentClassLog.class_date)}`;
+                        })()
+                      : "Sem aula vinculada"
+                }
+                disabled
+                className="bg-muted"
+              />
+            ) : (
+              // Ao criar: mostrar select normal
+              <Select
+                value={selectedClassLogId || undefined}
+                onValueChange={handleClassLogChange}
+                disabled={!selectedStudentId || loadingClassLogs || (requireClassLog && classLogOptions.length === 0)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={
+                    !selectedStudentId 
+                      ? "Selecione um aluno primeiro" 
+                      : loadingClassLogs 
+                        ? "Carregando aulas..." 
+                        : requireClassLog && classLogOptions.length === 0
+                          ? "Nenhuma aula disponível"
+                          : "Selecione uma aula"
+                  } />
+                </SelectTrigger>
+                <SelectContent>
+                  {classLogOptions.map((log) => (
+                    <SelectItem key={log.id} value={log.id}>
+                      {formatClassLogDate(log.class_date)}
+                      {log.attendance === false && " (Falta)"}
+                      {log.grade && ` - Nota: ${log.grade}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {selectedStudentId && classLogOptions.length === 0 && !loadingClassLogs && !initialData && (
               <p className="text-xs text-muted-foreground">
                 Nenhuma aula disponível (todas já têm cobrança ou não há aulas cadastradas). Registre uma aula na aba Aulas primeiro.
               </p>
@@ -287,8 +323,16 @@ export function FinancialFormDialog({
             <Input
               id="amount"
               type="text"
-              placeholder="450,00"
+              placeholder="1.450,00"
               {...register("amount")}
+              onChange={(e) => {
+                const value = e.target.value;
+                const numericValue = parseMoneyToNumber(value);
+                if (!isNaN(numericValue)) {
+                  const formatted = formatNumberToMoneyBR(numericValue);
+                  setValue("amount", formatted);
+                }
+              }}
             />
             {errors.amount && (
               <p className="text-sm text-destructive">{errors.amount.message}</p>
@@ -346,7 +390,7 @@ export function FinancialFormDialog({
           <div className="space-y-2">
             <Label htmlFor="payment_method">Método de Pagamento</Label>
             <Select
-              value={undefined}
+              value={watch("payment_method") || undefined}
               onValueChange={(value) => setValue("payment_method", value)}
             >
               <SelectTrigger>

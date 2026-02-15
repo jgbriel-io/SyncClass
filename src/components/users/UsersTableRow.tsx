@@ -230,12 +230,6 @@ export function UsersTableRow({
                   Reativar aluno vinculado
                 </DropdownMenuItem>
               )}
-              {linkedTeacher && (
-                <DropdownMenuItem onClick={() => onReactivateTeacher(linkedTeacher.id)}>
-                  <Check className="h-4 w-4 mr-2" />
-                  Reativar professor vinculado
-                </DropdownMenuItem>
-              )}
               <DropdownMenuItem
                 className={
                   isActive

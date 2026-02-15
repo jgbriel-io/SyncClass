@@ -8,6 +8,7 @@ import { ptBR } from "date-fns/locale";
 import { formatDate, formatCurrency } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils";
 import { getClassStatusWithTime } from "@/lib/utils/classTime";
+import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 
 interface StudentClassCardProps {
@@ -23,6 +24,10 @@ interface StudentClassCardProps {
     teacher_name?: string;
     feedback?: string | null;
     amount?: number | null;
+    payment_status?: string | null;
+    payment_due_date?: string | null;
+    is_package?: boolean;
+    observations?: string | null;
   };
   onClick?: () => void;
 }
@@ -76,11 +81,33 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
   const badgeLabel = isConcluida
     ? "Concluída"
     : status.label === "Pendente"
-      ? "Pagamento pendente"
+      ? "Não avaliada"
       : status.label;
   const badgeVariant = isConcluida
     ? "success"
     : status.variant;
+
+  // Calcular status de pagamento
+  const paymentStatus = classLog.payment_status && classLog.payment_due_date
+    ? getFinancialActualStatus({
+        status: classLog.payment_status,
+        due_date: classLog.payment_due_date,
+      })
+    : null;
+
+  const paymentBadgeLabel = paymentStatus === "pago"
+    ? "Pago"
+    : paymentStatus === "atrasado"
+      ? "Atrasado"
+      : paymentStatus === "pendente"
+        ? "Pendente"
+        : null;
+
+  const paymentBadgeVariant = paymentStatus === "pago"
+    ? "success"
+    : paymentStatus === "atrasado"
+      ? "destructive"
+      : "warning";
 
   const handleToggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -97,14 +124,42 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
     >
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-3 flex-1 min-w-0">
-          {/* Título + Badge (cada um no seu canto) */}
+          {/* Título + Badges (status da aula + status do pagamento) */}
           <div className="flex items-center justify-between gap-4">
             <h3 className="font-semibold text-sm text-foreground truncate min-w-0">
-              {escapeHtml(classLog.title?.trim() || "Aula")}
+              {(() => {
+                const rawTitle = classLog.title?.trim();
+                const isPackage = classLog.is_package;
+                
+                // Se tem título customizado
+                if (rawTitle) {
+                  // Se o título já é "Aula - data", não duplicar
+                  const isDefaultFormat = rawTitle.match(/^Aula\s*-\s*\d{2}\/\d{2}\/\d{4}$/i);
+                  
+                  if (isDefaultFormat) {
+                    // É o formato padrão, adiciona (Pacote) se necessário
+                    return isPackage ? `${rawTitle} (Pacote)` : rawTitle;
+                  }
+                  
+                  // É um título customizado
+                  return isPackage ? `${rawTitle} (Pacote)` : rawTitle;
+                }
+                
+                // Fallback: "Aula - data"
+                const fallbackTitle = `Aula - ${formatDate(classLog.class_date)}`;
+                return isPackage ? `${fallbackTitle} (Pacote)` : fallbackTitle;
+              })()}
             </h3>
-            <StatusBadge variant={badgeVariant} className="shrink-0">
-              {badgeLabel}
-            </StatusBadge>
+            <div className="flex items-center gap-2 shrink-0">
+              <StatusBadge variant={badgeVariant} className="shrink-0">
+                {badgeLabel}
+              </StatusBadge>
+              {paymentBadgeLabel && (
+                <StatusBadge variant={paymentBadgeVariant} className="shrink-0">
+                  {paymentBadgeLabel}
+                </StatusBadge>
+              )}
+            </div>
           </div>
 
           {/* Presença (só quando concluída) */}
@@ -155,16 +210,32 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
                 <Timer className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                 <span>Duração: {formatDuration(classLog.duration_minutes, classLog.start_at, classLog.end_at)}</span>
               </div>
-              <div className="flex items-start gap-2 text-sm">
-                <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <div className="min-w-0 flex-1">
-                  <span className="text-muted-foreground">
-                    {hasDetails ? (
-                      <span className="whitespace-pre-wrap">{sanitizeText(classLog.feedback)}</span>
-                    ) : (
-                      <span className="italic">Nenhum feedback registrado para esta aula.</span>
-                    )}
-                  </span>
+              
+              {/* Observações (preenchidas ao criar a aula) */}
+              {classLog.observations?.trim() && (
+                <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <MessageSquare className="h-4 w-4 flex-shrink-0 text-muted-foreground mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium">Observações: </span>
+                    <span className="whitespace-pre-wrap">{sanitizeText(classLog.observations)}</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Feedback (preenchido ao avaliar a aula) - abaixo da lista */}
+              <div className="pt-3 space-y-2">
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Feedback</p>
+                <div className="flex items-start gap-2 text-sm">
+                  <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-muted-foreground">
+                      {hasDetails ? (
+                        <span className="whitespace-pre-wrap">{sanitizeText(classLog.feedback)}</span>
+                      ) : (
+                        <span className="italic">Nenhum feedback registrado para esta aula.</span>
+                      )}
+                    </span>
+                  </div>
                 </div>
               </div>
             </>

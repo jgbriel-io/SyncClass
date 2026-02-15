@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Search, Plus, Eye, EyeOff, Copy, Check, Users, UserCheck, UserX, TrendingUp, Loader2 } from "lucide-react";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
@@ -96,29 +97,25 @@ const TABLE_MIN_W = STUD_TABLE_MIN_W;
 /** Calcula dados derivados de uma linha (para evitar repetição no map) */
 function getStudentRowData(
   student: Student & {
-    monthly_total_calculated?: number | null;
-    financial_status?: string | null;
-    financial_status_label?: string | null;
-    financial_status_variant?: "default" | "success" | "warning" | "destructive" | null;
-    last_class_date?: string | null;
-    days_without_class?: number | null;
+    total_classes_current_month?: number;
+    total_amount_current_month?: number;
   },
   teacherMap: Record<string, string>
 ) {
-  // ✅ NOVO: Usar valores calculados pela view students_enriched
-  const monthlyTotal = student.monthly_total_calculated ?? null;
+  // Usar valores calculados pela view students_with_stats
+  const totalClasses = student.total_classes_current_month ?? 0;
+  const monthlyTotal = student.total_amount_current_month ?? 0;
   const teacherName = student.teacher_id ? teacherMap[student.teacher_id] || "—" : "—";
-  const lastClassDateRaw = student.last_class_date ?? null;
-  const daysWithoutClass = student.days_without_class ?? null;
   
-  const financialStatus = student.financial_status_label && student.financial_status_variant
-    ? {
-        label: student.financial_status_label,
-        variant: student.financial_status_variant as "default" | "success" | "warning" | "destructive",
-      }
-    : null;
-  
-  return { monthlyTotal, teacherName, lastClassDateRaw, daysWithoutClass, financialStatus };
+  return {
+    student,
+    teacherName,
+    totalClasses,
+    monthlyTotal,
+    lastClassDateRaw: null,
+    daysWithoutClass: null,
+    financialStatus: null,
+  };
 }
 
 /* ❌ ANTIGO: Cálculos no front-end (DEPRECATED - remover em 2026-03-01)
@@ -215,8 +212,7 @@ export function StudentsListView({
     setPage(0);
   }, [initialSearch, setPage]);
 
-  // ✅ NOVO: Não precisamos mais buscar financialRecords e classLogs
-  // A view students_enriched já traz tudo calculado
+  // ✅ Usando students_with_stats que calcula total de aulas e valores
   const { data: studentsStats } = useStudentsStats(autoTeacherId);
 
   /* ❌ ANTIGO: Buscar dados para cálculos no front (DEPRECATED - remover em 2026-03-01)
@@ -254,12 +250,14 @@ export function StudentsListView({
 
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
+      // Filtro de aniversariantes (não está no banco)
       if (filters.filterPreset === "aniversariantes") {
         if (!student.birth_date) return false;
         const birthMonth = new Date(student.birth_date + "T00:00:00").getMonth() + 1;
         if (birthMonth !== currentMonth) return false;
       }
 
+      // Busca por texto com dígitos (CPF/telefone - não está no banco)
       const searchLower = filters.search.toLowerCase().trim();
       const searchDigits = searchLower.replace(/\D/g, "");
       const matchesSearch =
@@ -271,28 +269,17 @@ export function StudentsListView({
 
       if (!matchesSearch) return false;
 
-      const matchesStatus = filters.status === "all" || student.status === filters.status;
-      if (!matchesStatus) return false;
-
-      let matchesTeacher = true;
-      if (autoTeacherId) {
-        matchesTeacher = student.teacher_id === autoTeacherId;
-      } else if (showTeacherFilter) {
-        matchesTeacher = filters.teacherId === "all" || student.teacher_id === filters.teacherId;
-      }
-      if (!matchesTeacher) return false;
-
       return true;
     });
 
+    // Ordenação (não está no banco)
     result = [...result].sort((a, b) => {
       const nameA = (a.name || "").toLowerCase();
       const nameB = (b.name || "").toLowerCase();
 
       if (filters.sortBy === "name_asc") return nameA.localeCompare(nameB);
       if (filters.sortBy === "name_desc") return nameB.localeCompare(nameA);
-      // ✅ NOVO: Ordenação por último pagamento não é mais suportada
-      // (seria necessário adicionar last_payment_date na view students_enriched)
+      // Ordenação por último pagamento não é mais suportada
       if (filters.sortBy === "last_payment_desc" || filters.sortBy === "last_payment_asc") {
         return nameA.localeCompare(nameB); // Fallback para ordenação por nome
       }
@@ -300,7 +287,7 @@ export function StudentsListView({
     });
 
     return result;
-  }, [students, filters, autoTeacherId, showTeacherFilter, currentMonth]);
+  }, [students, filters, currentMonth]);
 
   /* ❌ ANTIGO: Ordenação por último pagamento (DEPRECATED)
   result = [...result].sort((a, b) => {
@@ -511,9 +498,7 @@ export function StudentsListView({
       )}
 
       {/* Table — horizontal scroll com sticky column "Aluno" */}
-      {isLoading ? (
-        <StudentsTableSkeleton rows={10} />
-      ) : !error && (
+      {!error && (
         <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto">
                 <Table style={{ minWidth: TABLE_MIN_W }}>
@@ -534,7 +519,10 @@ export function StudentsListView({
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-border/40">
-                    {filteredStudents.map((student) => {
+                    {isLoading ? (
+                      <StudentsTableSkeleton rows={10} />
+                    ) : (
+                      filteredStudents.map((student) => {
                       // ✅ NOVO: Apenas passar student e teacherMap
                       const rowData = getStudentRowData(student, teacherMap);
                       
@@ -554,6 +542,7 @@ export function StudentsListView({
                           student={student}
                           showTeacherColumn={showTeacherColumn}
                           teacherName={rowData.teacherName}
+                          totalClasses={rowData.totalClasses}
                           monthlyTotal={rowData.monthlyTotal}
                           lastClassDateRaw={rowData.lastClassDateRaw}
                           daysWithoutClass={rowData.daysWithoutClass}
@@ -576,7 +565,8 @@ export function StudentsListView({
                           }}
                         />
                       );
-                    })}
+                    })
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -836,12 +826,22 @@ onClick={() => {
             <DialogTitle>Redefinir senha do aluno</DialogTitle>
             {studentToResetPassword && (
               <DialogDescription>
-                Nova senha para <strong>{studentToResetPassword.name}</strong>. Mínimo 6 caracteres.
+                Nova senha para <strong>{studentToResetPassword.name}</strong>.
               </DialogDescription>
             )}
           </DialogHeader>
           {studentToResetPassword && (
             <>
+              <div className="rounded-lg border bg-muted/50 p-3 space-y-2 mb-4">
+                <p className="text-xs font-medium text-muted-foreground">Requisitos da senha:</p>
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Mínimo de 8 caracteres</li>
+                  <li>Pelo menos uma letra maiúscula (A-Z)</li>
+                  <li>Pelo menos uma letra minúscula (a-z)</li>
+                  <li>Pelo menos um número (0-9)</li>
+                  <li>Pelo menos um caractere especial (!@#$%^&*)</li>
+                </ul>
+              </div>
               <div className="space-y-4 py-2">
                 <div className="space-y-2">
                   <Label htmlFor="reset-password-new">Nova senha</Label>
@@ -851,7 +851,7 @@ onClick={() => {
                     placeholder="••••••••"
                     value={resetPasswordNew}
                     onChange={(e) => setResetPasswordNew(e.target.value)}
-                    minLength={6}
+                    minLength={8}
                     disabled={teacherResetPassword.isPending}
                   />
                 </div>
@@ -863,7 +863,7 @@ onClick={() => {
                     placeholder="••••••••"
                     value={resetPasswordConfirm}
                     onChange={(e) => setResetPasswordConfirm(e.target.value)}
-                    minLength={6}
+                    minLength={8}
                     disabled={teacherResetPassword.isPending}
                   />
                 </div>
@@ -872,9 +872,28 @@ onClick={() => {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+                    // Gerar senha forte com todos os requisitos
+                    const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+                    const lower = "abcdefghijkmnpqrstuvwxyz";
+                    const numbers = "23456789";
+                    const special = "!@#$%^&*";
+                    
                     let p = "";
-                    for (let i = 0; i < 10; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
+                    // Garantir pelo menos um de cada tipo
+                    p += upper.charAt(Math.floor(Math.random() * upper.length));
+                    p += lower.charAt(Math.floor(Math.random() * lower.length));
+                    p += numbers.charAt(Math.floor(Math.random() * numbers.length));
+                    p += special.charAt(Math.floor(Math.random() * special.length));
+                    
+                    // Completar com caracteres aleatórios
+                    const allChars = upper + lower + numbers + special;
+                    for (let i = 4; i < 12; i++) {
+                      p += allChars.charAt(Math.floor(Math.random() * allChars.length));
+                    }
+                    
+                    // Embaralhar
+                    p = p.split('').sort(() => Math.random() - 0.5).join('');
+                    
                     setResetPasswordNew(p);
                     setResetPasswordConfirm(p);
                   }}
@@ -897,11 +916,40 @@ onClick={() => {
                 <Button
                   disabled={
                     teacherResetPassword.isPending ||
-                    resetPasswordNew.length < 6 ||
-                    resetPasswordNew !== resetPasswordConfirm
+                    resetPasswordNew.length < 8 ||
+                    resetPasswordNew !== resetPasswordConfirm ||
+                    !/[A-Z]/.test(resetPasswordNew) ||
+                    !/[a-z]/.test(resetPasswordNew) ||
+                    !/[0-9]/.test(resetPasswordNew) ||
+                    !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(resetPasswordNew)
                   }
                   onClick={() => {
-                    if (resetPasswordNew.length < 6 || resetPasswordNew !== resetPasswordConfirm) return;
+                    // Validação completa
+                    if (resetPasswordNew.length < 8) {
+                      toast.error("A senha deve ter no mínimo 8 caracteres.");
+                      return;
+                    }
+                    if (!/[A-Z]/.test(resetPasswordNew)) {
+                      toast.error("A senha deve conter pelo menos uma letra maiúscula.");
+                      return;
+                    }
+                    if (!/[a-z]/.test(resetPasswordNew)) {
+                      toast.error("A senha deve conter pelo menos uma letra minúscula.");
+                      return;
+                    }
+                    if (!/[0-9]/.test(resetPasswordNew)) {
+                      toast.error("A senha deve conter pelo menos um número.");
+                      return;
+                    }
+                    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(resetPasswordNew)) {
+                      toast.error("A senha deve conter pelo menos um caractere especial.");
+                      return;
+                    }
+                    if (resetPasswordNew !== resetPasswordConfirm) {
+                      toast.error("As senhas não coincidem.");
+                      return;
+                    }
+                    
                     teacherResetPassword.mutate(
                       { studentId: studentToResetPassword.id, password: resetPasswordNew },
                       {

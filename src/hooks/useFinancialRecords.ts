@@ -30,7 +30,6 @@ export function useUndoFinancialPayment() {
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
       queryClient.invalidateQueries({ queryKey: ["student_details"] });
       queryClient.invalidateQueries({ queryKey: ["student_balance"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });
@@ -382,7 +381,6 @@ export function useCreateFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
       queryClient.invalidateQueries({ queryKey: ["student_details"] });
       queryClient.invalidateQueries({ queryKey: ["student_balance"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });
@@ -473,7 +471,6 @@ export function useConfirmPayment() {
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
       queryClient.invalidateQueries({ queryKey: ["student_details"] });
       queryClient.invalidateQueries({ queryKey: ["student_balance"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });
@@ -511,7 +508,6 @@ export function useUpdateFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
       queryClient.invalidateQueries({ queryKey: ["student_details"] });
       queryClient.invalidateQueries({ queryKey: ["student_balance"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });
@@ -553,7 +549,6 @@ export function useDeleteFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
       queryClient.invalidateQueries({ queryKey: ["student_details"] });
       queryClient.invalidateQueries({ queryKey: ["student_balance"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });

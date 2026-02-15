@@ -162,25 +162,40 @@ export function ClassDetailSheet({
           />
         )}
 
-        {(classLog.feedback || classLog.updated_at) && (
+        {/* Observações e Feedback */}
+        <div className="space-y-4">
+          {/* Observações (preenchidas ao criar a aula) */}
+          {classLog.observations?.trim() && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Observações
+              </p>
+              <p className="text-sm whitespace-pre-wrap text-foreground rounded-lg border bg-muted/30 p-3">
+                {sanitizeText(classLog.observations)}
+              </p>
+            </div>
+          )}
+          
+          {/* Feedback (preenchido ao avaliar a aula) */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Feedback
             </p>
-            {classLog.feedback ? (
+            {classLog.feedback?.trim() ? (
               <p className="text-sm whitespace-pre-wrap text-foreground rounded-lg border bg-muted/30 p-3">
                 {sanitizeText(classLog.feedback)}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">—</p>
             )}
-            {classLog.updated_at && (
-              <p className="text-xs text-muted-foreground">
-                Editado em {format(new Date(classLog.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-              </p>
-            )}
           </div>
-        )}
+          
+          {classLog.updated_at && (
+            <p className="text-xs text-muted-foreground">
+              Editado em {format(new Date(classLog.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+            </p>
+          )}
+        </div>
       </DetailSectionGroup>
     </BaseDetailSheet>
   );

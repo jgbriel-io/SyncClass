@@ -63,7 +63,7 @@ export function useStudentDetails(studentId: string | null) {
       if (studentError) throw studentError;
       if (!student) return null;
 
-      // Fetch class logs (teachers_masked por RLS: aluno não pode ler teachers)
+      // Fetch class logs - buscar teacher name separadamente
       const { data: classLogs, error: classLogsError } = await supabase
         .from("class_logs")
         .select(`
@@ -78,7 +78,6 @@ export function useStudentDetails(studentId: string | null) {
           title,
           billed_amount,
           teacher_id,
-          teachers_masked(name),
           created_at
         `)
         .eq("student_id", studentId)
@@ -86,7 +85,7 @@ export function useStudentDetails(studentId: string | null) {
 
       if (classLogsError) throw classLogsError;
 
-      // Nome do professor do aluno como fallback (teachers_masked por RLS)
+      // Nome do professor do aluno como fallback
       let studentTeacherName: string | undefined;
       if (student.teacher_id) {
         const { data: teacherData } = await supabase
@@ -97,7 +96,7 @@ export function useStudentDetails(studentId: string | null) {
         studentTeacherName = teacherData?.name ?? undefined;
       }
 
-      const rawLogs = (classLogs || []) as Array<Record<string, unknown> & { teachers_masked?: { name?: string } | null }>;
+      const rawLogs = (classLogs || []) as Array<Record<string, unknown>>;
       const mappedClassLogs: StudentClassLog[] = rawLogs.map((log) => ({
         id: log.id as string,
         class_date: log.class_date as string,
@@ -110,7 +109,7 @@ export function useStudentDetails(studentId: string | null) {
         title: log.title as string | null,
         billed_amount: log.billed_amount as number | null,
         teacher_id: (log.teacher_id ?? student.teacher_id) as string | null,
-        teacher_name: log.teachers_masked?.name ?? studentTeacherName,
+        teacher_name: studentTeacherName,
         created_at: log.created_at as string | null,
       }));
 

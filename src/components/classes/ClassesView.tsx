@@ -1,5 +1,4 @@
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyClassesState } from "@/components/ui/contextual-empty-states";
 import { Button } from "@/components/ui/button";
@@ -200,11 +199,6 @@ export function ClassesView({
   const { data: students = [] } = useStudents();
   const activeStudents = students.filter((s) => s.status === "ativo");
 
-  // Ao mudar filtro de status, voltar para a primeira página
-  useEffect(() => {
-    setPage(0);
-  }, [filters.status, setPage]);
-
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [page]);
@@ -216,6 +210,7 @@ export function ClassesView({
 
   const filteredLogs = useMemo(() => {
     const filtered = logs.filter((log) => {
+      // Apenas busca por texto (não está no banco)
       const searchLower = filters.search.toLowerCase();
       const studentName = log.students?.name || "";
       const title = log.title || "";
@@ -225,68 +220,9 @@ export function ClassesView({
         title.toLowerCase().includes(searchLower);
       if (!matchesSearch) return false;
 
-      if (filters.teacherId !== "all" && log.teacher_id !== filters.teacherId && log.students?.teacher_id !== filters.teacherId) return false;
-
-      // Filtro pacote / individual (financial_record_via_package = true → pacote)
+      // Filtro pacote / individual (não está no banco)
       if (filters.classType === "pacote" && !log.financial_record_via_package) return false;
       if (filters.classType === "individual" && log.financial_record_via_package) return false;
-
-      // Filtro de período primeiro (antes de verificar status)
-      if (filters.period !== "all") {
-        const classDate = new Date(log.class_date + "T12:00:00");
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        let from: Date;
-        let to: Date;
-        if (filters.period === "week") {
-          from = new Date(today);
-          from.setDate(from.getDate() - from.getDay());
-          to = new Date(from);
-          to.setDate(to.getDate() + 6);
-        } else if (filters.period === "month") {
-          from = new Date(today.getFullYear(), today.getMonth(), 1);
-          to = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        } else {
-          from = new Date(today);
-          from.setMonth(from.getMonth() - 3);
-          to = new Date(today);
-        }
-        to.setHours(23, 59, 59, 999);
-        if (classDate < from || classDate > to) return false;
-      }
-
-      const badge = getClassStatusBadge(log);
-      const status =
-        badge.label === "Concluída"
-          ? "concluida"
-          : badge.label === "Agendada" || badge.label === "Em andamento"
-            ? "agendada"
-            : "avaliacao_pendente";
-
-      // Filtro de status:
-      // - "all": mostra tudo (agendada + pendente + concluídas)
-      // - "em_aberto": mostra aulas não concluídas OU aulas concluídas com pagamento não finalizado
-      // - valores específicos: filtram por esse status exato
-      if (filters.status === "em_aberto") {
-        const isNotCompleted = status !== "concluida";
-        if (isNotCompleted) {
-          // Aula não concluída, mostra
-          return true;
-        }
-        // Aula concluída: só mostra se tem cobrança pendente/atrasada
-        if (!log.financial_records) {
-          return false;
-        }
-        const financialStatus = getFinancialActualStatus({
-          status: log.financial_records.status,
-          due_date: log.financial_records.due_date
-        });
-        return financialStatus !== "pago";
-      }
-      
-      if (filters.status !== "all" && filters.status !== status) {
-        return false;
-      }
 
       return true;
     });
@@ -453,9 +389,7 @@ export function ClassesView({
       )}
 
         {/* Table View (Admin) */}
-        {isLoading ? (
-          <ClassesTableSkeleton rows={8} />
-        ) : !error && viewMode === "table" && (
+        {!error && viewMode === "table" && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
           <div className="overflow-x-auto">
             <Table style={{ minWidth: CL_TABLE_MIN_W }}>
@@ -477,7 +411,10 @@ export function ClassesView({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLogs.map((log) => {
+                {isLoading ? (
+                  <ClassesTableSkeleton rows={8} />
+                ) : (
+                  filteredLogs.map((log) => {
                   const teacherName = 
                     log.teachers?.name ?? 
                     (log.teacher_id ? teacherMap.get(log.teacher_id) : null) ?? 
@@ -497,7 +434,8 @@ export function ClassesView({
                       isEvaluationBlocked={isClassEvaluationBlocked(log)}
                     />
                   );
-                })}
+                })
+                )}
               </TableBody>
             </Table>
           </div>

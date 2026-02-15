@@ -463,16 +463,15 @@ export default function UsersPage() {
   };
 
   return (
-    <>
     <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">Usuários</h1>
-              <p className="text-sm mobile:text-xs tablet:text-xs mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">
-                Gerencie usuários e privilégios
-              </p>
-            </div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">Usuários</h1>
+          <p className="text-sm mobile:text-xs tablet:text-xs mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">
+            Gerencie usuários e privilégios
+          </p>
+        </div>
             <Button onClick={() => {
               setSelectedUser(null);
               setIsFormOpen(true);
@@ -535,39 +534,39 @@ export default function UsersPage() {
         )}
 
         {/* Table */}
-        {isLoading ? (
-          <UsersTableSkeleton rows={10} />
-        ) : !error && (
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-            <div className="overflow-x-auto">
-              <Table style={{ minWidth: USER_TABLE_MIN_W }}>
-                <TableHeader>
-                  <TableRow className="border-b bg-muted/50">
-                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>Status</TableHead>
-                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: USER_COL.USUARIO, minWidth: USER_COL.USUARIO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>Usuário</TableHead>
-                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.PRIVILEGIO, minWidth: USER_COL.PRIVILEGIO }}>Privilégio</TableHead>
-                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: USER_COL.VINCULO, minWidth: USER_COL.VINCULO }}>Vínculo</TableHead>
-                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: USER_COL.CADASTRO, minWidth: USER_COL.CADASTRO }}>Cadastro</TableHead>
-                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.PLACEHOLDER, minWidth: USER_COL.PLACEHOLDER }} aria-label="Placeholder" />
-                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.ACOES, minWidth: USER_COL.ACOES }}>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
+        <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
+          <div className="overflow-x-auto">
+            <Table style={{ minWidth: USER_TABLE_MIN_W }}>
+              <TableHeader>
+                <TableRow className="border-b bg-muted/50">
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>Status</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: USER_COL.USUARIO, minWidth: USER_COL.USUARIO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>Usuário</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.PRIVILEGIO, minWidth: USER_COL.PRIVILEGIO }}>Privilégio</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: USER_COL.VINCULO, minWidth: USER_COL.VINCULO }}>Vínculo</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: USER_COL.CADASTRO, minWidth: USER_COL.CADASTRO }}>Cadastro</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.PLACEHOLDER, minWidth: USER_COL.PLACEHOLDER }} aria-label="Placeholder" />
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.ACOES, minWidth: USER_COL.ACOES }}>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody className="divide-y divide-border/40">
-                {filteredUsers.map((user) => (
-                  <UsersTableRow
-                    key={user.id}
-                    user={user}
-                    students={students}
-                    teachers={teachers}
-                    onViewDetail={(id) => {
-                      setDetailUserId(id);
-                      setDetailSheetOpen(true);
-                    }}
-                    onEdit={(u) => {
-                      setSelectedUser(u);
-                      setIsFormOpen(true);
-                    }}
-                    onResetPassword={(u) => {
+                {isLoading ? (
+                  <UsersTableSkeleton rows={10} />
+                ) : (
+                  filteredUsers.map((user) => (
+                    <UsersTableRow
+                      key={user.id}
+                      user={user}
+                      students={students}
+                      teachers={teachers}
+                      onViewDetail={(id) => {
+                        setDetailUserId(id);
+                        setDetailSheetOpen(true);
+                      }}
+                      onEdit={(u) => {
+                        setSelectedUser(u);
+                        setIsFormOpen(true);
+                      }}
+                      onResetPassword={(u) => {
                       setUserToResetPassword(u);
                       setResetPasswordNew("");
                       setResetPasswordConfirm("");
@@ -588,29 +587,28 @@ export default function UsersPage() {
                     getRoleLabel={getRoleLabel}
                     getRoleVariant={getRoleVariant}
                   />
-                ))}
+                  ))
+                )}
               </TableBody>
-              </Table>
-            </div>
-            {filteredUsers.length === 0 && (
-              <EmptyState
-                icon={User}
-                title={users.length === 0 ? "Nenhum usuário cadastrado" : "Nenhum resultado"}
-                message={users.length === 0
-                  ? "Clique no botão 'Novo Usuário' para adicionar o primeiro"
-                  : "Ajuste os filtros acima ou limpe a busca"}
-              />
-            )}
-            <TablePaginationBar
-              page={page}
-              pageSize={10}
-              totalCount={totalCount}
-              hasMore={hasMore}
-              isFetching={isFetching}
-              onPageChange={setPage}
-            />
+            </Table>
           </div>
-        )}
+          {!isLoading && filteredUsers.length === 0 && (
+            <EmptyState
+              icon={User}
+              title={users.length === 0 ? "Nenhum usuário cadastrado" : "Nenhum resultado"}
+              message={users.length === 0
+                ? "Clique no botão 'Novo Usuário' para adicionar o primeiro"
+                : "Ajuste os filtros acima ou limpe a busca"}
+            />
+          )}
+          <TablePaginationBar
+            page={page}
+            pageSize={10}
+            totalCount={totalCount}
+            hasMore={hasMore}
+            isFetching={isFetching}
+            onPageChange={setPage}
+          />
         </div>
 
         {/* Create/Edit User Dialog */}
@@ -742,12 +740,22 @@ export default function UsersPage() {
               <DialogTitle>Redefinir senha</DialogTitle>
               {userToResetPassword && (
                 <DialogDescription>
-                  Nova senha para <strong>{userToResetPassword.profile?.full_name ?? userToResetPassword.email}</strong>. Mínimo 6 caracteres.
+                  Nova senha para <strong>{userToResetPassword.profile?.full_name ?? userToResetPassword.email}</strong>.
                 </DialogDescription>
               )}
             </DialogHeader>
             {userToResetPassword && (
               <>
+                <div className="rounded-lg border bg-muted/50 p-3 space-y-2 mb-4">
+                  <p className="text-xs font-medium text-muted-foreground">Requisitos da senha:</p>
+                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                    <li>Mínimo de 8 caracteres</li>
+                    <li>Pelo menos uma letra maiúscula (A-Z)</li>
+                    <li>Pelo menos uma letra minúscula (a-z)</li>
+                    <li>Pelo menos um número (0-9)</li>
+                    <li>Pelo menos um caractere especial (!@#$%^&*)</li>
+                  </ul>
+                </div>
                 <div className="space-y-4 py-2">
                   <div className="space-y-2">
                     <Label htmlFor="reset-password-new">Nova senha</Label>
@@ -757,7 +765,7 @@ export default function UsersPage() {
                       placeholder="••••••••"
                       value={resetPasswordNew}
                       onChange={(e) => setResetPasswordNew(e.target.value)}
-                      minLength={6}
+                      minLength={8}
                       disabled={adminResetPassword.isPending}
                     />
                   </div>
@@ -769,7 +777,7 @@ export default function UsersPage() {
                       placeholder="••••••••"
                       value={resetPasswordConfirm}
                       onChange={(e) => setResetPasswordConfirm(e.target.value)}
-                      minLength={6}
+                      minLength={8}
                       disabled={adminResetPassword.isPending}
                     />
                   </div>
@@ -778,9 +786,28 @@ export default function UsersPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+                      // Gerar senha forte com todos os requisitos
+                      const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+                      const lower = "abcdefghijkmnpqrstuvwxyz";
+                      const numbers = "23456789";
+                      const special = "!@#$%^&*";
+                      
                       let p = "";
-                      for (let i = 0; i < 10; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
+                      // Garantir pelo menos um de cada tipo
+                      p += upper.charAt(Math.floor(Math.random() * upper.length));
+                      p += lower.charAt(Math.floor(Math.random() * lower.length));
+                      p += numbers.charAt(Math.floor(Math.random() * numbers.length));
+                      p += special.charAt(Math.floor(Math.random() * special.length));
+                      
+                      // Completar com caracteres aleatórios
+                      const allChars = upper + lower + numbers + special;
+                      for (let i = 4; i < 12; i++) {
+                        p += allChars.charAt(Math.floor(Math.random() * allChars.length));
+                      }
+                      
+                      // Embaralhar
+                      p = p.split('').sort(() => Math.random() - 0.5).join('');
+                      
                       setResetPasswordNew(p);
                       setResetPasswordConfirm(p);
                     }}
@@ -803,11 +830,40 @@ export default function UsersPage() {
                   <Button
                     disabled={
                       adminResetPassword.isPending ||
-                      resetPasswordNew.length < 6 ||
-                      resetPasswordNew !== resetPasswordConfirm
+                      resetPasswordNew.length < 8 ||
+                      resetPasswordNew !== resetPasswordConfirm ||
+                      !/[A-Z]/.test(resetPasswordNew) ||
+                      !/[a-z]/.test(resetPasswordNew) ||
+                      !/[0-9]/.test(resetPasswordNew) ||
+                      !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(resetPasswordNew)
                     }
                     onClick={() => {
-                      if (resetPasswordNew.length < 6 || resetPasswordNew !== resetPasswordConfirm) return;
+                      // Validação completa
+                      if (resetPasswordNew.length < 8) {
+                        toast.error("A senha deve ter no mínimo 8 caracteres.");
+                        return;
+                      }
+                      if (!/[A-Z]/.test(resetPasswordNew)) {
+                        toast.error("A senha deve conter pelo menos uma letra maiúscula.");
+                        return;
+                      }
+                      if (!/[a-z]/.test(resetPasswordNew)) {
+                        toast.error("A senha deve conter pelo menos uma letra minúscula.");
+                        return;
+                      }
+                      if (!/[0-9]/.test(resetPasswordNew)) {
+                        toast.error("A senha deve conter pelo menos um número.");
+                        return;
+                      }
+                      if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(resetPasswordNew)) {
+                        toast.error("A senha deve conter pelo menos um caractere especial.");
+                        return;
+                      }
+                      if (resetPasswordNew !== resetPasswordConfirm) {
+                        toast.error("As senhas não coincidem.");
+                        return;
+                      }
+                      
                       adminResetPassword.mutate(
                         { userId: userToResetPassword.id, password: resetPasswordNew },
                         {
@@ -1025,6 +1081,6 @@ export default function UsersPage() {
           open={detailSheetOpen}
           onOpenChange={setDetailSheetOpen}
         />
-    </>
+      </div>
   );
 }

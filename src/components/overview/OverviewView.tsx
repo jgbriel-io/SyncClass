@@ -12,6 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { EmptyStudentsState } from "@/components/ui/contextual-empty-states";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Search } from "lucide-react";
 import { useStudentsWithStatsPaginated } from "@/hooks/useStudentDetails";
 import { useStudents } from "@/hooks/useStudents";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
@@ -145,59 +148,60 @@ export function OverviewView({
       )}
 
       {/* Table */}
-      {isLoading ? (
-        <OverviewTableSkeleton rows={10} />
-      ) : (
-        !error && (
-          <>
-            <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-              <div className="overflow-x-auto">
-                <Table className="table-fixed" style={{ minWidth: OVERVIEW_TABLE_MIN_W }}>
-                  <TableHeader>
-                    <TableRow className="border-b bg-muted/50">
-                      <TableHead className={`${TABLE_HEAD_BASE} ${STICKY_HEADER}`} style={{ ...STICKY_SHADOW, width: OVERVIEW_COL.ALUNO, minWidth: OVERVIEW_COL.ALUNO }}>Aluno</TableHead>
-                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ENTRADA, minWidth: OVERVIEW_COL.ENTRADA }}>Entrada</TableHead>
-                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.AULAS, minWidth: OVERVIEW_COL.AULAS }}>Aulas</TableHead>
-                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.FREQUENCIA, minWidth: OVERVIEW_COL.FREQUENCIA }}>Frequência</TableHead>
-                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.MEDIA, minWidth: OVERVIEW_COL.MEDIA }}>Média</TableHead>
-                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PAGO, minWidth: OVERVIEW_COL.PAGO }}>Pago</TableHead>
-                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PENDENTE, minWidth: OVERVIEW_COL.PENDENTE }}>Pendente</TableHead>
-                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ATRASADO, minWidth: OVERVIEW_COL.ATRASADO }}>Atrasado</TableHead>
-                      <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ACOES, minWidth: OVERVIEW_COL.ACOES }}>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredStudents.map((student) => (
-                      <OverviewTableRow
-                        key={student.id}
-                        student={student}
-                        onViewStudent={handleViewStudent}
+      <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
+        <div className="overflow-x-auto">
+          <Table className="table-fixed" style={{ minWidth: OVERVIEW_TABLE_MIN_W }}>
+            <TableHeader>
+              <TableRow className="border-b bg-muted/50">
+                <TableHead className={`${TABLE_HEAD_BASE} ${STICKY_HEADER}`} style={{ ...STICKY_SHADOW, width: OVERVIEW_COL.ALUNO, minWidth: OVERVIEW_COL.ALUNO }}>Aluno</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ENTRADA, minWidth: OVERVIEW_COL.ENTRADA }}>Entrada</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.AULAS, minWidth: OVERVIEW_COL.AULAS }}>Aulas</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.FREQUENCIA, minWidth: OVERVIEW_COL.FREQUENCIA }}>Frequência</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.MEDIA, minWidth: OVERVIEW_COL.MEDIA }}>Média</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PAGO, minWidth: OVERVIEW_COL.PAGO }}>Pago</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PENDENTE, minWidth: OVERVIEW_COL.PENDENTE }}>Pendente</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ATRASADO, minWidth: OVERVIEW_COL.ATRASADO }}>Atrasado</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ACOES, minWidth: OVERVIEW_COL.ACOES }}>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <OverviewTableSkeleton rows={10} />
+              ) : filteredStudents.length === 0 ? (
+                <TableRow>
+                  <td colSpan={10} className="p-0">
+                    {students.length === 0 ? (
+                      <EmptyStudentsState />
+                    ) : (
+                      <EmptyState
+                        icon={Search}
+                        title="Nenhum resultado"
+                        message="Ajuste os filtros acima ou limpe a busca"
                       />
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              {filteredStudents.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground border-t">
-                  {students.length === 0
-                    ? showTeacherFilter
-                      ? "Nenhum aluno cadastrado ainda"
-                      : "Nenhum aluno vinculado a você ainda"
-                    : "Nenhum aluno encontrado com esses filtros"}
-                </div>
+                    )}
+                  </td>
+                </TableRow>
+              ) : (
+                filteredStudents.map((student) => (
+                  <OverviewTableRow
+                    key={student.id}
+                    student={student}
+                    onViewStudent={handleViewStudent}
+                  />
+                ))
               )}
-              <TablePaginationBar
-                page={page}
-                pageSize={PAGE_SIZE}
-                totalCount={totalCount}
-                hasMore={hasMore}
-                isFetching={isFetching}
-                onPageChange={setPage}
-              />
-            </div>
-          </>
-        )
-      )}
+            </TableBody>
+          </Table>
+        </div>
+        <TablePaginationBar
+          page={page}
+          pageSize={PAGE_SIZE}
+          totalCount={totalCount}
+          hasMore={hasMore}
+          isFetching={isFetching}
+          onPageChange={setPage}
+        />
+      </div>
 
       {/* Detail Sheet */}
       <StudentDetailSheet

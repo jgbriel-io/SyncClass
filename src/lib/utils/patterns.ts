@@ -172,16 +172,44 @@ export function isValidEmailFormat(value: string): boolean {
 
 /**
  * Converte string de valor monetário para número
- * Aceita formatos: "1.234,56" ou "1234.56"
+ * Aceita formatos: "1.234,56" ou "1234.56" ou "1234,56"
  */
 export function parseMoneyToNumber(value: string): number {
-  const cleaned = value.replace(REGEX_PATTERNS.nonNumeric, "").replace(",", ".");
+  // Remove tudo exceto dígitos, vírgula e ponto
+  const cleaned = value.replace(/[^\d,.]/g, "");
+  
+  // Se tem vírgula e ponto, assume formato brasileiro (1.234,56)
+  if (cleaned.includes(",") && cleaned.includes(".")) {
+    return parseFloat(cleaned.replace(/\./g, "").replace(",", "."));
+  }
+  
+  // Se tem apenas vírgula, assume formato brasileiro (1234,56)
+  if (cleaned.includes(",")) {
+    return parseFloat(cleaned.replace(",", "."));
+  }
+  
+  // Se tem apenas ponto ou nenhum, assume formato americano (1234.56)
   return parseFloat(cleaned);
 }
 
 /**
- * Converte número para string com vírgula decimal
+ * Formata número para string monetária brasileira com separador de milhar
+ * Ex: 1234.56 -> "1.234,56"
+ */
+export function formatNumberToMoneyBR(value: number | string): string {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return "0,00";
+  
+  return num.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
+ * Converte número para string com vírgula decimal (sem separador de milhar)
  * Ex: 1234.56 -> "1234,56"
+ * @deprecated Use formatNumberToMoneyBR para formato completo
  */
 export function formatNumberToMoney(value: number): string {
   return String(value).replace(".", ",");

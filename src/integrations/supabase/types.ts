@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -7,140 +7,107 @@
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
       activities: {
         Row: {
           corrected_at: string | null
+          correction: string | null
           correction_file_name: string | null
           correction_file_url: string | null
-          created_at: string
+          created_at: string | null
           delivered_at: string | null
+          delivery_date: string | null
           description: string | null
-          due_date: string
+          due_date: string | null
           feedback: string | null
-          file_name: string
+          file_name: string | null
           file_size: number | null
           file_type: string | null
-          file_url: string
+          file_url: string | null
           grade: number | null
           id: string
+          response_file_name: string | null
+          response_file_size: number | null
+          response_file_type: string | null
+          response_file_url: string | null
           status: string
           student_id: string
           student_response_file_name: string | null
-          student_response_file_url: string | null
           student_response_text: string | null
-          teacher_id: string
+          teacher_id: string | null
           title: string
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           corrected_at?: string | null
+          correction?: string | null
           correction_file_name?: string | null
           correction_file_url?: string | null
-          created_at?: string
+          created_at?: string | null
           delivered_at?: string | null
+          delivery_date?: string | null
           description?: string | null
-          due_date: string
+          due_date?: string | null
           feedback?: string | null
-          file_name: string
+          file_name?: string | null
           file_size?: number | null
           file_type?: string | null
-          file_url: string
+          file_url?: string | null
           grade?: number | null
           id?: string
+          response_file_name?: string | null
+          response_file_size?: number | null
+          response_file_type?: string | null
+          response_file_url?: string | null
           status?: string
           student_id: string
           student_response_file_name?: string | null
-          student_response_file_url?: string | null
           student_response_text?: string | null
-          teacher_id: string
+          teacher_id?: string | null
           title: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           corrected_at?: string | null
+          correction?: string | null
           correction_file_name?: string | null
           correction_file_url?: string | null
-          created_at?: string
+          created_at?: string | null
           delivered_at?: string | null
+          delivery_date?: string | null
           description?: string | null
-          due_date?: string
+          due_date?: string | null
           feedback?: string | null
-          file_name?: string
+          file_name?: string | null
           file_size?: number | null
           file_type?: string | null
-          file_url?: string
+          file_url?: string | null
           grade?: number | null
           id?: string
+          response_file_name?: string | null
+          response_file_size?: number | null
+          response_file_type?: string | null
+          response_file_url?: string | null
           status?: string
           student_id?: string
           student_response_file_name?: string | null
-          student_response_file_url?: string | null
           student_response_text?: string | null
-          teacher_id?: string
+          teacher_id?: string | null
           title?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "activities_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "student_class_stats"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "activities_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_complete_balance"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "activities_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_financial_balance"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "activities_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
             referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "activities_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_active"
             referencedColumns: ["id"]
           },
           {
@@ -154,27 +121,6 @@ export type Database = {
             foreignKeyName: "activities_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students_enriched"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "activities_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_financial_status"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "activities_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_last_class_info"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "activities_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
             referencedRelation: "students_masked"
             referencedColumns: ["id"]
           },
@@ -182,7 +128,7 @@ export type Database = {
             foreignKeyName: "activities_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students_with_monthly_total"
+            referencedRelation: "students_with_stats"
             referencedColumns: ["id"]
           },
           {
@@ -203,52 +149,34 @@ export type Database = {
       }
       audit_logs: {
         Row: {
-          action: string | null
+          action: string
           action_type: string
-          changed_fields: string[] | null
-          created_at: string
+          created_at: string | null
           id: string
-          ip_address: unknown
           metadata: Json | null
-          new_data: Json | null
-          old_data: Json | null
-          record_id: string
+          record_id: string | null
           table_name: string
-          user_agent: string | null
           user_id: string | null
-          user_role: string | null
         }
         Insert: {
-          action?: string | null
+          action: string
           action_type: string
-          changed_fields?: string[] | null
-          created_at?: string
+          created_at?: string | null
           id?: string
-          ip_address?: unknown
           metadata?: Json | null
-          new_data?: Json | null
-          old_data?: Json | null
-          record_id: string
+          record_id?: string | null
           table_name: string
-          user_agent?: string | null
           user_id?: string | null
-          user_role?: string | null
         }
         Update: {
-          action?: string | null
+          action?: string
           action_type?: string
-          changed_fields?: string[] | null
-          created_at?: string
+          created_at?: string | null
           id?: string
-          ip_address?: unknown
           metadata?: Json | null
-          new_data?: Json | null
-          old_data?: Json | null
-          record_id?: string
+          record_id?: string | null
           table_name?: string
-          user_agent?: string | null
           user_id?: string | null
-          user_role?: string | null
         }
         Relationships: []
       }
@@ -312,35 +240,7 @@ export type Database = {
             foreignKeyName: "class_logs_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "student_class_stats"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_complete_balance"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_financial_balance"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
             referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_active"
             referencedColumns: ["id"]
           },
           {
@@ -354,27 +254,6 @@ export type Database = {
             foreignKeyName: "class_logs_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students_enriched"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_financial_status"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_last_class_info"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
             referencedRelation: "students_masked"
             referencedColumns: ["id"]
           },
@@ -382,7 +261,7 @@ export type Database = {
             foreignKeyName: "class_logs_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students_with_monthly_total"
+            referencedRelation: "students_with_stats"
             referencedColumns: ["id"]
           },
           {
@@ -404,16 +283,19 @@ export type Database = {
       financial_record_class_logs: {
         Row: {
           class_log_id: string
+          created_at: string | null
           financial_record_id: string
           id: string
         }
         Insert: {
           class_log_id: string
+          created_at?: string | null
           financial_record_id: string
           id?: string
         }
         Update: {
           class_log_id?: string
+          created_at?: string | null
           financial_record_id?: string
           id?: string
         }
@@ -421,16 +303,16 @@ export type Database = {
           {
             foreignKeyName: "financial_record_class_logs_class_log_id_fkey"
             columns: ["class_log_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "class_logs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "financial_record_class_logs_class_log_id_fkey"
             columns: ["class_log_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "class_logs_with_billing"
-            referencedColumns: ["class_log_id"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "financial_record_class_logs_financial_record_id_fkey"
@@ -452,51 +334,42 @@ export type Database = {
         Row: {
           amount: number
           class_log_id: string | null
-          confirmed_at: string | null
           confirmed_by_user_id: string | null
           created_at: string | null
           description: string | null
-          due_date: string
+          due_date: string | null
           id: string
-          idempotency_key: string | null
-          last_status_change_at: string | null
           paid_at: string | null
           payment_method: string | null
-          status: Database["public"]["Enums"]["payment_status"] | null
+          status: string
           student_id: string
           updated_at: string | null
         }
         Insert: {
           amount: number
           class_log_id?: string | null
-          confirmed_at?: string | null
           confirmed_by_user_id?: string | null
           created_at?: string | null
           description?: string | null
-          due_date: string
+          due_date?: string | null
           id?: string
-          idempotency_key?: string | null
-          last_status_change_at?: string | null
           paid_at?: string | null
           payment_method?: string | null
-          status?: Database["public"]["Enums"]["payment_status"] | null
+          status?: string
           student_id: string
           updated_at?: string | null
         }
         Update: {
           amount?: number
           class_log_id?: string | null
-          confirmed_at?: string | null
           confirmed_by_user_id?: string | null
           created_at?: string | null
           description?: string | null
-          due_date?: string
+          due_date?: string | null
           id?: string
-          idempotency_key?: string | null
-          last_status_change_at?: string | null
           paid_at?: string | null
           payment_method?: string | null
-          status?: Database["public"]["Enums"]["payment_status"] | null
+          status?: string
           student_id?: string
           updated_at?: string | null
         }
@@ -513,41 +386,13 @@ export type Database = {
             columns: ["class_log_id"]
             isOneToOne: false
             referencedRelation: "class_logs_with_billing"
-            referencedColumns: ["class_log_id"]
-          },
-          {
-            foreignKeyName: "financial_records_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_class_stats"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "financial_records_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_complete_balance"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "financial_records_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_financial_balance"
-            referencedColumns: ["student_id"]
           },
           {
             foreignKeyName: "financial_records_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "financial_records_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_active"
             referencedColumns: ["id"]
           },
           {
@@ -561,27 +406,6 @@ export type Database = {
             foreignKeyName: "financial_records_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students_enriched"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "financial_records_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_financial_status"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "financial_records_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_last_class_info"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "financial_records_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
             referencedRelation: "students_masked"
             referencedColumns: ["id"]
           },
@@ -589,7 +413,7 @@ export type Database = {
             foreignKeyName: "financial_records_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students_with_monthly_total"
+            referencedRelation: "students_with_stats"
             referencedColumns: ["id"]
           },
         ]
@@ -597,7 +421,7 @@ export type Database = {
       idempotency_keys: {
         Row: {
           completed_at: string | null
-          created_at: string
+          created_at: string | null
           id: string
           idempotency_key: string
           operation: string
@@ -608,18 +432,18 @@ export type Database = {
         }
         Insert: {
           completed_at?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           idempotency_key: string
           operation: string
           request_payload?: Json | null
           response_payload?: Json | null
-          status: string
+          status?: string
           user_id?: string | null
         }
         Update: {
           completed_at?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           idempotency_key?: string
           operation?: string
@@ -630,149 +454,9 @@ export type Database = {
         }
         Relationships: []
       }
-      invites: {
-        Row: {
-          created_at: string
-          created_by_user_id: string
-          email: string
-          expires_at: string
-          id: string
-          metadata: Json | null
-          role: Database["public"]["Enums"]["app_role"]
-          student_id: string | null
-          teacher_id: string | null
-          token: string
-          updated_at: string
-          used_at: string | null
-          used_by_user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by_user_id: string
-          email: string
-          expires_at: string
-          id?: string
-          metadata?: Json | null
-          role: Database["public"]["Enums"]["app_role"]
-          student_id?: string | null
-          teacher_id?: string | null
-          token: string
-          updated_at?: string
-          used_at?: string | null
-          used_by_user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by_user_id?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          metadata?: Json | null
-          role?: Database["public"]["Enums"]["app_role"]
-          student_id?: string | null
-          teacher_id?: string | null
-          token?: string
-          updated_at?: string
-          used_at?: string | null
-          used_by_user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invites_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_class_stats"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "invites_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_complete_balance"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invites_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_financial_balance"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "invites_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invites_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_active"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invites_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_active_masked"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invites_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_enriched"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invites_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_financial_status"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "invites_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_last_class_info"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "invites_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_masked"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invites_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_with_monthly_total"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invites_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invites_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers_masked"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       performance_logs: {
         Row: {
-          created_at: string
+          created_at: string | null
           duration_ms: number
           id: string
           metadata: Json | null
@@ -780,7 +464,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           duration_ms: number
           id?: string
           metadata?: Json | null
@@ -788,7 +472,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           duration_ms?: number
           id?: string
           metadata?: Json | null
@@ -799,78 +483,50 @@ export type Database = {
       }
       profiles: {
         Row: {
-          active: boolean
+          active: boolean | null
           avatar_url: string | null
           created_at: string | null
           email: string | null
-          full_name: string | null
+          full_name: string
           id: string
-          role: string | null
+          role: string
           student_id: string | null
           teacher_id: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
-          active?: boolean
+          active?: boolean | null
           avatar_url?: string | null
           created_at?: string | null
           email?: string | null
-          full_name?: string | null
+          full_name: string
           id?: string
-          role?: string | null
+          role: string
           student_id?: string | null
           teacher_id?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
-          active?: boolean
+          active?: boolean | null
           avatar_url?: string | null
           created_at?: string | null
           email?: string | null
-          full_name?: string | null
+          full_name?: string
           id?: string
-          role?: string | null
+          role?: string
           student_id?: string | null
           teacher_id?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "profiles_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "student_class_stats"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "profiles_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_complete_balance"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_financial_balance"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "profiles_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
             referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_active"
             referencedColumns: ["id"]
           },
           {
@@ -884,27 +540,6 @@ export type Database = {
             foreignKeyName: "profiles_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students_enriched"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_financial_status"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "profiles_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_last_class_info"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "profiles_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
             referencedRelation: "students_masked"
             referencedColumns: ["id"]
           },
@@ -912,7 +547,7 @@ export type Database = {
             foreignKeyName: "profiles_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students_with_monthly_total"
+            referencedRelation: "students_with_stats"
             referencedColumns: ["id"]
           },
           {
@@ -931,91 +566,58 @@ export type Database = {
           },
         ]
       }
-      rate_limit_log: {
-        Row: {
-          created_at: string
-          endpoint: string
-          id: string
-          identifier: string
-          request_count: number
-          window_end: string
-          window_start: string
-        }
-        Insert: {
-          created_at?: string
-          endpoint: string
-          id?: string
-          identifier: string
-          request_count?: number
-          window_end: string
-          window_start: string
-        }
-        Update: {
-          created_at?: string
-          endpoint?: string
-          id?: string
-          identifier?: string
-          request_count?: number
-          window_end?: string
-          window_start?: string
-        }
-        Relationships: []
-      }
       students: {
         Row: {
           birth_date: string | null
           city: string | null
-          classes_per_week: number | null
           cpf: string | null
           created_at: string | null
-          deleted_at: string | null
           email: string | null
           hourly_rate: number | null
           id: string
+          is_deleted: boolean | null
           name: string
           origin: Database["public"]["Enums"]["student_origin"] | null
           pay_day: number | null
           phone: string | null
           state: string | null
-          status: Database["public"]["Enums"]["student_status"] | null
+          status: string | null
           teacher_id: string | null
           updated_at: string | null
         }
         Insert: {
           birth_date?: string | null
           city?: string | null
-          classes_per_week?: number | null
           cpf?: string | null
           created_at?: string | null
-          deleted_at?: string | null
           email?: string | null
           hourly_rate?: number | null
           id?: string
+          is_deleted?: boolean | null
           name: string
           origin?: Database["public"]["Enums"]["student_origin"] | null
           pay_day?: number | null
           phone?: string | null
           state?: string | null
-          status?: Database["public"]["Enums"]["student_status"] | null
+          status?: string | null
           teacher_id?: string | null
           updated_at?: string | null
         }
         Update: {
           birth_date?: string | null
           city?: string | null
-          classes_per_week?: number | null
           cpf?: string | null
           created_at?: string | null
-          deleted_at?: string | null
           email?: string | null
           hourly_rate?: number | null
           id?: string
+          is_deleted?: boolean | null
           name?: string
           origin?: Database["public"]["Enums"]["student_origin"] | null
           pay_day?: number | null
           phone?: string | null
           state?: string | null
-          status?: Database["public"]["Enums"]["student_status"] | null
+          status?: string | null
           teacher_id?: string | null
           updated_at?: string | null
         }
@@ -1038,213 +640,99 @@ export type Database = {
       }
       teachers: {
         Row: {
+          address: string | null
           cpf: string | null
           created_at: string | null
           email: string | null
+          hourly_rate: number | null
           id: string
           name: string
           phone: string | null
-          specialization: string | null
-          status: Database["public"]["Enums"]["teacher_status"] | null
+          pix_key: string | null
+          status: string | null
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
           cpf?: string | null
           created_at?: string | null
           email?: string | null
+          hourly_rate?: number | null
           id?: string
           name: string
           phone?: string | null
-          specialization?: string | null
-          status?: Database["public"]["Enums"]["teacher_status"] | null
+          pix_key?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
           cpf?: string | null
           created_at?: string | null
           email?: string | null
+          hourly_rate?: number | null
           id?: string
           name?: string
           phone?: string | null
-          specialization?: string | null
-          status?: Database["public"]["Enums"]["teacher_status"] | null
+          pix_key?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Relationships: []
       }
       user_roles: {
         Row: {
-          email: string | null
-          full_name: string | null
+          created_at: string | null
           id: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
-          email?: string | null
-          full_name?: string | null
+          created_at?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
-          email?: string | null
-          full_name?: string | null
+          created_at?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role?: string
+          updated_at?: string | null
           user_id?: string
-        }
-        Relationships: []
-      }
-      webhook_logs: {
-        Row: {
-          created_at: string
-          error_message: string | null
-          event_type: string | null
-          id: string
-          ip_address: unknown
-          payload: Json
-          processed: boolean | null
-          processed_at: string | null
-          provider: string
-          signature: string | null
-          signature_valid: boolean | null
-          user_agent: string | null
-        }
-        Insert: {
-          created_at?: string
-          error_message?: string | null
-          event_type?: string | null
-          id?: string
-          ip_address?: unknown
-          payload: Json
-          processed?: boolean | null
-          processed_at?: string | null
-          provider: string
-          signature?: string | null
-          signature_valid?: boolean | null
-          user_agent?: string | null
-        }
-        Update: {
-          created_at?: string
-          error_message?: string | null
-          event_type?: string | null
-          id?: string
-          ip_address?: unknown
-          payload?: Json
-          processed?: boolean | null
-          processed_at?: string | null
-          provider?: string
-          signature?: string | null
-          signature_valid?: boolean | null
-          user_agent?: string | null
-        }
-        Relationships: []
-      }
-      webhook_secrets: {
-        Row: {
-          active: boolean
-          algorithm: string
-          created_at: string
-          id: string
-          provider: string
-          secret_key: string
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          algorithm?: string
-          created_at?: string
-          id?: string
-          provider: string
-          secret_key: string
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          algorithm?: string
-          created_at?: string
-          id?: string
-          provider?: string
-          secret_key?: string
-          updated_at?: string
         }
         Relationships: []
       }
     }
     Views: {
-      audit_logs_readable: {
-        Row: {
-          action_type: string | null
-          changed_fields: string[] | null
-          created_at: string | null
-          id: string | null
-          new_data: Json | null
-          old_data: Json | null
-          record_id: string | null
-          table_name: string | null
-          user_id: string | null
-          user_name: string | null
-          user_role: string | null
-        }
-        Relationships: []
-      }
       class_logs_with_billing: {
         Row: {
           attendance: boolean | null
           billed_amount: number | null
-          billing_due_date: string | null
-          billing_paid_at: string | null
-          billing_status: Database["public"]["Enums"]["payment_status"] | null
-          billing_status_consolidated: string | null
           class_date: string | null
-          class_log_id: string | null
           created_at: string | null
+          duration_minutes: number | null
           end_at: string | null
-          feedback: string | null
+          financial_amount: number | null
+          financial_due_date: string | null
+          financial_paid_at: string | null
           financial_record_id: string | null
-          grade: number | null
+          financial_status: string | null
+          id: string | null
+          is_package: boolean | null
+          notes: string | null
           start_at: string | null
           student_id: string | null
-          student_name: string | null
           teacher_id: string | null
-          teacher_name: string | null
-          title: string | null
+          updated_at: string | null
         }
         Relationships: [
           {
             foreignKeyName: "class_logs_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "student_class_stats"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_complete_balance"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_financial_balance"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
             referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_active"
             referencedColumns: ["id"]
           },
           {
@@ -1258,27 +746,6 @@ export type Database = {
             foreignKeyName: "class_logs_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students_enriched"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_financial_status"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students_last_class_info"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
             referencedRelation: "students_masked"
             referencedColumns: ["id"]
           },
@@ -1286,7 +753,7 @@ export type Database = {
             foreignKeyName: "class_logs_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students_with_monthly_total"
+            referencedRelation: "students_with_stats"
             referencedColumns: ["id"]
           },
           {
@@ -1298,173 +765,6 @@ export type Database = {
           },
           {
             foreignKeyName: "class_logs_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers_masked"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      performance_summary: {
-        Row: {
-          avg_duration_ms: number | null
-          day: string | null
-          max_duration_ms: number | null
-          min_duration_ms: number | null
-          operation: string | null
-          p50_duration_ms: number | null
-          p95_duration_ms: number | null
-          p99_duration_ms: number | null
-          slow_calls_count: number | null
-          total_calls: number | null
-        }
-        Relationships: []
-      }
-      student_class_stats: {
-        Row: {
-          absent_classes: number | null
-          attendance_rate: number | null
-          average_grade: number | null
-          first_class_date: string | null
-          graded_classes: number | null
-          last_class_date: string | null
-          present_classes: number | null
-          student_id: string | null
-          student_name: string | null
-          total_classes: number | null
-        }
-        Relationships: []
-      }
-      student_complete_balance: {
-        Row: {
-          absent_classes: number | null
-          attendance_rate: number | null
-          average_grade: number | null
-          birth_date: string | null
-          city: string | null
-          classes_per_week: number | null
-          count_overdue: number | null
-          count_paid: number | null
-          count_pending: number | null
-          cpf: string | null
-          created_at: string | null
-          email: string | null
-          first_class_date: string | null
-          graded_classes: number | null
-          hourly_rate: number | null
-          id: string | null
-          last_class_date: string | null
-          name: string | null
-          origin: Database["public"]["Enums"]["student_origin"] | null
-          pay_day: number | null
-          phone: string | null
-          present_classes: number | null
-          state: string | null
-          status: Database["public"]["Enums"]["student_status"] | null
-          teacher_id: string | null
-          total_classes: number | null
-          total_overdue: number | null
-          total_paid: number | null
-          total_pending: number | null
-          total_unpaid: number | null
-          updated_at: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "students_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "students_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers_masked"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      student_financial_balance: {
-        Row: {
-          count_overdue: number | null
-          count_paid: number | null
-          count_pending: number | null
-          student_id: string | null
-          student_name: string | null
-          total_overdue: number | null
-          total_paid: number | null
-          total_pending: number | null
-          total_unpaid: number | null
-        }
-        Relationships: []
-      }
-      students_active: {
-        Row: {
-          birth_date: string | null
-          city: string | null
-          classes_per_week: number | null
-          cpf: string | null
-          created_at: string | null
-          email: string | null
-          hourly_rate: number | null
-          id: string | null
-          name: string | null
-          origin: Database["public"]["Enums"]["student_origin"] | null
-          pay_day: number | null
-          phone: string | null
-          state: string | null
-          status: Database["public"]["Enums"]["student_status"] | null
-          teacher_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          birth_date?: string | null
-          city?: string | null
-          classes_per_week?: number | null
-          cpf?: string | null
-          created_at?: string | null
-          email?: string | null
-          hourly_rate?: number | null
-          id?: string | null
-          name?: string | null
-          origin?: Database["public"]["Enums"]["student_origin"] | null
-          pay_day?: number | null
-          phone?: string | null
-          state?: string | null
-          status?: Database["public"]["Enums"]["student_status"] | null
-          teacher_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          birth_date?: string | null
-          city?: string | null
-          classes_per_week?: number | null
-          cpf?: string | null
-          created_at?: string | null
-          email?: string | null
-          hourly_rate?: number | null
-          id?: string | null
-          name?: string | null
-          origin?: Database["public"]["Enums"]["student_origin"] | null
-          pay_day?: number | null
-          phone?: string | null
-          state?: string | null
-          status?: Database["public"]["Enums"]["student_status"] | null
-          teacher_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "students_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "students_teacher_id_fkey"
             columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "teachers_masked"
@@ -1476,54 +776,51 @@ export type Database = {
         Row: {
           birth_date: string | null
           city: string | null
-          classes_per_week: number | null
           cpf: string | null
           created_at: string | null
           email: string | null
           hourly_rate: number | null
           id: string | null
+          is_deleted: boolean | null
           name: string | null
-          origin: Database["public"]["Enums"]["student_origin"] | null
           pay_day: number | null
           phone: string | null
           state: string | null
-          status: Database["public"]["Enums"]["student_status"] | null
+          status: string | null
           teacher_id: string | null
           updated_at: string | null
         }
         Insert: {
           birth_date?: string | null
           city?: string | null
-          classes_per_week?: number | null
           cpf?: never
           created_at?: string | null
           email?: string | null
           hourly_rate?: number | null
           id?: string | null
+          is_deleted?: boolean | null
           name?: string | null
-          origin?: Database["public"]["Enums"]["student_origin"] | null
           pay_day?: number | null
-          phone?: never
+          phone?: string | null
           state?: string | null
-          status?: Database["public"]["Enums"]["student_status"] | null
+          status?: string | null
           teacher_id?: string | null
           updated_at?: string | null
         }
         Update: {
           birth_date?: string | null
           city?: string | null
-          classes_per_week?: number | null
           cpf?: never
           created_at?: string | null
           email?: string | null
           hourly_rate?: number | null
           id?: string | null
+          is_deleted?: boolean | null
           name?: string | null
-          origin?: Database["public"]["Enums"]["student_origin"] | null
           pay_day?: number | null
-          phone?: never
+          phone?: string | null
           state?: string | null
-          status?: Database["public"]["Enums"]["student_status"] | null
+          status?: string | null
           teacher_id?: string | null
           updated_at?: string | null
         }
@@ -1543,121 +840,56 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      students_enriched: {
-        Row: {
-          birth_date: string | null
-          calculation_month: number | null
-          calculation_year: number | null
-          city: string | null
-          classes_per_week: number | null
-          cpf: string | null
-          created_at: string | null
-          days_without_class: number | null
-          deleted_at: string | null
-          email: string | null
-          financial_status: string | null
-          financial_status_label: string | null
-          financial_status_variant: string | null
-          hourly_rate: number | null
-          id: string | null
-          last_class_date: string | null
-          monthly_total_calculated: number | null
-          name: string | null
-          origin: Database["public"]["Enums"]["student_origin"] | null
-          pay_day: number | null
-          phone: string | null
-          state: string | null
-          status: Database["public"]["Enums"]["student_status"] | null
-          teacher_id: string | null
-          updated_at: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "students_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "students_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers_masked"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      students_financial_status: {
-        Row: {
-          financial_status: string | null
-          financial_status_label: string | null
-          financial_status_variant: string | null
-          student_id: string | null
-        }
-        Relationships: []
-      }
-      students_last_class_info: {
-        Row: {
-          days_without_class: number | null
-          last_class_date: string | null
-          student_id: string | null
-        }
-        Relationships: []
       }
       students_masked: {
         Row: {
           birth_date: string | null
           city: string | null
-          classes_per_week: number | null
           cpf: string | null
           created_at: string | null
           email: string | null
           hourly_rate: number | null
           id: string | null
+          is_deleted: boolean | null
           name: string | null
-          origin: Database["public"]["Enums"]["student_origin"] | null
           pay_day: number | null
           phone: string | null
           state: string | null
-          status: Database["public"]["Enums"]["student_status"] | null
+          status: string | null
           teacher_id: string | null
           updated_at: string | null
         }
         Insert: {
           birth_date?: string | null
           city?: string | null
-          classes_per_week?: number | null
           cpf?: never
           created_at?: string | null
           email?: string | null
           hourly_rate?: number | null
           id?: string | null
+          is_deleted?: boolean | null
           name?: string | null
-          origin?: Database["public"]["Enums"]["student_origin"] | null
           pay_day?: number | null
-          phone?: never
+          phone?: string | null
           state?: string | null
-          status?: Database["public"]["Enums"]["student_status"] | null
+          status?: string | null
           teacher_id?: string | null
           updated_at?: string | null
         }
         Update: {
           birth_date?: string | null
           city?: string | null
-          classes_per_week?: number | null
           cpf?: never
           created_at?: string | null
           email?: string | null
           hourly_rate?: number | null
           id?: string | null
+          is_deleted?: boolean | null
           name?: string | null
-          origin?: Database["public"]["Enums"]["student_origin"] | null
           pay_day?: number | null
-          phone?: never
+          phone?: string | null
           state?: string | null
-          status?: Database["public"]["Enums"]["student_status"] | null
+          status?: string | null
           teacher_id?: string | null
           updated_at?: string | null
         }
@@ -1678,72 +910,32 @@ export type Database = {
           },
         ]
       }
-      students_with_monthly_total: {
+      students_with_stats: {
         Row: {
           birth_date: string | null
-          calculation_month: number | null
-          calculation_year: number | null
           city: string | null
-          classes_per_week: number | null
           cpf: string | null
           created_at: string | null
-          deleted_at: string | null
           email: string | null
           hourly_rate: number | null
           id: string | null
-          monthly_total_calculated: number | null
+          is_deleted: boolean | null
           name: string | null
           origin: Database["public"]["Enums"]["student_origin"] | null
           pay_day: number | null
           phone: string | null
           state: string | null
-          status: Database["public"]["Enums"]["student_status"] | null
+          status: string | null
           teacher_id: string | null
+          total_activities_corrected: number | null
+          total_activities_delivered: number | null
+          total_activities_pending: number | null
+          total_classes_attended: number | null
+          total_classes_missed: number | null
+          total_classes_pending: number | null
+          total_paid_amount: number | null
+          total_pending_amount: number | null
           updated_at: string | null
-        }
-        Insert: {
-          birth_date?: string | null
-          calculation_month?: never
-          calculation_year?: never
-          city?: string | null
-          classes_per_week?: number | null
-          cpf?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          email?: string | null
-          hourly_rate?: number | null
-          id?: string | null
-          monthly_total_calculated?: never
-          name?: string | null
-          origin?: Database["public"]["Enums"]["student_origin"] | null
-          pay_day?: number | null
-          phone?: string | null
-          state?: string | null
-          status?: Database["public"]["Enums"]["student_status"] | null
-          teacher_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          birth_date?: string | null
-          calculation_month?: never
-          calculation_year?: never
-          city?: string | null
-          classes_per_week?: number | null
-          cpf?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          email?: string | null
-          hourly_rate?: number | null
-          id?: string | null
-          monthly_total_calculated?: never
-          name?: string | null
-          origin?: Database["public"]["Enums"]["student_origin"] | null
-          pay_day?: number | null
-          phone?: string | null
-          state?: string | null
-          status?: Database["public"]["Enums"]["student_status"] | null
-          teacher_id?: string | null
-          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1764,78 +956,50 @@ export type Database = {
       }
       teachers_masked: {
         Row: {
+          address: string | null
           cpf: string | null
           created_at: string | null
           email: string | null
+          hourly_rate: number | null
           id: string | null
           name: string | null
           phone: string | null
-          specialization: string | null
-          status: Database["public"]["Enums"]["teacher_status"] | null
+          pix_key: string | null
+          status: string | null
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
           cpf?: never
           created_at?: string | null
           email?: string | null
+          hourly_rate?: number | null
           id?: string | null
           name?: string | null
-          phone?: never
-          specialization?: string | null
-          status?: Database["public"]["Enums"]["teacher_status"] | null
+          phone?: string | null
+          pix_key?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
           cpf?: never
           created_at?: string | null
           email?: string | null
+          hourly_rate?: number | null
           id?: string | null
           name?: string | null
-          phone?: never
-          specialization?: string | null
-          status?: Database["public"]["Enums"]["teacher_status"] | null
+          phone?: string | null
+          pix_key?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Relationships: []
       }
     }
     Functions: {
-      check_cpf_exists_platform: {
-        Args: { p_cpf_digits: string }
-        Returns: boolean
-      }
-      check_phone_exists_platform: {
-        Args: { p_phone_digits: string }
-        Returns: boolean
-      }
-      check_rate_limit: {
-        Args: {
-          p_endpoint: string
-          p_identifier: string
-          p_max_requests?: number
-          p_window_minutes?: number
-        }
-        Returns: Json
-      }
-      check_student_cpf_exists: {
-        Args: { p_cpf_digits: string }
-        Returns: boolean
-      }
-      check_student_phone_exists: {
-        Args: { p_phone_digits: string }
-        Returns: boolean
-      }
-      check_teacher_cpf_exists: {
-        Args: { p_cpf_digits: string }
-        Returns: boolean
-      }
-      check_teacher_phone_exists: {
-        Args: { p_phone_digits: string }
-        Returns: boolean
-      }
-      cleanup_old_webhook_logs: { Args: never; Returns: undefined }
       confirm_payment_idempotent: {
-        Args: { p_idempotency_key?: string; p_record_id: string }
+        Args: { p_idempotency_key: string; p_record_id: string }
         Returns: Json
       }
       create_class_package: {
@@ -1846,138 +1010,35 @@ export type Database = {
         }
         Returns: Json
       }
-      create_invite: {
-        Args: {
-          p_email: string
-          p_expires_in_hours?: number
-          p_role: Database["public"]["Enums"]["app_role"]
-          p_student_id?: string
-          p_teacher_id?: string
-        }
-        Returns: Json
-      }
-      get_friendly_error_message: {
-        Args: { p_error_code: string; p_error_message: string }
-        Returns: string
-      }
-      get_my_student_id: { Args: never; Returns: string }
-      get_my_teacher_id: { Args: never; Returns: string }
-      get_student_balance: {
-        Args: { p_student_id: string }
-        Returns: {
-          total_overdue: number
-          total_paid: number
-          total_pending: number
-          total_unpaid: number
-        }[]
-      }
-      get_unbilled_classes: {
-        Args: { p_student_id: string }
-        Returns: {
-          attendance: boolean
-          class_date: string
-          class_log_id: string
-          teacher_name: string
-          title: string
-        }[]
-      }
-      hard_delete_student_record: {
-        Args: { p_student_id: string }
-        Returns: undefined
-      }
-      hard_delete_teacher_record: {
-        Args: { p_teacher_id: string }
-        Returns: undefined
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      get_student_id: { Args: never; Returns: string }
+      get_teacher_id: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
-      is_class_billed: { Args: { p_class_log_id: string }; Returns: boolean }
+      is_student: { Args: never; Returns: boolean }
       is_teacher: { Args: never; Returns: boolean }
       log_performance: {
         Args: { p_duration_ms: number; p_metadata?: Json; p_operation: string }
         Returns: undefined
       }
-      log_webhook: {
-        Args: {
-          p_event_type: string
-          p_payload: Json
-          p_provider: string
-          p_signature?: string
-          p_signature_valid?: boolean
-        }
-        Returns: string
-      }
       mark_as_paid_idempotent: {
         Args: {
-          p_idempotency_key?: string
-          p_paid_at: string
-          p_payment_method?: string
+          p_idempotency_key: string
+          p_payment_method: string
           p_record_id: string
         }
         Returns: Json
       }
-      mark_invite_used: {
-        Args: { p_token: string; p_user_id: string }
-        Returns: Json
-      }
-      mask_cpf: { Args: { cpf: string }; Returns: string }
-      mask_phone: { Args: { phone: string }; Returns: string }
-      restore_student: { Args: { p_student_id: string }; Returns: undefined }
-      set_user_role: {
-        Args: {
-          p_email?: string
-          p_full_name?: string
-          p_role: Database["public"]["Enums"]["app_role"]
-          p_student_id?: string
-          p_teacher_id?: string
-          p_user_id: string
-        }
-        Returns: undefined
-      }
-      soft_delete_student: {
-        Args: { p_student_id: string }
-        Returns: undefined
-      }
       undo_payment_idempotent: {
-        Args: { p_idempotency_key?: string; p_record_id: string }
+        Args: { p_idempotency_key: string; p_record_id: string }
         Returns: Json
-      }
-      update_student_payment_day: {
-        Args: { p_new_pay_day: number; p_student_id: string }
-        Returns: Json
-      }
-      upsert_user_role_safe: {
-        Args: {
-          p_email?: string
-          p_full_name?: string
-          p_role: Database["public"]["Enums"]["app_role"]
-          p_user_id: string
-        }
-        Returns: undefined
-      }
-      validate_invite: { Args: { p_token: string }; Returns: Json }
-      validate_webhook_signature: {
-        Args: { p_payload: string; p_provider: string; p_signature: string }
-        Returns: boolean
       }
     }
     Enums: {
-      app_role: "admin" | "student" | "teacher"
-      payment_status: "pendente" | "pago" | "atrasado"
       student_origin:
         | "indicacao"
         | "google"
         | "instagram"
         | "passante"
         | "outro"
-      student_status: "ativo" | "inativo"
-      teacher_status: "ativo" | "inativo"
     }
     CompositeTypes: {
       class_log_input: {
@@ -1988,6 +1049,7 @@ export type Database = {
         end_at: string | null
         attendance: boolean | null
         notes: string | null
+        billed_amount: number | null
       }
       package_financial_input: {
         amount: number | null
@@ -2117,17 +1179,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
-      app_role: ["admin", "student", "teacher"],
-      payment_status: ["pendente", "pago", "atrasado"],
       student_origin: ["indicacao", "google", "instagram", "passante", "outro"],
-      student_status: ["ativo", "inativo"],
-      teacher_status: ["ativo", "inativo"],
     },
   },
 } as const
-

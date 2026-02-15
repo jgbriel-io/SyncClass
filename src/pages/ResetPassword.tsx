@@ -27,8 +27,26 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) {
-      toast.error("A senha deve ter no mínimo 6 caracteres.");
+    
+    // Validação de requisitos de senha
+    if (password.length < 8) {
+      toast.error("A senha deve ter no mínimo 8 caracteres.");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      toast.error("A senha deve conter pelo menos uma letra maiúscula.");
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      toast.error("A senha deve conter pelo menos uma letra minúscula.");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      toast.error("A senha deve conter pelo menos um número.");
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+      toast.error("A senha deve conter pelo menos um caractere especial (!@#$%^&*).");
       return;
     }
     if (password !== confirm) {
@@ -119,7 +137,16 @@ export default function ResetPassword() {
 
           <div className={stack('TIGHT')}>
             <h2 className={typography('H2')}>Definir nova senha</h2>
-            <p className={typography('SMALL')}>Mínimo de 6 caracteres.</p>
+            <div className="rounded-lg border bg-muted/50 p-3 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Requisitos da senha:</p>
+              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Mínimo de 8 caracteres</li>
+                <li>Pelo menos uma letra maiúscula (A-Z)</li>
+                <li>Pelo menos uma letra minúscula (a-z)</li>
+                <li>Pelo menos um número (0-9)</li>
+                <li>Pelo menos um caractere especial (!@#$%^&*)</li>
+              </ul>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className={stack('RELAXED')}>
@@ -133,7 +160,7 @@ export default function ResetPassword() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
                   className="h-11 pr-10"
                   disabled={isSubmitting}
                 />
@@ -156,7 +183,7 @@ export default function ResetPassword() {
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 className="h-11"
                 disabled={isSubmitting}
               />

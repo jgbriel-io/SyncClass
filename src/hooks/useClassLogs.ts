@@ -652,7 +652,6 @@ export function useCreateClassLogPackage() {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
       queryClient.invalidateQueries({ queryKey: ["student_details"] });
       queryClient.invalidateQueries({ queryKey: ["student_balance"] });
       queryClient.invalidateQueries({ queryKey: ["available_class_logs"] });
@@ -708,7 +707,6 @@ export function useDeleteClassLog() {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
       queryClient.invalidateQueries({ queryKey: ["student_details"] });
       queryClient.invalidateQueries({ queryKey: ["student_balance"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });

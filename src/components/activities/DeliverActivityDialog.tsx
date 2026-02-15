@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Loader2, Upload, FileText, X } from "lucide-react";
 import { uploadActivityFile } from "@/hooks/useActivities";
+import { useAuth } from "@/contexts/AuthContext";
+import { validateFile, checkUploadRateLimit, FILE_TYPES, formatFileSize } from "@/lib/utils/fileValidation";
 import { toast } from "sonner";
 
 const deliverSchema = z.object({
@@ -36,6 +38,7 @@ export function DeliverActivityDialog({
 }: DeliverActivityDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const {
     register,
@@ -47,12 +50,28 @@ export function DeliverActivityDialog({
     resolver: zodResolver(deliverSchema),
   });
 
+  // Limpar formulário quando o modal fecha
+  useEffect(() => {
+    if (!open) {
+      reset();
+      setSelectedFile(null);
+    }
+  }, [open, reset]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setValue("response_file", file);
+    if (!file) return;
+
+    // Validar tipo e tamanho do arquivo
+    const validation = validateFile(file, 'ACTIVITY_RESPONSE');
+    if (!validation.valid) {
+      toast.error(validation.error);
+      e.target.value = ''; // Limpar input
+      return;
     }
+
+    setSelectedFile(file);
+    setValue("response_file", file);
   };
 
   const handleRemoveFile = () => {
@@ -61,6 +80,15 @@ export function DeliverActivityDialog({
   };
 
   const handleFormSubmit = async (data: DeliverFormData) => {
+    // Verificar rate limiting
+    if (user?.id) {
+      const rateLimit = checkUploadRateLimit(user.id, 10, 60000); // 10 uploads por minuto
+      if (!rateLimit.allowed) {
+        toast.error(`Muitos uploads. Aguarde ${rateLimit.retryAfter} segundos.`);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       let responseFileUrl: string | undefined;
@@ -137,7 +165,7 @@ export function DeliverActivityDialog({
 
           <div className="space-y-2">
             <Label htmlFor="response_file">
-              Ou envie um arquivo (PDF, imagem, documento)
+              Ou envie um arquivo
             </Label>
             {!selectedFile ? (
               <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 hover:border-primary/50 transition-colors">
@@ -151,12 +179,12 @@ export function DeliverActivityDialog({
                 <input
                   id="response_file"
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
+                  accept={FILE_TYPES.ACTIVITY_RESPONSE.accept}
                   onChange={handleFileChange}
                   className="hidden"
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  PDF, Imagem ou Documento (máx. 50MB)
+                  {FILE_TYPES.ACTIVITY_RESPONSE.description}
                 </p>
               </div>
             ) : (
@@ -165,7 +193,7 @@ export function DeliverActivityDialog({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{selectedFile.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    {formatFileSize(selectedFile.size)}
                   </p>
                 </div>
                 <Button

@@ -55,7 +55,8 @@ function isDateFuture(brDate: string): boolean {
 
 /** Vencimento padrão: dia do pagamento do aluno no mês/ano da aula. 
  * Se a data da aula for muito antiga ou inválida, usa mês/ano atual.
- * pay_day 1–31; se mês tem menos dias, usa último dia. 
+ * pay_day 1–31; se mês tem menos dias, usa último dia.
+ * Se o dia de pagamento já passou no mês atual, retorna string vazia (não cria cobrança).
  */
 function getDefaultDueDateForClassMonth(classDateBr: string, payDay: number | null): string {
   if (!classDateBr || !REGEX_PATTERNS.date.test(classDateBr)) {
@@ -96,6 +97,16 @@ function getDefaultDueDateForClassMonth(classDateBr: string, payDay: number | nu
   
   const lastDay = new Date(y, m, 0).getDate();
   const day = Math.min(payDay, lastDay);
+  
+  // Verificar se o dia de pagamento já passou no mês atual
+  const paymentDate = new Date(y, m - 1, day);
+  paymentDate.setHours(0, 0, 0, 0);
+  
+  if (paymentDate < today) {
+    // Dia de pagamento já passou, retorna vazio (não cria cobrança)
+    return "";
+  }
+  
   const dd = day.toString().padStart(2, "0");
   const mm = m.toString().padStart(2, "0");
   return `${dd}/${mm}/${y}`;
@@ -109,12 +120,8 @@ const classLogBaseSchema = z.object({
     .refine((val) => {
       if (!val || !REGEX_PATTERNS.date.test(val)) return true;
       const [day, month, year] = val.split("/").map(Number);
-      const d = new Date(year, month - 1, day);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      d.setHours(0, 0, 0, 0);
-      return d >= today;
-    }, { message: "Informe uma data de hoje em diante (não é possível cadastrar aulas em datas passadas)" }),
+      return year >= 2026;
+    }, { message: "Informe uma data de 2026 em diante" }),
   title: z.string().optional(),
   feedback: z.string().max(1000).optional(),
   observations: z.string().max(1000, "Máximo 1000 caracteres").optional(),
@@ -331,11 +338,10 @@ export function ClassLogFormDialog({
     const effectiveTeacherId = teacherId || (enableTeacherSelection ? selectedTeacherId || null : null);
     const classDateIso = brDateToIso(data.class_date);
 
-    const defaultTitleAvulsa = `Aula - ${data.class_date}`;
     const classLogData: ClassLogInsert = {
       student_id: data.student_id,
       class_date: classDateIso,
-      title: data.title?.trim() || defaultTitleAvulsa,
+      title: data.title?.trim() || null,
       attendance: isEditing ? (classLog?.attendance ?? null) : null,
       grade: isEditing ? (classLog?.grade ?? null) : null,
       feedback: isEditing ? (classLog?.feedback ?? null) : null,
@@ -513,11 +519,9 @@ export function ClassLogFormDialog({
                   locale={ptBR}
                   initialFocus
                   disabled={(date) => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
                     const d = new Date(date);
                     d.setHours(0, 0, 0, 0);
-                    return d < today;
+                    return d.getFullYear() < 2026;
                   }}
                 />
               </PopoverContent>

@@ -393,9 +393,6 @@ export function useCreateUser() {
       };
     },
     onSuccess: (result, variables) => {
-      if (result?.permissionsWarning) {
-        toast.warning("Usuário criado. Ajuste as permissões manualmente na aba Usuários se necessário.");
-      }
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
@@ -861,11 +858,7 @@ export function useInviteStudent() {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      if (data?.permissionsWarning) {
-        toast.warning("Aluno criado. Ajuste as permissões na aba Usuários se necessário.");
-      } else {
-        toast.success("Aluno e conta de acesso criados com sucesso!");
-      }
+      toast.success("Aluno e conta de acesso criados com sucesso!");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Erro ao convidar aluno.");
@@ -892,11 +885,7 @@ export function useInviteTeacher() {
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      if (data?.permissionsWarning) {
-        toast.warning("Professor criado. Ajuste as permissões na aba Usuários se necessário.");
-      } else {
-        toast.success("Professor e conta de acesso criados com sucesso!");
-      }
+      toast.success("Professor e conta de acesso criados com sucesso!");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Erro ao convidar professor.");

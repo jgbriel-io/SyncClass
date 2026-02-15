@@ -136,9 +136,14 @@ export async function uploadActivityFile(file: File): Promise<{ path: string; ur
     throw new Error("Arquivo corrompido ou tipo inválido. O conteúdo não corresponde à extensão.");
   }
   
-  // Gerar nome seguro (sem usar nome original para evitar path traversal)
-  const ext = file.type.split('/')[1]?.replace('vnd.openxmlformats-officedocument.wordprocessingml.', '') || 'bin';
-  const fileName = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
+  // Gerar nome seguro usando o nome original sanitizado
+  const sanitizedName = file.name
+    .replace(/[^a-zA-Z0-9._-]/g, '_') // Remove caracteres especiais
+    .replace(/_{2,}/g, '_') // Remove underscores duplicados
+    .substring(0, 100); // Limita tamanho
+  
+  const timestamp = Date.now();
+  const fileName = `${timestamp}-${sanitizedName}`;
   const filePath = fileName;
 
   const { error: uploadError } = await supabase.storage
@@ -342,8 +347,8 @@ export function useMarkActivityAsDelivered() {
           status: "entregue",
           delivered_at: new Date().toISOString(),
           student_response_text: responseText || null,
-          student_response_file_url: responseFileUrl || null,
-          student_response_file_name: responseFileName || null,
+          response_file_url: responseFileUrl || null,
+          response_file_name: responseFileName || null,
         })
         .eq("id", activityId)
         .select()

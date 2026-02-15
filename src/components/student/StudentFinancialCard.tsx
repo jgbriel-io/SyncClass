@@ -52,7 +52,7 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
     : null;
 
   return (
-    <Card className={cn("p-4 border-l-4", config.borderColor)}>
+    <Card className="p-4">
       <div className="space-y-3">
         {/* Valor e Status */}
         <div className="flex items-center justify-between">

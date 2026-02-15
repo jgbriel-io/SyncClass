@@ -149,7 +149,7 @@ export function PackageClassesDialog({
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>("fixed");
   const [fixedMonth, setFixedMonth] = useState<number>(0);
-  const [fixedYear, setFixedYear] = useState<number>(0);
+  const [fixedYear, setFixedYear] = useState<number>(2026);
   const [fixedWeekdays, setFixedWeekdays] = useState<number[]>([]);
   const [fixedStartTime, setFixedStartTime] = useState("");
   const [fixedEndTime, setFixedEndTime] = useState("");
@@ -171,7 +171,7 @@ export function PackageClassesDialog({
       setPaymentMethod("");
       setScheduleMode("fixed");
       setFixedMonth(0);
-      setFixedYear(0);
+      setFixedYear(2026);
       setFixedWeekdays([]);
       setFixedStartTime("");
       setFixedEndTime("");
@@ -189,7 +189,7 @@ export function PackageClassesDialog({
       setPaymentMethod("");
       setScheduleMode("fixed");
       setFixedMonth(0);
-      setFixedYear(0);
+      setFixedYear(2026);
       setFixedWeekdays([]);
       setFixedStartTime("");
       setFixedEndTime("");
@@ -308,7 +308,7 @@ export function PackageClassesDialog({
         end_at: endAt,
         duration_minutes: durationMinutes,
         billed_amount: slotAmount > 0 ? slotAmount : null,
-        title: `Aula pacote mensal - ${s.class_date}`,
+        title: null,
         observations: null,
       };
 
@@ -478,7 +478,7 @@ export function PackageClassesDialog({
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
-                      {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map((y) => (
+                      {[2026, 2027, 2028].map((y) => (
                         <SelectItem key={y} value={String(y)}>
                           {y}
                         </SelectItem>

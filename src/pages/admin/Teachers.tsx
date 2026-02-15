@@ -392,9 +392,7 @@ export default function TeachersPage() {
           )}
 
           {/* Table */}
-          {isLoading ? (
-            <TeachersTableSkeleton rows={10} />
-          ) : !error && (
+          {!error && (
           <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
             <div className="overflow-x-auto">
               <Table style={{ minWidth: TEACH_TABLE_MIN_W }}>
@@ -412,7 +410,10 @@ export default function TeachersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-border/40">
-                  {filteredTeachers.map((teacher) => (
+                  {isLoading ? (
+                    <TeachersTableSkeleton rows={10} />
+                  ) : (
+                    filteredTeachers.map((teacher) => (
                     <TeachersTableRow
                       key={teacher.id}
                       teacher={teacher}
@@ -439,7 +440,8 @@ export default function TeachersPage() {
                         setHardDeleteDialogOpen(true);
                       }}
                     />
-                  ))}
+                  ))
+                  )}
                 </TableBody>
               </Table>
             </div>

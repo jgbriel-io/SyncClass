@@ -58,10 +58,6 @@ const studentSchema = z.object({
     ),
   email: emailSchema,
   hourly_rate: z.string().optional().nullable(),
-  classes_per_week: z
-    .string()
-    .optional()
-    .nullable(),
   pay_day: z
     .string()
     .optional()
@@ -131,9 +127,6 @@ export function StudentFormDialog({
       hourly_rate: student?.hourly_rate
         ? String(student.hourly_rate).replace(".", ",")
         : "",
-      classes_per_week: student?.classes_per_week
-        ? String(student.classes_per_week)
-        : "",
       pay_day: student?.pay_day ? String(student.pay_day) : "",
       origin: student?.origin || undefined,
       status: student?.status || "ativo",
@@ -160,7 +153,6 @@ export function StudentFormDialog({
         phone: "",
         email: "",
         hourly_rate: "",
-        classes_per_week: "",
         pay_day: "",
         origin: undefined,
         status: "ativo",
@@ -191,9 +183,6 @@ export function StudentFormDialog({
         hourly_rate: student.hourly_rate
           ? String(student.hourly_rate).replace(".", ",")
           : "",
-        classes_per_week: student.classes_per_week
-          ? String(student.classes_per_week)
-          : "",
         pay_day: student.pay_day ? String(student.pay_day) : "",
         origin: student.origin || undefined,
         status: student.status || "ativo",
@@ -213,7 +202,6 @@ export function StudentFormDialog({
         phone: "",
         email: "",
         hourly_rate: "",
-        classes_per_week: "",
         pay_day: "",
         origin: undefined,
         status: "ativo",
@@ -241,13 +229,11 @@ export function StudentFormDialog({
     void loadCities();
   }, [selectedState]);
 
+
+
   const handleFormSubmit = (data: StudentFormData) => {
     const hourlyRateNumber = data.hourly_rate
       ? parseFloat(data.hourly_rate.replace(/[^.\d,]/g, "").replace(",", "."))
-      : null;
-
-    const classesPerWeekNumber = data.classes_per_week
-      ? Number(data.classes_per_week)
       : null;
 
     const payDayNumber = data.pay_day ? Number(data.pay_day) : null;
@@ -266,7 +252,6 @@ export function StudentFormDialog({
       status: selectedStatus,
       birth_date: data.birth_date ? brDateToIso(data.birth_date) : null,
       hourly_rate: hourlyRateNumber,
-      classes_per_week: classesPerWeekNumber,
       pay_day: payDayNumber,
       teacher_id: (autoTeacherId && !student) ? autoTeacherId : null,
     };
@@ -537,19 +522,6 @@ export function StudentFormDialog({
                 type="text"
                 placeholder="Ex: 120,00"
                 {...register("hourly_rate")}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="classes_per_week">Aulas por semana</Label>
-              <Input
-                id="classes_per_week"
-                type="number"
-                min={0}
-                max={14}
-                placeholder="Ex: 1, 2, 3..."
-                {...register("classes_per_week")}
                 disabled={isLoading}
               />
             </div>

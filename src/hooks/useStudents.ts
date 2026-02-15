@@ -65,9 +65,9 @@ export function useStudentsPaginated(options?: UseStudentsPaginatedOptions): Use
   const query = useQuery({
     queryKey: ["students_paginated", page, pageSize, filters],
     queryFn: async () => {
-      // ✅ NOVO: Usar view students_enriched com cálculos no banco
+      // Usar students_with_stats para ter estatísticas calculadas
       let q = supabase
-        .from("students_enriched")
+        .from("students_with_stats")
         .select("*", { count: "exact" });
 
       if (filters?.teacherId && filters.teacherId !== "all") {
@@ -547,7 +547,6 @@ export function useUpdateStudentPaymentDay() {
       // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["students_enriched"] });
       queryClient.invalidateQueries({ queryKey: ["student_details"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });

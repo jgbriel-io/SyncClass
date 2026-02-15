@@ -1,14 +1,17 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StudentClassCard } from "@/components/student/StudentClassCard";
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Loader2, BookOpen, TrendingUp, TrendingDown, Award, Calendar as CalendarIcon, XCircle } from "lucide-react";
 import { useStudentClassLogs, useStudentStats, useLastClass } from "@/hooks/useStudentPortal";
 import { formatDate } from "@/lib/utils/formatters";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
+import { getClassStatusWithTime } from "@/lib/utils/classTime";
 
 function classLogToCardProps(record: {
   id: string;
@@ -22,6 +25,10 @@ function classLogToCardProps(record: {
   billed_amount?: number | null;
   teacher_name?: string;
   feedback?: string | null;
+  payment_status?: string | null;
+  payment_due_date?: string | null;
+  is_package?: boolean;
+  observations?: string | null;
 }) {
   return {
     id: record.id,
@@ -35,6 +42,10 @@ function classLogToCardProps(record: {
     teacher_name: record.teacher_name,
     feedback: record.feedback ?? null,
     amount: record.billed_amount ?? null,
+    payment_status: record.payment_status ?? null,
+    payment_due_date: record.payment_due_date ?? null,
+    is_package: record.is_package,
+    observations: record.observations ?? null,
   };
 }
 
@@ -42,6 +53,8 @@ export default function StudentHistory() {
   const { data: classLogs = [], isLoading, error } = useStudentClassLogs();
   const stats = useStudentStats();
   const lastClass = useLastClass();
+  const [statusFilter, setStatusFilter] = useState<string>("aberto");
+  const [sortOrder, setSortOrder] = useState<string>("recente");
 
   const attendancePercentage = stats.attendanceRate.toFixed(0);
 
@@ -74,6 +87,47 @@ export default function StudentHistory() {
     return { best, worst, trend };
   }, [classesWithGrade]);
 
+  // Filtrar e ordenar aulas
+  const filteredClassLogs = useMemo(() => {
+    let filtered = classLogs;
+    
+    // Filtrar por status
+    if (statusFilter !== "all") {
+      filtered = classLogs.filter((log) => {
+        const status = getClassStatusWithTime({
+          class_date: log.class_date,
+          start_at: log.start_at ?? null,
+          end_at: log.end_at ?? null,
+          attendance: log.attendance,
+        });
+        
+        if (statusFilter === "aberto") {
+          // Em aberto = Pendente (não avaliada) ou Agendada
+          return status.label === "Pendente" || status.label === "Agendada";
+        }
+        if (statusFilter === "concluida") {
+          return status.label === "Concluída";
+        }
+        
+        return true;
+      });
+    }
+    
+    // Ordenar
+    const sorted = [...filtered].sort((a, b) => {
+      const dateA = new Date(a.class_date + "T" + (a.start_at ? new Date(a.start_at).toTimeString().slice(0, 8) : "00:00:00"));
+      const dateB = new Date(b.class_date + "T" + (b.start_at ? new Date(b.start_at).toTimeString().slice(0, 8) : "00:00:00"));
+      
+      if (sortOrder === "recente") {
+        return dateB.getTime() - dateA.getTime(); // Mais recente primeiro
+      } else {
+        return dateA.getTime() - dateB.getTime(); // Mais antiga primeiro
+      }
+    });
+    
+    return sorted;
+  }, [classLogs, statusFilter, sortOrder]);
+
   const renderClassCards = (records: typeof classLogs) =>
     records.length === 0 ? (
       <div className="rounded-lg border bg-card">
@@ -86,6 +140,41 @@ export default function StudentHistory() {
         ))}
       </div>
     );
+
+  const renderStatusFilter = () => (
+    <div className="flex flex-wrap items-center gap-4 mb-4">
+      <div className="flex items-center gap-3">
+        <Label htmlFor="status-filter" className="text-sm font-medium whitespace-nowrap">
+          Status:
+        </Label>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger id="status-filter" className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="aberto">Em aberto</SelectItem>
+            <SelectItem value="concluida">Concluídas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="flex items-center gap-3">
+        <Label htmlFor="sort-order" className="text-sm font-medium whitespace-nowrap">
+          Ordenar:
+        </Label>
+        <Select value={sortOrder} onValueChange={setSortOrder}>
+          <SelectTrigger id="sort-order" className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recente">Mais recente</SelectItem>
+            <SelectItem value="antiga">Mais antiga</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
 
   return (
     <PageContainer constrained maxWidth="5xl">
@@ -132,11 +221,12 @@ export default function StudentHistory() {
                 variant="default"
               />
             </div>
+            {renderStatusFilter()}
             <div className={stack('DEFAULT')}>
               <h2 className={typography('TABLE_HEADER')}>
                 Histórico de Aulas
               </h2>
-              {renderClassCards(classLogs)}
+              {renderClassCards(filteredClassLogs)}
             </div>
           </TabsContent>
 
