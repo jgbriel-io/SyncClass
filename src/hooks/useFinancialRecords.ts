@@ -400,12 +400,10 @@ export function useMarkAsPaid() {
     mutationFn: async (id: string) => {
       // Gerar chave de idempotência usando crypto.randomUUID()
       const idempotencyKey = crypto.randomUUID();
-      const now = new Date().toISOString();
 
       // Chamar RPC mark_as_paid_idempotent
       const { data, error } = await supabase.rpc("mark_as_paid_idempotent", {
         p_record_id: id,
-        p_paid_at: now,
         p_payment_method: null,
         p_idempotency_key: idempotencyKey,
       });

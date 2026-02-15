@@ -100,7 +100,7 @@ export function ClassesFilters({
                 <SelectItem value="em_aberto">Em aberto</SelectItem>
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="agendada">Agendada</SelectItem>
-                <SelectItem value="avaliacao_pendente">Avaliação pendente</SelectItem>
+                <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="concluida">Concluída</SelectItem>
               </SelectContent>
             </Select>

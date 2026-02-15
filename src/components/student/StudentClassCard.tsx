@@ -75,7 +75,7 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
 
   const badgeLabel = isConcluida
     ? "Concluída"
-    : status.label === "Avaliação pendente"
+    : status.label === "Pendente"
       ? "Pagamento pendente"
       : status.label;
   const badgeVariant = isConcluida

@@ -142,7 +142,8 @@ export function FinancialFormDialog({
     
     onSubmit({
       student_id: data.student_id,
-      class_log_id: data.class_log_id || null,
+      // Preservar class_log_id original ao editar, ou usar o novo valor ao criar
+      class_log_id: initialData ? (initialData.class_log_id || null) : (data.class_log_id || null),
       amount: amount,
       due_date: brDateToIso(data.due_date),
       payment_method: data.payment_method || null,

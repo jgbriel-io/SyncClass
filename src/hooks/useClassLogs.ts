@@ -263,7 +263,7 @@ export function usePendingEvaluationClassLogs(teacherId?: string | null) {
       if (error) throw error;
       const list = (data ?? []) as ClassLogWithStudent[];
       const enriched = await enrichWithPackageFinancial(list);
-      return enriched.filter((log) => getClassStatusWithTime(log).label === "Avaliação pendente");
+      return enriched.filter((log) => getClassStatusWithTime(log).label === "Pendente");
     },
   });
 }
@@ -619,6 +619,7 @@ export function useCreateClassLogPackage() {
         end_at: item.classLog.end_at,
         attendance: item.classLog.attendance ?? null,
         notes: item.classLog.notes || null,
+        billed_amount: item.classLog.billed_amount ?? null,
       }));
 
       const financialData = packageFinancial

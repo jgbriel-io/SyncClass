@@ -39,7 +39,7 @@ export function isClassEvaluationBlocked(item: ClassTimeInput): boolean {
 
 /**
  * Status da aula para exibição (dashboard, lista de aulas, etc.).
- * Considera class_date e start_at/end_at: Agendada, Em andamento, Avaliação pendente, Concluída.
+ * Considera class_date e start_at/end_at: Agendada, Em andamento, Pendente, Concluída.
  */
 export function getClassStatusWithTime(item: ClassTimeInput & { attendance?: boolean | null }): {
   label: string;
@@ -60,7 +60,7 @@ export function getClassStatusWithTime(item: ClassTimeInput & { attendance?: boo
   if (startAt && startAt > now) return { label: "Agendada", variant: "info" };
   if (endAt && now < endAt) return { label: "Em andamento", variant: "info" };
 
-  return { label: "Avaliação pendente", variant: "warning" };
+  return { label: "Pendente", variant: "warning" };
 }
 
 /**
@@ -77,5 +77,5 @@ export function getClassStatusFromDate(
   const d = new Date(class_date + "T12:00:00");
   d.setHours(0, 0, 0, 0);
   if (d > today) return { label: "Agendada", variant: "info" };
-  return { label: "Avaliação pendente", variant: "warning" };
+  return { label: "Pendente", variant: "warning" };
 }

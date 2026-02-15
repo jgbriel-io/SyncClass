@@ -115,7 +115,7 @@ function getPaymentStatusLabel(status: string | null): string {
   }
 }
 
-/** Badge de status: Concluída, Agendada, Em andamento, Avaliação pendente (usa horário quando disponível) */
+/** Badge de status: Concluída, Agendada, Em andamento, Pendente (usa horário quando disponível) */
 function getClassStatusBadge(log: {
   class_date: string;
   attendance: boolean | null;
@@ -264,7 +264,7 @@ export function ClassesView({
             : "avaliacao_pendente";
 
       // Filtro de status:
-      // - "all": mostra tudo (agendada + avaliação pendente + concluídas)
+      // - "all": mostra tudo (agendada + pendente + concluídas)
       // - "em_aberto": mostra aulas não concluídas OU aulas concluídas com pagamento não finalizado
       // - valores específicos: filtram por esse status exato
       if (filters.status === "em_aberto") {

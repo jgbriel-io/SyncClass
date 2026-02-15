@@ -4,7 +4,7 @@ import { AvatarCircle } from "@/components/ui/avatar-circle";
 import { NumericCell } from "@/components/ui/numeric-cell";
 import { formatDate, formatDateTime } from "@/lib/utils/formatters";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2, Eye, Loader2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Eye, Loader2, Trash2 } from "lucide-react";
 import { FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import {
   CELL_BASE,
@@ -33,9 +33,9 @@ interface FinancialTableRowProps {
   isUndoing: boolean;
   onViewHistory: (record: FinancialRecordWithRelations) => void;
   onEdit: (record: FinancialRecordWithRelations) => void;
-  onDelete: (record: FinancialRecordWithRelations) => void;
   onConfirmPayment: (record: FinancialRecordWithRelations) => void;
   onUndoPayment: (record: FinancialRecordWithRelations) => void;
+  onDelete?: (record: FinancialRecordWithRelations) => void;
 }
 
 export function FinancialTableRow({
@@ -45,11 +45,14 @@ export function FinancialTableRow({
   isUndoing,
   onViewHistory,
   onEdit,
-  onDelete,
   onConfirmPayment,
   onUndoPayment,
+  onDelete,
 }: FinancialTableRowProps) {
   const lastUpdatedAt = record.updated_at || record.created_at;
+  
+  // Pode deletar apenas se não houver aula vinculada (class_log_id é null)
+  const canDelete = !record.class_log_id && onDelete;
 
   return (
     <tr className="group hover:bg-muted/30 transition-colors">
@@ -198,13 +201,15 @@ export function FinancialTableRow({
                 <Pencil className="h-4 w-4 mr-2" aria-hidden="true" />
                 Editar
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => onDelete(record)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
-                Excluir
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem 
+                  onClick={() => onDelete(record)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Excluir
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

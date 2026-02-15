@@ -98,10 +98,10 @@ export function FinancialView({
   const [confirmPaymentId, setConfirmPaymentId] = useState<string | null>(null);
   const [recordToConfirm, setRecordToConfirm] = useState<FinancialRecordWithRelations | null>(null);
   const [recordToEdit, setRecordToEdit] = useState<FinancialRecordWithRelations | null>(null);
-  const [recordToDelete, setRecordToDelete] = useState<FinancialRecordWithRelations | null>(null);
   const [recordToUndo, setRecordToUndo] = useState<FinancialRecordWithRelations | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [undoDialogOpen, setUndoDialogOpen] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<FinancialRecordWithRelations | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [historyRecord, setHistoryRecord] = useState<FinancialRecordWithRelations | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState<string | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
@@ -223,17 +223,6 @@ export function FinancialView({
     }
   };
 
-  const handleDeleteRecord = () => {
-    if (recordToDelete) {
-      deleteRecord.mutate(recordToDelete.id, {
-        onSuccess: () => {
-          setDeleteDialogOpen(false);
-          setRecordToDelete(null);
-        },
-      });
-    }
-  };
-
   const openConfirmPayment = (record: FinancialRecordWithRelations) => {
     setRecordToConfirm(record);
     setConfirmPaymentId(record.id);
@@ -250,6 +239,17 @@ export function FinancialView({
         },
         onError: () => {
           setIsProcessingPayment(null);
+        },
+      });
+    }
+  };
+
+  const handleDeleteRecord = () => {
+    if (recordToDelete) {
+      deleteRecord.mutate(recordToDelete.id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setRecordToDelete(null);
         },
       });
     }
@@ -443,14 +443,14 @@ export function FinancialView({
                       setRecordToEdit(record);
                       setIsFormOpen(true);
                     }}
-                    onDelete={(record) => {
-                      setRecordToDelete(record);
-                      setDeleteDialogOpen(true);
-                    }}
                     onConfirmPayment={openConfirmPayment}
                     onUndoPayment={(record) => {
                       setRecordToUndo(record);
                       setUndoDialogOpen(true);
+                    }}
+                    onDelete={(record) => {
+                      setRecordToDelete(record);
+                      setDeleteDialogOpen(true);
                     }}
                   />
                 ))}
@@ -494,37 +494,6 @@ export function FinancialView({
         initialData={recordToEdit || null}
         enableTeacherSelection={enableTeacherSelection}
       />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir a cobrança de {recordToDelete?.students?.name} no valor de <strong>{recordToDelete ? formatCurrency(Number(recordToDelete.amount)) : ""}</strong>? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteRecord.isPending}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteRecord}
-              disabled={deleteRecord.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteRecord.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Excluindo...
-                </>
-              ) : (
-                "Excluir"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Undo Payment (Desfazer Cobrança) Dialog */}
       <AlertDialog
@@ -577,6 +546,52 @@ export function FinancialView({
                 </>
               ) : (
                 "Desfazer cobrança"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Record Dialog */}
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) setRecordToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir cobrança</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Deseja excluir permanentemente a cobrança de{" "}
+                  <strong>{recordToDelete?.students?.name}</strong> no valor de{" "}
+                  <strong>{recordToDelete ? formatCurrency(Number(recordToDelete.amount)) : ""}</strong>?
+                </p>
+                <p className="text-destructive font-medium">
+                  Esta ação não pode ser desfeita.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteRecord.isPending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteRecord}
+              disabled={deleteRecord.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteRecord.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                "Excluir cobrança"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

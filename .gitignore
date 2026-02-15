@@ -31,3 +31,6 @@ dist-ssr
 # Documentation files (except README)
 *.md
 !README.md
+
+# Supabase migrations
+supabase/migrations/

@@ -288,7 +288,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             to="/admin/classes?status=avaliacao_pendente"
                             className="block rounded-md px-2 py-2 text-sm hover:bg-muted focus:bg-muted focus:outline-none"
                           >
-                            <span className="font-medium text-foreground">Avaliação pendente</span>
+                            <span className="font-medium text-foreground">Pendente</span>
                             <p className="mt-0.5 truncate text-muted-foreground">
                               {(log.students as { name?: string } | null)?.name ?? "Aluno"} · {log.class_date && format(new Date(log.class_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
                             </p>
