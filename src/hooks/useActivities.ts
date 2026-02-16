@@ -229,6 +229,29 @@ export function useActivityFilesForTeacher(teacherId: string | undefined) {
   return { data: files, ...rest };
 }
 
+/** Lista de arquivos distintos de TODOS os professores (para admin) */
+export function useAllActivityFiles() {
+  const { data: activities = [], ...rest } = useActivities(undefined, undefined, { fetchAll: true });
+  const files = useMemo(() => {
+    const seen = new Set<string>();
+    const list: ActivityFileOption[] = [];
+    for (const a of activities) {
+      // Apenas arquivos principais (file_url), nunca arquivos de resposta de alunos
+      if (a.file_url && !seen.has(a.file_url)) {
+        seen.add(a.file_url);
+        list.push({
+          file_url: a.file_url,
+          file_name: a.file_name,
+          file_type: a.file_type ?? null,
+          file_size: a.file_size ?? null,
+        });
+      }
+    }
+    return list;
+  }, [activities]);
+  return { data: files, ...rest };
+}
+
 /** Opções para listagem: fetchAll = true (admin) busca todas as atividades da plataforma */
 export type UseActivitiesOptions = { fetchAll?: boolean };
 
@@ -262,7 +285,8 @@ export function useActivities(
       if (error) throw error;
       return (data ?? []) as ActivityWithRelations[];
     },
-    enabled: fetchAll || !!(teacherId || studentId),
+    // Habilita se: fetchAll OU tem teacherId OU tem studentId
+    enabled: fetchAll || !!teacherId || !!studentId,
   });
 }
 

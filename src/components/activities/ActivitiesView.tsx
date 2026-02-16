@@ -91,12 +91,16 @@ export function ActivitiesView({
   const activeStudents = students.filter((s) => s.status === "ativo");
 
   const effectiveStudentId = filters.studentId !== "all" ? filters.studentId : undefined;
-  const effectiveTeacherId = isAdmin && filters.teacherId !== "all" ? filters.teacherId : (autoTeacherId || undefined);
+  const effectiveTeacherId = filters.teacherId !== "all" ? filters.teacherId : undefined;
+  
+  // Admin: busca todas as atividades (de todos os professores) ou filtra por professor específico
+  // Professor: sempre filtra pelo seu ID
+  const shouldFetchAll = isAdmin && !effectiveTeacherId;
   
   const { data: activities = [], isLoading, refetch } = useActivities(
-    effectiveTeacherId,
-    effectiveStudentId,
-    isAdmin && !effectiveStudentId ? { fetchAll: true } : undefined,
+    shouldFetchAll ? undefined : (effectiveTeacherId || autoTeacherId || undefined),
+    undefined, // Admin nunca filtra por aluno, só professor filtra
+    shouldFetchAll ? { fetchAll: true } : undefined,
   );
   const deleteActivity = useDeleteActivity();
 
@@ -228,12 +232,10 @@ export function ActivitiesView({
           </h1>
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </div>
-        {!isAdmin && (
-          <Button onClick={() => setSendDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Enviar Atividade
-          </Button>
-        )}
+        <Button onClick={() => setSendDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          {isAdmin ? "Nova Atividade" : "Enviar Atividade"}
+        </Button>
       </div>
 
       {/* Stat cards */}
@@ -253,6 +255,7 @@ export function ActivitiesView({
         students={activeStudents}
         teachers={teachers}
         showTeacherFilter={isAdmin}
+        showStudentFilter={!isAdmin}
         primaryStatus="all"
       />
 
@@ -328,7 +331,8 @@ export function ActivitiesView({
       <SendActivityDialog
         open={sendDialogOpen}
         onOpenChange={setSendDialogOpen}
-        teacherId={autoTeacherId || ""}
+        teacherId={autoTeacherId || undefined}
+        isAdmin={isAdmin}
       />
 
       <EditActivityDialog

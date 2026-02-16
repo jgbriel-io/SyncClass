@@ -1,0 +1,40 @@
+feat: implementa gestão de faltas, cascade delete de pacotes e melhorias gerais
+
+- Adiciona status "abonado" e "extornado" para gestão de faltas
+  * Falta não cobrada: status "abonado"
+  * Falta com pagamento extornado: status "extornado"
+  * Checkbox "Extornar pagamento" quando aluno faltou e já pagou
+  * Desabilita botão "Confirmar" para cobranças finalizadas
+
+- Implementa cascade delete para pacotes e aulas
+  * Deletar cobrança de pacote remove todas as aulas vinculadas
+  * Deletar todas as aulas do pacote remove a cobrança automaticamente
+  * Migration 12 com triggers e FKs configuradas corretamente
+
+- Adiciona indicador "(Pacote)" no título das aulas de pacote
+
+- Permite edição de nome e email nas configurações
+  * Usuários podem editar próprio nome e email
+  * Email requer confirmação via link enviado
+  * Funciona para admin, professor e aluno
+
+- Corrige criação de usuários admin
+  * Passa role correta nos metadados do auth.signUp
+  * Admin agora é criado com role "admin" ao invés de "student"
+
+- Remove funcionalidade "Vincular usuário"
+  * Vinculação automática mantida na criação
+
+- Adiciona campo de descrição no histórico financeiro
+
+- Adiciona trigger para prevenir aulas sobrepostas do mesmo professor
+
+- Corrige exibição de badge "Sem cobrança" para aulas
+  * Verifica corretamente se aula tem cobrança (avulsa ou pacote)
+  * Mostra status correto em todas as views
+
+- Melhora tratamento de erros no Edge Function admin-delete-user
+  * Trata erro 404 quando usuário já foi deletado do Auth
+  * Limpa registros órfãos no banco
+
+Migrations: 07, 08, 09, 10, 11, 12

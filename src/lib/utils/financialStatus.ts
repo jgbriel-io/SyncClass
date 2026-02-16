@@ -3,7 +3,7 @@
  * Evita duplicação e garante consistência em toda a aplicação.
  */
 
-export type FinancialStatus = "pago" | "pendente" | "atrasado";
+export type FinancialStatus = "pago" | "pendente" | "atrasado" | "abonado" | "extornado" | "cancelado";
 
 /** Verifica se due_date (YYYY-MM-DD) já passou (locale-safe) */
 export function isOverdue(dueDateStr: string): boolean {
@@ -17,11 +17,18 @@ export function isOverdue(dueDateStr: string): boolean {
 /**
  * Calcula o status real de uma cobrança a partir de due_date.
  * O banco guarda "pendente"; "atrasado" é derivado de due_date < hoje.
+ * Status finais (pago, abonado, extornado, cancelado) não mudam.
  */
 export function getFinancialActualStatus(record: {
   status: string | null;
   due_date: string;
 }): FinancialStatus {
+  // Status finais que não mudam
   if (record.status === "pago") return "pago";
+  if (record.status === "abonado") return "abonado";
+  if (record.status === "extornado") return "extornado";
+  if (record.status === "cancelado") return "cancelado";
+  
+  // Status pendente pode virar atrasado baseado na data
   return isOverdue(record.due_date) ? "atrasado" : "pendente";
 }

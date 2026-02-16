@@ -199,16 +199,37 @@ export function ClassLogRow({
 
       {/* ── Financeiro ─────────────────────────────────────────────── */}
       <td className={CELL} style={{ minWidth: COL.FINANCEIRO }}>
-        {log.financial_records ? (
-          <StatusBadge
-            variant={getPaymentStatusVariant(log.financial_records.status)}
-          >
-            <Receipt className="h-3 w-3" />
-            {getPaymentStatusLabel(log.financial_records.status)}
-          </StatusBadge>
-        ) : (
-          <span className="text-sm text-muted-foreground">Sem cobrança</span>
-        )}
+        {(() => {
+          // Cobrança direta (aula individual)
+          const hasDirectFinancial = log.financial_records && log.financial_records.length > 0;
+          
+          // Cobrança de pacote
+          const packageFinancial = log.financial_record_class_logs?.[0]?.financial_records;
+          
+          if (hasDirectFinancial) {
+            return (
+              <StatusBadge variant={getPaymentStatusVariant(log.financial_records[0].status)}>
+                <Receipt className="h-3 w-3" />
+                {getPaymentStatusLabel(log.financial_records[0].status)}
+              </StatusBadge>
+            );
+          }
+          
+          if (packageFinancial) {
+            return (
+              <StatusBadge variant={getPaymentStatusVariant(packageFinancial.status)}>
+                <Receipt className="h-3 w-3" />
+                {getPaymentStatusLabel(packageFinancial.status)}
+              </StatusBadge>
+            );
+          }
+          
+          return (
+            <StatusBadge variant="default">
+              Sem cobrança
+            </StatusBadge>
+          );
+        })()}
       </td>
 
       {/* ── Valor ──────────────────────────────────────────────────── */}

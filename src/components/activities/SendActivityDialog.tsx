@@ -22,12 +22,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { useStudents } from "@/hooks/useStudents";
+import { useTeachers } from "@/hooks/useTeachers";
 import { useAuth } from "@/contexts/AuthContext";
 import { validateFile, checkUploadRateLimit, FILE_TYPES, formatFileSize } from "@/lib/utils/fileValidation";
 import {
   useCreateActivity,
   uploadActivityFile,
   useActivityFilesForTeacher,
+  useAllActivityFiles,
   ActivityInsert,
 } from "@/hooks/useActivities";
 import { toast } from "sonner";
@@ -43,6 +45,7 @@ function dueDateAndTimeToIso(dueDate: string, dueTime: string): string {
 
 const activitySchema = z
   .object({
+    teacher_id: z.string().optional(), // Opcional para admin selecionar professor
     student_id: z.string().min(1, "Selecione um aluno"),
     title: z.string().min(1, "Informe o título da atividade"),
     description: z.string().optional(),
@@ -65,20 +68,38 @@ type ActivityFormData = z.infer<typeof activitySchema>;
 interface SendActivityDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  teacherId: string;
+  teacherId?: string | null; // Opcional para modo admin
+  isAdmin?: boolean; // Indica se é modo admin
 }
 
 export function SendActivityDialog({
   open,
   onOpenChange,
-  teacherId,
+  teacherId = null,
+  isAdmin = false,
 }: SendActivityDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
   const { user } = useAuth();
 
   const { data: students = [], isLoading: loadingStudents } = useStudents();
-  const { data: existingFiles = [], isLoading: loadingFiles } = useActivityFilesForTeacher(teacherId);
+  const { data: teachers = [] } = useTeachers();
+  
+  // Para admin sem professor selecionado: busca arquivos de todos os professores
+  // Para admin com professor selecionado: busca arquivos daquele professor
+  // Para professor: busca seus próprios arquivos
+  const effectiveTeacherId = isAdmin ? selectedTeacherId : teacherId;
+  const shouldFetchAll = isAdmin && !selectedTeacherId;
+  
+  const { data: teacherFiles = [], isLoading: loadingTeacherFiles } = useActivityFilesForTeacher(
+    shouldFetchAll ? undefined : (effectiveTeacherId || undefined)
+  );
+  const { data: allFiles = [], isLoading: loadingAllFiles } = useAllActivityFiles();
+  
+  const existingFiles = shouldFetchAll ? allFiles : teacherFiles;
+  const loadingFiles = shouldFetchAll ? loadingAllFiles : loadingTeacherFiles;
+  
   const createActivity = useCreateActivity();
   const activeStudents = students.filter((s) => s.status === "ativo");
 
@@ -107,6 +128,7 @@ export function SendActivityDialog({
         due_time: "23:59",
       });
       setSelectedFile(null);
+      setSelectedTeacherId("");
     }
   }, [open, reset]);
 
@@ -131,6 +153,12 @@ export function SendActivityDialog({
   };
 
   const handleFormSubmit = async (data: ActivityFormData) => {
+    // Validar professor no modo admin
+    if (isAdmin && !selectedTeacherId) {
+      toast.error("Selecione um professor");
+      return;
+    }
+
     // Verificar rate limiting
     if (user?.id) {
       const rateLimit = checkUploadRateLimit(user.id, 10, 60000); // 10 uploads por minuto
@@ -170,7 +198,7 @@ export function SendActivityDialog({
 
       const activityData: ActivityInsert = {
         student_id: data.student_id,
-        teacher_id: teacherId,
+        teacher_id: isAdmin ? (data.teacher_id || selectedTeacherId) : teacherId!,
         title: data.title.trim(),
         description: data.description?.trim() || null,
         due_date: dueDateAndTimeToIso(data.due_date, data.due_time),
@@ -208,6 +236,35 @@ export function SendActivityDialog({
       size="SM"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          {/* Seleção de Professor (apenas para admin) */}
+          {isAdmin && (
+            <div className="space-y-2">
+              <Label htmlFor="teacher_id">Professor *</Label>
+              <Select
+                value={selectedTeacherId}
+                onValueChange={(value) => {
+                  setSelectedTeacherId(value);
+                  setValue("teacher_id", value);
+                }}
+                disabled={isPending}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um professor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teachers.map((teacher) => (
+                    <SelectItem key={teacher.id} value={teacher.id}>
+                      {teacher.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!selectedTeacherId && (
+                <p className="text-sm text-destructive">Selecione um professor</p>
+              )}
+            </div>
+          )}
+
           {/* Seleção de Aluno */}
           <div className="space-y-2">
             <Label htmlFor="student_id">Aluno *</Label>

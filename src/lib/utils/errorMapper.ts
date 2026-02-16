@@ -41,7 +41,7 @@ export function mapPostgresError(error: unknown): string {
       return "O valor da cobrança deve ser maior que zero.";
     }
     if (message.includes("financial_records_status_check")) {
-      return "Status de cobrança inválido. Use: pendente, pago ou atrasado.";
+      return "Status de cobrança inválido. Use: pendente, pago, atrasado, abonado, extornado ou cancelado.";
     }
 
     // Class logs constraints

@@ -45,6 +45,7 @@ interface ActivitiesFiltersProps {
   students: Student[];
   teachers?: Teacher[];
   showTeacherFilter?: boolean;
+  showStudentFilter?: boolean;
   /** Status principal - quando all, não mostra botão Limpar */
   primaryStatus?: "all";
 }
@@ -56,13 +57,14 @@ export function ActivitiesFilters({
   students,
   teachers = [],
   showTeacherFilter = false,
+  showStudentFilter = true,
   primaryStatus = "all",
 }: ActivitiesFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const hasActiveFilters =
     filters.status !== primaryStatus ||
-    filters.studentId !== "all" ||
+    (showStudentFilter && filters.studentId !== "all") ||
     (showTeacherFilter && filters.teacherId !== "all") ||
     filters.period !== "all" ||
     filters.sortBy !== "due_asc";
@@ -108,27 +110,29 @@ export function ActivitiesFilters({
           </div>
 
           {/* Aluno */}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Aluno</span>
-            <Select
-              value={filters.studentId}
-              onValueChange={(v) => onChange({ ...filters, studentId: v })}
-            >
-              <SelectTrigger className="w-[200px] pl-3 text-left">
-                <SelectValue placeholder="Aluno" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="pl-6">
-                  Todos os alunos
-                </SelectItem>
-                {students.map((s) => (
-                  <SelectItem key={s.id} value={s.id} className="pl-6">
-                    {s.name || "—"}
+          {showStudentFilter && (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Aluno</span>
+              <Select
+                value={filters.studentId}
+                onValueChange={(v) => onChange({ ...filters, studentId: v })}
+              >
+                <SelectTrigger className="w-[200px] pl-3 text-left">
+                  <SelectValue placeholder="Aluno" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="pl-6">
+                    Todos os alunos
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+                  {students.map((s) => (
+                    <SelectItem key={s.id} value={s.id} className="pl-6">
+                      {s.name || "—"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Botão Mais Filtros */}
           <CollapsibleTrigger asChild>

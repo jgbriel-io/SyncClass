@@ -260,7 +260,7 @@ async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult>
   const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
     email: normalizedEmail,
     password,
-    options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/login` },
+    options: { data: { full_name: fullName, role: body.role }, emailRedirectTo: `${window.location.origin}/login` },
   });
   if (authError) {
     const msg = authError.message?.toLowerCase() ?? "";
@@ -497,7 +497,7 @@ export function useUpdateUserRole() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("Privilégio atualizado com sucesso!");
+      // Toast removido - será mostrado no componente após ambas as operações
     },
     onError: (error: Error) => {
       toast.error(error.message || "Erro ao atualizar privilégio. Tente novamente.");
@@ -522,7 +522,7 @@ export function useUpdateUserProfile() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Perfil atualizado com sucesso!");
+      // Toast removido - será mostrado no componente após ambas as operações
     },
     onError: (error: Error) => {
       toast.error("Erro ao atualizar perfil. Tente novamente.");
@@ -645,7 +645,7 @@ export function useDeleteUser() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário arquivado com sucesso!");
+      // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
       toast.error("Erro ao excluir usuário. Tente novamente.");
@@ -674,12 +674,10 @@ export function useHardDeleteUser() {
       queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
       queryClient.invalidateQueries({ queryKey: ["teachers_paginated"] });
-      toast.success("Usuário excluído definitivamente.");
+      // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
-      toast.error(
-        error?.message || "Erro ao excluir definitivamente o usuário. Tente novamente."
-      );
+      // Toast removido - será mostrado no componente com onError callback
     },
   });
 }
@@ -785,7 +783,7 @@ export function useLinkUserToStudent() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário vinculado ao aluno com sucesso!");
+      // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
       toast.error("Erro ao vincular usuário ao aluno. Tente novamente.");
@@ -829,7 +827,7 @@ export function useLinkUserToTeacher() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário vinculado ao professor com sucesso!");
+      // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
       toast.error(error.message || "Erro ao vincular usuário ao professor. Tente novamente.");

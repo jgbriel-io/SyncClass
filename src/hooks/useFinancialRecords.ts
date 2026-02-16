@@ -520,6 +520,47 @@ export function useUpdateFinancialRecord() {
   });
 }
 
+export function useUpdateFinancialStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: "abonado" | "extornado" }) => {
+      const { data, error } = await supabase
+        .from("financial_records")
+        .update({ status })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidar todas as queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
+      
+      const message = variables.status === "abonado" 
+        ? "Falta abonada (não cobrada)" 
+        : "Pagamento extornado";
+      toast.success(message);
+    },
+    onError: (error) => {
+      logger.error(error, { context: "useUpdateFinancialStatus" });
+      toast.error(sanitizeErrorMessage(error));
+    },
+  });
+}
+
 export function useDeleteFinancialRecord() {
   const queryClient = useQueryClient();
 

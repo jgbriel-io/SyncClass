@@ -654,10 +654,18 @@ export function FinancialView({
             <DialogTitle className="text-base">Histórico de pagamento</DialogTitle>
           </DialogHeader>
           {historyRecord && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 {historyRecord.students?.name} · {formatCurrency(Number(historyRecord.amount))}
               </p>
+              
+              {historyRecord.description && (
+                <div className="rounded-lg border bg-muted/50 p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Descrição</p>
+                  <p className="text-sm text-foreground">{historyRecord.description}</p>
+                </div>
+              )}
+              
               {historyRecord.status === "pago" && historyRecord.confirmed_by ? (
                 <div className="rounded-lg border bg-muted/50 p-3 text-sm">
                   <p className="font-medium text-foreground">

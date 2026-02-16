@@ -114,10 +114,18 @@ export function ClassesTableRow({
   const { date, timeRange } = formatClassDateAndTime(log);
   const displayTitle = getClassLogDisplayTitle(log);
 
-  const financialStatus = log.financial_records
+  const hasDirectFinancial = log.financial_records && log.financial_records.length > 0;
+  const packageFinancial = log.financial_record_class_logs?.[0]?.financial_records;
+  
+  const financialStatus = hasDirectFinancial
     ? getFinancialActualStatus({
-        status: log.financial_records.status,
-        due_date: log.financial_records.due_date,
+        status: log.financial_records[0].status,
+        due_date: log.financial_records[0].due_date,
+      })
+    : packageFinancial
+    ? getFinancialActualStatus({
+        status: packageFinancial.status,
+        due_date: packageFinancial.due_date,
       })
     : null;
 
@@ -212,12 +220,14 @@ export function ClassesTableRow({
 
       {/* Financeiro - M */}
       <td className={CELL_BASE} style={{ width: COL.FINANCEIRO, minWidth: COL.FINANCEIRO }}>
-        {log.financial_records ? (
+        {hasDirectFinancial || packageFinancial ? (
           <StatusBadge variant={getPaymentStatusVariant(financialStatus)}>
             {getPaymentStatusLabel(financialStatus)}
           </StatusBadge>
         ) : (
-          <span className="text-muted-foreground truncate block" title="Sem cobrança">Sem cobrança</span>
+          <StatusBadge variant="default">
+            Sem cobrança
+          </StatusBadge>
         )}
       </td>
 

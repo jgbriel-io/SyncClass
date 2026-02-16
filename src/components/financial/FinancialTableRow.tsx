@@ -14,16 +14,22 @@ import {
 } from "@/lib/design-tokens/table-columns";
 import { COL } from "./FinancialTableRow.constants";
 
-const statusVariants: Record<string, "success" | "warning" | "destructive" | "default"> = {
+const statusVariants: Record<string, "success" | "warning" | "destructive" | "default" | "secondary"> = {
   pago: "success",
   pendente: "warning",
   atrasado: "destructive",
+  abonado: "default",
+  extornado: "default",
+  cancelado: "default",
 };
 
 const statusLabels: Record<string, string> = {
   pago: "Pago",
   pendente: "Pendente",
   atrasado: "Atrasado",
+  abonado: "Abonado",
+  extornado: "Extornado",
+  cancelado: "Cancelado",
 };
 
 interface FinancialTableRowProps {
@@ -147,16 +153,7 @@ export function FinancialTableRow({
       {/* Confirm / Undo - S */}
       <td className={CELL_BASE} style={{ width: COL.AVALIAR, minWidth: COL.AVALIAR }}>
         <div className="flex items-center justify-end">
-          {record.actualStatus !== "pago" ? (
-            <Button
-              size="sm"
-              className="h-8 w-[7rem] shrink-0 bg-success-action text-white hover:bg-success-action/90 border-none text-xs"
-              onClick={() => onConfirmPayment(record)}
-              title="Confirmar"
-            >
-              Confirmar
-            </Button>
-          ) : (
+          {record.actualStatus === "pago" ? (
             <Button
               size="sm"
               className="h-8 w-[7rem] shrink-0 whitespace-nowrap bg-warning text-white font-semibold hover:bg-warning/90 border-none shadow text-xs"
@@ -172,6 +169,25 @@ export function FinancialTableRow({
               ) : (
                 "Desfazer"
               )}
+            </Button>
+          ) : record.actualStatus === "abonado" || record.actualStatus === "extornado" || record.actualStatus === "cancelado" ? (
+            <Button
+              size="sm"
+              className="h-8 w-[7rem] shrink-0 text-xs"
+              disabled
+              variant="ghost"
+              title="Cobrança finalizada"
+            >
+              Finalizado
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              className="h-8 w-[7rem] shrink-0 bg-success-action text-white hover:bg-success-action/90 border-none text-xs"
+              onClick={() => onConfirmPayment(record)}
+              title="Confirmar"
+            >
+              Confirmar
             </Button>
           )}
         </div>

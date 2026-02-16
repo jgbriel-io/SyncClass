@@ -58,10 +58,23 @@ function getPaymentStatusLabel(status: string | null): string {
   }
 }
 
-function getClassLogDisplayTitle(log: { title?: string | null; class_date?: string }): string {
-  if (log.title?.trim()) return escapeHtml(log.title);
+function getClassLogDisplayTitle(log: { 
+  title?: string | null; 
+  class_date?: string;
+  financial_record_via_package?: boolean;
+}): string {
+  const rawTitle = log.title?.trim();
+  const isPackage = log.financial_record_via_package;
+  
+  // Se tem título customizado
+  if (rawTitle) {
+    return isPackage ? `${escapeHtml(rawTitle)} (Pacote)` : escapeHtml(rawTitle);
+  }
+  
+  // Fallback: "Aula - data"
   const d = log.class_date ? format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "";
-  return d ? `Aula - ${d}` : "Aula";
+  const fallbackTitle = d ? `Aula - ${d}` : "Aula";
+  return isPackage ? `${fallbackTitle} (Pacote)` : fallbackTitle;
 }
 
 interface ClassDetailSheetProps {
@@ -84,10 +97,10 @@ export function ClassDetailSheet({
 
   const statusBadge = getClassStatusWithTime(classLog);
   const { date, timeRange } = formatClassDateAndTime(classLog);
-  const financialStatus = classLog.financial_records
+  const financialStatus = classLog.financial_records && classLog.financial_records.length > 0
     ? getFinancialActualStatus({
-        status: classLog.financial_records.status,
-        due_date: classLog.financial_records.due_date,
+        status: classLog.financial_records[0].status,
+        due_date: classLog.financial_records[0].due_date,
       })
     : null;
 
@@ -142,7 +155,7 @@ export function ClassDetailSheet({
           }
         />
 
-        {classLog.financial_records && (
+        {classLog.financial_records && classLog.financial_records.length > 0 && (
           <DetailSection
             icon={Receipt}
             label="Financeiro"
@@ -152,10 +165,10 @@ export function ClassDetailSheet({
                   {getPaymentStatusLabel(financialStatus)}
                 </StatusBadge>
                 <span className="text-sm font-medium tabular-nums">
-                  {formatCurrency(classLog.financial_records.amount)}
+                  {formatCurrency(classLog.financial_records[0].amount)}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  Venc.: {formatDate(classLog.financial_records.due_date)}
+                  Venc.: {formatDate(classLog.financial_records[0].due_date)}
                 </span>
               </div>
             }

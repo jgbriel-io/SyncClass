@@ -300,11 +300,26 @@ export function ClassLogFormDialog({
       setValue("observations", (classLog as { observations?: string | null }).observations || "");
       setValue("start_time", extractTimeFromIso(classLog.start_at));
       setValue("end_time", extractTimeFromIso(classLog.end_at));
-      if (classLog.financial_records?.due_date) {
-        setValue("financial_due_date", isoDateToBr(classLog.financial_records.due_date));
-      }
-      if (classLog.financial_records?.amount != null) {
-        setValue("financial_amount", Number(classLog.financial_records.amount).toFixed(2).replace(".", ","));
+      
+      // Verificar cobrança direta ou via pacote
+      const hasDirectFinancial = classLog.financial_records && classLog.financial_records.length > 0 && classLog.financial_records[0];
+      const hasPackageFinancial = classLog.financial_record_class_logs && classLog.financial_record_class_logs.length > 0 && classLog.financial_record_class_logs[0]?.financial_records;
+      
+      if (hasDirectFinancial) {
+        if (classLog.financial_records[0].due_date) {
+          setValue("financial_due_date", isoDateToBr(classLog.financial_records[0].due_date));
+        }
+        if (classLog.financial_records[0].amount != null) {
+          setValue("financial_amount", Number(classLog.financial_records[0].amount).toFixed(2).replace(".", ","));
+        }
+      } else if (hasPackageFinancial) {
+        const packageFinancial = classLog.financial_record_class_logs[0].financial_records;
+        if (packageFinancial.due_date) {
+          setValue("financial_due_date", isoDateToBr(packageFinancial.due_date));
+        }
+        if (packageFinancial.amount != null) {
+          setValue("financial_amount", Number(packageFinancial.amount).toFixed(2).replace(".", ","));
+        }
       }
     } else if (!open) {
       reset();
@@ -381,13 +396,24 @@ export function ClassLogFormDialog({
     }
 
     // Edição: atualizar aula e, se tiver cobrança vinculada, atualizar vencimento e valor
-    if (isEditing && classLog?.financial_records?.id) {
+    const hasDirectFinancial = classLog?.financial_records && classLog.financial_records.length > 0 && classLog.financial_records[0]?.id;
+    const hasPackageFinancial = classLog?.financial_record_class_logs && classLog.financial_record_class_logs.length > 0 && classLog.financial_record_class_logs[0]?.financial_records?.id;
+    
+    if (isEditing && (hasDirectFinancial || hasPackageFinancial)) {
+      const financialId = hasDirectFinancial 
+        ? classLog.financial_records[0].id 
+        : classLog.financial_record_class_logs![0].financial_records.id;
+      
+      const currentDueDate = hasDirectFinancial
+        ? classLog.financial_records[0].due_date
+        : classLog.financial_record_class_logs![0].financial_records.due_date;
+      
       const dueDate = data.financial_due_date?.trim()
         ? brDateToIso(data.financial_due_date)
-        : (classLog.financial_records.due_date ?? "");
+        : (currentDueDate ?? "");
       const amount = data.financial_amount ? parseMoneyToNumber(data.financial_amount) : undefined;
       onSubmit(classLogData, {
-        financialRecordId: classLog.financial_records.id,
+        financialRecordId: financialId,
         dueDate,
         ...(amount != null && !isNaN(amount) && amount > 0 && { amount }),
       });
@@ -568,51 +594,6 @@ export function ClassLogFormDialog({
             )}
           </div>
 
-          {/* Ao editar: vencimento da cobrança vinculada (pode alterar) */}
-          {isEditing && classLog?.financial_records && (
-            <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <Receipt className="h-4 w-4" />
-                Cobrança vinculada
-              </h4>
-
-              <div className="space-y-2">
-                <Label htmlFor="financial_due_date_edit">Vencimento</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="financial_due_date_edit"
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal h-10",
-                        !financialDueDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {financialDueDate || "Selecione a data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={brDateStringToDate(financialDueDate || "") ?? undefined}
-                      onSelect={(date) => {
-                        if (date) {
-                          setValue("financial_due_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
-                        }
-                      }}
-                      locale={ptBR}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <p className="text-xs text-muted-foreground">
-                  Alterar a data da aula não altera o vencimento automaticamente; edite aqui se quiser.
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* Cobrança ao registrar aula */}
           {!isEditing && onSubmitWithFinancial && (
             <div className="space-y-4">
@@ -738,6 +719,67 @@ export function ClassLogFormDialog({
               )}
             </div>
           )}
+
+          {/* Editar cobrança (só se a aula tiver cobrança vinculada - direta ou via pacote) */}
+          {isEditing && (
+            (classLog?.financial_records && classLog.financial_records.length > 0 && classLog.financial_records[0]?.id) ||
+            (classLog?.financial_record_class_logs && classLog.financial_record_class_logs.length > 0 && classLog.financial_record_class_logs[0]?.financial_records?.id)
+          ) && (
+            <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Receipt className="h-4 w-4" />
+                Dados da Cobrança
+              </h4>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="financial_amount_edit">Valor (R$)</Label>
+                  <Input
+                    id="financial_amount_edit"
+                    type="text"
+                    placeholder="100,00"
+                    {...register("financial_amount")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="financial_due_date_edit">Vencimento</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="financial_due_date_edit"
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal h-10",
+                          !financialDueDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {financialDueDate || "Selecione a data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={brDateStringToDate(financialDueDate || "") ?? undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            setValue("financial_due_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                          }
+                        }}
+                        locale={ptBR}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Alterar a data da aula não altera o vencimento automaticamente; edite aqui se quiser.
+              </p>
+            </div>
+          )}
+
 
           {/* Actions */}
           <div className="flex justify-end gap-4 pt-4">

@@ -158,6 +158,20 @@ serve(async (req) => {
     );
 
     if (deleteError) {
+      // Se o usuário já não existe (404), considera sucesso
+      const isUserNotFound = deleteError.status === 404 || 
+                             deleteError.code === "user_not_found" ||
+                             deleteError.message?.toLowerCase().includes("user not found");
+      
+      if (isUserNotFound) {
+        console.log("User already deleted from Auth, cleaning up database records");
+        // Usuário já foi deletado do Auth, mas pode ter registros no banco
+        // Remove profile e user_roles manualmente se existirem
+        await supabaseAdmin.from("profiles").delete().eq("user_id", userIdToDelete);
+        await supabaseAdmin.from("user_roles").delete().eq("user_id", userIdToDelete);
+        return jsonResponse({ success: true }, 200);
+      }
+      
       console.error("Error hard-deleting user:", deleteError);
       return jsonResponse({ error: deleteError.message }, 500);
     }

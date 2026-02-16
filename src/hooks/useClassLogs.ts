@@ -56,13 +56,22 @@ export interface ClassLogWithStudent extends ClassLog {
   teachers?: {
     name: string;
   } | null;
-  financial_records: {
+  financial_records: Array<{
     id: string;
-    status: "pendente" | "pago" | "atrasado" | null;
+    status: "pendente" | "pago" | "atrasado" | "abonado" | "extornado" | "cancelado" | null;
     amount: number;
     due_date: string;
     description?: string | null;
-  } | null;
+  }>;
+  financial_record_class_logs?: Array<{
+    financial_records: {
+      id: string;
+      status: "pendente" | "pago" | "atrasado" | "abonado" | "extornado" | "cancelado" | null;
+      amount: number;
+      due_date: string;
+      description?: string | null;
+    };
+  }>;
   /** true quando a cobrança foi vinculada via pacote (financial_record_class_logs) */
   financial_record_via_package?: boolean;
 }
@@ -121,6 +130,15 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
             status,
             amount,
             due_date
+          ),
+          financial_record_class_logs (
+            financial_record_id,
+            financial_records (
+              id,
+              status,
+              amount,
+              due_date
+            )
           )
         `,
           { count: "exact" }
@@ -190,13 +208,15 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
 async function enrichWithPackageFinancial(
   list: ClassLogWithStudent[]
 ): Promise<ClassLogWithStudent[]> {
-  const withoutFinancial = list.filter((log) => !log.financial_records);
+  const withoutFinancial = list.filter((log) => !log.financial_records || log.financial_records.length === 0);
+  
   if (withoutFinancial.length === 0) return list;
   const logIds = withoutFinancial.map((l) => l.id);
   const { data: links } = await supabase
     .from("financial_record_class_logs")
     .select("class_log_id, financial_record_id")
     .in("class_log_id", logIds);
+  
   if (!links?.length) return list;
   const frIds = [...new Set(links.map((r) => r.financial_record_id))];
   const { data: frs } = await supabase
@@ -209,7 +229,7 @@ async function enrichWithPackageFinancial(
     const frId = logToFr.get(log.id);
     const fr = frId ? frMap.get(frId) : null;
     if (fr) {
-      (log as ClassLogWithStudent).financial_records = fr;
+      (log as ClassLogWithStudent).financial_records = [fr];
       (log as ClassLogWithStudent).financial_record_via_package = true;
     }
   });

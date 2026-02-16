@@ -77,6 +77,8 @@ export interface CombinedUser {
     full_name: string | null;
     email: string | null;
   } | null;
+  student: Tables<"students"> | null;
+  teacher: Tables<"teachers"> | null;
 }
 
 // Legacy export for backward compatibility
@@ -100,13 +102,35 @@ export function useUsers() {
 
       if (rolesError) throw rolesError;
 
+      // Buscar todos os students e teachers de uma vez
+      const { data: students, error: studentsError } = await supabase
+        .from("students")
+        .select("*");
+
+      if (studentsError) throw studentsError;
+
+      const { data: teachers, error: teachersError } = await supabase
+        .from("teachers")
+        .select("*");
+
+      if (teachersError) throw teachersError;
+
       return (profiles || []).map((profile: ProfileRow): CombinedUser => {
         const roleRow = (roles || []).find((r: UserRoleRow) => r.user_id === profile.user_id);
         const emailFromProfile = profile.email;
         const emailFromRole = roleRow?.email;
         const primaryEmail = emailFromProfile || emailFromRole || "";
 
-        return {
+        // Buscar student e teacher vinculados
+        const student = profile.student_id 
+          ? (students || []).find(s => s.id === profile.student_id) || null
+          : null;
+        
+        const teacher = profile.teacher_id
+          ? (teachers || []).find(t => t.id === profile.teacher_id) || null
+          : null;
+
+        const combinedUser: CombinedUser = {
           id: profile.user_id,
           email: primaryEmail,
           created_at: profile.created_at || "",
@@ -129,7 +153,11 @@ export function useUsers() {
             full_name: roleRow.full_name,
             email: roleRow.email,
           } : null,
+          student,
+          teacher,
         };
+
+        return combinedUser;
       });
     },
   });
@@ -192,11 +220,52 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
 
       if (rolesError) throw rolesError;
 
+      // Buscar students e teachers vinculados
+      const studentIds = profileRows
+        .map(p => p.student_id)
+        .filter((id): id is string => id != null);
+      
+      const teacherIds = profileRows
+        .map(p => p.teacher_id)
+        .filter((id): id is string => id != null);
+
+      let students: Tables<"students">[] = [];
+      let teachers: Tables<"teachers">[] = [];
+
+      if (studentIds.length > 0) {
+        const { data: studentsData, error: studentsError } = await supabase
+          .from("students")
+          .select("*")
+          .in("id", studentIds);
+        
+        if (studentsError) throw studentsError;
+        students = studentsData || [];
+      }
+
+      if (teacherIds.length > 0) {
+        const { data: teachersData, error: teachersError } = await supabase
+          .from("teachers")
+          .select("*")
+          .in("id", teacherIds);
+        
+        if (teachersError) throw teachersError;
+        teachers = teachersData || [];
+      }
+
       const list = profileRows.map((profile): CombinedUser => {
         const roleRow = (roles || []).find((r: UserRoleRow) => r.user_id === profile.user_id);
         const emailFromProfile = profile.email;
         const emailFromRole = roleRow?.email;
         const primaryEmail = emailFromProfile || emailFromRole || "";
+
+        // Buscar student e teacher vinculados
+        const student = profile.student_id 
+          ? students.find(s => s.id === profile.student_id) || null
+          : null;
+        
+        const teacher = profile.teacher_id
+          ? teachers.find(t => t.id === profile.teacher_id) || null
+          : null;
 
         return {
           id: profile.user_id,
@@ -221,6 +290,8 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
             full_name: roleRow.full_name,
             email: roleRow.email,
           } : null,
+          student,
+          teacher,
         };
       });
 

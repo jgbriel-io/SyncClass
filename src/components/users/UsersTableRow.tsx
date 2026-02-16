@@ -46,8 +46,6 @@ interface UsersTableRowProps {
   onViewDetail: (userId: string) => void;
   onEdit: (user: UserWithProfile) => void;
   onResetPassword: (user: UserWithProfile) => void;
-  onLinkStudent: (user: UserWithProfile) => void;
-  onLinkTeacher: (user: UserWithProfile) => void;
   onReactivateStudent: (studentId: string) => void;
   onReactivateTeacher: (teacherId: string) => void;
   onDelete: (user: UserWithProfile) => void;
@@ -63,8 +61,6 @@ export function UsersTableRow({
   onViewDetail,
   onEdit,
   onResetPassword,
-  onLinkStudent,
-  onLinkTeacher,
   onReactivateStudent,
   onReactivateTeacher,
   onDelete,
@@ -214,16 +210,6 @@ export function UsersTableRow({
                 <KeyRound className="h-4 w-4 mr-2" />
                 Redefinir senha
               </DropdownMenuItem>
-              {role === "student" && !linkedStudent && (
-                <DropdownMenuItem onClick={() => onLinkStudent(user)}>
-                  Vincular aluno
-                </DropdownMenuItem>
-              )}
-              {role === "teacher" && !linkedTeacher && (
-                <DropdownMenuItem onClick={() => onLinkTeacher(user)}>
-                  Vincular professor
-                </DropdownMenuItem>
-              )}
               {linkedStudent && linkedStudent.status === "inativo" && (
                 <DropdownMenuItem onClick={() => onReactivateStudent(linkedStudent.id)}>
                   <Check className="h-4 w-4 mr-2" />

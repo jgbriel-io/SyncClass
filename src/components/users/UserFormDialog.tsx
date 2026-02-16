@@ -22,6 +22,7 @@ import { BR_STATES, fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { REGEX_PATTERNS, maskCPF, maskPhone, brDateStringToDate, isValidDateString } from "@/lib/utils/patterns";
+import { useDateMask } from "@/hooks/useDateMask";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -58,10 +59,6 @@ const studentSchema = z.object({
     .regex(REGEX_PATTERNS.phone, "Formato deve ser (00) 00000-0000"),
   email: emailSchema,
   hourly_rate: z.string().optional().nullable(),
-  classes_per_week: z
-    .string()
-    .optional()
-    .nullable(),
   pay_day: z
     .string()
     .optional()
@@ -138,7 +135,6 @@ interface StudentSubmitData {
     status: StudentStatus;
     birth_date: string | null;
     hourly_rate: number | null;
-    classes_per_week: number | null;
     pay_day: number | null;
   };
 }
@@ -209,6 +205,9 @@ export function UserFormDialog({
 
   const watchedCity = watch("city") || "";
   const birthDate = watch("birth_date");
+  const { handleChange: handleDateChange, handleKeyDown: handleDateKeyDown } = useDateMask(
+    (value, options) => setValue("birth_date", value, options)
+  );
 
   useEffect(() => {
     if (selectedRole === "student") {
@@ -229,28 +228,58 @@ export function UserFormDialog({
   }, [selectedState, selectedRole]);
 
   useEffect(() => {
+    // Apenas resetar quando o modal ABRE, não quando fecha
     if (!open) {
-      reset({
-        email: "",
-        fullName: "",
-        name: "",
-        role: "admin",
-      });
-      setSelectedRole("admin");
-      setSelectedOrigin("");
-      setSelectedStatus("ativo");
-      setSelectedState("");
       return;
     }
 
     if (user) {
-      reset({
-        email: user.email,
-        fullName: user.profile?.full_name || "",
-        role: (user.role?.role as AppRole) || "admin",
-      });
-      setSelectedRole((user.role?.role as AppRole) || "admin");
+      const userRole = (user.role?.role as AppRole) || "admin";
+      setSelectedRole(userRole);
+
+      if (userRole === "admin") {
+        reset({
+          email: user.email,
+          fullName: user.profile?.full_name || "",
+          role: "admin",
+        });
+      } else if (userRole === "student" && user.student) {
+        // Carregar dados do student
+        const student = user.student;
+        
+        reset({
+          name: student.name || "",
+          email: student.email || user.email,
+          cpf: student.cpf || "",
+          phone: student.phone || "",
+          state: student.state || "",
+          city: student.city || "",
+          birth_date: student.birth_date 
+            ? format(new Date(student.birth_date), "dd/MM/yyyy", { locale: ptBR })
+            : null,
+          hourly_rate: student.hourly_rate ? String(student.hourly_rate) : "",
+          pay_day: student.pay_day ? String(student.pay_day) : "",
+          origin: (student.origin as StudentOrigin) || "outro",
+          status: (student.status as StudentStatus) || "ativo",
+          role: "student",
+        });
+        setSelectedOrigin((student.origin as StudentOrigin) || "outro");
+        setSelectedStatus((student.status as StudentStatus) || "ativo");
+        setSelectedState(student.state || "");
+      } else if (userRole === "teacher" && user.teacher) {
+        // Carregar dados do teacher
+        const teacher = user.teacher;
+        
+        reset({
+          name: teacher.name || "",
+          email: teacher.email || user.email,
+          phone: teacher.phone || "",
+          cpf: teacher.cpf || "",
+          role: "teacher",
+        });
+      }
     } else {
+      // Modo criação
       if (selectedRole === "admin") {
         reset({
           email: "",
@@ -267,12 +296,14 @@ export function UserFormDialog({
           city: "",
           birth_date: null,
           hourly_rate: "",
-          classes_per_week: "",
           pay_day: "",
           origin: "outro",
           status: "ativo",
           role: "student",
         });
+        setSelectedOrigin("");
+        setSelectedStatus("ativo");
+        setSelectedState("");
       } else {
         reset({
           name: "",
@@ -282,10 +313,6 @@ export function UserFormDialog({
           role: "teacher",
         });
       }
-
-      setSelectedOrigin("");
-      setSelectedStatus("ativo");
-      setSelectedState("");
     }
   }, [user, open, reset, selectedRole]);
 
@@ -312,7 +339,6 @@ export function UserFormDialog({
         city: "",
         birth_date: null,
         hourly_rate: "",
-        classes_per_week: "",
         pay_day: "",
         origin: "outro",
         status: "ativo",
@@ -344,10 +370,6 @@ export function UserFormDialog({
         ? parseFloat(data.hourly_rate.replace(/[^.\d,]/g, "").replace(",", "."))
         : null;
 
-      const classesPerWeekNumber = data.classes_per_week
-        ? Number(data.classes_per_week)
-        : null;
-
       const payDayNumber = data.pay_day ? Number(data.pay_day) : null;
 
       onSubmit({
@@ -365,7 +387,6 @@ export function UserFormDialog({
           status: selectedStatus,
           birth_date: data.birth_date ? brDateToIso(data.birth_date) : null,
           hourly_rate: hourlyRateNumber,
-          classes_per_week: classesPerWeekNumber,
           pay_day: payDayNumber,
         },
       });
@@ -458,7 +479,7 @@ export function UserFormDialog({
           )}
 
           {/* Formulário STUDENT - Completo */}
-          {selectedRole === "student" && !isEdit && (
+          {selectedRole === "student" && (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2 space-y-2">
                 <Label htmlFor="name">Nome completo *</Label>
@@ -466,7 +487,7 @@ export function UserFormDialog({
                   id="name"
                   placeholder="Nome do aluno"
                   {...register("name")}
-                  disabled={isLoading}
+                  disabled={isLoading || isEdit}
                 />
                 {errors.name && (
                   <p className="text-sm text-destructive">{getErrorMessage(errors, "name")}</p>
@@ -590,7 +611,7 @@ export function UserFormDialog({
                     const masked = maskCPF(e.target.value);
                     setValue("cpf", masked, { shouldValidate: true });
                   }}
-                  disabled={isLoading}
+                  disabled={isLoading || isEdit}
                 />
                 {errors.cpf && (
                   <p className="text-sm text-destructive">{getErrorMessage(errors, "cpf")}</p>
@@ -599,35 +620,70 @@ export function UserFormDialog({
 
               <div className="space-y-2">
                 <Label htmlFor="birth_date">Data de Nascimento</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="birth_date"
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal h-10",
-                        !birthDate && "text-muted-foreground"
-                      )}
-                      disabled={isLoading}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {birthDate || "Selecione a data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={brDateStringToDate(birthDate || "") ?? undefined}
-                      onSelect={(date) => {
-                        if (date) {
-                          setValue("birth_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
-                        }
-                      }}
-                      locale={ptBR}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <div className="flex gap-2">
+                  <Input
+                    id="birth_date"
+                    type="text"
+                    placeholder="dd/mm/aaaa"
+                    maxLength={10}
+                    value={birthDate || ""}
+                    onChange={handleDateChange}
+                    onKeyDown={handleDateKeyDown}
+                    disabled={isLoading}
+                    className="flex-1"
+                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        disabled={isLoading}
+                      >
+                        <CalendarIcon className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <div className="p-3 border-b flex items-center justify-center gap-2">
+                        <Select
+                          value={birthDate ? brDateStringToDate(birthDate)?.getFullYear().toString() : "2000"}
+                          onValueChange={(year) => {
+                            const currentDate = birthDate ? brDateStringToDate(birthDate) : new Date(2000, 0, 1);
+                            const newDate = new Date(parseInt(year), currentDate?.getMonth() ?? 0, 1);
+                            setValue("birth_date", format(newDate, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Ano" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[200px]">
+                            {Array.from({ length: new Date().getFullYear() - 1920 + 1 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                              <SelectItem key={year} value={year.toString()}>
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Calendar
+                        mode="single"
+                        selected={brDateStringToDate(birthDate || "") ?? undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            setValue("birth_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                          }
+                        }}
+                        locale={ptBR}
+                        month={birthDate ? brDateStringToDate(birthDate) ?? new Date(2000, 0, 1) : new Date(2000, 0, 1)}
+                        onMonthChange={() => {}}
+                        fromYear={1920}
+                        toYear={new Date().getFullYear()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 {errors.birth_date && (
                   <p className="text-sm text-destructive">{getErrorMessage(errors, "birth_date")}</p>
                 )}
@@ -660,7 +716,7 @@ export function UserFormDialog({
                   type="email"
                   placeholder="email@exemplo.com"
                   {...register("email")}
-                  disabled={isLoading}
+                  disabled={isLoading || isEdit}
                 />
                 {errors.email && (
                   <p className="text-sm text-destructive">{getErrorMessage(errors, "email")}</p>
@@ -674,19 +730,6 @@ export function UserFormDialog({
                   type="text"
                   placeholder="Ex: 120,00"
                   {...register("hourly_rate")}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="classes_per_week">Aulas por semana</Label>
-                <Input
-                  id="classes_per_week"
-                  type="number"
-                  min={0}
-                  max={14}
-                  placeholder="Ex: 1, 2, 3..."
-                  {...register("classes_per_week")}
                   disabled={isLoading}
                 />
               </div>
@@ -734,7 +777,7 @@ export function UserFormDialog({
           )}
 
           {/* Formulário TEACHER - Completo */}
-          {selectedRole === "teacher" && !isEdit && (
+          {selectedRole === "teacher" && (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2 space-y-2">
                 <Label htmlFor="name">Nome completo *</Label>
@@ -742,7 +785,7 @@ export function UserFormDialog({
                   id="name"
                   placeholder="Nome do professor"
                   {...register("name")}
-                  disabled={isLoading}
+                  disabled={isLoading || isEdit}
                 />
                 {errors.name && (
                   <p className="text-sm text-destructive">{getErrorMessage(errors, "name")}</p>
@@ -756,7 +799,7 @@ export function UserFormDialog({
                   type="email"
                   placeholder="email@exemplo.com"
                   {...register("email")}
-                  disabled={isLoading}
+                  disabled={isLoading || isEdit}
                 />
                 {errors.email && (
                   <p className="text-sm text-destructive">{getErrorMessage(errors, "email")}</p>

@@ -7,14 +7,18 @@
 
 /**
  * Formata um valor numérico como moeda brasileira (BRL)
- * @param value - Valor numérico a ser formatado
+ * @param value - Valor numérico a ser formatado (aceita null/undefined)
  * @returns String formatada (ex: "R$ 1.234,56")
  */
-export function formatCurrency(value: number): string {
+export function formatCurrency(value: number | null | undefined): string {
+  const numValue = Number(value);
+  if (isNaN(numValue)) {
+    return "R$ 0,00";
+  }
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
-  }).format(value);
+  }).format(numValue);
 }
 
 /**

@@ -125,10 +125,23 @@ function getClassStatusBadge(log: {
 }
 
 /** Título para exibição: usa o salvo ou fallback "Aula - dd/mm/yyyy" */
-function getClassLogDisplayTitle(log: { title?: string | null; class_date?: string }): string {
-  if (log.title?.trim()) return log.title;
+function getClassLogDisplayTitle(log: { 
+  title?: string | null; 
+  class_date?: string;
+  financial_record_via_package?: boolean;
+}): string {
+  const rawTitle = log.title?.trim();
+  const isPackage = log.financial_record_via_package;
+  
+  // Se tem título customizado
+  if (rawTitle) {
+    return isPackage ? `${rawTitle} (Pacote)` : rawTitle;
+  }
+  
+  // Fallback: "Aula - data"
   const d = log.class_date ? format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "";
-  return d ? `Aula - ${d}` : "Aula";
+  const fallbackTitle = d ? `Aula - ${d}` : "Aula";
+  return isPackage ? `${fallbackTitle} (Pacote)` : fallbackTitle;
 }
 
 interface ClassesViewProps {
@@ -513,12 +526,12 @@ export function ClassesView({
                       <StatusBadge variant={getClassStatusBadge(log).variant}>
                         {getClassStatusBadge(log).label}
                       </StatusBadge>
-                      {log.financial_records && (
+                      {log.financial_records && log.financial_records.length > 0 ? (
                         <StatusBadge
                           variant={getPaymentStatusVariant(
                             getFinancialActualStatus({
-                              status: log.financial_records.status,
-                              due_date: log.financial_records.due_date,
+                              status: log.financial_records[0].status,
+                              due_date: log.financial_records[0].due_date,
                             })
                           )}
                           className="flex items-center gap-1"
@@ -526,10 +539,14 @@ export function ClassesView({
                           <Receipt className="h-3 w-3" />
                           {getPaymentStatusLabel(
                             getFinancialActualStatus({
-                              status: log.financial_records.status,
-                              due_date: log.financial_records.due_date,
+                              status: log.financial_records[0].status,
+                              due_date: log.financial_records[0].due_date,
                             })
                           )}
+                        </StatusBadge>
+                      ) : (
+                        <StatusBadge variant="default">
+                          Sem cobrança
                         </StatusBadge>
                       )}
                     </div>
