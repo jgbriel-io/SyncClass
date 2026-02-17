@@ -34,6 +34,7 @@ interface StudentsTableRowProps {
   onResetPassword: (student: Student) => void;
   onArchive: (student: Student) => void;
   onHardDelete: (student: Student) => void;
+  showHardDelete?: boolean;
 }
 
 export function StudentsTableRow({
@@ -50,6 +51,7 @@ export function StudentsTableRow({
   onResetPassword,
   onArchive,
   onHardDelete,
+  showHardDelete = true,
 }: StudentsTableRowProps) {
   const lastUpdatedAt = student.updated_at;
   const hourlyRate = student.hourly_rate;
@@ -144,7 +146,7 @@ export function StudentsTableRow({
                 {student.status === "ativo" && <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />}
                 {student.status === "ativo" ? "Arquivar" : (<><Check className="h-4 w-4 mr-2" aria-hidden="true" />Reativar aluno</>)}
               </DropdownMenuItem>
-              {student.status === "inativo" && (
+              {showHardDelete && student.status === "inativo" && (
                 <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onHardDelete(student)}>
                   <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
                   Excluir definitivamente

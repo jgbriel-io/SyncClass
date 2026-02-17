@@ -150,14 +150,20 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
                 return isPackage ? `${fallbackTitle} (Pacote)` : fallbackTitle;
               })()}
             </h3>
-            <div className="flex items-center gap-2 shrink-0">
-              <StatusBadge variant={badgeVariant} className="shrink-0">
-                {badgeLabel}
-              </StatusBadge>
-              {paymentBadgeLabel && (
-                <StatusBadge variant={paymentBadgeVariant} className="shrink-0">
-                  {paymentBadgeLabel}
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="flex flex-col items-end gap-0.5">
+                <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">Presença</span>
+                <StatusBadge variant={badgeVariant} className="shrink-0">
+                  {badgeLabel}
                 </StatusBadge>
+              </div>
+              {paymentBadgeLabel && (
+                <div className="flex flex-col items-end gap-0.5">
+                  <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">Pagamento</span>
+                  <StatusBadge variant={paymentBadgeVariant} className="shrink-0">
+                    {paymentBadgeLabel}
+                  </StatusBadge>
+                </div>
               )}
             </div>
           </div>
