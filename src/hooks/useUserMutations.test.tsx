@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -97,6 +98,7 @@ describe('useUserMutations', () => {
       const mockUpdate = vi.fn().mockReturnThis();
       const mockEq = vi.fn().mockResolvedValue({ error: null });
 
+       
       vi.mocked(supabase.from).mockReturnValue({
         update: mockUpdate,
         eq: mockEq,

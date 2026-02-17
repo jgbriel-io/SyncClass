@@ -63,7 +63,9 @@ export default function StudentCheckout() {
 
   const record = recordId ? records.find((r) => r.id === recordId) : null;
   const isPaid = record?.status === "pago";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const hasProof = !!(record as any)?.payment_proof_url;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const proofStatus = (record as any)?.payment_proof_status;
   const notFound = !isLoading && !error && recordId && !record;
 

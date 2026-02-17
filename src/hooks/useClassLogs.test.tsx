@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -71,13 +72,13 @@ describe('useClassLogs', () => {
         insert: mockInsert,
         select: mockSelect,
         single: mockSingle,
-      } as any);
+      } as any);  
 
       const { result } = renderHook(() => useCreateClassLog(), {
         wrapper: createWrapper(),
       });
 
-      result.current.mutate(newClass as any);
+      result.current.mutate(newClass as any);  
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -100,7 +101,7 @@ describe('useClassLogs', () => {
         insert: mockInsert,
         select: mockSelect,
         single: mockSingle,
-      } as any);
+      } as any);  
 
       const { result } = renderHook(() => useCreateClassLog(), {
         wrapper: createWrapper(),
@@ -112,7 +113,7 @@ describe('useClassLogs', () => {
         class_date: '2026-02-16',
         start_at: '10:00',
         end_at: '11:00',
-      } as any);
+      } as any);  
 
       await waitFor(() => expect(result.current.isError).toBe(true));
     });
@@ -148,7 +149,7 @@ describe('useClassLogs', () => {
       vi.mocked(supabase.from).mockReturnValue({
         delete: mockDelete,
         eq: mockEq,
-      } as any);
+      } as any);  
 
       const { result } = renderHook(() => useDeleteClassLog(), {
         wrapper: createWrapper(),

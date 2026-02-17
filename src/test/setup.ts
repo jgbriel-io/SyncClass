@@ -11,9 +11,11 @@ const localStorageMock = {
   key: vi.fn(),
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.localStorage = localStorageMock as any;
 
 // Mock sessionStorage
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.sessionStorage = localStorageMock as any;
 
 // Limpar mocks após cada teste

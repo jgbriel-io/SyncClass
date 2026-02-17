@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -50,6 +51,7 @@ describe('useStudents', () => {
       const mockSelect = vi.fn().mockReturnThis();
       const mockOrder = vi.fn().mockResolvedValue({ data: mockStudents, error: null });
 
+       
       vi.mocked(supabase.from).mockReturnValue({
         select: mockSelect,
         order: mockOrder,
@@ -73,6 +75,7 @@ describe('useStudents', () => {
       const mockSelect = vi.fn().mockReturnThis();
       const mockOrder = vi.fn().mockResolvedValue({ data: null, error: mockError });
 
+       
       vi.mocked(supabase.from).mockReturnValue({
         select: mockSelect,
         order: mockOrder,
@@ -101,6 +104,7 @@ describe('useStudents', () => {
         count: 10,
       });
 
+       
       vi.mocked(supabase.from).mockReturnValue({
         select: mockSelect,
         order: mockOrder,
@@ -131,6 +135,7 @@ describe('useStudents', () => {
         count: 0,
       });
 
+       
       vi.mocked(supabase.from).mockReturnValue({
         select: mockSelect,
         eq: mockEq,
@@ -165,6 +170,7 @@ describe('useStudents', () => {
         error: { code: '23505', message: 'duplicate key' },
       });
 
+       
       vi.mocked(supabase.from).mockReturnValue({
         insert: mockInsert,
         select: mockSelect,
@@ -175,6 +181,7 @@ describe('useStudents', () => {
         wrapper: createWrapper(),
       });
 
+       
       result.current.mutate({ name: 'Test', email: 'test@test.com' } as any);
 
       await waitFor(() => expect(result.current.isError).toBe(true));

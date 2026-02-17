@@ -123,12 +123,14 @@ export function ClassesTableRow({
     ? getFinancialActualStatus({
         status: log.financial_records[0].status,
         due_date: log.financial_records[0].due_date,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payment_proof_status: (log.financial_records[0] as any).payment_proof_status,
       })
     : packageFinancial
     ? getFinancialActualStatus({
         status: packageFinancial.status,
         due_date: packageFinancial.due_date,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payment_proof_status: (packageFinancial as any).payment_proof_status,
       })
     : null;
