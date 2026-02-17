@@ -48,6 +48,7 @@ import { cn } from "@/lib/utils";
 import { Table, TableHeader, TableHead, TableBody, TableRow } from "@/components/ui/table";
 import { ActivitiesTableRow } from "@/components/activities/ActivitiesTableRow";
 import { COL as ACT_COL, TABLE_MIN_W as ACT_TABLE_MIN_W } from "@/components/activities/ActivitiesTableRow.constants";
+import { logger } from "@/lib/sentry";
 import {
   ActivitiesFilters,
   type ActivitiesFiltersState,
@@ -135,7 +136,7 @@ export function ActivitiesView({
       toast.dismiss();
       toast.success("Download concluído");
     } catch (error) {
-      console.error("Erro ao baixar arquivo:", error);
+      logger.error(error as Error, { context: 'download_activity_file' });
       toast.dismiss();
       toast.error("Erro ao baixar arquivo");
     }

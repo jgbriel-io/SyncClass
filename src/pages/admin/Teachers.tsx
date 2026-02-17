@@ -782,10 +782,39 @@ export default function TeachersPage() {
               <AlertDialogAction
                 onClick={() => {
                   if (!teacherToHardDelete) return;
-                  hardDeleteTeacher.mutate(teacherToHardDelete.id, {
+                  hardDeleteTeacher.mutate({ id: teacherToHardDelete.id, force: false }, {
                     onSuccess: () => {
                       setHardDeleteDialogOpen(false);
                       setTeacherToHardDelete(null);
+                    },
+                    onError: (error) => {
+                      const errorMessage = (error as Error).message;
+                      
+                      // Se o erro contém informações sobre aulas futuras, mostrar modal de confirmação
+                      if (errorMessage.includes("aula(s) agendada(s)")) {
+                        setHardDeleteDialogOpen(false);
+                        
+                        // Extrair número de aulas
+                        const numAulas = errorMessage.match(/(\d+) aula\(s\)/)?.[1] || "?";
+                        
+                        // Mostrar confirmação final
+                        const userInput = window.prompt(
+                          `⚠️ ATENÇÃO - EXCLUSÃO PERMANENTE\n\n${errorMessage}\n\nPara confirmar a exclusão permanente de ${teacherToHardDelete.name} e TODAS as ${numAulas} aulas agendadas, digite: CONFIRMAR`
+                        );
+                        
+                        if (userInput === "CONFIRMAR") {
+                          // Força a exclusão ignorando a validação
+                          hardDeleteTeacher.mutate({ id: teacherToHardDelete.id, force: true }, {
+                            onSuccess: () => {
+                              setTeacherToHardDelete(null);
+                              toast.success("Professor e todas as aulas foram excluídos permanentemente.");
+                            },
+                          });
+                        } else {
+                          toast.info("Exclusão cancelada.");
+                          setTeacherToHardDelete(null);
+                        }
+                      }
                     },
                   });
                 }}

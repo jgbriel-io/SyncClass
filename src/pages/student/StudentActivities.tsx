@@ -17,6 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";
+import { logger } from "@/lib/sentry";
 
 const StudentActivitiesPage = () => {
   const { user } = useAuth();
@@ -74,7 +75,7 @@ const StudentActivitiesPage = () => {
       toast.dismiss();
       toast.success("Download concluído");
     } catch (error) {
-      console.error("Erro ao baixar arquivo:", error);
+      logger.error(error as Error, { context: 'download_activity_file' });
       toast.dismiss();
       toast.error("Erro ao baixar arquivo");
     }

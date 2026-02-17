@@ -399,10 +399,13 @@ export function useCreateFinancialRecord() {
 }
 
 export function useMarkAsPaid() {
+  // Gerar chave de idempotência FORA do mutationFn para evitar race condition
+  const idempotencyKeyRef = { current: crypto.randomUUID() };
+  
   return useOptimisticMutation<FinancialRecord, string>({
     mutationFn: async (id: string) => {
-      // Gerar chave de idempotência usando crypto.randomUUID()
-      const idempotencyKey = crypto.randomUUID();
+      // Usar chave fixa para esta instância do hook (evita duplo clique)
+      const idempotencyKey = idempotencyKeyRef.current;
 
       // Chamar RPC mark_as_paid_idempotent
       const { data, error } = await supabase.rpc("mark_as_paid_idempotent", {
@@ -423,6 +426,10 @@ export function useMarkAsPaid() {
         .single();
 
       if (fetchError) throw fetchError;
+      
+      // Gerar nova chave para próxima operação
+      idempotencyKeyRef.current = crypto.randomUUID();
+      
       return record;
     },
     queryKey: ["financial_records"],
@@ -447,10 +454,13 @@ export function useMarkAsPaid() {
 
 export function useConfirmPayment() {
   const queryClient = useQueryClient();
+  // Gerar chave de idempotência FORA do mutationFn para evitar race condition
+  const idempotencyKeyRef = { current: crypto.randomUUID() };
+  
   return useMutation({
     mutationFn: async (id: string) => {
-      // Gerar chave de idempotência usando crypto.randomUUID()
-      const idempotencyKey = crypto.randomUUID();
+      // Usar chave fixa para esta instância do hook (evita duplo clique)
+      const idempotencyKey = idempotencyKeyRef.current;
 
       // Chamar RPC confirm_payment_idempotent
       const { data, error } = await supabase.rpc("confirm_payment_idempotent", {
@@ -466,6 +476,9 @@ export function useConfirmPayment() {
       if (data && !data.success) {
         throw new Error(data.error || "Erro ao confirmar pagamento");
       }
+
+      // Gerar nova chave para próxima operação
+      idempotencyKeyRef.current = crypto.randomUUID();
 
       return data;
     },

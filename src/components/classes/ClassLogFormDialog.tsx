@@ -502,7 +502,7 @@ export function ClassLogFormDialog({
             <Input
               id="title"
               type="text"
-              placeholder="Ex: Revisão de escalas maiores"
+              placeholder="Ex: Present Perfect - Unit 8"
               {...register("title")}
             />
           </div>
@@ -686,7 +686,7 @@ export function ClassLogFormDialog({
                     <Input
                       id="financial_description"
                       type="text"
-                      placeholder="Aula de piano - Janeiro"
+                      placeholder="Aula de inglês - Janeiro"
                       {...register("financial_description")}
                     />
                     <p className="text-xs text-muted-foreground">

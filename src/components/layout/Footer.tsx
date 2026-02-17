@@ -50,7 +50,7 @@ export function Footer() {
               Virtual Arrow
             </a>
             <span>•</span>
-            <span>JLAC English Platform © {currentYear}</span>
+            <span>JLAC English School © {currentYear}</span>
             <span>•</span>
             <span>Conforme LGPD</span>
           </div>

@@ -12,6 +12,7 @@ import { uploadActivityFile } from "@/hooks/useActivities";
 import { useAuth } from "@/contexts/AuthContext";
 import { validateFile, checkUploadRateLimit, FILE_TYPES, formatFileSize } from "@/lib/utils/fileValidation";
 import { toast } from "sonner";
+import { logger } from "@/lib/sentry";
 
 const deliverSchema = z.object({
   response_text: z.string().optional(),
@@ -113,7 +114,7 @@ export function DeliverActivityDialog({
       onOpenChange(false);
       toast.success("Atividade entregue com sucesso!");
     } catch (error) {
-      console.error("Erro ao entregar atividade:", error);
+      logger.error(error as Error, { context: 'deliver_activity' });
       toast.error("Erro ao entregar atividade: " + (error as Error).message);
     } finally {
       setIsSubmitting(false);
