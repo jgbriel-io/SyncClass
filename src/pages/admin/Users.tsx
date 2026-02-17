@@ -41,6 +41,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
 import { getAvatarLetter } from "@/lib/utils/patterns";
+import { logger } from "@/lib/sentry";
 import {
   useUsersPaginated,
   useUsersStats,
@@ -376,7 +377,7 @@ export default function UsersPage() {
           setForceHardDelete(false);
         },
         onError: (error) => {
-          console.error("Erro ao excluir usuário:", error);
+          logger.error(error as Error, { context: 'delete_user' });
           toast.error("Erro ao excluir usuário: " + (error as Error).message);
         },
       });

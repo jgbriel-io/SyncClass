@@ -380,7 +380,7 @@ export function FinancialFormDialog({
             <Label htmlFor="description">Descrição</Label>
             <Textarea
               id="description"
-              placeholder="Ex: Mensalidade Jan/2025"
+              placeholder="Ex: Aulas de inglês - Janeiro/2025"
               rows={2}
               {...register("description")}
             />

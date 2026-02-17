@@ -294,7 +294,7 @@ export function SendActivityDialog({
             <Label htmlFor="title">Título *</Label>
             <Input
               id="title"
-              placeholder="Ex: Lista de Exercícios 1"
+              placeholder="Ex: Reading Comprehension - Unit 5"
               {...register("title")}
               disabled={isPending}
             />

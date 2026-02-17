@@ -15,6 +15,7 @@ import { ptBR } from "date-fns/locale";
 import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { useUpdateClassLog } from "@/hooks/useClassLogs";
 import { useMarkAsPaid, useUpdateFinancialStatus } from "@/hooks/useFinancialRecords";
+import { logger } from "@/lib/sentry";
 
 /** Schema do modal Avaliar aula: nota, feedback e confirmar pagamento obrigatórios quando aplicável */
 function createPostClassSchema(requirePaymentConfirmation: boolean) {
@@ -198,7 +199,7 @@ export function PostClassDialog({
       onSuccess();
       onOpenChange(false);
     } catch (error) {
-      console.error("❌ Erro ao registrar avaliação:", error);
+      logger.error(error as Error, { context: 'post_class_evaluation' });
       toast.error("Erro ao registrar avaliação. Tente novamente.");
     }
   };

@@ -598,6 +598,48 @@ export function useUpdateClassLog() {
   });
 }
 
+/** Valida se há sobreposição de horários entre aulas do pacote */
+function validateNoOverlap(items: CreateClassLogPackageItem[]): void {
+  if (items.length <= 1) return;
+
+  // Agrupar por data
+  const byDate = new Map<string, CreateClassLogPackageItem[]>();
+  items.forEach((item) => {
+    const date = item.classLog.class_date;
+    if (!byDate.has(date)) {
+      byDate.set(date, []);
+    }
+    byDate.get(date)!.push(item);
+  });
+
+  // Verificar sobreposição em cada data
+  byDate.forEach((dayItems, date) => {
+    if (dayItems.length <= 1) return;
+
+    // Ordenar por horário de início
+    const sorted = dayItems.sort((a, b) =>
+      (a.classLog.start_at || "").localeCompare(b.classLog.start_at || "")
+    );
+
+    // Verificar se há sobreposição entre aulas consecutivas
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const current = sorted[i].classLog;
+      const next = sorted[i + 1].classLog;
+
+      const currentEnd = current.end_at || "";
+      const nextStart = next.start_at || "";
+
+      if (currentEnd > nextStart) {
+        const [y, m, d] = date.split("-");
+        const formattedDate = `${d}/${m}/${y}`;
+        throw new Error(
+          `Aulas se sobrepõem no dia ${formattedDate}: ${current.start_at}-${currentEnd} e ${nextStart}-${next.end_at}`
+        );
+      }
+    }
+  });
+}
+
 /** Payload para criar um pacote de aulas em lote */
 export interface CreateClassLogPackageItem {
   classLog: ClassLogInsert;
@@ -625,6 +667,9 @@ export function useCreateClassLogPackage() {
     mutationFn: async (payload: CreateClassLogPackagePayload) => {
       const { items, packageFinancial } = payload;
       if (items.length === 0) throw new Error("Nenhuma aula no pacote.");
+
+      // Validar sobreposição client-side ANTES de enviar ao banco
+      validateNoOverlap(items);
 
       // Usar chave existente ou gerar nova apenas na primeira tentativa
       if (!idempotencyKeyRef.current) {

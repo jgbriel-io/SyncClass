@@ -28,9 +28,15 @@ dist-ssr
 *.sln
 *.sw?
 
-# Documentation files (except README)
-*.md
-!README.md
+# Temporary files
+COMMIT_MESSAGE.txt
+*.tmp
+*.temp
+
+# Documentation files - ignore working drafts, keep important docs
+FUNCTIONAL_AUDIT_REPORT.md
+TYPES_FIX_SUMMARY.md
+TESTS_COVERAGE.md
 
 # Supabase migrations
 supabase/migrations/

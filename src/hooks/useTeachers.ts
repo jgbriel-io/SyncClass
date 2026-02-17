@@ -242,15 +242,45 @@ export function useHardDeleteTeacher() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      // 1) Check if there's a linked auth user via profiles
+    mutationFn: async ({ id, force = false }: { id: string; force?: boolean }) => {
+      // 1) Verificar se há aulas futuras agendadas (a menos que force = true)
+      if (!force) {
+        const today = new Date().toISOString().split("T")[0];
+        const { data: futureClasses, error: futureError } = await supabase
+          .from("class_logs")
+          .select("id, class_date, start_at, students(name)")
+          .eq("teacher_id", id)
+          .gte("class_date", today)
+          .order("class_date", { ascending: true });
+
+        if (futureError) throw futureError;
+
+        if (futureClasses && futureClasses.length > 0) {
+          // Formatar lista de aulas para mostrar no erro
+          const classList = futureClasses.slice(0, 5).map((c: { class_date: string; start_at: string | null; students: { name: string } | null }) => {
+            const [y, m, d] = c.class_date.split("-");
+            const date = `${d}/${m}/${y}`;
+            const time = c.start_at || "";
+            const student = c.students?.name || "Aluno desconhecido";
+            return `${date} ${time} - ${student}`;
+          }).join("\n");
+
+          const remaining = futureClasses.length > 5 ? `\n... e mais ${futureClasses.length - 5} aula(s)` : "";
+
+          throw new Error(
+            `Este professor tem ${futureClasses.length} aula(s) agendada(s):\n\n${classList}${remaining}\n\nTodas as aulas serão perdidas permanentemente. Tem certeza?`
+          );
+        }
+      }
+
+      // 2) Check if there's a linked auth user via profiles
       const { data: linkedProfile } = await supabase
         .from("profiles")
         .select("user_id")
         .eq("teacher_id", id)
         .maybeSingle();
 
-      // 2) Delete the teacher record (CASCADE removes class_logs)
+      // 3) Delete the teacher record (CASCADE removes class_logs)
       const { error } = await supabase
         .from("teachers")
         .delete()
@@ -258,7 +288,7 @@ export function useHardDeleteTeacher() {
 
       if (error) throw error;
 
-      // 3) If there's a linked user, hard-delete the auth account too
+      // 4) If there's a linked user, hard-delete the auth account too
       if (linkedProfile?.user_id) {
         const { data, error: fnError } = await supabase.functions.invoke("admin-delete-user", {
           body: { userId: linkedProfile.user_id },
