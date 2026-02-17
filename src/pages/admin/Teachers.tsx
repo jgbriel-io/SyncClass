@@ -434,6 +434,7 @@ export default function TeachersPage() {
                         setTeacherToHardDelete(t);
                         setHardDeleteDialogOpen(true);
                       }}
+                      showHardDelete={false}
                     />
                   ))
                   )}
@@ -764,7 +765,7 @@ export default function TeachersPage() {
         <AlertDialog open={hardDeleteDialogOpen} onOpenChange={setHardDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Excluir definitivamente?</AlertDialogTitle>
+              <AlertDialogTitle className="text-destructive">⚠️ EXCLUSÃO PERMANENTE</AlertDialogTitle>
               <AlertDialogDescription>
                 Tem certeza que deseja excluir definitivamente o professor{" "}
                 <strong>{teacherToHardDelete?.name}</strong>?

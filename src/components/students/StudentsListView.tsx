@@ -488,6 +488,7 @@ export function StudentsListView({
                             setStudentToHardDelete(s);
                             setHardDeleteDialogOpen(true);
                           }}
+                          showHardDelete={false}
                         />
                       );
                     })

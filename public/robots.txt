@@ -1,14 +1,6 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
-Allow: /
+Disallow: /
+
+# JLAC English School - Private Platform
+# This is a private learning management system.
+# Access is restricted to enrolled students and authorized staff only.

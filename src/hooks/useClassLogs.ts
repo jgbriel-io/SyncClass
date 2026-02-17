@@ -538,6 +538,17 @@ export function useUpdateClassLog() {
 
   return useMutation({
     mutationFn: async ({ id, financialRecordId, dueDate, amount, ...updates }: UpdateClassLogPayload) => {
+      // Verificar se esta aula faz parte de um pacote ANTES de atualizar
+      const { data: packageLink, error: linkError } = await supabase
+        .from("financial_record_class_logs")
+        .select("financial_record_id")
+        .eq("class_log_id", id)
+        .maybeSingle();
+
+      if (linkError) throw linkError;
+
+      const isPackage = !!packageLink?.financial_record_id;
+
       // Validação de sobreposição agora é feita no banco via trigger
       const { data, error } = await supabase
         .from("class_logs")
@@ -553,7 +564,63 @@ export function useUpdateClassLog() {
       if (financialRecordId) {
         const financialUpdate: { due_date?: string; amount?: number } = {};
         if (dueDate) financialUpdate.due_date = dueDate;
-        if (amount != null && amount > 0) financialUpdate.amount = amount;
+        
+        // Se faz parte de um pacote e a duração mudou, recalcular o valor total
+        if (isPackage && updates.duration_minutes !== undefined) {
+          // Buscar todas as aulas do mesmo pacote (APÓS o update)
+          const { data: packageLinks, error: linksError } = await supabase
+            .from("financial_record_class_logs")
+            .select("class_log_id")
+            .eq("financial_record_id", packageLink.financial_record_id);
+
+          if (linksError) throw linksError;
+
+          const classLogIds = packageLinks?.map(l => l.class_log_id) || [];
+
+          // Buscar as aulas e somar as horas (agora com a duração atualizada)
+          const { data: packageClasses, error: classesError } = await supabase
+            .from("class_logs")
+            .select("duration_minutes, student_id")
+            .in("id", classLogIds);
+
+          if (classesError) throw classesError;
+
+          if (packageClasses && packageClasses.length > 0) {
+            // Buscar o valor/hora do aluno
+            const studentId = packageClasses[0].student_id;
+            const { data: student, error: studentError } = await supabase
+              .from("students")
+              .select("hourly_rate")
+              .eq("id", studentId)
+              .single();
+
+            if (studentError) throw studentError;
+
+            // Calcular o novo valor total do pacote (converter minutos para horas)
+            const totalMinutes = packageClasses.reduce((sum, cls) => sum + (cls.duration_minutes || 0), 0);
+            const totalHours = totalMinutes / 60;
+            const hourlyRate = student?.hourly_rate || 0;
+            financialUpdate.amount = totalHours * hourlyRate;
+
+            // Atualizar a cobrança do pacote
+            const { error: updateError } = await supabase
+              .from("financial_records")
+              .update(financialUpdate)
+              .eq("id", packageLink.financial_record_id);
+
+            if (updateError) {
+              toast.error("Aula atualizada com sucesso, mas não foi possível atualizar a cobrança do pacote.");
+            }
+            
+            return data;
+          }
+        }
+        
+        // Se não é pacote ou não mudou duração, atualizar normalmente
+        if (amount != null && amount > 0) {
+          financialUpdate.amount = amount;
+        }
+        
         if (Object.keys(financialUpdate).length > 0) {
           const { error: financialError } = await supabase
             .from("financial_records")

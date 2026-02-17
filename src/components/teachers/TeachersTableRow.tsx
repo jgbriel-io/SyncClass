@@ -29,6 +29,7 @@ interface TeachersTableRowProps {
   onResetPassword: (teacher: Teacher) => void;
   onDelete: (teacher: Teacher) => void;
   onHardDelete: (teacher: Teacher) => void;
+  showHardDelete?: boolean;
 }
 
 export function TeachersTableRow({
@@ -41,6 +42,7 @@ export function TeachersTableRow({
   onResetPassword,
   onDelete,
   onHardDelete,
+  showHardDelete = true,
 }: TeachersTableRowProps) {
   const status = teacher.status ?? "ativo";
   const lastUpdatedAt = teacher.updated_at;
@@ -147,7 +149,7 @@ export function TeachersTableRow({
                   </>
                 )}
               </DropdownMenuItem>
-              {status === "inativo" && (
+              {showHardDelete && status === "inativo" && (
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onClick={() => onHardDelete(teacher)}

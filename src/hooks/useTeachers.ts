@@ -23,11 +23,18 @@ export function useTeachers() {
     queryKey: ["teachers"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("teachers_masked")
+        .from("teachers")
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as Teacher[];
+      
+      // Mask CPF only (keep last 4 digits visible)
+      const maskedData = (data ?? []).map(teacher => ({
+        ...teacher,
+        cpf: teacher.cpf ? teacher.cpf.slice(0, -4).replace(/\d/g, '*') + teacher.cpf.slice(-4) : null,
+      }));
+      
+      return maskedData as Teacher[];
     },
   });
 }
@@ -57,7 +64,8 @@ export function useTeachersPaginated(options?: UseTeachersPaginatedOptions): Use
   const query = useQuery({
     queryKey: ["teachers_paginated", page, pageSize, filters],
     queryFn: async () => {
-      let q = supabase.from("teachers_masked").select("*", { count: "exact" });
+      // Use teachers table directly instead of view to avoid cache issues
+      let q = supabase.from("teachers").select("*", { count: "exact" });
 
       if (filters?.status && filters.status !== "all") {
         q = q.eq("status", filters.status);
@@ -71,7 +79,14 @@ export function useTeachersPaginated(options?: UseTeachersPaginatedOptions): Use
       const { data, error, count } = await q.range(from, to);
 
       if (error) throw error;
-      return { list: (data ?? []) as Teacher[], count: count ?? 0 };
+      
+      // Mask CPF only (keep last 4 digits visible)
+      const maskedData = (data ?? []).map(teacher => ({
+        ...teacher,
+        cpf: teacher.cpf ? teacher.cpf.slice(0, -4).replace(/\d/g, '*') + teacher.cpf.slice(-4) : null,
+      }));
+      
+      return { list: maskedData as Teacher[], count: count ?? 0 };
     },
     placeholderData: keepPreviousData,
   });
@@ -185,7 +200,9 @@ export function useUpdateTeacher() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["teachers_paginated"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Professor atualizado com sucesso!");
     },
@@ -202,10 +219,11 @@ export function useDeleteTeacher() {
     mutationFn: async (id: string) => {
       // Soft delete: mark teacher as inativo instead of removing row
       const status: TeacherStatus = "inativo";
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("teachers")
         .update({ status })
-        .eq("id", id);
+        .eq("id", id)
+        .select();
 
       if (error) throw error;
 
@@ -218,10 +236,14 @@ export function useDeleteTeacher() {
       if (profilesError) {
         throw profilesError;
       }
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["teachers_paginated"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Professor arquivado com sucesso!");
     },
