@@ -129,7 +129,8 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
             id,
             status,
             amount,
-            due_date
+            due_date,
+            payment_proof_status
           ),
           financial_record_class_logs (
             financial_record_id,
@@ -137,7 +138,8 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
               id,
               status,
               amount,
-              due_date
+              due_date,
+              payment_proof_status
             )
           )
         `,
@@ -481,7 +483,7 @@ export function useCreateClassLogWithFinancial() {
 
         if (financialError) {
           // Se falhar ao criar cobrança, ainda retorna a aula criada
-          toast.error("Aula criada, mas erro ao criar cobrança.");
+          toast.error("Aula criada com sucesso, mas não foi possível criar a cobrança.");
           return createdLog;
         }
       }
@@ -558,7 +560,7 @@ export function useUpdateClassLog() {
             .update(financialUpdate)
             .eq("id", financialRecordId);
           if (financialError) {
-            toast.error("Aula atualizada, mas não foi possível atualizar a cobrança.");
+            toast.error("Aula atualizada com sucesso, mas não foi possível atualizar a cobrança.");
           }
         }
       }
@@ -693,7 +695,7 @@ export function useCreateClassLogPackage() {
         msg.includes("overlap") ||
         msg.includes("Duas aulas") ||
         msg.includes("agendada em");
-      const displayMsg = isOverlap ? msg : msg ? `${msg}${details}` : "Erro ao cadastrar pacote de aulas. Tente novamente.";
+      const displayMsg = isOverlap ? msg : msg ? `${msg}${details}` : "Não foi possível cadastrar o pacote de aulas. Por favor, tente novamente.";
       toast.error(displayMsg);
     },
   });
@@ -733,7 +735,7 @@ export function useDeleteClassLog() {
       toast.success("Registro removido com sucesso!");
     },
     onError: () => {
-      toast.error("Erro ao remover registro. Tente novamente.");
+      toast.error("Não foi possível remover o registro. Por favor, tente novamente.");
     },
   });
 }

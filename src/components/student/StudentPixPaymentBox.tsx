@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Check, QrCode, Wallet } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
+import { Copy, Check, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -12,10 +11,9 @@ interface StudentPixPaymentBoxProps {
   className?: string;
 }
 
-/** Caixa de pagamento PIX: chave copia e cola + QR. Sem integração automática; professor confirma na plataforma. */
+/** Caixa de pagamento PIX: chave copia e cola. Sem integração automática; professor confirma na plataforma. */
 export function StudentPixPaymentBox({ pixKey, className }: StudentPixPaymentBoxProps) {
   const [copied, setCopied] = useState(false);
-  const [showQr, setShowQr] = useState(true);
 
   const handleCopy = async () => {
     try {
@@ -42,46 +40,23 @@ export function StudentPixPaymentBox({ pixKey, className }: StudentPixPaymentBox
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-[1fr,auto]">
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">Chave PIX (copia e cola)</label>
-          <div className="flex gap-2">
-            <Input
-              readOnly
-              value={pixKey}
-              className="font-mono text-sm bg-muted/50"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={handleCopy}
-              className="shrink-0"
-              aria-label="Copiar chave PIX"
-            >
-              {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex items-center gap-2">
-            <QrCode className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground">QR Code</span>
-          </div>
-          {showQr && (
-            <div className="rounded-lg border bg-white p-2">
-              <QRCodeSVG value={pixKey} size={140} level="M" />
-            </div>
-          )}
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Chave PIX (copia e cola)</label>
+        <div className="flex gap-2">
+          <Input
+            readOnly
+            value={pixKey}
+            className="font-mono text-sm bg-muted/50"
+          />
           <Button
             type="button"
-            variant="ghost"
-            size="sm"
-            className="text-xs"
-            onClick={() => setShowQr((v) => !v)}
+            variant="outline"
+            size="icon"
+            onClick={handleCopy}
+            className="shrink-0"
+            aria-label="Copiar chave PIX"
           >
-            {showQr ? "Ocultar QR" : "Mostrar QR"}
+            {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
           </Button>
         </div>
       </div>

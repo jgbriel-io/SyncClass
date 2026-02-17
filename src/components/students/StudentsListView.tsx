@@ -30,7 +30,7 @@ import {
   Student,
   StudentInsert,
 } from "@/hooks/useStudents";
-import { useInviteStudent, useCreateAuthUserForStudent, useTeacherResetPassword } from "@/hooks/useUsers";
+import { useInviteStudent, useCreateAuthUserForStudent, useResetPassword } from "@/hooks/useUsers";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,20 +51,6 @@ import { StudentsTableRow } from "@/components/students/StudentsTableRow";
 import { COL as STUD_COL, TABLE_MIN_W as STUD_TABLE_MIN_W } from "@/components/students/StudentsTableRow.constants";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { Teacher } from "@/hooks/useTeachers";
-
-/* ❌ ANTIGO: Imports não mais necessários (DEPRECATED - remover em 2026-03-01)
-import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
-import { useFinancialRecordsByStudentIds, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
-import { useClassLogsByStudentIds } from "@/hooks/useClassLogs";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Pencil, Trash2, Loader2, KeyRound } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { useCreateAuthUserForStudent, useTeacherResetPassword } from "@/hooks/useUsers";
-*/
 
 interface StudentsListViewProps {
   title: string;
@@ -92,8 +78,6 @@ const originLabels: Record<string, string> = {
 const COL = STUD_COL;
 const TABLE_MIN_W = STUD_TABLE_MIN_W;
 
-
-
 /** Calcula dados derivados de uma linha (para evitar repetição no map) */
 function getStudentRowData(
   student: Student & {
@@ -117,39 +101,6 @@ function getStudentRowData(
     financialStatus: null,
   };
 }
-
-/* ❌ ANTIGO: Cálculos no front-end (DEPRECATED - remover em 2026-03-01)
-function getStudentRowData(
-  student: Student,
-  teacherMap: Record<string, string>,
-  monthlyTotalFromChargesByStudent: Record<string, number>,
-  lastClassDateByStudent: Record<string, string>,
-  financialStatusByStudent: Record<string, { label: string; variant: "default" | "success" | "warning" | "destructive" }>
-) {
-  const monthlyFromCharges = monthlyTotalFromChargesByStudent[student.id];
-  const monthlyTotal =
-    monthlyFromCharges != null
-      ? monthlyFromCharges
-      : student.hourly_rate != null && student.classes_per_week != null
-        ? student.hourly_rate * student.classes_per_week * 4
-        : null;
-  const teacherName = student.teacher_id ? teacherMap[student.teacher_id] || "—" : "—";
-  const lastClassDateRaw = lastClassDateByStudent[student.id] ?? null;
-  const daysWithoutClass = lastClassDateRaw
-    ? (() => {
-        const last = new Date(lastClassDateRaw + "T00:00:00");
-        const today = new Date();
-        last.setHours(0, 0, 0, 0);
-        today.setHours(0, 0, 0, 0);
-        const diffMs = today.getTime() - last.getTime();
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        return diffDays < 0 ? 0 : diffDays;
-      })()
-    : null;
-  const financialStatus = financialStatusByStudent[student.id] ?? null;
-  return { monthlyTotal, teacherName, lastClassDateRaw, daysWithoutClass, financialStatus };
-}
-*/
 
 export function StudentsListView({
   title,
@@ -215,12 +166,6 @@ export function StudentsListView({
   // ✅ Usando students_with_stats que calcula total de aulas e valores
   const { data: studentsStats } = useStudentsStats(autoTeacherId);
 
-  /* ❌ ANTIGO: Buscar dados para cálculos no front (DEPRECATED - remover em 2026-03-01)
-  const studentIds = useMemo(() => students.map((s) => s.id), [students]);
-  const { data: financialRecords = [] } = useFinancialRecordsByStudentIds(studentIds);
-  const { data: classLogs = [] } = useClassLogsByStudentIds(studentIds);
-  */
-
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [page]);
@@ -229,7 +174,7 @@ export function StudentsListView({
   const updateStudent = useUpdateStudent();
   const hardDeleteStudent = useHardDeleteStudent();
   const createStudentUser = useCreateAuthUserForStudent();
-  const teacherResetPassword = useTeacherResetPassword();
+  const teacherResetPassword = useResetPassword();
 
   const teacherMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -289,21 +234,6 @@ export function StudentsListView({
     return result;
   }, [students, filters, currentMonth]);
 
-  /* ❌ ANTIGO: Ordenação por último pagamento (DEPRECATED)
-  result = [...result].sort((a, b) => {
-    const nameA = (a.name || "").toLowerCase();
-    const nameB = (b.name || "").toLowerCase();
-    const lastPayA = lastPaymentDateByStudent[a.id] || "";
-    const lastPayB = lastPaymentDateByStudent[b.id] || "";
-
-    if (filters.sortBy === "name_asc") return nameA.localeCompare(nameB);
-    if (filters.sortBy === "name_desc") return nameB.localeCompare(nameA);
-    if (filters.sortBy === "last_payment_desc") return lastPayB.localeCompare(lastPayA);
-    if (filters.sortBy === "last_payment_asc") return lastPayA.localeCompare(lastPayB);
-    return 0;
-  });
-  */
-
   const handleCreateOrUpdate = (data: StudentInsert) => {
     const run = async () => {
       // Auto-set teacher_id if provided
@@ -339,23 +269,18 @@ export function StudentsListView({
           }
         );
       } else {
-        if (normalizedEmail) {
-          inviteStudent.mutate(dataWithTeacher as StudentInsert & { teacher_id?: string | null }, {
-            onSuccess: (result) => {
-              setIsFormOpen(false);
-              if (result?.password) {
-                setGeneratedPassword(result.password);
-                setShowGeneratedPassword(false);
-                setPasswordCopied(false);
-                setIsPasswordDialogOpen(true);
-              }
-            },
-          });
-        } else {
-          createStudent.mutate(dataWithTeacher, {
-            onSuccess: () => setIsFormOpen(false),
-          });
-        }
+        // Email é obrigatório, sempre usa inviteStudent
+        inviteStudent.mutate(dataWithTeacher as StudentInsert & { teacher_id?: string | null }, {
+          onSuccess: (result) => {
+            setIsFormOpen(false);
+            if (result?.password) {
+              setGeneratedPassword(result.password);
+              setShowGeneratedPassword(false);
+              setPasswordCopied(false);
+              setIsPasswordDialogOpen(true);
+            }
+          },
+        });
       }
     };
 

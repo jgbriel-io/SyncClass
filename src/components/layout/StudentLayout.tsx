@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Home, BookOpen, CreditCard, LogOut, Loader2, Settings, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { SettingsModal } from "@/components/layout/SettingsModal";
+import { InstallPWABanner } from "@/components/pwa/InstallPWABanner";
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -44,7 +45,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
             <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-xs">E</span>
             </div>
-            <span className="text-base font-semibold">EduCore</span>
+            <span className="text-sm font-semibold">JLAC English School</span>
           </Link>
           <div className="flex items-center gap-1">
             <button
@@ -72,6 +73,9 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
       {/* Page content */}
       <main id="main-content" className="pt-6 pb-6 px-4 animate-fade-in">{children}</main>
+
+      {/* PWA Install Banner */}
+      <InstallPWABanner />
 
       {/* Bottom navigation */}
       <nav 

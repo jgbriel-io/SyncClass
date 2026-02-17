@@ -760,6 +760,7 @@ export function ClassesView({
         onSubmit={handleCreateOrUpdate}
         onSubmitWithFinancial={handleCreateWithFinancial}
         isLoading={isMutating}
+        teacherId={autoTeacherId ?? undefined}
         enableTeacherSelection={enableTeacherSelection}
       />
 

@@ -114,7 +114,7 @@ export function useCreateTeacher() {
     },
     onError: (error: unknown) => {
       const friendly = getDuplicateErrorMessage(error as { code?: string; message?: string });
-      toast.error(friendly || "Erro ao cadastrar professor. Tente novamente.");
+      toast.error(friendly || "Não foi possível cadastrar o professor. Por favor, tente novamente.");
     },
   });
 }
@@ -191,7 +191,7 @@ export function useUpdateTeacher() {
     },
     onError: (error: unknown) => {
       const friendly = getDuplicateErrorMessage(error as { code?: string; message?: string });
-      toast.error(friendly || "Erro ao atualizar professor. Tente novamente.");
+      toast.error(friendly || "Não foi possível atualizar o professor. Por favor, tente novamente.");
     },
   });
 }
@@ -226,7 +226,7 @@ export function useDeleteTeacher() {
       toast.success("Professor arquivado com sucesso!");
     },
     onError: () => {
-      toast.error("Erro ao excluir professor. Tente novamente.");
+      toast.error("Não foi possível arquivar o professor. Por favor, tente novamente.");
     },
   });
 }
@@ -280,7 +280,7 @@ export function useHardDeleteTeacher() {
       toast.success("Professor excluído definitivamente.");
     },
     onError: () => {
-      toast.error("Erro ao excluir professor definitivamente. Tente novamente.");
+      toast.error("Não foi possível excluir o professor definitivamente. Por favor, tente novamente.");
     },
   });
 }

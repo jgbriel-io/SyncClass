@@ -63,7 +63,7 @@ import {
   Teacher,
   TeacherInsert,
 } from "@/hooks/useTeachers";
-import { useCreateAuthUserForTeacher, useInviteTeacher, useAdminResetPassword } from "@/hooks/useUsers";
+import { useCreateAuthUserForTeacher, useInviteTeacher, useResetPassword } from "@/hooks/useUsers";
 import { useStudents } from "@/hooks/useStudents";
 import { useClassLogs } from "@/hooks/useClassLogs";
 import { useFinancialRecords } from "@/hooks/useFinancialRecords";
@@ -127,7 +127,7 @@ export default function TeachersPage() {
   const deleteTeacher = useDeleteTeacher();
   const hardDeleteTeacher = useHardDeleteTeacher();
   const createTeacherUser = useCreateAuthUserForTeacher();
-  const adminResetPassword = useAdminResetPassword();
+  const adminResetPassword = useResetPassword();
 
   // Buscar todas as aulas e registros financeiros
   const { data: allClassLogs = [] } = useClassLogs();
@@ -262,24 +262,19 @@ export default function TeachersPage() {
           }
         );
       } else {
-        if (normalizedEmail) {
-          inviteTeacher.mutate(data, {
-            onSuccess: (result) => {
-              setIsFormOpen(false);
-              if (result?.password) {
-                setGeneratedPassword(result.password);
-                setShowGeneratedPassword(false);
-                setPasswordCopied(false);
-                setPasswordDialogContext("create");
-                setIsPasswordDialogOpen(true);
-              }
-            },
-          });
-        } else {
-          createTeacher.mutate(data, {
-            onSuccess: () => setIsFormOpen(false),
-          });
-        }
+        // Email é obrigatório, sempre usa inviteTeacher
+        inviteTeacher.mutate(data, {
+          onSuccess: (result) => {
+            setIsFormOpen(false);
+            if (result?.password) {
+              setGeneratedPassword(result.password);
+              setShowGeneratedPassword(false);
+              setPasswordCopied(false);
+              setPasswordDialogContext("create");
+              setIsPasswordDialogOpen(true);
+            }
+          },
+        });
       }
     };
 

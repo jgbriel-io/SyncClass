@@ -102,7 +102,7 @@ export function UserDetailSheet({
             <p className="text-sm text-muted-foreground mt-1">
               {user.email || "Sem email"}
             </p>
-            <div className="flex flex-col gap-2 items-start mt-2">
+            <div className="flex flex-row gap-2 items-center mt-2">
               <StatusBadge variant={isActive ? "success" : "default"}>
                 {isActive ? "Ativo" : "Inativo"}
               </StatusBadge>

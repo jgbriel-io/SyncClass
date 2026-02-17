@@ -409,7 +409,7 @@ export function useCreateUser() {
         email: variables.email,
         role: variables.role,
       });
-      toast.error(error.message || "Erro ao criar usuário. Tente novamente.");
+      toast.error(error.message || "Não foi possível criar o usuário. Por favor, tente novamente.");
     },
   });
 }
@@ -500,7 +500,7 @@ export function useUpdateUserRole() {
       // Toast removido - será mostrado no componente após ambas as operações
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao atualizar privilégio. Tente novamente.");
+      toast.error(error.message || "Não foi possível atualizar o privilégio. Por favor, tente novamente.");
     },
   });
 }
@@ -525,7 +525,7 @@ export function useUpdateUserProfile() {
       // Toast removido - será mostrado no componente após ambas as operações
     },
     onError: (error: Error) => {
-      toast.error("Erro ao atualizar perfil. Tente novamente.");
+      toast.error("Não foi possível atualizar o perfil. Por favor, tente novamente.");
     },
   });
 }
@@ -552,7 +552,7 @@ export function useUpdateMyProfile() {
       const message =
         err?.message && String(err.message).trim()
           ? String(err.message)
-          : "Erro ao atualizar foto. Tente novamente.";
+          : "Não foi possível atualizar a foto. Por favor, tente novamente.";
       toast.error(message);
     },
   });
@@ -622,7 +622,7 @@ export function useUploadAvatar() {
       const message =
         err?.message && String(err.message).trim()
           ? String(err.message)
-          : "Erro ao enviar foto. Tente novamente.";
+          : "Não foi possível enviar a foto. Por favor, tente novamente.";
       toast.error(message);
     },
   });
@@ -648,7 +648,7 @@ export function useDeleteUser() {
       // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
-      toast.error("Erro ao excluir usuário. Tente novamente.");
+      toast.error("Não foi possível excluir o usuário. Por favor, tente novamente.");
     },
   });
 }
@@ -736,16 +736,10 @@ export function useResetPassword() {
       toast.success("Senha redefinida com sucesso. O usuário precisará fazer login novamente.");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao redefinir senha. Tente novamente.");
+      toast.error(error.message || "Não foi possível redefinir a senha. Por favor, tente novamente.");
     },
   });
 }
-
-/** @deprecated Use useResetPassword em vez disso. Mantido para compatibilidade temporária. */
-export const useAdminResetPassword = useResetPassword;
-
-/** @deprecated Use useResetPassword em vez disso. Mantido para compatibilidade temporária. */
-export const useTeacherResetPassword = useResetPassword;
 
 // Link user to student
 export function useLinkUserToStudent() {
@@ -786,7 +780,7 @@ export function useLinkUserToStudent() {
       // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
-      toast.error("Erro ao vincular usuário ao aluno. Tente novamente.");
+      toast.error("Não foi possível vincular o usuário ao aluno. Por favor, tente novamente.");
     },
   });
 }
@@ -830,7 +824,7 @@ export function useLinkUserToTeacher() {
       // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao vincular usuário ao professor. Tente novamente.");
+      toast.error(error.message || "Não foi possível vincular o usuário ao professor. Por favor, tente novamente.");
     },
   });
 }
@@ -856,10 +850,12 @@ export function useInviteStudent() {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
       toast.success("Aluno e conta de acesso criados com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao convidar aluno.");
+      toast.error(error.message || "Não foi possível enviar o convite ao aluno.");
     },
   });
 }
@@ -883,10 +879,12 @@ export function useInviteTeacher() {
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["teachers_paginated"] });
       toast.success("Professor e conta de acesso criados com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao convidar professor.");
+      toast.error(error.message || "Não foi possível enviar o convite ao professor.");
     },
   });
 }
@@ -1011,7 +1009,7 @@ export function useResetOwnPassword() {
       }, 1500);
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao alterar senha. Tente novamente.");
+      toast.error(error.message || "Não foi possível alterar a senha. Por favor, tente novamente.");
     },
   });
 }

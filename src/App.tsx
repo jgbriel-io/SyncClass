@@ -46,6 +46,7 @@ const StudentPanel = lazy(() => import("./pages/StudentPanel"));
 
 // Lazy loading - outras páginas
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Policies = lazy(() => import("./pages/Policies"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -107,6 +108,9 @@ const App = () => (
               }
             />
             <Route path="/redefinir-senha" element={<ResetPassword />} />
+            
+            {/* Policies - Página pública */}
+            <Route path="/policies" element={<Policies />} />
 
             {/* Admin Routes - layout persistente evita piscada ao trocar abas */}
             <Route path="/admin" element={<AdminShell />}>
@@ -118,6 +122,7 @@ const App = () => (
               <Route path="activities" element={<AdminActivitiesPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="teachers" element={<AdminTeachersPage />} />
+              <Route path="policies" element={<Policies />} />
             </Route>
 
             {/* Teacher Routes - layout persistente */}
@@ -131,6 +136,7 @@ const App = () => (
               <Route path="financial" element={<TeacherFinancialPage />} />
               <Route path="classes" element={<TeacherClassesPage />} />
               <Route path="activities" element={<TeacherActivitiesPage />} />
+              <Route path="policies" element={<Policies />} />
             </Route>
 
             {/* Student Routes - layout persistente */}
@@ -143,6 +149,7 @@ const App = () => (
               <Route path="financial" element={<StudentFinancial />} />
               <Route path="financial/checkout/:recordId" element={<StudentCheckout />} />
               <Route path="activities" element={<StudentActivitiesPage />} />
+              <Route path="policies" element={<Policies />} />
             </Route>
 
             {/* Catch-all */}

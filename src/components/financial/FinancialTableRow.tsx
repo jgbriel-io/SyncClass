@@ -18,6 +18,7 @@ const statusVariants: Record<string, "success" | "warning" | "destructive" | "de
   pago: "success",
   pendente: "warning",
   atrasado: "destructive",
+  validando: "warning",
   abonado: "default",
   extornado: "default",
   cancelado: "default",
@@ -27,6 +28,7 @@ const statusLabels: Record<string, string> = {
   pago: "Pago",
   pendente: "Pendente",
   atrasado: "Atrasado",
+  validando: "Validando",
   abonado: "Abonado",
   extornado: "Extornado",
   cancelado: "Cancelado",
@@ -57,8 +59,11 @@ export function FinancialTableRow({
 }: FinancialTableRowProps) {
   const lastUpdatedAt = record.updated_at || record.created_at;
   
-  // Pode deletar apenas se não houver aula vinculada (class_log_id é null)
-  const canDelete = !record.class_log_id && onDelete;
+  // Pode deletar se:
+  // 1. Não houver aula avulsa vinculada (class_log_id é null) OU
+  // 2. Houver pacote vinculado (package_classes existe)
+  // Basicamente: pode deletar qualquer cobrança que não seja de aula avulsa já criada
+  const canDelete = onDelete && (!record.class_log_id || (record.package_classes && record.package_classes.length > 0));
 
   return (
     <tr className="group hover:bg-muted/30 transition-colors">

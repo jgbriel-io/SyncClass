@@ -49,7 +49,7 @@ import {
   useUpdateUserProfile,
   useDeleteUser,
   useHardDeleteUser,
-  useAdminResetPassword,
+  useResetPassword,
   UserWithProfile,
 } from "@/hooks/useUsers";
 import { useStudents, useUpdateStudent, useHardDeleteStudent } from "@/hooks/useStudents";
@@ -100,7 +100,7 @@ export default function UsersPage() {
   const [detailUserId, setDetailUserId] = useState<string | null>(null);
 
   const listTopRef = useRef<HTMLDivElement>(null);
-  const adminResetPassword = useAdminResetPassword();
+  const adminResetPassword = useResetPassword();
   const {
     data: users = [],
     isLoading,

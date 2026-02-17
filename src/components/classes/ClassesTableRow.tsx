@@ -63,6 +63,8 @@ function getPaymentStatusLabel(status: string | null): string {
       return "Pendente";
     case "atrasado":
       return "Atrasado";
+    case "validando":
+      return "Validando";
     default:
       return "Pendente";
   }
@@ -121,11 +123,13 @@ export function ClassesTableRow({
     ? getFinancialActualStatus({
         status: log.financial_records[0].status,
         due_date: log.financial_records[0].due_date,
+        payment_proof_status: (log.financial_records[0] as any).payment_proof_status,
       })
     : packageFinancial
     ? getFinancialActualStatus({
         status: packageFinancial.status,
         due_date: packageFinancial.due_date,
+        payment_proof_status: (packageFinancial as any).payment_proof_status,
       })
     : null;
 

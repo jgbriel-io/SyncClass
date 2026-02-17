@@ -325,11 +325,20 @@ export function useCurrentUserProfile(userId: string | undefined) {
       if (!userId) return null;
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, user_id, full_name, email, avatar_url")
+        .select("id, user_id, full_name, email, avatar_url, role, teacher_id, student_id")
         .eq("user_id", userId)
         .maybeSingle();
       if (error) throw error;
-      return data as { id: string; user_id: string; full_name: string | null; email: string | null; avatar_url: string | null } | null;
+      return data as { 
+        id: string; 
+        user_id: string; 
+        full_name: string | null; 
+        email: string | null; 
+        avatar_url: string | null;
+        role: string | null;
+        teacher_id: string | null;
+        student_id: string | null;
+      } | null;
     },
     enabled: !!userId,
   });
@@ -365,8 +374,6 @@ export {
   useDeleteUser,
   useHardDeleteUser,
   useResetPassword,
-  useAdminResetPassword,
-  useTeacherResetPassword,
   useResetOwnPassword,
   useLinkUserToStudent,
   useLinkUserToTeacher,

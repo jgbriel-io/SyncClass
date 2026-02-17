@@ -34,8 +34,12 @@ interface StudentFinancialRecord {
   amount: number;
   due_date: string;
   description: string | null;
-  status: "pendente" | "pago" | "atrasado";
+  status: "pendente" | "pago" | "atrasado" | "aguardando_confirmacao";
   paid_at: string | null;
+  payment_proof_status?: string | null;
+  payment_proof_url?: string | null;
+  payment_proof_filename?: string | null;
+  payment_proof_uploaded_at?: string | null;
 }
 
 interface StudentStats {
@@ -254,7 +258,7 @@ export function useStudentFinancialRecords() {
       // Then get the financial records for this student
       const { data, error } = await supabase
         .from("financial_records")
-        .select("id, amount, due_date, description, status, paid_at")
+        .select("id, amount, due_date, description, status, paid_at, payment_proof_status, payment_proof_url, payment_proof_filename, payment_proof_uploaded_at")
         .eq("student_id", profile.student_id)
         .order("due_date", { ascending: false });
 

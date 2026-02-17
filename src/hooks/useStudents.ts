@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
-import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -15,7 +15,8 @@ export type StudentsListFilters = {
   search?: string;
 };
 
-export type Student = Tables<"students">;
+export type Student = Tables<"students_active_masked">;
+export type StudentWithStats = Tables<"students_with_stats"> & { anonymized_at?: string | null };
 export type StudentInsert = TablesInsert<"students">;
 export type StudentUpdate = TablesUpdate<"students">;
 type ProfileUpdate = TablesUpdate<"profiles">;
@@ -46,7 +47,7 @@ export interface UseStudentsPaginatedOptions {
 }
 
 export interface UseStudentsPaginatedResult {
-  data: Student[];
+  data: StudentWithStats[];
   isLoading: boolean;
   error: Error | null;
   isFetching: boolean;
@@ -94,12 +95,12 @@ export function useStudentsPaginated(options?: UseStudentsPaginatedOptions): Use
       const { data, error, count } = await q.range(from, to);
 
       if (error) throw error;
-      return { list: (data ?? []) as Student[], count: count ?? 0 };
+      return { list: (data ?? []) as StudentWithStats[], count: count ?? 0 };
     },
     placeholderData: keepPreviousData,
   });
 
-  const list = (query.data?.list ?? []) as Student[];
+  const list = (query.data?.list ?? []) as StudentWithStats[];
   const totalCount = query.data?.count ?? 0;
   const hasMore = totalCount > (page + 1) * pageSize;
 
@@ -143,7 +144,7 @@ export function useCreateStudent() {
     },
     onError: (error: unknown) => {
       const friendly = getDuplicateErrorMessage(error as PostgresError);
-      toast.error(friendly || "Erro ao cadastrar aluno. Tente novamente.");
+      toast.error(friendly || "Não foi possível cadastrar o aluno. Por favor, tente novamente.");
     },
   });
 }
@@ -243,30 +244,20 @@ export function useUpdateStudent() {
         }
       }
       
-      // ✅ NOVO: Atualizar vencimentos usando RPC atômica
+      // Atualizar vencimentos usando RPC atômica
       if (payDayChanged && oldPayDay !== newPayDay && newPayDay !== null) {
         try {
           const { data: rpcResult, error: rpcError } = await supabase.rpc(
             'update_student_payment_day',
             {
               p_student_id: id,
-              p_new_pay_day: newPayDay,
+              p_pay_day: newPayDay,
             }
           );
 
           if (rpcError) {
             console.error('Erro ao atualizar vencimentos:', rpcError);
             toast.warning('Aluno atualizado, mas não foi possível atualizar os vencimentos das cobranças.');
-          } else if (rpcResult) {
-            const updatedCount = rpcResult.updated_count || 0;
-            if (updatedCount > 0) {
-              console.log(`✅ MIGRATION_SUCCESS: update_student_payment_day moved to RPC`, {
-                migration_date: '2026-02-14',
-                old_method: 'loop_updates',
-                new_method: 'rpc',
-                updated_count: updatedCount,
-              });
-            }
           }
         } catch (error) {
           console.error('Erro ao chamar RPC update_student_payment_day:', error);
@@ -274,48 +265,13 @@ export function useUpdateStudent() {
         }
       }
 
-      /* ❌ ANTIGO: Loop de updates (DEPRECATED - remover em 2026-03-01)
-      if (payDayChanged && oldPayDay !== newPayDay && newPayDay !== null) {
-        try {
-          const { data: pendingRecords, error: fetchError } = await supabase
-            .from("financial_records")
-            .select("id, due_date")
-            .eq("student_id", id)
-            .eq("status", "pendente");
-          
-          if (fetchError) throw fetchError;
-
-          if (pendingRecords && pendingRecords.length > 0) {
-            const updates = [];
-            for (const record of pendingRecords) {
-              if (record.due_date) {
-                const dueDate = new Date(record.due_date + "T00:00:00");
-                const year = dueDate.getFullYear();
-                const month = dueDate.getMonth() + 1;
-                const lastDay = new Date(year, month, 0).getDate();
-                const newDay = Math.min(newPayDay, lastDay);
-                const newDueDate = `${year}-${String(month).padStart(2, '0')}-${String(newDay).padStart(2, '0')}`;
-
-                const { error: updateError } = await supabase
-                  .from("financial_records")
-                  .update({ due_date: newDueDate })
-                  .eq("id", record.id);
-                
-                if (!updateError) updates.push(record.id);
-              }
-            }
-          }
-        } catch {
-          // Não falha a operação principal se a atualização de cobranças falhar
-        }
-      }
-      */
-
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });
@@ -325,7 +281,7 @@ export function useUpdateStudent() {
       const pgErr = error as PostgresError;
       const friendly = getDuplicateErrorMessage(pgErr);
       const msg = pgErr?.message || (error as Error)?.message;
-      toast.error(friendly || msg || "Erro ao atualizar aluno. Tente novamente.");
+      toast.error(friendly || msg || "Não foi possível atualizar o aluno. Por favor, tente novamente.");
     },
   });
 }
@@ -364,7 +320,7 @@ export function useDeleteStudent() {
       toast.success("Aluno arquivado com sucesso!");
     },
     onError: () => {
-      toast.error("Erro ao arquivar aluno. Tente novamente.");
+      toast.error("Não foi possível arquivar o aluno. Por favor, tente novamente.");
     },
   });
 }
@@ -404,7 +360,7 @@ export function useSoftDeleteStudent() {
       toast.success("Aluno arquivado com sucesso!");
     },
     onError: () => {
-      toast.error("Erro ao arquivar aluno. Tente novamente.");
+      toast.error("Não foi possível arquivar o aluno. Por favor, tente novamente.");
     },
   });
 }
@@ -459,7 +415,7 @@ export function useHardDeleteStudent() {
       toast.success("Aluno excluído definitivamente.");
     },
     onError: () => {
-      toast.error("Erro ao excluir aluno definitivamente. Tente novamente.");
+      toast.error("Não foi possível excluir o aluno definitivamente. Por favor, tente novamente.");
     },
   });
 }
@@ -499,7 +455,7 @@ export function useRestoreStudent() {
       toast.success("Aluno restaurado com sucesso!");
     },
     onError: () => {
-      toast.error("Erro ao restaurar aluno. Tente novamente.");
+      toast.error("Não foi possível restaurar o aluno. Por favor, tente novamente.");
     },
   });
 }
@@ -522,7 +478,7 @@ export function useUpdateStudentPaymentDay() {
 
       const { data, error } = await supabase.rpc("update_student_payment_day", {
         p_student_id: studentId,
-        p_new_pay_day: newPayDay,
+        p_pay_day: newPayDay,
       });
 
       if (error) {
@@ -558,7 +514,7 @@ export function useUpdateStudentPaymentDay() {
     },
     onError: (error) => {
       const err = error as Error;
-      toast.error(err.message || "Erro ao atualizar dia de pagamento");
+      toast.error(err.message || "Não foi possível atualizar o dia de pagamento");
     },
   });
 }

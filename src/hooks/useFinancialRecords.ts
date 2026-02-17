@@ -162,7 +162,12 @@ export function useFinancialRecords(
             grade,
             feedback,
             title
-          )
+          ),
+          payment_proof_status,
+          payment_proof_url,
+          payment_proof_filename,
+          payment_proof_uploaded_at,
+          payment_proof_rejection_reason
         `,
           { count: "exact" }
         )

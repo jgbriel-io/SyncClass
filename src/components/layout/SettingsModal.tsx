@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -9,9 +9,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserProfile, useUploadAvatar, useUpdateMyProfile, useResetOwnPassword } from "@/hooks/useUsers";
 import { getAvatarLetter } from "@/lib/utils/patterns";
 import { AVATAR_MAX_SIZE_BYTES, AVATAR_MAX_PX } from "@/lib/utils/avatarUpload";
-import { User, Palette, Loader2, Upload, Trash2, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Palette, Loader2, Upload, Trash2, Lock, Eye, EyeOff, Wallet, Download, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { isPWAInstalled, isPWAInstallPromptAvailable, showPWAInstallPrompt } from "@/lib/pwa";
 
 interface SettingsModalProps {
   open: boolean;
@@ -41,6 +42,10 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [newEmail, setNewEmail] = useState(email);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const avatarUrl = profile?.avatar_url ?? "";
+  const [pixKey, setPixKey] = useState("");
+  const [editingPixKey, setEditingPixKey] = useState(false);
+  const [isUpdatingPixKey, setIsUpdatingPixKey] = useState(false);
+  const isTeacher = profile?.role === "teacher";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,6 +58,25 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     if (!user?.id) return;
     updateAvatar.mutate({ userId: user.id, avatar_url: null });
   };
+
+  // Buscar chave PIX do professor
+  useEffect(() => {
+    if (!profile?.teacher_id || !isTeacher) return;
+    
+    const fetchPixKey = async () => {
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("pix_key")
+        .eq("id", profile.teacher_id)
+        .maybeSingle();
+      
+      if (!error && data?.pix_key) {
+        setPixKey(data.pix_key);
+      }
+    };
+    
+    fetchPixKey();
+  }, [profile?.teacher_id, isTeacher]);
 
   const handleUpdateName = async () => {
     if (!user?.id || !newName.trim()) return;
@@ -102,7 +126,28 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     }
   };
 
-  const isPending = uploadAvatar.isPending || updateAvatar.isPending || isUpdatingProfile;
+  const handleUpdatePixKey = async () => {
+    if (!profile?.teacher_id) return;
+    
+    setIsUpdatingPixKey(true);
+    try {
+      const { error } = await supabase
+        .from("teachers")
+        .update({ pix_key: pixKey.trim() || null })
+        .eq("id", profile.teacher_id);
+      
+      if (error) throw error;
+      
+      toast.success("Chave PIX atualizada com sucesso!");
+      setEditingPixKey(false);
+    } catch (error) {
+      toast.error("Erro ao atualizar chave PIX. Tente novamente.");
+    } finally {
+      setIsUpdatingPixKey(false);
+    }
+  };
+
+  const isPending = uploadAvatar.isPending || updateAvatar.isPending || isUpdatingProfile || isUpdatingPixKey;
 
   return (
     <BaseDialog
@@ -113,17 +158,17 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     >
         <Tabs defaultValue="perfil" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="perfil" className="gap-2">
-              <User className="h-4 w-4" />
-              Perfil
+            <TabsTrigger value="perfil" className="gap-1.5 sm:gap-2">
+              <User className="h-4 w-4 shrink-0" />
+              <span className="hidden xs:inline sm:inline">Perfil</span>
             </TabsTrigger>
-            <TabsTrigger value="senha" className="gap-2">
-              <Lock className="h-4 w-4" />
-              Senha
+            <TabsTrigger value="senha" className="gap-1.5 sm:gap-2">
+              <Lock className="h-4 w-4 shrink-0" />
+              <span className="hidden xs:inline sm:inline">Senha</span>
             </TabsTrigger>
-            <TabsTrigger value="preferencias" className="gap-2">
-              <Palette className="h-4 w-4" />
-              Preferências
+            <TabsTrigger value="preferencias" className="gap-1.5 sm:gap-2">
+              <Palette className="h-4 w-4 shrink-0" />
+              <span className="hidden xs:inline sm:inline">Preferências</span>
             </TabsTrigger>
           </TabsList>
           <TabsContent value="perfil" className="space-y-4 pt-4">
@@ -270,6 +315,57 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                 </p>
               )}
             </div>
+            {isTeacher && (
+              <div className="space-y-2">
+                <Label htmlFor="settings-pix-key" className="flex items-center gap-2">
+                  <Wallet className="h-4 w-4" />
+                  Chave PIX
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="settings-pix-key"
+                    value={pixKey}
+                    onChange={(e) => setPixKey(e.target.value)}
+                    readOnly={!editingPixKey}
+                    placeholder="CPF, email, telefone ou chave aleatória"
+                    className={editingPixKey ? "" : "bg-muted/50"}
+                  />
+                  {editingPixKey ? (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={handleUpdatePixKey}
+                        disabled={isPending}
+                      >
+                        {isUpdatingPixKey ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingPixKey(false);
+                          // Restaurar valor original se cancelar
+                        }}
+                        disabled={isPending}
+                      >
+                        Cancelar
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingPixKey(true)}
+                    >
+                      Editar
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Esta chave será exibida para seus alunos na tela de pagamento.
+                </p>
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="senha" className="space-y-4 pt-4">
             <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
@@ -382,6 +478,47 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             <p className="text-sm text-muted-foreground">
               Opções de tema, idioma e notificações em breve.
             </p>
+            
+            {/* Botão de instalação PWA */}
+            {!isPWAInstalled() && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Download className="h-4 w-4" />
+                  Instalar App
+                </Label>
+                <div className="rounded-lg border bg-muted/50 p-3">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Instale o app na sua tela inicial para acesso mais rápido e funcionamento offline.
+                  </p>
+                  <Button
+                    onClick={async () => {
+                      if (isPWAInstallPromptAvailable()) {
+                        const accepted = await showPWAInstallPrompt();
+                        if (accepted) {
+                          toast.success("App instalado com sucesso!");
+                        }
+                      } else {
+                        toast.info("Use o menu do navegador para instalar o app");
+                      }
+                    }}
+                    className="w-full"
+                    disabled={!isPWAInstallPromptAvailable()}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Instalar App
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {isPWAInstalled() && (
+              <div className="rounded-lg border bg-success/10 border-success/20 p-3">
+                <div className="flex items-center gap-2 text-success">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span className="text-sm font-medium">App instalado!</span>
+                </div>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
     </BaseDialog>

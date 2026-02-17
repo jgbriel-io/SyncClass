@@ -67,21 +67,20 @@ export default function Login() {
             <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
               <GraduationCap className={iconSize('LG')} />
             </div>
-            <span className={typography('H1')}>EduCore</span>
+            <span className={`${typography('H2')} font-semibold`}>JLAC English School</span>
           </div>
 
           <div className={`${stack('RELAXED')} max-w-md`}>
             <h1 className={`${typography('DISPLAY')} leading-tight`}>
-              Gestão educacional simplificada
+              Your English learning platform
             </h1>
             <p className={`${typography('H3')} text-primary-foreground/80 leading-relaxed`}>
-              Controle de alunos, aulas e financeiro em um único lugar. 
-              Saia das planilhas, ganhe tempo e clareza.
+              Manage your classes, track progress, and handle payments all in one place.
             </p>
           </div>
 
           <p className={typography('SMALL')}>
-            © 2025 EduCore. Todos os direitos reservados.
+            © 2026 JLAC English School. All rights reserved.
           </p>
         </div>
 
@@ -98,7 +97,7 @@ export default function Login() {
             <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
               <GraduationCap className="h-7 w-7 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-semibold">EduCore</span>
+            <span className="text-lg font-semibold">JLAC English School</span>
           </div>
 
           <div className={`${stack('RELAXED')} text-center lg:text-left`}>

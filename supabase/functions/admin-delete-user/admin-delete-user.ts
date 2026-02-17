@@ -124,10 +124,10 @@ serve(async (req) => {
 
   // 1) Remove linked record from students table (ignora se já foi removido)
   if (linkedStudentId) {
-    const { error: studentDeleteError } = await supabaseAdmin.rpc(
-      "hard_delete_student_record",
-      { p_student_id: linkedStudentId },
-    );
+    const { error: studentDeleteError } = await supabaseAdmin
+      .from("students")
+      .delete()
+      .eq("id", linkedStudentId);
 
     if (studentDeleteError) {
       // Ignora erro se o registro já não existir
@@ -137,10 +137,10 @@ serve(async (req) => {
 
   // 2) Remove linked record from teachers table
   if (linkedTeacherId) {
-    const { error: teacherDeleteError } = await supabaseAdmin.rpc(
-      "hard_delete_teacher_record",
-      { p_teacher_id: linkedTeacherId },
-    );
+    const { error: teacherDeleteError } = await supabaseAdmin
+      .from("teachers")
+      .delete()
+      .eq("id", linkedTeacherId);
 
     if (teacherDeleteError) {
       console.error("Error deleting teacher record:", teacherDeleteError);
@@ -174,6 +174,15 @@ serve(async (req) => {
       
       console.error("Error hard-deleting user:", deleteError);
       return jsonResponse({ error: deleteError.message }, 500);
+    }
+    
+    // Invalida todas as sessões do usuário deletado
+    // Isso força o logout em todos os dispositivos
+    try {
+      await supabaseAdmin.auth.admin.signOut(userIdToDelete);
+    } catch (signOutError) {
+      // Ignora erro de signOut pois o usuário já foi deletado
+      console.log("SignOut error (expected after delete):", signOutError);
     }
   }
 

@@ -137,7 +137,6 @@ export function PostClassDialog({
   }, [open, classLog, reset, isPaymentAlreadyPaid]);
 
   const handleFormSubmit = async (data: PostClassFormData) => {
-    console.log("🔥 handleFormSubmit called!", data);
     if (!classLog) return;
 
     const attendanceValue = data.attendance;

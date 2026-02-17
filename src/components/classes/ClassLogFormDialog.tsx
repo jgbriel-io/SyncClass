@@ -56,21 +56,17 @@ function isDateFuture(brDate: string): boolean {
 /** Vencimento padrão: dia do pagamento do aluno no mês/ano da aula. 
  * Se a data da aula for muito antiga ou inválida, usa mês/ano atual.
  * pay_day 1–31; se mês tem menos dias, usa último dia.
- * Se o dia de pagamento já passou no mês atual, retorna string vazia (não cria cobrança).
+ * Se a data da aula for DEPOIS do dia de pagamento do mês, retorna vazio (não preenche automaticamente).
  */
 function getDefaultDueDateForClassMonth(classDateBr: string, payDay: number | null): string {
   if (!classDateBr || !REGEX_PATTERNS.date.test(classDateBr)) {
-    // Se data inválida, usa hoje
-    const today = new Date();
-    const dd = String(payDay && payDay >= 1 && payDay <= 31 ? Math.min(payDay, new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()) : today.getDate()).padStart(2, "0");
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const yyyy = today.getFullYear();
-    return `${dd}/${mm}/${yyyy}`;
+    // Se data inválida, retorna vazio
+    return "";
   }
   
   if (payDay == null || payDay < 1 || payDay > 31) {
-    // Se não tem pay_day, retorna a própria data da aula
-    return classDateBr;
+    // Se não tem pay_day, retorna vazio
+    return "";
   }
   
   const iso = brDateToIso(classDateBr);
@@ -79,35 +75,29 @@ function getDefaultDueDateForClassMonth(classDateBr: string, payDay: number | nu
   today.setHours(0, 0, 0, 0);
   classDate.setHours(0, 0, 0, 0);
   
-  // Se a data da aula for muito antiga (mais de 1 ano atrás), usa mês/ano atual
+  // Se a data da aula for muito antiga (mais de 1 ano atrás), retorna vazio
   const oneYearAgo = new Date(today);
   oneYearAgo.setFullYear(today.getFullYear() - 1);
   
-  let y, m;
   if (classDate < oneYearAgo) {
-    // Data muito antiga, usa mês/ano atual
-    y = today.getFullYear();
-    m = today.getMonth() + 1;
-  } else {
-    // Data válida, usa mês/ano da aula
-    const [year, month] = iso.split("-").map(Number);
-    y = year;
-    m = month;
-  }
-  
-  const lastDay = new Date(y, m, 0).getDate();
-  const day = Math.min(payDay, lastDay);
-  
-  // Verificar se o dia de pagamento já passou no mês atual
-  const paymentDate = new Date(y, m - 1, day);
-  paymentDate.setHours(0, 0, 0, 0);
-  
-  if (paymentDate < today) {
-    // Dia de pagamento já passou, retorna vazio (não cria cobrança)
     return "";
   }
   
-  const dd = day.toString().padStart(2, "0");
+  // Usa mês/ano da aula
+  const [year, month, dayOfMonth] = iso.split("-").map(Number);
+  const y = year;
+  const m = month;
+  
+  const lastDay = new Date(y, m, 0).getDate();
+  const paymentDay = Math.min(payDay, lastDay);
+  
+  // Se a data da aula for DEPOIS do dia de pagamento do mês, retorna vazio
+  if (dayOfMonth > paymentDay) {
+    return "";
+  }
+  
+  // Data da aula é ANTES ou IGUAL ao dia de pagamento, preenche o vencimento
+  const dd = paymentDay.toString().padStart(2, "0");
   const mm = m.toString().padStart(2, "0");
   return `${dd}/${mm}/${y}`;
 }
@@ -650,6 +640,9 @@ export function ClassLogFormDialog({
                         placeholder="100,00"
                         {...register("financial_amount")}
                       />
+                      {errors.financial_amount && (
+                        <p className="text-sm text-destructive">{errors.financial_amount.message}</p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -682,6 +675,9 @@ export function ClassLogFormDialog({
                           />
                         </PopoverContent>
                       </Popover>
+                      {errors.financial_due_date && (
+                        <p className="text-sm text-destructive">{errors.financial_due_date.message}</p>
+                      )}
                     </div>
                   </div>
 

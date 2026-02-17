@@ -109,11 +109,19 @@ export function UsersTableRow({
         style={STICKY_SHADOW}
       >
         <div className="flex items-center gap-4 overflow-hidden">
-          <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-medium text-accent-foreground">
-              {avatarLetter}
-            </span>
-          </div>
+          {user.profile?.avatar_url ? (
+            <img
+              src={user.profile.avatar_url}
+              alt={displayName}
+              className="h-9 w-9 rounded-full object-cover flex-shrink-0"
+            />
+          ) : (
+            <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+              <span className="text-xs font-medium text-accent-foreground">
+                {avatarLetter}
+              </span>
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium truncate" title={displayName}>
               {displayName}
@@ -210,12 +218,6 @@ export function UsersTableRow({
                 <KeyRound className="h-4 w-4 mr-2" />
                 Redefinir senha
               </DropdownMenuItem>
-              {linkedStudent && linkedStudent.status === "inativo" && (
-                <DropdownMenuItem onClick={() => onReactivateStudent(linkedStudent.id)}>
-                  <Check className="h-4 w-4 mr-2" />
-                  Reativar aluno vinculado
-                </DropdownMenuItem>
-              )}
               <DropdownMenuItem
                 className={
                   isActive

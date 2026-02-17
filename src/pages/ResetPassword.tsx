@@ -114,7 +114,7 @@ export default function ResetPassword() {
             <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
               <GraduationCap className="h-6 w-6" />
             </div>
-            <span className="text-xl font-semibold">EduCore</span>
+            <span className="text-base font-semibold">JLAC English School</span>
           </div>
           <div className="space-y-6 max-w-md">
             <h1 className="text-4xl font-bold tracking-tight">Nova senha</h1>
@@ -122,7 +122,7 @@ export default function ResetPassword() {
               Defina uma nova senha para acessar sua conta.
             </p>
           </div>
-          <p className="text-sm text-primary-foreground/60">© 2025 EduCore</p>
+          <p className="text-sm text-primary-foreground/60">© 2026 JLAC English School</p>
         </div>
       </div>
 
@@ -131,7 +131,7 @@ export default function ResetPassword() {
           <div className="lg:hidden flex justify-center">
             <Link to="/login" className={`flex items-center ${gap('TIGHT')} text-muted-foreground hover:text-foreground`}>
               <GraduationCap className={iconSize('XL')} />
-              <span className={typography('H1')}>EduCore</span>
+              <span className={`${typography('H2')} font-semibold`}>JLAC English School</span>
             </Link>
           </div>
 

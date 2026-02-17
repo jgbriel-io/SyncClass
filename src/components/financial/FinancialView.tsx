@@ -76,6 +76,10 @@ import {
 import { FinancialTableRow } from "@/components/financial/FinancialTableRow";
 import { COL as FIN_COL, TABLE_MIN_W as FIN_TABLE_MIN_W } from "@/components/financial/FinancialTableRow.constants";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useCurrentUserProfile } from "@/hooks/useUsers";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FinancialViewProps {
   title?: string;
@@ -106,6 +110,8 @@ export function FinancialView({
   const [isProcessingPayment, setIsProcessingPayment] = useState<string | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
   const { data: forecastedBilling } = useForecastedBilling(autoTeacherId);
+  const { user } = useAuth();
+  const { data: currentUserProfile } = useCurrentUserProfile(user?.id);
 
   const {
     data: records = [],
@@ -162,6 +168,11 @@ export function FinancialView({
           (studentCpf.replace(/\D/g, "").includes(searchDigits) ||
             studentPhone.replace(/\D/g, "").includes(searchDigits)));
       if (!matchesSearch) return false;
+
+      // Filtro de status
+      if (filters.status !== "all" && record.actualStatus !== filters.status) {
+        return false;
+      }
 
       return true;
     });
@@ -432,7 +443,10 @@ export function FinancialView({
                       setRecordToEdit(record);
                       setIsFormOpen(true);
                     }}
-                    onConfirmPayment={openConfirmPayment}
+                    onConfirmPayment={(record) => {
+                      // Abre o modal de histórico em vez do dialog de confirmação
+                      setHistoryRecord(record);
+                    }}
                     onUndoPayment={(record) => {
                       setRecordToUndo(record);
                       setUndoDialogOpen(true);
@@ -649,36 +663,173 @@ export function FinancialView({
 
       {/* Mini modal: Histórico de pagamento */}
       <Dialog open={!!historyRecord} onOpenChange={(open) => !open && setHistoryRecord(null)}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base">Histórico de pagamento</DialogTitle>
           </DialogHeader>
           {historyRecord && (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-3 pr-2">
+              <p className="text-sm text-muted-foreground break-words">
                 {historyRecord.students?.name} · {formatCurrency(Number(historyRecord.amount))}
               </p>
               
               {historyRecord.description && (
                 <div className="rounded-lg border bg-muted/50 p-3">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Descrição</p>
-                  <p className="text-sm text-foreground">{historyRecord.description}</p>
+                  <p className="text-sm text-foreground break-words overflow-wrap-anywhere">{historyRecord.description}</p>
                 </div>
               )}
               
+              {/* Comprovante de Pagamento */}
+              {(historyRecord as any).payment_proof_url && (
+                <div className="rounded-lg border bg-primary/5 p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Comprovante de Pagamento</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <p className="text-sm font-medium break-words overflow-wrap-anywhere">
+                        {(historyRecord as any).payment_proof_filename || "Comprovante.pdf"}
+                      </p>
+                      <p className="text-xs text-muted-foreground break-words">
+                        Enviado em {(historyRecord as any).payment_proof_uploaded_at 
+                          ? formatDateTime((historyRecord as any).payment_proof_uploaded_at)
+                          : "—"}
+                      </p>
+                      {(historyRecord as any).payment_proof_status === "pending" && (
+                        <p className="text-xs text-warning font-medium mt-1">
+                          Aguardando aprovação
+                        </p>
+                      )}
+                      {(historyRecord as any).payment_proof_status === "rejected" && (
+                        <p className="text-xs text-destructive font-medium mt-1 break-words overflow-wrap-anywhere">
+                          Rejeitado: {(historyRecord as any).payment_proof_rejection_reason || "Sem motivo"}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0"
+                      onClick={async () => {
+                        try {
+                          const { getPaymentProofUrl } = await import("@/hooks/usePaymentProof");
+                          const url = await getPaymentProofUrl((historyRecord as any).payment_proof_url);
+                          window.open(url, "_blank", "noopener,noreferrer");
+                        } catch (error) {
+                          toast.error("Erro ao abrir comprovante");
+                        }
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Ver
+                    </Button>
+                  </div>
+                  
+                  {/* Botões de Aprovar/Rejeitar (apenas se pending) */}
+                  {(historyRecord as any).payment_proof_status === "pending" && (
+                    <div className="flex gap-2 mt-3 pt-3 border-t shrink-0">
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-success text-white hover:bg-success/90 shrink-0"
+                        onClick={async () => {
+                          try {
+                            const { useReviewPaymentProof } = await import("@/hooks/usePaymentProof");
+                            // Chamar mutation diretamente
+                            await supabase.rpc("review_payment_proof", {
+                              p_financial_record_id: historyRecord.id,
+                              p_approved: true,
+                              p_rejection_reason: null,
+                            });
+                            toast.success("Pagamento confirmado!");
+                            setHistoryRecord(null);
+                            // Recarregar dados
+                            window.location.reload();
+                          } catch (error) {
+                            toast.error("Erro ao aprovar comprovante");
+                          }
+                        }}
+                      >
+                        Aprovar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="flex-1 shrink-0"
+                        onClick={async () => {
+                          const reason = prompt("Motivo da rejeição (opcional):");
+                          if (reason === null) return; // Cancelou
+                          
+                          try {
+                            await supabase.rpc("review_payment_proof", {
+                              p_financial_record_id: historyRecord.id,
+                              p_approved: false,
+                              p_rejection_reason: reason || "Comprovante inválido",
+                            });
+                            toast.success("Comprovante rejeitado");
+                            setHistoryRecord(null);
+                            window.location.reload();
+                          } catch (error) {
+                            toast.error("Erro ao rejeitar comprovante");
+                          }
+                        }}
+                      >
+                        Rejeitar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Status do pagamento */}
               {historyRecord.status === "pago" && historyRecord.confirmed_by ? (
-                <div className="rounded-lg border bg-muted/50 p-3 text-sm">
-                  <p className="font-medium text-foreground">
-                    Confirmado por {historyRecord.confirmed_by.full_name}
+                <div className="rounded-lg border bg-success/10 border-success/20 p-3 text-sm">
+                  {currentUserProfile?.role === "admin" ? (
+                    <>
+                      <p className="font-medium text-foreground break-words overflow-wrap-anywhere">
+                        Confirmado por {historyRecord.confirmed_by.full_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 break-words">
+                        {historyRecord.updated_at ? formatDateTime(historyRecord.updated_at) : "Data não disponível"}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-medium text-foreground break-words">
+                        Pagamento confirmado
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 break-words">
+                        {historyRecord.updated_at ? formatDateTime(historyRecord.updated_at) : "Data não disponível"}
+                      </p>
+                    </>
+                  )}
+                </div>
+              ) : historyRecord.status === "pago" ? (
+                <div className="rounded-lg border bg-success/10 border-success/20 p-3 text-sm">
+                  <p className="font-medium text-foreground break-words">
+                    Pagamento confirmado
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5 break-words">
                     {historyRecord.updated_at ? formatDateTime(historyRecord.updated_at) : "Data não disponível"}
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Nenhum pagamento registrado para esta cobrança.
-                </p>
+                <>
+                  <p className="text-sm text-muted-foreground break-words">
+                    Nenhum pagamento registrado para esta cobrança.
+                  </p>
+                  
+                  {/* Botão Confirmar Pagamento (se não tiver comprovante ou comprovante rejeitado) */}
+                  {(!((historyRecord as any).payment_proof_url) || (historyRecord as any).payment_proof_status === "rejected") && (
+                    <Button
+                      className="w-full bg-success text-white hover:bg-success/90 shrink-0"
+                      onClick={() => {
+                        setHistoryRecord(null);
+                        openConfirmPayment(historyRecord);
+                      }}
+                    >
+                      Confirmar Pagamento
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           )}

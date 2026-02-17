@@ -33,15 +33,14 @@ describe('Design Tokens: Spacing', () => {
   });
 
   describe('GAP', () => {
-    it('deve ter 4 tamanhos definidos', () => {
-      expect(Object.keys(GAP)).toHaveLength(4);
+    it('deve ter 3 tamanhos definidos', () => {
+      expect(Object.keys(GAP)).toHaveLength(3);
     });
 
     it('deve ter os valores corretos', () => {
       expect(GAP.TIGHT).toBe('gap-2');
       expect(GAP.DEFAULT).toBe('gap-4');
-      expect(GAP.LOOSE).toBe('gap-4');
-      expect(GAP.RELAXED).toBe('gap-6');
+      expect(GAP.LOOSE).toBe('gap-6');
     });
   });
 
@@ -139,8 +138,7 @@ describe('Design Tokens: Spacing', () => {
     it('deve retornar a classe correta', () => {
       expect(gap('TIGHT')).toBe('gap-2');
       expect(gap('DEFAULT')).toBe('gap-4');
-      expect(gap('LOOSE')).toBe('gap-4');
-      expect(gap('RELAXED')).toBe('gap-6');
+      expect(gap('LOOSE')).toBe('gap-6');
     });
   });
 
@@ -218,11 +216,9 @@ describe('Design Tokens: Spacing', () => {
       const tight = parseInt(GAP.TIGHT.replace('gap-', ''));
       const def = parseInt(GAP.DEFAULT.replace('gap-', ''));
       const loose = parseInt(GAP.LOOSE.replace('gap-', ''));
-      const relaxed = parseInt(GAP.RELAXED.replace('gap-', ''));
 
       expect(tight).toBeLessThan(def);
       expect(def).toBeLessThan(loose);
-      expect(loose).toBeLessThan(relaxed);
     });
   });
 
@@ -232,9 +228,9 @@ describe('Design Tokens: Spacing', () => {
       expect(GAP.TIGHT).toContain('2');
     });
 
-    it('STACK.DEFAULT e GAP.LOOSE devem usar valores próximos', () => {
+    it('STACK.DEFAULT e GAP.DEFAULT devem usar valores próximos', () => {
       const stackValue = parseInt(STACK.DEFAULT.replace('space-y-', ''));
-      const gapValue = parseInt(GAP.LOOSE.replace('gap-', ''));
+      const gapValue = parseInt(GAP.DEFAULT.replace('gap-', ''));
       expect(stackValue).toBe(gapValue);
     });
   });

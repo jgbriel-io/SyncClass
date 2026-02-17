@@ -3,22 +3,105 @@ import { PageContainer } from "@/components/ui/page-container";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StudentPixPaymentBox } from "@/components/student/StudentPixPaymentBox";
-import { getPixKey } from "@/lib/pixConfig";
 import { useStudentFinancialRecords } from "@/hooks/useStudentPortal";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCurrentUserProfile } from "@/hooks/useUsers";
+import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
-import { ArrowLeft, Loader2, FileText, Calendar, Wallet } from "lucide-react";
+import { ArrowLeft, Loader2, FileText, Calendar, Wallet, Upload, CheckCircle2 } from "lucide-react";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";
+import { useQuery } from "@tanstack/react-query";
+import { useSubmitPaymentProof } from "@/hooks/usePaymentProof";
+import { useState, useRef } from "react";
+import { toast } from "sonner";
 
 export default function StudentCheckout() {
   const { recordId } = useParams<{ recordId: string }>();
+  const { user } = useAuth();
+  const { data: profile } = useCurrentUserProfile(user?.id);
   const { data: records = [], isLoading, error } = useStudentFinancialRecords();
-  const pixKey = getPixKey();
+  const submitProof = useSubmitPaymentProof();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // Buscar chave PIX do professor do aluno
+  const { data: teacherPixKey, isLoading: isLoadingPixKey } = useQuery({
+    queryKey: ["teacher-pix-key", profile?.student_id],
+    queryFn: async () => {
+      if (!profile?.student_id) {
+        return null;
+      }
+      
+      // Buscar o student para pegar o teacher_id
+      const { data: student, error: studentError } = await supabase
+        .from("students")
+        .select("teacher_id")
+        .eq("id", profile.student_id)
+        .maybeSingle();
+      
+      if (studentError || !student?.teacher_id) {
+        return null;
+      }
+      
+      // Buscar a chave PIX do professor
+      const { data: teacher, error: teacherError } = await supabase
+        .from("teachers")
+        .select("pix_key")
+        .eq("id", student.teacher_id)
+        .maybeSingle();
+      
+      if (teacherError || !teacher?.pix_key) {
+        return null;
+      }
+      
+      return teacher.pix_key;
+    },
+    enabled: !!profile?.student_id,
+  });
 
   const record = recordId ? records.find((r) => r.id === recordId) : null;
   const isPaid = record?.status === "pago";
+  const hasProof = !!(record as any)?.payment_proof_url;
+  const proofStatus = (record as any)?.payment_proof_status;
   const notFound = !isLoading && !error && recordId && !record;
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de arquivo
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Apenas imagens (JPEG, PNG, WebP) ou PDF são permitidos");
+      return;
+    }
+
+    // Validar tamanho (máx 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 5MB");
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const handleSubmitProof = () => {
+    if (!selectedFile || !recordId) return;
+
+    submitProof.mutate(
+      { financialRecordId: recordId, file: selectedFile },
+      {
+        onSuccess: () => {
+          setSelectedFile(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
+        },
+      }
+    );
+  };
 
   if (isLoading) {
     return (
@@ -112,16 +195,118 @@ export default function StudentCheckout() {
           <h2 className={typography('TABLE_HEADER')}>
             Pagar com PIX
           </h2>
-          {pixKey ? (
-            <StudentPixPaymentBox pixKey={pixKey} />
+          {isLoadingPixKey ? (
+            <Card className="p-4 bg-muted/30">
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <p className={`${typography('SMALL')}`}>
+                  Carregando chave PIX...
+                </p>
+              </div>
+            </Card>
+          ) : teacherPixKey ? (
+            <StudentPixPaymentBox pixKey={teacherPixKey} />
           ) : (
             <Card className="p-4 bg-muted/30">
               <p className={`${typography('SMALL')} text-center`}>
                 Entre em contato com seu professor para obter a chave PIX e realizar o pagamento. Após pagar, envie o comprovante para que ele confirme na plataforma.
               </p>
+              <p className={`${typography('SMALL')} text-center text-muted-foreground mt-2`}>
+                (Debug: Profile student_id: {profile?.student_id || "não encontrado"})
+              </p>
             </Card>
           )}
         </div>
+
+        {/* Enviar Comprovante */}
+        {!isPaid && (
+          <div className={stack('TIGHT')}>
+            <h2 className={typography('TABLE_HEADER')}>
+              Enviar Comprovante
+            </h2>
+            
+            {hasProof ? (
+              <Card className="p-4 bg-success/5 border-success/30">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Comprovante enviado!</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {proofStatus === "pending" && "Aguardando confirmação do professor"}
+                      {proofStatus === "approved" && "Comprovante aprovado"}
+                      {proofStatus === "rejected" && "Comprovante rejeitado. Envie um novo."}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <Card className="p-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Após realizar o pagamento, envie o comprovante para que seu professor possa confirmar.
+                </p>
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                
+                {selectedFile ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted">
+                      <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm flex-1 truncate">{selectedFile.name}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = "";
+                          }
+                        }}
+                      >
+                        Remover
+                      </Button>
+                    </div>
+                    <Button
+                      className="w-full"
+                      onClick={handleSubmitProof}
+                      disabled={submitProof.isPending}
+                    >
+                      {submitProof.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-2" />
+                          Enviar Comprovante
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Selecionar Arquivo
+                  </Button>
+                )}
+                
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Formatos aceitos: JPEG, PNG, WebP ou PDF (máx. 5MB)
+                </p>
+              </Card>
+            )}
+          </div>
+        )}
 
         <Button variant="outline" className="w-full" asChild>
           <Link to="/student/financial">

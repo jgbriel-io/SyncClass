@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { sanitizeText } from "@/lib/utils/sanitize";
 
-type FinancialStatus = "pago" | "pendente" | "atrasado";
+type FinancialStatus = "pago" | "pendente" | "atrasado" | "validando";
 
 interface StudentFinancialCardProps {
   record: {
@@ -39,6 +39,11 @@ const statusConfig: Record<FinancialStatus, {
     variant: "destructive",
     label: "Atrasado",
     borderColor: "border-l-destructive",
+  },
+  validando: {
+    variant: "warning",
+    label: "Validando",
+    borderColor: "border-l-warning",
   },
 };
 
@@ -93,6 +98,14 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
             <div className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
               <span className="text-sm font-medium">Pagamento em atraso</span>
+            </div>
+          )}
+
+          {/* Validando */}
+          {record.status === "validando" && (
+            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+              <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+              <span className="text-sm font-medium">Comprovante enviado. Aguardando confirmação do professor.</span>
             </div>
           )}
         </div>

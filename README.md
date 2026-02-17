@@ -1,4 +1,4 @@
-# 🎓 Edu Core Zen
+# 🎓 JLAC English School | Platform
 
 Sistema de gestão de aulas e cobranças para professores e alunos.
 

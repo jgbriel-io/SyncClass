@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { SettingsModal } from "@/components/layout/SettingsModal";
+import { Footer } from "@/components/layout/Footer";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -143,8 +144,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <span className="text-sidebar-primary-foreground font-bold text-base">E</span>
             </div>
             {!sidebarCollapsed && (
-              <span className="text-lg font-semibold text-sidebar-foreground tracking-tight">
-                EduCore
+            <span className="text-base font-semibold text-sidebar-foreground tracking-tight">
+                JLAC English School
               </span>
             )}
           </Link>
@@ -219,7 +220,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Main content */}
       <div className={cn(
-        "transition-all duration-300 ease-in-out",
+        "flex flex-col min-h-screen transition-all duration-300 ease-in-out",
         sidebarCollapsed ? "laptop:pl-[72px]" : "laptop:pl-64"
       )}>
         {/* Top bar */}
@@ -341,8 +342,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="p-4 tablet:p-5 laptop:p-6 desktop:p-8 animate-fade-in">{children}</main>
+        {/* Page content - flex-1 faz crescer para empurrar o footer para baixo */}
+        <main className="flex-1 p-4 tablet:p-5 laptop:p-6 desktop:p-8 animate-fade-in">{children}</main>
+        
+        {/* Footer - sempre no bottom */}
+        <Footer />
       </div>
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>

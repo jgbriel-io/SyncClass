@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/collapsible";
 
 export type FinancialPeriodPreset = "all" | "today" | "this_week" | "this_month";
-export type FinancialStatusFilter = "all" | "pendente" | "pago" | "atrasado";
+export type FinancialStatusFilter = "all" | "pendente" | "pago" | "atrasado" | "validando";
 export type FinancialSortBy = "due_desc" | "due_asc" | "amount_desc" | "amount_asc" | "created_desc" | "created_asc";
 
 export interface FinancialFiltersState {
@@ -85,6 +85,7 @@ export function FinancialFilters({ filters, onChange, onReset, students = [] }: 
                 <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="pago">Pago</SelectItem>
                 <SelectItem value="atrasado">Atrasado</SelectItem>
+                <SelectItem value="validando">Validando</SelectItem>
               </SelectContent>
             </Select>
           </div>
