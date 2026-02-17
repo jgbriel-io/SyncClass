@@ -1,0 +1,19 @@
+fix: regenera tipos Supabase e corrige parâmetros RPC
+
+- Regenera src/integrations/supabase/types.ts (estava vazio)
+- Adiciona funções RPC faltantes manualmente:
+  * update_student_payment_day
+  * soft_delete_student
+  * restore_student
+- Corrige tipos em useStudents.ts:
+  * Cria tipo StudentWithStats para compatibilidade de views
+  * Altera import para type import
+- Corrige parâmetros em update_student_payment_day:
+  * p_new_pay_day para p_pay_day (2 locais)
+
+Validações:
+- npm run type-check: Zero erros
+- npm run build: Sucesso (9.62s, 148 arquivos)
+- Diagnósticos TypeScript: Todos os hooks sem erros
+
+Status: PRONTO PARA PRODUÇÃO

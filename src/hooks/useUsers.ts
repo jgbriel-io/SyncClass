@@ -1,9 +1,46 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, Enums } from "@/integrations/supabase/types";
 
-const DEFAULT_PAGE_SIZE = 20;
+export interface UsersStats {
+  total: number;
+  active: number;
+  inactive: number;
+  newThisMonth: number;
+}
+
+export function useUsersStats() {
+  return useQuery({
+    queryKey: ["users_stats"],
+    queryFn: async (): Promise<UsersStats> => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("active, created_at");
+
+      if (error) throw error;
+
+      const rows = data ?? [];
+      const now = new Date();
+      const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
+      const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+
+      const total = rows.length;
+      const active = rows.filter((r) => r.active === true).length;
+      const inactive = rows.filter((r) => r.active === false).length;
+      const newThisMonth = rows.filter((r) => {
+        if (!r.created_at) return false;
+        const createdDate = String(r.created_at).split("T")[0];
+        return createdDate >= monthStart && createdDate <= monthEnd;
+      }).length;
+
+      return { total, active, inactive, newThisMonth };
+    },
+  });
+}
+
+const DEFAULT_PAGE_SIZE = 10;
 
 export type UsersListFilters = {
   role?: "all" | "admin" | "teacher" | "student";
@@ -40,6 +77,8 @@ export interface CombinedUser {
     full_name: string | null;
     email: string | null;
   } | null;
+  student: Tables<"students"> | null;
+  teacher: Tables<"teachers"> | null;
 }
 
 // Legacy export for backward compatibility
@@ -63,13 +102,35 @@ export function useUsers() {
 
       if (rolesError) throw rolesError;
 
+      // Buscar todos os students e teachers de uma vez
+      const { data: students, error: studentsError } = await supabase
+        .from("students")
+        .select("*");
+
+      if (studentsError) throw studentsError;
+
+      const { data: teachers, error: teachersError } = await supabase
+        .from("teachers")
+        .select("*");
+
+      if (teachersError) throw teachersError;
+
       return (profiles || []).map((profile: ProfileRow): CombinedUser => {
         const roleRow = (roles || []).find((r: UserRoleRow) => r.user_id === profile.user_id);
         const emailFromProfile = profile.email;
         const emailFromRole = roleRow?.email;
         const primaryEmail = emailFromProfile || emailFromRole || "";
 
-        return {
+        // Buscar student e teacher vinculados
+        const student = profile.student_id 
+          ? (students || []).find(s => s.id === profile.student_id) || null
+          : null;
+        
+        const teacher = profile.teacher_id
+          ? (teachers || []).find(t => t.id === profile.teacher_id) || null
+          : null;
+
+        const combinedUser: CombinedUser = {
           id: profile.user_id,
           email: primaryEmail,
           created_at: profile.created_at || "",
@@ -92,7 +153,11 @@ export function useUsers() {
             full_name: roleRow.full_name,
             email: roleRow.email,
           } : null,
+          student,
+          teacher,
         };
+
+        return combinedUser;
       });
     },
   });
@@ -123,10 +188,18 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
   const query = useQuery({
     queryKey: ["users_paginated", page, pageSize, filters],
     queryFn: async () => {
-      const q = supabase
-        .from("profiles")
-        .select("*", { count: "exact" })
-        .order("created_at", { ascending: false });
+      let q = supabase.from("profiles").select("*", { count: "exact" });
+
+      if (filters?.status === "active") {
+        q = q.eq("active", true);
+      } else if (filters?.status === "inactive") {
+        q = q.eq("active", false);
+      }
+
+      const sortBy = filters?.sortBy ?? "created_desc";
+      const orderCol = sortBy === "name_asc" || sortBy === "name_desc" ? "full_name" : "created_at";
+      const ascending = sortBy === "created_asc" || sortBy === "name_asc";
+      q = q.order(orderCol, { ascending, nullsFirst: false });
 
       const from = page * pageSize;
       const to = from + pageSize - 1;
@@ -147,11 +220,52 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
 
       if (rolesError) throw rolesError;
 
+      // Buscar students e teachers vinculados
+      const studentIds = profileRows
+        .map(p => p.student_id)
+        .filter((id): id is string => id != null);
+      
+      const teacherIds = profileRows
+        .map(p => p.teacher_id)
+        .filter((id): id is string => id != null);
+
+      let students: Tables<"students">[] = [];
+      let teachers: Tables<"teachers">[] = [];
+
+      if (studentIds.length > 0) {
+        const { data: studentsData, error: studentsError } = await supabase
+          .from("students")
+          .select("*")
+          .in("id", studentIds);
+        
+        if (studentsError) throw studentsError;
+        students = studentsData || [];
+      }
+
+      if (teacherIds.length > 0) {
+        const { data: teachersData, error: teachersError } = await supabase
+          .from("teachers")
+          .select("*")
+          .in("id", teacherIds);
+        
+        if (teachersError) throw teachersError;
+        teachers = teachersData || [];
+      }
+
       const list = profileRows.map((profile): CombinedUser => {
         const roleRow = (roles || []).find((r: UserRoleRow) => r.user_id === profile.user_id);
         const emailFromProfile = profile.email;
         const emailFromRole = roleRow?.email;
         const primaryEmail = emailFromProfile || emailFromRole || "";
+
+        // Buscar student e teacher vinculados
+        const student = profile.student_id 
+          ? students.find(s => s.id === profile.student_id) || null
+          : null;
+        
+        const teacher = profile.teacher_id
+          ? teachers.find(t => t.id === profile.teacher_id) || null
+          : null;
 
         return {
           id: profile.user_id,
@@ -176,6 +290,8 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
             full_name: roleRow.full_name,
             email: roleRow.email,
           } : null,
+          student,
+          teacher,
         };
       });
 
@@ -209,11 +325,20 @@ export function useCurrentUserProfile(userId: string | undefined) {
       if (!userId) return null;
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, user_id, full_name, email, avatar_url")
+        .select("id, user_id, full_name, email, avatar_url, role, teacher_id, student_id")
         .eq("user_id", userId)
         .maybeSingle();
       if (error) throw error;
-      return data as { id: string; user_id: string; full_name: string | null; email: string | null; avatar_url: string | null } | null;
+      return data as { 
+        id: string; 
+        user_id: string; 
+        full_name: string | null; 
+        email: string | null; 
+        avatar_url: string | null;
+        role: string | null;
+        teacher_id: string | null;
+        student_id: string | null;
+      } | null;
     },
     enabled: !!userId,
   });
@@ -248,7 +373,8 @@ export {
   useUploadAvatar,
   useDeleteUser,
   useHardDeleteUser,
-  useAdminResetPassword,
+  useResetPassword,
+  useResetOwnPassword,
   useLinkUserToStudent,
   useLinkUserToTeacher,
   useCreateAuthUserForStudent,

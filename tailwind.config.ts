@@ -14,6 +14,13 @@ export default {
       },
     },
     extend: {
+      // 4 breakpoints de responsividade: mobile (até 425px), tablet 768px, laptop 1024px, desktop 1440px
+      screens: {
+        mobile: { max: "425px" },
+        tablet: "768px",
+        laptop: "1024px",
+        desktop: "1440px",
+      },
       fontFamily: {
         sans: ['Geist Sans', 'system-ui', 'sans-serif'],
       },
@@ -57,6 +64,7 @@ export default {
           foreground: "hsl(var(--success-foreground))",
           muted: "hsl(var(--success-muted))",
         },
+        "success-action": "rgb(var(--success-action) / <alpha-value>)",
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",

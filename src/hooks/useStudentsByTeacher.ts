@@ -49,7 +49,7 @@ export function useCreateStudentForTeacher() {
     },
     onError: (error: unknown) => {
       const friendly = getDuplicateErrorMessage(error as { code?: string; message?: string });
-      toast.error(friendly || "Erro ao cadastrar aluno. Tente novamente.");
+      toast.error(friendly || "Não foi possível cadastrar o aluno. Por favor, tente novamente.");
     },
   });
 }

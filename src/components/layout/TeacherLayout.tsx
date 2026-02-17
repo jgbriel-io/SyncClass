@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -18,6 +18,7 @@ import {
   Search,
   Bell,
   Settings,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { SettingsModal } from "@/components/layout/SettingsModal";
+import { Footer } from "@/components/layout/Footer";
 
 interface TeacherLayoutProps {
   children: React.ReactNode;
@@ -46,6 +48,7 @@ const navigation = [
   { name: "Visão Geral", href: "/teacher/overview", icon: ClipboardList },
   { name: "Alunos", href: "/teacher/students", icon: Users },
   { name: "Aulas", href: "/teacher/classes", icon: BookOpen },
+  { name: "Atividades", href: "/teacher/activities", icon: FileText },
   { name: "Financeiro", href: "/teacher/financial", icon: CreditCard },
 ];
 
@@ -58,7 +61,14 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signOut, user } = useAuth();
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/teacher/students")) {
+      setSearchQuery(searchParams.get("search") ?? "");
+    }
+  }, [location.pathname, searchParams]);
   const { data: profile } = useCurrentUserProfile(user?.id);
   const { data: teacherProfile } = useQuery({
     queryKey: ["teacher-profile", user?.id],
@@ -86,13 +96,15 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
       queryClient.invalidateQueries({ queryKey: ["teacher-birthdays"] });
       queryClient.invalidateQueries({ queryKey: ["teacher-new-students-and-classes-by-month"] });
       queryClient.invalidateQueries({ queryKey: ["today_classes"] });
-    } else if (path.startsWith("/teacher/overview") || path.startsWith("/teacher/students")) {
+    } else if (path.startsWith("/teacher/overview") || path.startsWith("/teacher/students") || path.startsWith("/admin/overview") || path.startsWith("/admin/students")) {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["students_with_stats"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_by_student_ids"] });
     } else if (path.startsWith("/teacher/classes")) {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
+    } else if (path.startsWith("/teacher/activities")) {
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
     } else if (path.startsWith("/teacher/financial")) {
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
@@ -119,7 +131,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm laptop:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -129,7 +141,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
           sidebarCollapsed ? "w-[72px]" : "w-64",
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          mobileOpen ? "translate-x-0" : "-translate-x-full laptop:translate-x-0"
         )}
       >
         {/* Logo */}
@@ -137,13 +149,13 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
           "flex h-16 items-center border-b border-sidebar-border",
           sidebarCollapsed ? "justify-center px-2" : "justify-between px-4"
         )}>
-          <Link to="/teacher" className="flex items-center gap-3">
+          <Link to="/teacher" className="flex items-center gap-4">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 flex items-center justify-center shadow-lg">
               <span className="text-sidebar-primary-foreground font-bold text-base">E</span>
             </div>
             {!sidebarCollapsed && (
-              <span className="text-lg font-semibold text-sidebar-foreground tracking-tight">
-                EduCore
+              <span className="text-base font-semibold text-sidebar-foreground tracking-tight">
+                JLAC English School
               </span>
             )}
           </Link>
@@ -151,7 +163,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
           {/* Mobile close */}
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
+            className="laptop:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
           >
             <X className="h-5 w-5" />
           </button>
@@ -168,7 +180,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                   to={item.href}
                   title={sidebarCollapsed ? item.name : undefined}
                   className={cn(
-                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                    "group flex items-center gap-4 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                     sidebarCollapsed && "justify-center px-2",
                     isActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
@@ -189,7 +201,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             className={cn(
-              "hidden lg:flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors",
+              "hidden laptop:flex w-full items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors",
               sidebarCollapsed && "justify-center px-2"
             )}
           >
@@ -202,7 +214,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             onClick={handleLogout}
             disabled={isLoggingOut}
             className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50",
+              "flex w-full items-center gap-4 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50",
               sidebarCollapsed && "justify-center px-2"
             )}
           >
@@ -218,31 +230,31 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
 
       {/* Main content */}
       <div className={cn(
-        "transition-all duration-300 ease-in-out",
-        sidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-64"
+        "flex flex-col min-h-screen transition-all duration-300 ease-in-out",
+        sidebarCollapsed ? "laptop:pl-[72px]" : "laptop:pl-64"
       )}>
         {/* Top bar - alinhado ao AdminLayout */}
-        <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
+        <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 tablet:px-5 laptop:px-6 desktop:px-8">
           {/* Left: menu + search */}
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-4">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden shrink-0 text-muted-foreground hover:text-foreground"
+              className="laptop:hidden shrink-0 text-muted-foreground hover:text-foreground"
               type="button"
               aria-label="Abrir menu"
             >
               <Menu className="h-6 w-6" />
             </button>
-            <form onSubmit={handleSearchSubmit} className="hidden md:block w-full max-w-sm">
+            <form onSubmit={handleSearchSubmit} className="hidden tablet:block w-full max-w-sm">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <Input
                   type="search"
-                  placeholder="Buscar alunos, aulas..."
+                  placeholder="Buscar aluno (nome, e-mail...)"
                   className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  aria-label="Buscar alunos, aulas"
+                  aria-label="Buscar aluno por nome ou e-mail"
                 />
               </div>
             </form>
@@ -287,7 +299,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                             to="/teacher/classes?status=avaliacao_pendente"
                             className="block rounded-md px-2 py-2 text-sm hover:bg-muted focus:bg-muted focus:outline-none"
                           >
-                            <span className="font-medium text-foreground">Aula em aberto para avaliação</span>
+                            <span className="font-medium text-foreground">Pendente</span>
                             <p className="mt-0.5 truncate text-muted-foreground">
                               {(log.students as { name?: string } | null)?.name ?? "Aluno"} · {log.class_date && format(new Date(log.class_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
                             </p>
@@ -340,8 +352,11 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="p-4 lg:p-6 animate-fade-in">{children}</main>
+        {/* Page content - flex-1 faz crescer para empurrar o footer para baixo */}
+        <main className="flex-1 p-4 tablet:p-5 laptop:p-6 desktop:p-8 animate-fade-in">{children}</main>
+        
+        {/* Footer - sempre no bottom */}
+        <Footer />
       </div>
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>

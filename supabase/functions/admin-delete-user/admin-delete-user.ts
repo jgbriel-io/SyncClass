@@ -61,11 +61,10 @@ serve(async (req) => {
     return jsonResponse({ error: "Forbidden" }, 403);
   }
 
-  // Parse body
+  // Parse body: só aba Usuários envia userId
   interface RequestBody {
     userId?: string;
   }
-  
   let body: RequestBody;
   try {
     body = await req.json();
@@ -78,30 +77,113 @@ serve(async (req) => {
     return jsonResponse({ error: "Missing userId" }, 400);
   }
 
-  // Ensure the target user is already deactivated at profile level
+  // Usuário tem que estar inativo; pega student_id e teacher_id para apagar os registros das tabelas
   const { data: profile, error: profileError } = await supabaseAdmin
     .from("profiles")
-    .select("active, student_id")
+    .select("active, student_id, teacher_id")
     .eq("user_id", userIdToDelete)
     .maybeSingle();
 
   if (profileError) {
     console.error("Error fetching profile for hard delete:", profileError);
-    return jsonResponse({ error: "Failed to load profile" }, 500);
+    return jsonResponse({ error: "Falha ao carregar perfil." }, 500);
   }
 
+  // Se o profile existe e está ativo, bloqueia — a menos que o student/teacher já tenha sido removido
+  // (indica que o hard delete foi iniciado pela aba Alunos/Professores)
   if (profile && profile.active === true) {
-    return jsonResponse({ error: "User must be deactivated before hard delete" }, 400);
+    // Verifica se os registros vinculados ainda existem
+    let studentStillExists = false;
+    let teacherStillExists = false;
+
+    if (profile.student_id) {
+      const { data: s } = await supabaseAdmin
+        .from("students")
+        .select("id")
+        .eq("id", profile.student_id)
+        .maybeSingle();
+      studentStillExists = !!s;
+    }
+    if (profile.teacher_id) {
+      const { data: t } = await supabaseAdmin
+        .from("teachers")
+        .select("id")
+        .eq("id", profile.teacher_id)
+        .maybeSingle();
+      teacherStillExists = !!t;
+    }
+
+    // Se o registro vinculado ainda existe, o usuário de fato não foi arquivado → bloqueia
+    if (studentStillExists || teacherStillExists || (!profile.student_id && !profile.teacher_id)) {
+      return jsonResponse({ error: "Arquive o usuário antes de excluir definitivamente." }, 400);
+    }
   }
 
-  // Perform hard delete via Admin API
-  const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
-    userIdToDelete,
-  );
+  const linkedStudentId = profile?.student_id ?? null;
+  const linkedTeacherId = profile?.teacher_id ?? null;
 
-  if (deleteError) {
-    console.error("Error hard-deleting user:", deleteError);
-    return jsonResponse({ error: deleteError.message }, 500);
+  // 1) Remove linked record from students table (ignora se já foi removido)
+  if (linkedStudentId) {
+    const { error: studentDeleteError } = await supabaseAdmin
+      .from("students")
+      .delete()
+      .eq("id", linkedStudentId);
+
+    if (studentDeleteError) {
+      // Ignora erro se o registro já não existir
+      console.warn("Student record delete (may already be gone):", studentDeleteError.message);
+    }
+  }
+
+  // 2) Remove linked record from teachers table
+  if (linkedTeacherId) {
+    const { error: teacherDeleteError } = await supabaseAdmin
+      .from("teachers")
+      .delete()
+      .eq("id", linkedTeacherId);
+
+    if (teacherDeleteError) {
+      console.error("Error deleting teacher record:", teacherDeleteError);
+      return jsonResponse(
+        { error: "Falha ao remover registro do professor: " + (teacherDeleteError.message || "tente novamente.") },
+        500,
+      );
+    }
+  }
+
+  // 3) Remove auth user if there was a linked profile (cascade removes profile and user_roles)
+  if (userIdToDelete) {
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
+      userIdToDelete,
+    );
+
+    if (deleteError) {
+      // Se o usuário já não existe (404), considera sucesso
+      const isUserNotFound = deleteError.status === 404 || 
+                             deleteError.code === "user_not_found" ||
+                             deleteError.message?.toLowerCase().includes("user not found");
+      
+      if (isUserNotFound) {
+        console.log("User already deleted from Auth, cleaning up database records");
+        // Usuário já foi deletado do Auth, mas pode ter registros no banco
+        // Remove profile e user_roles manualmente se existirem
+        await supabaseAdmin.from("profiles").delete().eq("user_id", userIdToDelete);
+        await supabaseAdmin.from("user_roles").delete().eq("user_id", userIdToDelete);
+        return jsonResponse({ success: true }, 200);
+      }
+      
+      console.error("Error hard-deleting user:", deleteError);
+      return jsonResponse({ error: deleteError.message }, 500);
+    }
+    
+    // Invalida todas as sessões do usuário deletado
+    // Isso força o logout em todos os dispositivos
+    try {
+      await supabaseAdmin.auth.admin.signOut(userIdToDelete);
+    } catch (signOutError) {
+      // Ignora erro de signOut pois o usuário já foi deletado
+      console.log("SignOut error (expected after delete):", signOutError);
+    }
   }
 
   return jsonResponse({ success: true }, 200);

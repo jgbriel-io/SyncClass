@@ -5,8 +5,9 @@ import { CheckCircle2, XCircle, CalendarClock, AlertCircle } from "lucide-react"
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import type { StudentStatementEntry } from "@/hooks/useStudentStatement";
-import { getClassStatusFromDate } from "@/lib/utils/classTime";
+import { getClassStatusFromDate, getClassStatusWithTime } from "@/lib/utils/classTime";
 import { cn } from "@/lib/utils";
+import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 
 const BILLING_LABELS: Record<
   NonNullable<StudentStatementEntry["billing_status_consolidated"]>,
@@ -39,11 +40,19 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
   entry,
   isLast = false,
 }: UnifiedStatementCardProps) {
-  const { attendance, grade, feedback, title, class_date } = entry;
+  const { attendance, grade, feedback, title, class_date, start_at, end_at } = entry;
   const billingStatus = entry.billing_status_consolidated ?? "not_billed";
   const hasBilling = entry.financial_record_id != null && entry.billed_amount != null;
   const showGrade = attendance === true && grade != null;
-  const classStatus = getClassStatusFromDate(class_date, attendance);
+  const classStatus =
+    start_at != null || end_at != null
+      ? getClassStatusWithTime({
+          class_date,
+          start_at: start_at ?? null,
+          end_at: end_at ?? null,
+          attendance,
+        })
+      : getClassStatusFromDate(class_date, attendance);
   const isConcluida = classStatus.label === "Concluída";
 
   return (
@@ -58,7 +67,7 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
             ? "border-green-500/30"
             : isConcluida && attendance === false
             ? "border-rose-500/30"
-            : classStatus.label === "Agendada"
+            : classStatus.label === "Agendada" || classStatus.label === "Em andamento"
             ? "border-blue-500/30"
             : "border-muted-foreground/30"
         )}
@@ -69,7 +78,7 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
           ) : (
             <XCircle className="h-4 w-4 text-rose-500" />
           )
-        ) : classStatus.label === "Agendada" ? (
+        ) : classStatus.label === "Agendada" || classStatus.label === "Em andamento" ? (
           <CalendarClock className="h-4 w-4 text-blue-600" />
         ) : (
           <AlertCircle className="h-4 w-4 text-amber-600" />
@@ -78,13 +87,25 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
 
       <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
         {/* Topo: Data, Matéria/Aula, Badge Presença/Status */}
-        <div className="p-3 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2 min-w-0">
-            <span className="text-sm font-medium tabular-nums">
-              {formatDate(class_date)}
-            </span>
+        <div className="p-3 flex flex-wrap items-start justify-between gap-2">
+          <div className="flex flex-wrap items-start gap-2 min-w-0">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium tabular-nums">
+                {formatDate(class_date)}
+              </span>
+              {(start_at != null || end_at != null) && (
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {start_at != null
+                    ? format(new Date(start_at), "HH:mm", { locale: ptBR })
+                    : "—"}
+                  {end_at != null &&
+                    start_at != null &&
+                    ` – ${format(new Date(end_at), "HH:mm", { locale: ptBR })}`}
+                </span>
+              )}
+            </div>
             <span className="text-sm text-muted-foreground truncate max-w-[180px] sm:max-w-none">
-              {title?.trim() || "Aula"}
+              {escapeHtml(title?.trim() || "Aula")}
             </span>
             <StatusBadge
               variant={
@@ -92,7 +113,7 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
                   ? attendance
                     ? "success"
                     : "destructive"
-                  : classStatus.label === "Agendada"
+                  : classStatus.label === "Agendada" || classStatus.label === "Em andamento"
                   ? "info"
                   : "warning"
               }
@@ -129,7 +150,7 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
         {feedback?.trim() && (
           <div className="px-3 pb-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              {feedback}
+              {sanitizeText(feedback)}
             </p>
           </div>
         )}

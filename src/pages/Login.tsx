@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { GraduationCap, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { typography } from "@/lib/design-tokens/typography";
+import { stack } from "@/lib/design-tokens/spacing";
+import { iconSize } from "@/lib/design-tokens/icon-sizes";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -60,25 +63,24 @@ export default function Login() {
       <div className="hidden lg:flex lg:w-1/2 bg-primary relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
         <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
-              <GraduationCap className="h-6 w-6" />
+              <GraduationCap className={iconSize('LG')} />
             </div>
-            <span className="text-xl font-semibold">EduCore</span>
+            <span className={`${typography('H2')} font-semibold`}>JLAC English School</span>
           </div>
 
-          <div className="space-y-6 max-w-md">
-            <h1 className="text-4xl font-bold leading-tight">
-              Gestão educacional simplificada
+          <div className={`${stack('RELAXED')} max-w-md`}>
+            <h1 className={`${typography('DISPLAY')} leading-tight`}>
+              Your English learning platform
             </h1>
-            <p className="text-lg text-primary-foreground/80 leading-relaxed">
-              Controle de alunos, aulas e financeiro em um único lugar. 
-              Saia das planilhas, ganhe tempo e clareza.
+            <p className={`${typography('H3')} text-primary-foreground/80 leading-relaxed`}>
+              Manage your classes, track progress, and handle payments all in one place.
             </p>
           </div>
 
-          <p className="text-sm text-primary-foreground/60">
-            © 2025 EduCore. Todos os direitos reservados.
+          <p className={typography('SMALL')}>
+            © 2026 JLAC English School. All rights reserved.
           </p>
         </div>
 
@@ -91,25 +93,25 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-sm space-y-8">
           {/* Mobile logo */}
-          <div className="lg:hidden flex items-center justify-center gap-3">
+          <div className="lg:hidden flex items-center justify-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
               <GraduationCap className="h-7 w-7 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-semibold">EduCore</span>
+            <span className="text-lg font-semibold">JLAC English School</span>
           </div>
 
-          <div className="space-y-2 text-center lg:text-left">
-                <h2 className="text-2xl font-semibold tracking-tight">
+          <div className={`${stack('RELAXED')} text-center lg:text-left`}>
+                <h2 className={typography('H2')}>
                   Bem-vindo de volta
                 </h2>
-                <p className="text-muted-foreground">
+                <p className={typography('BODY')}>
                   Entre com suas credenciais para acessar
                 </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
+          <form onSubmit={handleSubmit} className={stack('RELAXED')}>
+            <div className={stack('LOOSE')}>
+              <div className={stack('TIGHT')}>
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -123,7 +125,7 @@ export default function Login() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className={stack('TIGHT')}>
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
                   <Input
@@ -143,9 +145,9 @@ export default function Login() {
                     disabled={isLoading}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className={iconSize('SM')} />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className={iconSize('SM')} />
                     )}
                   </button>
                 </div>
@@ -155,14 +157,14 @@ export default function Login() {
             <Button type="submit" className="w-full h-11" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className={`mr-2 ${iconSize('SM')} animate-spin`} />
                   Entrando...
                 </>
               ) : (
                 "Entrar"
               )}
             </Button>
-            <p className="text-center text-sm">
+            <p className={`text-center ${typography('BODY')}`}>
               <Link
                 to="/esqueci-senha"
                 className="text-muted-foreground hover:text-foreground underline underline-offset-2"

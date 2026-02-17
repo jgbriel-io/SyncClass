@@ -27,11 +27,11 @@ export function TablePaginationBar({
 
   return (
     <div
-      className={`border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30 ${className}`}
+      className={`border-t px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 flex items-center justify-between gap-4 bg-muted/30 ${className}`}
       role="navigation"
       aria-label="Paginação da tabela"
     >
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
         {totalCount > 0 ? `${from}-${to} de ${totalCount}` : "0 registros"}
       </p>
       <div className="flex items-center gap-2">

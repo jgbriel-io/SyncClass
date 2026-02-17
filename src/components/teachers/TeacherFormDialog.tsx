@@ -5,29 +5,32 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Loader2 } from "lucide-react";
 import { Teacher, TeacherInsert } from "@/hooks/useTeachers";
 import { REGEX_PATTERNS, maskCPF } from "@/lib/utils/patterns";
+import { emailSchema } from "@/lib/validation/email";
 
 const teacherSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
-  email: z
-    .string()
-    .min(1, "Email é obrigatório")
-    .email("Email inválido")
-    .max(255),
+  email: emailSchema,
   phone: z
     .string()
-    .max(20)
     .optional()
-    .or(z.literal("").transform(() => undefined)),
+    .refine((val) => {
+      if (!val || val.trim() === "") return true;
+      return (val.length === 14 || val.length === 15) && REGEX_PATTERNS.phone.test(val);
+    }, {
+      message: "Telefone deve ter 10 ou 11 dígitos no formato (00) 00000-0000",
+    }),
   cpf: z
     .string()
-    .max(14)
     .optional()
-    .refine((val) => !val || REGEX_PATTERNS.cpf.test(val), {
-      message: "Formato deve ser 000.000.000-00",
+    .refine((val) => {
+      if (!val || val.trim() === "") return true;
+      return val.length === 14 && REGEX_PATTERNS.cpf.test(val);
+    }, {
+      message: "CPF deve ter 11 dígitos no formato 000.000.000-00",
     }),
 });
 
@@ -116,14 +119,13 @@ export function TeacherFormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>
-            {teacher ? "Editar Professor" : "Cadastrar Novo Professor"}
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={teacher ? "Editar Professor" : "Cadastrar Novo Professor"}
+      size="MD"
+    >
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2 space-y-2">
               <Label htmlFor="name">Nome completo *</Label>
@@ -190,7 +192,7 @@ export function TeacherFormDialog({
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-4 pt-4">
             <Button
               type="button"
               variant="outline"
@@ -213,7 +215,6 @@ export function TeacherFormDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

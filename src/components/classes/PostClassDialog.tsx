@@ -1,13 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,17 +14,42 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { useUpdateClassLog } from "@/hooks/useClassLogs";
-import { useMarkAsPaid, useDeleteFinancialRecord } from "@/hooks/useFinancialRecords";
+import { useMarkAsPaid, useUpdateFinancialStatus } from "@/hooks/useFinancialRecords";
 
-const postClassSchema = z.object({
-  attendance: z.boolean(),
-  grade: z.string().optional(),
-  feedback: z.string().max(500).optional(),
-  chargeAbsence: z.boolean().optional(),
-  confirmPayment: z.boolean().optional(),
-});
+/** Schema do modal Avaliar aula: nota, feedback e confirmar pagamento obrigatórios quando aplicável */
+function createPostClassSchema(requirePaymentConfirmation: boolean) {
+  return z
+    .object({
+      attendance: z.boolean(),
+      grade: z.string().optional(),
+      feedback: z.string().min(1, "Informe o feedback").max(500, "Máximo 500 caracteres"),
+      chargeAbsence: z.boolean().optional(),
+      confirmPayment: z.boolean().optional(),
+      refundPayment: z.boolean().optional(),
+    })
+    .refine(
+      (data) => {
+        // Só exige nota se o aluno COMPARECEU
+        if (!data.attendance) return true;
+        const g = data.grade?.trim();
+        if (!g) return false;
+        const n = parseFloat(g.replace(",", "."));
+        return !Number.isNaN(n) && n >= 0 && n <= 10;
+      },
+      { message: "Informe a nota (0–10)", path: ["grade"] }
+    )
+    .refine(
+      (data) => {
+        // Só exige confirmação de pagamento se COMPARECEU e tem cobrança não paga
+        if (!requirePaymentConfirmation) return true;
+        if (!data.attendance) return true; // Se faltou, não exige confirmação de pagamento
+        return data.confirmPayment === true;
+      },
+      { message: "Marque a opção para confirmar pagamento", path: ["confirmPayment"] }
+    );
+}
 
-type PostClassFormData = z.infer<typeof postClassSchema>;
+type PostClassFormData = z.infer<ReturnType<typeof createPostClassSchema>>;
 
 interface PostClassDialogProps {
   open: boolean;
@@ -46,7 +66,38 @@ export function PostClassDialog({
 }: PostClassDialogProps) {
   const updateClassLog = useUpdateClassLog();
   const markAsPaid = useMarkAsPaid();
-  const deleteFinancialRecord = useDeleteFinancialRecord();
+  const updateFinancialStatus = useUpdateFinancialStatus();
+
+  // Supabase pode retornar financial_records como objeto ou array (1:1)
+  // Também precisa verificar financial_record_class_logs para aulas de pacote
+  const financialRecord = (() => {
+    // Primeiro tenta financial_records direto
+    if (classLog?.financial_records) {
+      const records = Array.isArray(classLog.financial_records)
+        ? classLog.financial_records
+        : [classLog.financial_records];
+      if (records.length > 0 && records[0]?.id) {
+        return records[0];
+      }
+    }
+    // Se não tem direto, tenta via pacote
+    if (classLog?.financial_record_class_logs && classLog.financial_record_class_logs.length > 0) {
+      const packageFinancial = classLog.financial_record_class_logs[0]?.financial_records;
+      if (packageFinancial?.id) {
+        return packageFinancial;
+      }
+    }
+    return null;
+  })();
+  
+  const hasFinancialRecord = !!financialRecord?.id;
+  const isPaymentAlreadyPaid = financialRecord?.status === "pago";
+  const requirePaymentConfirmation = !!(classLog && hasFinancialRecord && !isPaymentAlreadyPaid);
+
+  const postClassSchema = useMemo(
+    () => createPostClassSchema(requirePaymentConfirmation),
+    [requirePaymentConfirmation]
+  );
 
   const {
     register,
@@ -63,16 +114,14 @@ export function PostClassDialog({
       feedback: "",
       chargeAbsence: false,
       confirmPayment: false,
+      refundPayment: false,
     },
   });
 
   const attendance = watch("attendance");
   const chargeAbsence = watch("chargeAbsence");
   const confirmPayment = watch("confirmPayment");
-
-  const hasFinancialRecord = !!classLog?.financial_records?.id;
-
-  const isPaymentAlreadyPaid = classLog?.financial_records?.status === "pago";
+  const refundPayment = watch("refundPayment");
 
   useEffect(() => {
     if (open && classLog) {
@@ -82,6 +131,7 @@ export function PostClassDialog({
         feedback: classLog.feedback ?? "",
         chargeAbsence: false,
         confirmPayment: isPaymentAlreadyPaid,
+        refundPayment: false,
       });
     }
   }, [open, classLog, reset, isPaymentAlreadyPaid]);
@@ -103,16 +153,52 @@ export function PostClassDialog({
         feedback: feedbackValue,
       });
 
-      if (!attendanceValue && hasFinancialRecord && !data.chargeAbsence) {
-        await deleteFinancialRecord.mutateAsync(classLog.financial_records!.id);
-      } else if (attendanceValue && hasFinancialRecord && data.confirmPayment) {
-        await markAsPaid.mutateAsync(classLog.financial_records!.id);
+      // Lógica de cobrança quando o aluno FALTOU
+      if (!attendanceValue && hasFinancialRecord && financialRecord?.id) {
+        if (!data.chargeAbsence) {
+          // Faltou e NÃO quer cobrar
+          if (isPaymentAlreadyPaid) {
+            // Se já estava pago e marcou para extornar
+            if (data.refundPayment) {
+              await updateFinancialStatus.mutateAsync({ 
+                id: financialRecord.id, 
+                status: "extornado" 
+              });
+            } else {
+              // Mantém como pago (não faz nada)
+              toast.success("Falta registrada, pagamento mantido como pago");
+            }
+          } else {
+            // Não estava pago, marca como abonado
+            await updateFinancialStatus.mutateAsync({ 
+              id: financialRecord.id, 
+              status: "abonado" 
+            });
+          }
+        } else {
+          // Faltou e QUER cobrar: mantém o status atual
+          if (isPaymentAlreadyPaid) {
+            toast.success("Falta registrada, cobrança mantida como paga");
+          } else {
+            toast.success("Falta registrada, cobrança mantida como pendente");
+          }
+        }
+      } 
+      // Lógica de pagamento quando o aluno COMPARECEU
+      else if (attendanceValue && hasFinancialRecord && data.confirmPayment && financialRecord?.id) {
+        await markAsPaid.mutateAsync(financialRecord.id);
+      } else if (attendanceValue) {
+        // Compareceu mas não tem cobrança ou não confirmou pagamento
+        toast.success("Avaliação registrada com sucesso");
+      } else {
+        // Faltou mas não tem cobrança
+        toast.success("Falta registrada");
       }
 
       onSuccess();
       onOpenChange(false);
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error("❌ Erro ao registrar avaliação:", error);
       toast.error("Erro ao registrar avaliação. Tente novamente.");
     }
   };
@@ -120,7 +206,7 @@ export function PostClassDialog({
   const isPending =
     updateClassLog.isPending ||
     markAsPaid.isPending ||
-    deleteFinancialRecord.isPending;
+    updateFinancialStatus.isPending;
 
   if (!classLog) return null;
 
@@ -132,15 +218,16 @@ export function PostClassDialog({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Avaliar aula</DialogTitle>
-        </DialogHeader>
-        <p className="text-sm text-muted-foreground">
-          {studentName} — {classDateFormatted}
-        </p>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Avaliar aula"
+      size="SM"
+    >
+      <p className="text-sm text-muted-foreground mb-4">
+        {studentName} — {classDateFormatted}
+      </p>
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label>Comparecimento</Label>
             <div className="flex gap-6">
@@ -166,57 +253,68 @@ export function PostClassDialog({
           </div>
 
           {attendance && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="grade">Nota (0–10)</Label>
-                <Input
-                  id="grade"
-                  type="text"
-                  placeholder="Ex: 8.5"
-                  {...register("grade")}
-                />
-                {errors.grade && (
-                  <p className="text-sm text-destructive">{errors.grade.message}</p>
-                )}
-              </div>
-              {hasFinancialRecord && (
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="confirmPayment"
-                    checked={confirmPayment}
-                    disabled={isPaymentAlreadyPaid}
-                    onCheckedChange={(checked) =>
-                      setValue("confirmPayment", !!checked)
-                    }
-                  />
-                  <Label
-                    htmlFor="confirmPayment"
-                    className={isPaymentAlreadyPaid ? "cursor-default text-muted-foreground" : "cursor-pointer"}
-                  >
-                    Confirmar pagamento
-                  </Label>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="grade">Nota (0–10)</Label>
+              <Input
+                id="grade"
+                type="text"
+                placeholder="Ex: 8.5"
+                {...register("grade")}
+              />
+              {errors.grade && (
+                <p className="text-sm text-destructive">{errors.grade.message}</p>
               )}
-            </>
+            </div>
           )}
 
           {!attendance && hasFinancialRecord && (
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="chargeAbsence"
-                checked={chargeAbsence}
-                onCheckedChange={(checked) =>
-                  setValue("chargeAbsence", !!checked)
-                }
-              />
-              <Label htmlFor="chargeAbsence" className="cursor-pointer">
-                Cobrar esta falta?
-              </Label>
+            <div className="space-y-3 p-3 bg-muted/50 rounded-lg border">
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="chargeAbsence"
+                  checked={chargeAbsence}
+                  onCheckedChange={(checked) =>
+                    setValue("chargeAbsence", !!checked)
+                  }
+                />
+                <div className="flex-1">
+                  <Label htmlFor="chargeAbsence" className="cursor-pointer font-medium">
+                    Cobrar esta falta
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {chargeAbsence 
+                      ? "A cobrança será mantida com o status atual"
+                      : isPaymentAlreadyPaid
+                        ? "A cobrança será mantida como paga (ou extornada se marcar abaixo)"
+                        : "A cobrança será marcada como abonada (não cobrada)"}
+                  </p>
+                </div>
+              </div>
+              
+              {!chargeAbsence && isPaymentAlreadyPaid && (
+                <div className="flex items-start gap-2 ml-6 pt-2 border-t">
+                  <Checkbox
+                    id="refundPayment"
+                    checked={refundPayment}
+                    onCheckedChange={(checked) =>
+                      setValue("refundPayment", !!checked)
+                    }
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="refundPayment" className="cursor-pointer font-medium text-amber-600">
+                      Extornar pagamento
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      O pagamento será marcado como extornado (devolvido ao aluno)
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="feedback">Feedback (opcional)</Label>
+            <Label htmlFor="feedback">Feedback</Label>
             <Textarea
               id="feedback"
               placeholder="Observações sobre a aula..."
@@ -227,6 +325,30 @@ export function PostClassDialog({
               <p className="text-sm text-destructive">{errors.feedback.message}</p>
             )}
           </div>
+
+          {attendance && hasFinancialRecord && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="confirmPayment"
+                  checked={confirmPayment}
+                  disabled={isPaymentAlreadyPaid}
+                  onCheckedChange={(checked) =>
+                    setValue("confirmPayment", !!checked)
+                  }
+                />
+                <Label
+                  htmlFor="confirmPayment"
+                  className={isPaymentAlreadyPaid ? "cursor-default text-muted-foreground" : "cursor-pointer"}
+                >
+                  Confirmar pagamento
+                </Label>
+              </div>
+              {errors.confirmPayment && (
+                <p className="text-sm text-destructive">{errors.confirmPayment.message}</p>
+              )}
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button
@@ -243,7 +365,6 @@ export function PostClassDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

@@ -21,27 +21,32 @@ const StudentShell = lazy(() => import("@/components/layout/StudentShell"));
 // Lazy - páginas administrativas
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const StudentsPage = lazy(() => import("./pages/admin/Students"));
-const StudentOverviewPage = lazy(() => import("./pages/admin/StudentOverview"));
+const OverviewPage = lazy(() => import("./pages/admin/Overview"));
 const UsersPage = lazy(() => import("./pages/admin/Users"));
 const FinancialPage = lazy(() => import("./pages/admin/Financial"));
 const ClassesPage = lazy(() => import("./pages/admin/Classes"));
 const AdminTeachersPage = lazy(() => import("./pages/admin/Teachers"));
+const AdminActivitiesPage = lazy(() => import("./pages/admin/Activities"));
 
 // Lazy loading - páginas de professor
 const TeacherHome = lazy(() => import("./pages/teacher/TeacherHome"));
 const TeacherStudentsPage = lazy(() => import("./pages/teacher/TeacherStudents"));
 const TeacherFinancialPage = lazy(() => import("./pages/teacher/TeacherFinancial"));
 const TeacherOverviewPage = lazy(() => import("./pages/teacher/TeacherOverview"));
-const TeacherPedagogicalPage = lazy(() => import("./pages/teacher/TeacherPedagogical"));
+const TeacherClassesPage = lazy(() => import("./pages/teacher/TeacherClasses"));
+const TeacherActivitiesPage = lazy(() => import("./pages/teacher/TeacherActivities"));
 
 // Lazy loading - páginas de estudante
 const StudentHome = lazy(() => import("./pages/student/StudentHome"));
 const StudentHistory = lazy(() => import("./pages/student/StudentHistory"));
 const StudentFinancial = lazy(() => import("./pages/student/StudentFinancial"));
+const StudentCheckout = lazy(() => import("./pages/student/StudentCheckout"));
+const StudentActivitiesPage = lazy(() => import("./pages/student/StudentActivities"));
 const StudentPanel = lazy(() => import("./pages/StudentPanel"));
 
 // Lazy loading - outras páginas
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Policies = lazy(() => import("./pages/Policies"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -68,7 +73,12 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <AuthProvider>
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -98,16 +108,21 @@ const App = () => (
               }
             />
             <Route path="/redefinir-senha" element={<ResetPassword />} />
+            
+            {/* Policies - Página pública */}
+            <Route path="/policies" element={<Policies />} />
 
             {/* Admin Routes - layout persistente evita piscada ao trocar abas */}
             <Route path="/admin" element={<AdminShell />}>
               <Route index element={<AdminDashboard />} />
               <Route path="students" element={<StudentsPage />} />
-              <Route path="students/overview" element={<StudentOverviewPage />} />
+              <Route path="overview" element={<OverviewPage />} />
               <Route path="financial" element={<FinancialPage />} />
               <Route path="classes" element={<ClassesPage />} />
+              <Route path="activities" element={<AdminActivitiesPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="teachers" element={<AdminTeachersPage />} />
+              <Route path="policies" element={<Policies />} />
             </Route>
 
             {/* Teacher Routes - layout persistente */}
@@ -119,7 +134,9 @@ const App = () => (
               <Route path="students" element={<TeacherStudentsPage />} />
               <Route path="overview" element={<TeacherOverviewPage />} />
               <Route path="financial" element={<TeacherFinancialPage />} />
-              <Route path="classes" element={<TeacherPedagogicalPage />} />
+              <Route path="classes" element={<TeacherClassesPage />} />
+              <Route path="activities" element={<TeacherActivitiesPage />} />
+              <Route path="policies" element={<Policies />} />
             </Route>
 
             {/* Student Routes - layout persistente */}
@@ -130,6 +147,9 @@ const App = () => (
               <Route index element={<StudentHome />} />
               <Route path="history" element={<StudentHistory />} />
               <Route path="financial" element={<StudentFinancial />} />
+              <Route path="financial/checkout/:recordId" element={<StudentCheckout />} />
+              <Route path="activities" element={<StudentActivitiesPage />} />
+              <Route path="policies" element={<Policies />} />
             </Route>
 
             {/* Catch-all */}

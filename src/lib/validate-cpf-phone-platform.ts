@@ -17,6 +17,17 @@ export async function validateCpfPhonePlatform(
   if (!data) return null;
   const cpf = normalizeDigits(data.cpf);
   const phone = normalizeDigits(data.phone);
+  
+  // Validar comprimento do CPF (deve ter exatamente 11 dígitos)
+  if (cpf && cpf.length > 0 && cpf.length !== 11) {
+    return "CPF deve ter exatamente 11 dígitos";
+  }
+  
+  // Validar comprimento do telefone (deve ter 10 ou 11 dígitos)
+  if (phone && phone.length > 0 && (phone.length < 10 || phone.length > 11)) {
+    return "Telefone deve ter 10 ou 11 dígitos";
+  }
+  
   if (cpf.length === 11) {
     const { data: exists, error } = await supabase.rpc("check_cpf_exists_platform", { p_cpf_digits: cpf });
     if (error) throw new Error("Erro ao validar CPF. Execute a migration check_cpf_phone_platform_wide.");

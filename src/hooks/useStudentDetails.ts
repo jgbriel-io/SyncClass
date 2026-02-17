@@ -4,16 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { isOverdue } from "@/lib/utils/financialStatus";
 import { Student } from "./useStudents";
 
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 10;
 
 export interface StudentClassLog {
   id: string;
   class_date: string;
   start_at: string | null;
   end_at: string | null;
+  duration_minutes: number | null;
   attendance: boolean | null;
   grade: number | null;
   feedback: string | null;
+  title: string | null;
+  billed_amount: number | null;
+  teacher_id: string | null;
+  teacher_name?: string;
   created_at: string | null;
 }
 
@@ -58,14 +63,55 @@ export function useStudentDetails(studentId: string | null) {
       if (studentError) throw studentError;
       if (!student) return null;
 
-      // Fetch class logs
+      // Fetch class logs - buscar teacher name separadamente
       const { data: classLogs, error: classLogsError } = await supabase
         .from("class_logs")
-        .select("id, class_date, start_at, end_at, attendance, grade, feedback, created_at")
+        .select(`
+          id,
+          class_date,
+          start_at,
+          end_at,
+          duration_minutes,
+          attendance,
+          grade,
+          feedback,
+          title,
+          billed_amount,
+          teacher_id,
+          created_at
+        `)
         .eq("student_id", studentId)
         .order("class_date", { ascending: false });
 
       if (classLogsError) throw classLogsError;
+
+      // Nome do professor do aluno como fallback
+      let studentTeacherName: string | undefined;
+      if (student.teacher_id) {
+        const { data: teacherData } = await supabase
+          .from("teachers_masked")
+          .select("name")
+          .eq("id", student.teacher_id)
+          .maybeSingle();
+        studentTeacherName = teacherData?.name ?? undefined;
+      }
+
+      const rawLogs = (classLogs || []) as Array<Record<string, unknown>>;
+      const mappedClassLogs: StudentClassLog[] = rawLogs.map((log) => ({
+        id: log.id as string,
+        class_date: log.class_date as string,
+        start_at: log.start_at as string | null,
+        end_at: log.end_at as string | null,
+        duration_minutes: log.duration_minutes as number | null,
+        attendance: log.attendance as boolean | null,
+        grade: log.grade as number | null,
+        feedback: log.feedback as string | null,
+        title: log.title as string | null,
+        billed_amount: log.billed_amount as number | null,
+        teacher_id: (log.teacher_id ?? student.teacher_id) as string | null,
+        teacher_name: studentTeacherName,
+        created_at: log.created_at as string | null,
+      }));
 
       // Fetch financial records
       const { data: financialRecords, error: financialError } = await supabase
@@ -105,7 +151,7 @@ export function useStudentDetails(studentId: string | null) {
 
       return {
         ...student,
-        classLogs: classLogs || [],
+        classLogs: mappedClassLogs,
         financialRecords: financialRecords || [],
         stats: {
           totalClasses,
@@ -211,6 +257,7 @@ export interface StudentWithStats extends Student {
 
 export interface UseStudentsWithStatsPaginatedOptions {
   pageSize?: number;
+  teacherId?: string | null;
 }
 
 export interface UseStudentsWithStatsPaginatedResult {
@@ -230,17 +277,26 @@ export function useStudentsWithStatsPaginated(
 ): UseStudentsWithStatsPaginatedResult {
   const [page, setPage] = useState(0);
   const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
+  const teacherId = options?.teacherId;
 
   const query = useQuery({
-    queryKey: ["students_with_stats_paginated", page, pageSize],
+    queryKey: ["students_with_stats_paginated", page, pageSize, teacherId],
     queryFn: async () => {
       const from = page * pageSize;
       const to = from + pageSize - 1;
-      const { data: students, error: studentsError, count } = await supabase
+      let q = supabase
         .from("students_masked")
-        .select("*", { count: "exact" })
+        .select("*", { count: "exact" });
+
+      if (teacherId) {
+        q = q.eq("teacher_id", teacherId);
+      }
+
+      q = q.eq("status", "ativo")
         .order("name", { ascending: true })
         .range(from, to);
+
+      const { data: students, error: studentsError, count } = await q;
 
       if (studentsError) throw studentsError;
 

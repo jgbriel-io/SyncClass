@@ -13,11 +13,13 @@ import {
   GraduationCap,
   Clock,
   ChevronRight,
+  ChevronDown,
   Bell,
   Link2,
   UserPlus,
   Zap,
   Filter,
+  BookOpen,
 } from "lucide-react";
 import {
   Select,
@@ -43,6 +45,7 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { TodayClassesData } from "@/hooks/useTodayClasses";
 import { getTodayClassStatus } from "@/hooks/useTodayClasses";
+import type { ForecastedBilling } from "@/hooks/useForecastedBilling";
 
 function formatBirthday(dateString: string): string {
   return format(new Date(dateString + "T00:00:00"), "dd/MM", { locale: ptBR });
@@ -65,8 +68,8 @@ function MetricCard({ title, value, change, changeLabel, icon: Icon, iconColor =
     <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">{title}</p>
+          <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">{value}</p>
           {change !== undefined && (
             <div className="flex items-center gap-1">
               {isPositive ? (
@@ -137,6 +140,7 @@ interface FinancialSummary {
   totalPaid: number;
   totalPending: number;
   totalOverdue: number;
+  totalReceivable: number; // pending + overdue
 }
 
 interface DashboardViewProps {
@@ -144,10 +148,13 @@ interface DashboardViewProps {
   subtitle?: string;
   stats: DashboardStats | undefined;
   financialSummary?: FinancialSummary | undefined;
+  forecastedBilling?: ForecastedBilling | undefined;
   upcomingPayments: UpcomingPayment[];
   birthdays: Birthday[];
   chartData: ChartDataPoint[];
   todayClasses: TodayClassesData | undefined;
+  /** Número de aulas pendentes de feedback (avaliação). Exibido no topo do dashboard. */
+  pendingFeedbackCount?: number;
   isLoading: boolean;
   chartLoading?: boolean;
   basePath: "/admin" | "/teacher";
@@ -165,10 +172,12 @@ export function DashboardView({
   subtitle,
   stats,
   financialSummary,
+  forecastedBilling,
   upcomingPayments,
   birthdays,
   chartData,
   todayClasses,
+  pendingFeedbackCount = 0,
   isLoading,
   chartLoading = false,
   basePath,
@@ -182,6 +191,7 @@ export function DashboardView({
   );
   const lines = chartLines ?? internalChartLines;
   const setLines = onChartLinesChange ?? setInternalChartLines;
+  const [isQuickActionsExpanded, setIsQuickActionsExpanded] = useState(true);
 
   const overduePercentage = stats && stats.activeStudents > 0
     ? ((stats.overdueCount / stats.activeStudents) * 100).toFixed(1)
@@ -191,8 +201,113 @@ export function DashboardView({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        <p className="text-muted-foreground">{subtitle}</p>
+        <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">{title}</h1>
+        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground">{subtitle}</p>
+      </div>
+
+      {/* Aviso: aulas pendentes de feedback */}
+      {pendingFeedbackCount > 0 && (
+        <div className="rounded-lg border border-warning/50 bg-warning/10 px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-warning shrink-0" />
+            <p className="text-sm font-medium">
+              <span className="font-semibold">{pendingFeedbackCount}</span>{" "}
+              {pendingFeedbackCount === 1 ? "aula pendente de feedback" : "aulas pendentes de feedback"}
+            </p>
+          </div>
+          <Link
+            to={`${basePath}/classes?status=avaliacao_pendente`}
+            className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary shrink-0 transition-colors"
+          >
+            Ver e avaliar
+            <ChevronRight className="h-3 w-3" />
+          </Link>
+        </div>
+      )}
+
+      {/* Ações Rápidas - linha separada com layout horizontal */}
+      <div className="rounded-xl border bg-card shadow-card">
+        <button
+          onClick={() => setIsQuickActionsExpanded(!isQuickActionsExpanded)}
+          className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-4">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Zap className="h-4 w-4 text-primary" />
+            </div>
+            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Ações Rápidas</h2>
+          </div>
+          <ChevronDown
+            className={cn(
+              "h-5 w-5 text-muted-foreground transition-transform duration-200",
+              isQuickActionsExpanded && "rotate-180"
+            )}
+          />
+        </button>
+        {isQuickActionsExpanded && (
+        <div className="p-6 border-t">
+          <div className="flex flex-wrap gap-6 justify-center sm:justify-start">
+          <Link
+            to={`${basePath}/students`}
+            className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+          >
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
+            <p className="text-sm">Cadastrar Aluno</p>
+          </Link>
+          <Link
+            to={`${basePath}/classes`}
+            className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+          >
+            <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+              <GraduationCap className="h-4 w-4 text-success" />
+            </div>
+            <p className="text-sm">Registrar Aula</p>
+          </Link>
+          <Link
+            to={`${basePath}/financial`}
+            className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+          >
+            <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+              <DollarSign className="h-4 w-4 text-warning" />
+            </div>
+            <p className="text-sm">Visualizar cobranças</p>
+          </Link>
+          <Link
+            to={basePath === "/admin" ? "/admin/overview" : "/teacher/overview"}
+            className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+          >
+            <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
+              <TrendingUp className="h-4 w-4 text-accent-foreground" />
+            </div>
+            <p className="text-sm">Visão Geral</p>
+          </Link>
+          {basePath === "/admin" && (
+            <>
+              <Link
+                to="/admin/teachers"
+                className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+              >
+                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <UserPlus className="h-4 w-4 text-primary" />
+                </div>
+                <p className="text-sm">Cadastrar professor</p>
+              </Link>
+              <Link
+                to="/admin/users"
+                className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+              >
+                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
+                  <Link2 className="h-4 w-4 text-accent-foreground" />
+                </div>
+                <p className="text-sm">Cadastrar usuário</p>
+              </Link>
+            </>
+          )}
+          </div>
+        </div>
+        )}
       </div>
 
       {/* Loading */}
@@ -206,11 +321,11 @@ export function DashboardView({
         <>
           {/* Alerta Próxima Aula */}
           {todayClasses?.nextClass && (
-            <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 flex items-center gap-3">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 flex items-center gap-4">
               <Bell className="h-5 w-5 text-primary shrink-0" />
               <p className="text-sm font-medium">
                 {basePath === "/teacher" ? "Sua próxima aula" : "Próxima aula do dia"}{" "}
-                é com o aluno{" "}
+                é com o(a) aluno(a){" "}
                 <span className="font-semibold text-primary">{todayClasses.nextClass.studentName}</span>
                 {todayClasses.nextClass.timeLabel !== "Horário não definido" && (
                   <span className="font-normal">
@@ -222,7 +337,7 @@ export function DashboardView({
           )}
 
           {/* Estatísticas */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
             <MetricCard
               title="Alunos Ativos"
               value={stats?.activeStudents || 0}
@@ -257,60 +372,97 @@ export function DashboardView({
           </div>
 
           {/* Financeiro */}
-          {financialSummary != null && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">Total recebido</p>
-                    <p className="text-2xl font-bold tracking-tight text-success">
-                      {formatCurrency(financialSummary.totalPaid)}
-                    </p>
-                  </div>
-                  <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-success/10">
-                    <DollarSign className="h-5 w-5 text-success" />
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">A receber</p>
-                    <p className="text-2xl font-bold tracking-tight">
-                      {formatCurrency(financialSummary.totalPending)}
-                    </p>
-                  </div>
-                  <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-warning/10">
-                    <DollarSign className="h-5 w-5 text-warning" />
+          {(financialSummary != null || forecastedBilling != null) && (
+            <div className="grid gap-4 grid-cols-1 laptop:grid-cols-5">
+              {/* Previsão de Faturamento Mensal */}
+              {forecastedBilling != null && (
+                <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Previsão Mensal</p>
+                      <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-primary">
+                        {formatCurrency(forecastedBilling.totalForecast)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {forecastedBilling.receivedPercentage}% recebido
+                      </p>
+                    </div>
+                    <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">Em atraso</p>
-                    <p className="text-2xl font-bold tracking-tight text-destructive">
-                      {formatCurrency(financialSummary.totalOverdue)}
-                    </p>
+              )}
+              {financialSummary != null && (
+                <>
+                  <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total recebido</p>
+                        <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-success">
+                          {formatCurrency(financialSummary.totalPaid)}
+                        </p>
+                      </div>
+                      <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-success/10">
+                        <DollarSign className="h-5 w-5 text-success" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-destructive/10">
-                    <DollarSign className="h-5 w-5 text-destructive" />
+                  <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total a receber</p>
+                        <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">
+                          {formatCurrency(financialSummary.totalReceivable)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Pendentes + Em atraso</p>
+                      </div>
+                      <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-warning/10">
+                        <DollarSign className="h-5 w-5 text-warning" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                  <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Pendente</p>
+                        <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                          {formatCurrency(financialSummary.totalPending)}
+                        </p>
+                      </div>
+                      <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-blue-500/10">
+                        <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Em atraso</p>
+                        <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-destructive">
+                          {formatCurrency(financialSummary.totalOverdue)}
+                        </p>
+                      </div>
+                      <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-destructive/10">
+                        <DollarSign className="h-5 w-5 text-destructive" />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
           {/* Aulas de Hoje - altura relativa à quantidade de aulas */}
           <div className="rounded-xl border bg-card shadow-card overflow-hidden">
             <div className="flex items-center justify-between border-b px-6 py-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center">
                   <Clock className="h-4 w-4 text-warning" />
                 </div>
                 <div>
-                  <h2 className="font-semibold">Aulas de Hoje</h2>
-                  <p className="text-xs text-muted-foreground">
+                  <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Aulas de Hoje</h2>
+                  <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
                     {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
                   </p>
                 </div>
@@ -334,17 +486,17 @@ export function DashboardView({
                           key={item.id}
                           className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-4">
                             <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-                              <span className="text-sm font-medium">
+                              <span className="text-xs font-medium">
                                 {item.studentName.charAt(0)}
                               </span>
                             </div>
                             <div>
-                              <p className="font-medium text-sm">
+                              <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
                                 {item.timeLabel} — {item.studentName}
                               </p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
                                 {item.title?.trim() || "Aula"}
                               </p>
                             </div>
@@ -358,7 +510,7 @@ export function DashboardView({
                   </div>
                 )}
               {todayClasses?.classes.length ? (
-                <div className="border-t px-6 py-3 flex items-center">
+                <div className="border-t px-2 py-2 flex items-center">
                   <Link
                     to={`${basePath}/classes`}
                     className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1"
@@ -371,18 +523,18 @@ export function DashboardView({
             </div>
           </div>
 
-          {/* Terceira linha: Próximos Vencimentos 40% + Aniversariantes 40% + Ações Rápidas 20% */}
-          <div className="grid gap-6 lg:grid-cols-[2fr_2fr_1fr]">
+          {/* Terceira linha: Próximos Vencimentos + Aniversariantes */}
+          <div className="grid gap-6 grid-cols-1 laptop:grid-cols-2">
             {/* Upcoming Payments */}
             <div className="rounded-xl border bg-card shadow-card">
               <div className="flex items-center justify-between border-b px-6 py-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center">
                     <Clock className="h-4 w-4 text-warning" />
                   </div>
                   <div>
-                    <h2 className="font-semibold">Próximos Vencimentos</h2>
-                    <p className="text-xs text-muted-foreground">Pagamentos pendentes desta semana</p>
+                    <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Próximos Vencimentos</h2>
+                    <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">Pagamentos pendentes desta semana</p>
                   </div>
                 </div>
                 <StatusBadge variant="warning">{upcomingPayments.length}</StatusBadge>
@@ -400,20 +552,20 @@ export function DashboardView({
                       key={payment.id}
                       className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-                          <span className="text-sm font-medium">
+                          <span className="text-xs font-medium">
                             {payment.studentName.charAt(0)}
                           </span>
                         </div>
                         <div>
-                          <p className="font-medium text-sm">{payment.studentName}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">{payment.studentName}</p>
+                          <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
                             Vence em {formatDate(payment.dueDate)}
                           </p>
                         </div>
                       </div>
-                      <span className="font-semibold text-sm">
+                      <span className="font-semibold text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
                         {formatCurrency(payment.amount)}
                       </span>
                     </div>
@@ -421,7 +573,7 @@ export function DashboardView({
                 )}
               </div>
               {upcomingPayments.length > 0 && (
-                <div className="border-t px-6 py-3">
+                <div className="border-t px-2 py-2">
                   <Link
                     to={`${basePath}/financial`}
                     className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1"
@@ -436,13 +588,13 @@ export function DashboardView({
             {/* Birthdays */}
             <div className="rounded-xl border bg-card shadow-card flex flex-col min-h-0">
               <div className="flex items-center justify-between border-b px-6 py-4 shrink-0">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center">
                     <span className="text-lg">🎂</span>
                   </div>
                   <div>
-                    <h2 className="font-semibold">Aniversariantes</h2>
-                    <p className="text-xs text-muted-foreground">Este mês</p>
+                    <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Aniversariantes</h2>
+                    <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">Este mês</p>
                   </div>
                 </div>
                 <StatusBadge variant="warning">{birthdays.length}</StatusBadge>
@@ -460,16 +612,16 @@ export function DashboardView({
                       key={birthday.id}
                       className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center">
-                          <span className="text-sm font-medium">
+                          <span className="text-xs font-medium">
                             {birthday.name.charAt(0)}
                           </span>
                         </div>
-                        <p className="font-medium text-sm">{birthday.name}</p>
+                        <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">{birthday.name}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
                           {formatBirthday(birthday.birthDate)}
                         </span>
                         <span className="text-lg">🎉</span>
@@ -479,7 +631,7 @@ export function DashboardView({
                 )}
               </div>
               {birthdays.length > 0 && (
-                <div className="border-t px-6 py-3 shrink-0 flex justify-end">
+                <div className="border-t px-2 py-2 shrink-0 flex justify-end">
                   <Link
                     to={`${basePath}/students?filter=aniversariantes`}
                     className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1"
@@ -490,99 +642,25 @@ export function DashboardView({
                 </div>
               )}
             </div>
-
-            {/* Ações Rápidas */}
-            <div className="rounded-xl border bg-card shadow-card flex flex-col">
-              <div className="border-b px-6 py-4 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Zap className="h-4 w-4 text-primary" />
-                  </div>
-                  <h2 className="font-semibold">Ações Rápidas</h2>
-                </div>
-              </div>
-              <div className="flex-1 flex items-center justify-center p-4 min-h-0">
-                <div className="grid grid-cols-3 gap-x-4 gap-y-5 w-full max-w-[280px]">
-                <Link
-                  to={`${basePath}/students`}
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Users className="h-4 w-4 text-primary" />
-                  </div>
-                  <p className="text-center text-xs leading-tight">Cadastrar Aluno</p>
-                </Link>
-                <Link
-                  to={`${basePath}/classes`}
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center">
-                    <GraduationCap className="h-4 w-4 text-success" />
-                  </div>
-                  <p className="text-center text-xs leading-tight">Registrar Aula</p>
-                </Link>
-                <Link
-                  to={`${basePath}/financial`}
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center">
-                    <DollarSign className="h-4 w-4 text-warning" />
-                  </div>
-                  <p className="text-center text-xs leading-tight">Visualizar cobranças</p>
-                </Link>
-                <Link
-                  to={basePath === "/admin" ? "/admin/students/overview" : "/teacher/overview"}
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center">
-                    <TrendingUp className="h-4 w-4 text-accent-foreground" />
-                  </div>
-                  <p className="text-center text-xs leading-tight">Visão Geral</p>
-                </Link>
-                {basePath === "/admin" && (
-                  <>
-                    <Link
-                      to="/admin/teachers"
-                      className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                    >
-                      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <UserPlus className="h-4 w-4 text-primary" />
-                      </div>
-                      <p className="text-center text-xs leading-tight">Cadastrar professor</p>
-                    </Link>
-                    <Link
-                      to="/admin/users"
-                      className="flex flex-col items-center justify-center gap-2 rounded-lg px-2 py-3 text-sm font-medium hover:bg-muted transition-colors group"
-                    >
-                      <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center">
-                        <Link2 className="h-4 w-4 text-accent-foreground" />
-                      </div>
-                      <p className="text-center text-xs leading-tight">Cadastrar usuário</p>
-                    </Link>
-                  </>
-                )}
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Gráfico de crescimento - ao final da página */}
           <div className="rounded-xl border bg-card shadow-card">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b px-6 py-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center">
                   <TrendingUp className="h-4 w-4 text-success" />
                 </div>
                 <div>
-                  <h2 className="font-semibold">
-                    {basePath === "/admin" ? "Crescimento da plataforma" : "Crescimento de Alunos e Aulas"}
+                  <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">
+                    {basePath === "/admin" ? "Crescimento da plataforma" : "Evolução de Alunos e Aulas"}
                   </h2>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground">
                     {chartMonths === 1 ? "Mês atual (por dia)" : `Últimos ${chartMonths} meses`}
                   </p>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-4">
                 {onChartMonthsChange && (
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4 text-muted-foreground" />

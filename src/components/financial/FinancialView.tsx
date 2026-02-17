@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { useUndoFinancialPayment } from "@/hooks/useFinancialRecords";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
+import { useStudents } from "@/hooks/useStudents";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Check, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Loader2, DollarSign } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   FinancialFilters,
@@ -37,33 +38,48 @@ import {
   useFinancialSummary,
   useCreateFinancialRecord,
   useMarkAsPaid,
+  useConfirmPayment,
   useUpdateFinancialRecord,
   useDeleteFinancialRecord,
   FinancialRecordInsert,
   FinancialRecordWithRelations,
 } from "@/hooks/useFinancialRecords";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Pencil, Trash2, TrendingUp, Eye } from "lucide-react";
+import { FinancialTableSkeleton } from "@/components/ui/table-skeleton";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
-
-type PaymentStatus = "pendente" | "atrasado" | "pago";
-
-const statusLabels: Record<PaymentStatus, string> = {
-  pendente: "Pendente",
-  atrasado: "Atrasado",
-  pago: "Pago",
-};
-
-const statusVariants: Record<PaymentStatus, "warning" | "destructive" | "success"> = {
-  pendente: "warning",
-  atrasado: "destructive",
-  pago: "success",
-};
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  tableThLarge,
+  tableThMedium,
+  tableThSmall,
+  tableThSmallRight,
+  tableTdLarge,
+  tableTdMedium,
+  tableTdSmall,
+  tableTdActions,
+} from "@/lib/utils/tableColumns";
+import { cn } from "@/lib/utils";
+import { useForecastedBilling } from "@/hooks/useForecastedBilling";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { FinancialTableRow } from "@/components/financial/FinancialTableRow";
+import { COL as FIN_COL, TABLE_MIN_W as FIN_TABLE_MIN_W } from "@/components/financial/FinancialTableRow.constants";
+import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useCurrentUserProfile } from "@/hooks/useUsers";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FinancialViewProps {
   title?: string;
@@ -86,11 +102,16 @@ export function FinancialView({
   const [confirmPaymentId, setConfirmPaymentId] = useState<string | null>(null);
   const [recordToConfirm, setRecordToConfirm] = useState<FinancialRecordWithRelations | null>(null);
   const [recordToEdit, setRecordToEdit] = useState<FinancialRecordWithRelations | null>(null);
-  const [recordToDelete, setRecordToDelete] = useState<FinancialRecordWithRelations | null>(null);
   const [recordToUndo, setRecordToUndo] = useState<FinancialRecordWithRelations | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [undoDialogOpen, setUndoDialogOpen] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<FinancialRecordWithRelations | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [historyRecord, setHistoryRecord] = useState<FinancialRecordWithRelations | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState<string | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
+  const { data: forecastedBilling } = useForecastedBilling(autoTeacherId);
+  const { user } = useAuth();
+  const { data: currentUserProfile } = useCurrentUserProfile(user?.id);
 
   const {
     data: records = [],
@@ -102,10 +123,11 @@ export function FinancialView({
     totalCount,
     isFetching,
   } = useFinancialRecords(autoTeacherId, {
-    pageSize: 20,
+    pageSize: 10,
     filters: {
       dateFrom: filters.dateFrom || undefined,
       dateTo: filters.dateTo || undefined,
+      studentId: filters.studentId,
       sortBy: filters.sortBy,
     },
   });
@@ -115,8 +137,11 @@ export function FinancialView({
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [page]);
   const { data: teachers = [] } = useTeachers();
+  const { data: students = [] } = useStudents();
+  const activeStudents = students.filter((s) => s.status === "ativo");
   const createRecord = useCreateFinancialRecord();
   const markAsPaid = useMarkAsPaid();
+  const confirmPayment = useConfirmPayment();
   const updateRecord = useUpdateFinancialRecord();
   const deleteRecord = useDeleteFinancialRecord();
 
@@ -128,6 +153,7 @@ export function FinancialView({
 
   const filteredRecords = useMemo(() => {
     let result = recordsWithActualStatus.filter((record) => {
+      // Apenas busca por texto (não está no banco - CPF/telefone com dígitos)
       const searchLower = filters.search.toLowerCase().trim();
       const studentName = record.students?.name || "";
       const studentEmail = (record.students as { email?: string | null })?.email || "";
@@ -143,32 +169,29 @@ export function FinancialView({
             studentPhone.replace(/\D/g, "").includes(searchDigits)));
       if (!matchesSearch) return false;
 
-      const matchesStatus = filters.status === "all" || record.actualStatus === filters.status;
-      if (!matchesStatus) return false;
+      // Filtro de status
+      if (filters.status !== "all" && record.actualStatus !== filters.status) {
+        return false;
+      }
 
-      const dueDate = record.due_date ? new Date(record.due_date + "T12:00:00") : null;
-      if (filters.dateFrom && dueDate) {
-        const from = new Date(filters.dateFrom);
-        if (dueDate < from) return false;
-      }
-      if (filters.dateTo && dueDate) {
-        const to = new Date(filters.dateTo);
-        to.setHours(23, 59, 59, 999);
-        if (dueDate > to) return false;
-      }
       return true;
     });
 
+    // Ordenação (não está no banco)
     result = [...result].sort((a, b) => {
       const dueA = new Date((a.due_date || "") + "T12:00:00").getTime();
       const dueB = new Date((b.due_date || "") + "T12:00:00").getTime();
       const amtA = Number(a.amount) || 0;
       const amtB = Number(b.amount) || 0;
+      const createdA = new Date(a.created_at || 0).getTime();
+      const createdB = new Date(b.created_at || 0).getTime();
 
       if (filters.sortBy === "due_asc") return dueA - dueB;
       if (filters.sortBy === "due_desc") return dueB - dueA;
       if (filters.sortBy === "amount_desc") return amtB - amtA;
       if (filters.sortBy === "amount_asc") return amtA - amtB;
+      if (filters.sortBy === "created_desc") return createdB - createdA;
+      if (filters.sortBy === "created_asc") return createdA - createdB;
       return 0;
     });
     return result;
@@ -200,28 +223,33 @@ export function FinancialView({
     }
   };
 
-  const handleDeleteRecord = () => {
-    if (recordToDelete) {
-      deleteRecord.mutate(recordToDelete.id, {
-        onSuccess: () => {
-          setDeleteDialogOpen(false);
-          setRecordToDelete(null);
-        },
-      });
-    }
-  };
-
   const openConfirmPayment = (record: FinancialRecordWithRelations) => {
     setRecordToConfirm(record);
     setConfirmPaymentId(record.id);
   };
 
   const handleConfirmPayment = () => {
-    if (confirmPaymentId) {
-      markAsPaid.mutate(confirmPaymentId, {
+    if (confirmPaymentId && !isProcessingPayment) {
+      setIsProcessingPayment(confirmPaymentId);
+      confirmPayment.mutate(confirmPaymentId, {
         onSuccess: () => {
           setConfirmPaymentId(null);
           setRecordToConfirm(null);
+          setIsProcessingPayment(null);
+        },
+        onError: () => {
+          setIsProcessingPayment(null);
+        },
+      });
+    }
+  };
+
+  const handleDeleteRecord = () => {
+    if (recordToDelete) {
+      deleteRecord.mutate(recordToDelete.id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setRecordToDelete(null);
         },
       });
     }
@@ -256,39 +284,103 @@ export function FinancialView({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="text-muted-foreground mt-1">{subtitle}</p>
+          <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">{title}</h1>
+          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">{subtitle}</p>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border bg-card p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">A receber</p>
-          <p className="text-2xl font-semibold mt-1">
-            {formatCurrency(actualSummary.totalPending)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {actualSummary.countPending} cobrança{actualSummary.countPending !== 1 && "s"} pendente{actualSummary.countPending !== 1 && "s"}
-          </p>
+
+      {/* Card grande de Previsão de Faturamento Mensal */}
+      {forecastedBilling && (
+        <div className="rounded-lg border bg-gradient-to-br from-primary/5 to-primary/10 p-6 shadow-card mb-4">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Previsão de Faturamento Mensal</p>
+              </div>
+              <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-primary">
+                {formatCurrency(forecastedBilling.totalForecast)}
+              </p>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="text-success font-medium">
+                  {formatCurrency(forecastedBilling.receivedThisMonth)} recebido
+                </span>
+                <span>•</span>
+                <span className="font-medium">
+                  {formatCurrency(forecastedBilling.pendingThisMonth)} pendente
+                </span>
+              </div>
+              {/* Barra de progresso */}
+              <div className="w-full bg-muted rounded-full h-2">
+                <div
+                  className="bg-primary h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(forecastedBilling.receivedPercentage, 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {forecastedBilling.receivedPercentage}% recebido ({forecastedBilling.paidCount}/{forecastedBilling.totalCount} cobranças)
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="rounded-lg border bg-card p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">Recebido</p>
-          <p className="text-2xl font-semibold mt-1 text-success">
-            {formatCurrency(actualSummary.totalPaid)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {actualSummary.countPaid} pagamento{actualSummary.countPaid !== 1 && "s"}
-          </p>
+      )}
+
+      {/* Cards financeiros padrão dashboard (exceto previsão mensal) */}
+      <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
+        <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total recebido</p>
+              <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-success">
+                {formatCurrency(actualSummary.totalPaid)}
+              </p>
+            </div>
+            <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-success/10">
+              <DollarSign className="h-5 w-5 text-success" />
+            </div>
+          </div>
         </div>
-        <div className="rounded-lg border bg-card p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">Em atraso</p>
-          <p className="text-2xl font-semibold mt-1 text-destructive">
-            {formatCurrency(actualSummary.totalOverdue)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {actualSummary.countOverdue} cobrança{actualSummary.countOverdue !== 1 && "s"}
-          </p>
+        <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total a receber</p>
+              <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">
+                {formatCurrency(actualSummary.totalPending + actualSummary.totalOverdue)}
+              </p>
+              <p className="text-xs text-muted-foreground">Pendentes + Em atraso</p>
+            </div>
+            <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-warning/10">
+              <DollarSign className="h-5 w-5 text-warning" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Pendente</p>
+              <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {formatCurrency(actualSummary.totalPending)}
+              </p>
+            </div>
+            <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-blue-500/10">
+              <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Em atraso</p>
+              <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-destructive">
+                {formatCurrency(actualSummary.totalOverdue)}
+              </p>
+            </div>
+            <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-destructive/10">
+              <DollarSign className="h-5 w-5 text-destructive" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -303,6 +395,7 @@ export function FinancialView({
           setFilters(defaultFinancialFilters);
           setPage(0);
         }}
+        students={activeStudents}
       />
 
         {/* Error state */}
@@ -315,221 +408,84 @@ export function FinancialView({
       )}
 
         {/* Table */}
-        {isLoading ? (
-          <TableSkeleton rows={8} columns={8} />
-        ) : !error ? (
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
-                    Aluno
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell whitespace-nowrap">
-                    Aula Vinculada
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden sm:table-cell whitespace-nowrap">
-                    Descrição
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
-                    Valor
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden lg:table-cell whitespace-nowrap">
-                    Método
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 hidden md:table-cell whitespace-nowrap">
-                    Vencimento
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
-                    Status
-                  </th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3 whitespace-nowrap">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRecords.map((record) => {
-                  const lastUpdatedAt = record.updated_at || record.created_at;
-
-                  return (
-                    <tr
-                      key={record.id}
-                      className="hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <p className="font-medium text-sm">
-                          {record.students?.name || "—"}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4 hidden lg:table-cell">
-                        {record.class_logs ? (
-                          <div className="flex flex-col text-sm text-muted-foreground">
-                            <span>
-                              {record.students?.name}
-                              {" | "}
-                              {record.class_logs.title?.trim()
-                                ? record.class_logs.title
-                                : formatDate(record.class_logs.class_date)}
-                            </span>
-                            {showTeacherColumn && record.students?.teacher_id && (
-                              <span className="text-xs text-muted-foreground/80">
-                                Professor: {teacherMap.get(record.students.teacher_id) || "—"}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground/70">
-                            Sem aula vinculada
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 hidden sm:table-cell">
-                        <div className="flex flex-col text-sm text-muted-foreground">
-                          <span>{record.description || "—"}</span>
-                          {lastUpdatedAt && (
-                            <span className="text-[11px] mt-0.5">
-                              {`Editado em ${formatDateTime(lastUpdatedAt)}`}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <p className="font-semibold text-sm">
-                          {formatCurrency(Number(record.amount))}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4 hidden lg:table-cell whitespace-nowrap">
-                        <p className="text-sm text-muted-foreground">
-                          {record.payment_method || "—"}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4 hidden md:table-cell whitespace-nowrap">
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(record.due_date)}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge variant={statusVariants[record.actualStatus]}>
-                          {statusLabels[record.actualStatus]}
-                        </StatusBadge>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {record.actualStatus !== "pago" ? (
-                            <>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setRecordToEdit(record);
-                                      setIsFormOpen(true);
-                                    }}
-                                  >
-                                    <Pencil className="h-4 w-4 mr-2" />
-                                    Editar
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => {
-                                      setRecordToDelete(record);
-                                      setDeleteDialogOpen(true);
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Excluir
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                              <Button
-                                size="sm"
-                                className="h-8 bg-[#25D366] text-white hover:bg-[#1ebe57] border-none"
-                                onClick={() => openConfirmPayment(record)}
-                              >
-                                <Check className="h-3.5 w-3.5 mr-1.5" />
-                                Confirmar
-                              </Button>
-                            </>
-                          ) : (
-                            <Button
-                              size="sm"
-                              className="h-8 bg-warning text-white font-semibold hover:bg-warning/90 border-none shadow"
-                              disabled={undoPayment.isPending}
-                              onClick={() => {
-                                setRecordToUndo(record);
-                                setUndoDialogOpen(true);
-                              }}
-                            >
-                              {undoPayment.isPending ? (
-                                <>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Desfazendo...
-                                </>
-                              ) : (
-                                "Desfazer Cobrança"
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {filteredRecords.length === 0 && (
-            records.length === 0 ? (
-              <EmptyFinancialState
-                message="As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças."
-              />
-            ) : (
-              <EmptyState
-                icon={Search}
-                title="Nenhum resultado"
-                message="Ajuste os filtros acima ou limpe a busca"
-              />
-            )
-          )}
-          {(totalCount > 0 || page > 0) && (
-            <div className="border-t px-6 py-3 flex items-center justify-between gap-4 bg-muted/30">
-              <p className="text-sm text-muted-foreground">
-                {totalCount > 0
-                  ? `${page * 20 + 1}-${Math.min((page + 1) * 20, totalCount)} de ${totalCount}`
-                  : "0 registros"}
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 0 || isFetching}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+        <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
+          <Table style={{ minWidth: FIN_TABLE_MIN_W }}>
+            <TableHeader>
+              <TableRow>
+                <TableHead
+                  className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
+                  style={{ width: FIN_COL.ALUNO, minWidth: FIN_COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}
                 >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!hasMore || isFetching}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Próximo
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
+                  Aluno
+                </TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.AULA, minWidth: FIN_COL.AULA }}>Aula Vinculada</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.VALOR, minWidth: FIN_COL.VALOR }}>Valor</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.METODO, minWidth: FIN_COL.METODO }}>Método</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: FIN_COL.VENCIMENTO, minWidth: FIN_COL.VENCIMENTO }}>Vencimento</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.STATUS, minWidth: FIN_COL.STATUS }}>Status</TableHead>
+                <TableHead className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }} aria-label="Avaliar" />
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.ACOES, minWidth: FIN_COL.ACOES }}>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/40">
+              {isLoading ? (
+                <FinancialTableSkeleton rows={8} />
+              ) : (
+                filteredRecords.map((record) => (
+                  <FinancialTableRow
+                    key={record.id}
+                    record={record}
+                    showTeacherColumn={showTeacherColumn}
+                    teacherMap={teacherMap}
+                    isUndoing={undoPayment.isPending}
+                    onViewHistory={setHistoryRecord}
+                    onEdit={(record) => {
+                      setRecordToEdit(record);
+                      setIsFormOpen(true);
+                    }}
+                    onConfirmPayment={(record) => {
+                      // Abre o modal de histórico em vez do dialog de confirmação
+                      setHistoryRecord(record);
+                    }}
+                    onUndoPayment={(record) => {
+                      setRecordToUndo(record);
+                      setUndoDialogOpen(true);
+                    }}
+                    onDelete={(record) => {
+                      setRecordToDelete(record);
+                      setDeleteDialogOpen(true);
+                    }}
+                  />
+                ))
+              )}
+            </TableBody>
+          </Table>
+          {!isLoading && filteredRecords.length === 0 && (
+            <div className="border-t">
+              {records.length === 0 ? (
+                <EmptyFinancialState
+                  message="As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças."
+                />
+              ) : (
+                <EmptyState
+                  icon={Search}
+                  title="Nenhum resultado"
+                  message="Ajuste os filtros acima ou limpe a busca"
+                />
+              )}
             </div>
           )}
-          </div>
-        ) : null}
+          <TablePaginationBar
+            page={page}
+            pageSize={10}
+            totalCount={totalCount}
+            hasMore={!!hasMore}
+            isFetching={isFetching}
+            onPageChange={setPage}
+          />
+        </div>
 
-        {/* Create Form Dialog */}
+      {/* Create Form Dialog */}
       <FinancialFormDialog
         open={isFormOpen}
         onOpenChange={(open) => {
@@ -541,37 +497,6 @@ export function FinancialView({
         initialData={recordToEdit || null}
         enableTeacherSelection={enableTeacherSelection}
       />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir a cobrança de {recordToDelete?.students?.name} no valor de <strong>{recordToDelete ? formatCurrency(Number(recordToDelete.amount)) : ""}</strong>? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteRecord.isPending}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteRecord}
-              disabled={deleteRecord.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteRecord.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Excluindo...
-                </>
-              ) : (
-                "Excluir"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Undo Payment (Desfazer Cobrança) Dialog */}
       <AlertDialog
@@ -630,6 +555,52 @@ export function FinancialView({
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Delete Record Dialog */}
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) setRecordToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir cobrança</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Deseja excluir permanentemente a cobrança de{" "}
+                  <strong>{recordToDelete?.students?.name}</strong> no valor de{" "}
+                  <strong>{recordToDelete ? formatCurrency(Number(recordToDelete.amount)) : ""}</strong>?
+                </p>
+                <p className="text-destructive font-medium">
+                  Esta ação não pode ser desfeita.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteRecord.isPending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteRecord}
+              disabled={deleteRecord.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteRecord.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                "Excluir cobrança"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Confirm Payment Dialog */}
       <AlertDialog
         open={!!confirmPaymentId}
@@ -670,14 +641,14 @@ export function FinancialView({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={markAsPaid.isPending}>
+            <AlertDialogCancel disabled={confirmPayment.isPending || isProcessingPayment === confirmPaymentId}>
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmPayment}
-              disabled={markAsPaid.isPending}
+              disabled={confirmPayment.isPending || isProcessingPayment === confirmPaymentId}
             >
-              {markAsPaid.isPending ? (
+              {confirmPayment.isPending || isProcessingPayment === confirmPaymentId ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Registrando...
@@ -689,6 +660,191 @@ export function FinancialView({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Mini modal: Histórico de pagamento */}
+      <Dialog open={!!historyRecord} onOpenChange={(open) => !open && setHistoryRecord(null)}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base">Histórico de pagamento</DialogTitle>
+          </DialogHeader>
+          {historyRecord && (
+            <div className="space-y-3 pr-2">
+              <p className="text-sm text-muted-foreground break-words">
+                {historyRecord.students?.name} · {formatCurrency(Number(historyRecord.amount))}
+              </p>
+              
+              {historyRecord.description && (
+                <div className="rounded-lg border bg-muted/50 p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Descrição</p>
+                  <p className="text-sm text-foreground break-words overflow-wrap-anywhere">{historyRecord.description}</p>
+                </div>
+              )}
+              
+              {/* Comprovante de Pagamento */}
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {(historyRecord as any).payment_proof_url && (
+                <div className="rounded-lg border bg-primary/5 p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Comprovante de Pagamento</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <p className="text-sm font-medium break-words overflow-wrap-anywhere">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {(historyRecord as any).payment_proof_filename || "Comprovante.pdf"}
+                      </p>
+                      <p className="text-xs text-muted-foreground break-words">
+                        Enviado em {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {(historyRecord as any).payment_proof_uploaded_at 
+                          ? /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+                          formatDateTime((historyRecord as any).payment_proof_uploaded_at)
+                          : "—"}
+                      </p>
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {(historyRecord as any).payment_proof_status === "pending" && (
+                        <p className="text-xs text-warning font-medium mt-1">
+                          Aguardando aprovação
+                        </p>
+                      )}
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {(historyRecord as any).payment_proof_status === "rejected" && (
+                        <p className="text-xs text-destructive font-medium mt-1 break-words overflow-wrap-anywhere">
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                          Rejeitado: {(historyRecord as any).payment_proof_rejection_reason || "Sem motivo"}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0"
+                      onClick={async () => {
+                        try {
+                          const { getPaymentProofUrl } = await import("@/hooks/usePaymentProof");
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                          const url = await getPaymentProofUrl((historyRecord as any).payment_proof_url);
+                          window.open(url, "_blank", "noopener,noreferrer");
+                        } catch (error) {
+                          toast.error("Erro ao abrir comprovante");
+                        }
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Ver
+                    </Button>
+                  </div>
+                  
+                  {/* Botões de Aprovar/Rejeitar (apenas se pending) */}
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {(historyRecord as any).payment_proof_status === "pending" && (
+                    <div className="flex gap-2 mt-3 pt-3 border-t shrink-0">
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-success text-white hover:bg-success/90 shrink-0"
+                        onClick={async () => {
+                          try {
+                            const { useReviewPaymentProof } = await import("@/hooks/usePaymentProof");
+                            // Chamar mutation diretamente
+                            await supabase.rpc("review_payment_proof", {
+                              p_financial_record_id: historyRecord.id,
+                              p_approved: true,
+                              p_rejection_reason: null,
+                            });
+                            toast.success("Pagamento confirmado!");
+                            setHistoryRecord(null);
+                            // Recarregar dados
+                            window.location.reload();
+                          } catch (error) {
+                            toast.error("Erro ao aprovar comprovante");
+                          }
+                        }}
+                      >
+                        Aprovar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="flex-1 shrink-0"
+                        onClick={async () => {
+                          const reason = prompt("Motivo da rejeição (opcional):");
+                          if (reason === null) return; // Cancelou
+                          
+                          try {
+                            await supabase.rpc("review_payment_proof", {
+                              p_financial_record_id: historyRecord.id,
+                              p_approved: false,
+                              p_rejection_reason: reason || "Comprovante inválido",
+                            });
+                            toast.success("Comprovante rejeitado");
+                            setHistoryRecord(null);
+                            window.location.reload();
+                          } catch (error) {
+                            toast.error("Erro ao rejeitar comprovante");
+                          }
+                        }}
+                      >
+                        Rejeitar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Status do pagamento */}
+              {historyRecord.status === "pago" && historyRecord.confirmed_by ? (
+                <div className="rounded-lg border bg-success/10 border-success/20 p-3 text-sm">
+                  {currentUserProfile?.role === "admin" ? (
+                    <>
+                      <p className="font-medium text-foreground break-words overflow-wrap-anywhere">
+                        Confirmado por {historyRecord.confirmed_by.full_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 break-words">
+                        {historyRecord.updated_at ? formatDateTime(historyRecord.updated_at) : "Data não disponível"}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-medium text-foreground break-words">
+                        Pagamento confirmado
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 break-words">
+                        {historyRecord.updated_at ? formatDateTime(historyRecord.updated_at) : "Data não disponível"}
+                      </p>
+                    </>
+                  )}
+                </div>
+              ) : historyRecord.status === "pago" ? (
+                <div className="rounded-lg border bg-success/10 border-success/20 p-3 text-sm">
+                  <p className="font-medium text-foreground break-words">
+                    Pagamento confirmado
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5 break-words">
+                    {historyRecord.updated_at ? formatDateTime(historyRecord.updated_at) : "Data não disponível"}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground break-words">
+                    Nenhum pagamento registrado para esta cobrança.
+                  </p>
+                  
+                  {/* Botão Confirmar Pagamento (se não tiver comprovante ou comprovante rejeitado) */}
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {(!((historyRecord as any).payment_proof_url) || (historyRecord as any).payment_proof_status === "rejected") && (
+                    <Button
+                      className="w-full bg-success text-white hover:bg-success/90 shrink-0"
+                      onClick={() => {
+                        setHistoryRecord(null);
+                        openConfirmPayment(historyRecord);
+                      }}
+                    >
+                      Confirmar Pagamento
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

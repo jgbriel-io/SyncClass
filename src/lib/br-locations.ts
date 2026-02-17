@@ -51,15 +51,11 @@ export async function fetchIbgeCitiesByUf(uf: BrStateCode): Promise<BrCityOption
       `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`
     );
 
-    if (!response.ok) {
-      console.error("Erro ao buscar cidades do IBGE:", response.status, response.statusText);
-      return [];
-    }
+    if (!response.ok) return [];
 
     const data = (await response.json()) as { id: number; nome: string }[];
     return data.map((city) => ({ value: city.nome, label: city.nome }));
-  } catch (error) {
-    console.error("Erro ao chamar API de cidades do IBGE:", error);
+  } catch {
     return [];
   }
 }

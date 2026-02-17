@@ -4,11 +4,14 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/integrations/supabase/env";
 import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { validateCpfPhonePlatform } from "@/lib/validate-cpf-phone-platform";
+import { isValidEmailFormat } from "@/lib/utils/patterns";
+import { isAllowedEmailDomain } from "@/lib/validation/email";
 import { validateAndResizeAvatar, type AvatarValidationError } from "@/lib/utils/avatarUpload";
 import { toast } from "sonner";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import type { Tables, TablesInsert, Enums } from "@/integrations/supabase/types";
 import { logger } from "@/lib/sentry";
+import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
 
 // Types for mutations
 type AppRole = Enums<"app_role">;
@@ -59,14 +62,39 @@ interface CreateAuthUserParams {
   fullName: string;
 }
 
-// Helper function to generate random password
-function generateRandomPassword(length: number = 10): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+// Helper function to generate cryptographically secure random password
+function generateRandomPassword(length: number = 12): string {
+  const lowercase = "abcdefghijkmnpqrstuvwxyz";
+  const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const numbers = "23456789";
+  const symbols = "!@#$%&*";
+  const all = lowercase + uppercase + numbers + symbols;
+  
+  // Usar crypto.getRandomValues para segurança criptográfica
+  const array = new Uint32Array(length);
+  crypto.getRandomValues(array);
+  
   let password = "";
-  for (let i = 0; i < length; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  
+  // Garantir pelo menos 1 de cada tipo
+  password += lowercase[array[0] % lowercase.length];
+  password += uppercase[array[1] % uppercase.length];
+  password += numbers[array[2] % numbers.length];
+  password += symbols[array[3] % symbols.length];
+  
+  // Preencher o resto
+  for (let i = 4; i < length; i++) {
+    password += all[array[i] % all.length];
   }
-  return password;
+  
+  // Embaralhar usando Fisher-Yates com valores criptográficos
+  const chars = password.split('');
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = array[i] % (i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  
+  return chars.join('');
 }
 
 export interface InviteUserBody {
@@ -101,23 +129,83 @@ function isEdgeFunctionNetworkError(err: unknown): boolean {
   );
 }
 
+type InviteResponseBody = {
+  error?: string;
+  userId?: string;
+  email?: string;
+  password?: string;
+  createdStudent?: { id: string } | null;
+  createdTeacher?: { id: string } | null;
+  permissionsWarning?: boolean;
+};
+
 async function getFunctionError(err: unknown): Promise<string | null> {
-  const e = err as { context?: { json?: () => Promise<{ error?: string }>; body?: unknown } };
+  const body = await getFunctionResponseBody(err);
+  if (body?.error && typeof body.error === "string") return body.error;
+  return null;
+}
+
+/** Obtém o body da resposta da Edge Function quando ela retorna 4xx/5xx (vem em error.context). */
+async function getFunctionResponseBody(err: unknown): Promise<InviteResponseBody | null> {
+  const e = err as { context?: { json?: () => Promise<InviteResponseBody>; body?: unknown } };
+  
   if (e?.context?.json) {
     try {
-      const body = await e.context.json();
-      if (body?.error && typeof body.error === "string") return body.error;
-    } catch {
-      /* ignore */
+      const result = await e.context.json();
+      return result;
+    } catch (jsonErr) {
+      /* ignore - body already read */
     }
   }
   return null;
 }
 
+/** Erros que indicam 4xx (nunca tratar como sucesso parcial). */
+function isClientError(body: InviteResponseBody): boolean {
+  const err = (body?.error ?? "").toLowerCase();
+  return (
+    err.includes("já cadastrado") ||
+    err.includes("inválido") ||
+    err.includes("already")
+  );
+}
+
+/** Se a função retornou erro mas criou o usuário (ex.: 500 após falha em profile/roles), trata como sucesso parcial. Nunca para 4xx. */
+function inviteResultFromBody(body: InviteResponseBody, bodyEmail: string): InviteUserResult | null {
+  if (isClientError(body)) return null;
+  if (body?.userId && body?.password) {
+    return {
+      userId: body.userId,
+      email: body.email ?? bodyEmail,
+      password: body.password,
+      createdStudent: body.createdStudent ?? null,
+      createdTeacher: body.createdTeacher ?? null,
+      permissionsWarning: body.permissionsWarning ?? true,
+    };
+  }
+  return null;
+}
+
+function validateEmailForInvite(email: string): void {
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) throw new Error("Email é obrigatório");
+  if (!isValidEmailFormat(trimmed)) throw new Error("Email inválido");
+  if (!isAllowedEmailDomain(trimmed)) throw new Error("Use um email de provedor real (Gmail, Outlook, Yahoo, etc.)");
+}
+
 async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult> {
+  validateEmailForInvite(body.email);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error("Sessão expirada. Faça login novamente.");
+  }
   try {
-    const { data, error } = await supabase.functions.invoke("invite-user", { body });
-    const parsed = data as { error?: string; userId?: string; email?: string; password?: string; createdStudent?: { id: string } | null; createdTeacher?: { id: string } | null; permissionsWarning?: boolean } | null;
+    const { data, error } = await supabase.functions.invoke("invite-user", {
+      body,
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    const parsed = data as InviteResponseBody | null;
+    
     if (parsed?.userId && parsed?.password) {
       return {
         userId: parsed.userId,
@@ -128,31 +216,66 @@ async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult>
         permissionsWarning: parsed.permissionsWarning ?? false,
       };
     }
-    if (parsed?.error) throw new Error(parsed.error);
+    if (parsed?.error) {
+      throw new Error(parsed.error);
+    }
     if (error) {
-      const fnMsg = await getFunctionError(error);
-      throw new Error(fnMsg || (error as Error).message || "Erro ao criar usuário");
+      const errorBody = await getFunctionResponseBody(error);
+      const partial = errorBody ? inviteResultFromBody(errorBody, body.email) : null;
+      if (partial) return partial;
+
+      const msg = errorBody?.error ?? (error as Error).message ?? "Erro ao criar usuário";
+      throw new Error(msg);
     }
     throw new Error("Resposta inválida da função");
   } catch (err) {
     if (isEdgeFunctionNetworkError(err)) {
       return createUserLegacy(body);
     }
-    const fnMsg = await getFunctionError(err);
-    if (fnMsg) throw new Error(fnMsg);
     if (err instanceof Error) throw err;
     throw new Error("Erro ao criar usuário");
   }
 }
 
-// Fallback quando Edge Function indisponível (não deployada, rede, etc.)
+// Fallback quando Edge Function indisponível (não deployada, rede, etc.).
+// Ordem igual à Edge Function: auth primeiro; só depois insert em teachers/students, para nunca deixar registro órfão.
 async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult> {
+  validateEmailForInvite(body.email);
   const fullName = body.full_name;
   const normalizedEmail = body.email.trim().toLowerCase();
   const password = (body.password && body.password.length >= 6) ? body.password : generateRandomPassword();
 
   const { data: existingProfile } = await supabase.from("profiles").select("id").ilike("email", normalizedEmail).maybeSingle();
   if (existingProfile) throw new Error(MSG_EMAIL);
+
+  if (body.role === "teacher" && !body.teacherId && body.teacherData) {
+    const { data: existingTeacher } = await supabase.from("teachers").select("id").ilike("email", normalizedEmail).maybeSingle();
+    if (existingTeacher) throw new Error(MSG_EMAIL);
+  }
+  if (body.role === "student" && !body.studentId && body.studentData) {
+    const { data: existingStudent } = await supabase.from("students").select("id").ilike("email", normalizedEmail).maybeSingle();
+    if (existingStudent) throw new Error(MSG_EMAIL);
+  }
+
+  const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
+    email: normalizedEmail,
+    password,
+    options: { data: { full_name: fullName, role: body.role }, emailRedirectTo: `${window.location.origin}/login` },
+  });
+  if (authError) {
+    const msg = authError.message?.toLowerCase() ?? "";
+    if (msg.includes("already") || msg.includes("already been registered")) throw new Error(MSG_EMAIL);
+    throw authError;
+  }
+  if (!authData.user) throw new Error("Falha ao criar usuário");
+  const userId = authData.user.id;
+
+  for (let i = 0; i < 8; i++) {
+    const { data: p } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
+    if (p) break;
+    await new Promise((r) => setTimeout(r, 150 + i * 100));
+  }
+  await new Promise((r) => setTimeout(r, 400));
 
   let createdStudent: { id: string } | null = null;
   let createdTeacher: { id: string } | null = null;
@@ -186,22 +309,6 @@ async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult>
       throw new Error("teacherId ou teacherData é obrigatório para role teacher");
     }
   }
-
-  const { data: authData, error: authError } = await supabaseSignupClient.auth.signUp({
-    email: normalizedEmail,
-    password,
-    options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/login` },
-  });
-  if (authError) throw authError;
-  if (!authData.user) throw new Error("Falha ao criar usuário");
-  const userId = authData.user.id;
-
-  for (let i = 0; i < 8; i++) {
-    const { data: p } = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
-    if (p) break;
-    await new Promise((r) => setTimeout(r, 150 + i * 100));
-  }
-  await new Promise((r) => setTimeout(r, 400));
 
   let roleOk = false;
   const { error: rpcErr } = await supabase.rpc("set_user_role", {
@@ -250,6 +357,14 @@ export function useCreateUser() {
       studentData,
       teacherData,
     }: CreateUserParams) => {
+      // Rate limiting: 5 criações de usuário por 5 minutos
+      const rateLimitResult = checkRateLimit("createUser", RATE_LIMIT_CONFIGS.AUTH);
+      if (!rateLimitResult.allowed) {
+        throw new Error(
+          `Muitas tentativas de criação de usuário. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
+        );
+      }
+
       const normalizedEmail = email.trim().toLowerCase();
       const finalPassword = (!password || password.length < 6) ? generateRandomPassword() : password;
 
@@ -278,9 +393,6 @@ export function useCreateUser() {
       };
     },
     onSuccess: (result, variables) => {
-      if (result?.permissionsWarning) {
-        toast.warning("Usuário criado. Ajuste as permissões manualmente na aba Usuários se necessário.");
-      }
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
@@ -297,7 +409,7 @@ export function useCreateUser() {
         email: variables.email,
         role: variables.role,
       });
-      toast.error(error.message || "Erro ao criar usuário. Tente novamente.");
+      toast.error(error.message || "Não foi possível criar o usuário. Por favor, tente novamente.");
     },
   });
 }
@@ -385,10 +497,10 @@ export function useUpdateUserRole() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("Privilégio atualizado com sucesso!");
+      // Toast removido - será mostrado no componente após ambas as operações
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao atualizar privilégio. Tente novamente.");
+      toast.error(error.message || "Não foi possível atualizar o privilégio. Por favor, tente novamente.");
     },
   });
 }
@@ -410,10 +522,10 @@ export function useUpdateUserProfile() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Perfil atualizado com sucesso!");
+      // Toast removido - será mostrado no componente após ambas as operações
     },
     onError: (error: Error) => {
-      toast.error("Erro ao atualizar perfil. Tente novamente.");
+      toast.error("Não foi possível atualizar o perfil. Por favor, tente novamente.");
     },
   });
 }
@@ -440,7 +552,7 @@ export function useUpdateMyProfile() {
       const message =
         err?.message && String(err.message).trim()
           ? String(err.message)
-          : "Erro ao atualizar foto. Tente novamente.";
+          : "Não foi possível atualizar a foto. Por favor, tente novamente.";
       toast.error(message);
     },
   });
@@ -467,6 +579,14 @@ export function useUploadAvatar() {
 
   return useMutation({
     mutationFn: async ({ userId, file }: UploadAvatarParams): Promise<void> => {
+      // Rate limiting: 5 uploads por 5 minutos
+      const rateLimitResult = checkRateLimit("uploadAvatar", RATE_LIMIT_CONFIGS.UPLOAD);
+      if (!rateLimitResult.allowed) {
+        throw new Error(
+          `Muitos uploads. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
+        );
+      }
+
       const blob = await validateAndResizeAvatar(file).catch((err: AvatarValidationError) => {
         toast.error(err.message);
         throw err;
@@ -502,7 +622,7 @@ export function useUploadAvatar() {
       const message =
         err?.message && String(err.message).trim()
           ? String(err.message)
-          : "Erro ao enviar foto. Tente novamente.";
+          : "Não foi possível enviar a foto. Por favor, tente novamente.";
       toast.error(message);
     },
   });
@@ -525,44 +645,52 @@ export function useDeleteUser() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário arquivado com sucesso!");
+      // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
-      toast.error("Erro ao excluir usuário. Tente novamente.");
+      toast.error("Não foi possível excluir o usuário. Por favor, tente novamente.");
     },
   });
 }
 
-// Hard delete user via Edge Function
+// Hard delete user via Edge Function (só pela aba Usuários). Remove conta + registros vinculados (student/teacher).
 export function useHardDeleteUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase.functions.invoke("admin-delete-user", {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
         body: { userId },
       });
-
       if (error) throw error;
+      const msg = (data as { error?: string } | null)?.error;
+      if (msg) throw new Error(msg);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário excluído definitivamente.");
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["teachers_paginated"] });
+      // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
-      toast.error(
-        error?.message || "Erro ao excluir definitivamente o usuário. Tente novamente."
-      );
+      // Toast removido - será mostrado no componente com onError callback
     },
   });
 }
 
-/** Redefinir senha de um usuário (admin via Edge Function). Usa fetch para garantir envio do Authorization. */
-export function useAdminResetPassword() {
+/**
+ * Hook unificado para redefinir senha.
+ * - Admin pode enviar { userId, password } para qualquer usuário.
+ * - Admin ou Professor pode enviar { studentId, password } para aluno.
+ * Chama a Edge Function unificada 'reset-password'.
+ */
+export function useResetPassword() {
   return useMutation({
-    mutationFn: async ({ userId, password }: { userId: string; password: string }) => {
+    mutationFn: async (params: { userId?: string; studentId?: string; password: string }) => {
       const {
         data: { session },
         error: sessionError,
@@ -570,12 +698,11 @@ export function useAdminResetPassword() {
       if (sessionError || !session?.access_token) {
         throw new Error("Sessão expirada. Faça login novamente.");
       }
-      // Em dev usa proxy (same-origin) para evitar CORS; em prod chama Supabase direto
       const functionsBase = import.meta.env.DEV && typeof window !== "undefined"
         ? `${window.location.origin}/supabase-functions`
         : `${SUPABASE_URL}/functions/v1`;
-      const url = `${functionsBase}/admin-reset-password`;
-      
+      const url = `${functionsBase}/reset-password`;
+
       try {
         const res = await fetch(url, {
           method: "POST",
@@ -585,33 +712,31 @@ export function useAdminResetPassword() {
             apikey: SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({
-            userId,
-            password,
+            ...params,
             accessToken: session.access_token,
           }),
         });
-        
+
         const data = (await res.json().catch(() => ({}))) as { error?: string };
-        
+
         if (!res.ok) {
           throw new Error(data?.error ?? (res.statusText || "Erro ao redefinir senha."));
         }
         if (data?.error) throw new Error(data.error);
       } catch (err) {
-        console.error("[useAdminResetPassword] Erro:", err);
         if (isEdgeFunctionNetworkError(err)) {
           throw new Error(
-            "Não foi possível contactar o servidor. Verifique sua conexão e se a Edge Function 'admin-reset-password' está publicada no projeto Supabase."
+            "Não foi possível contactar o servidor. Verifique sua conexão e se a Edge Function 'reset-password' está publicada no projeto Supabase."
           );
         }
         throw err;
       }
     },
     onSuccess: () => {
-      toast.success("Senha redefinida com sucesso.");
+      toast.success("Senha redefinida com sucesso. O usuário precisará fazer login novamente.");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao redefinir senha. Tente novamente.");
+      toast.error(error.message || "Não foi possível redefinir a senha. Por favor, tente novamente.");
     },
   });
 }
@@ -652,10 +777,10 @@ export function useLinkUserToStudent() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário vinculado ao aluno com sucesso!");
+      // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
-      toast.error("Erro ao vincular usuário ao aluno. Tente novamente.");
+      toast.error("Não foi possível vincular o usuário ao aluno. Por favor, tente novamente.");
     },
   });
 }
@@ -696,10 +821,10 @@ export function useLinkUserToTeacher() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      toast.success("Usuário vinculado ao professor com sucesso!");
+      // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao vincular usuário ao professor. Tente novamente.");
+      toast.error(error.message || "Não foi possível vincular o usuário ao professor. Por favor, tente novamente.");
     },
   });
 }
@@ -725,14 +850,12 @@ export function useInviteStudent() {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      if (data?.permissionsWarning) {
-        toast.warning("Aluno criado. Ajuste as permissões na aba Usuários se necessário.");
-      } else {
-        toast.success("Aluno e conta de acesso criados com sucesso!");
-      }
+      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      toast.success("Aluno e conta de acesso criados com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao convidar aluno.");
+      toast.error(error.message || "Não foi possível enviar o convite ao aluno.");
     },
   });
 }
@@ -756,14 +879,12 @@ export function useInviteTeacher() {
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      if (data?.permissionsWarning) {
-        toast.warning("Professor criado. Ajuste as permissões na aba Usuários se necessário.");
-      } else {
-        toast.success("Professor e conta de acesso criados com sucesso!");
-      }
+      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["teachers_paginated"] });
+      toast.success("Professor e conta de acesso criados com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao convidar professor.");
+      toast.error(error.message || "Não foi possível enviar o convite ao professor.");
     },
   });
 }
@@ -816,6 +937,79 @@ export function useCreateAuthUserForTeacher() {
     onError: (error: Error) => {
       const msg = error?.message?.toLowerCase() || "";
       toast.error(msg.includes("already") || msg.includes("cadastrado") ? MSG_EMAIL : error.message);
+    },
+  });
+}
+
+/** Permite que o próprio usuário autenticado redefina sua senha (senha atual + nova senha). */
+export function useResetOwnPassword() {
+  return useMutation({
+    mutationFn: async ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) => {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+      const functionsBase = import.meta.env.DEV && typeof window !== "undefined"
+        ? `${window.location.origin}/supabase-functions`
+        : `${SUPABASE_URL}/functions/v1`;
+      const url = `${functionsBase}/reset-password`;
+
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            currentPassword,
+            newPassword,
+            accessToken: session.access_token,
+          }),
+        });
+
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+
+        if (!res.ok) {
+          throw new Error(data?.error ?? (res.statusText || "Erro ao redefinir senha."));
+        }
+        if (data?.error) throw new Error(data.error);
+      } catch (err) {
+        if (isEdgeFunctionNetworkError(err)) {
+          throw new Error(
+            "Não foi possível contactar o servidor. Verifique sua conexão e se a Edge Function 'reset-password' está publicada no projeto Supabase."
+          );
+        }
+        throw err;
+      }
+    },
+    onSuccess: async () => {
+      toast.success("Senha alterada com sucesso! Você será redirecionado para o login.");
+      // Aguardar um momento para o toast ser exibido, depois limpar sessão completamente
+      setTimeout(async () => {
+        try {
+          await supabase.auth.signOut({ scope: "global" });
+        } catch (_e) {
+          // ignorar erro de signOut
+        }
+        // Limpar todos os tokens/sessões do Supabase do localStorage
+        Object.keys(localStorage)
+          .filter(key => key.startsWith("sb-"))
+          .forEach(key => localStorage.removeItem(key));
+        // Limpar sessionStorage também
+        Object.keys(sessionStorage)
+          .filter(key => key.startsWith("sb-"))
+          .forEach(key => sessionStorage.removeItem(key));
+        // Forçar reload completo para /login (não usar router, evitar cache de estado)
+        window.location.replace("/login");
+      }, 1500);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Não foi possível alterar a senha. Por favor, tente novamente.");
     },
   });
 }

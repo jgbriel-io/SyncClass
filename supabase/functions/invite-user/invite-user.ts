@@ -37,6 +37,49 @@ function normalizeDigits(val: string | null | undefined): string {
   return val.replace(/\D/g, "");
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_MAX_LENGTH = 255;
+
+const ALLOWED_EMAIL_DOMAINS = new Set([
+  "gmail.com", "googlemail.com",
+  "outlook.com", "hotmail.com", "hotmail.com.br", "live.com", "live.com.br", "outlook.com.br", "outlook.pt", "msn.com",
+  "yahoo.com", "yahoo.com.br", "ymail.com",
+  "icloud.com", "me.com", "mac.com",
+  "protonmail.com", "proton.me",
+  "uol.com.br", "bol.com.br", "terra.com.br", "ig.com.br",
+  "aol.com", "zoho.com", "mail.com", "i.ua", "inbox.com",
+]);
+
+function getEmailDomain(email: string): string {
+  const trimmed = email?.trim()?.toLowerCase() ?? "";
+  const i = trimmed.lastIndexOf("@");
+  return i >= 0 ? trimmed.slice(i + 1) : "";
+}
+
+function isValidEmailFormat(email: string): boolean {
+  const trimmed = email?.trim() ?? "";
+  if (trimmed.length === 0 || trimmed.length > EMAIL_MAX_LENGTH) return false;
+  return EMAIL_REGEX.test(trimmed);
+}
+
+function isAllowedEmailDomain(email: string): boolean {
+  const domain = getEmailDomain(email);
+  return domain.length > 0 && ALLOWED_EMAIL_DOMAINS.has(domain);
+}
+
+// Remove empty strings and convert them to null to avoid unique index conflicts
+function cleanInsertData(data: Record<string, unknown>): Record<string, unknown> {
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value === "" || value === undefined) {
+      // Skip empty strings and undefined to let DB handle defaults
+      continue;
+    }
+    cleaned[key] = value;
+  }
+  return cleaned;
+}
+
 // Validação platform-wide: CPF e telefone únicos em students + teachers
 async function validateCpfPhonePlatform(
   admin: ReturnType<typeof createClient>,
@@ -45,6 +88,17 @@ async function validateCpfPhonePlatform(
   if (!data) return null;
   const cpf = normalizeDigits(data.cpf as string);
   const phone = normalizeDigits(data.phone as string);
+  
+  // Validar comprimento do CPF (deve ter exatamente 11 dígitos)
+  if (cpf && cpf.length > 0 && cpf.length !== 11) {
+    return "CPF deve ter exatamente 11 dígitos";
+  }
+  
+  // Validar comprimento do telefone (deve ter 10 ou 11 dígitos)
+  if (phone && phone.length > 0 && (phone.length < 10 || phone.length > 11)) {
+    return "Telefone deve ter 10 ou 11 dígitos";
+  }
+  
   if (cpf.length === 11) {
     const { data: cpfExists } = await admin.rpc("check_cpf_exists_platform", { p_cpf_digits: cpf });
     if (cpfExists === true) return "CPF já cadastrado na plataforma";
@@ -98,22 +152,26 @@ serve(async (req) => {
     return jsonResponse({ error: "Configuração do servidor incompleta" }, 500);
   }
 
-  const authHeader = req.headers.get("Authorization");
+  const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization");
   const jwt = authHeader?.replace(/^Bearer\s+/i, "").trim();
   if (!jwt) {
     log("No Authorization header");
-    return jsonResponse({ error: "Não autenticado" }, 401);
+    return jsonResponse({ error: "Não autenticado. Envie o header Authorization com o token do usuário logado." }, 401);
   }
 
   const supabaseAuthed = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
+    global: { headers: { Authorization: authHeader! } },
   });
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
   const { data: { user: caller }, error: authError } = await supabaseAuthed.auth.getUser(jwt);
   if (authError || !caller) {
-    log("Not authenticated", { error: authError?.message });
-    return jsonResponse({ error: "Não autenticado" }, 401);
+    log("Not authenticated", { error: authError?.message, hasJwt: !!jwt });
+    const detail = authError?.message ?? (caller ? null : "Usuário não encontrado");
+    return jsonResponse({
+      error: "Não autenticado",
+      ...(detail && { detail }),
+    }, 401);
   }
 
   const { data: callerRoleRow } = await supabaseAdmin
@@ -153,15 +211,31 @@ serve(async (req) => {
   let body: Body;
   try {
     body = await req.json();
-  } catch {
+    log("Request body received", { email: body.email, role: body.role, hasTeacherData: !!body.teacherData, hasStudentData: !!body.studentData });
+  } catch (err) {
+    log("Failed to parse JSON body", { error: (err as Error).message });
     return jsonResponse({ error: "Corpo JSON inválido" }, 400);
   }
 
   const { email, full_name, role, teacher_id, teacherId, studentId, teacherData, studentData } = body;
-  const normalizedEmail = (email ?? "").trim().toLowerCase();
+  const rawEmail = (email ?? "").trim();
+  if (!rawEmail) {
+    log("Missing email");
+    return jsonResponse({ error: "Email é obrigatório" }, 400);
+  }
+  if (!isValidEmailFormat(rawEmail)) {
+    log("Invalid email format", { email: rawEmail });
+    return jsonResponse({ error: "Email inválido" }, 400);
+  }
+  if (!isAllowedEmailDomain(rawEmail)) {
+    log("Email domain not allowed", { email: rawEmail });
+    return jsonResponse({ error: "Use um email de provedor real (Gmail, Outlook, Yahoo, etc.)" }, 400);
+  }
+  const normalizedEmail = rawEmail.toLowerCase();
 
-  if (!normalizedEmail || !full_name || !role || !ROLES.includes(role)) {
-    return jsonResponse({ error: "email, full_name e role são obrigatórios" }, 400);
+  if (!full_name || !role || !ROLES.includes(role)) {
+    log("Missing required fields", { full_name, role, roleValid: ROLES.includes(role as Role) });
+    return jsonResponse({ error: "Nome completo e tipo de conta são obrigatórios" }, 400);
   }
 
   if (callerRole === "teacher") {
@@ -191,6 +265,27 @@ serve(async (req) => {
     return jsonResponse({ error: "Email já cadastrado" }, 400);
   }
 
+  if (role === "teacher" && !teacherId) {
+    const { data: existingTeacher } = await supabaseAdmin
+      .from("teachers")
+      .select("id")
+      .ilike("email", normalizedEmail)
+      .maybeSingle();
+    if (existingTeacher) {
+      return jsonResponse({ error: "Email já cadastrado" }, 400);
+    }
+  }
+  if (role === "student" && !studentId) {
+    const { data: existingStudent } = await supabaseAdmin
+      .from("students")
+      .select("id")
+      .ilike("email", normalizedEmail)
+      .maybeSingle();
+    if (existingStudent) {
+      return jsonResponse({ error: "Email já cadastrado" }, 400);
+    }
+  }
+
   if (role === "student" && !studentId) {
     const err = await validateCpfPhonePlatform(supabaseAdmin, studentData as Record<string, unknown> | undefined);
     if (err) return jsonResponse({ error: err }, 400);
@@ -210,7 +305,10 @@ serve(async (req) => {
   });
 
   if (createError) {
-    const friendly = createError.message?.toLowerCase().includes("already") ? "Email já cadastrado" : createError.message;
+    const msg = createError.message ?? "";
+    const friendly = msg.toLowerCase().includes("already") || msg.toLowerCase().includes("already been registered")
+      ? "Email já cadastrado"
+      : msg;
     log("Auth createUser failed", { error: createError.message });
     return jsonResponse({ error: friendly }, 400);
   }
@@ -238,12 +336,13 @@ serve(async (req) => {
     } else {
       const sd = (studentData ?? {}) as Record<string, unknown>;
       const tid = (teacher_id ?? teacherId ?? sd.teacher_id) as string | undefined;
-      const insertData: Record<string, unknown> = {
+      const rawInsertData: Record<string, unknown> = {
         name: full_name,
         email: normalizedEmail,
         teacher_id: tid ?? null,
         ...sd,
       };
+      const insertData = cleanInsertData(rawInsertData);
       const { data: student, error: studentErr } = await supabaseAdmin
         .from("students")
         .insert(insertData)
@@ -265,11 +364,12 @@ serve(async (req) => {
       resolvedTeacherId = teacherId;
     } else {
       const td = (teacherData ?? {}) as Record<string, unknown>;
-      const insertData: Record<string, unknown> = {
+      const rawInsertData: Record<string, unknown> = {
         name: full_name,
         email: normalizedEmail,
         ...td,
       };
+      const insertData = cleanInsertData(rawInsertData);
       const { data: teacher, error: teacherErr } = await supabaseAdmin
         .from("teachers")
         .insert(insertData)

@@ -1,3 +1,4 @@
+export * from "./ActivitiesFilters";
 export * from "./UsersFilters";
 export * from "./StudentsFilters";
 export * from "./FinancialFilters";

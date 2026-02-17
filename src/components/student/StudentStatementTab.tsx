@@ -11,6 +11,8 @@ import type { StudentStatementEntry } from "@/hooks/useStudentStatement";
 interface StudentStatementTabProps {
   studentId: string | null;
   studentName: string;
+  embedded?: boolean;
+  totalAmount?: number;
 }
 
 function groupByMonthYear(entries: StudentStatementEntry[]) {
@@ -36,6 +38,8 @@ function groupByMonthYear(entries: StudentStatementEntry[]) {
 export const StudentStatementTab = memo(function StudentStatementTab({
   studentId,
   studentName,
+  embedded = false,
+  totalAmount,
 }: StudentStatementTabProps) {
   const { data: entries = [], isLoading } = useStudentStatement(studentId);
 
@@ -58,8 +62,67 @@ export const StudentStatementTab = memo(function StudentStatementTab({
       e.billing_status_consolidated === "overdue"
   ).length;
 
+  const content = (
+    <div className={embedded ? "space-y-4" : "p-6 space-y-4"}>
+      {/* Header informativo */}
+      <div className="rounded-lg border bg-card p-3 flex items-center justify-between gap-4">
+        <p className="text-sm font-medium">{totalAmount != null ? "Total" : "Histórico de Movimentações"}</p>
+        {(totalAmount != null ? totalAmount : totalBilled) > 0 && (
+          <p className="text-2xl font-semibold tabular-nums">
+            {formatCurrency(totalAmount != null ? totalAmount : totalBilled)}
+          </p>
+        )}
+      </div>
+
+      {/* Timeline agrupada por mês/ano */}
+      {grouped.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <p>Nenhum registro encontrado</p>
+          <p className="text-sm mt-1">
+            O histórico aparecerá aqui quando houver aulas
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {grouped.map(({ key, label, items }) => (
+            <section key={key}>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 sticky top-0 bg-background/95 py-1 z-10">
+                {label}
+              </h3>
+              <div className="space-y-0">
+                {items.map((entry, idx) => (
+                  <UnifiedStatementCard
+                    key={entry.class_log_id}
+                    entry={entry}
+                    isLast={idx === items.length - 1}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="pt-4 border-t text-xs text-muted-foreground text-center">
+        <p>Extrato de {studentName}</p>
+        <p className="mt-1">
+          {totalClasses} aula{totalClasses !== 1 ? "s" : ""}
+          {openBilling > 0 &&
+            ` • ${openBilling} cobrança${openBilling !== 1 ? "s" : ""} em aberto`}
+        </p>
+      </div>
+    </div>
+  );
+
   if (isLoading) {
-    return (
+    return embedded ? (
+      <div className="space-y-4">
+        <div className="h-20 rounded-lg bg-muted/50 animate-pulse" />
+        <div className="h-32 rounded-lg bg-muted/50 animate-pulse" />
+        <div className="h-32 rounded-lg bg-muted/50 animate-pulse" />
+      </div>
+    ) : (
       <ScrollArea className="h-full">
         <div className="p-6 space-y-4">
           <div className="h-20 rounded-lg bg-muted/50 animate-pulse" />
@@ -70,58 +133,5 @@ export const StudentStatementTab = memo(function StudentStatementTab({
     );
   }
 
-  return (
-    <ScrollArea className="h-full">
-      <div className="p-6 space-y-4">
-        {/* Header informativo */}
-        <div className="rounded-lg border bg-card p-3 flex items-center justify-between gap-4">
-          <p className="text-sm font-medium">Extrato</p>
-          {totalBilled > 0 && (
-            <p className="text-base font-semibold tabular-nums">
-              {formatCurrency(totalBilled)}
-            </p>
-          )}
-        </div>
-
-        {/* Timeline agrupada por mês/ano */}
-        {grouped.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <p>Nenhum registro encontrado</p>
-            <p className="text-sm mt-1">
-              O histórico aparecerá aqui quando houver aulas
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {grouped.map(({ key, label, items }) => (
-              <section key={key}>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 sticky top-0 bg-background/95 py-1 z-10">
-                  {label}
-                </h3>
-                <div className="space-y-0">
-                  {items.map((entry, idx) => (
-                    <UnifiedStatementCard
-                      key={entry.class_log_id}
-                      entry={entry}
-                      isLast={idx === items.length - 1}
-                    />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="pt-4 border-t text-xs text-muted-foreground text-center">
-          <p>Extrato de {studentName}</p>
-          <p className="mt-1">
-            {totalClasses} aula{totalClasses !== 1 ? "s" : ""}
-            {openBilling > 0 &&
-              ` • ${openBilling} cobrança${openBilling !== 1 ? "s" : ""} em aberto`}
-          </p>
-        </div>
-      </div>
-    </ScrollArea>
-  );
+  return embedded ? content : <ScrollArea className="h-full">{content}</ScrollArea>;
 });

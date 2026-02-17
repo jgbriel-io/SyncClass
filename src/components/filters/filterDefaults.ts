@@ -1,3 +1,4 @@
+import type { ActivitiesFiltersState } from "./ActivitiesFilters";
 import type { ClassesFiltersState } from "./ClassesFilters";
 import type { FinancialFiltersState } from "./FinancialFilters";
 import type { OverviewFiltersState } from "./OverviewFilters";
@@ -5,11 +6,23 @@ import type { StudentsFiltersState } from "./StudentsFilters";
 import type { TeachersFiltersState } from "./TeachersFilters";
 import type { UsersFiltersState } from "./UsersFilters";
 
+export const defaultActivitiesFilters: ActivitiesFiltersState = {
+  search: "",
+  status: "all",
+  studentId: "all",
+  teacherId: "all",
+  period: "all",
+  sortBy: "due_asc",
+};
+
 export const defaultClassesFilters: ClassesFiltersState = {
   search: "",
   period: "all",
   teacherId: "all",
-  status: "all",
+  studentId: "all",
+  classType: "all",
+  status: "em_aberto",
+  sort: "recent",
 };
 
 export const defaultFinancialFilters: FinancialFiltersState = {
@@ -18,7 +31,8 @@ export const defaultFinancialFilters: FinancialFiltersState = {
   dateFrom: "",
   dateTo: "",
   status: "all",
-  sortBy: "due_asc",
+  studentId: "all",
+  sortBy: "created_desc",
 };
 
 export const defaultOverviewFilters: OverviewFiltersState = {
@@ -26,6 +40,7 @@ export const defaultOverviewFilters: OverviewFiltersState = {
   status: "all",
   period: "all",
   teacherId: "all",
+  studentId: "all",
   sortBy: "recent",
 };
 

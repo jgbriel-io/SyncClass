@@ -6,12 +6,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import {
   Select,
   SelectContent,
@@ -25,8 +20,13 @@ import type { Enums } from "@/integrations/supabase/types";
 import { BR_STATES, fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib/br-locations";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronsUpDown } from "lucide-react";
-import { REGEX_PATTERNS, maskCPF, maskPhone, maskDate, isValidDateString } from "@/lib/utils/patterns";
+import { Calendar } from "@/components/ui/calendar";
+import { ChevronsUpDown, CalendarIcon } from "lucide-react";
+import { REGEX_PATTERNS, maskCPF, maskPhone, brDateStringToDate, isValidDateString, isMasked } from "@/lib/utils/patterns";
+import { useDateMask } from "@/hooks/useDateMask";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { emailSchema } from "@/lib/validation/email";
 
 // Type for student origin from database enum
 type StudentOrigin = Enums<"student_origin">;
@@ -37,33 +37,27 @@ function brDateToIso(value: string): string {
   return `${year}-${month}-${day}`;
 }
 
-function isMasked(value: string | null | undefined): boolean {
-  return typeof value === "string" && value.includes("*");
-}
-
 const studentSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
   state: z.string().max(2).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
   cpf: z.string()
-    .max(14)
-    .refine((v) => !v || v.trim() === "" || REGEX_PATTERNS.cpf.test(v), "Formato deve ser 000.000.000-00"),
+    .refine((v) => {
+      if (!v || v.trim() === "") return true;
+      if (isMasked(v)) return true;
+      return v.length === 14 && REGEX_PATTERNS.cpf.test(v);
+    }, "CPF deve ter 11 dígitos no formato 000.000.000-00"),
   phone: z.string()
-    .max(20)
     .refine(
-      (v) => !v || v.trim() === "" || isMasked(v) || REGEX_PATTERNS.phone.test(v),
-      "Formato deve ser (00) 00000-0000"
+      (v) => {
+        if (!v || v.trim() === "") return true;
+        if (isMasked(v)) return true;
+        return (v.length === 14 || v.length === 15) && REGEX_PATTERNS.phone.test(v);
+      },
+      "Telefone deve ter 10 ou 11 dígitos no formato (00) 00000-0000"
     ),
-  email: z
-    .string()
-    .min(1, "Email é obrigatório")
-    .email("Email inválido")
-    .max(255),
+  email: emailSchema,
   hourly_rate: z.string().optional().nullable(),
-  classes_per_week: z
-    .string()
-    .optional()
-    .nullable(),
   pay_day: z
     .string()
     .optional()
@@ -133,9 +127,6 @@ export function StudentFormDialog({
       hourly_rate: student?.hourly_rate
         ? String(student.hourly_rate).replace(".", ",")
         : "",
-      classes_per_week: student?.classes_per_week
-        ? String(student.classes_per_week)
-        : "",
       pay_day: student?.pay_day ? String(student.pay_day) : "",
       origin: student?.origin || undefined,
       status: student?.status || "ativo",
@@ -146,6 +137,10 @@ export function StudentFormDialog({
   });
 
   const watchedCity = watch("city") || "";
+  const birthDate = watch("birth_date");
+  const { handleChange: handleDateChange, handleKeyDown: handleDateKeyDown } = useDateMask(
+    (value, options) => setValue("birth_date", value, options)
+  );
 
   useEffect(() => {
     // Sempre que o diálogo é fechado, garantimos que o formulário volte para o estado "novo aluno"
@@ -158,7 +153,6 @@ export function StudentFormDialog({
         phone: "",
         email: "",
         hourly_rate: "",
-        classes_per_week: "",
         pay_day: "",
         origin: undefined,
         status: "ativo",
@@ -189,9 +183,6 @@ export function StudentFormDialog({
         hourly_rate: student.hourly_rate
           ? String(student.hourly_rate).replace(".", ",")
           : "",
-        classes_per_week: student.classes_per_week
-          ? String(student.classes_per_week)
-          : "",
         pay_day: student.pay_day ? String(student.pay_day) : "",
         origin: student.origin || undefined,
         status: student.status || "ativo",
@@ -211,7 +202,6 @@ export function StudentFormDialog({
         phone: "",
         email: "",
         hourly_rate: "",
-        classes_per_week: "",
         pay_day: "",
         origin: undefined,
         status: "ativo",
@@ -239,13 +229,11 @@ export function StudentFormDialog({
     void loadCities();
   }, [selectedState]);
 
+
+
   const handleFormSubmit = (data: StudentFormData) => {
     const hourlyRateNumber = data.hourly_rate
       ? parseFloat(data.hourly_rate.replace(/[^.\d,]/g, "").replace(",", "."))
-      : null;
-
-    const classesPerWeekNumber = data.classes_per_week
-      ? Number(data.classes_per_week)
       : null;
 
     const payDayNumber = data.pay_day ? Number(data.pay_day) : null;
@@ -264,7 +252,6 @@ export function StudentFormDialog({
       status: selectedStatus,
       birth_date: data.birth_date ? brDateToIso(data.birth_date) : null,
       hourly_rate: hourlyRateNumber,
-      classes_per_week: classesPerWeekNumber,
       pay_day: payDayNumber,
       teacher_id: (autoTeacherId && !student) ? autoTeacherId : null,
     };
@@ -273,14 +260,13 @@ export function StudentFormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>
-            {student ? "Editar Aluno" : "Cadastrar Novo Aluno"}
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={student ? "Editar Aluno" : "Cadastrar Novo Aluno"}
+      size="MD"
+    >
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2 space-y-2">
               <Label htmlFor="name">Nome completo *</Label>
@@ -426,19 +412,70 @@ export function StudentFormDialog({
 
             <div className="space-y-2">
               <Label htmlFor="birth_date">Data de Nascimento</Label>
-              <Input
-                id="birth_date"
-                type="text"
-                inputMode="numeric"
-                maxLength={10}
-                placeholder="dd/mm/aaaa"
-                {...register("birth_date")}
-                onChange={(e) => {
-                  const masked = maskDate(e.target.value);
-                  setValue("birth_date", masked, { shouldValidate: true });
-                }}
-                disabled={isLoading}
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="birth_date"
+                  type="text"
+                  placeholder="dd/mm/aaaa"
+                  maxLength={10}
+                  value={birthDate || ""}
+                  onChange={handleDateChange}
+                  onKeyDown={handleDateKeyDown}
+                  disabled={isLoading}
+                  className="flex-1"
+                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0"
+                      disabled={isLoading}
+                    >
+                      <CalendarIcon className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <div className="p-3 border-b flex items-center justify-center gap-2">
+                      <Select
+                        value={birthDate ? brDateStringToDate(birthDate)?.getFullYear().toString() : "2000"}
+                        onValueChange={(year) => {
+                          const currentDate = birthDate ? brDateStringToDate(birthDate) : new Date(2000, 0, 1);
+                          const newDate = new Date(parseInt(year), currentDate?.getMonth() ?? 0, 1);
+                          setValue("birth_date", format(newDate, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Ano" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[200px]">
+                          {Array.from({ length: new Date().getFullYear() - 1920 + 1 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Calendar
+                      mode="single"
+                      selected={brDateStringToDate(birthDate || "") ?? undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setValue("birth_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                        }
+                      }}
+                      locale={ptBR}
+                      month={birthDate ? brDateStringToDate(birthDate) ?? new Date(2000, 0, 1) : new Date(2000, 0, 1)}
+                      onMonthChange={() => {}}
+                      fromYear={1920}
+                      toYear={new Date().getFullYear()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
               {errors.birth_date && (
                 <p className="text-sm text-destructive">{errors.birth_date.message}</p>
               )}
@@ -485,19 +522,6 @@ export function StudentFormDialog({
                 type="text"
                 placeholder="Ex: 120,00"
                 {...register("hourly_rate")}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="classes_per_week">Aulas por semana</Label>
-              <Input
-                id="classes_per_week"
-                type="number"
-                min={0}
-                max={14}
-                placeholder="Ex: 1, 2, 3..."
-                {...register("classes_per_week")}
                 disabled={isLoading}
               />
             </div>
@@ -562,7 +586,7 @@ export function StudentFormDialog({
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-4 pt-4">
             <Button
               type="button"
               variant="outline"
@@ -585,7 +609,6 @@ export function StudentFormDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

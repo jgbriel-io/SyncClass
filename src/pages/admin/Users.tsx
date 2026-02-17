@@ -36,27 +36,26 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil, KeyRound } from "lucide-react";
+import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil, KeyRound, Users, UserCheck, UserX, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
 import { getAvatarLetter } from "@/lib/utils/patterns";
 import {
   useUsersPaginated,
-  useLinkedProfileIds,
+  useUsersStats,
   useCreateUser,
   useUpdateUserRole,
   useUpdateUserProfile,
   useDeleteUser,
   useHardDeleteUser,
-  useAdminResetPassword,
-  useLinkUserToStudent,
-  useLinkUserToTeacher,
+  useResetPassword,
   UserWithProfile,
 } from "@/hooks/useUsers";
-import { useStudents, useUpdateStudent } from "@/hooks/useStudents";
-import { useTeachers, useUpdateTeacher, useDeleteTeacher } from "@/hooks/useTeachers";
+import { useStudents, useUpdateStudent, useHardDeleteStudent } from "@/hooks/useStudents";
+import { useTeachers, useUpdateTeacher, useDeleteTeacher, useHardDeleteTeacher } from "@/hooks/useTeachers";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,11 +65,15 @@ import {
 import { toast } from "sonner";
 import {
   UsersFilters,
-  defaultFilters,
   type UsersFiltersState,
 } from "@/components/filters/UsersFilters";
 import { defaultUsersFilters } from "@/components/filters/filterDefaults";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
+import { UsersTableSkeleton } from "@/components/ui/table-skeleton";
+import { StatCard } from "@/components/ui/stat-card";
+import { UsersTableRow } from "@/components/users/UsersTableRow";
+import { COL as USER_COL, TABLE_MIN_W as USER_TABLE_MIN_W } from "@/components/users/UsersTableRow.constants";
+import { UserDetailSheet } from "@/components/admin/UserDetailSheet";
 
 export default function UsersPage() {
   const [filters, setFilters] = useState<UsersFiltersState>({
@@ -78,13 +81,10 @@ export default function UsersPage() {
     status: "active",
   });
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [forceHardDelete, setForceHardDelete] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null);
-  const [linkType, setLinkType] = useState<"student" | "teacher" | null>(null);
-  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
-  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
   const [generatedPassword, setGeneratedPassword] = useState<string>("");
   const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
@@ -95,8 +95,12 @@ export default function UsersPage() {
   const [resetPasswordNew, setResetPasswordNew] = useState("");
   const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
 
+  // Detail sheet state
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [detailUserId, setDetailUserId] = useState<string | null>(null);
+
   const listTopRef = useRef<HTMLDivElement>(null);
-  const adminResetPassword = useAdminResetPassword();
+  const adminResetPassword = useResetPassword();
   const {
     data: users = [],
     isLoading,
@@ -106,10 +110,10 @@ export default function UsersPage() {
     hasMore,
     totalCount,
     isFetching,
-  } = useUsersPaginated({ pageSize: 20 });
+  } = useUsersPaginated({ pageSize: 10, filters });
   const { data: students = [] } = useStudents();
   const { data: teachers = [] } = useTeachers();
-  const { data: linkedIds } = useLinkedProfileIds();
+  const { data: usersStats } = useUsersStats();
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -120,9 +124,9 @@ export default function UsersPage() {
   const deleteUser = useDeleteUser();
   const hardDeleteUser = useHardDeleteUser();
   const updateStudent = useUpdateStudent();
+  const hardDeleteStudent = useHardDeleteStudent();
   const updateTeacher = useUpdateTeacher();
-  const linkToStudent = useLinkUserToStudent();
-  const linkToTeacher = useLinkUserToTeacher();
+  const hardDeleteTeacher = useHardDeleteTeacher();
   const deleteTeacher = useDeleteTeacher();
 
   const filteredUsers = useMemo(() => {
@@ -205,7 +209,6 @@ export default function UsersPage() {
       status: string;
       birth_date: string | null;
       hourly_rate: number | null;
-      classes_per_week: number | null;
       pay_day: number | null;
     };
     teacherData?: {
@@ -217,13 +220,6 @@ export default function UsersPage() {
   }) => {
     if (selectedUser) {
       // Update existing user
-      if (data.password) {
-        // Update password via admin API
-        // Note: Supabase Admin API doesn't have a direct password update
-        // You might need to use resetPasswordForEmail or handle this differently
-        console.warn("Password update not implemented via admin API");
-      }
-      
       updateProfile.mutate(
         {
           userId: selectedUser.id,
@@ -238,6 +234,7 @@ export default function UsersPage() {
               },
               {
                 onSuccess: () => {
+                  toast.success("Usuário atualizado com sucesso!");
                   setIsFormOpen(false);
                   setSelectedUser(null);
                 },
@@ -254,7 +251,11 @@ export default function UsersPage() {
           password: "",
           fullName: data.fullName,
           role: data.role,
-          studentData: data.studentData,
+          studentData: {
+            ...data.studentData,
+            origin: (data.studentData?.origin || "outro") as "indicacao" | "google" | "instagram" | "passante" | "outro",
+            status: (data.studentData?.status || "ativo") as "ativo" | "inativo",
+          },
           teacherData: data.teacherData,
         },
         {
@@ -266,43 +267,9 @@ export default function UsersPage() {
               setPasswordCopied(false);
               setPasswordDialogSource("create");
               setIsPasswordDialogOpen(true);
+            } else {
+              toast.success("Usuário criado com sucesso!");
             }
-          },
-        }
-      );
-    }
-  };
-
-  const handleLinkStudent = () => {
-    if (selectedUser && selectedStudentId) {
-      linkToStudent.mutate(
-        {
-          userId: selectedUser.id,
-          studentId: selectedStudentId,
-        },
-        {
-          onSuccess: () => {
-            setIsLinkDialogOpen(false);
-            setSelectedUser(null);
-            setSelectedStudentId("");
-          },
-        }
-      );
-    }
-  };
-
-  const handleLinkTeacher = () => {
-    if (selectedUser && selectedTeacherId) {
-      linkToTeacher.mutate(
-        {
-          userId: selectedUser.id,
-          teacherId: selectedTeacherId,
-        },
-        {
-          onSuccess: () => {
-            setIsLinkDialogOpen(false);
-            setSelectedUser(null);
-            setSelectedTeacherId("");
           },
         }
       );
@@ -312,27 +279,74 @@ export default function UsersPage() {
   const handleDeleteConfirm = () => {
     if (!selectedUser) return;
 
-    const linkedStudent = selectedUser.profile?.student_id
-      ? students.find((s) => s.id === selectedUser.profile?.student_id)
-      : null;
-    const linkedTeacher = selectedUser.profile?.teacher_id
-      ? teachers.find((t) => t.id === selectedUser.profile.teacher_id)
-      : null;
+    const { linkedStudent, linkedTeacher, isStudentActive, isTeacherActive, isHardDelete, userIsInactive } = deleteDialogInfo;
 
-    const isStudentActive = linkedStudent?.status === "ativo";
-    const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
-    const canHardDelete =
-      (linkedStudent && linkedStudent.status === "inativo") ||
-      (linkedTeacher && linkedTeacher.status === "inativo");
+    // Se o usuário está inativo e não é hard delete, é uma REATIVAÇÃO
+    if (userIsInactive && !isHardDelete && !forceHardDelete) {
+      // Reativar aluno vinculado
+      if (linkedStudent) {
+        updateStudent.mutate(
+          { id: linkedStudent.id, status: "ativo" },
+          {
+            onSuccess: () => {
+              toast.success("Usuário reativado com sucesso!");
+              setDeleteDialogOpen(false);
+              setSelectedUser(null);
+              setForceHardDelete(false);
+            },
+          }
+        );
+        return;
+      }
+
+      // Reativar professor vinculado
+      if (linkedTeacher) {
+        updateTeacher.mutate(
+          { id: linkedTeacher.id, status: "ativo" },
+          {
+            onSuccess: () => {
+              toast.success("Usuário reativado com sucesso!");
+              setDeleteDialogOpen(false);
+              setSelectedUser(null);
+              setForceHardDelete(false);
+            },
+          }
+        );
+        return;
+      }
+
+      // Reativar usuário sem vínculo (apenas profile.active)
+      updateProfile.mutate(
+        { userId: selectedUser.id, fullName: selectedUser.profile?.full_name || "" },
+        {
+          onSuccess: () => {
+            // Atualizar profile.active manualmente via supabase
+            supabase
+              .from("profiles")
+              .update({ active: true })
+              .eq("user_id", selectedUser.id)
+              .then(() => {
+                toast.success("Usuário reativado com sucesso!");
+                setDeleteDialogOpen(false);
+                setSelectedUser(null);
+                setForceHardDelete(false);
+              });
+          },
+        }
+      );
+      return;
+    }
 
     if (linkedStudent && isStudentActive) {
-      // Soft deactivate via student status so it reflects in both tabs
+      // Arquiva: muda status para inativo (updateStudent já sincroniza profile.active = false)
       updateStudent.mutate(
         { id: linkedStudent.id, status: "inativo" },
         {
           onSuccess: () => {
+            toast.success("Usuário arquivado com sucesso!");
             setDeleteDialogOpen(false);
             setSelectedUser(null);
+            setForceHardDelete(false);
           },
         }
       );
@@ -343,19 +357,27 @@ export default function UsersPage() {
       // Soft deactivate via teacher status so it reflects in both tabs
       deleteTeacher.mutate(linkedTeacher.id, {
         onSuccess: () => {
+          toast.success("Usuário arquivado com sucesso!");
           setDeleteDialogOpen(false);
           setSelectedUser(null);
+          setForceHardDelete(false);
         },
       });
       return;
     }
 
-    if (canHardDelete) {
-      // Hard delete auth user (admin-only Edge Function)
+    if (isHardDelete) {
+      // Hard delete: remove a conta do auth (CASCADE vai remover profile e vínculos)
       hardDeleteUser.mutate(selectedUser.id, {
         onSuccess: () => {
+          toast.success("Usuário excluído definitivamente!");
           setDeleteDialogOpen(false);
           setSelectedUser(null);
+          setForceHardDelete(false);
+        },
+        onError: (error) => {
+          console.error("Erro ao excluir usuário:", error);
+          toast.error("Erro ao excluir usuário: " + (error as Error).message);
         },
       });
       return;
@@ -364,22 +386,34 @@ export default function UsersPage() {
     // Fallback: just deactivate the profile (no linked student/teacher)
     deleteUser.mutate(selectedUser.id, {
       onSuccess: () => {
+        toast.success("Usuário arquivado com sucesso!");
         setDeleteDialogOpen(false);
         setSelectedUser(null);
+        setForceHardDelete(false);
       },
     });
   };
 
-  const openLinkDialog = (user: UserWithProfile, type: "student" | "teacher") => {
-    setSelectedUser(user);
-    setLinkType(type);
-    setIsLinkDialogOpen(true);
-  };
+  // Calcula se o dialog deve mostrar "Excluir definitivamente", "Reativar" ou "Arquivar".
+  const deleteDialogInfo = useMemo(() => {
+    const linkedStudent = selectedUser?.profile?.student_id
+      ? students.find((s) => s.id === selectedUser.profile?.student_id)
+      : null;
+    const linkedTeacher = selectedUser?.profile?.teacher_id
+      ? teachers.find((t) => t.id === selectedUser.profile?.teacher_id)
+      : null;
+    const isStudentActive = linkedStudent?.status === "ativo";
+    const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
+    const userIsInactive = !(selectedUser?.profile?.active ?? true);
 
-  const linkedStudentIds = linkedIds?.linkedStudentIds ?? new Set<string>();
-  const linkedTeacherIds = linkedIds?.linkedTeacherIds ?? new Set<string>();
-  const availableStudents = students.filter((s) => !linkedStudentIds.has(s.id));
-  const availableTeachers = teachers.filter((t) => !linkedTeacherIds.has(t.id));
+    // Hard delete apenas se forçado explicitamente
+    const isHardDelete = forceHardDelete;
+
+    const displayName =
+      selectedUser?.profile?.full_name || selectedUser?.email || "este usuário";
+
+    return { linkedStudent, linkedTeacher, isStudentActive, isTeacherActive, userIsInactive, isHardDelete, displayName };
+  }, [selectedUser, students, teachers, forceHardDelete]);
 
   const getRoleVariant = (role: string | null) => {
     switch (role) {
@@ -408,16 +442,15 @@ export default function UsersPage() {
   };
 
   return (
-    <>
     <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Usuários</h1>
-              <p className="text-muted-foreground mt-1">
-                Gerencie usuários, privilégios e vínculos
-              </p>
-            </div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">Usuários</h1>
+          <p className="text-sm mobile:text-xs tablet:text-xs mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">
+            Gerencie usuários e privilégios
+          </p>
+        </div>
             <Button onClick={() => {
               setSelectedUser(null);
               setIsFormOpen(true);
@@ -426,6 +459,36 @@ export default function UsersPage() {
               Novo Usuário
             </Button>
           </div>
+
+          {/* Cards informativos */}
+          {usersStats && (
+            <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
+              <StatCard
+                title="Total de usuários"
+                value={usersStats.total}
+                icon={Users}
+                variant="primary"
+              />
+              <StatCard
+                title="Usuários ativos"
+                value={usersStats.active}
+                icon={UserCheck}
+                variant="success"
+              />
+              <StatCard
+                title="Usuários inativos"
+                value={usersStats.inactive}
+                icon={UserX}
+                variant="muted"
+              />
+              <StatCard
+                title="Novos este mês"
+                value={usersStats.newThisMonth}
+                icon={TrendingUp}
+                variant="primaryHighlight"
+              />
+            </div>
+          )}
 
           {/* Filtros avançados */}
           <UsersFilters
@@ -440,13 +503,6 @@ export default function UsersPage() {
             }}
           />
 
-        {/* Loading state */}
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
-
         {/* Error state */}
         {error && (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
@@ -457,261 +513,99 @@ export default function UsersPage() {
         )}
 
         {/* Table */}
-        {!isLoading && !error && (
-          <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-            <Table>
+        <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
+          <div className="overflow-x-auto">
+            <Table style={{ minWidth: USER_TABLE_MIN_W }}>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs uppercase tracking-wider">
-                    Usuário
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider whitespace-nowrap">
-                    Privilégio
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider hidden lg:table-cell whitespace-nowrap">
-                    Vínculo
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider hidden md:table-cell whitespace-nowrap">
-                    Cadastro
-                  </TableHead>
-                  <TableHead className="text-right text-xs uppercase tracking-wider whitespace-nowrap">
-                    Ações
-                  </TableHead>
+                <TableRow className="border-b bg-muted/50">
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>Status</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: USER_COL.USUARIO, minWidth: USER_COL.USUARIO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>Usuário</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.PRIVILEGIO, minWidth: USER_COL.PRIVILEGIO }}>Privilégio</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: USER_COL.VINCULO, minWidth: USER_COL.VINCULO }}>Vínculo</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: USER_COL.CADASTRO, minWidth: USER_COL.CADASTRO }}>Cadastro</TableHead>
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.PLACEHOLDER, minWidth: USER_COL.PLACEHOLDER }} aria-label="Placeholder" />
+                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.ACOES, minWidth: USER_COL.ACOES }}>Ações</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                  {filteredUsers.map((user) => {
-                    const linkedStudent = user.profile?.student_id
-                      ? students.find((s) => s.id === user.profile?.student_id)
-                      : null;
-                    const linkedTeacher = user.profile?.teacher_id
-                      ? teachers.find((t) => t.id === user.profile.teacher_id)
-                      : null;
-
-                    const storedRole = (user.role?.role ?? user.profile?.role) as string | null ?? null;
-                    const role = storedRole === "admin"
-                      ? "admin"
-                      : storedRole === "teacher"
-                      ? "teacher"
-                      : storedRole === "student"
-                      ? "student"
-                      : linkedTeacher
-                      ? "teacher"
-                      : linkedStudent
-                      ? "student"
-                      : storedRole;
-
-                    const displayName = (user.profile?.full_name || "").trim() || "(sem nome)";
-                    const avatarLetter = getAvatarLetter(displayName);
-                    const subtitle = user.email || getRoleLabel(role);
-                    const isActive = user.profile?.active ?? true;
-                    const lastUpdatedAt = user.profile?.updated_at;
-
-                    return (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                              <span className="text-sm font-medium text-accent-foreground">
-                                {avatarLetter}
-                              </span>
-                            </div>
-                            <div className="space-y-0.5">
-                              <p className="font-medium text-sm whitespace-nowrap">
-                                {displayName}
-                              </p>
-                              {subtitle && (
-                                <p className="text-xs text-muted-foreground whitespace-nowrap">
-                                  {subtitle}
-                                </p>
-                              )}
-                              {!isActive && (
-                                <p className="text-[11px] text-amber-600">
-                                  Conta arquivada
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <div className="flex flex-col gap-1 items-start">
-                            <StatusBadge variant={getRoleVariant(role)}>
-                              {getRoleLabel(role)}
-                            </StatusBadge>
-                            {!isActive && (
-                              <span className="text-[11px] text-muted-foreground">
-                                Arquivado
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell whitespace-nowrap">
-                          {linkedStudent || linkedTeacher ? (
-                            <div className="flex flex-col gap-1">
-                              {linkedStudent && (
-                                <div className="flex items-center gap-2">
-                                  <User className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm">Aluno: {linkedStudent.name}</span>
-                                </div>
-                              )}
-                              {linkedTeacher && (
-                                <div className="flex items-center gap-2">
-                                  <Shield className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm">Professor: {linkedTeacher.name}</span>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell whitespace-nowrap">
-                          <div className="flex flex-col text-xs text-muted-foreground">
-                            <span>
-                              {user.created_at
-                                ? `Criado em ${format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })}`
-                                : "—"}
-                            </span>
-                            {lastUpdatedAt && (
-                              <span className="mt-0.5">
-                                {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-60">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setIsFormOpen(true);
-                                }}
-                              >
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setUserToResetPassword(user);
-                                  setResetPasswordNew("");
-                                  setResetPasswordConfirm("");
-                                  setResetPasswordDialogOpen(true);
-                                }}
-                              >
-                                <KeyRound className="h-4 w-4 mr-2" />
-                                Redefinir senha
-                              </DropdownMenuItem>
-                              {role === "student" && !linkedStudent && (
-                                <DropdownMenuItem
-                                  onClick={() => openLinkDialog(user, "student")}
-                                >
-                                  Vincular aluno
-                                </DropdownMenuItem>
-                              )}
-                              {role === "teacher" && !linkedTeacher && (
-                                <DropdownMenuItem
-                                  onClick={() => openLinkDialog(user, "teacher")}
-                                >
-                                  Vincular professor
-                                </DropdownMenuItem>
-                              )}
-                              {linkedStudent && linkedStudent.status === "inativo" && (
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    updateStudent.mutate({
-                                      id: linkedStudent.id,
-                                      status: "ativo",
-                                    });
-                                  }}
-                                >
-                                  Reativar aluno
-                                </DropdownMenuItem>
-                              )}
-                              {linkedTeacher && linkedTeacher.status === "inativo" && (
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    updateTeacher.mutate({
-                                      id: linkedTeacher.id,
-                                      status: "ativo",
-                                    });
-                                  }}
-                                >
-                                  Reativar professor
-                                </DropdownMenuItem>
-                              )}
-                              {(() => {
-                                const isStudentActive = linkedStudent?.status === "ativo";
-                                const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
-                                const userIsActive = isActive;
-                                const canHardDelete =
-                                  (linkedStudent && linkedStudent.status === "inativo") ||
-                                  (linkedTeacher && linkedTeacher.status === "inativo");
-
-                                const shouldShowDeactivate =
-                                  userIsActive && (isStudentActive || isTeacherActive || (!linkedStudent && !linkedTeacher));
-
-                                const label = shouldShowDeactivate
-                                  ? "Arquivar"
-                                  : canHardDelete
-                                  ? "Excluir definitivamente"
-                                  : "Inativo";
-
-                                const disabled = !shouldShowDeactivate && !canHardDelete;
-
-                                return (
-                                  <DropdownMenuItem
-                                    className="text-destructive hover:bg-destructive/10 data-[highlighted]:!bg-destructive/10 data-[highlighted]:!text-destructive"
-                                    disabled={disabled}
-                                    onClick={() => {
-                                      if (disabled) return;
-                                      setSelectedUser(user);
-                                      setDeleteDialogOpen(true);
-                                    }}
-                                  >
-                                    {(!disabled && (shouldShowDeactivate || canHardDelete)) && (
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                    )}
-                                    {label}
-                                  </DropdownMenuItem>
-                                );
-                              })()}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+              <TableBody className="divide-y divide-border/40">
+                {isLoading ? (
+                  <UsersTableSkeleton rows={10} />
+                ) : (
+                  filteredUsers.map((user) => (
+                    <UsersTableRow
+                      key={user.id}
+                      user={user}
+                      students={students}
+                      teachers={teachers}
+                      onViewDetail={(id) => {
+                        setDetailUserId(id);
+                        setDetailSheetOpen(true);
+                      }}
+                      onEdit={(u) => {
+                        setSelectedUser(u);
+                        setIsFormOpen(true);
+                      }}
+                      onResetPassword={(u) => {
+                      setUserToResetPassword(u);
+                      setResetPasswordNew("");
+                      setResetPasswordConfirm("");
+                      setResetPasswordDialogOpen(true);
+                    }}
+                    onReactivateStudent={(studentId) => {
+                      updateStudent.mutate(
+                        { id: studentId, status: "ativo" },
+                        {
+                          onSuccess: () => {
+                            toast.success("Aluno reativado com sucesso!");
+                          },
+                        }
+                      );
+                    }}
+                    onReactivateTeacher={(teacherId) => {
+                      updateTeacher.mutate(
+                        { id: teacherId, status: "ativo" },
+                        {
+                          onSuccess: () => {
+                            toast.success("Professor reativado com sucesso!");
+                          },
+                        }
+                      );
+                    }}
+                    onDelete={(u) => {
+                      setSelectedUser(u);
+                      setForceHardDelete(false);
+                      setDeleteDialogOpen(true);
+                    }}
+                    onHardDelete={(u) => {
+                      setSelectedUser(u);
+                      setForceHardDelete(true);
+                      setDeleteDialogOpen(true);
+                    }}
+                    getRoleLabel={getRoleLabel}
+                    getRoleVariant={getRoleVariant}
+                  />
+                  ))
+                )}
               </TableBody>
             </Table>
-            {filteredUsers.length === 0 && (
-              <EmptyState
-                icon={User}
-                title={users.length === 0 ? "Nenhum usuário cadastrado" : "Nenhum resultado"}
-                message={users.length === 0
-                  ? "Clique no botão 'Novo Usuário' para adicionar o primeiro"
-                  : "Ajuste os filtros acima ou limpe a busca"}
-              />
-            )}
-            <TablePaginationBar
-              page={page}
-              pageSize={20}
-              totalCount={totalCount}
-              hasMore={hasMore}
-              isFetching={isFetching}
-              onPageChange={setPage}
-            />
           </div>
-        )}
+          {!isLoading && filteredUsers.length === 0 && (
+            <EmptyState
+              icon={User}
+              title={users.length === 0 ? "Nenhum usuário cadastrado" : "Nenhum resultado"}
+              message={users.length === 0
+                ? "Clique no botão 'Novo Usuário' para adicionar o primeiro"
+                : "Ajuste os filtros acima ou limpe a busca"}
+            />
+          )}
+          <TablePaginationBar
+            page={page}
+            pageSize={10}
+            totalCount={totalCount}
+            hasMore={hasMore}
+            isFetching={isFetching}
+            onPageChange={setPage}
+          />
         </div>
 
         {/* Create/Edit User Dialog */}
@@ -772,7 +666,7 @@ export default function UsersPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between gap-3 pt-2">
+              <div className="flex justify-between gap-4 pt-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -843,12 +737,22 @@ export default function UsersPage() {
               <DialogTitle>Redefinir senha</DialogTitle>
               {userToResetPassword && (
                 <DialogDescription>
-                  Nova senha para <strong>{userToResetPassword.profile?.full_name ?? userToResetPassword.email}</strong>. Mínimo 6 caracteres.
+                  Nova senha para <strong>{userToResetPassword.profile?.full_name ?? userToResetPassword.email}</strong>.
                 </DialogDescription>
               )}
             </DialogHeader>
             {userToResetPassword && (
               <>
+                <div className="rounded-lg border bg-muted/50 p-3 space-y-2 mb-4">
+                  <p className="text-xs font-medium text-muted-foreground">Requisitos da senha:</p>
+                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                    <li>Mínimo de 8 caracteres</li>
+                    <li>Pelo menos uma letra maiúscula (A-Z)</li>
+                    <li>Pelo menos uma letra minúscula (a-z)</li>
+                    <li>Pelo menos um número (0-9)</li>
+                    <li>Pelo menos um caractere especial (!@#$%^&*)</li>
+                  </ul>
+                </div>
                 <div className="space-y-4 py-2">
                   <div className="space-y-2">
                     <Label htmlFor="reset-password-new">Nova senha</Label>
@@ -858,7 +762,7 @@ export default function UsersPage() {
                       placeholder="••••••••"
                       value={resetPasswordNew}
                       onChange={(e) => setResetPasswordNew(e.target.value)}
-                      minLength={6}
+                      minLength={8}
                       disabled={adminResetPassword.isPending}
                     />
                   </div>
@@ -870,7 +774,7 @@ export default function UsersPage() {
                       placeholder="••••••••"
                       value={resetPasswordConfirm}
                       onChange={(e) => setResetPasswordConfirm(e.target.value)}
-                      minLength={6}
+                      minLength={8}
                       disabled={adminResetPassword.isPending}
                     />
                   </div>
@@ -879,9 +783,28 @@ export default function UsersPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+                      // Gerar senha forte com todos os requisitos
+                      const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+                      const lower = "abcdefghijkmnpqrstuvwxyz";
+                      const numbers = "23456789";
+                      const special = "!@#$%^&*";
+                      
                       let p = "";
-                      for (let i = 0; i < 10; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
+                      // Garantir pelo menos um de cada tipo
+                      p += upper.charAt(Math.floor(Math.random() * upper.length));
+                      p += lower.charAt(Math.floor(Math.random() * lower.length));
+                      p += numbers.charAt(Math.floor(Math.random() * numbers.length));
+                      p += special.charAt(Math.floor(Math.random() * special.length));
+                      
+                      // Completar com caracteres aleatórios
+                      const allChars = upper + lower + numbers + special;
+                      for (let i = 4; i < 12; i++) {
+                        p += allChars.charAt(Math.floor(Math.random() * allChars.length));
+                      }
+                      
+                      // Embaralhar
+                      p = p.split('').sort(() => Math.random() - 0.5).join('');
+                      
                       setResetPasswordNew(p);
                       setResetPasswordConfirm(p);
                     }}
@@ -904,11 +827,40 @@ export default function UsersPage() {
                   <Button
                     disabled={
                       adminResetPassword.isPending ||
-                      resetPasswordNew.length < 6 ||
-                      resetPasswordNew !== resetPasswordConfirm
+                      resetPasswordNew.length < 8 ||
+                      resetPasswordNew !== resetPasswordConfirm ||
+                      !/[A-Z]/.test(resetPasswordNew) ||
+                      !/[a-z]/.test(resetPasswordNew) ||
+                      !/[0-9]/.test(resetPasswordNew) ||
+                      !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(resetPasswordNew)
                     }
                     onClick={() => {
-                      if (resetPasswordNew.length < 6 || resetPasswordNew !== resetPasswordConfirm) return;
+                      // Validação completa
+                      if (resetPasswordNew.length < 8) {
+                        toast.error("A senha deve ter no mínimo 8 caracteres.");
+                        return;
+                      }
+                      if (!/[A-Z]/.test(resetPasswordNew)) {
+                        toast.error("A senha deve conter pelo menos uma letra maiúscula.");
+                        return;
+                      }
+                      if (!/[a-z]/.test(resetPasswordNew)) {
+                        toast.error("A senha deve conter pelo menos uma letra minúscula.");
+                        return;
+                      }
+                      if (!/[0-9]/.test(resetPasswordNew)) {
+                        toast.error("A senha deve conter pelo menos um número.");
+                        return;
+                      }
+                      if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(resetPasswordNew)) {
+                        toast.error("A senha deve conter pelo menos um caractere especial.");
+                        return;
+                      }
+                      if (resetPasswordNew !== resetPasswordConfirm) {
+                        toast.error("As senhas não coincidem.");
+                        return;
+                      }
+                      
                       adminResetPassword.mutate(
                         { userId: userToResetPassword.id, password: resetPasswordNew },
                         {
@@ -943,178 +895,60 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Link Dialog */}
-        <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                Vincular {linkType === "student" ? "Aluno" : "Professor"}
-              </DialogTitle>
-            </DialogHeader>
-            {linkType === "student" && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Selecione o aluno</label>
-                  <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um aluno" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableStudents.map((student) => (
-                        <SelectItem key={student.id} value={student.id}>
-                          {student.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsLinkDialogOpen(false);
-                      setSelectedStudentId("");
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleLinkStudent}
-                    disabled={!selectedStudentId || linkToStudent.isPending}
-                  >
-                    {linkToStudent.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Vinculando...
-                      </>
-                    ) : (
-                      "Vincular"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-            {linkType === "teacher" && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Selecione o professor</label>
-                  <Select value={selectedTeacherId} onValueChange={setSelectedTeacherId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um professor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableTeachers.map((teacher) => (
-                        <SelectItem key={teacher.id} value={teacher.id}>
-                          {teacher.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsLinkDialogOpen(false);
-                      setSelectedTeacherId("");
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleLinkTeacher}
-                    disabled={!selectedTeacherId || linkToTeacher.isPending}
-                  >
-                    {linkToTeacher.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Vinculando...
-                      </>
-                    ) : (
-                      "Vincular"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
         {/* Deactivate/Delete Confirmation Dialog */}
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) {
+            setForceHardDelete(false);
+          }
+        }}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                {(() => {
-                  const linkedStudent = selectedUser?.profile?.student_id
-                    ? students.find((s) => s.id === selectedUser.profile?.student_id)
-                    : null;
-                  const linkedTeacher = selectedUser?.profile?.teacher_id
-                    ? teachers.find(
-                        (t) => t.id === selectedUser.profile.teacher_id
-                      )
-                    : null;
-                  const isStudentActive = linkedStudent?.status === "ativo";
-                  const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
-
-                  if (linkedStudent && isStudentActive) {
-                    return "Confirmar arquivamento";
-                  }
-
-                  if (linkedTeacher && isTeacherActive) {
-                    return "Confirmar arquivamento";
-                  }
-
-                  return "Confirmar arquivamento do usuário";
-                })()}
+                {deleteDialogInfo.isHardDelete
+                  ? "Excluir definitivamente?"
+                  : deleteDialogInfo.userIsInactive && !forceHardDelete
+                    ? "Confirmar reativação"
+                    : deleteDialogInfo.linkedStudent && deleteDialogInfo.isStudentActive
+                      ? "Confirmar arquivamento"
+                      : deleteDialogInfo.linkedTeacher && deleteDialogInfo.isTeacherActive
+                        ? "Confirmar arquivamento"
+                        : "Confirmar arquivamento do usuário"}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                {(() => {
-                  const linkedStudent = selectedUser?.profile?.student_id
-                    ? students.find((s) => s.id === selectedUser.profile?.student_id)
-                    : null;
-                  const linkedTeacher = selectedUser?.profile?.teacher_id
-                    ? teachers.find(
-                        (t) => t.id === selectedUser.profile.teacher_id
-                      )
-                    : null;
-                  const isStudentActive = linkedStudent?.status === "ativo";
-                  const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
-
-                  const displayName =
-                    selectedUser?.profile?.full_name || selectedUser?.email || "este usuário";
-
-                  if (linkedStudent && isStudentActive) {
-                    return (
-                      <>
-                        Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
-                        Ele será removido da lista de ativos e aparecerá como aluno inativo.
-                      </>
-                    );
-                  }
-
-                  if (linkedTeacher && isTeacherActive) {
-                    return (
-                      <>
-                        Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
-                        Ele será removido da lista de ativos e aparecerá como professor inativo.
-                      </>
-                    );
-                  }
-
-                  return (
-                    <>
-                      Tem certeza que deseja arquivar o usuário <strong>{displayName}</strong>?
-                      Esta ação não remove a conta do Supabase Auth, apenas arquiva o usuário no painel.
-                    </>
-                  );
-                })()}
+                {deleteDialogInfo.isHardDelete ? (
+                  <>
+                    A conta do usuário <strong>{deleteDialogInfo.displayName}</strong> será removida do sistema
+                    (Supabase Auth, perfil e vínculos). Esta ação não pode ser desfeita.
+                  </>
+                ) : deleteDialogInfo.userIsInactive && !forceHardDelete ? (
+                  <>
+                    Tem certeza que deseja reativar o usuário <strong>{deleteDialogInfo.displayName}</strong>?
+                    Ele voltará a aparecer na lista de usuários ativos.
+                  </>
+                ) : deleteDialogInfo.linkedStudent && deleteDialogInfo.isStudentActive ? (
+                  <>
+                    Tem certeza que deseja arquivar o usuário <strong>{deleteDialogInfo.displayName}</strong>?
+                    Ele será removido da lista de ativos e aparecerá como aluno inativo.
+                  </>
+                ) : deleteDialogInfo.linkedTeacher && deleteDialogInfo.isTeacherActive ? (
+                  <>
+                    Tem certeza que deseja arquivar o usuário <strong>{deleteDialogInfo.displayName}</strong>?
+                    Ele será removido da lista de ativos e aparecerá como professor inativo.
+                  </>
+                ) : (
+                  <>
+                    Tem certeza que deseja arquivar o usuário <strong>{deleteDialogInfo.displayName}</strong>?
+                    Esta ação não remove a conta do Supabase Auth, apenas arquiva o usuário no painel.
+                  </>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel
                 disabled={
                   deleteUser.isPending ||
+                  hardDeleteStudent.isPending ||
                   updateStudent.isPending ||
                   hardDeleteUser.isPending ||
                   updateTeacher.isPending ||
@@ -1127,29 +961,40 @@ export default function UsersPage() {
                 onClick={handleDeleteConfirm}
                 disabled={
                   deleteUser.isPending ||
+                  hardDeleteStudent.isPending ||
                   updateStudent.isPending ||
                   hardDeleteUser.isPending ||
                   updateTeacher.isPending ||
-                  deleteTeacher.isPending
+                  deleteTeacher.isPending ||
+                  updateProfile.isPending
                 }
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className={deleteDialogInfo.userIsInactive && !forceHardDelete ? "" : "bg-destructive text-destructive-foreground hover:bg-destructive/90"}
               >
                 {deleteUser.isPending ||
+                hardDeleteStudent.isPending ||
                 updateStudent.isPending ||
                 hardDeleteUser.isPending ||
                 updateTeacher.isPending ||
-                deleteTeacher.isPending ? (
+                deleteTeacher.isPending ||
+                updateProfile.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Arquivando...
+                    {deleteDialogInfo.isHardDelete ? "Excluindo..." : deleteDialogInfo.userIsInactive && !forceHardDelete ? "Reativando..." : "Arquivando..."}
                   </>
                 ) : (
-                  "Arquivar"
+                  deleteDialogInfo.isHardDelete ? "Excluir definitivamente" : deleteDialogInfo.userIsInactive && !forceHardDelete ? "Reativar" : "Arquivar"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-    </>
+
+        {/* User Detail Sheet */}
+        <UserDetailSheet
+          userId={detailUserId}
+          open={detailSheetOpen}
+          onOpenChange={setDetailSheetOpen}
+        />
+      </div>
   );
 }

@@ -2,12 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,15 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Receipt } from "lucide-react";
+import { Loader2, Receipt, CalendarIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { ClassLogInsert, ClassLogWithStudent, ClassLogWithFinancialData } from "@/hooks/useClassLogs";
-import { maskDate, isValidDateString, parseMoneyToNumber, REGEX_PATTERNS } from "@/lib/utils/patterns";
+import { brDateStringToDate, isValidDateString, parseMoneyToNumber, REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { formatCurrency } from "@/lib/utils/formatters";
-
-const REGEX_TIME = /^([01]?\d|2[0-3]):([0-5]\d)$/;
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
@@ -55,15 +53,51 @@ function isDateFuture(brDate: string): boolean {
   return d > today;
 }
 
-/** Vencimento padrão: dia do pagamento do aluno no mês da aula (dd/mm/yyyy). pay_day 1–31; se mês tem menos dias, usa último dia. */
+/** Vencimento padrão: dia do pagamento do aluno no mês/ano da aula. 
+ * Se a data da aula for muito antiga ou inválida, usa mês/ano atual.
+ * pay_day 1–31; se mês tem menos dias, usa último dia.
+ * Se a data da aula for DEPOIS do dia de pagamento do mês, retorna vazio (não preenche automaticamente).
+ */
 function getDefaultDueDateForClassMonth(classDateBr: string, payDay: number | null): string {
-  if (!classDateBr || !REGEX_PATTERNS.date.test(classDateBr)) return classDateBr;
-  if (payDay == null || payDay < 1 || payDay > 31) return classDateBr;
+  if (!classDateBr || !REGEX_PATTERNS.date.test(classDateBr)) {
+    // Se data inválida, retorna vazio
+    return "";
+  }
+  
+  if (payDay == null || payDay < 1 || payDay > 31) {
+    // Se não tem pay_day, retorna vazio
+    return "";
+  }
+  
   const iso = brDateToIso(classDateBr);
-  const [y, m] = iso.split("-").map(Number);
+  const classDate = new Date(iso + "T12:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  classDate.setHours(0, 0, 0, 0);
+  
+  // Se a data da aula for muito antiga (mais de 1 ano atrás), retorna vazio
+  const oneYearAgo = new Date(today);
+  oneYearAgo.setFullYear(today.getFullYear() - 1);
+  
+  if (classDate < oneYearAgo) {
+    return "";
+  }
+  
+  // Usa mês/ano da aula
+  const [year, month, dayOfMonth] = iso.split("-").map(Number);
+  const y = year;
+  const m = month;
+  
   const lastDay = new Date(y, m, 0).getDate();
-  const day = Math.min(payDay, lastDay);
-  const dd = day.toString().padStart(2, "0");
+  const paymentDay = Math.min(payDay, lastDay);
+  
+  // Se a data da aula for DEPOIS do dia de pagamento do mês, retorna vazio
+  if (dayOfMonth > paymentDay) {
+    return "";
+  }
+  
+  // Data da aula é ANTES ou IGUAL ao dia de pagamento, preenche o vencimento
+  const dd = paymentDay.toString().padStart(2, "0");
   const mm = m.toString().padStart(2, "0");
   return `${dd}/${mm}/${y}`;
 }
@@ -72,11 +106,23 @@ const classLogBaseSchema = z.object({
   class_date: z.string()
     .min(1, "Informe a data da aula")
     .regex(REGEX_PATTERNS.date, "Formato deve ser dd/mm/aaaa")
-    .refine(isValidDateString, { message: "Data inválida" }),
+    .refine(isValidDateString, { message: "Data inválida" })
+    .refine((val) => {
+      if (!val || !REGEX_PATTERNS.date.test(val)) return true;
+      const [day, month, year] = val.split("/").map(Number);
+      return year >= 2026;
+    }, { message: "Informe uma data de 2026 em diante" }),
   title: z.string().optional(),
+  feedback: z.string().max(1000).optional(),
   observations: z.string().max(1000, "Máximo 1000 caracteres").optional(),
-  start_time: z.string().optional().refine((v) => !v || REGEX_TIME.test(v), { message: "Formato HH:mm" }),
-  end_time: z.string().optional().refine((v) => !v || REGEX_TIME.test(v), { message: "Formato HH:mm" }),
+  start_time: z.string().optional().refine((v) => !v || REGEX_PATTERNS.time.test(v), { message: "Formato HH:mm" }),
+  end_time: z.string().optional().refine((v) => !v || REGEX_PATTERNS.time.test(v), { message: "Formato HH:mm" }),
+  grade: z
+    .number({ invalid_type_error: "Informe a nota" })
+    .min(0, "Nota mínima é 0")
+    .max(10, "Nota máxima é 10")
+    .optional()
+    .nullable(),
   financial_amount: z.string().optional(),
   financial_due_date: z.string().optional().refine(
     (val) => !val || isValidDateString(val),
@@ -131,6 +177,7 @@ function extractTimeFromIso(iso: string | null | undefined): string {
 export interface ClassLogFinancialUpdate {
   financialRecordId: string;
   dueDate: string;
+  amount?: number;
 }
 
 interface ClassLogFormDialogProps {
@@ -177,6 +224,7 @@ export function ClassLogFormDialog({
   });
 
   const classDate = watch("class_date");
+  const financialDueDate = watch("financial_due_date");
   const startTime = watch("start_time");
   const endTime = watch("end_time");
   const financialAmount = watch("financial_amount");
@@ -200,9 +248,8 @@ export function ClassLogFormDialog({
     return null;
   })();
 
-  // Valor puramente calculado a partir da duração (sem override manual)
+  // Valor puramente calculado a partir da duração (nova aula ou edição com horário alterado)
   const calculatedFromDuration = (() => {
-    if (isEditing) return null;
     if (
       hourlyRate != null &&
       hourlyRate > 0 &&
@@ -214,9 +261,8 @@ export function ClassLogFormDialog({
     return null;
   })();
 
-  // Valor efetivo: manual override ?? calculado
+  // Valor efetivo: manual override ?? calculado (em edição usa o do formulário)
   const computedAmount = (() => {
-    if (isEditing) return null;
     const manual = financialAmount ? parseMoneyToNumber(financialAmount) : null;
     if (manual != null && !isNaN(manual) && manual > 0) return manual;
     return calculatedFromDuration;
@@ -244,8 +290,26 @@ export function ClassLogFormDialog({
       setValue("observations", (classLog as { observations?: string | null }).observations || "");
       setValue("start_time", extractTimeFromIso(classLog.start_at));
       setValue("end_time", extractTimeFromIso(classLog.end_at));
-      if (classLog.financial_records?.due_date) {
-        setValue("financial_due_date", isoDateToBr(classLog.financial_records.due_date));
+      
+      // Verificar cobrança direta ou via pacote
+      const hasDirectFinancial = classLog.financial_records && classLog.financial_records.length > 0 && classLog.financial_records[0];
+      const hasPackageFinancial = classLog.financial_record_class_logs && classLog.financial_record_class_logs.length > 0 && classLog.financial_record_class_logs[0]?.financial_records;
+      
+      if (hasDirectFinancial) {
+        if (classLog.financial_records[0].due_date) {
+          setValue("financial_due_date", isoDateToBr(classLog.financial_records[0].due_date));
+        }
+        if (classLog.financial_records[0].amount != null) {
+          setValue("financial_amount", Number(classLog.financial_records[0].amount).toFixed(2).replace(".", ","));
+        }
+      } else if (hasPackageFinancial) {
+        const packageFinancial = classLog.financial_record_class_logs[0].financial_records;
+        if (packageFinancial.due_date) {
+          setValue("financial_due_date", isoDateToBr(packageFinancial.due_date));
+        }
+        if (packageFinancial.amount != null) {
+          setValue("financial_amount", Number(packageFinancial.amount).toFixed(2).replace(".", ","));
+        }
       }
     } else if (!open) {
       reset();
@@ -263,12 +327,12 @@ export function ClassLogFormDialog({
     }
   }, [classDate, isEditing, selectedStudent, setValue]);
 
-  // Auto-fill valor quando horário/duração muda (sempre atualiza com o calculado)
+  // Auto-fill valor quando horário/duração muda (nova aula ou edição)
   useEffect(() => {
-    if (!isEditing && calculatedFromDuration != null) {
+    if (calculatedFromDuration != null) {
       setValue("financial_amount", calculatedFromDuration.toFixed(2).replace(".", ","));
     }
-  }, [isEditing, calculatedFromDuration, setValue]);
+  }, [calculatedFromDuration, setValue]);
 
   const handleFormSubmit = (data: ClassLogFormData) => {
     if (enableTeacherSelection && !selectedTeacherId) {
@@ -297,13 +361,10 @@ export function ClassLogFormDialog({
           ? buildTimestamptzFromDateAndTime(classDateIso, data.end_time)
           : null,
       duration_minutes: effectiveDurationMinutes ?? null, // preenchido pelo trigger no DB se start_at/end_at presentes
-      billed_amount:
-        !isEditing && data.financial_amount
-          ? (() => {
-              const a = parseMoneyToNumber(data.financial_amount!);
-              return !isNaN(a) && a > 0 ? a : null;
-            })()
-          : null,
+      billed_amount: (() => {
+        const a = data.financial_amount ? parseMoneyToNumber(data.financial_amount) : null;
+        return a != null && !isNaN(a) && a > 0 ? a : null;
+      })(),
     };
 
     // Criar aula com cobrança
@@ -324,11 +385,27 @@ export function ClassLogFormDialog({
       }
     }
 
-    // Edição: atualizar aula e, se tiver cobrança vinculada, atualizar vencimento
-    if (isEditing && classLog?.financial_records?.id && data.financial_due_date?.trim()) {
+    // Edição: atualizar aula e, se tiver cobrança vinculada, atualizar vencimento e valor
+    const hasDirectFinancial = classLog?.financial_records && classLog.financial_records.length > 0 && classLog.financial_records[0]?.id;
+    const hasPackageFinancial = classLog?.financial_record_class_logs && classLog.financial_record_class_logs.length > 0 && classLog.financial_record_class_logs[0]?.financial_records?.id;
+    
+    if (isEditing && (hasDirectFinancial || hasPackageFinancial)) {
+      const financialId = hasDirectFinancial 
+        ? classLog.financial_records[0].id 
+        : classLog.financial_record_class_logs![0].financial_records.id;
+      
+      const currentDueDate = hasDirectFinancial
+        ? classLog.financial_records[0].due_date
+        : classLog.financial_record_class_logs![0].financial_records.due_date;
+      
+      const dueDate = data.financial_due_date?.trim()
+        ? brDateToIso(data.financial_due_date)
+        : (currentDueDate ?? "");
+      const amount = data.financial_amount ? parseMoneyToNumber(data.financial_amount) : undefined;
       onSubmit(classLogData, {
-        financialRecordId: classLog.financial_records.id,
-        dueDate: brDateToIso(data.financial_due_date),
+        financialRecordId: financialId,
+        dueDate,
+        ...(amount != null && !isNaN(amount) && amount > 0 && { amount }),
       });
     } else {
       onSubmit(classLogData);
@@ -342,12 +419,14 @@ export function ClassLogFormDialog({
 
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Editar Registro" : "Registrar Aula"}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEditing ? "Editar Registro" : "Registrar Aula"}
+      size="SM"
+      scrollable={true}
+    >
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Teacher Select - only when enabled (admin) */}
           {enableTeacherSelection && (
             <div className="space-y-2">
@@ -430,18 +509,39 @@ export function ClassLogFormDialog({
           {/* Class Date */}
           <div className="space-y-2">
             <Label htmlFor="class_date">Data da Aula *</Label>
-            <Input
-              id="class_date"
-              type="text"
-              inputMode="numeric"
-              maxLength={10}
-              placeholder="dd/mm/aaaa"
-              {...register("class_date")}
-              onChange={(e) => {
-                const masked = maskDate(e.target.value);
-                setValue("class_date", masked, { shouldValidate: true });
-              }}
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="class_date"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal h-10",
+                    !classDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {classDate || "Selecione a data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={brDateStringToDate(classDate || "") ?? undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      setValue("class_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                    }
+                  }}
+                  locale={ptBR}
+                  initialFocus
+                  disabled={(date) => {
+                    const d = new Date(date);
+                    d.setHours(0, 0, 0, 0);
+                    return d.getFullYear() < 2026;
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
             {errors.class_date && (
               <p className="text-sm text-destructive">{errors.class_date.message}</p>
             )}
@@ -450,7 +550,7 @@ export function ClassLogFormDialog({
           {/* Início e término da aula */}
           <div className="space-y-3 rounded-lg border p-3">
             <p className="text-sm font-medium">Horário</p>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="start_time">Início</Label>
                 <Input id="start_time" type="time" {...register("start_time")} />
@@ -483,35 +583,6 @@ export function ClassLogFormDialog({
               <p className="text-sm text-destructive">{errors.observations.message}</p>
             )}
           </div>
-
-          {/* Ao editar: vencimento da cobrança vinculada (pode alterar) */}
-          {isEditing && classLog?.financial_records && (
-            <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <Receipt className="h-4 w-4" />
-                Cobrança vinculada
-              </h4>
-
-              <div className="space-y-2">
-                <Label htmlFor="financial_due_date_edit">Vencimento</Label>
-                <Input
-                  id="financial_due_date_edit"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={10}
-                  placeholder="dd/mm/aaaa"
-                  {...register("financial_due_date")}
-                  onChange={(e) => {
-                    const masked = maskDate(e.target.value);
-                    setValue("financial_due_date", masked, { shouldValidate: true });
-                  }}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Alterar a data da aula não altera o vencimento automaticamente; edite aqui se quiser.
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* Cobrança ao registrar aula */}
           {!isEditing && onSubmitWithFinancial && (
@@ -569,22 +640,44 @@ export function ClassLogFormDialog({
                         placeholder="100,00"
                         {...register("financial_amount")}
                       />
+                      {errors.financial_amount && (
+                        <p className="text-sm text-destructive">{errors.financial_amount.message}</p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="financial_due_date">Vencimento *</Label>
-                      <Input
-                        id="financial_due_date"
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={10}
-                        placeholder="dd/mm/aaaa"
-                        {...register("financial_due_date")}
-                        onChange={(e) => {
-                          const masked = maskDate(e.target.value);
-                          setValue("financial_due_date", masked, { shouldValidate: true });
-                        }}
-                      />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            id="financial_due_date"
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal h-10",
+                              !financialDueDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {financialDueDate || "Selecione a data"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={brDateStringToDate(financialDueDate || "") ?? undefined}
+                            onSelect={(date) => {
+                              if (date) {
+                                setValue("financial_due_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                              }
+                            }}
+                            locale={ptBR}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {errors.financial_due_date && (
+                        <p className="text-sm text-destructive">{errors.financial_due_date.message}</p>
+                      )}
                     </div>
                   </div>
 
@@ -623,8 +716,69 @@ export function ClassLogFormDialog({
             </div>
           )}
 
+          {/* Editar cobrança (só se a aula tiver cobrança vinculada - direta ou via pacote) */}
+          {isEditing && (
+            (classLog?.financial_records && classLog.financial_records.length > 0 && classLog.financial_records[0]?.id) ||
+            (classLog?.financial_record_class_logs && classLog.financial_record_class_logs.length > 0 && classLog.financial_record_class_logs[0]?.financial_records?.id)
+          ) && (
+            <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Receipt className="h-4 w-4" />
+                Dados da Cobrança
+              </h4>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="financial_amount_edit">Valor (R$)</Label>
+                  <Input
+                    id="financial_amount_edit"
+                    type="text"
+                    placeholder="100,00"
+                    {...register("financial_amount")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="financial_due_date_edit">Vencimento</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="financial_due_date_edit"
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal h-10",
+                          !financialDueDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {financialDueDate || "Selecione a data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={brDateStringToDate(financialDueDate || "") ?? undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            setValue("financial_due_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                          }
+                        }}
+                        locale={ptBR}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Alterar a data da aula não altera o vencimento automaticamente; edite aqui se quiser.
+              </p>
+            </div>
+          )}
+
+
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-4 pt-4">
             <Button
               type="button"
               variant="outline"
@@ -647,7 +801,6 @@ export function ClassLogFormDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }

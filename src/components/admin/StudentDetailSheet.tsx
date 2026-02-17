@@ -1,15 +1,19 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
-import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   User,
   Mail,
@@ -17,21 +21,32 @@ import {
   Calendar,
   CreditCard,
   BookOpen,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
   TrendingUp,
   MapPin,
-  CalendarClock,
+  FileText,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  File,
+  MessageSquare,
+  Upload,
 } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useStudentDetails } from "@/hooks/useStudentDetails";
 import { StudentStatementTab } from "@/components/student/StudentStatementTab";
-import { getClassStatusWithTime } from "@/lib/utils/classTime";
+import { ClassHistoryList } from "@/components/classes/ClassHistoryList";
+import { useActivities, getActivityFileUrl, useAddActivityCorrection, uploadActivityFile, getActivityDisplayStatus, formatActivityDueDate, type ActivityWithRelations } from "@/hooks/useActivities";
+import { toast } from "sonner";
+import { sanitizeHtml, sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 
 interface StudentDetailSheetProps {
   studentId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Quando preenchido (ex.: professor), filtra atividades só desse professor; senão mostra todas do aluno. */
+  teacherId?: string | null;
 }
 
 const originLabels: Record<string, string> = {
@@ -42,55 +57,170 @@ const originLabels: Record<string, string> = {
   outro: "Outro",
 };
 
+const correctionSchema = z
+  .object({
+    feedback: z.string().transform((s) => s.trim()).pipe(z.string().min(1, "Informe o feedback")),
+    grade: z.string().min(1, "Informe a nota (0–10)"),
+    correctionFile: z.any().optional(),
+  })
+  .refine(
+    (data) => {
+      const g = data.grade?.trim();
+      if (!g) return false;
+      const n = parseFloat(g.replace(",", "."));
+      return !Number.isNaN(n) && n >= 0 && n <= 10;
+    },
+    { message: "Informe a nota (0–10)", path: ["grade"] }
+  );
+type CorrectionFormData = z.infer<typeof correctionSchema>;
+
+/** Formulário de correção inline dentro do card expansivo */
+function ActivityCorrectionFormInline({
+  activity,
+  onSuccess,
+}: {
+  activity: ActivityWithRelations;
+  onSuccess: () => void;
+}) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const addCorrection = useAddActivityCorrection();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CorrectionFormData>({
+    resolver: zodResolver(correctionSchema),
+    defaultValues: { feedback: "", grade: "" },
+  });
+
+  const handleCorrectionSubmit = async (data: CorrectionFormData) => {
+    let correctionFileUrl: string | undefined;
+    let correctionFileName: string | undefined;
+    const file = data.correctionFile;
+    if (file != null && typeof file === "object" && "name" in file && typeof (file as { name: string }).name === "string") {
+      const { url } = await uploadActivityFile(file as File);
+      correctionFileUrl = url;
+      correctionFileName = (file as File).name;
+    }
+    const gradeValue = data.grade?.trim()
+      ? Math.min(10, Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0))
+      : null;
+    await addCorrection.mutateAsync({
+      activityId: activity.id,
+      feedback: data.feedback.trim(),
+      grade: gradeValue,
+      correctionFileUrl,
+      correctionFileName,
+    });
+    toast.success("Correção enviada.");
+    reset();
+    setSelectedFile(null);
+    onSuccess();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setValue("correctionFile", file);
+    }
+  };
+
+  const isPending = addCorrection.isPending;
+
+  return (
+    <form onSubmit={handleSubmit(handleCorrectionSubmit, (err) => toast.error(err.feedback?.message ?? err.grade?.message ?? "Preencha o feedback e a nota."))} className="space-y-4 border-t pt-4 mt-4">
+      <p className="text-sm font-medium">Correção e feedback</p>
+      <div className="space-y-2">
+        <Label htmlFor={`feedback-${activity.id}`}>Feedback</Label>
+        <Textarea
+          id={`feedback-${activity.id}`}
+          placeholder="Escreva sua correção, observações..."
+          rows={3}
+          {...register("feedback")}
+          disabled={isPending}
+          className="resize-none"
+        />
+        {errors.feedback && <p className="text-sm text-destructive">{errors.feedback.message}</p>}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`grade-${activity.id}`}>Nota (0–10) *</Label>
+        <Input
+          id={`grade-${activity.id}`}
+          type="text"
+          placeholder="Ex: 8.5"
+          {...register("grade")}
+          disabled={isPending}
+        />
+        {errors.grade && <p className="text-sm text-destructive">{errors.grade.message}</p>}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`correctionFile-${activity.id}`}>Arquivo de correção (opcional)</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            id={`correctionFile-${activity.id}`}
+            type="file"
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+            onChange={handleFileChange}
+            disabled={isPending}
+            className="cursor-pointer text-sm"
+          />
+          {selectedFile && <span className="text-xs text-muted-foreground truncate max-w-[140px]">{selectedFile.name}</span>}
+        </div>
+      </div>
+      <Button type="submit" disabled={isPending} className="w-full border-none bg-success-action text-white hover:bg-success-action/90">
+        {isPending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enviando...</> : <><Upload className="h-4 w-4 mr-2" />Enviar correção</>}
+      </Button>
+    </form>
+  );
+}
+
 export function StudentDetailSheet({
   studentId,
   open,
   onOpenChange,
+  teacherId = null,
 }: StudentDetailSheetProps) {
   const { data: student, isLoading } = useStudentDetails(studentId);
+  const { data: activities = [], isLoading: activitiesLoading, refetch: refetchActivities } = useActivities(
+    teacherId ?? undefined,
+    studentId ?? undefined
+  );
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const getStatusLabel = (a: ActivityWithRelations | null) => (a ? getActivityDisplayStatus(a).label : "");
+  const getStatusVariant = (a: ActivityWithRelations | null) => (a ? getActivityDisplayStatus(a).variant : "default");
+
+  const handleActivityDownload = async (filePath: string, fileName: string) => {
+    try {
+      const url = await getActivityFileUrl(filePath);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      toast.error("Não foi possível abrir o arquivo.");
+    }
+  };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl p-0 flex flex-col">
-        <SheetHeader className="p-6 pb-4 border-b">
-          <SheetTitle className="flex items-center gap-3">
-            {isLoading ? (
-              <Skeleton className="h-12 w-12 rounded-full" />
-            ) : (
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-lg font-semibold text-primary">
-                  {student?.name?.charAt(0) || "?"}
-                </span>
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              {isLoading ? (
-                <>
-                  <Skeleton className="h-5 w-32 mb-1" />
-                  <Skeleton className="h-4 w-20" />
-                </>
-              ) : (
-                <>
-                  <p className="font-semibold truncate">{student?.name}</p>
-                  <StatusBadge
-                    variant={student?.status === "ativo" ? "success" : "default"}
-                  >
-                    {student?.status === "ativo" ? "Ativo" : "Inativo"}
-                  </StatusBadge>
-                </>
-              )}
-            </div>
-          </SheetTitle>
-        </SheetHeader>
-
-        {isLoading ? (
-          <div className="p-6 space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </div>
-        ) : student ? (
-          <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
+    <BaseDetailSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isLoading ? "" : student?.name || ""}
+      subtitle={
+        isLoading ? (
+          <Skeleton className="h-4 w-20" />
+        ) : (
+          <StatusBadge variant={student?.status === "ativo" ? "success" : "default"}>
+            {student?.status === "ativo" ? "Ativo" : "Inativo"}
+          </StatusBadge>
+        )
+      }
+      size="LG"
+      noScroll={true}
+    >
+      {isLoading ? (
+        <div className="p-6 space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      ) : student ? (
+        <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
             <TabsList className="mx-6 mt-4 grid grid-cols-4">
               <TabsTrigger value="info" className="text-xs">
                 <User className="h-3.5 w-3.5 mr-1.5" />
@@ -100,13 +230,13 @@ export function StudentDetailSheet({
                 <BookOpen className="h-3.5 w-3.5 mr-1.5" />
                 Aulas
               </TabsTrigger>
+              <TabsTrigger value="activities" className="text-xs">
+                <FileText className="h-3.5 w-3.5 mr-1.5" />
+                Atividades
+              </TabsTrigger>
               <TabsTrigger value="financial" className="text-xs">
                 <CreditCard className="h-3.5 w-3.5 mr-1.5" />
                 Financeiro
-              </TabsTrigger>
-              <TabsTrigger value="statement" className="text-xs">
-                <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
-                Extrato
               </TabsTrigger>
             </TabsList>
 
@@ -117,10 +247,22 @@ export function StudentDetailSheet({
                   {(() => {
                     const hourlyRate = student.hourly_rate;
                     const classesPerWeek = student.classes_per_week;
+                    const now = new Date();
+                    const currentYear = now.getFullYear();
+                    const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+                    const monthlyFromCharges =
+                      student.financialRecords?.reduce((sum, r) => {
+                        if (r.due_date == null || r.amount == null) return sum;
+                        const [y, m] = r.due_date.split("-");
+                        if (y !== String(currentYear) || m !== currentMonth) return sum;
+                        return sum + Number(r.amount);
+                      }, 0) ?? 0;
                     const monthlyTotal =
-                      hourlyRate != null && classesPerWeek != null
-                        ? hourlyRate * classesPerWeek * 4
-                        : null;
+                      monthlyFromCharges > 0
+                        ? monthlyFromCharges
+                        : hourlyRate != null && classesPerWeek != null
+                          ? hourlyRate * classesPerWeek * 4
+                          : null;
                     const payDay = student.pay_day;
                     const city = student.city;
                     const state = student.state;
@@ -130,7 +272,7 @@ export function StudentDetailSheet({
                     return (
                       <>
                         {/* Stats Cards */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-4">
                           <div className="rounded-lg border bg-card p-4">
                             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                               <TrendingUp className="h-4 w-4" />
@@ -163,7 +305,7 @@ export function StudentDetailSheet({
                             Informações Pessoais
                           </h3>
                           <div className="space-y-3">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                               <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                                 <User className="h-4 w-4 text-muted-foreground" />
                               </div>
@@ -172,7 +314,7 @@ export function StudentDetailSheet({
                                 <p className="text-sm font-medium">{student.cpf || "—"}</p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                               <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                                 <Mail className="h-4 w-4 text-muted-foreground" />
                               </div>
@@ -181,7 +323,7 @@ export function StudentDetailSheet({
                                 <p className="text-sm font-medium">{student.email || "—"}</p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                               <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                                 <Phone className="h-4 w-4 text-muted-foreground" />
                               </div>
@@ -190,7 +332,7 @@ export function StudentDetailSheet({
                                 <p className="text-sm font-medium">{student.phone || "—"}</p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                               <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
                               </div>
@@ -209,7 +351,7 @@ export function StudentDetailSheet({
                           <h3 className="text-sm font-medium text-muted-foreground">
                             Localização
                           </h3>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-4">
                             <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                               <MapPin className="h-4 w-4 text-muted-foreground" />
                             </div>
@@ -229,7 +371,7 @@ export function StudentDetailSheet({
                           <h3 className="text-sm font-medium text-muted-foreground">
                             Plano de aulas e cobrança
                           </h3>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-2 gap-4">
                             <div className="rounded-lg border bg-card p-3">
                               <p className="text-xs text-muted-foreground mb-1">Valor por hora</p>
                               <p className="text-sm font-semibold">
@@ -288,7 +430,7 @@ export function StudentDetailSheet({
             {/* Aulas */}
             <TabsContent value="classes" className="flex-1 overflow-auto m-0">
               <ScrollArea className="h-full">
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-6">
                   {/* Summary */}
                   <div className="grid grid-cols-3 gap-2">
                     <div className="rounded-lg bg-muted/50 p-3 text-center">
@@ -310,68 +452,189 @@ export function StudentDetailSheet({
                   </div>
 
                   {/* Class List */}
-                  {student.classLogs.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Nenhuma aula registrada
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                      Histórico de Aulas
+                    </h3>
+                    <ClassHistoryList
+                      classLogs={student.classLogs.map((log) => ({
+                        id: log.id,
+                        class_date: log.class_date,
+                        start_at: log.start_at,
+                        end_at: log.end_at,
+                        duration_minutes: log.duration_minutes,
+                        attendance: log.attendance,
+                        grade: log.grade ?? null,
+                        title: log.title ?? null,
+                        feedback: log.feedback ?? null,
+                        // Fallback para teacher_name: do log, senão do aluno
+                        teacher_name: log.teacher_name || student.teacher_name || undefined,
+                        // Fallback para amount: billed_amount, senão 0
+                        amount: typeof log.billed_amount === 'number' ? log.billed_amount : null,
+                      }))}
+                      emptyMessage="Nenhuma aula registrada"
+                      groupByMonth={true}
+                    />
+                  </div>
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* Atividades — cards expansivos (padrão aulas) */}
+            <TabsContent value="activities" className="flex-1 overflow-auto m-0">
+              <ScrollArea className="h-full">
+                <div className="p-6 space-y-4">
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Atividades do aluno
+                  </h3>
+                  {activitiesLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     </div>
+                  ) : activities.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4">
+                      Nenhuma atividade enviada.
+                    </p>
                   ) : (
-                    <div className="space-y-2">
-                      {student.classLogs.map((log) => {
-                        const status = getClassStatusWithTime(log);
-                        const isConcluida = status.label === "Concluída";
-                        return (
-                          <div
-                            key={log.id}
-                            className="rounded-lg border bg-card p-3 space-y-2"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                {isConcluida ? (
-                                  log.attendance ? (
-                                    <CheckCircle className="h-4 w-4 text-success" />
-                                  ) : (
-                                    <XCircle className="h-4 w-4 text-rose-500" />
-                                  )
-                                ) : status.label === "Agendada" || status.label === "Em andamento" ? (
-                                  <CalendarClock className="h-4 w-4 text-blue-600" />
-                                ) : (
-                                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                    <div className="space-y-3">
+                      {activities.map((activity) => (
+                        <Collapsible
+                          key={activity.id}
+                          open={expandedId === activity.id}
+                          onOpenChange={(open) => setExpandedId(open ? activity.id : null)}
+                        >
+                          <Card className="p-4 overflow-hidden">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="space-y-3 flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-4">
+                                  <h3 className="font-semibold text-sm text-foreground truncate min-w-0">
+                                    {escapeHtml(activity.title)}
+                                  </h3>
+                                  <StatusBadge variant={getActivityDisplayStatus(activity).variant} className="shrink-0">
+                                    {getActivityDisplayStatus(activity).label}
+                                  </StatusBadge>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Calendar className="h-4 w-4 flex-shrink-0" />
+                                  <span>Enviada em {format(new Date(activity.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                                </div>
+                                {activity.due_date && (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span>Prazo: {formatActivityDueDate(activity.due_date)}</span>
+                                  </div>
                                 )}
-                                <span className="text-sm font-medium">
-                                  {formatDate(log.class_date)}
-                                </span>
-                                {!isConcluida && (
-                                  <span className="text-xs text-muted-foreground">
-                                    {status.label}
-                                  </span>
-                                )}
+
+                                <CollapsibleContent>
+                                  <div className="pt-2 space-y-4">
+                                    {/* Material */}
+                                    <div className="border-t pt-4 space-y-3">
+                                      <div className="flex items-center gap-2">
+                                        <FileText className="h-4 w-4 text-primary" />
+                                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Material</span>
+                                      </div>
+                                      {activity.description && (
+                                        <div className="rounded-lg p-3 bg-muted/30">
+                                          <div 
+                                            className="text-sm whitespace-pre-wrap prose prose-sm max-w-none"
+                                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(activity.description) }}
+                                          />
+                                        </div>
+                                      )}
+                                      <div className="flex items-center gap-4 rounded-lg p-3 bg-muted/30">
+                                        <FileText className="h-5 w-5 text-muted-foreground" />
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-sm font-medium truncate">{activity.file_name}</p>
+                                          {activity.file_size != null && (
+                                            <p className="text-xs text-muted-foreground">{(activity.file_size / 1024).toFixed(1)} KB</p>
+                                          )}
+                                        </div>
+                                        <Button size="sm" variant="outline" onClick={() => handleActivityDownload(activity.file_url, activity.file_name)}>
+                                          <Download className="h-4 w-4 mr-2" />
+                                          Baixar
+                                        </Button>
+                                      </div>
+                                    </div>
+
+                                    {/* Resposta do aluno */}
+                                    {(activity.status === "entregue" || activity.status === "corrigida") &&
+                                      (activity.student_response_text || (activity.student_response_file_url && activity.student_response_file_name)) && (
+                                      <div className="border-t pt-4 space-y-3">
+                                        <div className="flex items-center gap-2">
+                                          <File className="h-4 w-4 text-muted-foreground" />
+                                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Resposta do aluno</span>
+                                        </div>
+                                        {activity.student_response_text && (
+                                          <div className="rounded-lg p-3 bg-muted/30">
+                                            <p className="text-sm whitespace-pre-wrap">{sanitizeText(activity.student_response_text)}</p>
+                                          </div>
+                                        )}
+                                        {activity.student_response_file_url && activity.student_response_file_name && (
+                                          <div className="flex items-center gap-4 rounded-lg p-3 bg-muted/30">
+                                            <File className="h-5 w-5 text-muted-foreground" />
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-sm font-medium truncate">{activity.student_response_file_name}</p>
+                                            </div>
+                                            <Button size="sm" variant="outline" onClick={() => handleActivityDownload(activity.student_response_file_url!, activity.student_response_file_name!)}>
+                                              <Download className="h-4 w-4 mr-2" />
+                                              Baixar
+                                            </Button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {/* Feedback já enviado */}
+                                    {activity.status === "corrigida" &&
+                                      (activity.feedback || activity.grade != null || (activity.correction_file_url && activity.correction_file_name)) && (
+                                      <div className="border-t pt-4 space-y-3">
+                                        <div className="flex items-center gap-2">
+                                          <MessageSquare className="h-4 w-4 text-success" />
+                                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Feedback</span>
+                                        </div>
+                                        {activity.grade != null && (
+                                          <p className="text-sm">Nota: <span className="font-semibold">{Number(activity.grade).toFixed(1)}</span>/10</p>
+                                        )}
+                                        {activity.feedback && (
+                                          <div className="rounded-lg p-3 bg-muted/30">
+                                            <p className="text-sm whitespace-pre-wrap">{sanitizeText(activity.feedback)}</p>
+                                          </div>
+                                        )}
+                                        {activity.correction_file_url && activity.correction_file_name && (
+                                          <div className="flex items-center gap-4 rounded-lg p-3 bg-muted/30">
+                                            <FileText className="h-5 w-5 text-muted-foreground" />
+                                            <span className="text-sm truncate flex-1">{activity.correction_file_name}</span>
+                                            <Button size="sm" variant="outline" onClick={() => handleActivityDownload(activity.correction_file_url!, activity.correction_file_name!)}>
+                                              <Download className="h-4 w-4 mr-2" />
+                                              Baixar
+                                            </Button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {/* Formulário de correção (quando status = entregue) */}
+                                    {activity.status === "entregue" && (
+                                      <ActivityCorrectionFormInline activity={activity} onSuccess={refetchActivities} />
+                                    )}
+                                  </div>
+                                </CollapsibleContent>
+
+                                <div className="pt-2 border-t">
+                                  <CollapsibleTrigger asChild>
+                                    <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground hover:text-foreground -ml-2">
+                                      {expandedId === activity.id ? (
+                                        <><ChevronUp className="h-4 w-4" /> Ver menos</>
+                                      ) : (
+                                        <><ChevronDown className="h-4 w-4" /> Ver mais</>
+                                      )}
+                                    </Button>
+                                  </CollapsibleTrigger>
+                                </div>
                               </div>
-                              {log.grade != null ? (
-                                <span
-                                  className={`text-sm font-bold ${
-                                    log.grade >= 7
-                                      ? "text-success"
-                                      : log.grade >= 5
-                                      ? "text-amber-600"
-                                      : "text-rose-600"
-                                  }`}
-                                >
-                                  {Number(log.grade).toFixed(1)}
-                                </span>
-                              ) : isConcluida && log.attendance === false ? (
-                                <span className="text-sm font-medium text-destructive">
-                                  Não compareceu
-                                </span>
-                              ) : null}
                             </div>
-                            {log.feedback && (
-                              <p className="text-xs text-muted-foreground pl-6">
-                                {log.feedback}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
+                          </Card>
+                        </Collapsible>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -381,8 +644,8 @@ export function StudentDetailSheet({
             {/* Financeiro */}
             <TabsContent value="financial" className="flex-1 overflow-auto m-0">
               <ScrollArea className="h-full">
-                <div className="p-6 space-y-4">
-                  {/* Summary */}
+                <div className="p-6 space-y-6">
+                  {/* Cards coloridos */}
                   <div className="grid grid-cols-3 gap-2">
                     <div className="rounded-lg bg-success/10 p-3 text-center">
                       <p className="text-sm font-bold text-success">
@@ -404,72 +667,27 @@ export function StudentDetailSheet({
                     </div>
                   </div>
 
-                  {/* Records List */}
-                  {student.financialRecords.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Nenhum registro financeiro
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {student.financialRecords.map((record) => {
-                        const actualStatus = getFinancialActualStatus(record);
-                        return (
-                          <div
-                            key={record.id}
-                            className="rounded-lg border bg-card p-3"
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium">
-                                {formatCurrency(record.amount)}
-                              </span>
-                              <StatusBadge
-                                variant={
-                                  actualStatus === "pago"
-                                    ? "success"
-                                    : actualStatus === "atrasado"
-                                    ? "destructive"
-                                    : "warning"
-                                }
-                              >
-                                {actualStatus === "pago"
-                                  ? "Pago"
-                                  : actualStatus === "atrasado"
-                                  ? "Atrasado"
-                                  : "Pendente"}
-                              </StatusBadge>
-                            </div>
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>{record.description || "Mensalidade"}</span>
-                              <span>Venc: {formatDate(record.due_date)}</span>
-                            </div>
-                            {record.paid_at && (
-                              <p className="text-xs text-success mt-1">
-                                Pago em {formatDate(record.paid_at)}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  {/* Timeline com cobranças integradas */}
+                  <StudentStatementTab
+                    studentId={student.id}
+                    studentName={student.name}
+                    embedded={true}
+                    totalAmount={
+                      student.stats.totalPaid +
+                      student.stats.totalPending +
+                      student.stats.totalOverdue
+                    }
+                  />
                 </div>
               </ScrollArea>
             </TabsContent>
 
-            {/* Extrato Consolidado */}
-            <TabsContent value="statement" className="flex-1 overflow-auto m-0">
-              <StudentStatementTab
-                studentId={student.id}
-                studentName={student.name}
-              />
-            </TabsContent>
           </Tabs>
-        ) : (
-          <div className="p-6 text-center text-muted-foreground">
-            Aluno não encontrado
-          </div>
-        )}
-      </SheetContent>
-    </Sheet>
+      ) : (
+        <div className="p-6 text-center text-muted-foreground">
+          Aluno não encontrado
+        </div>
+      )}
+    </BaseDetailSheet>
   );
 }

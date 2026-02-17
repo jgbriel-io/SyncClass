@@ -1,15 +1,17 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StudentClassCard } from "@/components/student/StudentClassCard";
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, BookOpen, TrendingUp, Award, Calendar as CalendarIcon, XCircle, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { startOfWeek } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Loader2, BookOpen, TrendingUp, TrendingDown, Award, Calendar as CalendarIcon, XCircle } from "lucide-react";
 import { useStudentClassLogs, useStudentStats, useLastClass } from "@/hooks/useStudentPortal";
 import { formatDate } from "@/lib/utils/formatters";
+import { typography } from "@/lib/design-tokens/typography";
+import { stack, gap } from "@/lib/design-tokens/spacing";
+import { getClassStatusWithTime } from "@/lib/utils/classTime";
 
 function classLogToCardProps(record: {
   id: string;
@@ -20,9 +22,13 @@ function classLogToCardProps(record: {
   attendance: boolean | null;
   grade?: number | null;
   title?: string | null;
-  teachers?: { name?: string } | null;
+  billed_amount?: number | null;
+  teacher_name?: string;
   feedback?: string | null;
-  financial_records?: { amount?: number | null }[] | null;
+  payment_status?: string | null;
+  payment_due_date?: string | null;
+  is_package?: boolean;
+  observations?: string | null;
 }) {
   return {
     id: record.id,
@@ -33,9 +39,13 @@ function classLogToCardProps(record: {
     attendance: record.attendance,
     grade: record.grade,
     title: record.title ?? null,
-    teacher_name: record.teachers?.name ?? undefined,
+    teacher_name: record.teacher_name,
     feedback: record.feedback ?? null,
-    amount: record.financial_records?.[0]?.amount ?? null,
+    amount: record.billed_amount ?? null,
+    payment_status: record.payment_status ?? null,
+    payment_due_date: record.payment_due_date ?? null,
+    is_package: record.is_package,
+    observations: record.observations ?? null,
   };
 }
 
@@ -43,6 +53,8 @@ export default function StudentHistory() {
   const { data: classLogs = [], isLoading, error } = useStudentClassLogs();
   const stats = useStudentStats();
   const lastClass = useLastClass();
+  const [statusFilter, setStatusFilter] = useState<string>("aberto");
+  const [sortOrder, setSortOrder] = useState<string>("recente");
 
   const attendancePercentage = stats.attendanceRate.toFixed(0);
 
@@ -75,22 +87,46 @@ export default function StudentHistory() {
     return { best, worst, trend };
   }, [classesWithGrade]);
 
-  const chartData = useMemo(() => {
-    const byWeek = new Map<string, number[]>();
-    for (const log of classesWithGrade) {
-      const d = new Date(log.class_date + "T12:00:00");
-      const weekStart = startOfWeek(d, { weekStartsOn: 1, locale: ptBR });
-      const key = weekStart.toISOString().slice(0, 10);
-      if (!byWeek.has(key)) byWeek.set(key, []);
-      byWeek.get(key)!.push(Number(log.grade));
+  // Filtrar e ordenar aulas
+  const filteredClassLogs = useMemo(() => {
+    let filtered = classLogs;
+    
+    // Filtrar por status
+    if (statusFilter !== "all") {
+      filtered = classLogs.filter((log) => {
+        const status = getClassStatusWithTime({
+          class_date: log.class_date,
+          start_at: log.start_at ?? null,
+          end_at: log.end_at ?? null,
+          attendance: log.attendance,
+        });
+        
+        if (statusFilter === "aberto") {
+          // Em aberto = Pendente (não avaliada) ou Agendada
+          return status.label === "Pendente" || status.label === "Agendada";
+        }
+        if (statusFilter === "concluida") {
+          return status.label === "Concluída";
+        }
+        
+        return true;
+      });
     }
-    return Array.from(byWeek.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([weekKey, grades]) => ({
-        week: formatDate(weekKey),
-        media: grades.reduce((a, b) => a + b, 0) / grades.length,
-      }));
-  }, [classesWithGrade]);
+    
+    // Ordenar
+    const sorted = [...filtered].sort((a, b) => {
+      const dateA = new Date(a.class_date + "T" + (a.start_at ? new Date(a.start_at).toTimeString().slice(0, 8) : "00:00:00"));
+      const dateB = new Date(b.class_date + "T" + (b.start_at ? new Date(b.start_at).toTimeString().slice(0, 8) : "00:00:00"));
+      
+      if (sortOrder === "recente") {
+        return dateB.getTime() - dateA.getTime(); // Mais recente primeiro
+      } else {
+        return dateA.getTime() - dateB.getTime(); // Mais antiga primeiro
+      }
+    });
+    
+    return sorted;
+  }, [classLogs, statusFilter, sortOrder]);
 
   const renderClassCards = (records: typeof classLogs) =>
     records.length === 0 ? (
@@ -98,19 +134,54 @@ export default function StudentHistory() {
         <EmptyState icon={BookOpen} message="Nenhuma aula registrada ainda" />
       </div>
     ) : (
-      <div className="space-y-3">
+      <div className={stack('DEFAULT')}>
         {records.map((record) => (
           <StudentClassCard key={record.id} classLog={classLogToCardProps(record)} />
         ))}
       </div>
     );
 
+  const renderStatusFilter = () => (
+    <div className="flex flex-wrap items-center gap-4 mb-4">
+      <div className="flex items-center gap-3">
+        <Label htmlFor="status-filter" className="text-sm font-medium whitespace-nowrap">
+          Status:
+        </Label>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger id="status-filter" className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="aberto">Em aberto</SelectItem>
+            <SelectItem value="concluida">Concluídas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="flex items-center gap-3">
+        <Label htmlFor="sort-order" className="text-sm font-medium whitespace-nowrap">
+          Ordenar:
+        </Label>
+        <Select value={sortOrder} onValueChange={setSortOrder}>
+          <SelectTrigger id="sort-order" className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recente">Mais recente</SelectItem>
+            <SelectItem value="antiga">Mais antiga</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
   return (
     <PageContainer constrained maxWidth="5xl">
       {/* Header */}
       <div className="mb-4">
-        <h1 className="text-xl font-semibold">Histórico Acadêmico</h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <h1 className={typography('H1')}>Histórico Acadêmico</h1>
+        <p className={`${typography('SMALL')} mt-1`}>
           Suas aulas e progresso
         </p>
       </div>
@@ -125,7 +196,7 @@ export default function StudentHistory() {
       {/* Error */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-          <p className="text-destructive text-sm">
+          <p className={typography('ERROR')}>
             Erro ao carregar histórico. Tente novamente.
           </p>
         </div>
@@ -150,17 +221,18 @@ export default function StudentHistory() {
                 variant="default"
               />
             </div>
-            <div className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            {renderStatusFilter()}
+            <div className={stack('DEFAULT')}>
+              <h2 className={typography('TABLE_HEADER')}>
                 Histórico de Aulas
               </h2>
-              {renderClassCards(classLogs)}
+              {renderClassCards(filteredClassLogs)}
             </div>
           </TabsContent>
 
           {/* Aba Presença: stats (taxa %, total faltas, última falta) + cards só faltas */}
           <TabsContent value="presenca" className="mt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            <div className={`grid grid-cols-1 sm:grid-cols-3 ${gap('DEFAULT')} mb-6`}>
               <StudentMetricCard
                 icon={TrendingUp}
                 label="Taxa de presença"
@@ -180,13 +252,13 @@ export default function StudentHistory() {
                 variant="default"
               />
             </div>
-            <div className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            <div className={stack('DEFAULT')}>
+              <h2 className={typography('TABLE_HEADER')}>
                 Aulas faltadas
               </h2>
               {missedClasses.length === 0 ? (
                 <div className="rounded-lg border bg-card p-6 text-center">
-                  <p className="text-sm text-muted-foreground">Nenhuma falta registrada.</p>
+                  <p className={typography('SMALL')}>Nenhuma falta registrada.</p>
                 </div>
               ) : (
                 renderClassCards(missedClasses)
@@ -194,29 +266,9 @@ export default function StudentHistory() {
             </div>
           </TabsContent>
 
-          {/* Aba Médias: gráfico evolução + stats (média, melhor, pior, tendência) + cards só com nota */}
+          {/* Aba Médias: cards (média, melhor, pior) + lista de aulas com nota */}
           <TabsContent value="media" className="mt-0">
-            {chartData.length > 0 && (
-              <div className="mb-6 rounded-lg border bg-card p-4">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Evolução da média (por semana)</h3>
-                <div className="h-[200px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                      <XAxis dataKey="week" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                      <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                      <Tooltip
-                        formatter={(value: number) => [value.toFixed(1), "Média"]}
-                        labelFormatter={(label) => `Semana ${label}`}
-                        contentStyle={{ fontSize: 12 }}
-                      />
-                      <Line type="monotone" dataKey="media" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${gap('DEFAULT')} mb-6`}>
               <StudentMetricCard
                 icon={Award}
                 label="Média geral"
@@ -224,31 +276,25 @@ export default function StudentHistory() {
                 variant="default"
               />
               <StudentMetricCard
-                icon={ArrowUpRight}
+                icon={TrendingUp}
                 label="Melhor nota"
                 value={classesWithGrade.length > 0 ? gradeStats.best.toFixed(1) : "—"}
                 variant="success"
               />
               <StudentMetricCard
-                icon={ArrowDownRight}
+                icon={TrendingDown}
                 label="Pior nota"
                 value={classesWithGrade.length > 0 ? gradeStats.worst.toFixed(1) : "—"}
-                variant="default"
-              />
-              <StudentMetricCard
-                icon={gradeStats.trend === "up" ? ArrowUpRight : gradeStats.trend === "down" ? ArrowDownRight : Award}
-                label="Tendência"
-                value={gradeStats.trend === "up" ? "Subindo" : gradeStats.trend === "down" ? "Caindo" : "—"}
-                variant={gradeStats.trend === "up" ? "success" : gradeStats.trend === "down" ? "destructive" : "default"}
+                variant="destructive"
               />
             </div>
-            <div className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            <div className={stack('DEFAULT')}>
+              <h2 className={typography('TABLE_HEADER')}>
                 Aulas com nota
               </h2>
               {classesWithGrade.length === 0 ? (
                 <div className="rounded-lg border bg-card p-6 text-center">
-                  <p className="text-sm text-muted-foreground">Nenhuma aula com nota registrada.</p>
+                  <p className={typography('SMALL')}>Nenhuma aula com nota registrada.</p>
                 </div>
               ) : (
                 renderClassCards(classesWithGrade)

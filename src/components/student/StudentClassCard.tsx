@@ -8,6 +8,8 @@ import { ptBR } from "date-fns/locale";
 import { formatDate, formatCurrency } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils";
 import { getClassStatusWithTime } from "@/lib/utils/classTime";
+import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
+import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 
 interface StudentClassCardProps {
   classLog: {
@@ -22,6 +24,10 @@ interface StudentClassCardProps {
     teacher_name?: string;
     feedback?: string | null;
     amount?: number | null;
+    payment_status?: string | null;
+    payment_due_date?: string | null;
+    is_package?: boolean;
+    observations?: string | null;
   };
   onClick?: () => void;
 }
@@ -73,13 +79,35 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
   const hasDetails = !!classLog.feedback?.trim();
 
   const badgeLabel = isConcluida
-    ? (classLog.attendance ? "Concluída" : "Falta")
-    : status.label === "Avaliação pendente"
-      ? "Pagamento pendente"
+    ? "Concluída"
+    : status.label === "Pendente"
+      ? "Não avaliada"
       : status.label;
   const badgeVariant = isConcluida
-    ? (classLog.attendance ? "success" : "destructive")
+    ? "success"
     : status.variant;
+
+  // Calcular status de pagamento
+  const paymentStatus = classLog.payment_status && classLog.payment_due_date
+    ? getFinancialActualStatus({
+        status: classLog.payment_status,
+        due_date: classLog.payment_due_date,
+      })
+    : null;
+
+  const paymentBadgeLabel = paymentStatus === "pago"
+    ? "Pago"
+    : paymentStatus === "atrasado"
+      ? "Atrasado"
+      : paymentStatus === "pendente"
+        ? "Pendente"
+        : null;
+
+  const paymentBadgeVariant = paymentStatus === "pago"
+    ? "success"
+    : paymentStatus === "atrasado"
+      ? "destructive"
+      : "warning";
 
   const handleToggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -89,22 +117,67 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
   return (
     <Card
       className={cn(
-        "p-4 transition-all hover:shadow-md",
+        "p-4 overflow-hidden transition-all hover:shadow-md",
         onClick && "cursor-pointer active:scale-[0.98]"
       )}
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-3 flex-1 min-w-0">
-          {/* Cabeçalho: no mobile badge + título; no desktop título | badge */}
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-            <StatusBadge variant={badgeVariant} className="sm:order-2 w-fit">
-              {badgeLabel}
-            </StatusBadge>
-            <h3 className="font-semibold text-sm text-foreground truncate sm:order-1">
-              {classLog.title?.trim() || "Aula"}
+          {/* Título + Badges (status da aula + status do pagamento) */}
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="font-semibold text-sm text-foreground truncate min-w-0">
+              {(() => {
+                const rawTitle = classLog.title?.trim();
+                const isPackage = classLog.is_package;
+                
+                // Se tem título customizado
+                if (rawTitle) {
+                  // Se o título já é "Aula - data", não duplicar
+                  const isDefaultFormat = rawTitle.match(/^Aula\s*-\s*\d{2}\/\d{2}\/\d{4}$/i);
+                  
+                  if (isDefaultFormat) {
+                    // É o formato padrão, adiciona (Pacote) se necessário
+                    return isPackage ? `${rawTitle} (Pacote)` : rawTitle;
+                  }
+                  
+                  // É um título customizado
+                  return isPackage ? `${rawTitle} (Pacote)` : rawTitle;
+                }
+                
+                // Fallback: "Aula - data"
+                const fallbackTitle = `Aula - ${formatDate(classLog.class_date)}`;
+                return isPackage ? `${fallbackTitle} (Pacote)` : fallbackTitle;
+              })()}
             </h3>
+            <div className="flex items-center gap-2 shrink-0">
+              <StatusBadge variant={badgeVariant} className="shrink-0">
+                {badgeLabel}
+              </StatusBadge>
+              {paymentBadgeLabel && (
+                <StatusBadge variant={paymentBadgeVariant} className="shrink-0">
+                  {paymentBadgeLabel}
+                </StatusBadge>
+              )}
+            </div>
           </div>
+
+          {/* Presença (só quando concluída) */}
+          {isConcluida && (
+            <div className="flex flex-wrap items-center gap-4">
+              {classLog.attendance ? (
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                  <span className="text-sm font-medium text-success">Presente</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <XCircle className="h-4 w-4 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">Não compareceu</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Data */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -118,48 +191,13 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
             <span>{timeRange}</span>
           </div>
 
-          {/* Professor */}
-          {classLog.teacher_name && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-              <span>{classLog.teacher_name}</span>
-            </div>
-          )}
-
-          {/* Presença e nota (só quando concluída) */}
-          {isConcluida && (
-            <div className="flex flex-wrap items-center gap-3 pt-1 border-t">
-              {classLog.attendance ? (
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                  <span className="text-sm font-medium text-success">Presente</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5">
-                  <XCircle className="h-4 w-4 text-destructive" />
-                  <span className="text-sm font-medium text-destructive">Faltou</span>
-                </div>
-              )}
-              {classLog.grade != null ? (
-                <div className="flex items-center gap-1.5">
-                  <Star className="h-4 w-4 text-warning" />
-                  <span className="text-sm font-medium">Nota: {Number(classLog.grade).toFixed(1)}</span>
-                </div>
-              ) : classLog.attendance === false ? (
-                <span className="text-sm font-medium text-destructive">Não compareceu</span>
-              ) : null}
-            </div>
-          )}
-
           {/* Detalhes expandidos: mesmo fluxo vertical (sem caixa) */}
           {expanded && (
             <>
-              {!classLog.teacher_name && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                  <span>Professor: —</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                <span>Professor: {classLog.teacher_name || "—"}</span>
+              </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <DollarSign className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                 <span>Valor da aula: {classLog.amount != null ? formatCurrency(classLog.amount) : "—"}</span>
@@ -172,16 +210,32 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
                 <Timer className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                 <span>Duração: {formatDuration(classLog.duration_minutes, classLog.start_at, classLog.end_at)}</span>
               </div>
-              <div className="flex items-start gap-2 text-sm">
-                <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <div className="min-w-0 flex-1">
-                  <span className="text-muted-foreground">
-                    {hasDetails ? (
-                      <span className="whitespace-pre-wrap">{classLog.feedback}</span>
-                    ) : (
-                      <span className="italic">Nenhum feedback registrado para esta aula.</span>
-                    )}
-                  </span>
+              
+              {/* Observações (preenchidas ao criar a aula) */}
+              {classLog.observations?.trim() && (
+                <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <MessageSquare className="h-4 w-4 flex-shrink-0 text-muted-foreground mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium">Observações: </span>
+                    <span className="whitespace-pre-wrap">{sanitizeText(classLog.observations)}</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Feedback (preenchido ao avaliar a aula) - abaixo da lista */}
+              <div className="pt-3 space-y-2">
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Feedback</p>
+                <div className="flex items-start gap-2 text-sm">
+                  <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-muted-foreground">
+                      {hasDetails ? (
+                        <span className="whitespace-pre-wrap">{sanitizeText(classLog.feedback)}</span>
+                      ) : (
+                        <span className="italic">Nenhum feedback registrado para esta aula.</span>
+                      )}
+                    </span>
+                  </div>
                 </div>
               </div>
             </>

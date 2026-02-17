@@ -153,3 +153,25 @@ export function EmptySearchIllustration() {
     </svg>
   );
 }
+
+export function EmptyActivitiesIllustration() {
+  return (
+    <svg
+      width="120"
+      height="120"
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="text-muted-foreground/30"
+    >
+      {/* Documento/lista */}
+      <rect x="35" y="25" width="50" height="65" rx="3" stroke="currentColor" strokeWidth="2" fill="none" />
+      <line x1="42" y1="38" x2="78" y2="38" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+      <line x1="42" y1="48" x2="78" y2="48" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+      <line x1="42" y1="58" x2="65" y2="58" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+      {/* Lápis/check */}
+      <path d="M 72 62 L 82 52 L 88 58 L 78 68 Z" stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" />
+      <line x1="82" y1="52" x2="85" y2="49" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}

@@ -3,42 +3,62 @@ export function useUndoFinancialPayment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
-        .from("financial_records")
-        .update({ status: "pendente", paid_at: null })
-        .eq("id", id)
-        .select()
-        .single();
+      // Gerar chave de idempotência usando crypto.randomUUID()
+      const idempotencyKey = crypto.randomUUID();
+
+      // Chamar RPC undo_payment_idempotent
+      const { data, error } = await supabase.rpc("undo_payment_idempotent", {
+        p_record_id: id,
+        p_idempotency_key: idempotencyKey,
+      });
+
       if (error) {
         throw error;
       }
+
+      // Verificar se houve erro na resposta do RPC
+      if (data && !data.success) {
+        throw new Error(data.error || "Erro ao desfazer pagamento");
+      }
+
       return data;
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Cobrança desfeita com sucesso!");
     },
     onError: (error) => {
-      console.error("Erro ao desfazer cobrança:", error);
-      toast.error("Erro ao desfazer cobrança. Tente novamente.");
+      logger.error(error, { context: "useUndoFinancialPayment" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { isOverdue } from "@/lib/utils/financialStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
+import { logger } from "@/lib/sentry";
+import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
+import { useOptimisticMutation } from "@/hooks/useOptimisticMutation";
 
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 10;
 
 export type FinancialRecordsFilters = {
   dateFrom?: string;
   dateTo?: string;
-  sortBy?: "due_desc" | "due_asc" | "amount_desc" | "amount_asc";
+  studentId?: string;
+  sortBy?: "due_desc" | "due_asc" | "amount_desc" | "amount_asc" | "created_desc" | "created_asc";
 };
 
 export type FinancialRecord = Tables<"financial_records">;
@@ -49,9 +69,6 @@ export interface FinancialRecordWithRelations extends FinancialRecord {
   students: {
     name: string;
     teacher_id?: string | null;
-    cpf?: string | null;
-    phone?: string | null;
-    email?: string | null;
   } | null;
   class_logs: {
     id: string;
@@ -61,6 +78,15 @@ export interface FinancialRecordWithRelations extends FinancialRecord {
     feedback: string | null;
     title?: string | null;
   } | null;
+  confirmed_by?: {
+    full_name: string;
+  } | null;
+  /** Aulas vinculadas quando é uma cobrança de pacote (class_log_id = null) */
+  package_classes?: Array<{
+    id: string;
+    class_date: string;
+    title?: string | null;
+  }>;
 }
 
 export interface UseFinancialRecordsOptions {
@@ -113,21 +139,21 @@ export function useFinancialRecords(
   const query = useQuery({
     queryKey: ["financial_records", teacherId, page, pageSize, filters],
     queryFn: async () => {
-      const sortBy = filters?.sortBy ?? "due_asc";
-      const orderCol = sortBy.startsWith("amount") ? "amount" : "due_date";
-      const ascending = sortBy === "due_asc" || sortBy === "amount_asc";
+      const sortBy = filters?.sortBy ?? "created_desc";
+      const orderCol =
+        sortBy.startsWith("amount") ? "amount"
+        : sortBy.startsWith("created") ? "created_at"
+        : "due_date";
+      const ascending = sortBy === "due_asc" || sortBy === "amount_asc" || sortBy === "created_asc";
 
       let q = supabase
         .from("financial_records")
         .select(
           `
           *,
-          students (
+          students!inner (
             name,
-            teacher_id,
-            cpf,
-            phone,
-            email
+            teacher_id
           ),
           class_logs (
             id,
@@ -136,14 +162,23 @@ export function useFinancialRecords(
             grade,
             feedback,
             title
-          )
+          ),
+          payment_proof_status,
+          payment_proof_url,
+          payment_proof_filename,
+          payment_proof_uploaded_at,
+          payment_proof_rejection_reason
         `,
           { count: "exact" }
         )
         .order(orderCol, { ascending });
 
+      // SEGURANÇA: Filtrar no servidor usando !inner join
       if (teacherId) {
         q = q.eq("students.teacher_id", teacherId);
+      }
+      if (filters?.studentId && filters.studentId !== "all") {
+        q = q.eq("student_id", filters.studentId);
       }
       if (filters?.dateFrom) {
         q = q.gte("due_date", filters.dateFrom);
@@ -159,9 +194,77 @@ export function useFinancialRecords(
       if (error) throw error;
 
       let list = (data ?? []) as FinancialRecordWithRelations[];
-      if (teacherId && list.length) {
-        list = list.filter((record) => record.students?.teacher_id === teacherId);
+
+      // Buscar nomes dos usuários que confirmaram os pagamentos
+      const confirmedByUserIds = Array.from(
+        new Set(
+          list
+            .filter((r) => r.confirmed_by_user_id)
+            .map((r) => r.confirmed_by_user_id!)
+        )
+      );
+
+      if (confirmedByUserIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", confirmedByUserIds);
+
+        if (profiles) {
+          const profileMap = new Map(profiles.map((p) => [p.user_id, p.full_name]));
+          list = list.map((record) => ({
+            ...record,
+            confirmed_by: record.confirmed_by_user_id
+              ? { full_name: profileMap.get(record.confirmed_by_user_id) || "" }
+              : null,
+          }));
+        }
       }
+
+      // Buscar aulas vinculadas aos pacotes (quando class_log_id = null)
+      const packageRecordIds = list
+        .filter((r) => r.class_log_id === null)
+        .map((r) => r.id);
+
+      if (packageRecordIds.length > 0) {
+        const { data: packageLinks } = await supabase
+          .from("financial_record_class_logs")
+          .select(
+            `
+            financial_record_id,
+            class_logs (
+              id,
+              class_date,
+              title
+            )
+          `
+          )
+          .in("financial_record_id", packageRecordIds);
+
+        if (packageLinks) {
+          // Agrupar aulas por financial_record_id
+          const packageClassesMap = new Map<string, Array<{ id: string; class_date: string; title?: string | null }>>();
+          
+          packageLinks.forEach((link: { financial_record_id: string; class_logs: { id: string; class_date: string; title: string | null } | null }) => {
+            if (link.class_logs) {
+              const existing = packageClassesMap.get(link.financial_record_id) || [];
+              existing.push({
+                id: link.class_logs.id,
+                class_date: link.class_logs.class_date,
+                title: link.class_logs.title,
+              });
+              packageClassesMap.set(link.financial_record_id, existing);
+            }
+          });
+
+          // Adicionar as aulas aos registros
+          list = list.map((record) => ({
+            ...record,
+            package_classes: packageClassesMap.get(record.id) || undefined,
+          }));
+        }
+      }
+
       return { list, count: count ?? 0 };
     },
     placeholderData: keepPreviousData,
@@ -196,26 +299,33 @@ export function useFinancialSummary(teacherId?: string | null) {
         throw error;
       }
 
-      const summary = {
-        totalPending: 0,
-        totalPaid: 0,
-        totalOverdue: 0,
-        countPending: 0,
-        countPaid: 0,
-        countOverdue: 0,
-      };
-
       let records = (data || []) as Array<{ amount: number; status: string; due_date: string; students?: { teacher_id?: string } }>;
       if (teacherId) {
         records = records.filter((r) => r.students?.teacher_id === teacherId);
       }
 
+      // Memoizar cálculo do summary
+      const summary = {
+        totalPending: 0,
+        totalPaid: 0,
+        totalOverdue: 0,
+        totalReceivable: 0,
+        countPending: 0,
+        countPaid: 0,
+        countOverdue: 0,
+      };
+
       records.forEach((record) => {
         accumulateSummary(record, summary);
       });
 
+      // Calcula total a receber (pendente + atrasado)
+      summary.totalReceivable = summary.totalPending + summary.totalOverdue;
+
       return summary;
     },
+    // Cache de 5 minutos para dados que mudam pouco
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -250,6 +360,14 @@ export function useCreateFinancialRecord() {
 
   return useMutation({
     mutationFn: async (record: FinancialRecordInsert) => {
+      // Rate limiting: 3 chamadas por minuto
+      const rateLimitResult = checkRateLimit("createFinancialRecord", RATE_LIMIT_CONFIGS.CRITICAL);
+      if (!rateLimitResult.allowed) {
+        throw new Error(
+          `Muitas requisições. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
+        );
+      }
+
       // Avoid relying on RETURNING/select() here; depending on RLS policies,
       // the insert can succeed while the returning row is not selectable,
       // which makes the UX look like "nothing happened".
@@ -262,50 +380,110 @@ export function useCreateFinancialRecord() {
       }
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Cobrança criada com sucesso!");
     },
     onError: (error) => {
-      console.error("Error creating financial record:", error);
-      toast.error(
-        `Erro ao criar cobrança. ${error instanceof Error ? error.message : "Tente novamente."}`
-      );
+      logger.error(error, { context: "useCreateFinancialRecord" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
 
 export function useMarkAsPaid() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+  return useOptimisticMutation<FinancialRecord, string>({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
-        .from("financial_records")
-        .update({
-          status: "pago",
-          paid_at: new Date().toISOString(),
-        })
-        .eq("id", id)
-        .select()
-        .single();
+      // Gerar chave de idempotência usando crypto.randomUUID()
+      const idempotencyKey = crypto.randomUUID();
+
+      // Chamar RPC mark_as_paid_idempotent
+      const { data, error } = await supabase.rpc("mark_as_paid_idempotent", {
+        p_record_id: id,
+        p_payment_method: null,
+        p_idempotency_key: idempotencyKey,
+      });
 
       if (error) {
         throw error;
       }
 
+      // Buscar registro atualizado para retornar
+      const { data: record, error: fetchError } = await supabase
+        .from("financial_records")
+        .select()
+        .eq("id", id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      return record;
+    },
+    queryKey: ["financial_records"],
+    optimisticUpdate: (oldData: { list: FinancialRecordWithRelations[]; count: number }, id: string) => {
+      const now = new Date().toISOString();
+      return {
+        ...oldData,
+        list: oldData.list.map((record) =>
+          record.id === id
+            ? { ...record, status: "pago" as const, paid_at: now }
+            : record
+        ),
+      };
+    },
+    successMessage: "Pagamento registrado com sucesso!",
+    errorMessage: "Erro ao registrar pagamento",
+    onError: (error) => {
+      logger.error(error, { context: "useMarkAsPaid" });
+    },
+  });
+}
+
+export function useConfirmPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Gerar chave de idempotência usando crypto.randomUUID()
+      const idempotencyKey = crypto.randomUUID();
+
+      // Chamar RPC confirm_payment_idempotent
+      const { data, error } = await supabase.rpc("confirm_payment_idempotent", {
+        p_record_id: id,
+        p_idempotency_key: idempotencyKey,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Verificar se houve erro na resposta do RPC
+      if (data && !data.success) {
+        throw new Error(data.error || "Erro ao confirmar pagamento");
+      }
+
       return data;
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
-      toast.success("Pagamento registrado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
+      toast.success("Pagamento confirmado com sucesso!");
     },
     onError: (error) => {
-      console.error("Error marking as paid:", error);
-      toast.error("Erro ao registrar pagamento. Tente novamente.");
+      logger.error(error, { context: "useConfirmPayment" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -329,14 +507,61 @@ export function useUpdateFinancialRecord() {
       return data;
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Cobrança atualizada com sucesso!");
     },
     onError: (error) => {
-      console.error("Error updating financial record:", error);
-      toast.error("Erro ao atualizar cobrança. Tente novamente.");
+      logger.error(error, { context: "useUpdateFinancialRecord" });
+      toast.error(sanitizeErrorMessage(error));
+    },
+  });
+}
+
+export function useUpdateFinancialStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: "abonado" | "extornado" }) => {
+      const { data, error } = await supabase
+        .from("financial_records")
+        .update({ status })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidar todas as queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
+      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
+      
+      const message = variables.status === "abonado" 
+        ? "Falta abonada (não cobrada)" 
+        : "Pagamento extornado";
+      toast.success(message);
+    },
+    onError: (error) => {
+      logger.error(error, { context: "useUpdateFinancialStatus" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -346,6 +571,14 @@ export function useDeleteFinancialRecord() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Rate limiting: 3 chamadas por minuto
+      const rateLimitResult = checkRateLimit("deleteFinancialRecord", RATE_LIMIT_CONFIGS.CRITICAL);
+      if (!rateLimitResult.allowed) {
+        throw new Error(
+          `Muitas requisições. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
+        );
+      }
+
       const { error } = await supabase
         .from("financial_records")
         .delete()
@@ -356,14 +589,20 @@ export function useDeleteFinancialRecord() {
       }
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
+      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
       toast.success("Cobrança removida com sucesso!");
     },
     onError: (error) => {
-      console.error("Error deleting financial record:", error);
-      toast.error("Erro ao remover cobrança. Tente novamente.");
+      logger.error(error, { context: "useDeleteFinancialRecord" });
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
