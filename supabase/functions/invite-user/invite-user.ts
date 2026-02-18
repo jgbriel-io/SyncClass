@@ -89,24 +89,33 @@ async function validateCpfPhonePlatform(
   const cpf = normalizeDigits(data.cpf as string);
   const phone = normalizeDigits(data.phone as string);
   
-  // Validar comprimento do CPF (deve ter exatamente 11 dígitos)
+  // Validar comprimento do CPF (deve ter exatamente 11 dígitos se preenchido)
   if (cpf && cpf.length > 0 && cpf.length !== 11) {
     return "CPF deve ter exatamente 11 dígitos";
   }
   
-  // Validar comprimento do telefone (deve ter 10 ou 11 dígitos)
-  if (phone && phone.length > 0 && (phone.length < 10 || phone.length > 11)) {
-    return "Telefone deve ter 10 ou 11 dígitos";
+  // Validar comprimento do telefone (8-15 dígitos para internacional)
+  if (phone && phone.length > 0) {
+    if (phone.length < 8) {
+      return "Telefone deve ter pelo menos 8 dígitos";
+    }
+    if (phone.length > 15) {
+      return "Telefone deve ter no máximo 15 dígitos";
+    }
   }
   
+  // Verificar duplicação de CPF
   if (cpf.length === 11) {
     const { data: cpfExists } = await admin.rpc("check_cpf_exists_platform", { p_cpf_digits: cpf });
     if (cpfExists === true) return "CPF já cadastrado na plataforma";
   }
-  if (phone.length >= 10) {
+  
+  // Verificar duplicação de telefone (apenas para números brasileiros: 10-11 dígitos)
+  if (phone.length >= 10 && phone.length <= 11) {
     const { data: phoneExists } = await admin.rpc("check_phone_exists_platform", { p_phone_digits: phone });
     if (phoneExists === true) return "Telefone já cadastrado na plataforma";
   }
+  
   return null;
 }
 

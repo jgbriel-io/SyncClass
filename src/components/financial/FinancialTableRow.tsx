@@ -60,10 +60,13 @@ export function FinancialTableRow({
   const lastUpdatedAt = record.updated_at || record.created_at;
   
   // Pode deletar se:
-  // 1. Não houver aula avulsa vinculada (class_log_id é null) OU
-  // 2. Houver pacote vinculado (package_classes existe)
-  // Basicamente: pode deletar qualquer cobrança que não seja de aula avulsa já criada
-  const canDelete = onDelete && (!record.class_log_id || (record.package_classes && record.package_classes.length > 0));
+  // 1. Status não é "pago" (permite deletar pendentes, atrasados e desfeitos)
+  // 2. E não é uma cobrança finalizada (abonado, extornado, cancelado)
+  // 3. E (não tem aula avulsa vinculada OU tem pacote vinculado)
+  const canDelete = onDelete && 
+    record.actualStatus !== "pago" && 
+    !["abonado", "extornado", "cancelado"].includes(record.actualStatus) &&
+    (!record.class_log_id || (record.package_classes && record.package_classes.length > 0));
 
   return (
     <tr className="group hover:bg-muted/30 transition-colors">
