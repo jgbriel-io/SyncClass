@@ -356,7 +356,9 @@ export function StudentDetailSheet({
                               <MapPin className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div>
-                              <p className="text-xs text-muted-foreground">Cidade / UF</p>
+                              <p className="text-xs text-muted-foreground">
+                                {state && state.length === 2 ? "Cidade / UF" : "Cidade / País"}
+                              </p>
                               <p className="text-sm font-medium">
                                 {city || state
                                   ? `${city || "—"}${state ? ` - ${state}` : ""}`

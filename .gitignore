@@ -37,6 +37,22 @@ COMMIT_MESSAGE.txt
 FUNCTIONAL_AUDIT_REPORT.md
 TYPES_FIX_SUMMARY.md
 TESTS_COVERAGE.md
+docs/
 
-# Supabase migrations
-supabase/migrations/
+# Supabase
+supabase/.temp/
+supabase/.branches/
+supabase/config.toml
+supabase/seed.sql
+.supabase/
+
+# Database dumps
+*.sql
+!supabase/migrations/*.sql
+database-dump*.sql
+dump*.sql
+
+# Scripts temporários
+fix-*.cjs
+export-*.cjs
+export-*.sql
