@@ -188,12 +188,11 @@ export default function TeachersPage() {
       const name = (teacher.name ?? "").toLowerCase();
       const email = (teacher.email ?? "").toLowerCase();
       const phoneDigits = (teacher.phone ?? "").replace(/\D/g, "");
-      const cpfDigits = (teacher.cpf ?? "").replace(/\D/g, "");
       const matchesSearch =
         !searchLower ||
         name.includes(searchLower) ||
         email.includes(searchLower) ||
-        (searchDigits.length > 0 && (phoneDigits.includes(searchDigits) || cpfDigits.includes(searchDigits)));
+        (searchDigits.length > 0 && phoneDigits.includes(searchDigits));
       if (!matchesSearch) return false;
 
       const status = teacher.status ?? "ativo";

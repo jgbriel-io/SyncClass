@@ -1,33 +1,10 @@
 /**
  * Schemas Zod reutilizáveis para validação de formulários
- * Centraliza validações comuns (CPF, telefone, email, etc.)
+ * Centraliza validações comuns (telefone, email, etc.)
  */
 
 import { z } from "zod";
 import { REGEX_PATTERNS, isValidDateString } from "@/lib/utils/patterns";
-
-/**
- * Schema para CPF (formato: 000.000.000-00)
- * Aceita vazio ou CPF válido
- */
-export const cpfSchema = z
-  .string()
-  .optional()
-  .refine(
-    (v) => !v || (v.length === 14 && REGEX_PATTERNS.cpf.test(v)),
-    { message: "CPF inválido (formato: 000.000.000-00)" }
-  );
-
-/**
- * Schema para CPF obrigatório
- */
-export const cpfRequiredSchema = z
-  .string()
-  .min(1, "CPF é obrigatório")
-  .refine(
-    (v) => v.length === 14 && REGEX_PATTERNS.cpf.test(v),
-    { message: "CPF inválido (formato: 000.000.000-00)" }
-  );
 
 /**
  * Schema para telefone (formato: (00) 0000-0000 ou (00) 00000-0000)

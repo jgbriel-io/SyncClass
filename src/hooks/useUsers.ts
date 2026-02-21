@@ -17,7 +17,8 @@ export function useUsersStats() {
     queryFn: async (): Promise<UsersStats> => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("active, created_at");
+        .select("active, created_at")
+        .is("deleted_at", null); // Only count non-deleted profiles
 
       if (error) throw error;
 
@@ -92,6 +93,7 @@ export function useUsers() {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
+        .is("deleted_at", null) // Only show non-deleted profiles
         .order("created_at", { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -188,7 +190,7 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
   const query = useQuery({
     queryKey: ["users_paginated", page, pageSize, filters],
     queryFn: async () => {
-      let q = supabase.from("profiles").select("*", { count: "exact" });
+      let q = supabase.from("profiles").select("*", { count: "exact" }).is("deleted_at", null); // Only show non-deleted profiles
 
       if (filters?.status === "active") {
         q = q.eq("active", true);
@@ -220,7 +222,7 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
 
       if (rolesError) throw rolesError;
 
-      // Buscar students e teachers vinculados
+      // Buscar students e teachers vinculados (incluindo inativos)
       const studentIds = profileRows
         .map(p => p.student_id)
         .filter((id): id is string => id != null);
@@ -233,6 +235,7 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
       let teachers: Tables<"teachers">[] = [];
 
       if (studentIds.length > 0) {
+        // IMPORTANTE: Buscar TODOS os students, incluindo inativos
         const { data: studentsData, error: studentsError } = await supabase
           .from("students")
           .select("*")
@@ -243,6 +246,7 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
       }
 
       if (teacherIds.length > 0) {
+        // IMPORTANTE: Buscar TODOS os teachers, incluindo inativos
         const { data: teachersData, error: teachersError } = await supabase
           .from("teachers")
           .select("*")

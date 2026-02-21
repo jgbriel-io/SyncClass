@@ -143,7 +143,7 @@ export function UsersTableRow({
       {/* Privilégio */}
       <td className={CELL_BASE} style={{ width: COL.PRIVILEGIO, minWidth: COL.PRIVILEGIO }}>
         <div className="flex flex-col gap-1 items-start">
-          <StatusBadge variant={getRoleVariant(role)}>
+          <StatusBadge variant={getRoleVariant(role)} className="justify-start">
             {getRoleLabel(role)}
           </StatusBadge>
           {!isActive && (
@@ -156,7 +156,7 @@ export function UsersTableRow({
 
       {/* Vínculo */}
       <td className={`${CELL_BASE} hidden lg:table-cell`} style={{ width: COL.VINCULO, minWidth: COL.VINCULO }}>
-        {linkedStudent || linkedTeacher ? (
+        {linkedStudent || linkedTeacher || role === "admin" ? (
           <div className="flex flex-col gap-1">
             {linkedStudent && (
               <div className="flex items-center gap-2">
@@ -168,6 +168,12 @@ export function UsersTableRow({
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
                 <span className="text-xs truncate" title={`Professor: ${linkedTeacher.name}`}>Professor: {linkedTeacher.name}</span>
+              </div>
+            )}
+            {role === "admin" && !linkedStudent && !linkedTeacher && (
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs truncate" title={`Admin: ${displayName}`}>Admin: {displayName}</span>
               </div>
             )}
           </div>

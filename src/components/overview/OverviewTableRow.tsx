@@ -1,4 +1,5 @@
 import { formatCurrency } from "@/lib/utils/formatters";
+import { formatPhoneDisplay } from "@/lib/utils/format-phone";
 import { Button } from "@/components/ui/button";
 import { Eye, TrendingUp, TrendingDown } from "lucide-react";
 import {
@@ -67,8 +68,8 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
             <p className="text-xs font-medium truncate" title={student.name}>
               {student.name}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate" title={student.email || student.phone || "—"}>
-              {student.email || student.phone || "—"}
+            <p className="text-xs text-muted-foreground mt-0.5 truncate" title={student.email || formatPhoneDisplay(student.phone, student.country) || "—"}>
+              {student.email || formatPhoneDisplay(student.phone, student.country) || "—"}
             </p>
           </div>
         </div>

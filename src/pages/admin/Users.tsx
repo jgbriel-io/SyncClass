@@ -235,7 +235,6 @@ export default function UsersPage() {
               },
               {
                 onSuccess: () => {
-                  toast.success("Usuário atualizado com sucesso!");
                   setIsFormOpen(false);
                   setSelectedUser(null);
                 },
@@ -268,8 +267,6 @@ export default function UsersPage() {
               setPasswordCopied(false);
               setPasswordDialogSource("create");
               setIsPasswordDialogOpen(true);
-            } else {
-              toast.success("Usuário criado com sucesso!");
             }
           },
         }
@@ -339,18 +336,35 @@ export default function UsersPage() {
     }
 
     if (linkedStudent && isStudentActive) {
-      // Arquiva: muda status para inativo (updateStudent já sincroniza profile.active = false)
-      updateStudent.mutate(
-        { id: linkedStudent.id, status: "inativo" },
-        {
-          onSuccess: () => {
-            toast.success("Usuário arquivado com sucesso!");
-            setDeleteDialogOpen(false);
-            setSelectedUser(null);
-            setForceHardDelete(false);
-          },
-        }
-      );
+      // PRIMEIRO: Garantir que o profile mantenha o student_id
+      supabase
+        .from("profiles")
+        .update({ 
+          student_id: linkedStudent.id, // Garantir vínculo ANTES de arquivar
+        })
+        .eq("student_id", linkedStudent.id)
+        .then(() => {
+          // DEPOIS: Arquivar o aluno
+          updateStudent.mutate(
+            { id: linkedStudent.id, status: "inativo" },
+            {
+              onSuccess: () => {
+                toast.success("Usuário arquivado com sucesso!");
+                setDeleteDialogOpen(false);
+                setSelectedUser(null);
+                setForceHardDelete(false);
+              },
+              onError: (err) => {
+                console.error("Erro ao arquivar aluno:", err);
+                toast.error("Erro ao arquivar usuário");
+              },
+            }
+          );
+        })
+        .catch((err) => {
+          console.error("Erro ao garantir vínculo:", err);
+          toast.error("Erro ao arquivar usuário");
+        });
       return;
     }
 
@@ -626,9 +640,6 @@ export default function UsersPage() {
           open={isPasswordDialogOpen}
           onOpenChange={(open) => {
             setIsPasswordDialogOpen(open);
-            if (!open && generatedPassword && passwordDialogSource === "create") {
-              toast.success("Usuário criado com sucesso!");
-            }
             if (!open) setPasswordDialogSource(null);
           }}
         >

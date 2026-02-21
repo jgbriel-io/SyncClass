@@ -112,8 +112,8 @@ export function useCreateTeacher() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (teacher: TeacherInsert) => {
-      const { validateCpfPhonePlatform } = await import("@/lib/validate-cpf-phone-platform");
-      const err = await validateCpfPhonePlatform(supabase, teacher);
+      const { validatePhonePlatform } = await import("@/lib/validate-phone-platform");
+      const err = await validatePhonePlatform(supabase, teacher);
       if (err) throw new Error(err);
       const { data, error } = await supabase
         .from("teachers")
@@ -213,7 +213,11 @@ export function useUpdateTeacher() {
   });
 }
 
-export function useDeleteTeacher() {
+/**
+ * Soft delete teacher - preserves class_logs
+ * Sets status to 'inativo'
+ */
+export function useSoftDeleteTeacher() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
@@ -227,10 +231,10 @@ export function useDeleteTeacher() {
 
       if (error) throw error;
 
-      // Also mark linked profiles as inactive
+      // Also mark linked profiles as inactive BUT KEEP teacher_id
       const { error: profilesError } = await supabase
         .from("profiles")
-        .update({ active: false })
+        .update({ active: false, teacher_id: id })
         .eq("teacher_id", id);
 
       if (profilesError) {
@@ -252,6 +256,8 @@ export function useDeleteTeacher() {
     },
   });
 }
+
+export const useDeleteTeacher = useSoftDeleteTeacher;
 
 /**
  * Hard delete teacher — physically removes from DB.
@@ -310,8 +316,23 @@ export function useHardDeleteTeacher() {
 
       if (error) throw error;
 
-      // 4) If there's a linked user, hard-delete the auth account too
+      // 4) If there's a linked user, soft delete the profile instead of hard delete
       if (linkedProfile?.user_id) {
+        // Mark profile as deleted (soft delete for audit trail)
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ 
+            deleted_at: new Date().toISOString(),
+            active: false,
+            teacher_id: null // Remove link
+          })
+          .eq("user_id", linkedProfile.user_id);
+
+        if (profileError) {
+          toast.warning("Professor removido. O perfil de usuário não pôde ser marcado como deletado.");
+        }
+
+        // Delete auth account
         const { data, error: fnError } = await supabase.functions.invoke("admin-delete-user", {
           body: { userId: linkedProfile.user_id },
         });

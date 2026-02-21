@@ -73,7 +73,6 @@ export function OverviewView({
         !searchLower ||
         (student.name || "").toLowerCase().includes(searchLower) ||
         (student.email || "").toLowerCase().includes(searchLower) ||
-        (student.cpf || "").replace(/\D/g, "").includes(searchDigits) ||
         (student.phone || "").replace(/\D/g, "").includes(searchDigits);
       if (!matchesSearch) return false;
 

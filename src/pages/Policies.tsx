@@ -116,7 +116,6 @@ function PrivacyPolicy() {
           <h3 className="font-medium text-foreground">Dados Coletados</h3>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>Nome completo, email e telefone para cadastro</li>
-            <li>CPF para identificação fiscal (opcional)</li>
             <li>Histórico de aulas e pagamentos</li>
             <li>Atividades e avaliações acadêmicas</li>
           </ul>
@@ -215,7 +214,7 @@ function DataRetention() {
         <div className="space-y-2">
           <h3 className="font-medium text-foreground">Exclusão Imediata</h3>
           <p>
-            Seus dados pessoais identificáveis (nome, CPF, telefone, email) são
+            Seus dados pessoais identificáveis (nome, telefone, email) são
             <span className="font-medium text-foreground"> anonimizados imediatamente</span>
             após a solicitação.
           </p>

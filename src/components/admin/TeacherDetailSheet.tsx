@@ -1,6 +1,7 @@
 import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
 import { DetailSection } from "@/components/ui/custom/DetailSection";
 import { formatCurrency } from "@/lib/utils/formatters";
+import { formatPhoneDisplay } from "@/lib/utils/format-phone";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +15,6 @@ import {
   BookOpen,
   Users,
   TrendingUp,
-  FileText,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -115,8 +115,7 @@ export function TeacherDetailSheet({
               </h3>
               <div className="grid gap-4 text-sm">
                 <DetailSection icon={Mail} label="Email" value={teacher.email || "—"} inline />
-                <DetailSection icon={Phone} label="Telefone" value={teacher.phone || "—"} inline />
-                <DetailSection icon={FileText} label="CPF" value={teacher.cpf || "—"} inline />
+                <DetailSection icon={Phone} label="Telefone" value={formatPhoneDisplay(teacher.phone, "Brasil") || "—"} inline />
                 <DetailSection
                   icon={Calendar}
                   label="Cadastrado em"
@@ -152,7 +151,7 @@ export function TeacherDetailSheet({
                       <div>
                         <p className="text-sm font-medium">{student.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {student.email || student.phone || "—"}
+                          {student.email || formatPhoneDisplay(student.phone, student.country) || "—"}
                         </p>
                       </div>
                       <div className="text-right text-xs text-muted-foreground">

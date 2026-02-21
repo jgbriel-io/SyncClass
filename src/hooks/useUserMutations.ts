@@ -3,9 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/integrations/supabase/env";
 import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
-import { validateCpfPhonePlatform } from "@/lib/validate-cpf-phone-platform";
+import { validatePhonePlatform } from "@/lib/validate-phone-platform";
 import { isValidEmailFormat } from "@/lib/utils/patterns";
-import { isAllowedEmailDomain } from "@/lib/validation/email";
 import { validateAndResizeAvatar, type AvatarValidationError } from "@/lib/utils/avatarUpload";
 import { toast } from "sonner";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
@@ -190,7 +189,6 @@ function validateEmailForInvite(email: string): void {
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) throw new Error("Email é obrigatório");
   if (!isValidEmailFormat(trimmed)) throw new Error("Email inválido");
-  if (!isAllowedEmailDomain(trimmed)) throw new Error("Use um email de provedor real (Gmail, Outlook, Yahoo, etc.)");
 }
 
 async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult> {
@@ -286,7 +284,7 @@ async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult>
     if (body.studentId) {
       resolvedStudentId = body.studentId;
     } else if (body.studentData) {
-      const err = await validateCpfPhonePlatform(supabase, body.studentData);
+      const err = await validatePhonePlatform(supabase, body.studentData);
       if (err) throw new Error(err);
       const insert: StudentInsert = { ...body.studentData, name: fullName, email: normalizedEmail } as StudentInsert;
       const { data: s, error: se } = await supabase.from("students").insert(insert).select("id").single();
@@ -299,7 +297,7 @@ async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult>
     if (body.teacherId) {
       resolvedTeacherId = body.teacherId;
     } else if (body.teacherData) {
-      const err = await validateCpfPhonePlatform(supabase, body.teacherData);
+      const err = await validatePhonePlatform(supabase, body.teacherData);
       if (err) throw new Error(err);
       const insert: TeacherInsert = { ...body.teacherData, name: fullName, email: normalizedEmail } as TeacherInsert;
       const { data: t, error: te } = await supabase.from("teachers").insert(insert).select("id").single();
@@ -402,6 +400,11 @@ export function useCreateUser() {
       if (variables.role === "teacher" || result?.createdTeacher) {
         queryClient.invalidateQueries({ queryKey: ["teachers"] });
       }
+      
+      // Toast apenas se não houver senha gerada (quando há senha, o dialog mostra)
+      if (!result?.password) {
+        toast.success("Usuário criado com sucesso!");
+      }
     },
     onError: (error: Error, variables) => {
       logger.error(error, {
@@ -497,7 +500,7 @@ export function useUpdateUserRole() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      // Toast removido - será mostrado no componente após ambas as operações
+      toast.success("Usuário atualizado com sucesso!");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Não foi possível atualizar o privilégio. Por favor, tente novamente.");
@@ -634,9 +637,23 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
+      // Buscar o profile atual para preservar student_id e teacher_id
+      const { data: currentProfile, error: fetchError } = await supabase
+        .from("profiles")
+        .select("student_id, teacher_id")
+        .eq("user_id", userId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Atualizar mantendo os vínculos
       const { error } = await supabase
         .from("profiles")
-        .update({ active: false })
+        .update({ 
+          active: false,
+          student_id: currentProfile.student_id,
+          teacher_id: currentProfile.teacher_id,
+        })
         .eq("user_id", userId);
 
       if (error) throw error;
