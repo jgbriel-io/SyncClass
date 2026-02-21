@@ -268,11 +268,15 @@ serve(async (req) => {
 
   log("Creating auth user", { email: normalizedEmail, role });
 
+  // Criar usuário com senha e enviar email de confirmação
   const { data: authUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
     email: normalizedEmail,
     password,
-    email_confirm: true,
-    user_metadata: { full_name },
+    email_confirm: false, // Não confirmar automaticamente para forçar email
+    user_metadata: { 
+      full_name,
+      temporary_password: password, // Disponível no template
+    },
   });
 
   if (createError) {
@@ -290,6 +294,20 @@ serve(async (req) => {
   }
 
   const userId = authUser.user.id;
+
+  // Enviar email de convite com senha
+  try {
+    await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail, {
+      data: {
+        full_name,
+        temporary_password: password,
+      },
+    });
+    log("Invite email sent", { email: normalizedEmail });
+  } catch (emailError) {
+    log("Failed to send invite email", { error: (emailError as Error).message });
+    // Não falhar a operação se email não enviar
+  }
 
   try {
     await waitForProfile(userId, supabaseAdmin);
@@ -363,6 +381,7 @@ serve(async (req) => {
     email: normalizedEmail,
     teacher_id: role === "teacher" ? resolvedTeacherId : null,
     student_id: role === "student" ? resolvedStudentId : null,
+    must_change_password: true, // Forçar troca de senha no primeiro login
   };
 
   const { error: profileErr } = await supabaseAdmin
