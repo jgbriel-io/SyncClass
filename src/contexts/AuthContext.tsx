@@ -38,11 +38,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("role, teacher_id, must_change_password")
+        .select("role, teacher_id, must_change_password, deleted_at, active")
         .eq("user_id", userId)
         .maybeSingle();
 
       if (!profileError && profileData) {
+        // Verificar se conta foi deletada ou desativada
+        if (profileData.deleted_at || profileData.active === false) {
+          logger.warn("User account deleted or inactive, logging out", { userId });
+          await supabase.auth.signOut();
+          window.location.href = "/login";
+          return null;
+        }
+
         // Atualizar flag de troca de senha
         setMustChangePassword(profileData.must_change_password === true);
         
@@ -155,6 +163,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener("unhandledrejection", handleUnhandledRejection);
 
+    // Polling: verificar se conta ainda está ativa a cada 5 minutos
+    let accountCheckInterval: NodeJS.Timeout | null = null;
+    
+    const checkAccountStatus = async () => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) return;
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("deleted_at, active")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (profileData && (profileData.deleted_at || profileData.active === false)) {
+        logger.warn("Account deleted or inactive during session, logging out", { userId: currentUser.id });
+        await supabase.auth.signOut();
+        window.location.href = "/login";
+      }
+    };
+
+    // Iniciar polling após login
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        accountCheckInterval = setInterval(checkAccountStatus, 5 * 60 * 1000); // 5 minutos
+      }
+    });
+
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!isMounted) return;
@@ -185,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
       window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+      if (accountCheckInterval) clearInterval(accountCheckInterval);
     };
   }, []);
 
