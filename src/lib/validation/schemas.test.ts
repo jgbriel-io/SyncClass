@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest";
 import {
-  cpfSchema,
-  cpfRequiredSchema,
   phoneSchema,
   phoneRequiredSchema,
   emailSchema,
@@ -20,32 +18,6 @@ import {
 } from "./schemas";
 
 describe("Validation Schemas", () => {
-  describe("cpfSchema", () => {
-    it("deve aceitar CPF válido", () => {
-      expect(cpfSchema.safeParse("123.456.789-00").success).toBe(true);
-    });
-
-    it("deve aceitar vazio", () => {
-      expect(cpfSchema.safeParse("").success).toBe(true);
-      expect(cpfSchema.safeParse(undefined).success).toBe(true);
-    });
-
-    it("deve rejeitar CPF inválido", () => {
-      expect(cpfSchema.safeParse("123").success).toBe(false);
-      expect(cpfSchema.safeParse("123.456.789-0").success).toBe(false);
-    });
-  });
-
-  describe("cpfRequiredSchema", () => {
-    it("deve aceitar CPF válido", () => {
-      expect(cpfRequiredSchema.safeParse("123.456.789-00").success).toBe(true);
-    });
-
-    it("deve rejeitar vazio", () => {
-      expect(cpfRequiredSchema.safeParse("").success).toBe(false);
-    });
-  });
-
   describe("phoneSchema", () => {
     it("deve aceitar telefone fixo válido", () => {
       expect(phoneSchema.safeParse("(11) 1234-5678").success).toBe(true);

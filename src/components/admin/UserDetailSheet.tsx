@@ -1,5 +1,6 @@
 import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
 import { DetailSection } from "@/components/ui/custom/DetailSection";
+import { formatPhoneDisplay } from "@/lib/utils/format-phone";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -199,7 +200,7 @@ export function UserDetailSheet({
                       <div className="space-y-1 text-sm">
                         <p className="font-medium">{linkedStudent.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {linkedStudent.email || linkedStudent.phone || "—"}
+                          {linkedStudent.email || formatPhoneDisplay(linkedStudent.phone, linkedStudent.country) || "—"}
                         </p>
                         <StatusBadge
                           variant={linkedStudent.status === "ativo" ? "success" : "default"}
@@ -220,7 +221,7 @@ export function UserDetailSheet({
                       <div className="space-y-1 text-sm">
                         <p className="font-medium">{linkedTeacher.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {linkedTeacher.email || linkedTeacher.phone || "—"}
+                          {linkedTeacher.email || formatPhoneDisplay(linkedTeacher.phone, "Brasil") || "—"}
                         </p>
                         <StatusBadge
                           variant={linkedTeacher.status === "ativo" ? "success" : "default"}

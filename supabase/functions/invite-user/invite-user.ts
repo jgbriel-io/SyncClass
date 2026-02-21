@@ -26,7 +26,6 @@ function randomPassword(length = 10): string {
 }
 
 function friendlyDuplicateError(msg: string): string {
-  if (msg.includes("CPF já cadastrado na plataforma") || msg.includes("teachers_unique_cpf") || msg.includes("students_unique_cpf")) return "CPF já cadastrado na plataforma";
   if (msg.includes("Telefone já cadastrado na plataforma") || msg.includes("teachers_unique_phone") || msg.includes("students_unique_phone")) return "Telefone já cadastrado na plataforma";
   if (msg.includes("students_unique_email") || (msg.includes("duplicate key") && msg.toLowerCase().includes("email"))) return "Email já cadastrado";
   return msg;
@@ -40,31 +39,10 @@ function normalizeDigits(val: string | null | undefined): string {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_MAX_LENGTH = 255;
 
-const ALLOWED_EMAIL_DOMAINS = new Set([
-  "gmail.com", "googlemail.com",
-  "outlook.com", "hotmail.com", "hotmail.com.br", "live.com", "live.com.br", "outlook.com.br", "outlook.pt", "msn.com",
-  "yahoo.com", "yahoo.com.br", "ymail.com",
-  "icloud.com", "me.com", "mac.com",
-  "protonmail.com", "proton.me",
-  "uol.com.br", "bol.com.br", "terra.com.br", "ig.com.br",
-  "aol.com", "zoho.com", "mail.com", "i.ua", "inbox.com",
-]);
-
-function getEmailDomain(email: string): string {
-  const trimmed = email?.trim()?.toLowerCase() ?? "";
-  const i = trimmed.lastIndexOf("@");
-  return i >= 0 ? trimmed.slice(i + 1) : "";
-}
-
 function isValidEmailFormat(email: string): boolean {
   const trimmed = email?.trim() ?? "";
   if (trimmed.length === 0 || trimmed.length > EMAIL_MAX_LENGTH) return false;
   return EMAIL_REGEX.test(trimmed);
-}
-
-function isAllowedEmailDomain(email: string): boolean {
-  const domain = getEmailDomain(email);
-  return domain.length > 0 && ALLOWED_EMAIL_DOMAINS.has(domain);
 }
 
 // Remove empty strings and convert them to null to avoid unique index conflicts
@@ -80,19 +58,13 @@ function cleanInsertData(data: Record<string, unknown>): Record<string, unknown>
   return cleaned;
 }
 
-// Validação platform-wide: CPF e telefone únicos em students + teachers
-async function validateCpfPhonePlatform(
+// Validação platform-wide: telefone único em students + teachers
+async function validatePhonePlatform(
   admin: ReturnType<typeof createClient>,
   data: Record<string, unknown> | undefined
 ): Promise<string | null> {
   if (!data) return null;
-  const cpf = normalizeDigits(data.cpf as string);
   const phone = normalizeDigits(data.phone as string);
-  
-  // Validar comprimento do CPF (deve ter exatamente 11 dígitos se preenchido)
-  if (cpf && cpf.length > 0 && cpf.length !== 11) {
-    return "CPF deve ter exatamente 11 dígitos";
-  }
   
   // Validar comprimento do telefone (8-15 dígitos para internacional)
   if (phone && phone.length > 0) {
@@ -104,14 +76,8 @@ async function validateCpfPhonePlatform(
     }
   }
   
-  // Verificar duplicação de CPF
-  if (cpf.length === 11) {
-    const { data: cpfExists } = await admin.rpc("check_cpf_exists_platform", { p_cpf_digits: cpf });
-    if (cpfExists === true) return "CPF já cadastrado na plataforma";
-  }
-  
-  // Verificar duplicação de telefone (apenas para números brasileiros: 10-11 dígitos)
-  if (phone.length >= 10 && phone.length <= 11) {
+  // Verificar duplicação de telefone (todos os telefones, não só brasileiros)
+  if (phone.length >= 8) {
     const { data: phoneExists } = await admin.rpc("check_phone_exists_platform", { p_phone_digits: phone });
     if (phoneExists === true) return "Telefone já cadastrado na plataforma";
   }
@@ -236,10 +202,6 @@ serve(async (req) => {
     log("Invalid email format", { email: rawEmail });
     return jsonResponse({ error: "Email inválido" }, 400);
   }
-  if (!isAllowedEmailDomain(rawEmail)) {
-    log("Email domain not allowed", { email: rawEmail });
-    return jsonResponse({ error: "Use um email de provedor real (Gmail, Outlook, Yahoo, etc.)" }, 400);
-  }
   const normalizedEmail = rawEmail.toLowerCase();
 
   if (!full_name || !role || !ROLES.includes(role)) {
@@ -296,11 +258,11 @@ serve(async (req) => {
   }
 
   if (role === "student" && !studentId) {
-    const err = await validateCpfPhonePlatform(supabaseAdmin, studentData as Record<string, unknown> | undefined);
+    const err = await validatePhonePlatform(supabaseAdmin, studentData as Record<string, unknown> | undefined);
     if (err) return jsonResponse({ error: err }, 400);
   }
   if (role === "teacher" && !teacherId) {
-    const err = await validateCpfPhonePlatform(supabaseAdmin, teacherData as Record<string, unknown> | undefined);
+    const err = await validatePhonePlatform(supabaseAdmin, teacherData as Record<string, unknown> | undefined);
     if (err) return jsonResponse({ error: err }, 400);
   }
 

@@ -10,6 +10,7 @@ import { MoreHorizontal, Pencil, Trash2, Check, KeyRound, Eye } from "lucide-rea
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatCurrency } from "@/lib/utils/formatters";
+import { formatPhoneDisplay } from "@/lib/utils/format-phone";
 import type { Teacher } from "@/hooks/useTeachers";
 import {
   CELL_BASE,
@@ -83,7 +84,9 @@ export function TeachersTableRow({
 
       {/* Telefone - M */}
       <td className={CELL_BASE} style={{ width: COL.TELEFONE, minWidth: COL.TELEFONE }}>
-        <span className="text-xs truncate block" title={teacher.phone || "—"}>{teacher.phone || "—"}</span>
+        <span className="text-xs truncate block" title={formatPhoneDisplay(teacher.phone, "Brasil") || "—"}>
+          {formatPhoneDisplay(teacher.phone, "Brasil") || "—"}
+        </span>
       </td>
 
       {/* Total Alunos - S */}

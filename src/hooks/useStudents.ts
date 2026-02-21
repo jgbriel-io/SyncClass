@@ -30,10 +30,12 @@ export function useStudents() {
   return useQuery({
     queryKey: ["students"],
     queryFn: async () => {
+      // IMPORTANTE: Buscar de students_masked (não students_active_masked)
+      // para incluir alunos inativos e manter vínculos visíveis
       const { data, error } = await supabase
-        .from("students_active_masked")
+        .from("students_masked")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false});
 
       if (error) throw error;
       return data as Student[];
@@ -122,8 +124,8 @@ export function useCreateStudent() {
 
   return useMutation({
     mutationFn: async (student: StudentInsert) => {
-      const { validateCpfPhonePlatform } = await import("@/lib/validate-cpf-phone-platform");
-      const err = await validateCpfPhonePlatform(supabase, student);
+      const { validatePhonePlatform } = await import("@/lib/validate-phone-platform");
+      const err = await validatePhonePlatform(supabase, student);
       if (err) throw new Error(err);
       const { data, error } = await supabase
         .from("students")
@@ -149,12 +151,9 @@ export function useCreateStudent() {
   });
 }
 
-/** Remove cpf/phone do update se parecerem mascarados (evita sobrescrever dados reais com ***) */
+/** Remove phone do update se parecer mascarado (evita sobrescrever dados reais com ***) */
 function sanitizeStudentUpdateForEdit(updates: Record<string, unknown>): Record<string, unknown> {
   const out = { ...updates };
-  if (typeof out.cpf === "string" && out.cpf.includes("*")) {
-    delete out.cpf;
-  }
   if (typeof out.phone === "string" && out.phone.includes("*")) {
     delete out.phone;
   }
@@ -167,6 +166,27 @@ export function useUpdateStudent() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: StudentUpdate & { id: string }) => {
       const safeUpdates = sanitizeStudentUpdateForEdit(updates as Record<string, unknown>) as StudentUpdate;
+      
+      // Validar telefone se foi alterado
+      if (safeUpdates.phone) {
+        const { validatePhonePlatform } = await import("@/lib/validate-phone-platform");
+        
+        // Buscar dados atuais do aluno para comparar
+        const { data: currentStudent } = await supabase
+          .from("students")
+          .select("phone")
+          .eq("id", id)
+          .single();
+        
+        // Só validar se telefone foi realmente alterado
+        const phoneChanged = safeUpdates.phone && safeUpdates.phone !== currentStudent?.phone;
+        
+        if (phoneChanged) {
+          const dataToValidate = { phone: safeUpdates.phone };
+          const err = await validatePhonePlatform(supabase, dataToValidate);
+          if (err) throw new Error(err);
+        }
+      }
       
       // Verifica se pay_day foi alterado
       const payDayChanged = 'pay_day' in updates && updates.pay_day !== undefined;
@@ -201,20 +221,37 @@ export function useUpdateStudent() {
       const normalizedEmail = rawEmail ? rawEmail.trim().toLowerCase() : null;
       const isActive = updatedStudent.status === "ativo";
 
+      // Buscar profiles vinculados pelo student_id
       const { data: linkedProfiles, error: profileError } = await supabase
         .from("profiles")
-        .select("id, user_id")
+        .select("id, user_id, student_id")
         .eq("student_id", updatedStudent.id);
 
       if (profileError) {
         throw profileError;
       }
 
-      if (linkedProfiles && linkedProfiles.length > 0) {
-        for (const profile of linkedProfiles) {
+      // Se não encontrou profiles pelo student_id, buscar pelo email (vínculo perdido)
+      let profilesToUpdate = linkedProfiles || [];
+      if (profilesToUpdate.length === 0 && normalizedEmail) {
+        const { data: profilesByEmail } = await supabase
+          .from("profiles")
+          .select("id, user_id, student_id")
+          .eq("email", normalizedEmail)
+          .eq("role", "student");
+        
+        if (profilesByEmail && profilesByEmail.length > 0) {
+          profilesToUpdate = profilesByEmail;
+        }
+      }
+
+      if (profilesToUpdate.length > 0) {
+        for (const profile of profilesToUpdate) {
+          // CRÍTICO: Sempre manter o student_id, mesmo que já exista
           const profileUpdate: ProfileUpdate = {
             role: "student",
             active: isActive,
+            student_id: updatedStudent.id,
           };
           if (fullName) {
             profileUpdate.full_name = fullName;
@@ -300,45 +337,6 @@ export function useUpdateStudent() {
 }
 
 /**
- * @deprecated Use useSoftDeleteStudent() instead to preserve data history
- */
-export function useDeleteStudent() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("students")
-        .update({ status: "inativo" })
-        .eq("id", id);
-
-      if (error) {
-        throw error;
-      }
-
-      // Also mark linked profiles as inactive
-      const { error: profilesError } = await supabase
-        .from("profiles")
-        .update({ active: false })
-        .eq("student_id", id);
-
-      if (profilesError) {
-        throw profilesError;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success("Aluno arquivado com sucesso!");
-    },
-    onError: () => {
-      toast.error("Não foi possível arquivar o aluno. Por favor, tente novamente.");
-    },
-  });
-}
-
-/**
  * Soft delete student - preserves class_logs and financial_records
  * Sets deleted_at timestamp and status to 'inativo'
  */
@@ -356,10 +354,10 @@ export function useSoftDeleteStudent() {
         throw error;
       }
 
-      // Also mark linked profiles as inactive
+      // Also mark linked profiles as inactive BUT KEEP student_id
       const { error: profilesError } = await supabase
         .from("profiles")
-        .update({ active: false })
+        .update({ active: false, student_id: id })
         .eq("student_id", id);
 
       if (profilesError) {
@@ -377,6 +375,8 @@ export function useSoftDeleteStudent() {
     },
   });
 }
+
+export const useDeleteStudent = useSoftDeleteStudent;
 
 /**
  * Hard delete student — physically removes from DB.
@@ -435,12 +435,26 @@ export function useHardDeleteStudent() {
 
       if (error) throw error;
 
-      // 4) If there's a linked user, hard-delete the auth account too
+      // 4) If there's a linked user, soft delete the profile instead of hard delete
       if (linkedProfile?.user_id) {
+        // Mark profile as deleted (soft delete for audit trail)
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ 
+            deleted_at: new Date().toISOString(),
+            active: false,
+            student_id: null // Remove link
+          })
+          .eq("user_id", linkedProfile.user_id);
+
+        if (profileError) {
+          toast.warning("Aluno removido. O perfil de usuário não pôde ser marcado como deletado.");
+        }
+
+        // Delete auth account
         const { data, error: fnError } = await supabase.functions.invoke("admin-delete-user", {
           body: { userId: linkedProfile.user_id },
         });
-        // Edge Function may return { error: "..." } in body
         const msg = (data as { error?: string } | null)?.error;
         if (fnError || msg) {
           toast.warning("Aluno removido. A conta de acesso vinculada não pôde ser excluída — remova manualmente se necessário.");

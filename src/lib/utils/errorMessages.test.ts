@@ -60,7 +60,7 @@ describe('sanitizeErrorMessage', () => {
   });
 
   it('deve sanitizar mensagens com detalhes técnicos', () => {
-    const error = 'Error in table students: column cpf violates constraint';
+    const error = 'Error in table students: column phone violates constraint';
     const message = sanitizeErrorMessage(error);
     expect(message).not.toContain('table');
     expect(message).not.toContain('column');

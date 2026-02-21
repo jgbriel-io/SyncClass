@@ -57,17 +57,11 @@ export function mapPostgresError(error: unknown): string {
   // UNIQUE CONSTRAINTS (23505)
   // ========================================
   if (code === "23505") {
-    if (message.includes("students_cpf_key") || message.includes("cpf")) {
-      return "Este CPF já está cadastrado no sistema.";
-    }
     if (message.includes("students_email_key") || message.includes("email")) {
       return "Este e-mail já está cadastrado no sistema.";
     }
     if (message.includes("students_phone_key") || message.includes("phone")) {
       return "Este telefone já está cadastrado no sistema.";
-    }
-    if (message.includes("teachers_cpf_key")) {
-      return "Este CPF de professor já está cadastrado no sistema.";
     }
     if (message.includes("teachers_email_key")) {
       return "Este e-mail de professor já está cadastrado no sistema.";

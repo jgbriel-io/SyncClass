@@ -37,7 +37,7 @@ class Logger {
 
     // Remove PII do metadata
     if (sanitized.metadata) {
-      const { email, cpf, phone, password, ...safeMeta } = sanitized.metadata as Record<string, unknown>;
+      const { email, phone, password, ...safeMeta } = sanitized.metadata as Record<string, unknown>;
       sanitized.metadata = safeMeta;
     }
 

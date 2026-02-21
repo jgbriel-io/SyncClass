@@ -10,10 +10,6 @@
 // ============================================================
 
 export const REGEX_PATTERNS = {
-  // Documentos brasileiros
-  cpf: /^\d{3}\.\d{3}\.\d{3}-\d{2}$/,
-  cpfDigits: /\D/g, // Remove tudo que não é dígito
-  
   // Telefones
   phone: /^\(\d{2}\) \d{4,5}-\d{4}$/,
   phoneDigits: /\D/g, // Remove tudo que não é dígito
@@ -45,19 +41,6 @@ export const REGEX_PATTERNS = {
 // ============================================================
 // MASK FUNCTIONS - Formatação de entrada
 // ============================================================
-
-/**
- * Máscara para CPF no formato 000.000.000-00
- */
-export function maskCPF(value: string): string {
-  const digits = value.replace(REGEX_PATTERNS.cpfDigits, "").slice(0, 11);
-  
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-}
 
 /**
  * Máscara para telefone no formato (00) 00000-0000 ou (00) 0000-0000
@@ -141,13 +124,6 @@ export function isValidDateString(value: string): boolean {
     date.getMonth() === month - 1 &&
     date.getDate() === day
   );
-}
-
-/**
- * Valida formato de CPF (não valida dígitos verificadores)
- */
-export function isValidCPFFormat(value: string): boolean {
-  return REGEX_PATTERNS.cpf.test(value);
 }
 
 /**

@@ -24,12 +24,13 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { ChevronsUpDown, CalendarIcon } from "lucide-react";
-import { REGEX_PATTERNS, maskCPF, maskPhone, brDateStringToDate, isValidDateString, isMasked } from "@/lib/utils/patterns";
-import { maskInternationalPhone } from "@/lib/utils/international-phone";
+import { REGEX_PATTERNS, maskPhone, brDateStringToDate, isValidDateString, isMasked } from "@/lib/utils/patterns";
+import { removeCountryCode } from "@/lib/utils/format-phone";
 import { useDateMask } from "@/hooks/useDateMask";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { emailSchema } from "@/lib/validation/email";
+import { useTeachers } from "@/hooks/useTeachers";
 
 // Type for student origin from database enum
 type StudentOrigin = Enums<"student_origin">;
@@ -57,47 +58,23 @@ const baseStudentSchema = z.object({
     }),
 });
 
-// Schema para alunos BRASILEIROS (campos obrigatórios)
-const brazilianStudentSchema = baseStudentSchema.extend({
-  state: z.string().min(2, "Estado é obrigatório").max(2),
-  city: z.string().min(2, "Cidade é obrigatória").max(100),
-  cpf: z.string()
-    .min(1, "CPF é obrigatório")
-    .refine((v) => {
-      if (isMasked(v)) return true;
-      return v.length === 14 && REGEX_PATTERNS.cpf.test(v);
-    }, "CPF deve ter 11 dígitos no formato 000.000.000-00"),
+// Schema unificado para todos os alunos (brasileiro e estrangeiro)
+const studentSchema = baseStudentSchema.extend({
+  country: z.string().min(2, "País é obrigatório").max(100),
+  state: z.string().min(1, "Estado/Região é obrigatório").max(100),
+  city: z.string().min(1, "Cidade é obrigatória").max(100),
   phone: z.string()
     .min(1, "Telefone é obrigatório")
     .refine(
       (v) => {
-        if (isMasked(v)) return true;
-        return (v.length === 14 || v.length === 15) && REGEX_PATTERNS.phone.test(v);
-      },
-      "Telefone deve ter 10 ou 11 dígitos no formato (00) 00000-0000"
-    ),
-});
-
-// Schema para alunos ESTRANGEIROS (campos opcionais/flexíveis)
-const foreignStudentSchema = baseStudentSchema.extend({
-  state: z.string().min(2, "País é obrigatório").max(100),
-  city: z.string().optional().nullable(),
-  cpf: z.string().optional().nullable(),
-  phone: z.string()
-    .optional()
-    .refine(
-      (v) => {
-        if (!v || v.trim() === "") return true;
-        // Telefone internacional: aceita +, espaços, parênteses, hífens e números
-        // Mínimo 8 dígitos, máximo 20 caracteres totais
         const digitsOnly = v.replace(/\D/g, "");
-        return digitsOnly.length >= 8 && digitsOnly.length <= 15 && v.length <= 20;
+        return digitsOnly.length >= 7 && digitsOnly.length <= 15;
       },
-      "Telefone deve ter entre 8 e 15 dígitos (máximo 20 caracteres)"
+      "Telefone deve ter entre 7 e 15 dígitos"
     ),
 });
 
-type StudentFormData = z.infer<typeof brazilianStudentSchema>;
+type StudentFormData = z.infer<typeof studentSchema>;
 
 interface StudentFormDialogProps {
   open: boolean;
@@ -116,18 +93,29 @@ export function StudentFormDialog({
   isLoading,
   autoTeacherId,
 }: StudentFormDialogProps) {
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
+  const [teacherError, setTeacherError] = useState<string | null>(null);
   const [selectedOrigin, setSelectedOrigin] = useState<StudentOrigin | "">(
     student?.origin || ""
   );
   const [selectedStatus, setSelectedStatus] = useState<StudentStatus>(
     student?.status || "ativo"
   );
+  const [selectedCountry, setSelectedCountry] = useState<string>("Brasil");
   const [selectedState, setSelectedState] = useState<string>(student?.state || "");
   const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
   const [statePopoverOpen, setStatePopoverOpen] = useState(false);
+  const [countryPopoverOpen, setCountryPopoverOpen] = useState(false);
   const [cities, setCities] = useState<BrCityOption[]>([]);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
-  const [isForeignStudent, setIsForeignStudent] = useState(false);
+
+  // Buscar lista de professores
+  const { data: teachers = [], isLoading: loadingTeachers } = useTeachers();
+  const activeTeachers = teachers.filter((t) => t.status === "ativo");
+
+  // Detecta se Brasil foi selecionado (para mostrar inputs do IBGE)
+  const isBrazilSelected = selectedCountry.toLowerCase() === "brasil" || 
+    selectedCountry.toLowerCase() === "brazil";
 
   const {
     register,
@@ -137,14 +125,12 @@ export function StudentFormDialog({
     watch,
     formState: { errors },
   } = useForm<StudentFormData>({
-    resolver: zodResolver(isForeignStudent ? foreignStudentSchema : brazilianStudentSchema),
+    resolver: zodResolver(studentSchema),
     defaultValues: {
       name: student?.name || "",
+      country: student?.country || "Brasil",
       state: student?.state || "",
       city: student?.city || "",
-      cpf: student?.cpf && !isMasked(student.cpf)
-        ? (student.cpf.includes(".") ? student.cpf : maskCPF(student.cpf))
-        : "",
       phone: student?.phone
         ? (isMasked(student.phone) ? student.phone : student.phone.includes("(") ? student.phone : maskPhone(student.phone))
         : "",
@@ -173,9 +159,9 @@ export function StudentFormDialog({
     if (!open) {
       reset({
         name: "",
+        country: "Brasil",
         state: "",
         city: "",
-        cpf: "",
         phone: "",
         email: "",
         hourly_rate: "",
@@ -186,24 +172,24 @@ export function StudentFormDialog({
       });
       setSelectedOrigin("");
       setSelectedStatus("ativo");
+      setSelectedCountry("Brasil");
       setSelectedState("");
+      setSelectedTeacherId(autoTeacherId || "");
+      setTeacherError(null);
+      setValue("country", "Brasil", { shouldValidate: false });
       return;
     }
 
     if (student) {
-      const formattedCPF =
-        student.cpf && !isMasked(student.cpf)
-          ? (student.cpf.includes(".") ? student.cpf : maskCPF(student.cpf))
-          : "";
       const formattedPhone = student.phone
         ? (isMasked(student.phone) ? student.phone : student.phone.includes("(") ? student.phone : maskPhone(student.phone))
         : "";
 
       reset({
         name: student.name,
+        country: student.country || "Brasil",
         state: student.state || "",
         city: student.city || "",
-        cpf: formattedCPF,
         phone: formattedPhone,
         email: student.email || "",
         hourly_rate: student.hourly_rate
@@ -218,13 +204,16 @@ export function StudentFormDialog({
       });
       setSelectedOrigin(student.origin || "");
       setSelectedStatus(student.status || "ativo");
+      setSelectedCountry(student.country || "Brasil");
       setSelectedState(student.state || "");
+      setSelectedTeacherId(student.teacher_id || "");
+      setValue("country", student.country || "Brasil", { shouldValidate: false });
     } else {
       reset({
         name: "",
+        country: "Brasil",
         state: "",
         city: "",
-        cpf: "",
         phone: "",
         email: "",
         hourly_rate: "",
@@ -235,51 +224,71 @@ export function StudentFormDialog({
       });
       setSelectedOrigin("");
       setSelectedStatus("ativo");
+      setSelectedCountry("Brasil");
       setSelectedState("");
+      setSelectedTeacherId(autoTeacherId || "");
+      setTeacherError(null);
+      setValue("country", "Brasil", { shouldValidate: false });
     }
-  }, [student, open, reset]);
+  }, [student, open, reset, setValue, autoTeacherId]);
 
   useEffect(() => {
-    const loadCities = async () => {
-      if (!selectedState) {
-        setCities([]);
-        return;
-      }
+    if (isBrazilSelected) {
+      const loadCities = async () => {
+        if (!selectedState || selectedState.length !== 2) {
+          setCities([]);
+          return;
+        }
 
-      setIsLoadingCities(true);
-      const result = await fetchIbgeCitiesByUf(selectedState as BrStateCode);
-      setCities(result);
-      setIsLoadingCities(false);
-    };
+        setIsLoadingCities(true);
+        const result = await fetchIbgeCitiesByUf(selectedState as BrStateCode);
+        setCities(result);
+        setIsLoadingCities(false);
+      };
 
-    void loadCities();
-  }, [selectedState]);
+      void loadCities();
+    } else {
+      setCities([]);
+    }
+  }, [selectedState, isBrazilSelected]);
 
 
 
   const handleFormSubmit = (data: StudentFormData) => {
+    // Validar professor selecionado apenas ao criar novo aluno
+    if (!student && !selectedTeacherId) {
+      setTeacherError("Selecione um professor");
+      return;
+    }
+    setTeacherError(null);
+
     const hourlyRateNumber = data.hourly_rate
       ? parseFloat(data.hourly_rate.replace(/[^.\d,]/g, "").replace(",", "."))
       : null;
 
     const payDayNumber = data.pay_day ? Number(data.pay_day) : null;
 
-    const omitCpfOnEdit = student && (data.cpf.trim() === "" || !!autoTeacherId);
     const omitPhoneOnEdit = student && data.phone.trim() === "";
+
+    // Para Brasil: remove máscara e salva apenas dígitos (DDD + número)
+    // Para outros países: salva exatamente como digitado (com DDI)
+    const normalizedPhone = data.phone 
+      ? (isBrazilSelected ? data.phone.replace(/\D/g, "") : data.phone.trim())
+      : null;
 
     const submitData: StudentInsert = {
       name: data.name,
-      state: isForeignStudent ? data.state : (selectedState || null),
+      country: selectedCountry,
+      state: isBrazilSelected ? (selectedState || null) : (data.state || null),
       city: data.city || null,
-      ...(omitCpfOnEdit ? {} : { cpf: data.cpf }),
-      ...(omitPhoneOnEdit ? {} : { phone: data.phone }),
+      ...(omitPhoneOnEdit ? {} : { phone: normalizedPhone || null }),
       email: data.email,
       origin: selectedOrigin as StudentOrigin,
       status: selectedStatus,
       birth_date: data.birth_date ? brDateToIso(data.birth_date) : null,
       hourly_rate: hourlyRateNumber,
       pay_day: payDayNumber,
-      teacher_id: (autoTeacherId && !student) ? autoTeacherId : null,
+      teacher_id: !student ? selectedTeacherId : undefined,
     };
 
     onSubmit(submitData);
@@ -294,6 +303,35 @@ export function StudentFormDialog({
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
           <div className="grid gap-4 sm:grid-cols-2">
+            {/* Seletor de Professor - apenas ao criar novo aluno */}
+            {!student && (
+              <div className="sm:col-span-2 space-y-2">
+                <Label htmlFor="teacher">Professor *</Label>
+                <Select
+                  value={selectedTeacherId}
+                  onValueChange={(value) => {
+                    setSelectedTeacherId(value);
+                    setTeacherError(null);
+                  }}
+                  disabled={isLoading || loadingTeachers || !!autoTeacherId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um professor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeTeachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {teacherError && (
+                  <p className="text-sm text-destructive">{teacherError}</p>
+                )}
+              </div>
+            )}
+
             <div className="sm:col-span-2 space-y-2">
               <Label htmlFor="name">Nome completo *</Label>
               <Input
@@ -307,222 +345,195 @@ export function StudentFormDialog({
               )}
             </div>
 
-            <div className="sm:col-span-2 space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <Checkbox
-                  id="foreign-student"
-                  checked={isForeignStudent}
-                  disabled={isLoading}
-                  onCheckedChange={(checked) => {
-                    setIsForeignStudent(!!checked);
-                    if (checked) {
-                      // Limpar apenas campos específicos do Brasil
-                      setSelectedState("");
-                      setValue("city", "", { shouldValidate: false });
-                      setValue("cpf", "", { shouldValidate: false });
-                      setValue("phone", "", { shouldValidate: false });
-                      // NÃO limpar state - usuário vai selecionar o país
-                    } else {
-                      // Limpar campos internacionais
-                      setValue("state", "", { shouldValidate: false });
-                      setValue("city", "", { shouldValidate: false });
-                      setValue("phone", "", { shouldValidate: false });
-                    }
-                  }}
-                />
-                <Label 
-                  htmlFor="foreign-student" 
-                  className={isLoading ? "cursor-default text-muted-foreground" : "cursor-pointer"}
-                >
-                  Aluno estrangeiro (não brasileiro)
-                </Label>
-              </div>
-
-              {!isForeignStudent ? (
-                <>
-                  <Label>Estado e cidade (Brasil)</Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Estado (UF)</Label>
-                      <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            role="combobox"
-                            className="w-full min-w-0 justify-between"
-                            disabled={isLoading}
+            {/* País */}
+            <div className="space-y-2">
+              <Label htmlFor="country">País *</Label>
+              <Popover open={countryPopoverOpen} onOpenChange={setCountryPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={countryPopoverOpen}
+                    className={cn(
+                      "w-full justify-between font-normal",
+                      !selectedCountry && "text-muted-foreground"
+                    )}
+                    disabled={isLoading}
+                  >
+                    <span className="min-w-0 truncate">
+                      {selectedCountry || "Selecione o país"}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar país..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhum país encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {COMMON_COUNTRIES.map((country) => (
+                          <CommandItem
+                            key={country.code}
+                            value={country.name}
+                            onSelect={() => {
+                              setSelectedCountry(country.name);
+                              setValue("country", country.name, { shouldValidate: true });
+                              setSelectedState("");
+                              setValue("state", "", { shouldValidate: false });
+                              setValue("city", "", { shouldValidate: false });
+                              setCountryPopoverOpen(false);
+                            }}
                           >
-                            <span className="min-w-0 truncate">
-                              {(() => {
-                                const current = BR_STATES.find((st) => st.code === selectedState);
-                                if (current) return `${current.code} - ${current.name}`;
-                                return "Selecione UF";
-                              })()}
-                            </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[260px] p-0">
-                          <Command>
-                            <CommandInput placeholder="Buscar estado ou UF..." />
-                            <CommandList>
-                              <CommandEmpty>Nenhum estado encontrado.</CommandEmpty>
-                              <CommandGroup>
-                                {BR_STATES.map((st) => (
-                                  <CommandItem
-                                    key={st.code}
-                                    value={`${st.code} ${st.name}`}
-                                    onSelect={() => {
-                                      setSelectedState(st.code);
-                                      setValue("state", st.code, { shouldValidate: true });
-                                      setValue("city", "", { shouldValidate: true });
-                                      setStatePopoverOpen(false);
-                                    }}
-                                  >
-                                    <span className="mr-2 font-mono text-xs">{st.code}</span>
-                                    <span>{st.name}</span>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="sm:col-span-2 space-y-1">
-                      <Label className="text-xs text-muted-foreground">Cidade</Label>
-                      <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            role="combobox"
-                            className="w-full min-w-0 justify-between"
-                            disabled={!selectedState || isLoading || isLoadingCities}
-                          >
-                            <span className="min-w-0 truncate">
-                              {(() => {
-                                const cityValue = watchedCity;
-                                const current = cities.find((c) => c.value === cityValue);
-                                if (current) return current.label;
-                                if (cityValue) return cityValue;
-                                if (isLoadingCities) return "Carregando cidades...";
-                                return selectedState
-                                  ? "Selecione a cidade"
-                                  : "Selecione uma UF primeiro";
-                              })()}
-                            </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[280px] p-0">
-                          <Command>
-                            <CommandInput placeholder="Buscar cidade..." />
-                            <CommandList>
-                              <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
-                              <CommandGroup>
-                                {cities.map((city) => (
-                                  <CommandItem
-                                    key={city.value}
-                                    value={city.label}
-                                    onSelect={() => {
-                                      setValue("city", city.value, { shouldValidate: true });
-                                      setCityPopoverOpen(false);
-                                    }}
-                                  >
-                                    {city.label}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Label>Localização (Internacional)</Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">País</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            role="combobox"
-                            className="w-full min-w-0 justify-between"
-                            disabled={isLoading}
-                          >
-                            <span className="min-w-0 truncate">
-                              {watchedState || "Selecione o país"}
-                            </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[280px] p-0">
-                          <Command>
-                            <CommandInput placeholder="Buscar país..." />
-                            <CommandList>
-                              <CommandEmpty>Nenhum país encontrado.</CommandEmpty>
-                              <CommandGroup>
-                                {COMMON_COUNTRIES.map((country) => (
-                                  <CommandItem
-                                    key={country.code}
-                                    value={`${country.name} ${country.nameEn}`}
-                                    onSelect={() => {
-                                      setValue("state", country.name, { shouldValidate: true });
-                                    }}
-                                  >
-                                    <span className="mr-2 text-xs opacity-50">{country.code}</span>
-                                    <span>{country.name}</span>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Cidade</Label>
-                      <Input
-                        placeholder="Ex: New York, Toronto, Lisboa"
-                        {...register("city")}
-                        disabled={isLoading}
-                        maxLength={100}
-                      />
-                    </div>
-                  </div>
-                </>
+                            {country.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {errors.country && (
+                <p className="text-sm text-destructive">{errors.country.message}</p>
               )}
             </div>
 
-            {!isForeignStudent && (
+            {/* Estado - IBGE para Brasil, texto livre para outros */}
+            {isBrazilSelected ? (
               <div className="space-y-2">
-                <Label htmlFor="cpf">CPF</Label>
+                <Label htmlFor="state">Estado (UF) *</Label>
+                <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-full min-w-0 justify-between",
+                        errors.state && "border-destructive"
+                      )}
+                      disabled={isLoading}
+                    >
+                      <span className="min-w-0 truncate">
+                        {BR_STATES.find(s => s.code === selectedState)?.name || "Selecione o estado"}
+                      </span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar estado..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhum estado encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          {BR_STATES.map((state) => (
+                            <CommandItem
+                              key={state.code}
+                              value={`${state.name} ${state.code}`}
+                              onSelect={() => {
+                                setSelectedState(state.code);
+                                setValue("state", state.code, { shouldValidate: true });
+                                setValue("city", "", { shouldValidate: false });
+                                setStatePopoverOpen(false);
+                              }}
+                            >
+                              <span className="mr-2 text-xs opacity-50">{state.code}</span>
+                              <span>{state.name}</span>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {errors.state && (
+                  <p className="text-sm text-destructive">{errors.state.message}</p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="state">Estado/Região *</Label>
                 <Input
-                  id="cpf"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={14}
-                  placeholder={
-                    autoTeacherId && student && isMasked(student.cpf)
-                      ? student.cpf
-                      : "000.000.000-00"
-                  }
-                  {...register("cpf")}
-                  onChange={(e) => {
-                    const masked = maskCPF(e.target.value);
-                    setValue("cpf", masked, { shouldValidate: true });
-                  }}
-                  disabled={isLoading || (!!autoTeacherId && !!student)}
+                  id="state"
+                  placeholder="Ex: California, Ontario"
+                  {...register("state")}
+                  disabled={isLoading}
                 />
-                {errors.cpf && (
-                  <p className="text-sm text-destructive">{errors.cpf.message}</p>
+                {errors.state && (
+                  <p className="text-sm text-destructive">{errors.state.message}</p>
+                )}
+              </div>
+            )}
+
+            {/* Cidade - IBGE para Brasil, texto livre para outros */}
+            {isBrazilSelected ? (
+              <div className="space-y-2">
+                <Label htmlFor="city">Cidade *</Label>
+                <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-full min-w-0 justify-between",
+                        errors.city && "border-destructive"
+                      )}
+                      disabled={!selectedState || isLoading || isLoadingCities}
+                    >
+                      <span className="min-w-0 truncate">
+                        {(() => {
+                          const cityValue = watchedCity;
+                          const current = cities.find((c) => c.value === cityValue);
+                          if (current) return current.label;
+                          if (cityValue) return cityValue;
+                          if (isLoadingCities) return "Carregando cidades...";
+                          return selectedState
+                            ? "Selecione a cidade"
+                            : "Selecione uma UF primeiro";
+                        })()}
+                      </span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar cidade..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
+                        <CommandGroup>
+                          {cities.map((city) => (
+                            <CommandItem
+                              key={city.value}
+                              value={city.label}
+                              onSelect={() => {
+                                setValue("city", city.value, { shouldValidate: true });
+                                setCityPopoverOpen(false);
+                              }}
+                            >
+                              {city.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {errors.city && (
+                  <p className="text-sm text-destructive">{errors.city.message}</p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="city">Cidade *</Label>
+                <Input
+                  id="city"
+                  placeholder="Ex: Londres, Paris, Nova York"
+                  {...register("city")}
+                  disabled={isLoading}
+                />
+                {errors.city && (
+                  <p className="text-sm text-destructive">{errors.city.message}</p>
                 )}
               </div>
             )}
@@ -599,21 +610,20 @@ export function StudentFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
+              <Label htmlFor="phone">Telefone *</Label>
               <Input
                 id="phone"
                 type="text"
-                inputMode={isForeignStudent ? "text" : "numeric"}
-                placeholder={isForeignStudent ? "Ex: +1 (555) 123-4567" : "(00) 00000-0000"}
+                inputMode={isBrazilSelected ? "numeric" : "text"}
+                placeholder={isBrazilSelected ? "(00) 00000-0000" : "Ex: 555 123 4567"}
                 {...register("phone")}
                 onChange={(e) => {
-                  if (!isForeignStudent) {
+                  if (isBrazilSelected) {
                     const masked = maskPhone(e.target.value);
                     setValue("phone", masked, { shouldValidate: true });
                   } else {
-                    // Telefone internacional livre, apenas limita tamanho
-                    const value = e.target.value.slice(0, 20);
-                    setValue("phone", value, { shouldValidate: true });
+                    // Telefone internacional: usuário digita APENAS o número local (sem DDI)
+                    setValue("phone", e.target.value, { shouldValidate: true });
                   }
                 }}
                 disabled={isLoading}
@@ -688,24 +698,6 @@ export function StudentFormDialog({
               )}
             </div>
 
-            {student && (
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select
-                  value={selectedStatus}
-                  onValueChange={setSelectedStatus}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
           </div>
 
           <div className="flex justify-end gap-4 pt-4">

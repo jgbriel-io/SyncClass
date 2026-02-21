@@ -202,14 +202,13 @@ export function StudentsListView({
         if (birthMonth !== currentMonth) return false;
       }
 
-      // Busca por texto com dígitos (CPF/telefone - não está no banco)
+      // Busca por texto com dígitos (telefone)
       const searchLower = filters.search.toLowerCase().trim();
       const searchDigits = searchLower.replace(/\D/g, "");
       const matchesSearch =
         !searchLower ||
         (student.name || "").toLowerCase().includes(searchLower) ||
         (student.email || "").toLowerCase().includes(searchLower) ||
-        (student.cpf || "").replace(/\D/g, "").includes(searchDigits) ||
         (student.phone || "").replace(/\D/g, "").includes(searchDigits);
 
       if (!matchesSearch) return false;

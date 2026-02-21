@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Loader2 } from "lucide-react";
 import { Teacher, TeacherInsert } from "@/hooks/useTeachers";
-import { REGEX_PATTERNS, maskCPF } from "@/lib/utils/patterns";
+import { REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { emailSchema } from "@/lib/validation/email";
 
 const teacherSchema = z.object({
@@ -22,15 +22,6 @@ const teacherSchema = z.object({
       return (val.length === 14 || val.length === 15) && REGEX_PATTERNS.phone.test(val);
     }, {
       message: "Telefone deve ter 10 ou 11 dígitos no formato (00) 00000-0000",
-    }),
-  cpf: z
-    .string()
-    .optional()
-    .refine((val) => {
-      if (!val || val.trim() === "") return true;
-      return val.length === 14 && REGEX_PATTERNS.cpf.test(val);
-    }, {
-      message: "CPF deve ter 11 dígitos no formato 000.000.000-00",
     }),
 });
 
@@ -63,11 +54,6 @@ export function TeacherFormDialog({
       name: teacher?.name || "",
       email: teacher?.email || "",
       phone: teacher?.phone || "",
-      cpf: teacher?.cpf
-        ? teacher.cpf.includes(".")
-          ? teacher.cpf
-          : maskCPF(teacher.cpf)
-        : "",
     },
   });
 
@@ -79,29 +65,24 @@ export function TeacherFormDialog({
         name: teacher.name || "",
         email: teacher.email || "",
         phone: teacher.phone || "",
-        cpf: teacher.cpf
-          ? teacher.cpf.includes(".")
-            ? teacher.cpf
-            : maskCPF(teacher.cpf)
-          : "",
       });
     } else {
       reset({
         name: "",
         email: "",
         phone: "",
-        cpf: "",
       });
     }
   }, [open, teacher, reset]);
 
   const handleFormSubmit = (data: TeacherFormData) => {
-    // Normaliza campos opcionais vazios para undefined
+    // Normalizar telefone (apenas dígitos)
+    const normalizedPhone = data.phone ? data.phone.replace(/\D/g, "") : undefined;
+
     const payload: TeacherInsert = {
       name: data.name,
       email: data.email,
-      phone: data.phone || undefined,
-      cpf: data.cpf || undefined,
+      phone: normalizedPhone,
     } as TeacherInsert;
 
     onSubmit(payload);
@@ -141,7 +122,7 @@ export function TeacherFormDialog({
               )}
             </div>
 
-            <div className="sm:col-span-2 space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
@@ -154,6 +135,7 @@ export function TeacherFormDialog({
                 <p className="text-sm text-destructive">{errors.email.message}</p>
               )}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
               <Input
@@ -168,26 +150,6 @@ export function TeacherFormDialog({
               />
               {typeof errors.phone?.message === "string" && (
                 <p className="text-sm text-destructive">{errors.phone.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cpf">CPF</Label>
-              <Input
-                id="cpf"
-                type="text"
-                inputMode="numeric"
-                maxLength={14}
-                placeholder="000.000.000-00"
-                disabled={isLoading}
-                {...register("cpf")}
-                onChange={(e) => {
-                  const masked = maskCPF(e.target.value);
-                  setValue("cpf", masked, { shouldValidate: true });
-                }}
-              />
-              {typeof errors.cpf?.message === "string" && (
-                <p className="text-sm text-destructive">{errors.cpf.message}</p>
               )}
             </div>
           </div>

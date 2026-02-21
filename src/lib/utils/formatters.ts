@@ -60,16 +60,7 @@ export function formatDateTime(dateString: string | Date): string {
   }).format(date);
 }
 
-/**
- * Formata um CPF (000.000.000-00)
- * @param cpf - String com 11 dígitos
- * @returns String formatada (ex: "123.456.789-00")
- */
-export function formatCPF(cpf: string): string {
-  const cleaned = cpf.replace(/\D/g, "");
-  if (cleaned.length !== 11) return cpf;
-  return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-}
+
 
 /**
  * Formata um telefone brasileiro

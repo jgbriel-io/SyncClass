@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
+import { formatPhoneDisplay } from "@/lib/utils/format-phone";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -307,15 +308,6 @@ export function StudentDetailSheet({
                           <div className="space-y-3">
                             <div className="flex items-center gap-4">
                               <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                                <User className="h-4 w-4 text-muted-foreground" />
-                              </div>
-                              <div>
-                                <p className="text-xs text-muted-foreground">CPF</p>
-                                <p className="text-sm font-medium">{student.cpf || "—"}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                                 <Mail className="h-4 w-4 text-muted-foreground" />
                               </div>
                               <div>
@@ -329,7 +321,7 @@ export function StudentDetailSheet({
                               </div>
                               <div>
                                 <p className="text-xs text-muted-foreground">Telefone</p>
-                                <p className="text-sm font-medium">{student.phone || "—"}</p>
+                                <p className="text-sm font-medium">{formatPhoneDisplay(student.phone, student.country) || "—"}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-4">
@@ -357,12 +349,15 @@ export function StudentDetailSheet({
                             </div>
                             <div>
                               <p className="text-xs text-muted-foreground">
-                                {state && state.length === 2 ? "Cidade / UF" : "Cidade / País"}
+                                País - Estado - Cidade
                               </p>
                               <p className="text-sm font-medium">
-                                {city || state
-                                  ? `${city || "—"}${state ? ` - ${state}` : ""}`
-                                  : "—"}
+                                {(() => {
+                                  const country = student.country || "—";
+                                  const stateValue = state || "—";
+                                  const cityValue = city || "—";
+                                  return `${country} - ${stateValue} - ${cityValue}`;
+                                })()}
                               </p>
                             </div>
                           </div>

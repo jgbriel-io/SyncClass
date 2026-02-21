@@ -47,14 +47,13 @@ export function isAllowedEmailDomain(email: string): boolean {
   return domain.length > 0 && ALLOWED_EMAIL_DOMAINS.includes(domain as (typeof ALLOWED_EMAIL_DOMAINS)[number]);
 }
 
-/** Schema de email: formato válido + domínio permitido (Gmail, Outlook, etc.). */
+/** Schema de email: formato válido (aceita qualquer domínio). */
 export const emailSchema = z
   .string()
   .min(1, "Email é obrigatório")
   .max(255, "Email muito longo")
   .email("Email inválido")
-  .refine((v) => REGEX_PATTERNS.email.test(v.trim()), "Email inválido")
-  .refine((v) => isAllowedEmailDomain(v), "Use um email de provedor real (Gmail, Outlook, Yahoo, etc.)");
+  .refine((v) => REGEX_PATTERNS.email.test(v.trim()), "Email inválido");
 
 /** Normaliza email para envio (trim + lowercase). */
 export function normalizeEmail(value: string): string {
