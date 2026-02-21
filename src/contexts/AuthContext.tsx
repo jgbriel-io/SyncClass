@@ -10,9 +10,11 @@ interface AuthContextType {
   session: Session | null;
   role: UserRole;
   isLoading: boolean;
+  mustChangePassword: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  onPasswordChanged: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<UserRole>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
 
   const fetchUserRole = async (userId: string): Promise<UserRole> => {
     try {
@@ -35,11 +38,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("role, teacher_id")
+        .select("role, teacher_id, must_change_password")
         .eq("user_id", userId)
         .maybeSingle();
 
       if (!profileError && profileData) {
+        // Atualizar flag de troca de senha
+        setMustChangePassword(profileData.must_change_password === true);
+        
         const r = profileData.role as string;
         if (r === "admin" || r === "student" || r === "teacher") return r as UserRole;
         if (profileData.teacher_id) return "teacher";
@@ -239,6 +245,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setRole(null);
+    setMustChangePassword(false);
+  };
+
+  const onPasswordChanged = () => {
+    setMustChangePassword(false);
   };
 
   return (
@@ -248,9 +259,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         role,
         isLoading,
+        mustChangePassword,
         signIn,
         signUp,
         signOut,
+        onPasswordChanged,
       }}
     >
       {children}
