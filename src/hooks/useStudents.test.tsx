@@ -63,7 +63,7 @@ describe('useStudents', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(supabase.from).toHaveBeenCalledWith('students_active_masked');
+      expect(supabase.from).toHaveBeenCalledWith('students_masked');
       expect(mockSelect).toHaveBeenCalledWith('*');
       expect(mockOrder).toHaveBeenCalledWith('created_at', { ascending: false });
       expect(result.current.data).toEqual(mockStudents);

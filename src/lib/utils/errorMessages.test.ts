@@ -6,10 +6,10 @@ import { sanitizeErrorMessage, isNetworkError, isPermissionError } from './error
 
 describe('sanitizeErrorMessage', () => {
   it('deve sanitizar erro de duplicate key', () => {
-    const error = new Error('duplicate key value violates unique constraint "students_cpf_key"');
+    const error = new Error('duplicate key value violates unique constraint "students_phone_key"');
     const message = sanitizeErrorMessage(error);
     expect(message).toBe('Este registro já existe no sistema');
-    expect(message).not.toContain('students_cpf_key');
+    expect(message).not.toContain('students_phone_key');
   });
 
   it('deve sanitizar erro de not null', () => {
