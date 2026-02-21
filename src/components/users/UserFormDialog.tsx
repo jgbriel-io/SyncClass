@@ -30,6 +30,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useTeachers } from "@/hooks/useTeachers";
 
 type AppRole = Enums<"app_role">;
 type StudentOrigin = Enums<"student_origin">;
@@ -143,7 +144,6 @@ interface StudentSubmitData {
     country: string;
     state: string | null;
     city: string | null;
-    cpf: string | null;
     phone: string | null;
     email: string;
     origin: StudentOrigin;
@@ -151,6 +151,7 @@ interface StudentSubmitData {
     birth_date: string | null;
     hourly_rate: number | null;
     pay_day: number | null;
+    teacher_id: string;
   };
 }
 
@@ -187,6 +188,8 @@ export function UserFormDialog({
   );
 
   // States para student
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
+  const [teacherError, setTeacherError] = useState<string | null>(null);
   const [selectedOrigin, setSelectedOrigin] = useState<StudentOrigin | "">("");
   const [selectedStatus, setSelectedStatus] = useState<StudentStatus>("ativo");
   const [selectedCountry, setSelectedCountry] = useState<string>("Brasil");
@@ -196,6 +199,10 @@ export function UserFormDialog({
   const [countryPopoverOpen, setCountryPopoverOpen] = useState(false);
   const [cities, setCities] = useState<BrCityOption[]>([]);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
+
+  // Buscar lista de professores
+  const { data: teachers = [], isLoading: loadingTeachers } = useTeachers();
+  const activeTeachers = teachers.filter((t) => t.status === "ativo");
 
   // Detecta se Brasil foi selecionado (para mostrar inputs do IBGE)
   const isBrazilSelected = selectedCountry.toLowerCase() === "brasil" || 
@@ -389,6 +396,13 @@ export function UserFormDialog({
         role: "admin",
       });
     } else if (selectedRole === "student" && "name" in data) {
+      // Validar professor selecionado
+      if (!selectedTeacherId) {
+        setTeacherError("Selecione um professor");
+        return;
+      }
+      setTeacherError(null);
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const studentData = data as any;
       const hourlyRateNumber = studentData.hourly_rate
@@ -421,6 +435,7 @@ export function UserFormDialog({
           birth_date: studentData.birth_date ? brDateToIso(studentData.birth_date) : null,
           hourly_rate: hourlyRateNumber,
           pay_day: payDayNumber,
+          teacher_id: selectedTeacherId, // Adiciona o professor selecionado
         },
       });
     } else if (selectedRole === "teacher" && "name" in data) {
@@ -516,6 +531,33 @@ export function UserFormDialog({
           {/* Formulário STUDENT - Unificado */}
           {selectedRole === "student" && (
             <div className="grid gap-4 sm:grid-cols-2">
+              {/* Seletor de Professor */}
+              <div className="sm:col-span-2 space-y-2">
+                <Label htmlFor="teacher">Professor *</Label>
+                <Select
+                  value={selectedTeacherId}
+                  onValueChange={(value) => {
+                    setSelectedTeacherId(value);
+                    setTeacherError(null);
+                  }}
+                  disabled={isLoading || loadingTeachers}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um professor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeTeachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {teacherError && (
+                  <p className="text-sm text-destructive">{teacherError}</p>
+                )}
+              </div>
+
               <div className="sm:col-span-2 space-y-2">
                 <Label htmlFor="name">Nome completo *</Label>
                 <Input

@@ -30,6 +30,7 @@ import { useDateMask } from "@/hooks/useDateMask";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { emailSchema } from "@/lib/validation/email";
+import { useTeachers } from "@/hooks/useTeachers";
 
 // Type for student origin from database enum
 type StudentOrigin = Enums<"student_origin">;
@@ -92,6 +93,8 @@ export function StudentFormDialog({
   isLoading,
   autoTeacherId,
 }: StudentFormDialogProps) {
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
+  const [teacherError, setTeacherError] = useState<string | null>(null);
   const [selectedOrigin, setSelectedOrigin] = useState<StudentOrigin | "">(
     student?.origin || ""
   );
@@ -105,6 +108,10 @@ export function StudentFormDialog({
   const [countryPopoverOpen, setCountryPopoverOpen] = useState(false);
   const [cities, setCities] = useState<BrCityOption[]>([]);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
+
+  // Buscar lista de professores
+  const { data: teachers = [], isLoading: loadingTeachers } = useTeachers();
+  const activeTeachers = teachers.filter((t) => t.status === "ativo");
 
   // Detecta se Brasil foi selecionado (para mostrar inputs do IBGE)
   const isBrazilSelected = selectedCountry.toLowerCase() === "brasil" || 
@@ -167,6 +174,8 @@ export function StudentFormDialog({
       setSelectedStatus("ativo");
       setSelectedCountry("Brasil");
       setSelectedState("");
+      setSelectedTeacherId(autoTeacherId || "");
+      setTeacherError(null);
       setValue("country", "Brasil", { shouldValidate: false });
       return;
     }
@@ -197,6 +206,7 @@ export function StudentFormDialog({
       setSelectedStatus(student.status || "ativo");
       setSelectedCountry(student.country || "Brasil");
       setSelectedState(student.state || "");
+      setSelectedTeacherId(student.teacher_id || "");
       setValue("country", student.country || "Brasil", { shouldValidate: false });
     } else {
       reset({
@@ -216,9 +226,11 @@ export function StudentFormDialog({
       setSelectedStatus("ativo");
       setSelectedCountry("Brasil");
       setSelectedState("");
+      setSelectedTeacherId(autoTeacherId || "");
+      setTeacherError(null);
       setValue("country", "Brasil", { shouldValidate: false });
     }
-  }, [student, open, reset, setValue]);
+  }, [student, open, reset, setValue, autoTeacherId]);
 
   useEffect(() => {
     if (isBrazilSelected) {
@@ -243,6 +255,13 @@ export function StudentFormDialog({
 
 
   const handleFormSubmit = (data: StudentFormData) => {
+    // Validar professor selecionado apenas ao criar novo aluno
+    if (!student && !selectedTeacherId) {
+      setTeacherError("Selecione um professor");
+      return;
+    }
+    setTeacherError(null);
+
     const hourlyRateNumber = data.hourly_rate
       ? parseFloat(data.hourly_rate.replace(/[^.\d,]/g, "").replace(",", "."))
       : null;
@@ -269,7 +288,7 @@ export function StudentFormDialog({
       birth_date: data.birth_date ? brDateToIso(data.birth_date) : null,
       hourly_rate: hourlyRateNumber,
       pay_day: payDayNumber,
-      teacher_id: (autoTeacherId && !student) ? autoTeacherId : null,
+      teacher_id: !student ? selectedTeacherId : undefined,
     };
 
     onSubmit(submitData);
@@ -284,6 +303,35 @@ export function StudentFormDialog({
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
           <div className="grid gap-4 sm:grid-cols-2">
+            {/* Seletor de Professor - apenas ao criar novo aluno */}
+            {!student && (
+              <div className="sm:col-span-2 space-y-2">
+                <Label htmlFor="teacher">Professor *</Label>
+                <Select
+                  value={selectedTeacherId}
+                  onValueChange={(value) => {
+                    setSelectedTeacherId(value);
+                    setTeacherError(null);
+                  }}
+                  disabled={isLoading || loadingTeachers || !!autoTeacherId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um professor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeTeachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {teacherError && (
+                  <p className="text-sm text-destructive">{teacherError}</p>
+                )}
+              </div>
+            )}
+
             <div className="sm:col-span-2 space-y-2">
               <Label htmlFor="name">Nome completo *</Label>
               <Input
