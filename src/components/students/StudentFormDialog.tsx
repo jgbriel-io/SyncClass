@@ -31,6 +31,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { emailSchema } from "@/lib/validation/email";
 import { useTeachers } from "@/hooks/useTeachers";
+import { GAP, STACK, ICON_SIZES } from "@/lib/design-tokens";
 
 // Type for student origin from database enum
 type StudentOrigin = Enums<"student_origin">;
@@ -46,7 +47,17 @@ const baseStudentSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
   email: emailSchema,
   hourly_rate: z.string().optional().nullable(),
-  pay_day: z.string().optional().nullable(),
+  pay_day: z.string()
+    .optional()
+    .nullable()
+    .refine(
+      (val) => {
+        if (!val) return true; // Permite vazio
+        const num = Number(val);
+        return !isNaN(num) && num >= 1 && num <= 31;
+      },
+      { message: "Dia de pagamento deve estar entre 1 e 31" }
+    ),
   origin: z.enum(["indicacao", "google", "instagram", "passante", "outro"]),
   status: z.enum(["ativo", "inativo"]).optional(),
   birth_date: z
@@ -301,11 +312,11 @@ export function StudentFormDialog({
       title={student ? "Editar Aluno" : "Cadastrar Novo Aluno"}
       size="MD"
     >
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className={STACK.DEFAULT}>
+          <div className={`grid ${GAP.DEFAULT} sm:grid-cols-2`}>
             {/* Seletor de Professor - apenas ao criar novo aluno */}
             {!student && (
-              <div className="sm:col-span-2 space-y-2">
+              <div className={`sm:col-span-2 ${STACK.TIGHT}`}>
                 <Label htmlFor="teacher">Professor *</Label>
                 <Select
                   value={selectedTeacherId}
@@ -332,7 +343,7 @@ export function StudentFormDialog({
               </div>
             )}
 
-            <div className="sm:col-span-2 space-y-2">
+            <div className={`sm:col-span-2 ${STACK.TIGHT}`}>
               <Label htmlFor="name">Nome completo *</Label>
               <Input
                 id="name"
@@ -346,7 +357,7 @@ export function StudentFormDialog({
             </div>
 
             {/* País */}
-            <div className="space-y-2">
+            <div className={STACK.TIGHT}>
               <Label htmlFor="country">País *</Label>
               <Popover open={countryPopoverOpen} onOpenChange={setCountryPopoverOpen}>
                 <PopoverTrigger asChild>
@@ -363,7 +374,7 @@ export function StudentFormDialog({
                     <span className="min-w-0 truncate">
                       {selectedCountry || "Selecione o país"}
                     </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    <ChevronsUpDown className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`} />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0" align="start">
@@ -400,7 +411,7 @@ export function StudentFormDialog({
 
             {/* Estado - IBGE para Brasil, texto livre para outros */}
             {isBrazilSelected ? (
-              <div className="space-y-2">
+              <div className={STACK.TIGHT}>
                 <Label htmlFor="state">Estado (UF) *</Label>
                 <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
                   <PopoverTrigger asChild>
@@ -417,7 +428,7 @@ export function StudentFormDialog({
                       <span className="min-w-0 truncate">
                         {BR_STATES.find(s => s.code === selectedState)?.name || "Selecione o estado"}
                       </span>
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      <ChevronsUpDown className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`} />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0" align="start">
@@ -451,7 +462,7 @@ export function StudentFormDialog({
                 )}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className={STACK.TIGHT}>
                 <Label htmlFor="state">Estado/Região *</Label>
                 <Input
                   id="state"
@@ -467,7 +478,7 @@ export function StudentFormDialog({
 
             {/* Cidade - IBGE para Brasil, texto livre para outros */}
             {isBrazilSelected ? (
-              <div className="space-y-2">
+              <div className={STACK.TIGHT}>
                 <Label htmlFor="city">Cidade *</Label>
                 <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
                   <PopoverTrigger asChild>
@@ -493,7 +504,7 @@ export function StudentFormDialog({
                             : "Selecione uma UF primeiro";
                         })()}
                       </span>
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      <ChevronsUpDown className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`} />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0" align="start">
@@ -524,7 +535,7 @@ export function StudentFormDialog({
                 )}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className={STACK.TIGHT}>
                 <Label htmlFor="city">Cidade *</Label>
                 <Input
                   id="city"
@@ -538,9 +549,9 @@ export function StudentFormDialog({
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className={STACK.TIGHT}>
               <Label htmlFor="birth_date">Data de Nascimento</Label>
-              <div className="flex gap-2">
+              <div className={`flex ${GAP.TIGHT}`}>
                 <Input
                   id="birth_date"
                   type="text"
@@ -561,7 +572,7 @@ export function StudentFormDialog({
                       className="shrink-0"
                       disabled={isLoading}
                     >
-                      <CalendarIcon className="h-4 w-4" />
+                      <CalendarIcon className={ICON_SIZES.SM} />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -609,7 +620,7 @@ export function StudentFormDialog({
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className={STACK.TIGHT}>
               <Label htmlFor="phone">Telefone *</Label>
               <Input
                 id="phone"
@@ -633,7 +644,7 @@ export function StudentFormDialog({
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className={STACK.TIGHT}>
               <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
@@ -647,7 +658,7 @@ export function StudentFormDialog({
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className={STACK.TIGHT}>
               <Label htmlFor="hourly_rate">Valor por hora</Label>
               <Input
                 id="hourly_rate_valor"
@@ -658,7 +669,7 @@ export function StudentFormDialog({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className={STACK.TIGHT}>
               <Label htmlFor="pay_day">Dia de pagamento</Label>
               <Input
                 id="pay_day"
@@ -671,7 +682,7 @@ export function StudentFormDialog({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className={STACK.TIGHT}>
               <Label>Origem do Aluno *</Label>
               <Select
                 value={selectedOrigin}
@@ -700,7 +711,7 @@ export function StudentFormDialog({
 
           </div>
 
-          <div className="flex justify-end gap-4 pt-4">
+          <div className={`flex justify-end ${GAP.DEFAULT} pt-4`}>
             <Button
               type="button"
               variant="outline"
@@ -712,7 +723,7 @@ export function StudentFormDialog({
             <Button type="submit" disabled={isLoading || !selectedOrigin}>
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className={`mr-2 ${ICON_SIZES.SM} animate-spin`} />
                   Salvando...
                 </>
               ) : student ? (

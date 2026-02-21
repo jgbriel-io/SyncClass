@@ -94,14 +94,32 @@ describe('useUserMutations', () => {
   });
 
   describe('useDeleteUser', () => {
-    it('deve fazer soft delete do usuário', async () => {
-      const mockUpdate = vi.fn().mockReturnThis();
-      const mockEq = vi.fn().mockResolvedValue({ error: null });
+    it('deve fazer soft delete do usuário preservando vínculos', async () => {
+      const mockProfile = {
+        student_id: 'student-123',
+        teacher_id: null,
+      };
 
-       
-      vi.mocked(supabase.from).mockReturnValue({
-        update: mockUpdate,
+      const mockSelect = vi.fn().mockReturnThis();
+      const mockEq = vi.fn().mockReturnThis();
+      const mockSingle = vi.fn().mockResolvedValue({ 
+        data: mockProfile, 
+        error: null 
+      });
+      const mockUpdate = vi.fn().mockReturnThis();
+      const mockEqUpdate = vi.fn().mockResolvedValue({ error: null });
+
+      // Mock para buscar profile atual
+      vi.mocked(supabase.from).mockReturnValueOnce({
+        select: mockSelect,
         eq: mockEq,
+        single: mockSingle,
+      } as any);
+
+      // Mock para atualizar profile
+      vi.mocked(supabase.from).mockReturnValueOnce({
+        update: mockUpdate,
+        eq: mockEqUpdate,
       } as any);
 
       const { result } = renderHook(() => useDeleteUser(), {
@@ -112,8 +130,12 @@ describe('useUserMutations', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(mockUpdate).toHaveBeenCalledWith({ active: false });
-      expect(mockEq).toHaveBeenCalledWith('user_id', 'user-123');
+      expect(mockUpdate).toHaveBeenCalledWith({ 
+        active: false,
+        student_id: 'student-123',
+        teacher_id: null,
+      });
+      expect(mockEqUpdate).toHaveBeenCalledWith('user_id', 'user-123');
     });
   });
 

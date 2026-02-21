@@ -50,18 +50,21 @@ CREATE TYPE package_financial_input AS (
 CREATE TABLE teachers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
-  cpf TEXT,
+  country VARCHAR(100),
   phone TEXT,
   email TEXT,
   address TEXT,
   hourly_rate NUMERIC(10,2),
   pix_key TEXT,
+  status TEXT DEFAULT 'ativo' CHECK (status IN ('ativo', 'inativo')),
   anonymized_at TIMESTAMPTZ DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 COMMENT ON TABLE teachers IS 'Cadastro de professores';
+COMMENT ON COLUMN teachers.country IS 'País do professor (ex: Brasil, Estados Unidos, Portugal)';
+COMMENT ON COLUMN teachers.status IS 'Status do professor: ativo ou inativo';
 COMMENT ON COLUMN teachers.hourly_rate IS 'Valor da hora/aula padrão do professor';
 COMMENT ON COLUMN teachers.anonymized_at IS 'Data de anonimização dos dados pessoais (LGPD). NULL = dados não anonimizados';
 
@@ -69,7 +72,7 @@ COMMENT ON COLUMN teachers.anonymized_at IS 'Data de anonimização dos dados pe
 CREATE TABLE students (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
-  cpf TEXT,
+  country VARCHAR(100),
   phone TEXT,
   email TEXT,
   pay_day INTEGER CHECK (pay_day >= 1 AND pay_day <= 31),
@@ -87,6 +90,7 @@ CREATE TABLE students (
 );
 
 COMMENT ON TABLE students IS 'Cadastro de alunos';
+COMMENT ON COLUMN students.country IS 'País do aluno (ex: Brasil, Estados Unidos, Portugal)';
 COMMENT ON COLUMN students.pay_day IS 'Dia do mês para vencimento de cobranças (1-31)';
 COMMENT ON COLUMN students.hourly_rate IS 'Valor da hora/aula padrão do aluno';
 COMMENT ON COLUMN students.is_deleted IS 'Soft delete - aluno inativo (deprecated, usar status)';
@@ -107,6 +111,7 @@ CREATE TABLE profiles (
   student_id UUID REFERENCES students(id) ON DELETE SET NULL,
   teacher_id UUID REFERENCES teachers(id) ON DELETE SET NULL,
   active BOOLEAN DEFAULT TRUE,
+  deleted_at TIMESTAMPTZ DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -115,6 +120,7 @@ COMMENT ON TABLE profiles IS 'Perfis de usuários do sistema vinculados ao auth.
 COMMENT ON COLUMN profiles.role IS 'Papel do usuário: admin, teacher ou student';
 COMMENT ON COLUMN profiles.avatar_url IS 'URL do avatar do usuário no storage bucket avatars';
 COMMENT ON COLUMN profiles.active IS 'Indica se o perfil está ativo';
+COMMENT ON COLUMN profiles.deleted_at IS 'Timestamp quando profile foi soft deleted (oculto da UI mas preservado para auditoria)';
 
 -- CLASS_LOGS: Registro de aulas
 CREATE TABLE class_logs (
@@ -295,6 +301,7 @@ CREATE INDEX idx_profiles_student_id ON profiles(student_id) WHERE student_id IS
 CREATE INDEX idx_profiles_teacher_id ON profiles(teacher_id) WHERE teacher_id IS NOT NULL;
 CREATE INDEX idx_profiles_avatar_url ON profiles(avatar_url) WHERE avatar_url IS NOT NULL;
 CREATE INDEX idx_profiles_active ON profiles(active) WHERE active = true;
+CREATE INDEX idx_profiles_deleted_at ON profiles(deleted_at) WHERE deleted_at IS NULL;
 
 -- Índices em students (otimizados)
 CREATE INDEX idx_students_name ON students(name);
@@ -424,20 +431,9 @@ COMMENT ON INDEX idx_class_logs_date_attendance IS
 
 
 -- ============================================
--- SUPORTE A ALUNOS ESTRANGEIROS
--- Índices únicos parciais para CPF e telefone
+-- SUPORTE A TELEFONES INTERNACIONAIS
+-- Índices únicos parciais para telefone (CPF removido)
 -- ============================================
-
--- CPF único apenas quando preenchido (permite múltiplos NULL para estrangeiros)
-DROP INDEX IF EXISTS idx_students_cpf_unique;
-CREATE UNIQUE INDEX idx_students_cpf_unique 
-  ON students(cpf) 
-  WHERE cpf IS NOT NULL AND cpf != '';
-
-DROP INDEX IF EXISTS idx_teachers_cpf_unique;
-CREATE UNIQUE INDEX idx_teachers_cpf_unique 
-  ON teachers(cpf) 
-  WHERE cpf IS NOT NULL AND cpf != '';
 
 -- Telefone único apenas quando preenchido (permite múltiplos NULL)
 DROP INDEX IF EXISTS idx_students_phone_unique;
@@ -450,5 +446,56 @@ CREATE UNIQUE INDEX idx_teachers_phone_unique
   ON teachers(phone) 
   WHERE phone IS NOT NULL AND phone != '';
 
-COMMENT ON INDEX idx_students_cpf_unique IS 'Índice único parcial - permite múltiplos NULL para alunos estrangeiros';
 COMMENT ON INDEX idx_students_phone_unique IS 'Índice único parcial - permite múltiplos NULL';
+COMMENT ON INDEX idx_teachers_phone_unique IS 'Índice único parcial - permite múltiplos NULL';
+
+-- ============================================
+-- FUNÇÕES DE NORMALIZAÇÃO DE TELEFONE
+-- ============================================
+
+-- Função para normalizar telefone (apenas dígitos)
+CREATE OR REPLACE FUNCTION normalize_phone(phone_input TEXT)
+RETURNS TEXT AS $
+BEGIN
+  IF phone_input IS NULL OR phone_input = '' THEN
+    RETURN NULL;
+  END IF;
+  -- Remove tudo exceto dígitos
+  RETURN regexp_replace(phone_input, '[^0-9]', '', 'g');
+END;
+$ LANGUAGE plpgsql IMMUTABLE;
+
+COMMENT ON FUNCTION normalize_phone IS 'Normaliza telefone removendo máscaras e mantendo apenas dígitos';
+
+-- Trigger para normalizar telefone automaticamente ao inserir/atualizar students
+CREATE OR REPLACE FUNCTION normalize_student_phone()
+RETURNS TRIGGER AS $
+BEGIN
+  NEW.phone := normalize_phone(NEW.phone);
+  RETURN NEW;
+END;
+$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_normalize_student_phone ON students;
+CREATE TRIGGER trigger_normalize_student_phone
+  BEFORE INSERT OR UPDATE OF phone ON students
+  FOR EACH ROW
+  EXECUTE FUNCTION normalize_student_phone();
+
+-- Trigger para normalizar telefone automaticamente ao inserir/atualizar teachers
+CREATE OR REPLACE FUNCTION normalize_teacher_phone()
+RETURNS TRIGGER AS $
+BEGIN
+  NEW.phone := normalize_phone(NEW.phone);
+  RETURN NEW;
+END;
+$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_normalize_teacher_phone ON teachers;
+CREATE TRIGGER trigger_normalize_teacher_phone
+  BEFORE INSERT OR UPDATE OF phone ON teachers
+  FOR EACH ROW
+  EXECUTE FUNCTION normalize_teacher_phone();
+
+COMMENT ON TRIGGER trigger_normalize_student_phone ON students IS 'Normaliza telefone automaticamente antes de inserir/atualizar';
+COMMENT ON TRIGGER trigger_normalize_teacher_phone ON teachers IS 'Normaliza telefone automaticamente antes de inserir/atualizar';

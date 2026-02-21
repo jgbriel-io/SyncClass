@@ -1,3 +1,5 @@
+import React from "react";
+
 // Hook para desfazer pagamento de uma cobrança
 export function useUndoFinancialPayment() {
   const queryClient = useQueryClient();
@@ -273,6 +275,13 @@ export function useFinancialRecords(
   const list = (query.data?.list ?? []) as FinancialRecordWithRelations[];
   const totalCount = query.data?.count ?? 0;
   const hasMore = totalCount > (page + 1) * pageSize;
+
+  // Reset para página 1 quando a página atual fica vazia mas há dados disponíveis
+  React.useEffect(() => {
+    if (!query.isLoading && list.length === 0 && totalCount > 0 && page > 0) {
+      setPage(0);
+    }
+  }, [list.length, totalCount, page, query.isLoading]);
 
   return {
     data: list,

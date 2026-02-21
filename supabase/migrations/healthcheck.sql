@@ -1,13 +1,14 @@
 -- ============================================
 -- VERIFICAÇÃO FINAL - HEALTH CHECK COMPLETO
 -- Valida todas as otimizações e funcionalidades
--- Data: 16/02/2026 (Consolidado)
+-- Data: 21/02/2026 (Consolidado - Migrations 1-4)
 -- ============================================
 -- Verifica:
 -- - Estrutura (tabelas, colunas, índices)
 -- - Lógica (views, funções, triggers)
 -- - Segurança (RLS, permissões, roles)
--- - Funcionalidades (anonimização, comprovantes, etc)
+-- - Funcionalidades (anonimização, comprovantes, internacionalização)
+-- - Remoção de CPF (LGPD simplificação)
 -- ============================================
 
 DO $$
@@ -270,6 +271,66 @@ BEGIN
     v_result := v_result || '  ✅ teachers.anonymized_at presente\n';
   ELSE
     v_result := v_result || '  ❌ teachers.anonymized_at FALTANDO!\n';
+  END IF;
+  v_result := v_result || E'\n';
+
+  -- 11.1 Verificar colunas internacionais (country)
+  v_result := v_result || '🌍 COLUNAS INTERNACIONAIS\n';
+  
+  SELECT COUNT(*) INTO v_function_count
+  FROM information_schema.columns
+  WHERE table_schema = 'public'
+    AND table_name = 'students'
+    AND column_name = 'country';
+  
+  IF v_function_count = 1 THEN
+    v_result := v_result || '  ✅ students.country presente\n';
+  ELSE
+    v_result := v_result || '  ❌ students.country FALTANDO!\n';
+  END IF;
+
+  SELECT COUNT(*) INTO v_function_count
+  FROM information_schema.columns
+  WHERE table_schema = 'public'
+    AND table_name = 'teachers'
+    AND column_name = 'country';
+  
+  IF v_function_count = 1 THEN
+    v_result := v_result || '  ✅ teachers.country presente\n';
+  ELSE
+    v_result := v_result || '  ❌ teachers.country FALTANDO!\n';
+  END IF;
+  v_result := v_result || E'\n';
+
+  -- 11.2 Verificar soft delete em profiles
+  v_result := v_result || '🗑️  SOFT DELETE (PROFILES)\n';
+  
+  SELECT COUNT(*) INTO v_function_count
+  FROM information_schema.columns
+  WHERE table_schema = 'public'
+    AND table_name = 'profiles'
+    AND column_name = 'deleted_at';
+  
+  IF v_function_count = 1 THEN
+    v_result := v_result || '  ✅ profiles.deleted_at presente\n';
+  ELSE
+    v_result := v_result || '  ❌ profiles.deleted_at FALTANDO!\n';
+  END IF;
+  v_result := v_result || E'\n';
+
+  -- 11.3 Verificar que CPF foi removido
+  v_result := v_result || '🚫 VERIFICAÇÃO DE REMOÇÃO DE CPF\n';
+  
+  SELECT COUNT(*) INTO v_function_count
+  FROM information_schema.columns
+  WHERE table_schema = 'public'
+    AND table_name IN ('students', 'teachers')
+    AND column_name = 'cpf';
+  
+  IF v_function_count = 0 THEN
+    v_result := v_result || '  ✅ CPF removido de students e teachers\n';
+  ELSE
+    v_result := v_result || '  ❌ ATENÇÃO: CPF ainda presente em ' || v_function_count || ' tabela(s)!\n';
   END IF;
   v_result := v_result || E'\n';
 

@@ -230,7 +230,7 @@ WITH (security_invoker = true) AS
 SELECT 
   s.id,
   s.name,
-  s.cpf,
+  s.country,
   s.phone,
   s.email,
   s.pay_day,
@@ -244,6 +244,7 @@ SELECT
   s.origin,
   s.created_at,
   s.updated_at,
+  s.anonymized_at,
   COUNT(DISTINCT cl.id) FILTER (WHERE cl.attendance = true) as total_classes_attended,
   COUNT(DISTINCT cl.id) FILTER (WHERE cl.attendance = false) as total_classes_missed,
   COUNT(DISTINCT cl.id) FILTER (WHERE cl.attendance IS NULL) as total_classes_pending,
@@ -269,7 +270,7 @@ SELECT * FROM students WHERE is_deleted = false OR status = 'ativo';
 COMMENT ON VIEW students_active IS 'Apenas alunos ativos (is_deleted = false ou status = ativo)';
 
 -- VIEW: students_masked
--- Alunos com dados sensíveis mascarados (LGPD) - apenas CPF
+-- Alunos com dados sensíveis mascarados (LGPD) - telefone não mascarado (formatação internacional provê privacidade)
 CREATE OR REPLACE VIEW students_masked
 WITH (security_invoker = true) AS
 SELECT 
@@ -278,10 +279,7 @@ SELECT
     WHEN anonymized_at IS NOT NULL THEN name
     ELSE name
   END AS name,
-  CASE 
-    WHEN cpf IS NOT NULL THEN '***.' || SUBSTRING(cpf FROM LENGTH(cpf) - 5 FOR 3) || '-**'
-    ELSE NULL
-  END as cpf,
+  country,
   phone,
   email,
   pay_day,
@@ -298,7 +296,7 @@ SELECT
   anonymized_at
 FROM students;
 
-COMMENT ON VIEW students_masked IS 'Alunos com CPF mascarado e nome anonimizado se aplicável (LGPD)';
+COMMENT ON VIEW students_masked IS 'Alunos com nome anonimizado se aplicável (LGPD)';
 
 -- VIEW: students_active_masked
 -- Alunos ativos com dados mascarados
@@ -306,10 +304,10 @@ CREATE OR REPLACE VIEW students_active_masked
 WITH (security_invoker = true) AS
 SELECT * FROM students_masked WHERE status = 'ativo' AND (anonymized_at IS NULL OR anonymized_at > NOW() - INTERVAL '5 years');
 
-COMMENT ON VIEW students_active_masked IS 'Alunos ativos com CPF mascarado';
+COMMENT ON VIEW students_active_masked IS 'Alunos ativos';
 
 -- VIEW: teachers_masked
--- Professores com dados sensíveis mascarados (apenas CPF)
+-- Professores com dados sensíveis mascarados (telefone não mascarado)
 CREATE OR REPLACE VIEW teachers_masked
 WITH (security_invoker = true) AS
 SELECT 
@@ -318,10 +316,7 @@ SELECT
     WHEN anonymized_at IS NOT NULL THEN name
     ELSE name
   END AS name,
-  CASE 
-    WHEN cpf IS NOT NULL THEN '***.' || SUBSTRING(cpf FROM LENGTH(cpf) - 5 FOR 3) || '-**'
-    ELSE NULL
-  END as cpf,
+  country,
   phone,
   email,
   address,
@@ -330,10 +325,10 @@ SELECT
   created_at,
   updated_at,
   anonymized_at,
-  'ativo'::TEXT AS status
+  COALESCE(status, 'ativo') AS status
 FROM teachers;
 
-COMMENT ON VIEW teachers_masked IS 'Professores com CPF mascarado e nome anonimizado se aplicável (LGPD)';
+COMMENT ON VIEW teachers_masked IS 'Professores com nome anonimizado se aplicável (LGPD)';
 
 -- VIEW: class_logs_with_billing
 -- Aulas com informações de cobrança

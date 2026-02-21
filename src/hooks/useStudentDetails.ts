@@ -1,5 +1,5 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { useState } from "react";
+import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { isOverdue } from "@/lib/utils/financialStatus";
 import { Student } from "./useStudents";
@@ -370,6 +370,13 @@ export function useStudentsWithStatsPaginated(
   const list = (query.data?.list ?? []) as StudentWithStats[];
   const totalCount = query.data?.count ?? 0;
   const hasMore = totalCount > (page + 1) * pageSize;
+
+  // Reset para página 1 quando a página atual fica vazia mas há dados disponíveis
+  React.useEffect(() => {
+    if (!query.isLoading && list.length === 0 && totalCount > 0 && page > 0) {
+      setPage(0);
+    }
+  }, [list.length, totalCount, page, query.isLoading]);
 
   return {
     data: list,

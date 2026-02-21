@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
+import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
@@ -94,6 +95,13 @@ export function useTeachersPaginated(options?: UseTeachersPaginatedOptions): Use
   const list = (query.data?.list ?? []) as Teacher[];
   const totalCount = query.data?.count ?? 0;
   const hasMore = totalCount > (page + 1) * pageSize;
+
+  // Reset para página 0 se a página atual ficou vazia mas há dados
+  React.useEffect(() => {
+    if (!query.isLoading && list.length === 0 && totalCount > 0 && page > 0) {
+      setPage(0);
+    }
+  }, [list.length, totalCount, page, query.isLoading]);
 
   return {
     data: list,
