@@ -15,8 +15,6 @@ interface BaseDialogProps {
   description?: string;
   children: ReactNode;
   size?: DialogSize;
-  /** Se true, adiciona max-height e overflow para dialogs com muito conteúdo */
-  scrollable?: boolean;
 }
 
 /**
@@ -29,6 +27,10 @@ interface BaseDialogProps {
  * - SM (448px): Formulários simples
  * - MD (512px): Formulários médios
  * - LG (672px): Formulários complexos
+ * 
+ * O modal automaticamente adiciona scroll quando o conteúdo
+ * excede 90vh (90% da altura da viewport). O header fica fixo
+ * e apenas o conteúdo interno tem scroll.
  */
 export function BaseDialog({
   open,
@@ -37,21 +39,20 @@ export function BaseDialog({
   description,
   children,
   size = "SM",
-  scrollable = false,
 }: BaseDialogProps) {
-  const scrollClass = scrollable ? "max-h-[90vh] overflow-y-auto" : "";
-  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`${DIALOG_SIZE_MAP[size]} ${scrollClass}`}
+        className={DIALOG_SIZE_MAP[size]}
         aria-describedby={description ? undefined : undefined}
       >
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0 px-4 pt-4">
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        {children}
+        <div className="overflow-y-auto flex-1 min-h-0 px-4 pb-4 custom-scrollbar">
+          {children}
+        </div>
       </DialogContent>
     </Dialog>
   );
