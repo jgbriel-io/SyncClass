@@ -6,6 +6,7 @@ import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { validatePhonePlatform } from "@/lib/validate-phone-platform";
 import { isValidEmailFormat } from "@/lib/utils/patterns";
 import { validateAndResizeAvatar, type AvatarValidationError } from "@/lib/utils/avatarUpload";
+import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
 import { toast } from "sonner";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
 import type { Tables, TablesInsert, Enums } from "@/integrations/supabase/types";
@@ -412,7 +413,7 @@ export function useCreateUser() {
         email: variables.email,
         role: variables.role,
       });
-      toast.error(error.message || "Não foi possível criar o usuário. Por favor, tente novamente.");
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -503,7 +504,7 @@ export function useUpdateUserRole() {
       toast.success("Usuário atualizado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Não foi possível atualizar o privilégio. Por favor, tente novamente.");
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -753,7 +754,7 @@ export function useResetPassword() {
       toast.success("Senha redefinida com sucesso. O usuário precisará fazer login novamente.");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Não foi possível redefinir a senha. Por favor, tente novamente.");
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -841,7 +842,7 @@ export function useLinkUserToTeacher() {
       // Toast removido - será mostrado no componente
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Não foi possível vincular o usuário ao professor. Por favor, tente novamente.");
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -872,7 +873,7 @@ export function useInviteStudent() {
       toast.success("Aluno e conta de acesso criados com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Não foi possível enviar o convite ao aluno.");
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -901,7 +902,7 @@ export function useInviteTeacher() {
       toast.success("Professor e conta de acesso criados com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Não foi possível enviar o convite ao professor.");
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }
@@ -1026,7 +1027,7 @@ export function useResetOwnPassword() {
       }, 1500);
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Não foi possível alterar a senha. Por favor, tente novamente.");
+      toast.error(sanitizeErrorMessage(error));
     },
   });
 }

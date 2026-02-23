@@ -13,6 +13,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   not_null: "Todos os campos obrigatórios devem ser preenchidos",
   check_violation: "Os dados fornecidos não atendem aos requisitos",
   unique_violation: "Este valor já está em uso",
+  grade_range: "A nota deve estar entre 0 e 100",
   
   // Erros de autenticação
   invalid_credentials: "Email ou senha incorretos",
@@ -43,6 +44,10 @@ const ERROR_MESSAGES: Record<string, string> = {
 function detectErrorType(message: string): string {
   const lowerMessage = message.toLowerCase();
   
+  // Detectar constraint específico de notas
+  if (lowerMessage.includes("grade_range") || lowerMessage.includes("nota deve estar")) {
+    return "grade_range";
+  }
   if (lowerMessage.includes("duplicate") || lowerMessage.includes("already exists") || lowerMessage.includes("já cadastrado")) {
     return "duplicate";
   }

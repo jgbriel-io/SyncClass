@@ -5,7 +5,8 @@ export function initSentry() {
   const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
   const ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT || import.meta.env.MODE;
 
-  if (!SENTRY_DSN) return;
+  // Desabilitar Sentry em desenvolvimento para evitar erros 403
+  if (!SENTRY_DSN || ENVIRONMENT === "development") return;
 
   Sentry.init({
     dsn: SENTRY_DSN,

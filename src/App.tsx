@@ -1,13 +1,15 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthRedirect } from "@/components/auth/AuthRedirect";
 import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 import { Loader2 } from "lucide-react";
+import { checkStorageQuota, clearStorageExcept } from "@/lib/utils/storage";
+import { toast } from "sonner";
 
 // Eager - login e fluxo de senha (páginas públicas)
 import Login from "./pages/Login";
@@ -71,6 +73,38 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const { mustChangePassword, onPasswordChanged } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Sprint 4 - Task 4.1: Monitoramento de LocalStorage
+  useEffect(() => {
+    const monitorStorage = () => {
+      const stats = checkStorageQuota();
+      
+      if (stats.shouldClear) {
+        // Limpar cache mantendo apenas auth
+        const authKeys = Object.keys(localStorage).filter(key => 
+          key.startsWith('sb-') || key.includes('auth')
+        );
+        
+        clearStorageExcept(authKeys);
+        queryClient.clear();
+        
+        toast.info('Cache limpo automaticamente para liberar espaço', {
+          description: `Uso anterior: ${stats.usedMB}MB / 5MB`,
+        });
+      } else if (stats.shouldWarn && import.meta.env.DEV) {
+        console.warn(`[Storage] Uso alto: ${stats.usedMB}MB / 5MB (${stats.percentage.toFixed(1)}%)`);
+      }
+    };
+
+    // Verificar imediatamente
+    monitorStorage();
+    
+    // Verificar a cada 1 minuto
+    const interval = setInterval(monitorStorage, 60000);
+    
+    return () => clearInterval(interval);
+  }, [queryClient]);
 
   return (
     <>

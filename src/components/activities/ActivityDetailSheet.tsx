@@ -18,7 +18,7 @@ import { sanitizeHtml, sanitizeText } from "@/lib/utils/sanitize";
 const correctionSchema = z
   .object({
     feedback: z.string().transform((s) => s.trim()).pipe(z.string().min(1, "Informe o feedback")),
-    grade: z.string().min(1, "Informe a nota (0–10)"),
+    grade: z.string().min(1, "Informe a nota (0–100)"),
     correctionFile: z.any().optional(),
   })
   .refine(
@@ -26,9 +26,9 @@ const correctionSchema = z
       const g = data.grade?.trim();
       if (!g) return false;
       const n = parseFloat(g.replace(",", "."));
-      return !Number.isNaN(n) && n >= 0 && n <= 10;
+      return !Number.isNaN(n) && n >= 0 && n <= 100;
     },
-    { message: "Informe a nota (0–10)", path: ["grade"] }
+    { message: "Informe a nota (0–100)", path: ["grade"] }
   );
 
 type CorrectionFormData = z.infer<typeof correctionSchema>;
@@ -99,7 +99,7 @@ export function ActivityDetailSheet({
         correctionFileName = (file as File).name;
       }
       const gradeValue = data.grade?.trim()
-        ? Math.min(10, Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0))
+        ? Math.min(100, Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0))
         : null;
       await addCorrection.mutateAsync({
         activityId: activity.id,
@@ -302,7 +302,7 @@ export function ActivityDetailSheet({
                   <div className="mb-3 flex items-center gap-2">
                     <span className="text-sm font-medium text-foreground">Nota:</span>
                     <span className="text-sm font-semibold tabular-nums">{Number(activity.grade).toFixed(1)}</span>
-                    <span className="text-xs text-muted-foreground">/ 10</span>
+                    <span className="text-xs text-muted-foreground">/ 100</span>
                   </div>
                 )}
                 {activity.feedback && (
@@ -382,11 +382,11 @@ export function ActivityDetailSheet({
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="grade">Nota (0–10) *</Label>
+                <Label htmlFor="grade">Nota (0–100) *</Label>
                 <Input
                   id="grade"
                   type="text"
-                  placeholder="Ex: 8.5"
+                  placeholder="Ex: 85"
                   {...register("grade")}
                   disabled={isCorrectionPending}
                 />
