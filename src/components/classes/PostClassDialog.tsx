@@ -35,9 +35,9 @@ function createPostClassSchema(requirePaymentConfirmation: boolean) {
         const g = data.grade?.trim();
         if (!g) return false;
         const n = parseFloat(g.replace(",", "."));
-        return !Number.isNaN(n) && n >= 0 && n <= 10;
+        return !Number.isNaN(n) && n >= 0 && n <= 100;
       },
-      { message: "Informe a nota (0–10)", path: ["grade"] }
+      { message: "Informe a nota (0–100)", path: ["grade"] }
     )
     .refine(
       (data) => {
@@ -142,7 +142,7 @@ export function PostClassDialog({
 
     const attendanceValue = data.attendance;
     const gradeValue = data.grade?.trim()
-      ? Math.min(10, Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0))
+      ? Math.min(100, Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0))
       : null;
     const feedbackValue = data.feedback?.trim() || null;
 
@@ -255,11 +255,11 @@ export function PostClassDialog({
 
           {attendance && (
             <div className="space-y-2">
-              <Label htmlFor="grade">Nota (0–10)</Label>
+              <Label htmlFor="grade">Nota (0–100)</Label>
               <Input
                 id="grade"
                 type="text"
-                placeholder="Ex: 8.5"
+                placeholder="Ex: 85"
                 {...register("grade")}
               />
               {errors.grade && (

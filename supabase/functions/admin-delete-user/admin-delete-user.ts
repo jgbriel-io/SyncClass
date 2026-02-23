@@ -151,8 +151,27 @@ serve(async (req) => {
     }
   }
 
-  // 3) Remove auth user if there was a linked profile (cascade removes profile and user_roles)
+  // 3) Invalidate all sessions before deleting auth user
   if (userIdToDelete) {
+    // Invalidar sessões ANTES de deletar o usuário
+    try {
+      const { error: invalidateError } = await supabaseAdmin.rpc(
+        'invalidate_sessions_before_delete',
+        { p_user_id: userIdToDelete }
+      );
+      
+      if (invalidateError) {
+        console.warn("Warning: Failed to invalidate sessions:", invalidateError);
+        // Não falha a operação, apenas loga o warning
+      } else {
+        console.log("Sessions invalidated for user:", userIdToDelete);
+      }
+    } catch (err) {
+      console.warn("Warning: Exception invalidating sessions:", err);
+      // Continua mesmo se falhar
+    }
+    
+    // Agora deleta o auth user (cascade removes profile and user_roles)
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
       userIdToDelete,
     );

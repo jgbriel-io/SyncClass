@@ -120,7 +120,7 @@ const classLogBaseSchema = z.object({
   grade: z
     .number({ invalid_type_error: "Informe a nota" })
     .min(0, "Nota mínima é 0")
-    .max(10, "Nota máxima é 10")
+    .max(100, "Nota máxima é 100")
     .optional()
     .nullable(),
   financial_amount: z.string().optional(),

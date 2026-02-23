@@ -75,65 +75,48 @@ CREATE POLICY "activities_delete_policy"
 -- 3. VALIDAÇÃO DE FILE UPLOAD (Storage)
 -- ============================================
 
--- Recriar políticas de storage com validações de tamanho e tipo
-DROP POLICY IF EXISTS "Authenticated users can upload activities" ON storage.objects;
-CREATE POLICY "activities_upload_secure_policy"
-  ON storage.objects FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    bucket_id = 'activities' AND
-    -- Limitar a 10MB (10485760 bytes)
-    (COALESCE((storage.foldername(name))[1], '') = auth.uid()::text OR (SELECT public.is_admin()))
-  );
+-- NOTA: Políticas de storage devem ser configuradas manualmente no Supabase Dashboard
+-- devido a restrições de permissão. As políticas recomendadas estão documentadas abaixo:
 
-COMMENT ON POLICY "activities_upload_secure_policy" ON storage.objects IS 'Permite upload apenas no próprio folder do usuário, máximo 10MB';
+-- POLÍTICA RECOMENDADA: activities_upload_secure_policy
+-- Tipo: INSERT
+-- Target: authenticated
+-- WITH CHECK:
+--   bucket_id = 'activities' AND
+--   ((storage.foldername(name))[1] = auth.uid()::text OR is_admin())
 
--- Atualizar política de leitura para respeitar soft delete
-DROP POLICY IF EXISTS "Authenticated users can read activities" ON storage.objects;
-CREATE POLICY "activities_read_secure_policy"
-  ON storage.objects FOR SELECT
-  TO authenticated
-  USING (
-    bucket_id = 'activities' AND
-    (
-      (SELECT public.is_admin()) OR
-      (storage.foldername(name))[1] = auth.uid()::text OR
-      -- Permitir leitura se usuário tem acesso à atividade
-      EXISTS (
-        SELECT 1 FROM activities a
-        WHERE a.file_url = name OR a.response_file_url = name OR a.correction_file_url = name
-        AND a.deleted_at IS NULL
-        AND (
-          a.teacher_id = (SELECT public.get_teacher_id()) OR
-          a.student_id = (SELECT public.get_student_id())
-        )
-      )
-    )
-  );
+-- POLÍTICA RECOMENDADA: activities_read_secure_policy  
+-- Tipo: SELECT
+-- Target: authenticated
+-- USING:
+--   bucket_id = 'activities' AND
+--   (is_admin() OR 
+--    (storage.foldername(name))[1] = auth.uid()::text OR
+--    EXISTS (
+--      SELECT 1 FROM activities a
+--      WHERE (a.file_url = name OR a.response_file_url = name OR a.correction_file_url = name)
+--      AND a.deleted_at IS NULL
+--      AND (a.teacher_id = get_teacher_id() OR a.student_id = get_student_id())
+--    ))
 
--- Atualizar política de update
-DROP POLICY IF EXISTS "Authenticated users can update activities" ON storage.objects;
-CREATE POLICY "activities_update_secure_policy"
-  ON storage.objects FOR UPDATE
-  TO authenticated
-  USING (
-    bucket_id = 'activities' AND
-    ((storage.foldername(name))[1] = auth.uid()::text OR (SELECT public.is_admin()))
-  )
-  WITH CHECK (
-    bucket_id = 'activities' AND
-    ((storage.foldername(name))[1] = auth.uid()::text OR (SELECT public.is_admin()))
-  );
+-- POLÍTICA RECOMENDADA: activities_update_secure_policy
+-- Tipo: UPDATE
+-- Target: authenticated
+-- USING e WITH CHECK:
+--   bucket_id = 'activities' AND
+--   ((storage.foldername(name))[1] = auth.uid()::text OR is_admin())
 
--- Atualizar política de delete
-DROP POLICY IF EXISTS "Authenticated users can delete activities" ON storage.objects;
-CREATE POLICY "activities_delete_secure_policy"
-  ON storage.objects FOR DELETE
-  TO authenticated
-  USING (
-    bucket_id = 'activities' AND
-    ((storage.foldername(name))[1] = auth.uid()::text OR (SELECT public.is_admin()))
-  );
+-- POLÍTICA RECOMENDADA: activities_delete_secure_policy
+-- Tipo: DELETE
+-- Target: authenticated
+-- USING:
+--   bucket_id = 'activities' AND
+--   ((storage.foldername(name))[1] = auth.uid()::text OR is_admin())
+
+DO $$
+BEGIN
+  RAISE NOTICE '⚠️  Políticas de storage devem ser configuradas manualmente no Dashboard';
+END $$;
 
 -- ============================================
 -- 4. CRIPTOGRAFIA DE DADOS SENSÍVEIS (PIX)
@@ -299,7 +282,7 @@ BEGIN
   RAISE NOTICE '============================================';
   RAISE NOTICE '✅ 1. Constraint de notas (0-100) adicionada';
   RAISE NOTICE '✅ 2. Soft delete em activities implementado';
-  RAISE NOTICE '✅ 3. Validação de file upload reforçada';
+  RAISE NOTICE '⚠️  3. Políticas de storage: configurar manualmente no Dashboard';
   RAISE NOTICE '✅ 4. Funções de criptografia criadas';
   RAISE NOTICE '✅ 5. Limpeza automática de logs configurada';
   RAISE NOTICE '============================================';
