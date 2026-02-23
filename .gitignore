@@ -1,5 +1,47 @@
-# Logs
-logs
+# ============================================
+# DEPENDENCIES
+# ============================================
+node_modules/
+.pnp
+.pnp.js
+
+# ============================================
+# BUILD OUTPUT
+# ============================================
+dist/
+dist-ssr/
+build/
+.next/
+out/
+.cache/
+
+# ============================================
+# ENVIRONMENT VARIABLES (SECURITY CRITICAL)
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.keys
+
+# Keep example files
+!.env.example
+
+# API Keys and Secrets
+*.pem
+*.key
+*.cert
+*.p12
+secrets.json
+credentials.json
+service-account.json
+
+# ============================================
+# LOGS
+# ============================================
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,52 +49,116 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# Editor directories and files
+# ============================================
+# EDITOR & IDE
+# ============================================
 .vscode/*
 !.vscode/extensions.json
-.idea
+!.vscode/settings.json
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*~
 
-# Temporary files
-COMMIT_MESSAGE.txt
+# ============================================
+# TEMPORARY FILES
+# ============================================
 *.tmp
 *.temp
+*.bak
+*.backup
+COMMIT_MESSAGE.txt
+TODO_*.md
+TEMP_*.md
+WIP_*.md
 
-# Documentation files - ignore working drafts, keep important docs
+# ============================================
+# DOCUMENTATION (Working Drafts)
+# ============================================
+# Ignore working documentation, keep essential docs
 FUNCTIONAL_AUDIT_REPORT.md
 TYPES_FIX_SUMMARY.md
 TESTS_COVERAGE.md
-docs/
+CONSOLIDACAO_*.md
+SPRINTS_*.md
+GUIA_*.md
+SECURITY_*.md
+DEPLOY_*.md
+MIGRATION_*.md
 
-# Supabase
+# Keep these important docs
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!LICENSE.md
+!CODE_OF_CONDUCT.md
+
+# Ignore docs folder (working drafts)
+docs/
+documentation/
+
+# ============================================
+# DATABASE & SUPABASE (SECURITY CRITICAL)
+# ============================================
+# Supabase local files
 supabase/.temp/
 supabase/.branches/
 supabase/config.toml
 supabase/seed.sql
 .supabase/
 
-# Database dumps
+# CRITICAL: Block ALL SQL files (migrations, dumps, seeds)
+# Migrations can expose database schema and security vulnerabilities
 *.sql
-!supabase/migrations/*.sql
+**/*.sql
+supabase/migrations/*.sql
+supabase/functions/**/*.sql
+
+# Database dumps and exports
 database-dump*.sql
 dump*.sql
+backup*.sql
+export*.sql
 
-# Scripts temporários
+# Supabase functions (may contain API keys or sensitive logic)
+supabase/functions/**/
+!supabase/functions/**/*.ts
+!supabase/functions/**/deno.json
+
+# ============================================
+# SCRIPTS (Temporary/One-off)
+# ============================================
 fix-*.cjs
+fix-*.js
 export-*.cjs
-export-*.sql
+export-*.js
+migrate-*.cjs
+migrate-*.js
+temp-*.cjs
+temp-*.js
+
+# ============================================
+# TESTING
+# ============================================
+coverage/
+.nyc_output/
+*.lcov
+
+# ============================================
+# OS FILES
+# ============================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================
+# MISC
+# ============================================
+*.local
+.vercel
+.turbo
