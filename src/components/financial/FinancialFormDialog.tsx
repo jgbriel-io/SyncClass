@@ -204,27 +204,42 @@ export function FinancialFormDialog({
           {enableTeacherSelection && (
             <div className="space-y-2">
               <Label>Professor *</Label>
-              <Select
-                value={selectedTeacherId}
-                onValueChange={(value) => {
-                  setSelectedTeacherId(value);
-                  setTeacherError(null);
-                }}
-                disabled={loadingTeachers}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um professor (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {teachers.map((teacher) => (
-                    <SelectItem key={teacher.id} value={teacher.id}>
-                      {teacher.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {teacherError && (
-                <p className="text-sm text-destructive">{teacherError}</p>
+              {initialData && selectedTeacherId ? (
+                <>
+                  <Input
+                    value={teachers.find(t => t.id === selectedTeacherId)?.name || "Professor não encontrado"}
+                    disabled
+                    readOnly
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Professor vinculado a esta cobrança
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Select
+                    value={selectedTeacherId}
+                    onValueChange={(value) => {
+                      setSelectedTeacherId(value);
+                      setTeacherError(null);
+                    }}
+                    disabled={loadingTeachers}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um professor (opcional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teachers.map((teacher) => (
+                        <SelectItem key={teacher.id} value={teacher.id}>
+                          {teacher.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {teacherError && (
+                    <p className="text-sm text-destructive">{teacherError}</p>
+                  )}
+                </>
               )}
             </div>
           )}

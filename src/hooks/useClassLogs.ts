@@ -130,6 +130,8 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
             status,
             amount,
             due_date,
+            payment_proof_url,
+            payment_proof_filename,
             payment_proof_status
           ),
           financial_record_class_logs (
@@ -139,6 +141,8 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
               status,
               amount,
               due_date,
+              payment_proof_url,
+              payment_proof_filename,
               payment_proof_status
             )
           )
@@ -230,7 +234,7 @@ async function enrichWithPackageFinancial(
   const frIds = [...new Set(links.map((r) => r.financial_record_id))];
   const { data: frs } = await supabase
     .from("financial_records")
-    .select("id, status, amount, due_date, description")
+    .select("id, status, amount, due_date, description, payment_proof_url, payment_proof_filename, payment_proof_status")
     .in("id", frIds);
   const frMap = new Map((frs ?? []).map((fr) => [fr.id, fr]));
   const logToFr = new Map(links.map((r) => [r.class_log_id, r.financial_record_id]));
@@ -257,7 +261,7 @@ export function useClassLogsByStudentIds(studentIds: string[]) {
           *,
           students ( name, teacher_id ),
           teachers ( name ),
-          financial_records ( id, status, amount, due_date )
+          financial_records ( id, status, amount, due_date, payment_proof_url, payment_proof_filename, payment_proof_status )
         `)
         .in("student_id", studentIds)
         .order("class_date", { ascending: false });
@@ -283,7 +287,7 @@ export function usePendingEvaluationClassLogs(teacherId?: string | null) {
           *,
           students ( name, teacher_id ),
           teachers ( name ),
-          financial_records ( id, status, amount, due_date )
+          financial_records ( id, status, amount, due_date, payment_proof_url, payment_proof_filename, payment_proof_status )
         `)
         .is("attendance", null)
         .lte("class_date", todayStr)

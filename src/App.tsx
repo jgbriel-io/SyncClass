@@ -10,8 +10,6 @@ import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 import { Loader2 } from "lucide-react";
 import { checkStorageQuota, clearStorageExcept } from "@/lib/utils/storage";
 import { toast } from "sonner";
-import { checkStorageQuota, clearStorageExcept } from "@/lib/utils/storage";
-import { toast } from "sonner";
 
 // Eager - login e fluxo de senha (páginas públicas)
 import Login from "./pages/Login";

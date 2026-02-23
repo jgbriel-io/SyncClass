@@ -80,6 +80,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCurrentUserProfile } from "@/hooks/useUsers";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface FinancialViewProps {
   title?: string;
@@ -96,6 +97,7 @@ export function FinancialView({
   enableTeacherSelection = true,
   autoTeacherId = null,
 }: FinancialViewProps) {
+  const queryClient = useQueryClient();
   const undoPayment = useUndoFinancialPayment();
   const [filters, setFilters] = useState<FinancialFiltersState>(defaultFinancialFilters);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -750,8 +752,7 @@ export function FinancialView({
                             });
                             toast.success("Pagamento confirmado!");
                             setHistoryRecord(null);
-                            // Recarregar dados
-                            window.location.reload();
+                            queryClient.invalidateQueries({ queryKey: ['financial-records'] });
                           } catch (error) {
                             toast.error("Erro ao aprovar comprovante");
                           }
@@ -764,18 +765,15 @@ export function FinancialView({
                         variant="destructive"
                         className="flex-1 shrink-0"
                         onClick={async () => {
-                          const reason = prompt("Motivo da rejeição (opcional):");
-                          if (reason === null) return; // Cancelou
-                          
                           try {
                             await supabase.rpc("review_payment_proof", {
                               p_financial_record_id: historyRecord.id,
                               p_approved: false,
-                              p_rejection_reason: reason || "Comprovante inválido",
+                              p_rejection_reason: "Comprovante inválido",
                             });
                             toast.success("Comprovante rejeitado");
                             setHistoryRecord(null);
-                            window.location.reload();
+                            queryClient.invalidateQueries({ queryKey: ['financial-records'] });
                           } catch (error) {
                             toast.error("Erro ao rejeitar comprovante");
                           }

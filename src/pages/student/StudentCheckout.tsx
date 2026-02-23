@@ -213,9 +213,6 @@ export default function StudentCheckout() {
               <p className={`${typography('SMALL')} text-center`}>
                 Entre em contato com seu professor para obter a chave PIX e realizar o pagamento. Após pagar, envie o comprovante para que ele confirme na plataforma.
               </p>
-              <p className={`${typography('SMALL')} text-center text-muted-foreground mt-2`}>
-                (Debug: Profile student_id: {profile?.student_id || "não encontrado"})
-              </p>
             </Card>
           )}
         </div>
@@ -227,7 +224,7 @@ export default function StudentCheckout() {
               Enviar Comprovante
             </h2>
             
-            {hasProof ? (
+            {hasProof && proofStatus !== "rejected" ? (
               <Card className="p-4 bg-success/5 border-success/30">
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
@@ -236,15 +233,25 @@ export default function StudentCheckout() {
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {proofStatus === "pending" && "Aguardando confirmação do professor"}
                       {proofStatus === "approved" && "Comprovante aprovado"}
-                      {proofStatus === "rejected" && "Comprovante rejeitado. Envie um novo."}
                     </p>
                   </div>
                 </div>
               </Card>
             ) : (
               <Card className="p-4">
+                {proofStatus === "rejected" && (
+                  <div className="mb-3 p-2 rounded-lg bg-destructive/10 border border-destructive/30">
+                    <p className="text-sm font-medium text-destructive">Comprovante rejeitado</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Envie um novo comprovante válido
+                    </p>
+                  </div>
+                )}
+                
                 <p className="text-sm text-muted-foreground mb-3">
-                  Após realizar o pagamento, envie o comprovante para que seu professor possa confirmar.
+                  {proofStatus === "rejected" 
+                    ? "Selecione um novo comprovante para enviar."
+                    : "Após realizar o pagamento, envie o comprovante para que seu professor possa confirmar."}
                 </p>
                 
                 <input

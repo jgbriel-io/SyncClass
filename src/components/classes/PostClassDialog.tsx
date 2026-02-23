@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2 } from "lucide-react";
+import { Loader2, FileText, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -16,6 +16,8 @@ import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { useUpdateClassLog } from "@/hooks/useClassLogs";
 import { useMarkAsPaid, useUpdateFinancialStatus } from "@/hooks/useFinancialRecords";
 import { logger } from "@/lib/sentry";
+import { getActivityFileUrl } from "@/hooks/useActivities";
+import { STACK, GAP, ICON_SIZES, TYPOGRAPHY } from "@/lib/design-tokens";
 
 /** Schema do modal Avaliar aula: nota, feedback e confirmar pagamento obrigatórios quando aplicável */
 function createPostClassSchema(requirePaymentConfirmation: boolean) {
@@ -66,6 +68,8 @@ export function PostClassDialog({
   onSuccess,
 }: PostClassDialogProps) {
   const updateClassLog = useUpdateClassLog();
+  
+  // Hooks com toasts desabilitados (vamos mostrar um toast único no final)
   const markAsPaid = useMarkAsPaid();
   const updateFinancialStatus = useUpdateFinancialStatus();
 
@@ -94,6 +98,33 @@ export function PostClassDialog({
   const hasFinancialRecord = !!financialRecord?.id;
   const isPaymentAlreadyPaid = financialRecord?.status === "pago";
   const requirePaymentConfirmation = !!(classLog && hasFinancialRecord && !isPaymentAlreadyPaid);
+  
+  // Verificar se tem comprovante anexado
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const hasPaymentProof = !!(financialRecord as any)?.payment_proof_url;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const paymentProofUrl = (financialRecord as any)?.payment_proof_url;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const paymentProofFilename = (financialRecord as any)?.payment_proof_filename || "Comprovante";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const paymentProofStatus = (financialRecord as any)?.payment_proof_status;
+
+  const [isViewingProof, setIsViewingProof] = useState(false);
+
+  const handleViewProof = async () => {
+    if (!paymentProofUrl) return;
+    
+    setIsViewingProof(true);
+    try {
+      const url = await getActivityFileUrl(paymentProofUrl);
+      window.open(url, "_blank");
+    } catch (error) {
+      toast.error("Erro ao abrir comprovante");
+      console.error(error);
+    } finally {
+      setIsViewingProof(false);
+    }
+  };
 
   const postClassSchema = useMemo(
     () => createPostClassSchema(requirePaymentConfirmation),
@@ -147,12 +178,24 @@ export function PostClassDialog({
     const feedbackValue = data.feedback?.trim() || null;
 
     try {
+      // Suprimir toasts automáticos temporariamente
+      const originalToastSuccess = toast.success;
+      const toastQueue: string[] = [];
+      
+      // Interceptar toasts durante as operações
+      toast.success = (message: string) => {
+        toastQueue.push(message);
+        return 0; // Retornar um ID dummy
+      };
+
       await updateClassLog.mutateAsync({
         id: classLog.id,
         attendance: attendanceValue,
         grade: gradeValue,
         feedback: feedbackValue,
       });
+
+      let successMessage = "";
 
       // Lógica de cobrança quando o aluno FALTOU
       if (!attendanceValue && hasFinancialRecord && financialRecord?.id) {
@@ -165,9 +208,10 @@ export function PostClassDialog({
                 id: financialRecord.id, 
                 status: "extornado" 
               });
+              successMessage = "Falta registrada e pagamento extornado";
             } else {
               // Mantém como pago (não faz nada)
-              toast.success("Falta registrada, pagamento mantido como pago");
+              successMessage = "Falta registrada, pagamento mantido como pago";
             }
           } else {
             // Não estava pago, marca como abonado
@@ -175,30 +219,38 @@ export function PostClassDialog({
               id: financialRecord.id, 
               status: "abonado" 
             });
+            successMessage = "Falta registrada e cobrança abonada";
           }
         } else {
           // Faltou e QUER cobrar: mantém o status atual
           if (isPaymentAlreadyPaid) {
-            toast.success("Falta registrada, cobrança mantida como paga");
+            successMessage = "Falta registrada, cobrança mantida como paga";
           } else {
-            toast.success("Falta registrada, cobrança mantida como pendente");
+            successMessage = "Falta registrada, cobrança mantida como pendente";
           }
         }
       } 
       // Lógica de pagamento quando o aluno COMPARECEU
       else if (attendanceValue && hasFinancialRecord && data.confirmPayment && financialRecord?.id) {
         await markAsPaid.mutateAsync(financialRecord.id);
+        successMessage = "Avaliação e pagamento registrados com sucesso";
       } else if (attendanceValue) {
         // Compareceu mas não tem cobrança ou não confirmou pagamento
-        toast.success("Avaliação registrada com sucesso");
+        successMessage = "Avaliação registrada com sucesso";
       } else {
         // Faltou mas não tem cobrança
-        toast.success("Falta registrada");
+        successMessage = "Falta registrada";
       }
 
+      // Restaurar toast original e mostrar apenas uma mensagem
+      toast.success = originalToastSuccess;
+      toast.success(successMessage);
+      
       onSuccess();
       onOpenChange(false);
     } catch (error) {
+      // Restaurar toast original em caso de erro
+      toast.success = originalToastSuccess;
       logger.error(error as Error, { context: 'post_class_evaluation' });
       toast.error("Erro ao registrar avaliação. Tente novamente.");
     }
@@ -225,14 +277,14 @@ export function PostClassDialog({
       title="Avaliar aula"
       size="SM"
     >
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className={`${TYPOGRAPHY.BODY} text-muted-foreground mb-4`}>
         {studentName} — {classDateFormatted}
       </p>
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          <div className="space-y-2">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className={STACK.DEFAULT}>
+          <div className={STACK.TIGHT}>
             <Label>Comparecimento</Label>
-            <div className="flex gap-6">
-              <label className="flex items-center gap-2 cursor-pointer">
+            <div className={`flex ${GAP.LOOSE}`}>
+              <label className={`flex items-center ${GAP.TIGHT} cursor-pointer`}>
                 <input
                   type="radio"
                   checked={attendance === true}
@@ -241,7 +293,7 @@ export function PostClassDialog({
                 />
                 <span>Compareceu</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className={`flex items-center ${GAP.TIGHT} cursor-pointer`}>
                 <input
                   type="radio"
                   checked={attendance === false}
@@ -254,23 +306,44 @@ export function PostClassDialog({
           </div>
 
           {attendance && (
-            <div className="space-y-2">
+            <div className={STACK.TIGHT}>
               <Label htmlFor="grade">Nota (0–100)</Label>
               <Input
                 id="grade"
                 type="text"
+                inputMode="numeric"
                 placeholder="Ex: 85"
                 {...register("grade")}
+                onKeyDown={(e) => {
+                  // Permitir: backspace, delete, tab, escape, enter, ponto, vírgula
+                  if (
+                    e.key === "Backspace" ||
+                    e.key === "Delete" ||
+                    e.key === "Tab" ||
+                    e.key === "Escape" ||
+                    e.key === "Enter" ||
+                    e.key === "." ||
+                    e.key === "," ||
+                    e.key === "ArrowLeft" ||
+                    e.key === "ArrowRight"
+                  ) {
+                    return;
+                  }
+                  // Bloquear se não for número
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
               />
               {errors.grade && (
-                <p className="text-sm text-destructive">{errors.grade.message}</p>
+                <p className={`${TYPOGRAPHY.BODY} text-destructive`}>{errors.grade.message}</p>
               )}
             </div>
           )}
 
           {!attendance && hasFinancialRecord && (
-            <div className="space-y-3 p-3 bg-muted/50 rounded-lg border">
-              <div className="flex items-start gap-2">
+            <div className={`${STACK.TIGHT} p-3 bg-muted/50 rounded-lg border`}>
+              <div className={`flex items-start ${GAP.TIGHT}`}>
                 <Checkbox
                   id="chargeAbsence"
                   checked={chargeAbsence}
@@ -282,7 +355,7 @@ export function PostClassDialog({
                   <Label htmlFor="chargeAbsence" className="cursor-pointer font-medium">
                     Cobrar esta falta
                   </Label>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className={`${TYPOGRAPHY.SMALL} mt-1`}>
                     {chargeAbsence 
                       ? "A cobrança será mantida com o status atual"
                       : isPaymentAlreadyPaid
@@ -293,7 +366,7 @@ export function PostClassDialog({
               </div>
               
               {!chargeAbsence && isPaymentAlreadyPaid && (
-                <div className="flex items-start gap-2 ml-6 pt-2 border-t">
+                <div className={`flex items-start ${GAP.TIGHT} ml-6 pt-2 border-t`}>
                   <Checkbox
                     id="refundPayment"
                     checked={refundPayment}
@@ -305,7 +378,7 @@ export function PostClassDialog({
                     <Label htmlFor="refundPayment" className="cursor-pointer font-medium text-amber-600">
                       Extornar pagamento
                     </Label>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className={`${TYPOGRAPHY.SMALL} mt-1`}>
                       O pagamento será marcado como extornado (devolvido ao aluno)
                     </p>
                   </div>
@@ -314,7 +387,7 @@ export function PostClassDialog({
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className={STACK.TIGHT}>
             <Label htmlFor="feedback">Feedback</Label>
             <Textarea
               id="feedback"
@@ -323,13 +396,13 @@ export function PostClassDialog({
               {...register("feedback")}
             />
             {errors.feedback && (
-              <p className="text-sm text-destructive">{errors.feedback.message}</p>
+              <p className={`${TYPOGRAPHY.BODY} text-destructive`}>{errors.feedback.message}</p>
             )}
           </div>
 
           {attendance && hasFinancialRecord && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
+            <div className={STACK.TIGHT}>
+              <div className={`flex items-center ${GAP.TIGHT}`}>
                 <Checkbox
                   id="confirmPayment"
                   checked={confirmPayment}
@@ -346,12 +419,43 @@ export function PostClassDialog({
                 </Label>
               </div>
               {errors.confirmPayment && (
-                <p className="text-sm text-destructive">{errors.confirmPayment.message}</p>
+                <p className={`${TYPOGRAPHY.BODY} text-destructive`}>{errors.confirmPayment.message}</p>
+              )}
+              
+              {hasPaymentProof && (
+                <div className={`flex items-center ${GAP.TIGHT} rounded-lg border bg-muted/30 p-3`}>
+                  <FileText className={`${ICON_SIZES.SM} text-muted-foreground flex-shrink-0`} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`${TYPOGRAPHY.BODY} font-medium truncate`}>{paymentProofFilename}</p>
+                    <p className={TYPOGRAPHY.SMALL}>
+                      {paymentProofStatus === "pending" && "Aguardando confirmação"}
+                      {paymentProofStatus === "approved" && "Comprovante aprovado"}
+                      {paymentProofStatus === "rejected" && "Comprovante rejeitado"}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleViewProof}
+                    disabled={isViewingProof}
+                    className="flex-shrink-0"
+                  >
+                    {isViewingProof ? (
+                      <Loader2 className={`${ICON_SIZES.SM} animate-spin`} />
+                    ) : (
+                      <>
+                        <Eye className={`${ICON_SIZES.SM} mr-1`} />
+                        Ver
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className={`flex justify-end ${GAP.TIGHT} pt-2`}>
             <Button
               type="button"
               variant="outline"
@@ -361,7 +465,7 @@ export function PostClassDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending && <Loader2 className={`mr-2 ${ICON_SIZES.SM} animate-spin`} />}
               Salvar
             </Button>
           </div>
