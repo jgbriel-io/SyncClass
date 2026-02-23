@@ -273,6 +273,7 @@ export function useActivities(
           students (name),
           teachers (name)
         `)
+        .is("deleted_at", null) // Filtrar atividades não deletadas
         .order("created_at", { ascending: false });
 
       if (!fetchAll) {
@@ -453,9 +454,15 @@ export function useDeleteActivity() {
 
   return useMutation({
     mutationFn: async (activityId: string) => {
+      // Soft delete: marcar como deletado em vez de remover do banco
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { error } = await supabase
         .from("activities")
-        .delete()
+        .update({
+          deleted_at: new Date().toISOString(),
+          deleted_by: user?.id || null,
+        })
         .eq("id", activityId);
 
       if (error) throw error;
