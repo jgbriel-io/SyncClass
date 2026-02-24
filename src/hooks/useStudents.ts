@@ -268,10 +268,16 @@ export function useUpdateStudent() {
             profileUpdate.email = normalizedEmail;
           }
 
-          const { error: profileUpdateError } = await supabase
-            .from("profiles")
-            .update(profileUpdate)
-            .eq("id", profile.id);
+          // Usar RPC para evitar erro de tipo UUID
+          const { data: rpcData, error: profileUpdateError } = await supabase.rpc('update_profile_by_id', {
+            p_id: profile.id,
+            p_role: profileUpdate.role,
+            p_active: profileUpdate.active,
+            p_student_id: profileUpdate.student_id,
+            p_teacher_id: null,
+            p_full_name: profileUpdate.full_name || null,
+            p_email: profileUpdate.email || null
+          });
 
           if (profileUpdateError) {
             throw profileUpdateError;
@@ -284,7 +290,10 @@ export function useUpdateStudent() {
               p_full_name: fullName ?? null,
               p_email: normalizedEmail,
             });
-            if (roleError) throw roleError;
+            
+            if (roleError) {
+              throw roleError;
+            }
           }
         }
       }

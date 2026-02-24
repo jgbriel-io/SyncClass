@@ -337,7 +337,7 @@ export function useCurrentUserProfile(userId: string | undefined) {
       if (!userId) return null;
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, user_id, full_name, email, avatar_url, role, teacher_id, student_id")
+        .select("id, user_id, full_name, email, avatar_url, role, teacher_id, student_id, active")
         .eq("user_id", userId)
         .maybeSingle();
       if (error) throw error;
@@ -350,6 +350,7 @@ export function useCurrentUserProfile(userId: string | undefined) {
         role: string | null;
         teacher_id: string | null;
         student_id: string | null;
+        active: boolean;
       } | null;
     },
     enabled: !!userId,

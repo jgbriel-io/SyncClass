@@ -56,7 +56,6 @@ import {
 import { useStudents, useUpdateStudent, useHardDeleteStudent } from "@/hooks/useStudents";
 import { useTeachers, useUpdateTeacher, useDeleteTeacher, useHardDeleteTeacher } from "@/hooks/useTeachers";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -313,58 +312,31 @@ export default function UsersPage() {
         return;
       }
 
-      // Reativar usuário sem vínculo (apenas profile.active)
-      updateProfile.mutate(
-        { userId: selectedUser.id, fullName: selectedUser.profile?.full_name || "" },
-        {
-          onSuccess: () => {
-            // Atualizar profile.active manualmente via supabase
-            supabase
-              .from("profiles")
-              .update({ active: true })
-              .eq("user_id", selectedUser.id)
-              .then(() => {
-                toast.success("Usuário reativado com sucesso!");
-                setDeleteDialogOpen(false);
-                setSelectedUser(null);
-                setForceHardDelete(false);
-              });
-          },
-        }
-      );
+      // Reativar usuário sem vínculo - não é possível via frontend
+      // O admin deve usar o painel de Students ou Teachers para reativar
+      toast.error("Este usuário não possui vínculo com aluno ou professor. Use o painel específico para reativar.");
+      setDeleteDialogOpen(false);
+      setSelectedUser(null);
+      setForceHardDelete(false);
       return;
     }
 
     if (linkedStudent && isStudentActive) {
-      // PRIMEIRO: Garantir que o profile mantenha o student_id
-      supabase
-        .from("profiles")
-        .update({ 
-          student_id: linkedStudent.id, // Garantir vínculo ANTES de arquivar
-        })
-        .eq("student_id", linkedStudent.id)
-        .then(() => {
-          // DEPOIS: Arquivar o aluno
-          updateStudent.mutate(
-            { id: linkedStudent.id, status: "inativo" },
-            {
-              onSuccess: () => {
-                toast.success("Usuário arquivado com sucesso!");
-                setDeleteDialogOpen(false);
-                setSelectedUser(null);
-                setForceHardDelete(false);
-              },
-              onError: (err) => {
-                console.error("Erro ao arquivar aluno:", err);
-                toast.error("Erro ao arquivar usuário");
-              },
-            }
-          );
-        })
-        .catch((err) => {
-          console.error("Erro ao garantir vínculo:", err);
-          toast.error("Erro ao arquivar usuário");
-        });
+      // Arquivar o aluno diretamente (RLS garante que só pode atualizar seus próprios registros)
+      updateStudent.mutate(
+        { id: linkedStudent.id, status: "inativo" },
+        {
+          onSuccess: () => {
+            toast.success("Usuário arquivado com sucesso!");
+            setDeleteDialogOpen(false);
+            setSelectedUser(null);
+            setForceHardDelete(false);
+          },
+          onError: (err) => {
+            toast.error("Erro ao arquivar usuário");
+          },
+        }
+      );
       return;
     }
 

@@ -48,11 +48,6 @@ export function checkStorageQuota(): {
   const shouldClear = used > MAX_STORAGE_SIZE;
   const shouldWarn = used > WARNING_THRESHOLD && !shouldClear;
   
-  // Log para debug (apenas em desenvolvimento)
-  if (import.meta.env.DEV) {
-    console.log(`[Storage] ${usedMB}MB / 5MB (${percentage.toFixed(1)}%)`);
-  }
-  
   return {
     used,
     usedMB,
@@ -84,10 +79,6 @@ export function clearStorageExcept(keepKeys: string[] = []): void {
   Object.entries(savedValues).forEach(([key, value]) => {
     localStorage.setItem(key, value);
   });
-  
-  if (import.meta.env.DEV) {
-    console.log('[Storage] Cleared, kept keys:', keepKeys);
-  }
 }
 
 /**

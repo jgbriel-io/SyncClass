@@ -120,7 +120,6 @@ export function PostClassDialog({
       window.open(url, "_blank");
     } catch (error) {
       toast.error("Erro ao abrir comprovante");
-      console.error(error);
     } finally {
       setIsViewingProof(false);
     }

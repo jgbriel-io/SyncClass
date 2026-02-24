@@ -47,7 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (profileData.deleted_at || profileData.active === false) {
           logger.warn("User account deleted or inactive, logging out", { userId });
           await supabase.auth.signOut();
-          window.location.href = "/login";
           return null;
         }
 
@@ -163,32 +162,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener("unhandledrejection", handleUnhandledRejection);
 
-    // Polling: verificar se conta ainda está ativa a cada 5 minutos
-    let accountCheckInterval: NodeJS.Timeout | null = null;
-    
+    // Verificar status da conta periodicamente
     const checkAccountStatus = async () => {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
 
       const { data: profileData } = await supabase
         .from("profiles")
         .select("deleted_at, active")
-        .eq("user_id", currentUser.id)
+        .eq("user_id", session.user.id)
         .maybeSingle();
 
       if (profileData && (profileData.deleted_at || profileData.active === false)) {
-        logger.warn("Account deleted or inactive during session, logging out", { userId: currentUser.id });
+        logger.warn("Account deleted or inactive, logging out", { userId: session.user.id });
         await supabase.auth.signOut();
         window.location.href = "/login";
       }
     };
 
-    // Iniciar polling após login
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        accountCheckInterval = setInterval(checkAccountStatus, 5 * 60 * 1000); // 5 minutos
-      }
-    });
+    // Verificar imediatamente ao carregar
+    checkAccountStatus();
+
+    // Verificar a cada 30 segundos
+    const accountCheckInterval = setInterval(checkAccountStatus, 30000);
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -220,7 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
       window.removeEventListener("unhandledrejection", handleUnhandledRejection);
-      if (accountCheckInterval) clearInterval(accountCheckInterval);
+      clearInterval(accountCheckInterval);
     };
   }, []);
 
