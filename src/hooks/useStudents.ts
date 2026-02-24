@@ -229,62 +229,32 @@ export function useUpdateStudent() {
       const normalizedEmail = rawEmail ? rawEmail.trim().toLowerCase() : null;
       const isActive = updatedStudent.status === "ativo";
 
-      console.log('[useUpdateStudent] Iniciando sincronização de profiles', {
-        studentId: updatedStudent.id,
-        studentIdType: typeof updatedStudent.id,
-        isActive,
-        fullName,
-        normalizedEmail
-      });
-
       // Buscar profiles vinculados pelo student_id
       const { data: linkedProfiles, error: profileError } = await supabase
         .from("profiles")
         .select("id, user_id, student_id")
         .eq("student_id", updatedStudent.id);
 
-      console.log('[useUpdateStudent] Resultado da busca por student_id', {
-        linkedProfiles,
-        profileError,
-        count: linkedProfiles?.length || 0
-      });
-
       if (profileError) {
-        console.error('[useUpdateStudent] Erro ao buscar profiles:', profileError);
         throw profileError;
       }
 
       // Se não encontrou profiles pelo student_id, buscar pelo email (vínculo perdido)
       let profilesToUpdate = linkedProfiles || [];
       if (profilesToUpdate.length === 0 && normalizedEmail) {
-        console.log('[useUpdateStudent] Buscando profiles pelo email:', normalizedEmail);
         const { data: profilesByEmail } = await supabase
           .from("profiles")
           .select("id, user_id, student_id")
           .eq("email", normalizedEmail)
           .eq("role", "student");
         
-        console.log('[useUpdateStudent] Profiles encontrados por email:', profilesByEmail);
-        
         if (profilesByEmail && profilesByEmail.length > 0) {
           profilesToUpdate = profilesByEmail;
         }
       }
 
-      console.log('[useUpdateStudent] Profiles para atualizar:', {
-        count: profilesToUpdate.length,
-        profiles: profilesToUpdate
-      });
-
       if (profilesToUpdate.length > 0) {
         for (const profile of profilesToUpdate) {
-          console.log('[useUpdateStudent] Atualizando profile', {
-            profileId: profile.id,
-            profileIdType: typeof profile.id,
-            userId: profile.user_id,
-            studentId: profile.student_id
-          });
-
           // CRÍTICO: Sempre manter o student_id, mesmo que já exista
           const profileUpdate: ProfileUpdate = {
             role: "student",
@@ -298,16 +268,7 @@ export function useUpdateStudent() {
             profileUpdate.email = normalizedEmail;
           }
 
-          console.log('[useUpdateStudent] Dados do update:', profileUpdate);
-
           // Usar RPC para evitar erro de tipo UUID
-          console.log('[useUpdateStudent] Chamando RPC update_profile_by_id com:', {
-            p_id: profile.id,
-            p_role: profileUpdate.role,
-            p_active: profileUpdate.active,
-            p_student_id: profileUpdate.student_id,
-          });
-
           const { data: rpcData, error: profileUpdateError } = await supabase.rpc('update_profile_by_id', {
             p_id: profile.id,
             p_role: profileUpdate.role,
@@ -318,25 +279,11 @@ export function useUpdateStudent() {
             p_email: profileUpdate.email || null
           });
 
-          console.log('[useUpdateStudent] Resultado da RPC:', { rpcData, profileUpdateError });
-
           if (profileUpdateError) {
-            console.error('[useUpdateStudent] Erro ao atualizar profile:', {
-              error: profileUpdateError,
-              profileId: profile.id,
-              update: profileUpdate
-            });
             throw profileUpdateError;
           }
 
-          console.log('[useUpdateStudent] Profile atualizado com sucesso:', profile.id);
-
           if (profile.user_id) {
-            console.log('[useUpdateStudent] Atualizando user_role via RPC:', {
-              userId: profile.user_id,
-              role: 'student'
-            });
-
             const { error: roleError } = await supabase.rpc("upsert_user_role_safe", {
               p_user_id: profile.user_id,
               p_role: "student",
@@ -345,11 +292,8 @@ export function useUpdateStudent() {
             });
             
             if (roleError) {
-              console.error('[useUpdateStudent] Erro ao atualizar user_role:', roleError);
               throw roleError;
             }
-            
-            console.log('[useUpdateStudent] User_role atualizado com sucesso');
           }
         }
       }

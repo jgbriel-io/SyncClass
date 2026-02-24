@@ -49,6 +49,8 @@ Ao editar QUALQUER arquivo, aplique TODAS estas verificações:
 - Delete código morto/comentado (Git guarda histórico)
 - Remova imports não utilizados
 - Simplifique condicionais (preferência por Early Returns)
+- **CRÍTICO:** Remova TODOS os `console.log()` (use `logger` de `@/lib/logger` se necessário)
+- Mantenha apenas `console.error` e `console.warn` do logger oficial (Sentry integration)
 
 ## ⚙️ 2. BACKEND & SEGURANÇA (SUPABASE)
 
@@ -165,6 +167,12 @@ px-6/py-6  →  PADDING_X.MD / PADDING_Y.MD
 - Corrigir todos os erros (não deixar warnings)
 - Use `/* eslint-disable @typescript-eslint/no-explicit-any */` apenas quando inevitável (type casting React Hook Form)
 
+### Debug & Logging
+- **PROIBIDO:** `console.log()`, `console.debug()`, `console.info()` em código de produção
+- **PERMITIDO:** Apenas `logger.error()` e `logger.warn()` de `@/lib/logger` (integração Sentry)
+- **VERIFICAÇÃO:** Antes de commit, busque por `console.log` no código e remova todos
+- **COMANDO:** `npm run lint` deve passar sem erros
+
 ## 📋 Checklist Rápido (Antes de Commit)
 
 ### Design Tokens
@@ -175,6 +183,7 @@ px-6/py-6  →  PADDING_X.MD / PADDING_Y.MD
 - [ ] Verifiquei componentes similares para manter consistência?
 - [ ] Todos os arquivos similares seguem o mesmo padrão?
 - [ ] Removi código morto/comentado?
+- [ ] Removi TODOS os `console.log()` do código?
 
 ### Qualidade
 - [ ] Adicionei feedback (toast + loading) em ações assíncronas?

@@ -92,8 +92,6 @@ function AppContent() {
         toast.info('Cache limpo automaticamente para liberar espaço', {
           description: `Uso anterior: ${stats.usedMB}MB / 5MB`,
         });
-      } else if (stats.shouldWarn && import.meta.env.DEV) {
-        console.warn(`[Storage] Uso alto: ${stats.usedMB}MB / 5MB (${stats.percentage.toFixed(1)}%)`);
       }
     };
 

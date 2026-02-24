@@ -62,7 +62,6 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
           .eq("user_id", user.id);
 
         if (profileError) {
-          console.error("Erro ao atualizar profile:", profileError);
           // Não falhar a operação se só o profile não atualizar
         }
       }
@@ -71,7 +70,6 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
       reset();
       onSuccess();
     } catch (error) {
-      console.error("Erro ao alterar senha:", error);
       toast.error(error instanceof Error ? error.message : "Erro ao alterar senha");
     } finally {
       setIsSubmitting(false);

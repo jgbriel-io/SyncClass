@@ -333,7 +333,6 @@ export default function UsersPage() {
             setForceHardDelete(false);
           },
           onError: (err) => {
-            console.error("Erro ao arquivar aluno:", err);
             toast.error("Erro ao arquivar usuário");
           },
         }

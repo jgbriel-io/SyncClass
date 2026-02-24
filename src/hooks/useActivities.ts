@@ -184,10 +184,6 @@ export async function getActivityFileUrl(filePathOrUrl: string): Promise<string>
     .createSignedUrl(filePath, 3600); // 1 hora
 
   if (error) {
-    console.error("Erro ao criar signed URL:", error);
-    console.error("Path usado:", filePath);
-    console.error("URL/Path original:", filePathOrUrl);
-    
     // Se o arquivo não existe, verificar se há problema com o path
     if (error.message.includes("not found") || error.message.includes("Object not found")) {
       throw new Error(`Arquivo não encontrado no storage. Verifique se o arquivo "${filePath}" existe no bucket 'activities'.`);
