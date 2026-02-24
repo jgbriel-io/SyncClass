@@ -24,6 +24,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
 import { useCurrentUserProfile } from "@/hooks/useUsers";
+import { useActiveUserCheck } from "@/hooks/useActiveUserCheck";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
@@ -64,6 +65,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { signOut, user } = useAuth();
+
+  // Verificar se usuário está ativo (logout automático se desativado)
+  useActiveUserCheck();
 
   useEffect(() => {
     if (location.pathname.startsWith("/admin/students")) {
