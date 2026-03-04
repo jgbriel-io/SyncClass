@@ -855,8 +855,13 @@ export function useInviteStudent() {
     mutationFn: async (data: StudentInsert & { teacher_id?: string | null }) => {
       const email = (data.email ?? "").trim().toLowerCase();
       if (!email) throw new Error("Email é obrigatório");
+      
+      // Gerar senha segura no frontend para enviar ao backend
+      const password = generateRandomPassword();
+      
       const result = await invokeInviteUser({
         email,
+        password, // Enviar senha gerada
         full_name: data.name,
         role: "student",
         teacher_id: data.teacher_id ?? undefined,
@@ -885,8 +890,13 @@ export function useInviteTeacher() {
     mutationFn: async (data: TeacherInsert) => {
       const email = (data.email ?? "").trim().toLowerCase();
       if (!email) throw new Error("Email é obrigatório");
+      
+      // Gerar senha segura no frontend para enviar ao backend
+      const password = generateRandomPassword();
+      
       const result = await invokeInviteUser({
         email,
+        password, // Enviar senha gerada
         full_name: data.name,
         role: "teacher",
         teacherData: data as Partial<TeacherInsert>,

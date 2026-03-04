@@ -140,7 +140,7 @@ export function SendActivityDialog({
     if (!file) return;
 
     // Validar tipo e tamanho do arquivo
-    const validation = validateFile(file, 'ACTIVITY_PDF');
+    const validation = validateFile(file, 'ACTIVITY_ALL');
     if (!validation.valid) {
       toast.error(validation.error);
       e.target.value = ''; // Limpar input
@@ -398,7 +398,7 @@ export function SendActivityDialog({
                   <Input
                     id="file"
                     type="file"
-                    accept={FILE_TYPES.ACTIVITY_PDF.accept}
+                    accept={FILE_TYPES.ACTIVITY_ALL.accept}
                     onChange={handleFileChange}
                     disabled={isPending}
                     className="cursor-pointer"
@@ -412,7 +412,7 @@ export function SendActivityDialog({
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {FILE_TYPES.ACTIVITY_PDF.description}
+                  {FILE_TYPES.ACTIVITY_ALL.description}
                 </p>
               </div>
             )}
@@ -441,11 +441,6 @@ export function SendActivityDialog({
 
             {(errors.file || errors.existingFileUrl) && (
               <p className="text-sm text-destructive">{errors.file?.message ?? errors.existingFileUrl?.message}</p>
-            )}
-            {fileSource === "new" && (
-              <p className="text-xs text-muted-foreground">
-                PDF, DOC, DOCX, JPG, PNG ou TXT (máx. 10 MB)
-              </p>
             )}
           </div>
 
