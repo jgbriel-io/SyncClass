@@ -269,15 +269,11 @@ export function StudentsListView({
         );
       } else {
         // Email é obrigatório, sempre usa inviteStudent
+        // Senha é enviada automaticamente por email, não precisa mostrar modal
         inviteStudent.mutate(dataWithTeacher as StudentInsert & { teacher_id?: string | null }, {
-          onSuccess: (result) => {
+          onSuccess: () => {
             setIsFormOpen(false);
-            if (result?.password) {
-              setGeneratedPassword(result.password);
-              setShowGeneratedPassword(false);
-              setPasswordCopied(false);
-              setIsPasswordDialogOpen(true);
-            }
+            toast.success("Aluno cadastrado! Um email com a senha foi enviado para o aluno.");
           },
         });
       }

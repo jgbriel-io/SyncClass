@@ -224,7 +224,15 @@ serve(async (req) => {
     return jsonResponse({ error: "Sem permissão para convidar usuários" }, 403);
   }
 
-  const password = (body.password && body.password.length >= 6) ? body.password : randomPassword();
+  // CRÍTICO: Usar senha do body se fornecida (frontend já gerou), nunca gerar nova
+  // Se não vier senha, gerar aqui (fallback para chamadas diretas da Edge Function)
+  let password = body.password;
+  if (!password || password.length < 6) {
+    password = randomPassword();
+    log("Generated new password (no valid password in body)");
+  } else {
+    log("Using password from request body");
+  }
 
   const { data: existingProfile } = await supabaseAdmin
     .from("profiles")
