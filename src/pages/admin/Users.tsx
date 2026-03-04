@@ -381,7 +381,7 @@ export default function UsersPage() {
     });
   };
 
-  // Calcula se o dialog deve mostrar "Excluir definitivamente", "Reativar" ou "Arquivar".
+  // Calcula se o dialog deve mostrar "Excluir arquivo morto", "Excluir definitivamente", "Reativar" ou "Arquivar".
   const deleteDialogInfo = useMemo(() => {
     const linkedStudent = selectedUser?.profile?.student_id
       ? students.find((s) => s.id === selectedUser.profile?.student_id)
@@ -392,14 +392,16 @@ export default function UsersPage() {
     const isStudentActive = linkedStudent?.status === "ativo";
     const isTeacherActive = (linkedTeacher?.status ?? "ativo") === "ativo";
     const userIsInactive = !(selectedUser?.profile?.active ?? true);
+    const hasNoLinks = !selectedUser?.profile?.student_id && !selectedUser?.profile?.teacher_id;
 
-    // Hard delete apenas se forçado explicitamente
-    const isHardDelete = forceHardDelete;
+    // Hard delete: forçado OU profile sem vínculos (arquivo morto)
+    const isHardDelete = forceHardDelete || (userIsInactive && hasNoLinks);
+    const isArchivedProfile = userIsInactive && hasNoLinks; // Profile arquivo morto
 
     const displayName =
       selectedUser?.profile?.full_name || selectedUser?.email || "este usuário";
 
-    return { linkedStudent, linkedTeacher, isStudentActive, isTeacherActive, userIsInactive, isHardDelete, displayName };
+    return { linkedStudent, linkedTeacher, isStudentActive, isTeacherActive, userIsInactive, isHardDelete, isArchivedProfile, displayName };
   }, [selectedUser, students, teachers, forceHardDelete]);
 
   const getRoleVariant = (role: string | null) => {
@@ -889,18 +891,27 @@ export default function UsersPage() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                {deleteDialogInfo.isHardDelete
-                  ? "Excluir definitivamente?"
-                  : deleteDialogInfo.userIsInactive && !forceHardDelete
-                    ? "Confirmar reativação"
-                    : deleteDialogInfo.linkedStudent && deleteDialogInfo.isStudentActive
-                      ? "Confirmar arquivamento"
-                      : deleteDialogInfo.linkedTeacher && deleteDialogInfo.isTeacherActive
+                {deleteDialogInfo.isArchivedProfile
+                  ? "Excluir arquivo morto?"
+                  : deleteDialogInfo.isHardDelete
+                    ? "Excluir definitivamente?"
+                    : deleteDialogInfo.userIsInactive && !forceHardDelete
+                      ? "Confirmar reativação"
+                      : deleteDialogInfo.linkedStudent && deleteDialogInfo.isStudentActive
                         ? "Confirmar arquivamento"
-                        : "Confirmar arquivamento do usuário"}
+                        : deleteDialogInfo.linkedTeacher && deleteDialogInfo.isTeacherActive
+                          ? "Confirmar arquivamento"
+                          : "Confirmar arquivamento do usuário"}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                {deleteDialogInfo.isHardDelete ? (
+                {deleteDialogInfo.isArchivedProfile ? (
+                  <>
+                    Tem certeza que deseja excluir o arquivo morto do usuário <strong>{deleteDialogInfo.displayName}</strong>?
+                    <br />
+                    <br />
+                    A conta será removida do sistema (Supabase Auth e perfil). O email ficará disponível para reutilização. Esta ação não pode ser desfeita.
+                  </>
+                ) : deleteDialogInfo.isHardDelete ? (
                   <>
                     A conta do usuário <strong>{deleteDialogInfo.displayName}</strong> será removida do sistema
                     (Supabase Auth, perfil e vínculos). Esta ação não pode ser desfeita.
@@ -966,7 +977,13 @@ export default function UsersPage() {
                     {deleteDialogInfo.isHardDelete ? "Excluindo..." : deleteDialogInfo.userIsInactive && !forceHardDelete ? "Reativando..." : "Arquivando..."}
                   </>
                 ) : (
-                  deleteDialogInfo.isHardDelete ? "Excluir definitivamente" : deleteDialogInfo.userIsInactive && !forceHardDelete ? "Reativar" : "Arquivar"
+                  deleteDialogInfo.isArchivedProfile 
+                    ? "Excluir arquivo morto" 
+                    : deleteDialogInfo.isHardDelete 
+                      ? "Excluir definitivamente" 
+                      : deleteDialogInfo.userIsInactive && !forceHardDelete 
+                        ? "Reativar" 
+                        : "Arquivar"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

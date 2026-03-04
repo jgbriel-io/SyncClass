@@ -22,11 +22,19 @@ export const FILE_TYPES = {
     maxSize: 10 * 1024 * 1024, // 10MB
     description: 'PDF ou Word até 10MB',
   },
-  ACTIVITY_RESPONSE: {
-    accept: '.pdf,.jpg,.jpeg,.png',
-    mimeTypes: ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'],
+  ACTIVITY_ALL: {
+    accept: '.pdf,.doc,.docx,.jpg,.jpeg,.png,.txt',
+    mimeTypes: [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'text/plain',
+    ],
     maxSize: 10 * 1024 * 1024, // 10MB
-    description: 'PDF ou imagem até 10MB',
+    description: 'PDF, DOC, DOCX, JPG, PNG ou TXT (máx. 10 MB)',
   },
 } as const;
 

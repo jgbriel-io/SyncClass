@@ -455,12 +455,14 @@ export function useHardDeleteStudent() {
       // 4) If there's a linked user, soft delete the profile instead of hard delete
       if (linkedProfile?.user_id) {
         // Mark profile as deleted (soft delete for audit trail)
+        // Limpar email para permitir reutilização em novos cadastros
         const { error: profileError } = await supabase
           .from("profiles")
           .update({ 
             deleted_at: new Date().toISOString(),
             active: false,
-            student_id: null // Remove link
+            student_id: null, // Remove link
+            email: null // Limpar email para permitir reutilização
           })
           .eq("user_id", linkedProfile.user_id);
 
