@@ -1,0 +1,380 @@
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { BaseDialog } from "@/components/ui/custom/BaseDialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { DialogFooter } from "@/components/ui/dialog";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Loader2, Upload, FileText, FolderOpen, CalendarIcon, Pencil } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { REGEX_PATTERNS } from "@/lib/utils/patterns";
+import {
+  useUpdateActivity,
+  uploadActivityFile,
+  useActivityFilesForTeacher,
+  type ActivityWithRelations,
+} from "@/hooks/useActivities";
+import { toast } from "sonner";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+function dueDateAndTimeToIso(dueDate: string, dueTime: string): string {
+  const [day, month, year] = dueDate.split("/").map(Number);
+  const [hour, minute] = dueTime.split(":").map(Number);
+  const local = new Date(year, month - 1, day, hour, minute, 0, 0);
+  return local.toISOString();
+}
+
+function parseDueDateForForm(dueDate: string | null | undefined): { date: string; time: string } {
+  if (!dueDate) {
+    const d = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    return {
+      date: format(d, "dd/MM/yyyy", { locale: ptBR }),
+      time: "23:59",
+    };
+  }
+  if (dueDate.includes("T")) {
+    const d = new Date(dueDate);
+    return {
+      date: format(d, "dd/MM/yyyy", { locale: ptBR }),
+      time: format(d, "HH:mm", { locale: ptBR }),
+    };
+  }
+  const [y, m, d] = dueDate.split("-");
+  return {
+    date: `${d}/${m}/${y}`,
+    time: "23:59",
+  };
+}
+
+const editActivitySchema = z
+  .object({
+    title: z.string().min(1, "Informe o título da atividade"),
+    description: z.string().optional(),
+    due_date: z.string().min(1, "Defina o prazo").regex(REGEX_PATTERNS.date, "Data no formato dd/mm/aaaa"),
+    due_time: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/, "Hora no formato HH:mm"),
+    fileSource: z.enum(["current", "new", "existing"]),
+    file: z.instanceof(File).optional(),
+    existingFileUrl: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.fileSource === "new") return data.file != null;
+      if (data.fileSource === "existing") return !!data.existingFileUrl;
+      return true;
+    },
+    { message: "Selecione ou envie um arquivo", path: ["file"] }
+  );
+
+type EditActivityFormData = z.infer<typeof editActivitySchema>;
+
+interface EditActivityDialogProps {
+  activity: ActivityWithRelations | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  teacherId: string;
+}
+
+export function EditActivityDialog({
+  activity,
+  open,
+  onOpenChange,
+  teacherId,
+}: EditActivityDialogProps) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const { data: existingFiles = [], isLoading: loadingFiles } = useActivityFilesForTeacher(teacherId);
+  const updateActivity = useUpdateActivity();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<EditActivityFormData>({
+    resolver: zodResolver(editActivitySchema),
+    defaultValues: {
+      fileSource: "current",
+      due_date: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "dd/MM/yyyy", { locale: ptBR }),
+      due_time: "23:59",
+    },
+  });
+
+  const fileSource = watch("fileSource");
+  const dueDate = watch("due_date");
+
+  useEffect(() => {
+    if (open && activity) {
+      const { date, time } = parseDueDateForForm(activity.due_date);
+      reset({
+        title: activity.title ?? "",
+        description: activity.description ?? "",
+        due_date: date,
+        due_time: time,
+        fileSource: "current",
+        file: undefined,
+        existingFileUrl: undefined,
+      });
+      setSelectedFile(null);
+    }
+  }, [open, activity, reset]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setValue("file", file);
+      setValue("existingFileUrl", undefined);
+    }
+  };
+
+  const handleFormSubmit = async (data: EditActivityFormData) => {
+    if (!activity) return;
+    setIsUploading(true);
+    try {
+      let file_url: string = activity.file_url;
+      let file_name: string = activity.file_name;
+      let file_type: string | null = activity.file_type ?? null;
+      let file_size: number | null = activity.file_size ?? null;
+
+      if (data.fileSource === "new" && data.file) {
+        const uploaded = await uploadActivityFile(data.file);
+        file_url = uploaded.url;
+        file_name = data.file.name;
+        file_type = data.file.type;
+        file_size = data.file.size;
+      } else if (data.fileSource === "existing" && data.existingFileUrl) {
+        const existing = existingFiles.find((f) => f.file_url === data.existingFileUrl);
+        if (!existing) {
+          toast.error("Arquivo não encontrado.");
+          return;
+        }
+        file_url = existing.file_url;
+        file_name = existing.file_name;
+        file_type = existing.file_type;
+        file_size = existing.file_size;
+      }
+
+      await updateActivity.mutateAsync({
+        id: activity.id,
+        title: data.title.trim(),
+        description: data.description?.trim() || null,
+        due_date: dueDateAndTimeToIso(data.due_date, data.due_time),
+        file_url,
+        file_name,
+        file_type,
+        file_size,
+      });
+
+      onOpenChange(false);
+    } catch (error) {
+      toast.error("Erro ao atualizar atividade: " + (error as Error).message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const isPending = isUploading || updateActivity.isPending;
+
+  if (!activity) return null;
+
+  return (
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Editar atividade"
+      description={`Altere título, descrição, prazo ou arquivo. Aluno: ${activity.students?.name ?? "—"}`}
+      size="SM"
+    >
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-title">Título *</Label>
+            <Input
+              id="edit-title"
+              placeholder="Ex: Reading Comprehension - Unit 5"
+              {...register("title")}
+              disabled={isPending}
+            />
+            {errors.title && (
+              <p className="text-sm text-destructive">{errors.title.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Prazo de entrega *</Label>
+            <p className="text-xs text-muted-foreground">Data e hora limite para o aluno entregar.</p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="edit-due_date"
+                    variant="outline"
+                    className="w-full sm:flex-1 justify-start text-left font-normal"
+                    disabled={isPending}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dueDate || "Data"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dueDate && REGEX_PATTERNS.date.test(dueDate) ? (() => {
+                      const [d, m, y] = dueDate.split("/");
+                      return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+                    })() : undefined}
+                    onSelect={(date) => {
+                      if (date) setValue("due_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
+                    }}
+                    locale={ptBR}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                  />
+                </PopoverContent>
+              </Popover>
+              <Input
+                id="edit-due_time"
+                type="time"
+                {...register("due_time")}
+                disabled={isPending}
+                className="w-full sm:w-[120px]"
+              />
+            </div>
+            {errors.due_date && <p className="text-sm text-destructive">{errors.due_date.message}</p>}
+            {errors.due_time && <p className="text-sm text-destructive">{errors.due_time.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-description">Descrição (opcional)</Label>
+            <Textarea
+              id="edit-description"
+              placeholder="Instruções e observações..."
+              rows={3}
+              {...register("description")}
+              disabled={isPending}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label>Arquivo</Label>
+            <RadioGroup
+              value={fileSource}
+              onValueChange={(v) => {
+                setValue("fileSource", v as "current" | "new" | "existing");
+                setSelectedFile(null);
+                setValue("file", undefined);
+                setValue("existingFileUrl", undefined);
+              }}
+              className="flex flex-col gap-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="current" id="edit-source-current" disabled={isPending} />
+                <Label htmlFor="edit-source-current" className="font-normal cursor-pointer flex items-center gap-1.5">
+                  <FileText className="h-4 w-4" />
+                  Manter arquivo atual ({activity.file_name})
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="new" id="edit-source-new" disabled={isPending} />
+                <Label htmlFor="edit-source-new" className="font-normal cursor-pointer flex items-center gap-1.5">
+                  <Upload className="h-4 w-4" />
+                  Enviar novo arquivo
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="existing" id="edit-source-existing" disabled={isPending || existingFiles.length === 0} />
+                <Label htmlFor="edit-source-existing" className="font-normal cursor-pointer flex items-center gap-1.5">
+                  <FolderOpen className="h-4 w-4" />
+                  Usar arquivo já na plataforma
+                  {existingFiles.length === 0 && (
+                    <span className="text-xs text-muted-foreground">(nenhum ainda)</span>
+                  )}
+                </Label>
+              </div>
+            </RadioGroup>
+
+            {fileSource === "new" && (
+              <div className="flex items-center gap-2">
+                <Input
+                  id="edit-file"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                  onChange={handleFileChange}
+                  disabled={isPending}
+                  className="cursor-pointer"
+                />
+                {selectedFile && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <FileText className="h-4 w-4 shrink-0" />
+                    <span className="truncate max-w-[150px]">{selectedFile.name}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {fileSource === "existing" && existingFiles.length > 0 && (
+              <Select
+                value={watch("existingFileUrl") ?? ""}
+                onValueChange={(v) => setValue("existingFileUrl", v)}
+                disabled={isPending || loadingFiles}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um arquivo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {existingFiles.map((f) => (
+                    <SelectItem key={f.file_url} value={f.file_url}>
+                      <span className="truncate block max-w-[240px]">
+                        {f.file_name}
+                        {f.file_size != null ? ` · ${(f.file_size / 1024).toFixed(1)} KB` : ""}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {(errors.file || errors.existingFileUrl) && (
+              <p className="text-sm text-destructive">{errors.file?.message ?? errors.existingFileUrl?.message}</p>
+            )}
+            {fileSource === "new" && (
+              <p className="text-xs text-muted-foreground">PDF, DOC, DOCX, JPG, PNG ou TXT (máx. 10 MB)</p>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Salvar alterações
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+    </BaseDialog>
+  );
+}

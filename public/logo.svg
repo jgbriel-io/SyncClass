@@ -1,0 +1,29 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="128" fill="#3b82f6"/>
+  
+  <!-- Book icon (simplified) -->
+  <g transform="translate(106, 106)">
+    <!-- Book base -->
+    <rect x="80" y="60" width="140" height="180" rx="8" fill="white" opacity="0.95"/>
+    <rect x="100" y="60" width="140" height="180" rx="8" fill="white"/>
+    
+    <!-- Book pages -->
+    <line x1="150" y1="100" x2="200" y2="100" stroke="#3b82f6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="150" y1="130" x2="200" y2="130" stroke="#3b82f6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="150" y1="160" x2="200" y2="160" stroke="#3b82f6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="150" y1="190" x2="200" y2="190" stroke="#3b82f6" stroke-width="4" stroke-linecap="round"/>
+    
+    <!-- Graduation cap -->
+    <g transform="translate(80, 20)">
+      <!-- Cap base -->
+      <polygon points="70,30 120,10 170,30 120,50" fill="#fbbf24"/>
+      <!-- Cap top -->
+      <rect x="115" y="5" width="10" height="30" fill="#fbbf24"/>
+      <circle cx="120" cy="5" r="5" fill="#fbbf24"/>
+    </g>
+  </g>
+  
+  <!-- Letter "E" for Edu -->
+  <text x="256" y="380" font-family="Arial, sans-serif" font-size="180" font-weight="bold" fill="white" text-anchor="middle">E</text>
+</svg>
