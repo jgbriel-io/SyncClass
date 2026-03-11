@@ -6,9 +6,9 @@ import { Label } from "@/components/ui/label";
 import { GraduationCap, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { typography } from "@/lib/design-tokens/typography";
-import { stack } from "@/lib/design-tokens/spacing";
-import { iconSize } from "@/lib/design-tokens/icon-sizes";
+import { TYPOGRAPHY } from "@/lib/design-tokens/typography";
+import { STACK } from "@/lib/design-tokens/spacing";
+import { ICON_SIZES } from "@/lib/design-tokens/icon-sizes";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -28,7 +28,10 @@ export default function Login() {
         if (error.message.includes("Invalid login credentials")) {
           toast.error("Email ou senha incorretos");
         } else if (error.message.includes("Email not confirmed")) {
-          toast.error("Email não confirmado. Verifique sua caixa de entrada.");
+          toast.error(
+            "Email não confirmado. Verifique sua caixa de entrada e clique no link 'Confirm Email & Login' que enviamos para você.",
+            { duration: 6000 }
+          );
         } else {
           toast.error(error.message);
         }
@@ -65,21 +68,21 @@ export default function Login() {
         <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground">
           <div className="flex items-center gap-4">
             <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
-              <GraduationCap className={iconSize('LG')} />
+              <GraduationCap className={ICON_SIZES.LG} />
             </div>
-            <span className={`${typography('H2')} font-semibold`}>JLAC English School</span>
+            <span className={`${TYPOGRAPHY.H2} font-semibold`}>JLAC English School</span>
           </div>
 
-          <div className={`${stack('RELAXED')} max-w-md`}>
-            <h1 className={`${typography('DISPLAY')} leading-tight`}>
+          <div className={`${STACK.RELAXED} max-w-md`}>
+            <h1 className={`${TYPOGRAPHY.DISPLAY} leading-tight`}>
               Your English learning platform
             </h1>
-            <p className={`${typography('H3')} text-primary-foreground/80 leading-relaxed`}>
+            <p className={`${TYPOGRAPHY.H3} text-primary-foreground/80 leading-relaxed`}>
               Manage your classes, track progress, and handle payments all in one place.
             </p>
           </div>
 
-          <p className={typography('SMALL')}>
+          <p className={TYPOGRAPHY.SMALL}>
             © 2026 JLAC English School. All rights reserved.
           </p>
         </div>
@@ -100,18 +103,18 @@ export default function Login() {
             <span className="text-lg font-semibold">JLAC English School</span>
           </div>
 
-          <div className={`${stack('RELAXED')} text-center lg:text-left`}>
-                <h2 className={typography('H2')}>
+          <div className={`${STACK.RELAXED} text-center lg:text-left`}>
+                <h2 className={TYPOGRAPHY.H2}>
                   Bem-vindo de volta
                 </h2>
-                <p className={typography('BODY')}>
+                <p className={TYPOGRAPHY.BODY}>
                   Entre com suas credenciais para acessar
                 </p>
           </div>
 
-          <form onSubmit={handleSubmit} className={stack('RELAXED')}>
-            <div className={stack('LOOSE')}>
-              <div className={stack('TIGHT')}>
+          <form onSubmit={handleSubmit} className={STACK.RELAXED}>
+            <div className={STACK.LOOSE}>
+              <div className={STACK.TIGHT}>
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -125,7 +128,7 @@ export default function Login() {
                 />
               </div>
 
-              <div className={stack('TIGHT')}>
+              <div className={STACK.TIGHT}>
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
                   <Input
@@ -145,9 +148,9 @@ export default function Login() {
                     disabled={isLoading}
                   >
                     {showPassword ? (
-                      <EyeOff className={iconSize('SM')} />
+                      <EyeOff className={ICON_SIZES.SM} />
                     ) : (
-                      <Eye className={iconSize('SM')} />
+                      <Eye className={ICON_SIZES.SM} />
                     )}
                   </button>
                 </div>
@@ -157,14 +160,14 @@ export default function Login() {
             <Button type="submit" className="w-full h-11" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className={`mr-2 ${iconSize('SM')} animate-spin`} />
+                  <Loader2 className={`mr-2 ${ICON_SIZES.SM} animate-spin`} />
                   Entrando...
                 </>
               ) : (
                 "Entrar"
               )}
             </Button>
-            <p className={`text-center ${typography('BODY')}`}>
+            <p className={`text-center ${TYPOGRAPHY.BODY}`}>
               <Link
                 to="/esqueci-senha"
                 className="text-muted-foreground hover:text-foreground underline underline-offset-2"

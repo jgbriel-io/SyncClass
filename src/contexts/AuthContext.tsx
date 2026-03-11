@@ -51,7 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         // Atualizar flag de troca de senha
-        setMustChangePassword(profileData.must_change_password === true);
+        const shouldChangePassword = profileData.must_change_password === true;
+        logger.addBreadcrumb(
+          "Password change check",
+          "auth",
+          { must_change_password: profileData.must_change_password, shouldChangePassword }
+        );
+        setMustChangePassword(shouldChangePassword);
         
         const r = profileData.role as string;
         if (r === "admin" || r === "student" || r === "teacher") return r as UserRole;
@@ -229,15 +235,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const authenticatedUser = data?.user ?? data?.session?.user ?? null;
     if (authenticatedUser) {
+      // Verificar se conta está ativa
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("active")
+        .select("active, must_change_password")
         .eq("user_id", authenticatedUser.id)
         .single();
 
-      if (!profileError && profile && profile.active === false) {
-        await supabase.auth.signOut();
-        return { error: new Error("Sua conta está inativa. Entre em contato com a secretaria.") };
+      if (!profileError && profile) {
+        if (profile.active === false) {
+          await supabase.auth.signOut();
+          return { error: new Error("Sua conta está inativa. Entre em contato com a secretaria.") };
+        }
+        
+        // Atualizar flag de troca de senha IMEDIATAMENTE após login
+        setMustChangePassword(profile.must_change_password === true);
       }
 
       const userRole = await fetchUserRole(authenticatedUser.id);

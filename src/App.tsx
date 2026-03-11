@@ -72,7 +72,7 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
-  const { mustChangePassword, onPasswordChanged } = useAuth();
+  const { mustChangePassword, onPasswordChanged, isLoading } = useAuth();
   const queryClient = useQueryClient();
 
   // Sprint 4 - Task 4.1: Monitoramento de LocalStorage
@@ -184,10 +184,12 @@ function AppContent() {
       </Suspense>
 
       {/* Modal de troca de senha obrigatória */}
-      <ChangePasswordDialog 
-        open={mustChangePassword} 
-        onSuccess={onPasswordChanged}
-      />
+      {!isLoading && (
+        <ChangePasswordDialog 
+          open={mustChangePassword} 
+          onSuccess={onPasswordChanged}
+        />
+      )}
     </>
   );
 }
