@@ -389,7 +389,6 @@ serve(async (req) => {
     email: normalizedEmail,
     teacher_id: role === "teacher" ? resolvedTeacherId : null,
     student_id: role === "student" ? resolvedStudentId : null,
-    must_change_password: true, // Forçar troca de senha no primeiro login
   };
 
   const { error: profileErr } = await supabaseAdmin
