@@ -1,5 +1,5 @@
 /**
- * Design Tokens - Sistema de Design da JLAC English School Platform
+ * Design Tokens - Sistema de Design da English School Platform
  * 
  * Centraliza todos os tokens de design para garantir consistência
  * visual e facilitar manutenção.

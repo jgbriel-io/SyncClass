@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -149,7 +149,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </div>
             {!sidebarCollapsed && (
             <span className="text-base font-semibold text-sidebar-foreground tracking-tight">
-                JLAC English School
+                English School
               </span>
             )}
           </Link>

@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+﻿import { Link, useLocation } from "react-router-dom";
 import { Heart } from "lucide-react";
 
 export function Footer() {
@@ -50,7 +50,7 @@ export function Footer() {
               Virtual Arrow
             </a>
             <span>•</span>
-            <span>JLAC English School © {currentYear}</span>
+            <span>English School © {currentYear}</span>
             <span>•</span>
             <span>Conforme LGPD</span>
           </div>
