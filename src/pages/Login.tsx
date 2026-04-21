@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,8 +36,8 @@ export default function Login() {
         return;
       }
       toast.success("Login realizado com sucesso!");
-      // Role-based redirect will happen via AuthContext
       setIsLoading(false);
+      // O useEffect vai redirecionar quando o role for carregado
     } catch (error) {
       toast.error("Ocorreu um erro. Tente novamente.");
       setIsLoading(false);
@@ -67,7 +67,7 @@ export default function Login() {
             <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
               <GraduationCap className={iconSize('LG')} />
             </div>
-            <span className={`${typography('H2')} font-semibold`}>JLAC English School</span>
+            <span className={`${typography('H2')} font-semibold`}>English School</span>
           </div>
 
           <div className={`${stack('RELAXED')} max-w-md`}>
@@ -80,7 +80,7 @@ export default function Login() {
           </div>
 
           <p className={typography('SMALL')}>
-            © 2026 JLAC English School. All rights reserved.
+            © 2026 English School. All rights reserved.
           </p>
         </div>
 
@@ -97,7 +97,7 @@ export default function Login() {
             <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
               <GraduationCap className="h-7 w-7 text-primary-foreground" />
             </div>
-            <span className="text-lg font-semibold">JLAC English School</span>
+            <span className="text-lg font-semibold">English School</span>
           </div>
 
           <div className={`${stack('RELAXED')} text-center lg:text-left`}>

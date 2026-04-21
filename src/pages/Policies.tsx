@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Shield, FileText, Lock, AlertCircle } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
@@ -108,7 +108,7 @@ function PrivacyPolicy() {
 
       <div className="space-y-4 text-sm text-muted-foreground">
         <p>
-          A JLAC English Platform está comprometida com a proteção dos seus dados pessoais,
+          A English School Platform está comprometida com a proteção dos seus dados pessoais,
           em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
         </p>
 

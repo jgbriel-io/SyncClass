@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { getClassStatusWithTime } from "@/lib/utils/classTime";
+import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 
 const DEFAULT_PAGE_SIZE = 10;
 

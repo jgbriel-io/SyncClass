@@ -77,6 +77,23 @@ serve(async (req) => {
     return jsonResponse({ error: "Usuário não encontrado. Token inválido." }, 401);
   }
 
+  // ✅ VULN-008 FIX: Rate limiting - 5 requests por minuto
+  const { data: rateLimitOk, error: rateLimitError } = await supabaseAdmin
+    .rpc("check_rate_limit", {
+      p_operation: "reset_password",
+      p_max_requests: 5,
+      p_window_minutes: 1,
+    });
+
+  if (rateLimitError) {
+    console.error("[reset-password] Rate limit check error:", rateLimitError);
+  } else if (!rateLimitOk) {
+    return jsonResponse({
+      error: "Muitas tentativas de reset de senha. Aguarde 1 minuto e tente novamente.",
+      retryAfter: 60,
+    }, 429);
+  }
+
   // ════════════════════════════════════════════════════════════
   // Fluxo A: Self-reset (currentPassword + newPassword)
   // ════════════════════════════════════════════════════════════
@@ -152,31 +169,20 @@ serve(async (req) => {
   if (studentId && typeof studentId === "string") {
     // ── Fluxo C: por studentId (professor ou admin) ──
 
-    const { data: student, error: studentError } = await supabaseAdmin
+    // ✅ VULN-007 FIX: usar supabaseAuthed (respeita RLS) ao invés de supabaseAdmin
+    const { data: student, error: studentError } = await supabaseAuthed
       .from("students")
       .select("id, teacher_id")
       .eq("id", studentId)
       .maybeSingle();
 
     if (studentError || !student) {
-      return jsonResponse({ error: "Aluno não encontrado." }, 404);
+      // RLS já garante: se não encontrou, professor não tem acesso
+      return jsonResponse({ error: "Aluno não encontrado ou sem permissão." }, 404);
     }
 
-    if (callerRole === "teacher") {
-      const { data: callerProfile, error: callerProfileError } = await supabaseAdmin
-        .from("profiles")
-        .select("teacher_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (callerProfileError || !callerProfile?.teacher_id) {
-        return jsonResponse({ error: "Perfil de professor não encontrado." }, 403);
-      }
-
-      if (student.teacher_id !== callerProfile.teacher_id) {
-        return jsonResponse({ error: "Acesso negado. Este aluno não está vinculado a você." }, 403);
-      }
-    }
+    // ✅ Se chegou aqui, RLS já validou que o aluno pertence ao professor
+    // Não precisa mais da validação manual de teacher_id
 
     const { data: studentProfile, error: studentProfileError } = await supabaseAdmin
       .from("profiles")

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Home, BookOpen, CreditCard, LogOut, Loader2, Settings, FileText } from "lucide-react";
@@ -45,7 +45,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
             <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-xs">E</span>
             </div>
-            <span className="text-sm font-semibold">JLAC English School</span>
+            <span className="text-sm font-semibold">English School</span>
           </Link>
           <div className="flex items-center gap-1">
             <button

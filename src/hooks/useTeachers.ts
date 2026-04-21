@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -136,8 +137,9 @@ export function useCreateTeacher() {
       toast.success("Professor cadastrado com sucesso!");
     },
     onError: (error: unknown) => {
-      const friendly = getDuplicateErrorMessage(error as { code?: string; message?: string });
-      toast.error(friendly || "Não foi possível cadastrar o professor. Por favor, tente novamente.");
+      const userMessage = sanitizeErrorMessage(error);
+      toast.error(userMessage);
+      logError(error as Error, { context: 'create_teacher' });
     },
   });
 }
@@ -215,8 +217,9 @@ export function useUpdateTeacher() {
       toast.success("Professor atualizado com sucesso!");
     },
     onError: (error: unknown) => {
-      const friendly = getDuplicateErrorMessage(error as { code?: string; message?: string });
-      toast.error(friendly || "Não foi possível atualizar o professor. Por favor, tente novamente.");
+      const userMessage = sanitizeErrorMessage(error);
+      toast.error(userMessage);
+      logError(error as Error, { context: 'update_teacher' });
     },
   });
 }
@@ -259,8 +262,10 @@ export function useSoftDeleteTeacher() {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Professor arquivado com sucesso!");
     },
-    onError: () => {
-      toast.error("Não foi possível arquivar o professor. Por favor, tente novamente.");
+    onError: (error: unknown) => {
+      const userMessage = sanitizeErrorMessage(error);
+      toast.error(userMessage);
+      logError(error as Error, { context: 'soft_delete_teacher' });
     },
   });
 }
@@ -362,8 +367,10 @@ export function useHardDeleteTeacher() {
       queryClient.invalidateQueries({ queryKey: ["profiles_linked_ids"] });
       toast.success("Professor excluído definitivamente.");
     },
-    onError: () => {
-      toast.error("Não foi possível excluir o professor definitivamente. Por favor, tente novamente.");
+    onError: (error: unknown) => {
+      const userMessage = sanitizeErrorMessage(error);
+      toast.error(userMessage);
+      logError(error as Error, { context: 'hard_delete_teacher' });
     },
   });
 }

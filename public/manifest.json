@@ -1,7 +1,7 @@
 {
-  "name": "JLAC English School",
-  "short_name": "JLAC English",
-  "description": "Plataforma oficial de ensino da JLAC English School",
+  "name": "English School Platform",
+  "short_name": "EduPlatform",
+  "description": "Plataforma oficial de ensino para alunos e professores",
   "start_url": "/student",
   "display": "standalone",
   "background_color": "#f7f9fc",

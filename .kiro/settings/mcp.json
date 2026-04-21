@@ -1,0 +1,39 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "disabled": false,
+      "autoApprove": ["resolve-library-id", "get-library-docs"]
+    },
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=yxwtxewwszoovqrjrrfb",
+      "disabled": false,
+      "autoApprove": []
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": ["-y", "@jpisnice/shadcn-ui-mcp-server"],
+      "disabled": false,
+      "autoApprove": ["get_component", "list_components", "get_block", "search_components"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "disabled": true,
+      "autoApprove": []
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"],
+      "disabled": false,
+      "autoApprove": ["fetch"]
+    },
+    "npm-registry": {
+      "command": "npx",
+      "args": ["-y", "package-registry-mcp"],
+      "disabled": false,
+      "autoApprove": ["search_npm", "get_npm_package"]
+    }
+  }
+}

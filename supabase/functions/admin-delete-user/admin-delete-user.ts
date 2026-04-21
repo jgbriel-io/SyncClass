@@ -61,6 +61,23 @@ serve(async (req) => {
     return jsonResponse({ error: "Forbidden" }, 403);
   }
 
+  // ✅ VULN-008 FIX: Rate limiting - 20 requests por minuto
+  const { data: rateLimitOk, error: rateLimitError } = await supabaseAdmin
+    .rpc("check_rate_limit", {
+      p_operation: "admin_delete_user",
+      p_max_requests: 20,
+      p_window_minutes: 1,
+    });
+
+  if (rateLimitError) {
+    console.error("[admin-delete-user] Rate limit check error:", rateLimitError);
+  } else if (!rateLimitOk) {
+    return jsonResponse({
+      error: "Muitas operações de exclusão. Aguarde 1 minuto e tente novamente.",
+      retryAfter: 60,
+    }, 429);
+  }
+
   // Parse body: só aba Usuários envia userId
   interface RequestBody {
     userId?: string;

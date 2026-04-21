@@ -1,6 +1,6 @@
 User-agent: *
 Disallow: /
 
-# JLAC English School - Private Platform
+# English School Platform - Private Platform
 # This is a private learning management system.
 # Access is restricted to enrolled students and authorized staff only.
