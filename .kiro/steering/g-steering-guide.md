@@ -60,6 +60,10 @@ description: ...
 - `g-react-best-practices.md` — performance React (`**/*.tsx`, `**/*.ts`)
 - `g-supabase-postgres-best-practices.md` — Postgres, índices, RLS (`src/integrations/**`, `supabase/**`)
 
+**Projeto (`p-`) — `manual`:**
+- `p-tcc-writing-style.md` — tom de voz e estilo de escrita acadêmica para o TCC
+
+
 **Genéricos (`g-`) — `manual`:**
 - `g-steering-guide.md` — este arquivo
 
