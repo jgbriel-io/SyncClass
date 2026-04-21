@@ -68,7 +68,7 @@ export function sanitizeErrorMessage(error: Error | unknown): string {
 /**
  * Log de erro completo (apenas para Sentry/console, não para usuário)
  */
-export function logError(error: Error | unknown, context?: Record<string, any>) {
+export function logError(error: Error | unknown, context?: Record<string, unknown>) {
   // Em produção, enviar para Sentry
   if (import.meta.env.PROD) {
     // TODO: Integrar com Sentry quando disponível
