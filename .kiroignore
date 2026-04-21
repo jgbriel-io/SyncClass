@@ -1,0 +1,111 @@
+# ============================================
+# DEPENDÊNCIAS
+# ============================================
+node_modules/
+.pnp
+.pnp.js
+
+# ============================================
+# BUILD / OUTPUT
+# ============================================
+dist/
+dist-ssr/
+build/
+.cache/
+.next/
+out/
+
+# ============================================
+# LOCKS E LOGS
+# ============================================
+*.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+*.log
+logs/
+
+# ============================================
+# VARIÁVEIS DE AMBIENTE
+# ============================================
+.env
+.env.*
+!.env.example
+
+# ============================================
+# CÓDIGO GERADO (não editar manualmente)
+# ============================================
+src/components/ui/
+src/integrations/supabase/types.ts
+
+# ============================================
+# ASSETS BINÁRIOS (irrelevantes para IA)
+# ============================================
+public/icons/
+public/favicon.ico
+public/favicon.png
+public/logo.svg
+public/placeholder.svg
+public/manifest.json
+public/robots.txt
+public/sw.js
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.ico
+*.svg
+*.woff
+*.woff2
+*.ttf
+*.eot
+
+# ============================================
+# TESTES E COBERTURA
+# ============================================
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+playwright-report/
+playwright/.cache/
+.playwright/
+
+# ============================================
+# SUPABASE LOCAL
+# ============================================
+supabase/.temp/
+supabase/.branches/
+supabase/config.toml
+supabase/seed.sql
+.supabase/
+
+# ============================================
+# DOCKER
+# ============================================
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# ============================================
+# CONFIGS DE TOOLING (não afetam lógica)
+# ============================================
+postcss.config.js
+eslint.config.js
+playwright.config.ts
+components.json
+.vscode/
+.github/
+.gitattributes
+.gitignore
+
+# ============================================
+# OS / MISC
+# ============================================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.temp
+*.bak

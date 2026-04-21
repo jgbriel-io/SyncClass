@@ -36,8 +36,8 @@ export default function Login() {
         return;
       }
       toast.success("Login realizado com sucesso!");
-      // Role-based redirect will happen via AuthContext
       setIsLoading(false);
+      // O useEffect vai redirecionar quando o role for carregado
     } catch (error) {
       toast.error("Ocorreu um erro. Tente novamente.");
       setIsLoading(false);

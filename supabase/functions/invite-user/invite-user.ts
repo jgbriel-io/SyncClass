@@ -18,10 +18,13 @@ function log(msg: string, data?: Record<string, unknown>) {
   console.log(`[invite-user] ${msg}`, data ?? "");
 }
 
-function randomPassword(length = 10): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+// ✅ VULN-009 FIX: crypto.getRandomValues() ao invés de Math.random()
+function randomPassword(length = 12): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*";
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
   let p = "";
-  for (let i = 0; i < length; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
+  for (let i = 0; i < length; i++) p += chars.charAt(array[i] % chars.length);
   return p;
 }
 
@@ -147,6 +150,23 @@ serve(async (req) => {
       error: "Não autenticado",
       ...(detail && { detail }),
     }, 401);
+  }
+
+  // ✅ VULN-008 FIX: Rate limiting - 10 requests por minuto
+  const { data: rateLimitOk, error: rateLimitError } = await supabaseAdmin
+    .rpc("check_rate_limit", {
+      p_operation: "invite_user",
+      p_max_requests: 10,
+      p_window_minutes: 1,
+    });
+
+  if (rateLimitError) {
+    log("Rate limit check error", { error: rateLimitError.message });
+  } else if (!rateLimitOk) {
+    return jsonResponse({
+      error: "Muitos convites enviados. Aguarde 1 minuto e tente novamente.",
+      retryAfter: 60,
+    }, 429);
   }
 
   const { data: callerRoleRow } = await supabaseAdmin
@@ -321,7 +341,7 @@ serve(async (req) => {
     await waitForProfile(userId, supabaseAdmin);
   } catch (err) {
     log("Profile wait failed", { error: (err as Error).message });
-    return jsonResponse({ error: (err as Error).message, userId, password, permissionsWarning: true }, 500);
+    return jsonResponse({ error: (err as Error).message, userId, permissionsWarning: true }, 500);
   }
 
   let resolvedStudentId: string | null = studentId ?? null;
@@ -398,7 +418,7 @@ serve(async (req) => {
 
   if (profileErr) {
     log("Profile update failed", { error: profileErr.message });
-    return jsonResponse({ error: profileErr.message, userId, password, permissionsWarning: true }, 500);
+    return jsonResponse({ error: profileErr.message, userId, permissionsWarning: true }, 500);
   }
 
   const { error: rolesErr } = await supabaseAdmin
@@ -408,16 +428,17 @@ serve(async (req) => {
 
   if (rolesErr) {
     log("user_roles update failed", { error: rolesErr.message });
-    return jsonResponse({ error: rolesErr.message, userId, password, permissionsWarning: true }, 500);
+    return jsonResponse({ error: rolesErr.message, userId, permissionsWarning: true }, 500);
   }
 
   log("User created successfully", { userId, role });
 
+  // ✅ VULN-011 FIX: Não retornar senha no response
   return jsonResponse({
     success: true,
     userId,
     email: normalizedEmail,
-    password,
+    temporaryPasswordGenerated: true,
     createdStudent: role === "student" && resolvedStudentId ? { id: resolvedStudentId } : null,
     createdTeacher: role === "teacher" && resolvedTeacherId ? { id: resolvedTeacherId } : null,
   }, 200);

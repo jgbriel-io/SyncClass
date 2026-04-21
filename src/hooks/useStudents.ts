@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -153,8 +154,9 @@ export function useCreateStudent() {
       toast.success("Aluno cadastrado com sucesso!");
     },
     onError: (error: unknown) => {
-      const friendly = getDuplicateErrorMessage(error as PostgresError);
-      toast.error(friendly || "Não foi possível cadastrar o aluno. Por favor, tente novamente.");
+      const userMessage = sanitizeErrorMessage(error);
+      toast.error(userMessage);
+      logError(error as Error, { context: 'create_student' });
     },
   });
 }
@@ -345,10 +347,9 @@ export function useUpdateStudent() {
       toast.success("Aluno atualizado com sucesso!");
     },
     onError: (error: unknown) => {
-      const pgErr = error as PostgresError;
-      const friendly = getDuplicateErrorMessage(pgErr);
-      const msg = pgErr?.message || (error as Error)?.message;
-      toast.error(friendly || msg || "Não foi possível atualizar o aluno. Por favor, tente novamente.");
+      const userMessage = sanitizeErrorMessage(error);
+      toast.error(userMessage);
+      logError(error as Error, { context: 'update_student' });
     },
   });
 }
@@ -387,8 +388,10 @@ export function useSoftDeleteStudent() {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Aluno arquivado com sucesso!");
     },
-    onError: () => {
-      toast.error("Não foi possível arquivar o aluno. Por favor, tente novamente.");
+    onError: (error: unknown) => {
+      const userMessage = sanitizeErrorMessage(error);
+      toast.error(userMessage);
+      logError(error as Error, { context: 'soft_delete_student' });
     },
   });
 }
@@ -490,8 +493,10 @@ export function useHardDeleteStudent() {
       queryClient.invalidateQueries({ queryKey: ["profiles_linked_ids"] });
       toast.success("Aluno excluído definitivamente.");
     },
-    onError: () => {
-      toast.error("Não foi possível excluir o aluno definitivamente. Por favor, tente novamente.");
+    onError: (error: unknown) => {
+      const userMessage = sanitizeErrorMessage(error);
+      toast.error(userMessage);
+      logError(error as Error, { context: 'hard_delete_student' });
     },
   });
 }
@@ -530,8 +535,10 @@ export function useRestoreStudent() {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       toast.success("Aluno restaurado com sucesso!");
     },
-    onError: () => {
-      toast.error("Não foi possível restaurar o aluno. Por favor, tente novamente.");
+    onError: (error: unknown) => {
+      const userMessage = sanitizeErrorMessage(error);
+      toast.error(userMessage);
+      logError(error as Error, { context: 'restore_student' });
     },
   });
 }
@@ -588,9 +595,10 @@ export function useUpdateStudentPaymentDay() {
       
       toast.success(data.message || "Dia de pagamento atualizado com sucesso!");
     },
-    onError: (error) => {
-      const err = error as Error;
-      toast.error(err.message || "Não foi possível atualizar o dia de pagamento");
+    onError: (error: unknown) => {
+      const userMessage = sanitizeErrorMessage(error);
+      toast.error(userMessage);
+      logError(error as Error, { context: 'update_student_payment_day' });
     },
   });
 }
