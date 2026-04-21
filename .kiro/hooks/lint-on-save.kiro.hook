@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Lint ao Salvar",
+  "description": "Roda npm run lint automaticamente ao salvar arquivos .ts e .tsx em src/",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npm run lint"
+  }
+}

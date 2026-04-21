@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Rodar Testes pós-Task",
+  "description": "Roda os testes automaticamente após uma task de spec ser concluída",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npx vitest --run"
+  }
+}

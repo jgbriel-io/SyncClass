@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Contexto de Arquitetura pré-Task",
+  "description": "Injeta contexto de arquitetura antes do agente começar uma task de spec, evitando anti-patterns",
+  "version": "1",
+  "when": {
+    "type": "preTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Antes de implementar: lógica em hooks, Supabase nunca em componentes, forms são Dialogs, sem useEffect para fetch, queries filtradas por tenant, Zod nos inputs, componentes ≤150 linhas, design tokens, verificar se já existe algo similar. Confirme e prossiga."
+  }
+}
