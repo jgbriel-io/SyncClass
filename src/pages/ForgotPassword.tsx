@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";
+import { AuthBrandPanel } from "@/components/auth/AuthBrandPanel";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -40,24 +41,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-1/2 bg-primary relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
-        <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
-              <GraduationCap className="h-6 w-6" />
-            </div>
-            <span className="text-base font-semibold">English School</span>
-          </div>
-          <div className="space-y-6 max-w-md">
-            <h1 className="text-4xl font-bold tracking-tight">Esqueceu a senha?</h1>
-            <p className="text-lg text-primary-foreground/80">
-              Informe seu email e enviaremos um link para redefinir sua senha.
-            </p>
-          </div>
-          <p className="text-sm text-primary-foreground/60">© 2026 English School</p>
-        </div>
-      </div>
+      <AuthBrandPanel variant="forgotPassword" />
 
       <div className="flex-1 flex items-center justify-center p-8">
         <div className={`w-full max-w-sm ${stack('RELAXED')}`}>

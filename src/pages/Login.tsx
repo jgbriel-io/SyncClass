@@ -3,12 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { typography } from "@/lib/design-tokens/typography";
-import { stack } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";
+import { AuthBrandPanel } from "@/components/auth/AuthBrandPanel";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -59,35 +59,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
-        <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
-              <GraduationCap className={iconSize('LG')} />
-            </div>
-            <span className={`${typography('H2')} font-semibold`}>English School</span>
-          </div>
-
-          <div className={`${stack('RELAXED')} max-w-md`}>
-            <h1 className={`${typography('DISPLAY')} leading-tight`}>
-              Your English learning platform
-            </h1>
-            <p className={`${typography('H3')} text-primary-foreground/80 leading-relaxed`}>
-              Manage your classes, track progress, and handle payments all in one place.
-            </p>
-          </div>
-
-          <p className={typography('SMALL')}>
-            © 2026 English School. All rights reserved.
-          </p>
-        </div>
-
-        {/* Decorative elements */}
-        <div className="absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-primary-foreground/5" />
-        <div className="absolute -right-10 top-20 w-40 h-40 rounded-full bg-primary-foreground/5" />
-      </div>
+      <AuthBrandPanel variant="login" />
 
       {/* Right side - Login/Signup form */}
       <div className="flex-1 flex items-center justify-center p-8">

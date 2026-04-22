@@ -1,42 +1,17 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Plus, Loader2, Shield, User, Link2, MoreHorizontal, Eye, EyeOff, Copy, Check, Trash2, Pencil, KeyRound, Users, UserCheck, UserX, TrendingUp } from "lucide-react";
+import { Plus, User, Users, UserCheck, UserX, TrendingUp } from "lucide-react";
+import { GeneratedPasswordDialog } from "@/components/shared/GeneratedPasswordDialog";
+import { AdminResetPasswordDialog } from "@/components/users/AdminResetPasswordDialog";
+import { UserDeleteDialog, type UserDeleteDialogInfo } from "@/components/users/UserDeleteDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
@@ -86,14 +61,9 @@ export default function UsersPage() {
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null);
   const [generatedPassword, setGeneratedPassword] = useState<string>("");
-  const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
-  const [passwordCopied, setPasswordCopied] = useState(false);
   const [passwordDialogSource, setPasswordDialogSource] = useState<"create" | "reset" | null>(null);
-  const passwordInputRef = useRef<HTMLInputElement>(null);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [userToResetPassword, setUserToResetPassword] = useState<UserWithProfile | null>(null);
-  const [resetPasswordNew, setResetPasswordNew] = useState("");
-  const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
 
   // Detail sheet state
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
@@ -262,8 +232,6 @@ export default function UsersPage() {
             setIsFormOpen(false);
             if (result?.password) {
               setGeneratedPassword(result.password);
-              setShowGeneratedPassword(false);
-              setPasswordCopied(false);
               setPasswordDialogSource("create");
               setIsPasswordDialogOpen(true);
             }
@@ -536,8 +504,6 @@ export default function UsersPage() {
                       }}
                       onResetPassword={(u) => {
                       setUserToResetPassword(u);
-                      setResetPasswordNew("");
-                      setResetPasswordConfirm("");
                       setResetPasswordDialogOpen(true);
                     }}
                     onReactivateStudent={(studentId) => {
@@ -610,385 +576,61 @@ export default function UsersPage() {
         />
 
         {/* Generated Password Dialog */}
-        <Dialog
+        <GeneratedPasswordDialog
           open={isPasswordDialogOpen}
           onOpenChange={(open) => {
             setIsPasswordDialogOpen(open);
             if (!open) setPasswordDialogSource(null);
           }}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                {passwordDialogSource === "reset" ? "Senha redefinida" : "Senha criada para o usuário"}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Guarde esta senha com segurança. Ela não será exibida novamente.
-              </p>
-
-              <div className="space-y-2">
-                <Label>Senha temporária</Label>
-                <div className="relative">
-                  <Input
-                    ref={passwordInputRef}
-                    type={showGeneratedPassword ? "text" : "password"}
-                    value={generatedPassword}
-                    readOnly
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowGeneratedPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showGeneratedPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex justify-between gap-4 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    if (!generatedPassword) return;
-                    const onSuccess = () => {
-                      setPasswordCopied(true);
-                      setTimeout(() => setPasswordCopied(false), 2000);
-                    };
-                    const tryInputCopy = () => {
-                      const input = passwordInputRef.current;
-                      if (input) {
-                        input.focus();
-                        input.select();
-                        input.setSelectionRange(0, generatedPassword.length);
-                        if (document.execCommand("copy")) onSuccess();
-                        else toast.error("Não foi possível copiar. Copie a senha manualmente.");
-                      } else {
-                        toast.error("Não foi possível copiar. Copie a senha manualmente.");
-                      }
-                    };
-                    if (navigator.clipboard?.writeText) {
-                      navigator.clipboard.writeText(generatedPassword).then(onSuccess).catch(tryInputCopy);
-                    } else {
-                      tryInputCopy();
-                    }
-                  }}
-                >
-                  {passwordCopied ? (
-                    <>
-                      <Check className="mr-2 h-4 w-4" />
-                      Copiado!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copiar senha
-                    </>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  className="flex-1"
-                  onClick={() => setIsPasswordDialogOpen(false)}
-                >
-                  Fechar
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+          password={generatedPassword}
+          source={passwordDialogSource}
+        />
 
         {/* Redefinir senha (admin) */}
-        <Dialog
+        <AdminResetPasswordDialog
           open={resetPasswordDialogOpen}
           onOpenChange={(open) => {
             setResetPasswordDialogOpen(open);
-            if (!open) {
-              setUserToResetPassword(null);
-              setResetPasswordNew("");
-              setResetPasswordConfirm("");
-            }
+            if (!open) setUserToResetPassword(null);
           }}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Redefinir senha</DialogTitle>
-              {userToResetPassword && (
-                <DialogDescription>
-                  Nova senha para <strong>{userToResetPassword.profile?.full_name ?? userToResetPassword.email}</strong>.
-                </DialogDescription>
-              )}
-            </DialogHeader>
-            {userToResetPassword && (
-              <>
-                <div className="rounded-lg border bg-muted/50 p-3 space-y-2 mb-4">
-                  <p className="text-xs font-medium text-muted-foreground">Requisitos da senha:</p>
-                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                    <li>Mínimo de 8 caracteres</li>
-                    <li>Pelo menos uma letra maiúscula (A-Z)</li>
-                    <li>Pelo menos uma letra minúscula (a-z)</li>
-                    <li>Pelo menos um número (0-9)</li>
-                    <li>Pelo menos um caractere especial (!@#$%^&*)</li>
-                  </ul>
-                </div>
-                <div className="space-y-4 py-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="reset-password-new">Nova senha</Label>
-                    <Input
-                      id="reset-password-new"
-                      type="password"
-                      placeholder="••••••••"
-                      value={resetPasswordNew}
-                      onChange={(e) => setResetPasswordNew(e.target.value)}
-                      minLength={8}
-                      disabled={adminResetPassword.isPending}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="reset-password-confirm">Confirmar senha</Label>
-                    <Input
-                      id="reset-password-confirm"
-                      type="password"
-                      placeholder="••••••••"
-                      value={resetPasswordConfirm}
-                      onChange={(e) => setResetPasswordConfirm(e.target.value)}
-                      minLength={8}
-                      disabled={adminResetPassword.isPending}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      // Gerar senha forte com todos os requisitos
-                      const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-                      const lower = "abcdefghijkmnpqrstuvwxyz";
-                      const numbers = "23456789";
-                      const special = "!@#$%^&*";
-                      
-                      let p = "";
-                      // Garantir pelo menos um de cada tipo
-                      p += upper.charAt(Math.floor(Math.random() * upper.length));
-                      p += lower.charAt(Math.floor(Math.random() * lower.length));
-                      p += numbers.charAt(Math.floor(Math.random() * numbers.length));
-                      p += special.charAt(Math.floor(Math.random() * special.length));
-                      
-                      // Completar com caracteres aleatórios
-                      const allChars = upper + lower + numbers + special;
-                      for (let i = 4; i < 12; i++) {
-                        p += allChars.charAt(Math.floor(Math.random() * allChars.length));
-                      }
-                      
-                      // Embaralhar
-                      p = p.split('').sort(() => Math.random() - 0.5).join('');
-                      
-                      setResetPasswordNew(p);
-                      setResetPasswordConfirm(p);
-                    }}
-                  >
-                    Gerar senha
-                  </Button>
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setResetPasswordDialogOpen(false);
-                      setUserToResetPassword(null);
-                      setResetPasswordNew("");
-                      setResetPasswordConfirm("");
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    disabled={
-                      adminResetPassword.isPending ||
-                      resetPasswordNew.length < 8 ||
-                      resetPasswordNew !== resetPasswordConfirm ||
-                      !/[A-Z]/.test(resetPasswordNew) ||
-                      !/[a-z]/.test(resetPasswordNew) ||
-                      !/[0-9]/.test(resetPasswordNew) ||
-                      !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(resetPasswordNew)
-                    }
-                    onClick={() => {
-                      // Validação completa
-                      if (resetPasswordNew.length < 8) {
-                        toast.error("A senha deve ter no mínimo 8 caracteres.");
-                        return;
-                      }
-                      if (!/[A-Z]/.test(resetPasswordNew)) {
-                        toast.error("A senha deve conter pelo menos uma letra maiúscula.");
-                        return;
-                      }
-                      if (!/[a-z]/.test(resetPasswordNew)) {
-                        toast.error("A senha deve conter pelo menos uma letra minúscula.");
-                        return;
-                      }
-                      if (!/[0-9]/.test(resetPasswordNew)) {
-                        toast.error("A senha deve conter pelo menos um número.");
-                        return;
-                      }
-                      if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(resetPasswordNew)) {
-                        toast.error("A senha deve conter pelo menos um caractere especial.");
-                        return;
-                      }
-                      if (resetPasswordNew !== resetPasswordConfirm) {
-                        toast.error("As senhas não coincidem.");
-                        return;
-                      }
-                      
-                      adminResetPassword.mutate(
-                        { userId: userToResetPassword.id, password: resetPasswordNew },
-                        {
-                          onSuccess: () => {
-                            const passwordToShow = resetPasswordNew;
-                            setResetPasswordDialogOpen(false);
-                            setUserToResetPassword(null);
-                            setResetPasswordNew("");
-                            setResetPasswordConfirm("");
-                            setGeneratedPassword(passwordToShow);
-                            setShowGeneratedPassword(false);
-                            setPasswordCopied(false);
-                            setPasswordDialogSource("reset");
-                            setIsPasswordDialogOpen(true);
-                          },
-                        }
-                      );
-                    }}
-                  >
-                    {adminResetPassword.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Redefinindo...
-                      </>
-                    ) : (
-                      "Redefinir senha"
-                    )}
-                  </Button>
-                </DialogFooter>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
+          user={userToResetPassword}
+          isPending={adminResetPassword.isPending}
+          onConfirm={(userId, password) => {
+            adminResetPassword.mutate(
+              { userId, password },
+              {
+                onSuccess: () => {
+                  setResetPasswordDialogOpen(false);
+                  setUserToResetPassword(null);
+                  setGeneratedPassword(password);
+                  setPasswordDialogSource("reset");
+                  setIsPasswordDialogOpen(true);
+                },
+              }
+            );
+          }}
+        />
 
         {/* Deactivate/Delete Confirmation Dialog */}
-        <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
-          setDeleteDialogOpen(open);
-          if (!open) {
-            setForceHardDelete(false);
+        <UserDeleteDialog
+          open={deleteDialogOpen}
+          onOpenChange={(open) => {
+            setDeleteDialogOpen(open);
+            if (!open) setForceHardDelete(false);
+          }}
+          info={deleteDialogInfo}
+          isPending={
+            deleteUser.isPending ||
+            hardDeleteStudent.isPending ||
+            updateStudent.isPending ||
+            hardDeleteUser.isPending ||
+            updateTeacher.isPending ||
+            deleteTeacher.isPending ||
+            updateProfile.isPending
           }
-        }}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {deleteDialogInfo.isArchivedProfile
-                  ? "Excluir arquivo morto?"
-                  : deleteDialogInfo.isHardDelete
-                    ? "Excluir definitivamente?"
-                    : deleteDialogInfo.userIsInactive && !forceHardDelete
-                      ? "Confirmar reativação"
-                      : deleteDialogInfo.linkedStudent && deleteDialogInfo.isStudentActive
-                        ? "Confirmar arquivamento"
-                        : deleteDialogInfo.linkedTeacher && deleteDialogInfo.isTeacherActive
-                          ? "Confirmar arquivamento"
-                          : "Confirmar arquivamento do usuário"}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {deleteDialogInfo.isArchivedProfile ? (
-                  <>
-                    Tem certeza que deseja excluir o arquivo morto do usuário <strong>{deleteDialogInfo.displayName}</strong>?
-                    <br />
-                    <br />
-                    A conta será removida do sistema (Supabase Auth e perfil). O email ficará disponível para reutilização. Esta ação não pode ser desfeita.
-                  </>
-                ) : deleteDialogInfo.isHardDelete ? (
-                  <>
-                    A conta do usuário <strong>{deleteDialogInfo.displayName}</strong> será removida do sistema
-                    (Supabase Auth, perfil e vínculos). Esta ação não pode ser desfeita.
-                  </>
-                ) : deleteDialogInfo.userIsInactive && !forceHardDelete ? (
-                  <>
-                    Tem certeza que deseja reativar o usuário <strong>{deleteDialogInfo.displayName}</strong>?
-                    Ele voltará a aparecer na lista de usuários ativos.
-                  </>
-                ) : deleteDialogInfo.linkedStudent && deleteDialogInfo.isStudentActive ? (
-                  <>
-                    Tem certeza que deseja arquivar o usuário <strong>{deleteDialogInfo.displayName}</strong>?
-                    Ele será removido da lista de ativos e aparecerá como aluno inativo.
-                  </>
-                ) : deleteDialogInfo.linkedTeacher && deleteDialogInfo.isTeacherActive ? (
-                  <>
-                    Tem certeza que deseja arquivar o usuário <strong>{deleteDialogInfo.displayName}</strong>?
-                    Ele será removido da lista de ativos e aparecerá como professor inativo.
-                  </>
-                ) : (
-                  <>
-                    Tem certeza que deseja arquivar o usuário <strong>{deleteDialogInfo.displayName}</strong>?
-                    Esta ação não remove a conta do Supabase Auth, apenas arquiva o usuário no painel.
-                  </>
-                )}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel
-                disabled={
-                  deleteUser.isPending ||
-                  hardDeleteStudent.isPending ||
-                  updateStudent.isPending ||
-                  hardDeleteUser.isPending ||
-                  updateTeacher.isPending ||
-                  deleteTeacher.isPending
-                }
-              >
-                Cancelar
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                disabled={
-                  deleteUser.isPending ||
-                  hardDeleteStudent.isPending ||
-                  updateStudent.isPending ||
-                  hardDeleteUser.isPending ||
-                  updateTeacher.isPending ||
-                  deleteTeacher.isPending ||
-                  updateProfile.isPending
-                }
-                className={deleteDialogInfo.userIsInactive && !forceHardDelete ? "" : "bg-destructive text-destructive-foreground hover:bg-destructive/90"}
-              >
-                {deleteUser.isPending ||
-                hardDeleteStudent.isPending ||
-                updateStudent.isPending ||
-                hardDeleteUser.isPending ||
-                updateTeacher.isPending ||
-                deleteTeacher.isPending ||
-                updateProfile.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {deleteDialogInfo.isHardDelete ? "Excluindo..." : deleteDialogInfo.userIsInactive && !forceHardDelete ? "Reativando..." : "Arquivando..."}
-                  </>
-                ) : (
-                  deleteDialogInfo.isArchivedProfile 
-                    ? "Excluir arquivo morto" 
-                    : deleteDialogInfo.isHardDelete 
-                      ? "Excluir definitivamente" 
-                      : deleteDialogInfo.userIsInactive && !forceHardDelete 
-                        ? "Reativar" 
-                        : "Arquivar"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          forceHardDelete={forceHardDelete}
+          onConfirm={handleDeleteConfirm}
+        />
 
         {/* User Detail Sheet */}
         <UserDetailSheet

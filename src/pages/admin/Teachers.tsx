@@ -1,11 +1,3 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   TeachersFilters,
@@ -14,45 +6,17 @@ import {
 import { defaultTeachersFilters } from "@/components/filters/filterDefaults";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Search, Plus, MoreHorizontal, Pencil, Trash2, Loader2, Eye, EyeOff, Copy, Check, KeyRound, Users, UserCheck, UserX, TrendingUp } from "lucide-react";
+import { Search, Plus, Loader2, Users, UserCheck, UserX, TrendingUp } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { TeacherFormDialog } from "@/components/teachers/TeacherFormDialog";
 import { MSG_EMAIL } from "@/lib/duplicate-messages";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   useTeachers,
   useTeachersPaginated,
@@ -75,6 +39,10 @@ import { StatCard } from "@/components/ui/stat-card";
 import { TeachersTableRow } from "@/components/teachers/TeachersTableRow";
 import { COL as TEACH_COL, TABLE_MIN_W as TEACH_TABLE_MIN_W } from "@/components/teachers/TeachersTableRow.constants";
 import { TeacherDetailSheet } from "@/components/admin/TeacherDetailSheet";
+import { GeneratedPasswordDialog } from "@/components/shared/GeneratedPasswordDialog";
+import { TeacherResetPasswordDialog } from "@/components/teachers/TeacherResetPasswordDialog";
+import { TeacherStatusDialog } from "@/components/teachers/TeacherStatusDialog";
+import { TeacherHardDeleteDialog } from "@/components/teachers/TeacherHardDeleteDialog";
 
 export default function TeachersPage() {
   const [filters, setFilters] = useState<TeachersFiltersState>({
@@ -89,16 +57,11 @@ export default function TeachersPage() {
   const [teacherToHardDelete, setTeacherToHardDelete] = useState<Teacher | null>(null);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
-  const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
-  const [passwordCopied, setPasswordCopied] = useState(false);
   const [passwordDialogContext, setPasswordDialogContext] = useState<"create" | "reset">("create");
-  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   // Reset password state
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [teacherToResetPassword, setTeacherToResetPassword] = useState<Teacher | null>(null);
-  const [resetPasswordNew, setResetPasswordNew] = useState("");
-  const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
 
   // Detail sheet state
@@ -267,8 +230,6 @@ export default function TeachersPage() {
             setIsFormOpen(false);
             if (result?.password) {
               setGeneratedPassword(result.password);
-              setShowGeneratedPassword(false);
-              setPasswordCopied(false);
               setPasswordDialogContext("create");
               setIsPasswordDialogOpen(true);
             }
@@ -421,8 +382,6 @@ export default function TeachersPage() {
                       onEdit={handleEdit}
                       onResetPassword={(t) => {
                         setTeacherToResetPassword(t);
-                        setResetPasswordNew("");
-                        setResetPasswordConfirm("");
                         setResetPasswordDialogOpen(true);
                       }}
                       onDelete={(t) => {
@@ -474,7 +433,7 @@ export default function TeachersPage() {
         />
 
         {/* Modal de senha gerada para professor */}
-        <Dialog
+        <GeneratedPasswordDialog
           open={isPasswordDialogOpen}
           onOpenChange={(open) => {
             setIsPasswordDialogOpen(open);
@@ -482,357 +441,103 @@ export default function TeachersPage() {
               toast.success("Conta criada para o professor.");
             }
           }}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                {passwordDialogContext === "reset" ? "Senha redefinida" : "Senha criada para o professor"}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Guarde esta senha com segurança. Ela não será exibida novamente.
-              </p>
-
-              <div className="space-y-2">
-                <Label>Senha temporária</Label>
-                <div className="relative">
-                  <Input
-                    ref={passwordInputRef}
-                    type={showGeneratedPassword ? "text" : "password"}
-                    value={generatedPassword}
-                    readOnly
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowGeneratedPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showGeneratedPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex justify-between gap-4 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    if (!generatedPassword) return;
-                    const onSuccess = () => {
-                      setPasswordCopied(true);
-                      setTimeout(() => setPasswordCopied(false), 2000);
-                    };
-                    const tryInputCopy = () => {
-                      const input = passwordInputRef.current;
-                      if (input) {
-                        input.focus();
-                        input.select();
-                        input.setSelectionRange(0, generatedPassword.length);
-                        if (document.execCommand("copy")) onSuccess();
-                        else toast.error("Não foi possível copiar. Copie a senha manualmente.");
-                      } else {
-                        toast.error("Não foi possível copiar. Copie a senha manualmente.");
-                      }
-                    };
-                    if (navigator.clipboard?.writeText) {
-                      navigator.clipboard.writeText(generatedPassword).then(onSuccess).catch(tryInputCopy);
-                    } else {
-                      tryInputCopy();
-                    }
-                  }}
-                >
-                  {passwordCopied ? (
-                    <>
-                      <Check className="mr-2 h-4 w-4" />
-                      Copiado!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copiar senha
-                    </>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  className="flex-1"
-                  onClick={() => setIsPasswordDialogOpen(false)}
-                >
-                  Fechar
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+          password={generatedPassword}
+          source={passwordDialogContext}
+        />
 
         {/* Modal de confirmação de status (arquivar/reativar) */}
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {(teacherToDelete?.status ?? "ativo") === "ativo"
-                  ? "Confirmar arquivamento"
-                  : "Confirmar reativação"}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {(teacherToDelete?.status ?? "ativo") === "ativo" ? (
-                  <>
-                    Tem certeza que deseja arquivar o professor{" "}
-                    <strong>{teacherToDelete?.name}</strong>? Ele será removido da
-                    lista de ativos, mas poderá ser visualizado em "Inativos".
-                  </>
-                ) : (
-                  <>
-                    Tem certeza que deseja reativar o professor{" "}
-                    <strong>{teacherToDelete?.name}</strong>? Ele voltará para a
-                    lista de ativos e terá o acesso reativado.
-                  </>
-                )}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={deleteTeacher.isPending || updateTeacher.isPending}>
-                Cancelar
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleStatusChangeConfirm}
-                disabled={deleteTeacher.isPending || updateTeacher.isPending}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {deleteTeacher.isPending || updateTeacher.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {(teacherToDelete?.status ?? "ativo") === "ativo"
-                      ? "Arquivando..."
-                      : "Reativando..."}
-                  </>
-                ) : (teacherToDelete?.status ?? "ativo") === "ativo" ? (
-                  "Arquivar"
-                ) : (
-                  "Reativar"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <TeacherStatusDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          teacher={teacherToDelete}
+          isPending={deleteTeacher.isPending || updateTeacher.isPending}
+          onConfirm={handleStatusChangeConfirm}
+        />
 
         {/* Redefinir senha do professor */}
-        <Dialog
+        <TeacherResetPasswordDialog
           open={resetPasswordDialogOpen}
           onOpenChange={(open) => {
             setResetPasswordDialogOpen(open);
-            if (!open) {
-              setTeacherToResetPassword(null);
-              setResetPasswordNew("");
-              setResetPasswordConfirm("");
+            if (!open) setTeacherToResetPassword(null);
+          }}
+          teacher={teacherToResetPassword}
+          isPending={resetPasswordLoading}
+          onConfirm={async (password) => {
+            if (!teacherToResetPassword) return;
+            setResetPasswordLoading(true);
+            try {
+              const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("user_id")
+                .eq("teacher_id", teacherToResetPassword.id)
+                .maybeSingle();
+
+              if (profileError || !profile?.user_id) {
+                toast.error("Este professor não possui conta de acesso vinculada.");
+                setResetPasswordLoading(false);
+                return;
+              }
+
+              adminResetPassword.mutate(
+                { userId: profile.user_id, password },
+                {
+                  onSuccess: () => {
+                    setResetPasswordDialogOpen(false);
+                    setTeacherToResetPassword(null);
+                    setGeneratedPassword(password);
+                    setPasswordDialogContext("reset");
+                    setIsPasswordDialogOpen(true);
+                    setResetPasswordLoading(false);
+                  },
+                  onError: () => setResetPasswordLoading(false),
+                }
+              );
+            } catch {
+              toast.error("Erro ao buscar conta do professor.");
+              setResetPasswordLoading(false);
             }
           }}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Redefinir senha do professor</DialogTitle>
-              {teacherToResetPassword && (
-                <DialogDescription>
-                  Nova senha para <strong>{teacherToResetPassword.name}</strong>. Mínimo 6 caracteres.
-                </DialogDescription>
-              )}
-            </DialogHeader>
-            {teacherToResetPassword && (
-              <>
-                <div className="space-y-4 py-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="reset-pw-teacher-new">Nova senha</Label>
-                    <Input
-                      id="reset-pw-teacher-new"
-                      type="password"
-                      placeholder="••••••••"
-                      value={resetPasswordNew}
-                      onChange={(e) => setResetPasswordNew(e.target.value)}
-                      minLength={6}
-                      disabled={resetPasswordLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="reset-pw-teacher-confirm">Confirmar senha</Label>
-                    <Input
-                      id="reset-pw-teacher-confirm"
-                      type="password"
-                      placeholder="••••••••"
-                      value={resetPasswordConfirm}
-                      onChange={(e) => setResetPasswordConfirm(e.target.value)}
-                      minLength={6}
-                      disabled={resetPasswordLoading}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-                      let p = "";
-                      for (let i = 0; i < 10; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
-                      setResetPasswordNew(p);
-                      setResetPasswordConfirm(p);
-                    }}
-                  >
-                    Gerar senha
-                  </Button>
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setResetPasswordDialogOpen(false);
-                      setTeacherToResetPassword(null);
-                      setResetPasswordNew("");
-                      setResetPasswordConfirm("");
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    disabled={
-                      resetPasswordLoading ||
-                      resetPasswordNew.length < 6 ||
-                      resetPasswordNew !== resetPasswordConfirm
-                    }
-                    onClick={async () => {
-                      if (!teacherToResetPassword) return;
-                      setResetPasswordLoading(true);
-                      try {
-                        // Buscar user_id vinculado ao professor via profiles
-                        const { data: profile, error: profileError } = await supabase
-                          .from("profiles")
-                          .select("user_id")
-                          .eq("teacher_id", teacherToResetPassword.id)
-                          .maybeSingle();
-
-                        if (profileError || !profile?.user_id) {
-                          toast.error("Este professor não possui conta de acesso vinculada.");
-                          setResetPasswordLoading(false);
-                          return;
-                        }
-
-                        adminResetPassword.mutate(
-                          { userId: profile.user_id, password: resetPasswordNew },
-                          {
-                            onSuccess: () => {
-                              setResetPasswordDialogOpen(false);
-                              setTeacherToResetPassword(null);
-                              setResetPasswordNew("");
-                              setResetPasswordConfirm("");
-                              setGeneratedPassword(resetPasswordNew);
-                              setPasswordDialogContext("reset");
-                              setIsPasswordDialogOpen(true);
-                              setResetPasswordLoading(false);
-                            },
-                            onError: () => {
-                              setResetPasswordLoading(false);
-                            },
-                          }
-                        );
-                      } catch {
-                        toast.error("Erro ao buscar conta do professor.");
-                        setResetPasswordLoading(false);
-                      }
-                    }}
-                  >
-                    {resetPasswordLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Redefinindo...
-                      </>
-                    ) : (
-                      "Redefinir senha"
-                    )}
-                  </Button>
-                </DialogFooter>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
+        />
 
         {/* Hard Delete Confirmation Dialog */}
-        <AlertDialog open={hardDeleteDialogOpen} onOpenChange={setHardDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-destructive">⚠️ EXCLUSÃO PERMANENTE</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja excluir definitivamente o professor{" "}
-                <strong>{teacherToHardDelete?.name}</strong>?
-                <br />
-                <br />
-                <strong className="text-destructive">Atenção:</strong> Todo o histórico de aulas
-                deste professor será <strong>permanentemente removido</strong>. Esta ação não
-                pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={hardDeleteTeacher.isPending}>
-                Cancelar
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  if (!teacherToHardDelete) return;
-                  hardDeleteTeacher.mutate({ id: teacherToHardDelete.id, force: false }, {
-                    onSuccess: () => {
-                      setHardDeleteDialogOpen(false);
-                      setTeacherToHardDelete(null);
-                    },
-                    onError: (error) => {
-                      const errorMessage = (error as Error).message;
-                      
-                      // Se o erro contém informações sobre aulas futuras, mostrar modal de confirmação
-                      if (errorMessage.includes("aula(s) agendada(s)")) {
-                        setHardDeleteDialogOpen(false);
-                        
-                        // Extrair número de aulas
-                        const numAulas = errorMessage.match(/(\d+) aula\(s\)/)?.[1] || "?";
-                        
-                        // Mostrar confirmação final
-                        const userInput = window.prompt(
-                          `⚠️ ATENÇÃO - EXCLUSÃO PERMANENTE\n\n${errorMessage}\n\nPara confirmar a exclusão permanente de ${teacherToHardDelete.name} e TODAS as ${numAulas} aulas agendadas, digite: CONFIRMAR`
-                        );
-                        
-                        if (userInput === "CONFIRMAR") {
-                          // Força a exclusão ignorando a validação
-                          hardDeleteTeacher.mutate({ id: teacherToHardDelete.id, force: true }, {
-                            onSuccess: () => {
-                              setTeacherToHardDelete(null);
-                              toast.success("Professor e todas as aulas foram excluídos permanentemente.");
-                            },
-                          });
-                        } else {
-                          toast.info("Exclusão cancelada.");
-                          setTeacherToHardDelete(null);
-                        }
-                      }
-                    },
-                  });
-                }}
-                disabled={hardDeleteTeacher.isPending}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {hardDeleteTeacher.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Excluindo...
-                  </>
-                ) : (
-                  "Excluir definitivamente"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <TeacherHardDeleteDialog
+          open={hardDeleteDialogOpen}
+          onOpenChange={setHardDeleteDialogOpen}
+          teacher={teacherToHardDelete}
+          isPending={hardDeleteTeacher.isPending}
+          onConfirm={(force) => {
+            if (!teacherToHardDelete) return;
+            hardDeleteTeacher.mutate({ id: teacherToHardDelete.id, force }, {
+              onSuccess: () => {
+                setHardDeleteDialogOpen(false);
+                setTeacherToHardDelete(null);
+                if (force) toast.success("Professor e todas as aulas foram excluídos permanentemente.");
+              },
+              onError: (error) => {
+                const errorMessage = (error as Error).message;
+                if (errorMessage.includes("aula(s) agendada(s)")) {
+                  setHardDeleteDialogOpen(false);
+                  const numAulas = errorMessage.match(/(\d+) aula\(s\)/)?.[1] || "?";
+                  const userInput = window.prompt(
+                    `⚠️ ATENÇÃO - EXCLUSÃO PERMANENTE\n\n${errorMessage}\n\nPara confirmar a exclusão permanente de ${teacherToHardDelete.name} e TODAS as ${numAulas} aulas agendadas, digite: CONFIRMAR`
+                  );
+                  if (userInput === "CONFIRMAR") {
+                    hardDeleteTeacher.mutate({ id: teacherToHardDelete.id, force: true }, {
+                      onSuccess: () => {
+                        setTeacherToHardDelete(null);
+                        toast.success("Professor e todas as aulas foram excluídos permanentemente.");
+                      },
+                    });
+                  } else {
+                    toast.info("Exclusão cancelada.");
+                    setTeacherToHardDelete(null);
+                  }
+                }
+              },
+            });
+          }}
+        />
 
         {/* Teacher Detail Sheet */}
         <TeacherDetailSheet
