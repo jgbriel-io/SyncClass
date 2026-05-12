@@ -8,26 +8,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ActivityDeleteDialog } from "@/components/activities/ActivityDeleteDialog";
 import {
   Plus,
-  Loader2,
   Clock,
   Search,
   FileStack,
   Inbox,
   CheckCircle2,
 } from "lucide-react";
-import { useActivities, useDeleteActivity, getActivityFileUrl, getActivityDisplayStatus, formatActivityDueDate, ActivityWithRelations } from "@/hooks/useActivities";
+import { useActivities, getActivityFileUrl, getActivityDisplayStatus, formatActivityDueDate, ActivityWithRelations } from "@/hooks/useActivities";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { SendActivityDialog } from "@/components/activities/SendActivityDialog";
@@ -103,7 +93,6 @@ export function ActivitiesView({
     undefined, // Admin nunca filtra por aluno, só professor filtra
     shouldFetchAll ? { fetchAll: true } : undefined,
   );
-  const deleteActivity = useDeleteActivity();
 
   const isOverdue = useCallback((a: ActivityWithRelations) =>
     a.status === "enviada" && a.due_date && new Date(a.due_date).getTime() < Date.now(),
@@ -139,17 +128,6 @@ export function ActivitiesView({
       logger.error(error as Error, { context: 'download_activity_file' });
       toast.dismiss();
       toast.error("Erro ao baixar arquivo");
-    }
-  };
-
-  const handleDeleteConfirm = () => {
-    if (activityToDelete) {
-      deleteActivity.mutate(activityToDelete.id, {
-        onSuccess: () => {
-          setDeleteDialogOpen(false);
-          setActivityToDelete(null);
-        },
-      });
     }
   };
 
@@ -352,35 +330,15 @@ export function ActivitiesView({
         activity={selectedActivity}
       />
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir a atividade{" "}
-              <strong>{activityToDelete?.title}</strong>?<br />
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteActivity.isPending}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={deleteActivity.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteActivity.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Excluindo...
-                </>
-              ) : (
-                "Excluir"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ActivityDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        activity={activityToDelete}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setActivityToDelete(null);
+        }}
+      />
 
       <ActivityDetailSheet
         activity={activityForDetail}

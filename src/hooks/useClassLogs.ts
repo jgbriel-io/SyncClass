@@ -3,8 +3,17 @@ import React, { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
-import { getClassStatusWithTime } from "@/lib/utils/classTime";
-import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
+import {
+  enrichWithPackageFinancial,
+  validateNoOverlap,
+  fetchClassLogs,
+  fetchClassLogsByStudentIds,
+  fetchPendingEvaluationClassLogs,
+  fetchAvailableClassLogsForStudent,
+  fetchClassLogsSummary,
+  createClassLogFn,
+  deleteClassLogFn,
+} from "./classLogsService";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -16,33 +25,6 @@ export type ClassLogsFilters = {
   period?: "all" | "week" | "month" | "3months";
   status?: ClassLogsStatusFilter;
 };
-
-function getDateRangeForPeriod(period: "week" | "month" | "3months"): { from: string; to: string } {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const y = today.getFullYear();
-  const m = today.getMonth();
-  const d = today.getDate();
-  let from: Date;
-  let to: Date;
-  if (period === "week") {
-    const start = new Date(y, m, d);
-    start.setDate(start.getDate() - start.getDay());
-    from = start;
-    to = new Date(start);
-    to.setDate(to.getDate() + 6);
-  } else if (period === "month") {
-    from = new Date(y, m, 1);
-    to = new Date(y, m + 1, 0);
-  } else {
-    from = new Date(y, m - 3, d);
-    to = new Date(y, m, d);
-  }
-  return {
-    from: from.toISOString().split("T")[0],
-    to: to.toISOString().split("T")[0],
-  };
-}
 
 export type ClassLog = Tables<"class_logs">;
 export type ClassLogInsert = TablesInsert<"class_logs">;
@@ -113,84 +95,7 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
 
   const query = useQuery({
     queryKey: ["class_logs", teacherId, page, pageSize, filters],
-    queryFn: async () => {
-      let q = supabase
-        .from("class_logs")
-        .select(
-          `
-          *,
-          students (
-            name,
-            teacher_id
-          ),
-          teachers (
-            name
-          ),
-          financial_records (
-            id,
-            status,
-            amount,
-            due_date,
-            payment_proof_url,
-            payment_proof_filename,
-            payment_proof_status
-          ),
-          financial_record_class_logs (
-            financial_record_id,
-            financial_records (
-              id,
-              status,
-              amount,
-              due_date,
-              payment_proof_url,
-              payment_proof_filename,
-              payment_proof_status
-            )
-          )
-        `,
-          { count: "exact" }
-        )
-        .order("class_date", { ascending: false });
-
-      const effectiveTeacherId = teacherId ?? (filters?.teacherId !== "all" ? filters?.teacherId : undefined);
-      
-      // Filtra por students.teacher_id (professor do aluno) em vez de class_logs.teacher_id
-      // porque class_logs.teacher_id pode ser NULL mesmo quando a aula pertence a um aluno desse professor
-      if (effectiveTeacherId) {
-        const { data: teacherStudentIds } = await supabase
-          .from("students")
-          .select("id")
-          .eq("teacher_id", effectiveTeacherId);
-        
-        if (teacherStudentIds && teacherStudentIds.length > 0) {
-          q = q.in("student_id", teacherStudentIds.map(s => s.id));
-        } else {
-          return { list: [] as ClassLogWithStudent[], count: 0 };
-        }
-      }
-
-      if (filters?.studentId && filters.studentId !== "all") {
-        q = q.eq("student_id", filters.studentId);
-      }
-
-      if (filters?.period && filters.period !== "all") {
-        const { from, to } = getDateRangeForPeriod(filters.period);
-        q = q.gte("class_date", from).lte("class_date", to);
-      }
-
-      // NÃO aplicar filtro de status no banco - deixar tudo client-side
-      // Isso garante que todas as aulas sejam retornadas e filtradas no componente
-
-      const from = page * pageSize;
-      const to = from + pageSize - 1;
-      
-      const { data, error, count } = await q.range(from, to);
-
-      if (error) throw error;
-      const list = (data ?? []) as ClassLogWithStudent[];
-      await enrichWithPackageFinancial(list);
-      return { list, count: count ?? 0 };
-    },
+    queryFn: () => fetchClassLogs(teacherId, page, pageSize, filters),
     placeholderData: keepPreviousData,
   });
 
@@ -218,58 +123,11 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
   };
 }
 
-/** Enriquece lista de aulas com financial_records vindos de pacote (financial_record_class_logs). */
-async function enrichWithPackageFinancial(
-  list: ClassLogWithStudent[]
-): Promise<ClassLogWithStudent[]> {
-  const withoutFinancial = list.filter((log) => !log.financial_records || log.financial_records.length === 0);
-  
-  if (withoutFinancial.length === 0) return list;
-  const logIds = withoutFinancial.map((l) => l.id);
-  const { data: links } = await supabase
-    .from("financial_record_class_logs")
-    .select("class_log_id, financial_record_id")
-    .in("class_log_id", logIds);
-  
-  if (!links?.length) return list;
-  const frIds = [...new Set(links.map((r) => r.financial_record_id))];
-  const { data: frs } = await supabase
-    .from("financial_records")
-    .select("id, status, amount, due_date, description, payment_proof_url, payment_proof_filename, payment_proof_status")
-    .in("id", frIds);
-  const frMap = new Map((frs ?? []).map((fr) => [fr.id, fr]));
-  const logToFr = new Map(links.map((r) => [r.class_log_id, r.financial_record_id]));
-  withoutFinancial.forEach((log) => {
-    const frId = logToFr.get(log.id);
-    const fr = frId ? frMap.get(frId) : null;
-    if (fr) {
-      (log as ClassLogWithStudent).financial_records = [fr];
-      (log as ClassLogWithStudent).financial_record_via_package = true;
-    }
-  });
-  return list;
-}
-
 /** Busca aulas por lista de student_ids (ex.: para enriquecer lista paginada de alunos) */
 export function useClassLogsByStudentIds(studentIds: string[]) {
   return useQuery({
     queryKey: ["class_logs_by_student_ids", studentIds],
-    queryFn: async () => {
-      if (studentIds.length === 0) return [] as ClassLogWithStudent[];
-      const { data, error } = await supabase
-        .from("class_logs")
-        .select(`
-          *,
-          students ( name, teacher_id ),
-          teachers ( name ),
-          financial_records ( id, status, amount, due_date, payment_proof_url, payment_proof_filename, payment_proof_status )
-        `)
-        .in("student_id", studentIds)
-        .order("class_date", { ascending: false });
-      if (error) throw error;
-      const list = (data ?? []) as ClassLogWithStudent[];
-      return enrichWithPackageFinancial(list);
-    },
+    queryFn: () => fetchClassLogsByStudentIds(studentIds),
     enabled: studentIds.length > 0,
   });
 }
@@ -278,27 +136,7 @@ export function useClassLogsByStudentIds(studentIds: string[]) {
 export function usePendingEvaluationClassLogs(teacherId?: string | null) {
   return useQuery({
     queryKey: ["class_logs_pending_evaluation", teacherId],
-    queryFn: async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayStr = today.toISOString().split("T")[0];
-      const { data, error } = await supabase
-        .from("class_logs")
-        .select(`
-          *,
-          students ( name, teacher_id ),
-          teachers ( name ),
-          financial_records ( id, status, amount, due_date, payment_proof_url, payment_proof_filename, payment_proof_status )
-        `)
-        .is("attendance", null)
-        .lte("class_date", todayStr)
-        .order("class_date", { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      const list = (data ?? []) as ClassLogWithStudent[];
-      const enriched = await enrichWithPackageFinancial(list);
-      return enriched.filter((log) => getClassStatusWithTime(log).label === "Pendente");
-    },
+    queryFn: fetchPendingEvaluationClassLogs,
   });
 }
 
@@ -307,40 +145,7 @@ export function usePendingEvaluationClassLogs(teacherId?: string | null) {
 export function useAvailableClassLogsForStudent(studentId: string | null, teacherId?: string) {
   return useQuery({
     queryKey: ["available_class_logs", studentId, teacherId],
-    queryFn: async () => {
-      if (!studentId) return [];
-
-      // Buscar todas as aulas do aluno. Não filtrar por class_logs.teacher_id:
-      // o aluno já está definido; se o contexto exige um professor, o student_id já implica alunos desse professor.
-      const { data: classLogs, error: classLogsError } = await supabase
-        .from("class_logs")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("class_date", { ascending: false });
-
-      if (classLogsError) throw classLogsError;
-
-      // Buscar IDs de aulas que já têm cobrança (direta ou via pacote)
-      const { data: financialRecords, error: financialError } = await supabase
-        .from("financial_records")
-        .select("class_log_id")
-        .eq("student_id", studentId)
-        .not("class_log_id", "is", null);
-
-      if (financialError) throw financialError;
-
-      const usedClassLogIds = new Set(financialRecords?.map(r => r.class_log_id).filter(Boolean) || []);
-
-      const { data: packageLinks } = await supabase
-        .from("financial_record_class_logs")
-        .select("class_log_id")
-        .in("class_log_id", classLogs?.map((l) => l.id) ?? []);
-
-      packageLinks?.forEach((r) => usedClassLogIds.add(r.class_log_id));
-
-      // Filtrar aulas disponíveis (sem cobrança)
-      return classLogs?.filter(log => !usedClassLogIds.has(log.id)) || [];
-    },
+    queryFn: () => fetchAvailableClassLogsForStudent(studentId!),
     enabled: !!studentId,
   });
 }
@@ -348,82 +153,14 @@ export function useAvailableClassLogsForStudent(studentId: string | null, teache
 export function useClassLogsSummary(teacherId?: string | null) {
   return useQuery({
     queryKey: ["class_logs_summary", teacherId],
-    queryFn: async () => {
-      let query = supabase
-        .from("class_logs")
-        .select("attendance, grade");
-      if (teacherId) {
-        const { data: teacherStudentIds } = await supabase
-          .from("students")
-          .select("id")
-          .eq("teacher_id", teacherId);
-        if (teacherStudentIds && teacherStudentIds.length > 0) {
-          query = query.in("student_id", teacherStudentIds.map((s) => s.id));
-        } else {
-          return {
-            totalClasses: 0,
-            totalPresent: 0,
-            totalAbsent: 0,
-            averageGrade: 0,
-            gradesCount: 0,
-            gradesSum: 0,
-          };
-        }
-      }
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
-      }
-
-      const summary = {
-        totalClasses: data.length,
-        totalPresent: 0,
-        totalAbsent: 0,
-        averageGrade: 0,
-        gradesCount: 0,
-        gradesSum: 0,
-      };
-
-      data.forEach((log) => {
-        if (log.attendance) {
-          summary.totalPresent++;
-        } else {
-          summary.totalAbsent++;
-        }
-        if (log.grade !== null) {
-          summary.gradesSum += Number(log.grade);
-          summary.gradesCount++;
-        }
-      });
-
-      if (summary.gradesCount > 0) {
-        summary.averageGrade = summary.gradesSum / summary.gradesCount;
-      }
-
-      return summary;
-    },
+    queryFn: () => fetchClassLogsSummary(teacherId),
   });
 }
 
 export function useCreateClassLog() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (log: ClassLogInsert) => {
-      // Validação de sobreposição agora é feita no banco via trigger
-      const { data, error } = await supabase
-        .from("class_logs")
-        .insert(log)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return data;
-    },
+    mutationFn: createClassLogFn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
@@ -677,48 +414,6 @@ export function useUpdateClassLog() {
   });
 }
 
-/** Valida se há sobreposição de horários entre aulas do pacote */
-function validateNoOverlap(items: CreateClassLogPackageItem[]): void {
-  if (items.length <= 1) return;
-
-  // Agrupar por data
-  const byDate = new Map<string, CreateClassLogPackageItem[]>();
-  items.forEach((item) => {
-    const date = item.classLog.class_date;
-    if (!byDate.has(date)) {
-      byDate.set(date, []);
-    }
-    byDate.get(date)!.push(item);
-  });
-
-  // Verificar sobreposição em cada data
-  byDate.forEach((dayItems, date) => {
-    if (dayItems.length <= 1) return;
-
-    // Ordenar por horário de início
-    const sorted = dayItems.sort((a, b) =>
-      (a.classLog.start_at || "").localeCompare(b.classLog.start_at || "")
-    );
-
-    // Verificar se há sobreposição entre aulas consecutivas
-    for (let i = 0; i < sorted.length - 1; i++) {
-      const current = sorted[i].classLog;
-      const next = sorted[i + 1].classLog;
-
-      const currentEnd = current.end_at || "";
-      const nextStart = next.start_at || "";
-
-      if (currentEnd > nextStart) {
-        const [y, m, d] = date.split("-");
-        const formattedDate = `${d}/${m}/${y}`;
-        throw new Error(
-          `Aulas se sobrepõem no dia ${formattedDate}: ${current.start_at}-${currentEnd} e ${nextStart}-${next.end_at}`
-        );
-      }
-    }
-  });
-}
-
 /** Payload para criar um pacote de aulas em lote */
 export interface CreateClassLogPackageItem {
   classLog: ClassLogInsert;
@@ -827,24 +522,8 @@ export function useCreateClassLogPackage() {
 
 export function useDeleteClassLog() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (id: string) => {
-      // Exclui a cobrança vinculada (se existir) antes de excluir a aula
-      await supabase
-        .from("financial_records")
-        .delete()
-        .eq("class_log_id", id);
-
-      const { error } = await supabase
-        .from("class_logs")
-        .delete()
-        .eq("id", id);
-
-      if (error) {
-        throw error;
-      }
-    },
+    mutationFn: deleteClassLogFn,
     onSuccess: () => {
       // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });

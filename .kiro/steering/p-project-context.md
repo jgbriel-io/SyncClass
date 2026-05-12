@@ -17,7 +17,7 @@ Plataforma SaaS para gestão de escola de inglês. Professores gerenciam alunos,
 - React Hook Form + Zod — formulários
 - Lucide React — ícones
 - Sonner — toasts
-- Deploy: Docker / VPS
+- Deploy: Cloudflare Pages
 
 Variáveis obrigatórias: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`
 

@@ -8,6 +8,15 @@ import { logError } from "@/lib/security/errorHandler";
 import { logger } from "@/lib/sentry";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
 import { useOptimisticMutation } from "@/hooks/useOptimisticMutation";
+import {
+  formatActivityDueDate,
+  getActivityDisplayStatus,
+  uploadActivityFile,
+  getActivityFileUrl,
+  fetchActivities,
+} from "./activitiesService";
+
+export { formatActivityDueDate, getActivityDisplayStatus, uploadActivityFile, getActivityFileUrl };
 
 export type Activity = Tables<"activities">;
 export type ActivityInsert = TablesInsert<"activities">;
@@ -22,181 +31,8 @@ export interface ActivityWithRelations extends Activity {
   } | null;
 }
 
-/** Atividade com pelo menos status, due_date e delivered_at (para exibição de status) */
-type ActivityForDisplay = Pick<Activity, "status" | "due_date" | "delivered_at">;
-
-/** Formata due_date (ISO ou YYYY-MM-DD) para exibição: "dd/MM/yyyy às HH:mm" ou só data se legado */
-export function formatActivityDueDate(dueDate: string | null | undefined): string {
-  if (!dueDate) return "—";
-  const d = new Date(dueDate);
-  if (Number.isNaN(d.getTime())) return dueDate;
-  const hasTime = dueDate.includes("T");
-  return hasTime
-    ? `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()} às ${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
-    : `${dueDate.slice(8, 10)}/${dueDate.slice(5, 7)}/${dueDate.slice(0, 4)}`;
-}
-
-/** Retorna label e variant do badge considerando prazo (data+hora) e entrega (no prazo / atraso / vencida). */
-export function getActivityDisplayStatus(
-  activity: ActivityForDisplay
-): { label: string; variant: "success" | "warning" | "default" | "info" | "destructive" } {
-  const dueTime = activity.due_date ? new Date(activity.due_date).getTime() : 0;
-  const now = Date.now();
-  const deliveredAt = activity.delivered_at;
-
-  if (activity.status === "corrigida") {
-    return { label: "Corrigida", variant: "success" };
-  }
-  if (activity.status === "entregue" && deliveredAt) {
-    const deliveredTime = new Date(deliveredAt).getTime();
-    const onTime = deliveredTime <= dueTime;
-    return onTime
-      ? { label: "Entregue", variant: "success" }
-      : { label: "Entregue com atraso", variant: "warning" };
-  }
-  if (activity.status === "enviada") {
-    if (dueTime > 0 && dueTime < now) {
-      return { label: "Vencida", variant: "destructive" };
-    }
-    return { label: "Aguardando", variant: "warning" };
-  }
-  return { label: activity.status, variant: "default" };
-}
-
-const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'] as const;
-const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-
-/**
- * Valida magic bytes (assinatura do arquivo) para garantir que o tipo é real
- */
-function validateMagicBytes(bytes: Uint8Array, mimeType: string): boolean {
-  // PDF: %PDF (0x25 0x50 0x44 0x46)
-  if (mimeType === 'application/pdf') {
-    return bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
-  }
-  
-  // JPEG: FF D8 FF
-  if (mimeType === 'image/jpeg') {
-    return bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
-  }
-  
-  // PNG: 89 50 4E 47
-  if (mimeType === 'image/png') {
-    return bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47;
-  }
-  
-  // WebP: RIFF ... WEBP
-  if (mimeType === 'image/webp') {
-    return bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
-           bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
-  }
-  
-  // DOC: D0 CF 11 E0 (Microsoft Office)
-  if (mimeType === 'application/msword') {
-    return bytes[0] === 0xD0 && bytes[1] === 0xCF && bytes[2] === 0x11 && bytes[3] === 0xE0;
-  }
-  
-  // DOCX: PK (ZIP format - 50 4B)
-  if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-    return bytes[0] === 0x50 && bytes[1] === 0x4B;
-  }
-  
-  // Text: permite qualquer coisa (não tem magic bytes específico)
-  if (mimeType === 'text/plain') {
-    return true;
-  }
-  
-  return false;
-}
-
-/** Upload de arquivo para o Supabase Storage */
-export async function uploadActivityFile(file: File): Promise<{ path: string; url: string }> {
-  // Rate limiting: 5 uploads por 5 minutos
-  const rateLimitResult = checkRateLimit("uploadActivityFile", RATE_LIMIT_CONFIGS.UPLOAD);
-  if (!rateLimitResult.allowed) {
-    throw new Error(
-      `Muitos uploads. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
-    );
-  }
-
-  // Validar tipo MIME
-  if (!ALLOWED_TYPES.includes(file.type as typeof ALLOWED_TYPES[number])) {
-    throw new Error(`Tipo não permitido. Use: PDF, JPEG, PNG, WebP, TXT, DOC ou DOCX`);
-  }
-  
-  // Validar tamanho
-  if (file.size > MAX_SIZE) {
-    throw new Error(`Arquivo muito grande. Máximo: ${MAX_SIZE / 1024 / 1024}MB`);
-  }
-  
-  // Validar magic bytes (primeiros 12 bytes do arquivo)
-  const buffer = await file.slice(0, 12).arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  
-  if (!validateMagicBytes(bytes, file.type)) {
-    throw new Error("Arquivo corrompido ou tipo inválido. O conteúdo não corresponde à extensão.");
-  }
-  
-  // Gerar nome seguro usando o nome original sanitizado
-  const sanitizedName = file.name
-    .replace(/[^a-zA-Z0-9._-]/g, '_') // Remove caracteres especiais
-    .replace(/_{2,}/g, '_') // Remove underscores duplicados
-    .substring(0, 100); // Limita tamanho
-  
-  const timestamp = Date.now();
-  const fileName = `${timestamp}-${sanitizedName}`;
-  const filePath = fileName;
-
-  const { error: uploadError } = await supabase.storage
-    .from("activities")
-    .upload(filePath, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: file.type,
-    });
-
-  if (uploadError) {
-    throw new Error("Erro ao fazer upload do arquivo: " + uploadError.message);
-  }
-
-  // Para buckets privados, armazenamos apenas o path
-  // A URL será gerada quando necessário via signed URL
-  return {
-    path: filePath,
-    url: filePath, // Armazenamos o path, não a URL
-  };
-}
-
-/** Download/visualização de arquivo - gera signed URL temporária (válida por 1 hora) */
-export async function getActivityFileUrl(filePathOrUrl: string): Promise<string> {
-  // Extrair apenas o nome do arquivo se for uma URL completa
-  let filePath = filePathOrUrl;
-  
-  // Se for uma URL do Supabase, extrair apenas o path
-  if (filePathOrUrl.includes('supabase.co/storage/v1/object/public/activities/')) {
-    filePath = filePathOrUrl.split('activities/').pop() || filePathOrUrl;
-  } else if (filePathOrUrl.includes('supabase.co/storage/v1/object/sign/activities/')) {
-    filePath = filePathOrUrl.split('activities/').pop()?.split('?')[0] || filePathOrUrl;
-  }
-
-  // Tentar criar signed URL
-  const { data, error } = await supabase.storage
-    .from("activities")
-    .createSignedUrl(filePath, 3600); // 1 hora
-
-  if (error) {
-    // Se o arquivo não existe, verificar se há problema com o path
-    if (error.message.includes("not found") || error.message.includes("Object not found")) {
-      throw new Error(`Arquivo não encontrado no storage. Verifique se o arquivo "${filePath}" existe no bucket 'activities'.`);
-    }
-    
-    throw new Error("Erro ao gerar URL do arquivo: " + error.message);
-  }
-
-  return data.signedUrl;
-}
-
-/** Arquivo já usado em alguma atividade (para reutilizar no envio) */
+/** Opções para listagem: fetchAll = true (admin) busca todas as atividades da plataforma */
+export type UseActivitiesOptions = { fetchAll?: boolean };
 export interface ActivityFileOption {
   file_url: string;
   file_name: string;
@@ -259,31 +95,9 @@ export function useActivities(
   options?: UseActivitiesOptions
 ) {
   const fetchAll = options?.fetchAll === true;
-
   return useQuery({
     queryKey: ["activities", teacherId, studentId, fetchAll],
-    queryFn: async () => {
-      let query = supabase
-        .from("activities")
-        .select(`
-          *,
-          students (name),
-          teachers (name)
-        `)
-        .is("deleted_at", null) // Filtrar atividades não deletadas
-        .order("created_at", { ascending: false });
-
-      if (!fetchAll) {
-        if (teacherId) query = query.eq("teacher_id", teacherId);
-        if (studentId) query = query.eq("student_id", studentId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return (data ?? []) as ActivityWithRelations[];
-    },
-    // Habilita se: fetchAll OU tem teacherId OU tem studentId
+    queryFn: () => fetchActivities(teacherId, studentId, fetchAll),
     enabled: fetchAll || !!teacherId || !!studentId,
   });
 }

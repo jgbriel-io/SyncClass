@@ -1,31 +1,11 @@
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyFinancialState } from "@/components/ui/contextual-empty-states";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils/formatters";
+import { formatCurrency } from "@/lib/utils/formatters";
 import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useUndoFinancialPayment } from "@/hooks/useFinancialRecords";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { useStudents } from "@/hooks/useStudents";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Search, Loader2, DollarSign } from "lucide-react";
+import { Search, DollarSign, TrendingUp } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   FinancialFilters,
@@ -33,54 +13,31 @@ import {
 } from "@/components/filters/FinancialFilters";
 import { defaultFinancialFilters } from "@/components/filters/filterDefaults";
 import { FinancialFormDialog } from "@/components/financial/FinancialFormDialog";
+import { FinancialUndoDialog } from "@/components/financial/FinancialUndoDialog";
+import { FinancialDeleteDialog } from "@/components/financial/FinancialDeleteDialog";
+import { FinancialConfirmPaymentDialog } from "@/components/financial/FinancialConfirmPaymentDialog";
+import { FinancialPaymentHistoryDialog } from "@/components/financial/FinancialPaymentHistoryDialog";
 import {
   useFinancialRecords,
   useFinancialSummary,
   useCreateFinancialRecord,
-  useMarkAsPaid,
-  useConfirmPayment,
   useUpdateFinancialRecord,
-  useDeleteFinancialRecord,
+  useUndoFinancialPayment,
   FinancialRecordInsert,
   FinancialRecordWithRelations,
 } from "@/hooks/useFinancialRecords";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2, TrendingUp, Eye } from "lucide-react";
 import { FinancialTableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  tableThLarge,
-  tableThMedium,
-  tableThSmall,
-  tableThSmallRight,
-  tableTdLarge,
-  tableTdMedium,
-  tableTdSmall,
-  tableTdActions,
-} from "@/lib/utils/tableColumns";
-import { cn } from "@/lib/utils";
 import { useForecastedBilling } from "@/hooks/useForecastedBilling";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { FinancialTableRow } from "@/components/financial/FinancialTableRow";
 import { COL as FIN_COL, TABLE_MIN_W as FIN_TABLE_MIN_W } from "@/components/financial/FinancialTableRow.constants";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useCurrentUserProfile } from "@/hooks/useUsers";
-import { useAuth } from "@/contexts/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
 
 interface FinancialViewProps {
   title?: string;
@@ -97,23 +54,17 @@ export function FinancialView({
   enableTeacherSelection = true,
   autoTeacherId = null,
 }: FinancialViewProps) {
-  const queryClient = useQueryClient();
-  const undoPayment = useUndoFinancialPayment();
   const [filters, setFilters] = useState<FinancialFiltersState>(defaultFinancialFilters);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [confirmPaymentId, setConfirmPaymentId] = useState<string | null>(null);
-  const [recordToConfirm, setRecordToConfirm] = useState<FinancialRecordWithRelations | null>(null);
+  const [confirmPaymentRecord, setConfirmPaymentRecord] = useState<FinancialRecordWithRelations | null>(null);
   const [recordToEdit, setRecordToEdit] = useState<FinancialRecordWithRelations | null>(null);
   const [recordToUndo, setRecordToUndo] = useState<FinancialRecordWithRelations | null>(null);
   const [undoDialogOpen, setUndoDialogOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<FinancialRecordWithRelations | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [historyRecord, setHistoryRecord] = useState<FinancialRecordWithRelations | null>(null);
-  const [isProcessingPayment, setIsProcessingPayment] = useState<string | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
   const { data: forecastedBilling } = useForecastedBilling(autoTeacherId);
-  const { user } = useAuth();
-  const { data: currentUserProfile } = useCurrentUserProfile(user?.id);
 
   const {
     data: records = [],
@@ -142,10 +93,8 @@ export function FinancialView({
   const { data: students = [] } = useStudents();
   const activeStudents = students.filter((s) => s.status === "ativo");
   const createRecord = useCreateFinancialRecord();
-  const markAsPaid = useMarkAsPaid();
-  const confirmPayment = useConfirmPayment();
   const updateRecord = useUpdateFinancialRecord();
-  const deleteRecord = useDeleteFinancialRecord();
+  const undoPayment = useUndoFinancialPayment();
 
   // Add actual status to records
   const recordsWithActualStatus = records.map((record) => ({
@@ -207,53 +156,20 @@ export function FinancialView({
   });
 
   const handleCreateRecord = (data: FinancialRecordInsert) => {
-    createRecord.mutate(data, {
-      onSuccess: () => {
-        setIsFormOpen(false);
-      },
-    });
+    createRecord.mutate(data, { onSuccess: () => setIsFormOpen(false) });
   };
 
   const handleEditRecord = (data: FinancialRecordInsert) => {
     if (recordToEdit) {
-      updateRecord.mutate({ id: recordToEdit.id, ...data }, {
-        onSuccess: () => {
-          setIsFormOpen(false);
-          setRecordToEdit(null);
-        },
-      });
-    }
-  };
-
-  const openConfirmPayment = (record: FinancialRecordWithRelations) => {
-    setRecordToConfirm(record);
-    setConfirmPaymentId(record.id);
-  };
-
-  const handleConfirmPayment = () => {
-    if (confirmPaymentId && !isProcessingPayment) {
-      setIsProcessingPayment(confirmPaymentId);
-      confirmPayment.mutate(confirmPaymentId, {
-        onSuccess: () => {
-          setConfirmPaymentId(null);
-          setRecordToConfirm(null);
-          setIsProcessingPayment(null);
-        },
-        onError: () => {
-          setIsProcessingPayment(null);
-        },
-      });
-    }
-  };
-
-  const handleDeleteRecord = () => {
-    if (recordToDelete) {
-      deleteRecord.mutate(recordToDelete.id, {
-        onSuccess: () => {
-          setDeleteDialogOpen(false);
-          setRecordToDelete(null);
-        },
-      });
+      updateRecord.mutate(
+        { id: recordToEdit.id, ...data },
+        {
+          onSuccess: () => {
+            setIsFormOpen(false);
+            setRecordToEdit(null);
+          },
+        }
+      );
     }
   };
 
@@ -446,7 +362,6 @@ export function FinancialView({
                       setIsFormOpen(true);
                     }}
                     onConfirmPayment={(record) => {
-                      // Abre o modal de histórico em vez do dialog de confirmação
                       setHistoryRecord(record);
                     }}
                     onUndoPayment={(record) => {
@@ -500,349 +415,46 @@ export function FinancialView({
         enableTeacherSelection={enableTeacherSelection}
       />
 
-      {/* Undo Payment (Desfazer Cobrança) Dialog */}
-      <AlertDialog
+      <FinancialUndoDialog
         open={undoDialogOpen}
         onOpenChange={(open) => {
           setUndoDialogOpen(open);
           if (!open) setRecordToUndo(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Desfazer cobrança</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                <p>
-                  Deseja desfazer o pagamento da cobrança de{" "}
-                  <strong>{recordToUndo?.students?.name}</strong> no valor de{" "}
-                  <strong>{recordToUndo ? formatCurrency(Number(recordToUndo.amount)) : ""}</strong>?
-                </p>
-                {recordToUndo?.class_logs && recordToUndo.class_logs.attendance != null ? (
-                  <p className="text-destructive font-medium">
-                    Esta cobrança está vinculada a uma aula já concluída/confirmada.
-                    Deseja desfazer mesmo assim?
-                  </p>
-                ) : null}
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={undoPayment.isPending}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (recordToUndo) {
-                  undoPayment.mutate(recordToUndo.id, {
-                    onSettled: () => {
-                      setUndoDialogOpen(false);
-                      setRecordToUndo(null);
-                    },
-                  });
-                }
-              }}
-              disabled={undoPayment.isPending}
-            >
-              {undoPayment.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Desfazendo...
-                </>
-              ) : (
-                "Desfazer cobrança"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        record={recordToUndo}
+        onClose={() => {
+          setUndoDialogOpen(false);
+          setRecordToUndo(null);
+        }}
+      />
 
-      {/* Delete Record Dialog */}
-      <AlertDialog
+      <FinancialDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={(open) => {
           setDeleteDialogOpen(open);
           if (!open) setRecordToDelete(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir cobrança</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                <p>
-                  Deseja excluir permanentemente a cobrança de{" "}
-                  <strong>{recordToDelete?.students?.name}</strong> no valor de{" "}
-                  <strong>{recordToDelete ? formatCurrency(Number(recordToDelete.amount)) : ""}</strong>?
-                </p>
-                <p className="text-destructive font-medium">
-                  Esta ação não pode ser desfeita.
-                </p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteRecord.isPending}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteRecord}
-              disabled={deleteRecord.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteRecord.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Excluindo...
-                </>
-              ) : (
-                "Excluir cobrança"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Confirm Payment Dialog */}
-      <AlertDialog
-        open={!!confirmPaymentId}
-        onOpenChange={(open) => {
-          if (!open) {
-            setConfirmPaymentId(null);
-            setRecordToConfirm(null);
-          }
+        record={recordToDelete}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setRecordToDelete(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {recordToConfirm?.class_logs && recordToConfirm.class_logs.attendance == null
-                ? "Atenção: confirmar pagamento antecipado"
-                : "Confirmar pagamento"}
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                {recordToConfirm?.class_logs && recordToConfirm.class_logs.attendance == null ? (
-                  <p>
-                    <span className="font-medium text-foreground block mb-1">
-                      Esta cobrança está vinculada a uma aula que ainda não foi concluída.
-                    </span>
-                    O pagamento já foi realizado? Ao confirmar, a cobrança de{" "}
-                    <strong>{recordToConfirm?.students?.name}</strong> no valor de{" "}
-                    <strong>{recordToConfirm ? formatCurrency(Number(recordToConfirm.amount)) : ""}</strong>{" "}
-                    será marcada como paga.
-                  </p>
-                ) : (
-                  <p>
-                    Deseja marcar como pago a cobrança de{" "}
-                    <strong>{recordToConfirm?.students?.name}</strong> no valor de{" "}
-                    <strong>{recordToConfirm ? formatCurrency(Number(recordToConfirm.amount)) : ""}</strong>?
-                  </p>
-                )}
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={confirmPayment.isPending || isProcessingPayment === confirmPaymentId}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmPayment}
-              disabled={confirmPayment.isPending || isProcessingPayment === confirmPaymentId}
-            >
-              {confirmPayment.isPending || isProcessingPayment === confirmPaymentId ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Registrando...
-                </>
-              ) : (
-                "Confirmar Pagamento"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      />
 
-      {/* Mini modal: Histórico de pagamento */}
-      <Dialog open={!!historyRecord} onOpenChange={(open) => !open && setHistoryRecord(null)}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-base">Histórico de pagamento</DialogTitle>
-          </DialogHeader>
-          {historyRecord && (
-            <div className="space-y-3 pr-2">
-              <p className="text-sm text-muted-foreground break-words">
-                {historyRecord.students?.name} · {formatCurrency(Number(historyRecord.amount))}
-              </p>
-              
-              {historyRecord.description && (
-                <div className="rounded-lg border bg-muted/50 p-3">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Descrição</p>
-                  <p className="text-sm text-foreground break-words overflow-wrap-anywhere">{historyRecord.description}</p>
-                </div>
-              )}
-              
-              {/* Comprovante de Pagamento */}
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {(historyRecord as any).payment_proof_url && (
-                <div className="rounded-lg border bg-primary/5 p-3">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Comprovante de Pagamento</p>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <p className="text-sm font-medium break-words overflow-wrap-anywhere">
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {(historyRecord as any).payment_proof_filename || "Comprovante.pdf"}
-                      </p>
-                      <p className="text-xs text-muted-foreground break-words">
-                        Enviado em {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {(historyRecord as any).payment_proof_uploaded_at 
-                          ? /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-                          formatDateTime((historyRecord as any).payment_proof_uploaded_at)
-                          : "—"}
-                      </p>
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {(historyRecord as any).payment_proof_status === "pending" && (
-                        <p className="text-xs text-warning font-medium mt-1">
-                          Aguardando aprovação
-                        </p>
-                      )}
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {(historyRecord as any).payment_proof_status === "rejected" && (
-                        <p className="text-xs text-destructive font-medium mt-1 break-words overflow-wrap-anywhere">
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          Rejeitado: {(historyRecord as any).payment_proof_rejection_reason || "Sem motivo"}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="shrink-0"
-                      onClick={async () => {
-                        try {
-                          const { getPaymentProofUrl } = await import("@/hooks/usePaymentProof");
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          const url = await getPaymentProofUrl((historyRecord as any).payment_proof_url);
-                          window.open(url, "_blank", "noopener,noreferrer");
-                        } catch (error) {
-                          toast.error("Erro ao abrir comprovante");
-                        }
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      Ver
-                    </Button>
-                  </div>
-                  
-                  {/* Botões de Aprovar/Rejeitar (apenas se pending) */}
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {(historyRecord as any).payment_proof_status === "pending" && (
-                    <div className="flex gap-2 mt-3 pt-3 border-t shrink-0">
-                      <Button
-                        size="sm"
-                        className="flex-1 bg-success text-white hover:bg-success/90 shrink-0"
-                        onClick={async () => {
-                          try {
-                            const { useReviewPaymentProof } = await import("@/hooks/usePaymentProof");
-                            // Chamar mutation diretamente
-                            await supabase.rpc("review_payment_proof", {
-                              p_financial_record_id: historyRecord.id,
-                              p_approved: true,
-                              p_rejection_reason: null,
-                            });
-                            toast.success("Pagamento confirmado!");
-                            setHistoryRecord(null);
-                            queryClient.invalidateQueries({ queryKey: ['financial-records'] });
-                          } catch (error) {
-                            toast.error("Erro ao aprovar comprovante");
-                          }
-                        }}
-                      >
-                        Aprovar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="flex-1 shrink-0"
-                        onClick={async () => {
-                          try {
-                            await supabase.rpc("review_payment_proof", {
-                              p_financial_record_id: historyRecord.id,
-                              p_approved: false,
-                              p_rejection_reason: "Comprovante inválido",
-                            });
-                            toast.success("Comprovante rejeitado");
-                            setHistoryRecord(null);
-                            queryClient.invalidateQueries({ queryKey: ['financial-records'] });
-                          } catch (error) {
-                            toast.error("Erro ao rejeitar comprovante");
-                          }
-                        }}
-                      >
-                        Rejeitar
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* Status do pagamento */}
-              {historyRecord.status === "pago" && historyRecord.confirmed_by ? (
-                <div className="rounded-lg border bg-success/10 border-success/20 p-3 text-sm">
-                  {currentUserProfile?.role === "admin" ? (
-                    <>
-                      <p className="font-medium text-foreground break-words overflow-wrap-anywhere">
-                        Confirmado por {historyRecord.confirmed_by.full_name}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5 break-words">
-                        {historyRecord.updated_at ? formatDateTime(historyRecord.updated_at) : "Data não disponível"}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-medium text-foreground break-words">
-                        Pagamento confirmado
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5 break-words">
-                        {historyRecord.updated_at ? formatDateTime(historyRecord.updated_at) : "Data não disponível"}
-                      </p>
-                    </>
-                  )}
-                </div>
-              ) : historyRecord.status === "pago" ? (
-                <div className="rounded-lg border bg-success/10 border-success/20 p-3 text-sm">
-                  <p className="font-medium text-foreground break-words">
-                    Pagamento confirmado
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 break-words">
-                    {historyRecord.updated_at ? formatDateTime(historyRecord.updated_at) : "Data não disponível"}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <p className="text-sm text-muted-foreground break-words">
-                    Nenhum pagamento registrado para esta cobrança.
-                  </p>
-                  
-                  {/* Botão Confirmar Pagamento (se não tiver comprovante ou comprovante rejeitado) */}
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {(!((historyRecord as any).payment_proof_url) || (historyRecord as any).payment_proof_status === "rejected") && (
-                    <Button
-                      className="w-full bg-success text-white hover:bg-success/90 shrink-0"
-                      onClick={() => {
-                        setHistoryRecord(null);
-                        openConfirmPayment(historyRecord);
-                      }}
-                    >
-                      Confirmar Pagamento
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <FinancialConfirmPaymentDialog
+        open={!!confirmPaymentRecord}
+        onOpenChange={(open) => {
+          if (!open) setConfirmPaymentRecord(null);
+        }}
+        record={confirmPaymentRecord}
+        onClose={() => setConfirmPaymentRecord(null)}
+      />
+
+      <FinancialPaymentHistoryDialog
+        record={historyRecord}
+        onClose={() => setHistoryRecord(null)}
+        onConfirmPayment={(record) => setConfirmPaymentRecord(record)}
+      />
     </div>
   );
 }

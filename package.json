@@ -14,12 +14,7 @@
     "ci": "npm ci && npm run check && npm run build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "playwright test --debug",
-    "test:e2e:report": "playwright show-report",
-    "test:e2e:headed": "playwright test --headed"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@fontsource/geist-sans": "^5.2.5",
@@ -84,7 +79,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@playwright/test": "^1.59.1",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",

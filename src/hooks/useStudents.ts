@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { useState } from "react";
-import React from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
+import { logger } from "@/lib/sentry";
+import { sanitizeStudentUpdateForEdit } from "@/lib/utils/sanitizeStudentUpdate";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -109,7 +110,7 @@ export function useStudentsPaginated(options?: UseStudentsPaginatedOptions): Use
   const hasMore = totalCount > (page + 1) * pageSize;
 
   // Reset para página 0 se a página atual ficou vazia mas há dados
-  React.useEffect(() => {
+  useEffect(() => {
     if (!query.isLoading && list.length === 0 && totalCount > 0 && page > 0) {
       setPage(0);
     }
@@ -159,15 +160,6 @@ export function useCreateStudent() {
       logError(error as Error, { context: 'create_student' });
     },
   });
-}
-
-/** Remove phone do update se parecer mascarado (evita sobrescrever dados reais com ***) */
-function sanitizeStudentUpdateForEdit(updates: Record<string, unknown>): Record<string, unknown> {
-  const out = { ...updates };
-  if (typeof out.phone === "string" && out.phone.includes("*")) {
-    delete out.phone;
-  }
-  return out;
 }
 
 export function useUpdateStudent() {

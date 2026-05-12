@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { useState } from "react";
-import React from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
+import { fetchTeachers, fetchTeachersPaginated } from "./teachersService";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -23,21 +23,7 @@ type ProfileUpdate = TablesUpdate<"profiles">;
 export function useTeachers() {
   return useQuery({
     queryKey: ["teachers"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("teachers")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      
-      // Mask CPF only (keep last 4 digits visible)
-      const maskedData = (data ?? []).map(teacher => ({
-        ...teacher,
-        cpf: teacher.cpf ? teacher.cpf.slice(0, -4).replace(/\d/g, '*') + teacher.cpf.slice(-4) : null,
-      }));
-      
-      return maskedData as Teacher[];
-    },
+    queryFn: fetchTeachers,
   });
 }
 
@@ -65,31 +51,7 @@ export function useTeachersPaginated(options?: UseTeachersPaginatedOptions): Use
 
   const query = useQuery({
     queryKey: ["teachers_paginated", page, pageSize, filters],
-    queryFn: async () => {
-      // Use teachers table directly instead of view to avoid cache issues
-      let q = supabase.from("teachers").select("*", { count: "exact" });
-
-      if (filters?.status && filters.status !== "all") {
-        q = q.eq("status", filters.status);
-      }
-
-      const ascending = filters?.sortBy === "name_asc";
-      q = q.order("name", { ascending });
-
-      const from = page * pageSize;
-      const to = from + pageSize - 1;
-      const { data, error, count } = await q.range(from, to);
-
-      if (error) throw error;
-      
-      // Mask CPF only (keep last 4 digits visible)
-      const maskedData = (data ?? []).map(teacher => ({
-        ...teacher,
-        cpf: teacher.cpf ? teacher.cpf.slice(0, -4).replace(/\d/g, '*') + teacher.cpf.slice(-4) : null,
-      }));
-      
-      return { list: maskedData as Teacher[], count: count ?? 0 };
-    },
+    queryFn: () => fetchTeachersPaginated(page, pageSize, filters),
     placeholderData: keepPreviousData,
   });
 
@@ -98,7 +60,7 @@ export function useTeachersPaginated(options?: UseTeachersPaginatedOptions): Use
   const hasMore = totalCount > (page + 1) * pageSize;
 
   // Reset para página 0 se a página atual ficou vazia mas há dados
-  React.useEffect(() => {
+  useEffect(() => {
     if (!query.isLoading && list.length === 0 && totalCount > 0 && page > 0) {
       setPage(0);
     }

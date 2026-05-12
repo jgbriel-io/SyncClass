@@ -13,7 +13,7 @@ import { useFinancialSummary } from "@/hooks/useFinancialRecords";
 import { useForecastedBilling } from "@/hooks/useForecastedBilling";
 import { useTodayClasses } from "@/hooks/useTodayClasses";
 import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
-import type { ChartMonthsFilter } from "@/components/dashboard/DashboardView";
+import type { ChartMonthsFilter } from "@/components/dashboard/DashboardGrowthChart";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
