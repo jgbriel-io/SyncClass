@@ -18,6 +18,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useActivities, getActivityFileUrl, getActivityDisplayStatus, formatActivityDueDate, ActivityWithRelations } from "@/hooks/useActivities";
+import { activities as activitiesContent } from "@/content/activities";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { SendActivityDialog } from "@/components/activities/SendActivityDialog";
@@ -104,13 +105,13 @@ export function ActivitiesView({
       const url = await getActivityFileUrl(filePath);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch {
-      toast.error("Não foi possível abrir o arquivo.");
+      toast.error(activitiesContent.view.toasts.fileOpenError);
     }
   };
 
   const handleDownload = async (filePath: string, fileName: string) => {
     try {
-      toast.loading("Preparando download...");
+      toast.loading(activitiesContent.view.toasts.downloadPreparing);
       const signedUrl = await getActivityFileUrl(filePath);
       const response = await fetch(signedUrl);
       const blob = await response.blob();
@@ -123,11 +124,11 @@ export function ActivitiesView({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       toast.dismiss();
-      toast.success("Download concluído");
+      toast.success(activitiesContent.view.toasts.downloadSuccess);
     } catch (error) {
       logger.error(error as Error, { context: 'download_activity_file' });
       toast.dismiss();
-      toast.error("Erro ao baixar arquivo");
+      toast.error(activitiesContent.view.toasts.downloadError);
     }
   };
 
@@ -213,17 +214,17 @@ export function ActivitiesView({
         </div>
         <Button onClick={() => setSendDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          {isAdmin ? "Nova Atividade" : "Enviar Atividade"}
+          {isAdmin ? activitiesContent.view.newButtonAdmin : activitiesContent.view.newButton}
         </Button>
       </div>
 
       {/* Stat cards */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 laptop:grid-cols-5">
-        <StatCard title="Total" value={totalActivities} icon={FileStack} variant="primary" />
-        <StatCard title="Aguardando" value={countEmAndamento} icon={Inbox} variant="muted" />
-        <StatCard title="Vencidas" value={countVencida} icon={Clock} variant="default" />
-        <StatCard title="Entregues" value={countEntregue} icon={Clock} variant="default" />
-        <StatCard title="Corrigidas" value={countCorrigida} icon={CheckCircle2} variant="success" />
+        <StatCard title={activitiesContent.view.statTotal} value={totalActivities} icon={FileStack} variant="primary" />
+        <StatCard title={activitiesContent.view.statAwaiting} value={countEmAndamento} icon={Inbox} variant="muted" />
+        <StatCard title={activitiesContent.view.statOverdue} value={countVencida} icon={Clock} variant="default" />
+        <StatCard title={activitiesContent.view.statDelivered} value={countEntregue} icon={Clock} variant="default" />
+        <StatCard title={activitiesContent.view.statCorrected} value={countCorrigida} icon={CheckCircle2} variant="success" />
       </div>
 
       {/* Filtros */}
@@ -243,14 +244,14 @@ export function ActivitiesView({
         <Table style={{ minWidth: ACT_TABLE_MIN_W }}>
           <TableHeader>
             <TableRow className="border-b bg-muted/50">
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ boxShadow: '2px 0 5px -2px rgba(0,0,0,0.1)', width: ACT_COL.ALUNO, minWidth: ACT_COL.ALUNO }}>Aluno</TableHead>
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.ATIVIDADE, minWidth: ACT_COL.ATIVIDADE }}>Atividade</TableHead>
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.ARQUIVO, minWidth: ACT_COL.ARQUIVO }}>Arquivo</TableHead>
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.PRAZO, minWidth: ACT_COL.PRAZO }}>Prazo</TableHead>
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.STATUS, minWidth: ACT_COL.STATUS }}>Status</TableHead>
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.ENTREGUE_EM, minWidth: ACT_COL.ENTREGUE_EM }}>Entregue em</TableHead>
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden xl:table-cell" style={{ width: ACT_COL.AVALIAR, minWidth: ACT_COL.AVALIAR }} aria-label="Avaliar" />
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.ACOES, minWidth: ACT_COL.ACOES }}>Ações</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ boxShadow: '2px 0 5px -2px rgba(0,0,0,0.1)', width: ACT_COL.ALUNO, minWidth: ACT_COL.ALUNO }}>{activitiesContent.table.colStudent}</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.ATIVIDADE, minWidth: ACT_COL.ATIVIDADE }}>{activitiesContent.table.colActivity}</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.ARQUIVO, minWidth: ACT_COL.ARQUIVO }}>{activitiesContent.table.colFile}</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.PRAZO, minWidth: ACT_COL.PRAZO }}>{activitiesContent.table.colDueDate}</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.STATUS, minWidth: ACT_COL.STATUS }}>{activitiesContent.table.colStatus}</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden sm:table-cell" style={{ width: ACT_COL.ENTREGUE_EM, minWidth: ACT_COL.ENTREGUE_EM }}>{activitiesContent.table.colDeliveredAt}</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden xl:table-cell" style={{ width: ACT_COL.AVALIAR, minWidth: ACT_COL.AVALIAR }} aria-label={activitiesContent.table.colActions} />
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: ACT_COL.ACOES, minWidth: ACT_COL.ACOES }}>{activitiesContent.table.colActions}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/40">
@@ -261,7 +262,7 @@ export function ActivitiesView({
                 <td colSpan={10} className="p-0">
                   <EmptyActivitiesState 
                     onAction={!isAdmin ? () => setSendDialogOpen(true) : undefined}
-                    actionLabel="Enviar primeira atividade"
+                    actionLabel={activitiesContent.emptyState.actionLabel}
                   />
                 </td>
               </TableRow>

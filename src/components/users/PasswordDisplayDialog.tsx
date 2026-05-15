@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
+import { users as usersContent, common } from "@/content";
 
 interface PasswordDisplayDialogProps {
   open: boolean;
@@ -43,9 +44,9 @@ export function PasswordDisplayDialog({
         input.select();
         input.setSelectionRange(0, password.length);
         if (document.execCommand("copy")) onSuccess();
-        else toast.error("Não foi possível copiar. Copie a senha manualmente.");
+        else toast.error(usersContent.passwordDialog.copyError);
       } else {
-        toast.error("Não foi possível copiar. Copie a senha manualmente.");
+        toast.error(usersContent.passwordDialog.copyError);
       }
     };
 
@@ -67,16 +68,16 @@ export function PasswordDisplayDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {source === "reset" ? "Senha redefinida" : "Senha criada para o usuário"}
+            {source === "reset" ? "Senha redefinida" : usersContent.passwordDialog.title}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Guarde esta senha com segurança. Ela não será exibida novamente.
+            {usersContent.passwordDialog.description}
           </p>
 
           <div className="space-y-2">
-            <Label>Senha temporária</Label>
+            <Label>{usersContent.passwordDialog.passwordLabel}</Label>
             <div className="relative">
               <Input
                 ref={inputRef}
@@ -109,12 +110,12 @@ export function PasswordDisplayDialog({
               {copied ? (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  Copiado!
+                  {common.actions.copied}
                 </>
               ) : (
                 <>
                   <Copy className="mr-2 h-4 w-4" />
-                  Copiar senha
+                  {usersContent.passwordDialog.copyButton}
                 </>
               )}
             </Button>
@@ -123,7 +124,7 @@ export function PasswordDisplayDialog({
               className="flex-1"
               onClick={() => onOpenChange(false)}
             >
-              Fechar
+              {usersContent.passwordDialog.closeButton}
             </Button>
           </div>
         </div>

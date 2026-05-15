@@ -19,6 +19,7 @@ import { useUsersPaginated } from "@/hooks/useUsers";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useMemo } from "react";
+import { users as usersContent } from "@/content";
 
 interface UserDetailSheetProps {
   userId: string | null;

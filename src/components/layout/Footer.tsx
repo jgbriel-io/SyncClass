@@ -1,5 +1,6 @@
 ﻿import { Link, useLocation } from "react-router-dom";
 import { Heart } from "lucide-react";
+import { layout } from "@/content";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -25,34 +26,34 @@ export function Footer() {
               to={policiesPath}
               className="hover:text-primary transition-colors"
             >
-              Políticas de Privacidade
+              {layout.footer.privacyPolicy}
             </Link>
             <span>•</span>
             <Link
               to={policiesPath}
               className="hover:text-primary transition-colors"
             >
-              Termos de Uso
+              {layout.footer.termsOfUse}
             </Link>
           </div>
           
           {/* Créditos */}
           <div className="flex items-center gap-1.5">
-            <span>Desenvolvido com</span>
-            <Heart className="h-3 w-3 text-red-500 fill-red-500" />
-            <span>por</span>
+            <span>{layout.footer.developedWith}</span>
+            <Heart className="h-3 w-3 text-destructive fill-destructive" />
+            <span>{layout.footer.by}</span>
             <a
-              href="https://virtualarrow.com.br"
+              href={layout.footer.developerUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium hover:text-primary transition-colors"
             >
-              Virtual Arrow
+              {layout.footer.developer}
             </a>
             <span>•</span>
             <span>English School © {currentYear}</span>
             <span>•</span>
-            <span>Conforme LGPD</span>
+            <span>{layout.footer.lgpd}</span>
           </div>
         </div>
       </div>

@@ -16,6 +16,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { brDateStringToDate, REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { toast } from "sonner";
+import { classes as classesContent } from "@/content";
 
 export type Slot = { class_date: string; start_time: string; end_time: string };
 export type ScheduleMode = "fixed" | "dynamic";
@@ -127,30 +128,30 @@ export function PackageSlotList({
 
   const handleGenerate = () => {
     if (!fixedMonth || !fixedYear) {
-      toast.error("Selecione o mês e o ano.");
+      toast.error(classesContent.packageDialog.toasts.selectMonth);
       return;
     }
     if (fixedWeekdays.length === 0) {
-      toast.error("Selecione pelo menos um dia da semana.");
+      toast.error(classesContent.packageDialog.toasts.selectWeekday);
       return;
     }
     if (!REGEX_PATTERNS.time.test(fixedStartTime) || !REGEX_PATTERNS.time.test(fixedEndTime)) {
-      toast.error("Informe o horário de início e término.");
+      toast.error(classesContent.packageDialog.toasts.invalidTime);
       return;
     }
     const [sh, sm] = fixedStartTime.split(":").map(Number);
     const [eh, em] = fixedEndTime.split(":").map(Number);
     if (eh < sh || (eh === sh && em <= sm)) {
-      toast.error("Horário de término deve ser posterior ao início.");
+      toast.error(classesContent.packageDialog.toasts.endTimeBeforeStart);
       return;
     }
     const generated = generateSlotsForMonth(fixedYear, fixedMonth, fixedWeekdays, fixedStartTime, fixedEndTime);
     if (generated.length === 0) {
-      toast.error("Nenhuma data encontrada para o mês e dias selecionados.");
+      toast.error(classesContent.packageDialog.toasts.noDatesFound);
       return;
     }
     onSlotsChange(generated);
-    toast.success(`${generated.length} aula(s) gerada(s) para ${MONTH_NAMES[fixedMonth - 1]}/${fixedYear}.`);
+    toast.success(classesContent.packageDialog.toasts.generated(generated.length, MONTH_NAMES[fixedMonth - 1], fixedYear));
   };
 
   return (

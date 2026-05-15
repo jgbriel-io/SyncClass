@@ -11,6 +11,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/utils/formatters";
 import { useDeleteClassLog, type ClassLogWithStudent } from "@/hooks/useClassLogs";
+import { classes as classesContent, common } from "@/content";
 
 interface ClassDeleteDialogProps {
   open: boolean;
@@ -36,29 +37,29 @@ export function ClassDeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+          <AlertDialogTitle>{classesContent.deleteDialog.title}</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2">
               <p>
-                Tem certeza que deseja excluir o registro de aula de{" "}
-                <strong>{classLog?.students?.name}</strong> do dia{" "}
-                <strong>{classLog ? formatDate(classLog.class_date) : ""}</strong>?
+                {classesContent.deleteDialog.description(
+                  classLog?.students?.name ?? "",
+                  classLog ? formatDate(classLog.class_date) : ""
+                )}
               </p>
               {classLog?.financial_records?.status === "pago" ? (
                 <p className="text-destructive font-medium">
-                  Esta aula possui uma cobrança já paga. A exclusão da aula também exclui a
-                  cobrança. Deseja excluir mesmo assim?
+                  {classesContent.deleteDialog.warningPaid}
                 </p>
               ) : classLog?.financial_records ? (
                 <span className="block text-warning">
-                  ⚠️ Esta aula possui uma cobrança vinculada que também será afetada.
+                  {classesContent.deleteDialog.warningLinked}
                 </span>
               ) : null}
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteLog.isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteLog.isPending}>{common.actions.cancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={deleteLog.isPending}
@@ -67,10 +68,10 @@ export function ClassDeleteDialog({
             {deleteLog.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Excluindo...
+                {classesContent.deleteDialog.deleting}
               </>
             ) : (
-              "Excluir"
+              classesContent.deleteDialog.confirmButton
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

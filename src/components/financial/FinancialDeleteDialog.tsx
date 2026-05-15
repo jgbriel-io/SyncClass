@@ -11,6 +11,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { useDeleteFinancialRecord, type FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
+import { financial } from "@/content";
 
 interface FinancialDeleteDialogProps {
   open: boolean;
@@ -36,20 +37,21 @@ export function FinancialDeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Excluir cobrança</AlertDialogTitle>
+          <AlertDialogTitle>{financial.deleteDialog.title}</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2">
               <p>
-                Deseja excluir permanentemente a cobrança de{" "}
-                <strong>{record?.students?.name}</strong> no valor de{" "}
-                <strong>{record ? formatCurrency(Number(record.amount)) : ""}</strong>?
+                {financial.deleteDialog.description(
+                  record?.students?.name ?? "",
+                  record ? formatCurrency(Number(record.amount)) : ""
+                )}
               </p>
-              <p className="text-destructive font-medium">Esta ação não pode ser desfeita.</p>
+              <p className="text-destructive font-medium">{financial.deleteDialog.irreversible}</p>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteRecord.isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteRecord.isPending}>{financial.deleteDialog.cancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={deleteRecord.isPending}
@@ -58,10 +60,10 @@ export function FinancialDeleteDialog({
             {deleteRecord.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Excluindo...
+                {financial.deleteDialog.deleting}
               </>
             ) : (
-              "Excluir cobrança"
+              financial.deleteDialog.confirmButton
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

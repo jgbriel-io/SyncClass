@@ -18,6 +18,7 @@ import { useMarkAsPaid, useUpdateFinancialStatus } from "@/hooks/useFinancialRec
 import { logger } from "@/lib/sentry";
 import { getActivityFileUrl } from "@/hooks/useActivities";
 import { STACK, GAP, ICON_SIZES, TYPOGRAPHY } from "@/lib/design-tokens";
+import { classes as classesContent } from "@/content";
 
 /** Schema do modal Avaliar aula: nota, feedback e confirmar pagamento obrigatórios quando aplicável */
 function createPostClassSchema(requirePaymentConfirmation: boolean) {
@@ -273,7 +274,7 @@ export function PostClassDialog({
     <BaseDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Avaliar aula"
+      title={classesContent.postClassDialog.title}
       size="SM"
     >
       <p className={`${TYPOGRAPHY.BODY} text-muted-foreground mb-4`}>
@@ -281,7 +282,7 @@ export function PostClassDialog({
       </p>
       <form onSubmit={handleSubmit(handleFormSubmit)} className={STACK.DEFAULT}>
           <div className={STACK.TIGHT}>
-            <Label>Comparecimento</Label>
+            <Label>{classesContent.postClassDialog.attendanceLabel}</Label>
             <div className={`flex ${GAP.LOOSE}`}>
               <label className={`flex items-center ${GAP.TIGHT} cursor-pointer`}>
                 <input
@@ -290,7 +291,7 @@ export function PostClassDialog({
                   onChange={() => setValue("attendance", true)}
                   className="rounded-full"
                 />
-                <span>Compareceu</span>
+                <span>{classesContent.postClassDialog.attended}</span>
               </label>
               <label className={`flex items-center ${GAP.TIGHT} cursor-pointer`}>
                 <input
@@ -299,14 +300,14 @@ export function PostClassDialog({
                   onChange={() => setValue("attendance", false)}
                   className="rounded-full"
                 />
-                <span>Faltou</span>
+                <span>{classesContent.postClassDialog.absent}</span>
               </label>
             </div>
           </div>
 
           {attendance && (
             <div className={STACK.TIGHT}>
-              <Label htmlFor="grade">Nota (0–100)</Label>
+              <Label htmlFor="grade">{classesContent.postClassDialog.gradeLabel}</Label>
               <Input
                 id="grade"
                 type="text"
@@ -352,7 +353,7 @@ export function PostClassDialog({
                 />
                 <div className="flex-1">
                   <Label htmlFor="chargeAbsence" className="cursor-pointer font-medium">
-                    Cobrar esta falta
+                    {classesContent.postClassDialog.chargeAbsenceLabel}
                   </Label>
                   <p className={`${TYPOGRAPHY.SMALL} mt-1`}>
                     {chargeAbsence 
@@ -375,7 +376,7 @@ export function PostClassDialog({
                   />
                   <div className="flex-1">
                     <Label htmlFor="refundPayment" className="cursor-pointer font-medium text-amber-600">
-                      Extornar pagamento
+                      {classesContent.postClassDialog.refundLabel}
                     </Label>
                     <p className={`${TYPOGRAPHY.SMALL} mt-1`}>
                       O pagamento será marcado como extornado (devolvido ao aluno)
@@ -387,7 +388,7 @@ export function PostClassDialog({
           )}
 
           <div className={STACK.TIGHT}>
-            <Label htmlFor="feedback">Feedback</Label>
+            <Label htmlFor="feedback">{classesContent.postClassDialog.feedbackLabel}</Label>
             <Textarea
               id="feedback"
               placeholder="Observações sobre a aula..."
@@ -414,7 +415,7 @@ export function PostClassDialog({
                   htmlFor="confirmPayment"
                   className={isPaymentAlreadyPaid ? "cursor-default text-muted-foreground" : "cursor-pointer"}
                 >
-                  Confirmar pagamento
+                  {classesContent.postClassDialog.confirmPaymentLabel}
                 </Label>
               </div>
               {errors.confirmPayment && (
@@ -427,9 +428,9 @@ export function PostClassDialog({
                   <div className="flex-1 min-w-0">
                     <p className={`${TYPOGRAPHY.BODY} font-medium truncate`}>{paymentProofFilename}</p>
                     <p className={TYPOGRAPHY.SMALL}>
-                      {paymentProofStatus === "pending" && "Aguardando confirmação"}
-                      {paymentProofStatus === "approved" && "Comprovante aprovado"}
-                      {paymentProofStatus === "rejected" && "Comprovante rejeitado"}
+                      {paymentProofStatus === "pending" && classesContent.postClassDialog.proofPending}
+                      {paymentProofStatus === "approved" && classesContent.postClassDialog.proofApproved}
+                      {paymentProofStatus === "rejected" && classesContent.postClassDialog.proofRejected}
                     </p>
                   </div>
                   <Button
@@ -445,7 +446,7 @@ export function PostClassDialog({
                     ) : (
                       <>
                         <Eye className={`${ICON_SIZES.SM} mr-1`} />
-                        Ver
+                        {classesContent.postClassDialog.viewProof}
                       </>
                     )}
                   </Button>
@@ -461,11 +462,11 @@ export function PostClassDialog({
               onClick={() => onOpenChange(false)}
               disabled={isPending}
             >
-              Cancelar
+              {classesContent.postClassDialog.cancel}
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className={`mr-2 ${ICON_SIZES.SM} animate-spin`} />}
-              Salvar
+              {classesContent.postClassDialog.save}
             </Button>
           </div>
         </form>

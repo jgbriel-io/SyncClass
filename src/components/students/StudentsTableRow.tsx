@@ -19,6 +19,7 @@ import {
   getXLColumnClasses,
 } from "@/lib/design-tokens/table-columns";
 import { COL } from "./StudentsTableRow.constants";
+import { students as studentsContent, common } from "@/content";
 
 interface StudentsTableRowProps {
   student: Student;
@@ -136,20 +137,20 @@ export function StudentsTableRow({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(student)}>
                 <Pencil className="h-4 w-4 mr-2" aria-hidden="true" />
-                Editar
+                {common.actions.edit}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onResetPassword(student)}>
                 <KeyRound className="h-4 w-4 mr-2" aria-hidden="true" />
-                Redefinir senha
+                {studentsContent.resetPasswordDialog.title}
               </DropdownMenuItem>
               <DropdownMenuItem className={student.status === "ativo" ? "text-destructive focus:text-destructive" : "focus:text-primary"} onClick={() => onArchive(student)}>
                 {student.status === "ativo" && <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />}
-                {student.status === "ativo" ? "Arquivar" : (<><Check className="h-4 w-4 mr-2" aria-hidden="true" />Reativar aluno</>)}
+                {student.status === "ativo" ? studentsContent.archiveDialog.confirmArchive : (<><Check className="h-4 w-4 mr-2" aria-hidden="true" />{studentsContent.archiveDialog.confirmReactivate}</>)}
               </DropdownMenuItem>
               {showHardDelete && student.status === "inativo" && (
                 <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onHardDelete(student)}>
                   <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Excluir definitivamente
+                  {studentsContent.deleteDialog.confirmButton}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

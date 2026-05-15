@@ -10,9 +10,10 @@ import { Loader2 } from "lucide-react";
 import { Teacher, TeacherInsert } from "@/hooks/useTeachers";
 import { REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { emailSchema } from "@/lib/validation/email";
+import { teachers as teachersContent, common } from "@/content";
 
 const teacherSchema = z.object({
-  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
+  name: z.string().min(2, teachersContent.validation.nameMin).max(100),
   email: emailSchema,
   phone: z
     .string()
@@ -21,7 +22,7 @@ const teacherSchema = z.object({
       if (!val || val.trim() === "") return true;
       return (val.length === 14 || val.length === 15) && REGEX_PATTERNS.phone.test(val);
     }, {
-      message: "Telefone deve ter 10 ou 11 dígitos no formato (00) 00000-0000",
+      message: teachersContent.validation.phoneFormat,
     }),
 });
 
@@ -103,7 +104,7 @@ export function TeacherFormDialog({
     <BaseDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={teacher ? "Editar Professor" : "Cadastrar Novo Professor"}
+      title={teacher ? teachersContent.formDialog.titleEdit : teachersContent.formDialog.titleNew}
       size="MD"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
@@ -112,7 +113,7 @@ export function TeacherFormDialog({
               <Label htmlFor="name">Nome completo *</Label>
               <Input
                 id="name"
-                placeholder="Nome do professor"
+              placeholder={teachersContent.formDialog.namePlaceholder}
                 autoFocus
                 disabled={isLoading}
                 {...register("name")}
@@ -161,18 +162,18 @@ export function TeacherFormDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancelar
+              {common.actions.cancel}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
+                  {teachersContent.formDialog.submitting}
                 </>
               ) : teacher ? (
-                "Salvar alterações"
+                teachersContent.formDialog.submitButton
               ) : (
-                "Cadastrar"
+                teachersContent.formDialog.createButton
               )}
             </Button>
           </div>

@@ -11,6 +11,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { useUndoFinancialPayment, type FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
+import { financial } from "@/content";
 
 interface FinancialUndoDialogProps {
   open: boolean;
@@ -36,33 +37,33 @@ export function FinancialUndoDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Desfazer cobrança</AlertDialogTitle>
+          <AlertDialogTitle>{financial.undoDialog.title}</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2">
               <p>
-                Deseja desfazer o pagamento da cobrança de{" "}
-                <strong>{record?.students?.name}</strong> no valor de{" "}
-                <strong>{record ? formatCurrency(Number(record.amount)) : ""}</strong>?
+                {financial.undoDialog.description(
+                  record?.students?.name ?? "",
+                  record ? formatCurrency(Number(record.amount)) : ""
+                )}
               </p>
               {record?.class_logs && record.class_logs.attendance != null ? (
                 <p className="text-destructive font-medium">
-                  Esta cobrança está vinculada a uma aula já concluída/confirmada. Deseja desfazer
-                  mesmo assim?
+                  {financial.undoDialog.warningLinked}
                 </p>
               ) : null}
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={undoPayment.isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={undoPayment.isPending}>{financial.undoDialog.cancel}</AlertDialogCancel>
           <AlertDialogAction onClick={handleConfirm} disabled={undoPayment.isPending}>
             {undoPayment.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Desfazendo...
+                {financial.undoDialog.processing}
               </>
             ) : (
-              "Desfazer cobrança"
+              financial.undoDialog.confirmButton
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

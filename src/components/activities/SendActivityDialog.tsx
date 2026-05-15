@@ -34,6 +34,7 @@ import {
 } from "@/hooks/useActivities";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { activities as activitiesContent, common } from "@/content";
 
 /** Converte data (dd/MM/yyyy) + hora (HH:mm) para ISO no fuso local (enviado como timestamptz) */
 function dueDateAndTimeToIso(dueDate: string, dueTime: string): string {
@@ -45,12 +46,12 @@ function dueDateAndTimeToIso(dueDate: string, dueTime: string): string {
 
 const activitySchema = z
   .object({
-    teacher_id: z.string().optional(), // Opcional para admin selecionar professor
-    student_id: z.string().min(1, "Selecione um aluno"),
-    title: z.string().min(1, "Informe o título da atividade"),
+    teacher_id: z.string().optional(),
+    student_id: z.string().min(1, activitiesContent.validation.studentRequired),
+    title: z.string().min(1, activitiesContent.validation.titleRequired),
     description: z.string().optional(),
-    due_date: z.string().min(1, "Defina o prazo de entrega").regex(REGEX_PATTERNS.date, "Data no formato dd/mm/aaaa"),
-    due_time: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/, "Hora no formato HH:mm"),
+    due_date: z.string().min(1, activitiesContent.validation.dueDateRequired).regex(REGEX_PATTERNS.date, activitiesContent.validation.dueDateFormat),
+    due_time: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/, activitiesContent.validation.dueTimeFormat),
     fileSource: z.enum(["new", "existing"]),
     file: z.instanceof(File).optional(),
     existingFileUrl: z.string().optional(),
@@ -60,7 +61,7 @@ const activitySchema = z
       if (data.fileSource === "new") return data.file != null;
       return !!data.existingFileUrl;
     },
-    { message: "Selecione ou envie um arquivo", path: ["file"] }
+    { message: activitiesContent.validation.fileRequired, path: ["file"] }
   );
 
 type ActivityFormData = z.infer<typeof activitySchema>;
@@ -155,15 +156,14 @@ export function SendActivityDialog({
   const handleFormSubmit = async (data: ActivityFormData) => {
     // Validar professor no modo admin
     if (isAdmin && !selectedTeacherId) {
-      toast.error("Selecione um professor");
+      toast.error(activitiesContent.sendDialog.teacherRequired);
       return;
     }
 
-    // Verificar rate limiting
     if (user?.id) {
-      const rateLimit = checkUploadRateLimit(user.id, 10, 60000); // 10 uploads por minuto
+      const rateLimit = checkUploadRateLimit(user.id, 10, 60000);
       if (!rateLimit.allowed) {
-        toast.error(`Muitos uploads. Aguarde ${rateLimit.retryAfter} segundos.`);
+        toast.error(activitiesContent.sendDialog.toasts.rateLimitExceeded(rateLimit.retryAfter ?? 0));
         return;
       }
     }
@@ -184,7 +184,7 @@ export function SendActivityDialog({
       } else if (data.fileSource === "existing" && data.existingFileUrl) {
         const existing = existingFiles.find((f) => f.file_url === data.existingFileUrl);
         if (!existing) {
-          toast.error("Arquivo não encontrado.");
+          toast.error(activitiesContent.sendDialog.toasts.fileNotFound);
           return;
         }
         file_url = existing.file_url;
@@ -192,7 +192,7 @@ export function SendActivityDialog({
         file_type = existing.file_type;
         file_size = existing.file_size;
       } else {
-        toast.error("Selecione ou envie um arquivo.");
+        toast.error(activitiesContent.sendDialog.toasts.fileRequired);
         return;
       }
 
@@ -219,7 +219,7 @@ export function SendActivityDialog({
       setSelectedFile(null);
       onOpenChange(false);
     } catch (error) {
-      toast.error("Erro ao enviar atividade: " + (error as Error).message);
+      toast.error(activitiesContent.sendDialog.toasts.error((error as Error).message));
     } finally {
       setIsUploading(false);
     }
@@ -231,15 +231,15 @@ export function SendActivityDialog({
     <BaseDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Enviar atividade"
-      description="Selecione o aluno, preencha o título e anexe o arquivo da atividade."
+      title={activitiesContent.sendDialog.title}
+      description={activitiesContent.sendDialog.description}
       size="SM"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Seleção de Professor (apenas para admin) */}
           {isAdmin && (
             <div className="space-y-2">
-              <Label htmlFor="teacher_id">Professor *</Label>
+              <Label htmlFor="teacher_id">{activitiesContent.sendDialog.teacherLabel}</Label>
               <Select
                 value={selectedTeacherId}
                 onValueChange={(value) => {
@@ -249,7 +249,7 @@ export function SendActivityDialog({
                 disabled={isPending}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um professor" />
+                  <SelectValue placeholder={activitiesContent.sendDialog.teacherPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
                   {teachers.map((teacher) => (
@@ -267,13 +267,13 @@ export function SendActivityDialog({
 
           {/* Seleção de Aluno */}
           <div className="space-y-2">
-            <Label htmlFor="student_id">Aluno *</Label>
+            <Label htmlFor="student_id">{activitiesContent.sendDialog.studentLabel}</Label>
             <Select
               onValueChange={(value) => setValue("student_id", value)}
               disabled={loadingStudents || isPending}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione um aluno" />
+                <SelectValue placeholder={activitiesContent.sendDialog.studentPlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {activeStudents.map((student) => (
@@ -291,10 +291,10 @@ export function SendActivityDialog({
 
           {/* Título */}
           <div className="space-y-2">
-            <Label htmlFor="title">Título *</Label>
+            <Label htmlFor="title">{activitiesContent.sendDialog.titleLabel}</Label>
             <Input
               id="title"
-              placeholder="Ex: Reading Comprehension - Unit 5"
+              placeholder={activitiesContent.sendDialog.titlePlaceholder}
               {...register("title")}
               disabled={isPending}
             />
@@ -305,8 +305,8 @@ export function SendActivityDialog({
 
           {/* Prazo de entrega (data e hora) */}
           <div className="space-y-2">
-            <Label>Prazo de entrega *</Label>
-            <p className="text-xs text-muted-foreground">Data e hora limite para o aluno entregar.</p>
+            <Label>{activitiesContent.sendDialog.dueDateLabel}</Label>
+            <p className="text-xs text-muted-foreground">{activitiesContent.sendDialog.dueDateHint}</p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Popover>
                 <PopoverTrigger asChild>
@@ -317,7 +317,7 @@ export function SendActivityDialog({
                     disabled={isPending}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dueDate || "Data"}
+                    {dueDate || activitiesContent.sendDialog.dueDatePlaceholder}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -362,7 +362,7 @@ export function SendActivityDialog({
 
           {/* Arquivo: novo ou da plataforma */}
           <div className="space-y-3">
-            <Label>Arquivo *</Label>
+            <Label>{activitiesContent.sendDialog.fileLabel}</Label>
             <RadioGroup
               value={fileSource}
               onValueChange={(v) => {
@@ -377,16 +377,16 @@ export function SendActivityDialog({
                 <RadioGroupItem value="new" id="source-new" disabled={isPending} />
                 <Label htmlFor="source-new" className="font-normal cursor-pointer flex items-center gap-1.5">
                   <Upload className="h-4 w-4" />
-                  Enviar novo arquivo
+                  {activitiesContent.sendDialog.fileSourceNew}
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="existing" id="source-existing" disabled={isPending || existingFiles.length === 0} />
                 <Label htmlFor="source-existing" className="font-normal cursor-pointer flex items-center gap-1.5">
                   <FolderOpen className="h-4 w-4" />
-                  Usar arquivo já na plataforma
+                  {activitiesContent.sendDialog.fileSourceExisting}
                   {existingFiles.length === 0 && (
-                    <span className="text-xs text-muted-foreground">(nenhum ainda)</span>
+                    <span className="text-xs text-muted-foreground">{activitiesContent.sendDialog.fileSourceNone}</span>
                   )}
                 </Label>
               </div>
@@ -424,7 +424,7 @@ export function SendActivityDialog({
                 disabled={isPending || loadingFiles}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um arquivo" />
+                  <SelectValue placeholder={activitiesContent.sendDialog.fileSelectPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
                   {existingFiles.map((f) => (
@@ -451,18 +451,18 @@ export function SendActivityDialog({
               onClick={() => onOpenChange(false)}
               disabled={isPending}
             >
-              Cancelar
+              {common.actions.cancel}
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
+                  {activitiesContent.sendDialog.submitting}
                 </>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Enviar atividade
+                  {activitiesContent.sendDialog.submitButton}
                 </>
               )}
             </Button>

@@ -20,6 +20,7 @@ import {
 import { useUpdateStudent, useHardDeleteStudent } from "@/hooks/useStudents";
 import { useUpdateTeacher, useDeleteTeacher, useHardDeleteTeacher } from "@/hooks/useTeachers";
 import type { Tables } from "@/integrations/supabase/types";
+import { common, users as usersContent } from "@/content";
 
 type Student = Tables<"students">;
 type Teacher = Tables<"teachers">;
@@ -107,7 +108,7 @@ export function DeleteUserDialog({
           { id: linkedStudent.id, status: "ativo" },
           {
             onSuccess: () => {
-              toast.success("Usuário reativado com sucesso!");
+              toast.success(usersContent.deleteDialog.toastReactivated);
               onClose();
             },
           }
@@ -119,16 +120,14 @@ export function DeleteUserDialog({
           { id: linkedTeacher.id, status: "ativo" },
           {
             onSuccess: () => {
-              toast.success("Usuário reativado com sucesso!");
+              toast.success(usersContent.deleteDialog.toastReactivated);
               onClose();
             },
           }
         );
         return;
       }
-      toast.error(
-        "Este usuário não possui vínculo com aluno ou professor. Use o painel específico para reativar."
-      );
+      toast.error(usersContent.deleteDialog.toastNoLink);
       onClose();
       return;
     }
@@ -138,11 +137,11 @@ export function DeleteUserDialog({
         { id: linkedStudent.id, status: "inativo" },
         {
           onSuccess: () => {
-            toast.success("Usuário arquivado com sucesso!");
+            toast.success(usersContent.deleteDialog.toastArchived);
             onClose();
           },
           onError: () => {
-            toast.error("Erro ao arquivar usuário");
+            toast.error(usersContent.deleteDialog.toastArchiveError);
           },
         }
       );
@@ -152,7 +151,7 @@ export function DeleteUserDialog({
     if (linkedTeacher && isTeacherActive) {
       deleteTeacher.mutate(linkedTeacher.id, {
         onSuccess: () => {
-          toast.success("Usuário arquivado com sucesso!");
+          toast.success(usersContent.deleteDialog.toastArchived);
           onClose();
         },
       });
@@ -162,12 +161,12 @@ export function DeleteUserDialog({
     if (isHardDelete) {
       hardDeleteUser.mutate(user.id, {
         onSuccess: () => {
-          toast.success("Usuário excluído definitivamente!");
+          toast.success(usersContent.deleteDialog.toastDeleted);
           onClose();
         },
         onError: (error) => {
           logger.error(error as Error, { context: "delete_user" });
-          toast.error("Erro ao excluir usuário: " + (error as Error).message);
+          toast.error(usersContent.deleteDialog.toastDeleteError + (error as Error).message);
         },
       });
       return;
@@ -175,27 +174,27 @@ export function DeleteUserDialog({
 
     deleteUser.mutate(user.id, {
       onSuccess: () => {
-        toast.success("Usuário arquivado com sucesso!");
+        toast.success(usersContent.deleteDialog.toastArchived);
         onClose();
       },
     });
   };
 
   const title = info.isArchivedProfile
-    ? "Excluir arquivo morto?"
+    ? usersContent.deleteDialog.titleArchived
     : info.isHardDelete
-    ? "Excluir definitivamente?"
+    ? usersContent.deleteDialog.titleHard
     : info.userIsInactive && !forceHardDelete
-    ? "Confirmar reativação"
-    : "Confirmar arquivamento";
+    ? usersContent.deleteDialog.titleReactivate
+    : usersContent.deleteDialog.titleArchive;
 
   const actionLabel = info.isArchivedProfile
-    ? "Excluir arquivo morto"
+    ? usersContent.deleteDialog.confirmArchived
     : info.isHardDelete
-    ? "Excluir definitivamente"
+    ? usersContent.deleteDialog.confirmHard
     : info.userIsInactive && !forceHardDelete
-    ? "Reativar"
-    : "Arquivar";
+    ? usersContent.deleteDialog.confirmReactivate
+    : usersContent.deleteDialog.confirmArchive;
 
   const isDestructive = !(info.userIsInactive && !forceHardDelete);
 
@@ -254,7 +253,7 @@ export function DeleteUserDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>{common.actions.cancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={isPending}
@@ -268,10 +267,10 @@ export function DeleteUserDialog({
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {info.isHardDelete
-                  ? "Excluindo..."
+                  ? common.actions.deleting
                   : info.userIsInactive && !forceHardDelete
-                  ? "Reativando..."
-                  : "Arquivando..."}
+                  ? usersContent.deleteDialog.reactivating
+                  : usersContent.deleteDialog.archiving}
               </>
             ) : (
               actionLabel

@@ -4,6 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useResetOwnPassword } from "@/hooks/useUsers";
+import { layout } from "@/content";
+
+const s = layout.settings.password;
 
 export function SettingsSenhaTab() {
   const resetOwnPassword = useResetOwnPassword();
@@ -31,14 +34,14 @@ export function SettingsSenhaTab() {
     <div className="space-y-4 pt-4">
       <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
         <p className="text-sm text-amber-800 dark:text-amber-200">
-          Ao alterar sua senha, sua sessão será encerrada e você precisará fazer login novamente com a nova senha.
+          {s.sessionWarning}
         </p>
       </div>
 
       {[
-        { id: "current-password", label: "Senha atual", value: currentPassword, setter: setCurrentPassword, show: showCurrent, toggleShow: () => setShowCurrent(v => !v), placeholder: "Digite sua senha atual" },
-        { id: "new-password", label: "Nova senha", value: newPassword, setter: setNewPassword, show: showNew, toggleShow: () => setShowNew(v => !v), placeholder: "Mínimo 6 caracteres" },
-        { id: "confirm-password", label: "Confirmar nova senha", value: confirmPassword, setter: setConfirmPassword, show: showConfirm, toggleShow: () => setShowConfirm(v => !v), placeholder: "Repita a nova senha" },
+        { id: "current-password", label: s.currentPasswordLabel, value: currentPassword, setter: setCurrentPassword, show: showCurrent, toggleShow: () => setShowCurrent(v => !v), placeholder: s.currentPasswordPlaceholder },
+        { id: "new-password", label: s.newPasswordLabel, value: newPassword, setter: setNewPassword, show: showNew, toggleShow: () => setShowNew(v => !v), placeholder: s.newPasswordPlaceholder },
+        { id: "confirm-password", label: s.confirmPasswordLabel, value: confirmPassword, setter: setConfirmPassword, show: showConfirm, toggleShow: () => setShowConfirm(v => !v), placeholder: s.confirmPasswordPlaceholder },
       ].map(({ id, label, value, setter, show, toggleShow, placeholder }) => (
         <div key={id} className="space-y-2">
           <Label htmlFor={id}>{label}</Label>
@@ -56,7 +59,7 @@ export function SettingsSenhaTab() {
               tabIndex={-1}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               onClick={toggleShow}
-              aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+              aria-label={show ? s.hidePassword : s.showPassword}
             >
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -65,7 +68,7 @@ export function SettingsSenhaTab() {
       ))}
 
       {newPassword && confirmPassword && newPassword !== confirmPassword && (
-        <p className="text-sm text-destructive">As senhas não coincidem.</p>
+        <p className="text-sm text-destructive">{s.passwordMismatch}</p>
       )}
 
       <Button
@@ -80,9 +83,9 @@ export function SettingsSenhaTab() {
         className="w-full"
       >
         {resetOwnPassword.isPending ? (
-          <><Loader2 className="h-4 w-4 animate-spin mr-2" />Alterando...</>
+          <><Loader2 className="h-4 w-4 animate-spin mr-2" />{s.submitting}</>
         ) : (
-          "Alterar senha"
+          s.submitButton
         )}
       </Button>
     </div>

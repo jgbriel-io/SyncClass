@@ -9,11 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useAddActivityCorrection, uploadActivityFile, type ActivityWithRelations } from "@/hooks/useActivities";
+import { activities as activitiesContent, common } from "@/content";
 
 const correctionSchema = z
   .object({
-    feedback: z.string().transform((s) => s.trim()).pipe(z.string().min(1, "Informe o feedback")),
-    grade: z.string().min(1, "Informe a nota (0–100)"),
+    feedback: z.string().transform((s) => s.trim()).pipe(z.string().min(1, activitiesContent.validation.feedbackRequired)),
+    grade: z.string().min(1, activitiesContent.validation.gradeRequired),
     correctionFile: z.any().optional(),
   })
   .refine(
@@ -23,7 +24,7 @@ const correctionSchema = z
       const n = parseFloat(g.replace(",", "."));
       return !Number.isNaN(n) && n >= 0 && n <= 100;
     },
-    { message: "Informe a nota (0–100)", path: ["grade"] }
+    { message: activitiesContent.validation.gradeRange, path: ["grade"] }
   );
 
 type CorrectionFormData = z.infer<typeof correctionSchema>;
@@ -61,7 +62,7 @@ export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: 
       correctionFileUrl,
       correctionFileName,
     });
-    toast.success("Correção enviada.");
+    toast.success(activitiesContent.correctionDialog.toasts.success);
     reset();
     setSelectedFile(null);
     onSuccess();
@@ -84,12 +85,12 @@ export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: 
       )}
       className="space-y-4 border-t pt-4 mt-4"
     >
-      <p className="text-sm font-medium">Correção e feedback</p>
+      <p className="text-sm font-medium">{activitiesContent.correctionDialog.title}</p>
       <div className="space-y-2">
-        <Label htmlFor={`feedback-${activity.id}`}>Feedback</Label>
+        <Label htmlFor={`feedback-${activity.id}`}>{activitiesContent.correctionDialog.feedbackLabel}</Label>
         <Textarea
           id={`feedback-${activity.id}`}
-          placeholder="Escreva sua correção, observações..."
+          placeholder={activitiesContent.correctionDialog.feedbackPlaceholder}
           rows={3}
           {...register("feedback")}
           disabled={isPending}
@@ -98,18 +99,18 @@ export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: 
         {errors.feedback && <p className="text-sm text-destructive">{errors.feedback.message}</p>}
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`grade-${activity.id}`}>Nota (0–100) *</Label>
+        <Label htmlFor={`grade-${activity.id}`}>{activitiesContent.correctionDialog.gradeLabel}</Label>
         <Input
           id={`grade-${activity.id}`}
           type="text"
-          placeholder="Ex: 85"
+          placeholder={activitiesContent.correctionDialog.gradePlaceholder}
           {...register("grade")}
           disabled={isPending}
         />
         {errors.grade && <p className="text-sm text-destructive">{errors.grade.message}</p>}
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`correctionFile-${activity.id}`}>Arquivo de correção (opcional)</Label>
+        <Label htmlFor={`correctionFile-${activity.id}`}>{activitiesContent.correctionDialog.correctionFileLabel}</Label>
         <div className="flex items-center gap-2">
           <Input
             id={`correctionFile-${activity.id}`}
@@ -127,14 +128,14 @@ export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: 
       <div className="flex gap-2">
         {onCancel && (
           <Button type="button" variant="outline" className="flex-1" disabled={isPending} onClick={onCancel}>
-            Cancelar
+            {common.actions.cancel}
           </Button>
         )}
         <Button type="submit" disabled={isPending} className={onCancel ? "flex-1 border-none bg-success-action text-white hover:bg-success-action/90" : "w-full border-none bg-success-action text-white hover:bg-success-action/90"}>
           {isPending ? (
-            <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enviando...</>
+            <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{activitiesContent.correctionDialog.submitting}</>
           ) : (
-            <><Upload className="h-4 w-4 mr-2" />Enviar correção</>
+            <><Upload className="h-4 w-4 mr-2" />{activitiesContent.correctionDialog.submitButton}</>
           )}
         </Button>
       </div>

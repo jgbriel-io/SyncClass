@@ -14,6 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { common } from "@/content";
 
 export type UserRoleFilter = "all" | "admin" | "teacher" | "student";
 export type UserStatusFilter = "all" | "active" | "inactive";
@@ -116,7 +117,7 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
           {hasActiveFilters && onReset && (
             <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
               <X className="h-4 w-4 mr-1" />
-              Limpar
+              {common.actions.clear}
             </Button>
           )}
         </div>

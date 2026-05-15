@@ -1,0 +1,45 @@
+feat(i18n): centralizar strings em src/content + refatorar activities/classes
+
+Criada estrutura completa de centralizacao de textos seguindo padrao Sprint 19.
+Refatorados primeiros componentes pra usar strings centralizadas.
+
+## Novos Arquivos (3)
+- src/content/validation.ts - mensagens Zod (required, emailInvalid, phoneInvalid, etc)
+- src/content/ui.ts - empty states genericos, pagination, location placeholders
+- src/content/pwa.ts - install banner, PIX payment toasts
+
+## Arquivos Expandidos (8)
+- src/content/activities.ts - toasts (success/error), deliverDialog, descriptionLabel/Placeholder
+- src/content/classes.ts - toasts em logFormDialog, postClassDialog, packageDialog, deleteDialog
+- src/content/financial.ts - toasts em formDialog, confirmPaymentDialog, undoDialog, deleteDialog, paymentHistoryDialog
+- src/content/students.ts - toasts, placeholders (year, teacher, paymentMethod), table (noCharges, daysWithoutClass, editedAt)
+- src/content/teachers.ts - toasts, table (statusActive/Inactive, editedAt, viewDetails)
+- src/content/users.ts - toasts, table (statusActive/Inactive, roles, linked*, createdAt, viewDetails)
+- src/content/common.ts - 5 secoes novas: toasts, aria, emptyStates, placeholders, labels
+- src/content/index.ts - exporta validation, ui, pwa
+
+## Componentes Refatorados (7)
+- src/components/activities/DeliverActivityDialog.tsx - toasts + labels
+- src/components/activities/ActivityCorrectionFormInline.tsx - toast success
+- src/components/activities/EditActivityDialog.tsx - validacoes
+- src/components/activities/SendActivityDialog.tsx - validacoes
+- src/components/activities/AddCorrectionDialog.tsx - validacoes
+- src/components/classes/PackageSlotList.tsx - todos toasts (selectMonth, selectWeekday, invalidTime, etc)
+- src/components/classes/PackageClassesDialog.tsx - validacoes
+
+## Documentacao (2)
+- docs/sprints/sprint-20-centralizacao-strings.md - resumo completo da estrutura criada
+- docs/sprints/sprint-21-refatoracao-componentes-TODO.md - checklist detalhado do que falta
+
+## Impacto
+- 170+ strings centralizadas em src/content/
+- Zero duplicacao de mensagens
+- Estrutura pronta pra i18n (adicionar EN depois)
+- ~30% dos componentes refatorados
+- Faltam ~15 arquivos (PWA, Financial, validacoes Zod, empty states, placeholders)
+
+## Proximos Passos
+Ver docs/sprints/sprint-21-refatoracao-componentes-TODO.md para continuar refatoracao.
+Estimativa: ~2h15min para completar.
+
+Build: passou sem erros

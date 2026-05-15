@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";
+import { auth, common } from "@/content";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -30,9 +31,9 @@ export default function ForgotPassword() {
         return;
       }
       setSent(true);
-      toast.success("Link enviado! Verifique seu email.");
+      toast.success(auth.forgotPassword.toasts.success);
     } catch {
-      toast.error("Ocorreu um erro. Tente novamente.");
+      toast.error(auth.forgotPassword.toasts.generic);
     } finally {
       setIsLoading(false);
     }
@@ -47,15 +48,15 @@ export default function ForgotPassword() {
             <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
               <GraduationCap className="h-6 w-6" />
             </div>
-            <span className="text-base font-semibold">English School</span>
+            <span className="text-base font-semibold">{common.app.name}</span>
           </div>
           <div className="space-y-6 max-w-md">
-            <h1 className="text-4xl font-bold tracking-tight">Esqueceu a senha?</h1>
+            <h1 className="text-4xl font-bold tracking-tight">{auth.forgotPassword.pageTitle}</h1>
             <p className="text-lg text-primary-foreground/80">
-              Informe seu email e enviaremos um link para redefinir sua senha.
+              {auth.forgotPassword.pageSubtitle}
             </p>
           </div>
-          <p className="text-sm text-primary-foreground/60">© 2026 English School</p>
+          <p className="text-sm text-primary-foreground/60">{common.app.copyright(2026)}</p>
         </div>
       </div>
 
@@ -64,38 +65,37 @@ export default function ForgotPassword() {
           <div className="lg:hidden flex justify-center">
             <Link to="/login" className={`flex items-center ${gap('TIGHT')} text-muted-foreground hover:text-foreground`}>
               <GraduationCap className={iconSize('XL')} />
-              <span className={`${typography('H2')} font-semibold`}>English School</span>
+              <span className={`${typography('H2')} font-semibold`}>{common.app.name}</span>
             </Link>
           </div>
 
           <div className={stack('TIGHT')}>
-            <h2 className={typography('H2')}>Redefinir senha</h2>
+            <h2 className={typography('H2')}>{auth.forgotPassword.title}</h2>
             <p className={typography('SMALL')}>
-              Digite o email da sua conta. Enviaremos um link para criar uma nova senha.
+              {auth.forgotPassword.subtitle}
             </p>
           </div>
 
           {sent ? (
             <div className={`${stack('LOOSE')} rounded-lg border bg-muted/30 p-4`}>
               <p className={typography('SMALL')}>
-                Se existir uma conta com esse email, você receberá um link em instantes. Verifique a caixa de entrada e o
-                spam.
+                {auth.forgotPassword.sentMessage}
               </p>
               <Button variant="outline" className="w-full" asChild>
                 <Link to="/login">
                   <ArrowLeft className={`mr-2 ${iconSize('SM')}`} />
-                  Voltar ao login
+                  {auth.forgotPassword.backToLogin}
                 </Link>
               </Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className={stack('RELAXED')}>
               <div className={stack('TIGHT')}>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{auth.forgotPassword.emailLabel}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu@email.com"
+                  placeholder={auth.forgotPassword.emailPlaceholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -107,10 +107,10 @@ export default function ForgotPassword() {
                 {isLoading ? (
                   <>
                     <Loader2 className={`mr-2 ${iconSize('SM')} animate-spin`} />
-                    Enviando...
+                    {auth.forgotPassword.submitting}
                   </>
                 ) : (
-                  "Enviar link"
+                  auth.forgotPassword.submitButton
                 )}
               </Button>
             </form>
@@ -119,7 +119,7 @@ export default function ForgotPassword() {
           <p className="text-center">
             <Link to="/login" className={`${typography('SMALL')} hover:text-foreground inline-flex items-center ${gap('TIGHT')}`}>
               <ArrowLeft className={iconSize('SM')} />
-              Voltar ao login
+              {auth.forgotPassword.backToLogin}
             </Link>
           </p>
         </div>

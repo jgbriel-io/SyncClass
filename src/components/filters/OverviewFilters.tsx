@@ -14,6 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { common } from "@/content";
 
 export type OverviewPeriodFilter = "all" | "7" | "30" | "90";
 export type OverviewSortBy = "name_asc" | "name_desc" | "recent" | "oldest";
@@ -140,7 +141,7 @@ export function OverviewFilters({
           {hasActiveFilters && onReset && (
             <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
               <X className="h-4 w-4 mr-1" />
-              Limpar
+              {common.actions.clear}
             </Button>
           )}
         </div>

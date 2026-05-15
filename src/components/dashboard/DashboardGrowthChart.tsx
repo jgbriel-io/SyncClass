@@ -18,6 +18,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { dashboard } from "@/content";
 
 export interface ChartDataPoint {
   month: string;
@@ -86,10 +87,10 @@ export function DashboardGrowthChart({
           </div>
           <div>
             <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">
-              {basePath === "/admin" ? "Crescimento da plataforma" : "Evolução de Alunos e Aulas"}
+              {basePath === "/admin" ? dashboard.chart.titleAdmin : dashboard.chart.titleTeacher}
             </h2>
             <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground">
-              {chartMonths === 1 ? "Mês atual (por dia)" : `Últimos ${chartMonths} meses`}
+              {chartMonths === 1 ? dashboard.chart.currentMonth : dashboard.chart.lastMonths(chartMonths)}
             </p>
           </div>
         </div>
@@ -105,10 +106,10 @@ export function DashboardGrowthChart({
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1 mês</SelectItem>
-                  <SelectItem value="3">3 meses</SelectItem>
-                  <SelectItem value="6">6 meses</SelectItem>
-                  <SelectItem value="12">1 ano</SelectItem>
+                  <SelectItem value="1">{dashboard.chart.months1}</SelectItem>
+                  <SelectItem value="3">{dashboard.chart.months3}</SelectItem>
+                  <SelectItem value="6">{dashboard.chart.months6}</SelectItem>
+                  <SelectItem value="12">{dashboard.chart.months12}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -117,7 +118,12 @@ export function DashboardGrowthChart({
             <div className="flex flex-wrap gap-2">
               {(["alunos", "professores", "aulas", "usuarios"] as const).map((key) => {
                 const adminLines = lines as ChartLineFilterAdmin;
-                const label = { alunos: "Alunos", professores: "Professores", aulas: "Aulas", usuarios: "Usuários" }[key];
+                const label = {
+                  alunos: dashboard.chart.students,
+                  professores: dashboard.chart.teachers,
+                  aulas: dashboard.chart.classes,
+                  usuarios: dashboard.chart.users,
+                }[key];
                 return (
                   <button
                     key={key}
@@ -140,7 +146,7 @@ export function DashboardGrowthChart({
             <div className="flex flex-wrap gap-2">
               {(["alunos", "aulas"] as const).map((key) => {
                 const teacherLines = lines as ChartLineFilterTeacher;
-                const label = { alunos: "Alunos", aulas: "Aulas" }[key];
+                const label = { alunos: dashboard.chart.students, aulas: dashboard.chart.classes }[key];
                 return (
                   <button
                     key={key}
@@ -170,7 +176,7 @@ export function DashboardGrowthChart({
           <div className="h-[280px] flex items-center justify-center text-muted-foreground">
             <div className="text-center">
               <TrendingUp className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Nenhum dado disponível ainda</p>
+              <p className="text-sm">{dashboard.chart.noData}</p>
             </div>
           </div>
         ) : (
@@ -218,12 +224,12 @@ export function DashboardGrowthChart({
                   labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
                   formatter={(value: number, name: string) => [
                     value,
-                    name === "count" ? "Alunos" : name === "classesCount" ? "Aulas" : name === "teachersCount" ? "Professores" : name === "usersCount" ? "Usuários" : name,
+                    name === "count" ? dashboard.chart.students : name === "classesCount" ? dashboard.chart.classes : name === "teachersCount" ? dashboard.chart.teachers : name === "usersCount" ? dashboard.chart.users : name,
                   ]}
                 />
                 <Legend
                   formatter={(value) =>
-                    value === "count" ? "Alunos" : value === "classesCount" ? "Aulas" : value === "teachersCount" ? "Professores" : value === "usersCount" ? "Usuários" : value
+                    value === "count" ? dashboard.chart.students : value === "classesCount" ? dashboard.chart.classes : value === "teachersCount" ? dashboard.chart.teachers : value === "usersCount" ? dashboard.chart.users : value
                   }
                   wrapperStyle={{ paddingTop: 16 }}
                 />

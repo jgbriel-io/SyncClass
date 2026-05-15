@@ -14,11 +14,13 @@ import { validateFile, checkUploadRateLimit, FILE_TYPES, formatFileSize } from "
 import { toast } from "sonner";
 import { logger } from "@/lib/sentry";
 
+import { activities as activitiesContent, common } from "@/content";
+
 const deliverSchema = z.object({
   response_text: z.string().optional(),
   response_file: z.instanceof(File).optional(),
 }).refine((data) => data.response_text || data.response_file, {
-  message: "Forneça uma resposta em texto ou envie um arquivo",
+  message: activitiesContent.deliverDialog.toasts.error("Forneça uma resposta em texto ou envie um arquivo"),
   path: ["response_text"],
 });
 
@@ -112,10 +114,10 @@ export function DeliverActivityDialog({
       reset();
       setSelectedFile(null);
       onOpenChange(false);
-      toast.success("Atividade entregue com sucesso!");
+      toast.success(activitiesContent.deliverDialog.toasts.success);
     } catch (error) {
       logger.error(error as Error, { context: 'deliver_activity' });
-      toast.error("Erro ao entregar atividade: " + (error as Error).message);
+      toast.error(activitiesContent.deliverDialog.toasts.error((error as Error).message));
     } finally {
       setIsSubmitting(false);
     }
@@ -131,7 +133,7 @@ export function DeliverActivityDialog({
     <BaseDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Entregar atividade"
+      title={activitiesContent.deliverDialog.title}
       description={activityTitle}
       size="LG"
     >
@@ -166,7 +168,7 @@ export function DeliverActivityDialog({
 
           <div className="space-y-2">
             <Label htmlFor="response_file">
-              Ou envie um arquivo
+              {activitiesContent.deliverDialog.fileLabel}
             </Label>
             {!selectedFile ? (
               <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 hover:border-primary/50 transition-colors">
@@ -185,7 +187,7 @@ export function DeliverActivityDialog({
                   className="hidden"
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  {FILE_TYPES.ACTIVITY_RESPONSE.description}
+                  {activitiesContent.deliverDialog.fileHint}
                 </p>
               </div>
             ) : (
@@ -219,16 +221,16 @@ export function DeliverActivityDialog({
               onClick={handleCancel}
               disabled={isSubmitting}
             >
-              Cancelar
+              {common.actions.cancel}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
+                  {activitiesContent.deliverDialog.submitting}
                 </>
               ) : (
-                "Entregar atividade"
+                activitiesContent.deliverDialog.submitButton
               )}
             </Button>
           </DialogFooter>

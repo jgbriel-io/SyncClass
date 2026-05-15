@@ -9,6 +9,7 @@ import { StudentDetailInfoTab } from "@/components/admin/StudentDetailInfoTab";
 import { StudentDetailClassesTab } from "@/components/admin/StudentDetailClassesTab";
 import { StudentDetailActivitiesTab } from "@/components/admin/StudentDetailActivitiesTab";
 import { StudentDetailFinancialTab } from "@/components/admin/StudentDetailFinancialTab";
+import { students as studentsContent } from "@/content";
 
 interface StudentDetailSheetProps {
   studentId: string | null;
@@ -57,16 +58,16 @@ export function StudentDetailSheet({
         <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
           <TabsList className="mx-6 mt-4 grid grid-cols-4">
             <TabsTrigger value="info" className="text-xs">
-              <User className="h-3.5 w-3.5 mr-1.5" />Dados
+              <User className="h-3.5 w-3.5 mr-1.5" />{studentsContent.detailSheet.tabInfo}
             </TabsTrigger>
             <TabsTrigger value="classes" className="text-xs">
-              <BookOpen className="h-3.5 w-3.5 mr-1.5" />Aulas
+              <BookOpen className="h-3.5 w-3.5 mr-1.5" />{studentsContent.detailSheet.tabClasses}
             </TabsTrigger>
             <TabsTrigger value="activities" className="text-xs">
-              <FileText className="h-3.5 w-3.5 mr-1.5" />Atividades
+              <FileText className="h-3.5 w-3.5 mr-1.5" />{studentsContent.detailSheet.tabActivities}
             </TabsTrigger>
             <TabsTrigger value="financial" className="text-xs">
-              <CreditCard className="h-3.5 w-3.5 mr-1.5" />Financeiro
+              <CreditCard className="h-3.5 w-3.5 mr-1.5" />{studentsContent.detailSheet.tabFinancial}
             </TabsTrigger>
           </TabsList>
 

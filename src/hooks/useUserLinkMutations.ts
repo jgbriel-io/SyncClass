@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
 import { toast } from "sonner";
-import { MSG_EMAIL } from "@/lib/duplicate-messages";
+import { common } from "@/content";
 import { invokeInviteUser } from "./inviteUserService";
 
 interface CreateAuthUserParams {
@@ -66,7 +66,7 @@ export function useCreateAuthUserForStudent() {
     },
     onError: (error: Error) => {
       const msg = error?.message?.toLowerCase() || "";
-      toast.error(msg.includes("already") || msg.includes("cadastrado") ? MSG_EMAIL : error.message);
+      toast.error(msg.includes("already") || msg.includes("cadastrado") ? common.errors.duplicateEmail : error.message);
     },
   });
 }
@@ -85,7 +85,7 @@ export function useCreateAuthUserForTeacher() {
     },
     onError: (error: Error) => {
       const msg = error?.message?.toLowerCase() || "";
-      toast.error(msg.includes("already") || msg.includes("cadastrado") ? MSG_EMAIL : error.message);
+      toast.error(msg.includes("already") || msg.includes("cadastrado") ? common.errors.duplicateEmail : error.message);
     },
   });
 }

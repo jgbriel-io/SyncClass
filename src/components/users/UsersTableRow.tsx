@@ -27,6 +27,7 @@ import {
   getXLColumnClasses,
 } from "@/lib/design-tokens/table-columns";
 import { COL } from "./UsersTableRow.constants";
+import { common } from "@/content";
 
 interface Student {
   id: string;
@@ -218,7 +219,7 @@ export function UsersTableRow({
             <DropdownMenuContent align="end" className="w-60">
               <DropdownMenuItem onClick={() => onEdit(user)}>
                 <Pencil className="h-4 w-4 mr-2" />
-                Editar
+                {common.actions.edit}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onResetPassword(user)}>
                 <KeyRound className="h-4 w-4 mr-2" />
@@ -252,7 +253,7 @@ export function UsersTableRow({
                   <Trash2 className="h-4 w-4 mr-2" />
                   {!user.profile?.student_id && !user.profile?.teacher_id 
                     ? "Excluir arquivo morto" 
-                    : "Excluir definitivamente"}
+                    : common.actions.delete + " definitivamente"}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

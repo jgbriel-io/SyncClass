@@ -38,6 +38,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SettingsModal } from "@/components/layout/SettingsModal";
 import { Footer } from "@/components/layout/Footer";
+import { layout } from "@/content";
 
 interface TeacherLayoutProps {
   children: React.ReactNode;
@@ -155,7 +156,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             </div>
             {!sidebarCollapsed && (
               <span className="text-base font-semibold text-sidebar-foreground tracking-tight">
-                English School
+                {common.app.name}
               </span>
             )}
           </Link>
@@ -206,7 +207,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             )}
           >
             <ChevronLeft className={cn("h-5 w-5 transition-transform duration-300", sidebarCollapsed && "rotate-180")} />
-            {!sidebarCollapsed && <span>Recolher</span>}
+            {!sidebarCollapsed && <span>{layout.sidebar.collapse}</span>}
           </button>
 
           {/* Logout */}
@@ -223,7 +224,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             ) : (
               <LogOut className="h-5 w-5 shrink-0" />
             )}
-            {!sidebarCollapsed && <span>Sair</span>}
+            {!sidebarCollapsed && <span>{isLoggingOut ? layout.sidebar.loggingOut : layout.sidebar.logout}</span>}
           </button>
         </div>
       </aside>
@@ -241,7 +242,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
               onClick={() => setMobileOpen(true)}
               className="laptop:hidden shrink-0 text-muted-foreground hover:text-foreground"
               type="button"
-              aria-label="Abrir menu"
+              aria-label={layout.sidebar.openMenu}
             >
               <Menu className="h-6 w-6" />
             </button>
@@ -250,11 +251,11 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <Input
                   type="search"
-                  placeholder="Buscar aluno (nome, e-mail...)"
+                  placeholder={layout.topbar.searchPlaceholder}
                   className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  aria-label="Buscar aluno por nome ou e-mail"
+                  aria-label={layout.topbar.searchAriaLabel}
                 />
               </div>
             </form>
@@ -269,7 +270,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                   variant="ghost"
                   size="icon"
                   className="relative"
-                  aria-label="Notificações"
+                  aria-label={layout.topbar.notifications}
                 >
                   <Bell className="h-5 w-5 text-muted-foreground" />
                   {pendingClasses.length > 0 && (
@@ -279,7 +280,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
                 <DropdownMenuLabel className="flex items-center justify-between">
-                  Notificações
+                  {layout.topbar.notifications}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <div className="max-h-[320px] overflow-y-auto py-2">
@@ -289,7 +290,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                     </div>
                   ) : pendingClasses.length === 0 ? (
                     <p className="px-2 py-6 text-center text-sm text-muted-foreground">
-                      Nenhuma notificação no momento
+                      {layout.topbar.noNotifications}
                     </p>
                   ) : (
                     <ul className="space-y-0.5">
@@ -299,7 +300,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                             to="/teacher/classes?status=avaliacao_pendente"
                             className="block rounded-md px-2 py-2 text-sm hover:bg-muted focus:bg-muted focus:outline-none"
                           >
-                            <span className="font-medium text-foreground">Pendente</span>
+                            <span className="font-medium text-foreground">{layout.topbar.notificationPending}</span>
                             <p className="mt-0.5 truncate text-muted-foreground">
                               {(log.students as { name?: string } | null)?.name ?? "Aluno"} · {log.class_date && format(new Date(log.class_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
                             </p>
@@ -328,11 +329,11 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                <DropdownMenuLabel>{layout.topbar.myAccount}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="gap-2" onClick={() => setSettingsOpen(true)}>
                   <Settings className="h-4 w-4" />
-                  Configurações
+                  {layout.topbar.settings}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -345,7 +346,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                   ) : (
                     <LogOut className="h-4 w-4" />
                   )}
-                  {isLoggingOut ? "Saindo..." : "Sair"}
+                  {isLoggingOut ? layout.sidebar.loggingOut : layout.sidebar.logout}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

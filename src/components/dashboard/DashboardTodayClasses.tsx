@@ -6,6 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
 import type { TodayClassesData } from "@/hooks/useTodayClasses";
 import { getTodayClassStatus } from "@/hooks/useTodayClasses";
+import { dashboard } from "@/content";
 
 interface DashboardTodayClassesProps {
   todayClasses: TodayClassesData | undefined;
@@ -21,7 +22,7 @@ export function DashboardTodayClasses({ todayClasses, basePath }: DashboardToday
             <Clock className="h-4 w-4 text-warning" />
           </div>
           <div>
-            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Aulas de Hoje</h2>
+            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">{dashboard.todayClasses.title}</h2>
             <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
               {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
             </p>
@@ -35,7 +36,7 @@ export function DashboardTodayClasses({ todayClasses, basePath }: DashboardToday
         {!todayClasses?.classes.length ? (
           <div className="py-12 px-6 text-center text-muted-foreground">
             <Calendar className="h-10 w-10 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Nenhuma aula agendada para hoje</p>
+            <p className="text-sm">{dashboard.todayClasses.noClasses}</p>
           </div>
         ) : (
           <div className="divide-y">
@@ -75,7 +76,7 @@ export function DashboardTodayClasses({ todayClasses, basePath }: DashboardToday
               to={`${basePath}/classes`}
               className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1"
             >
-              Ver todas
+              {dashboard.todayClasses.viewAll}
               <ChevronRight className="h-3 w-3" />
             </Link>
           </div>

@@ -38,6 +38,7 @@ import { useForecastedBilling } from "@/hooks/useForecastedBilling";
 import { FinancialTableRow } from "@/components/financial/FinancialTableRow";
 import { COL as FIN_COL, TABLE_MIN_W as FIN_TABLE_MIN_W } from "@/components/financial/FinancialTableRow.constants";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
+import { financial as financialContent } from "@/content";
 
 interface FinancialViewProps {
   title?: string;
@@ -216,7 +217,7 @@ export function FinancialView({
             <div className="space-y-2 flex-1">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Previsão de Faturamento Mensal</p>
+                <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">{financialContent.view.forecastTitle}</p>
               </div>
               <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-primary">
                 {formatCurrency(forecastedBilling.totalForecast)}
@@ -250,7 +251,7 @@ export function FinancialView({
         <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total recebido</p>
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">{financialContent.view.totalReceived}</p>
               <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-success">
                 {formatCurrency(actualSummary.totalPaid)}
               </p>
@@ -263,11 +264,11 @@ export function FinancialView({
         <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Total a receber</p>
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">{financialContent.view.totalToReceive}</p>
               <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">
                 {formatCurrency(actualSummary.totalPending + actualSummary.totalOverdue)}
               </p>
-              <p className="text-xs text-muted-foreground">Pendentes + Em atraso</p>
+              <p className="text-xs text-muted-foreground">{financialContent.view.pendingAndOverdue}</p>
             </div>
             <div className="h-11 w-11 rounded-xl flex items-center justify-center bg-warning/10">
               <DollarSign className="h-5 w-5 text-warning" />
@@ -277,7 +278,7 @@ export function FinancialView({
         <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Pendente</p>
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">{financialContent.view.pendingLabel}</p>
               <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
                 {formatCurrency(actualSummary.totalPending)}
               </p>
@@ -290,7 +291,7 @@ export function FinancialView({
         <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">Em atraso</p>
+              <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">{financialContent.view.overdueLabel}</p>
               <p className="text-2xl laptop:text-xl desktop:text-2xl font-bold tracking-tight text-destructive">
                 {formatCurrency(actualSummary.totalOverdue)}
               </p>
@@ -320,7 +321,7 @@ export function FinancialView({
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <p className="text-destructive">
-            Erro ao carregar registros financeiros. Tente novamente.
+            {financialContent.view.errorLoading}
           </p>
         </div>
       )}
@@ -334,15 +335,15 @@ export function FinancialView({
                   className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
                   style={{ width: FIN_COL.ALUNO, minWidth: FIN_COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}
                 >
-                  Aluno
+                  {financialContent.view.colStudent}
                 </TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.AULA, minWidth: FIN_COL.AULA }}>Aula Vinculada</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.VALOR, minWidth: FIN_COL.VALOR }}>Valor</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.METODO, minWidth: FIN_COL.METODO }}>Método</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: FIN_COL.VENCIMENTO, minWidth: FIN_COL.VENCIMENTO }}>Vencimento</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.STATUS, minWidth: FIN_COL.STATUS }}>Status</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.AULA, minWidth: FIN_COL.AULA }}>{financialContent.view.colClass}</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.VALOR, minWidth: FIN_COL.VALOR }}>{financialContent.view.colAmount}</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.METODO, minWidth: FIN_COL.METODO }}>{financialContent.view.colMethod}</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: FIN_COL.VENCIMENTO, minWidth: FIN_COL.VENCIMENTO }}>{financialContent.view.colDueDate}</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.STATUS, minWidth: FIN_COL.STATUS }}>{financialContent.view.colStatus}</TableHead>
                 <TableHead className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }} aria-label="Avaliar" />
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.ACOES, minWidth: FIN_COL.ACOES }}>Ações</TableHead>
+                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.ACOES, minWidth: FIN_COL.ACOES }}>{financialContent.table.colActions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/40">

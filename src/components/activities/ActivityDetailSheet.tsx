@@ -9,6 +9,7 @@ import { getActivityFileUrl, type ActivityWithRelations } from "@/hooks/useActiv
 import { ActivityCorrectionFormInline } from "@/components/activities/ActivityCorrectionFormInline";
 import { toast } from "sonner";
 import { sanitizeHtml, sanitizeText } from "@/lib/utils/sanitize";
+import { activities as activitiesContent } from "@/content";
 
 interface ActivityDetailSheetProps {
   activity: ActivityWithRelations | null;
@@ -50,7 +51,7 @@ export function ActivityDetailSheet({
       const url = await getActivityFileUrl(filePath);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch {
-      toast.error("Não foi possível abrir o arquivo.");
+      toast.error(activitiesContent.view.toasts.fileOpenError);
     }
   };
 

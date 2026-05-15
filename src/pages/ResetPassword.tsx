@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";
+import { auth, common } from "@/content";
 
 export default function ResetPassword() {
   const { user, isLoading: authLoading } = useAuth();
@@ -21,7 +22,7 @@ export default function ResetPassword() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      toast.error("Link expirado ou inválido. Solicite um novo link.");
+      toast.error(auth.resetPassword.toasts.expiredLink);
     }
   }, [authLoading, user]);
 
@@ -30,27 +31,27 @@ export default function ResetPassword() {
     
     // Validação de requisitos de senha
     if (password.length < 8) {
-      toast.error("A senha deve ter no mínimo 8 caracteres.");
+      toast.error(auth.resetPassword.toasts.minLength);
       return;
     }
     if (!/[A-Z]/.test(password)) {
-      toast.error("A senha deve conter pelo menos uma letra maiúscula.");
+      toast.error(auth.resetPassword.toasts.uppercase);
       return;
     }
     if (!/[a-z]/.test(password)) {
-      toast.error("A senha deve conter pelo menos uma letra minúscula.");
+      toast.error(auth.resetPassword.toasts.lowercase);
       return;
     }
     if (!/[0-9]/.test(password)) {
-      toast.error("A senha deve conter pelo menos um número.");
+      toast.error(auth.resetPassword.toasts.number);
       return;
     }
     if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
-      toast.error("A senha deve conter pelo menos um caractere especial (!@#$%^&*).");
+      toast.error(auth.resetPassword.toasts.special);
       return;
     }
     if (password !== confirm) {
-      toast.error("As senhas não coincidem.");
+      toast.error(auth.resetPassword.toasts.passwordMismatch);
       return;
     }
     if (!user) return;
@@ -62,11 +63,11 @@ export default function ResetPassword() {
         setIsSubmitting(false);
         return;
       }
-      toast.success("Senha alterada. Faça login com a nova senha.");
+      toast.success(auth.resetPassword.toasts.success);
       await supabase.auth.signOut();
       navigate("/login", { replace: true });
     } catch {
-      toast.error("Ocorreu um erro. Tente novamente.");
+      toast.error(auth.resetPassword.toasts.generic);
     } finally {
       setIsSubmitting(false);
     }
@@ -77,7 +78,7 @@ export default function ResetPassword() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">{common.actions.loading}</p>
         </div>
       </div>
     );
@@ -87,17 +88,17 @@ export default function ResetPassword() {
     return (
       <div className="min-h-screen flex items-center justify-center p-8">
         <div className={`w-full max-w-sm ${stack('RELAXED')} text-center`}>
-          <h2 className={typography('H1')}>Link expirado ou inválido</h2>
+          <h2 className={typography('H1')}>{auth.resetPassword.expiredTitle}</h2>
           <p className={typography('SMALL')}>
-            Solicite um novo link de redefinição de senha na página de login.
+            {auth.resetPassword.expiredMessage}
           </p>
           <Button asChild className="w-full">
-            <Link to="/esqueci-senha">Solicitar novo link</Link>
+            <Link to="/esqueci-senha">{auth.resetPassword.requestNewLink}</Link>
           </Button>
           <p>
             <Link to="/login" className={`${typography('SMALL')} hover:text-foreground inline-flex items-center ${gap('TIGHT')}`}>
               <ArrowLeft className={iconSize('SM')} />
-              Voltar ao login
+              {auth.resetPassword.backToLogin}
             </Link>
           </p>
         </div>
@@ -114,15 +115,15 @@ export default function ResetPassword() {
             <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
               <GraduationCap className="h-6 w-6" />
             </div>
-            <span className="text-base font-semibold">English School</span>
+            <span className="text-base font-semibold">{common.app.name}</span>
           </div>
           <div className="space-y-6 max-w-md">
-            <h1 className="text-4xl font-bold tracking-tight">Nova senha</h1>
+            <h1 className="text-4xl font-bold tracking-tight">{auth.resetPassword.pageTitle}</h1>
             <p className="text-lg text-primary-foreground/80">
-              Defina uma nova senha para acessar sua conta.
+              {auth.resetPassword.pageSubtitle}
             </p>
           </div>
-          <p className="text-sm text-primary-foreground/60">© 2026 English School</p>
+          <p className="text-sm text-primary-foreground/60">{common.app.copyright(2026)}</p>
         </div>
       </div>
 
@@ -131,32 +132,32 @@ export default function ResetPassword() {
           <div className="lg:hidden flex justify-center">
             <Link to="/login" className={`flex items-center ${gap('TIGHT')} text-muted-foreground hover:text-foreground`}>
               <GraduationCap className={iconSize('XL')} />
-              <span className={`${typography('H2')} font-semibold`}>English School</span>
+              <span className={`${typography('H2')} font-semibold`}>{common.app.name}</span>
             </Link>
           </div>
 
           <div className={stack('TIGHT')}>
-            <h2 className={typography('H2')}>Definir nova senha</h2>
+            <h2 className={typography('H2')}>{auth.resetPassword.title}</h2>
             <div className="rounded-lg border bg-muted/50 p-3 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Requisitos da senha:</p>
+              <p className="text-xs font-medium text-muted-foreground">{auth.resetPassword.requirements.title}</p>
               <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                <li>Mínimo de 8 caracteres</li>
-                <li>Pelo menos uma letra maiúscula (A-Z)</li>
-                <li>Pelo menos uma letra minúscula (a-z)</li>
-                <li>Pelo menos um número (0-9)</li>
-                <li>Pelo menos um caractere especial (!@#$%^&*)</li>
+                <li>{auth.resetPassword.requirements.minLength}</li>
+                <li>{auth.resetPassword.requirements.uppercase}</li>
+                <li>{auth.resetPassword.requirements.lowercase}</li>
+                <li>{auth.resetPassword.requirements.number}</li>
+                <li>{auth.resetPassword.requirements.special}</li>
               </ul>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className={stack('RELAXED')}>
             <div className={stack('TIGHT')}>
-              <Label htmlFor="password">Nova senha</Label>
+              <Label htmlFor="password">{auth.resetPassword.passwordLabel}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder={auth.resetPassword.passwordPlaceholder}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -175,11 +176,11 @@ export default function ResetPassword() {
               </div>
             </div>
             <div className={stack('TIGHT')}>
-              <Label htmlFor="confirm">Confirmar senha</Label>
+              <Label htmlFor="confirm">{auth.resetPassword.confirmLabel}</Label>
               <Input
                 id="confirm"
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+                placeholder={auth.resetPassword.passwordPlaceholder}
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 required
@@ -192,10 +193,10 @@ export default function ResetPassword() {
               {isSubmitting ? (
                 <>
                   <Loader2 className={`mr-2 ${iconSize('SM')} animate-spin`} />
-                  Salvando...
+                  {auth.resetPassword.submitting}
                 </>
               ) : (
-                "Salvar nova senha"
+                auth.resetPassword.submitButton
               )}
             </Button>
           </form>
@@ -203,7 +204,7 @@ export default function ResetPassword() {
           <p className="text-center">
             <Link to="/login" className={`${typography('SMALL')} hover:text-foreground inline-flex items-center ${gap('TIGHT')}`}>
               <ArrowLeft className={iconSize('SM')} />
-              Voltar ao login
+              {auth.resetPassword.backToLogin}
             </Link>
           </p>
         </div>

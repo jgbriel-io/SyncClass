@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";
+import { auth, common } from "@/content";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -26,20 +27,20 @@ export default function Login() {
       const { error } = await signIn(email, password);
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
-          toast.error("Email ou senha incorretos");
+          toast.error(auth.login.toasts.invalidCredentials);
         } else if (error.message.includes("Email not confirmed")) {
-          toast.error("Email não confirmado. Verifique sua caixa de entrada.");
+          toast.error(auth.login.toasts.emailNotConfirmed);
         } else {
           toast.error(error.message);
         }
         setIsLoading(false);
         return;
       }
-      toast.success("Login realizado com sucesso!");
+      toast.success(auth.login.toasts.success);
       setIsLoading(false);
       // O useEffect vai redirecionar quando o role for carregado
     } catch (error) {
-      toast.error("Ocorreu um erro. Tente novamente.");
+      toast.error(auth.login.toasts.generic);
       setIsLoading(false);
     }
   };
@@ -67,7 +68,7 @@ export default function Login() {
             <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
               <GraduationCap className={iconSize('LG')} />
             </div>
-            <span className={`${typography('H2')} font-semibold`}>English School</span>
+            <span className={`${typography('H2')} font-semibold`}>{common.app.name}</span>
           </div>
 
           <div className={`${stack('RELAXED')} max-w-md`}>
@@ -75,12 +76,12 @@ export default function Login() {
               Your English learning platform
             </h1>
             <p className={`${typography('H3')} text-primary-foreground/80 leading-relaxed`}>
-              Manage your classes, track progress, and handle payments all in one place.
+              {common.app.tagline}
             </p>
           </div>
 
           <p className={typography('SMALL')}>
-            © 2026 English School. All rights reserved.
+            {common.app.copyright(2026)}
           </p>
         </div>
 
@@ -97,26 +98,26 @@ export default function Login() {
             <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
               <GraduationCap className="h-7 w-7 text-primary-foreground" />
             </div>
-            <span className="text-lg font-semibold">English School</span>
+            <span className="text-lg font-semibold">{common.app.name}</span>
           </div>
 
           <div className={`${stack('RELAXED')} text-center lg:text-left`}>
                 <h2 className={typography('H2')}>
-                  Bem-vindo de volta
+                  {auth.login.title}
                 </h2>
                 <p className={typography('BODY')}>
-                  Entre com suas credenciais para acessar
+                  {auth.login.subtitle}
                 </p>
           </div>
 
           <form onSubmit={handleSubmit} className={stack('RELAXED')}>
             <div className={stack('LOOSE')}>
               <div className={stack('TIGHT')}>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{auth.login.emailLabel}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu@email.com"
+                  placeholder={auth.login.emailPlaceholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -126,12 +127,12 @@ export default function Login() {
               </div>
 
               <div className={stack('TIGHT')}>
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">{auth.login.passwordLabel}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder={auth.login.passwordPlaceholder}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -158,10 +159,10 @@ export default function Login() {
               {isLoading ? (
                 <>
                   <Loader2 className={`mr-2 ${iconSize('SM')} animate-spin`} />
-                  Entrando...
+                  {auth.login.submitting}
                 </>
               ) : (
-                "Entrar"
+                auth.login.submitButton
               )}
             </Button>
             <p className={`text-center ${typography('BODY')}`}>
@@ -169,7 +170,7 @@ export default function Login() {
                 to="/esqueci-senha"
                 className="text-muted-foreground hover:text-foreground underline underline-offset-2"
               >
-                Esqueci minha senha
+                {auth.login.forgotPassword}
               </Link>
             </p>
           </form>

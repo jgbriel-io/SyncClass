@@ -14,6 +14,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { common } from "@/content";
+import { activities as activitiesContent, common } from "@/content";
 
 export type ActivityStatusFilter = "all" | "enviada" | "vencida" | "entregue" | "corrigida";
 export type ActivityPeriodFilter = "all" | "week" | "month" | "3months";
@@ -151,7 +153,7 @@ export function ActivitiesFilters({
           {hasActiveFilters && onReset && (
             <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
               <X className="h-4 w-4 mr-1" />
-              Limpar
+              {common.actions.clear}
             </Button>
           )}
         </div>

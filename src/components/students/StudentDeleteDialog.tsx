@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { useUpdateStudent, useHardDeleteStudent, type Student } from "@/hooks/useStudents";
+import { students as studentsContent, common } from "@/content";
 
 // ─── Archive / Reactivate Dialog ─────────────────────────────────────────────
 
@@ -42,30 +43,23 @@ export function StudentArchiveDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {isActive ? "Confirmar arquivamento" : "Confirmar reativação"}
+            {isActive ? studentsContent.archiveDialog.titleArchive : studentsContent.archiveDialog.titleReactivate}
           </AlertDialogTitle>
           <AlertDialogDescription>
             {isActive ? (
               <>
-                Tem certeza que deseja arquivar o aluno{" "}
-                <strong>{student?.name}</strong>?
+                {studentsContent.archiveDialog.descriptionArchive(student?.name ?? "")}
                 <br />
                 <br />
-                <strong>Importante:</strong> O histórico de aulas e cobranças será{" "}
-                <strong>preservado</strong>. O aluno apenas não aparecerá mais nas listagens
-                ativas.
+                <strong>Importante:</strong> {studentsContent.archiveDialog.archiveNote}
               </>
             ) : (
-              <>
-                Tem certeza que deseja reativar o aluno{" "}
-                <strong>{student?.name}</strong>? Ele voltará para a lista de ativos e terá o
-                acesso reativado.
-              </>
+              studentsContent.archiveDialog.descriptionReactivate(student?.name ?? "")
             )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={updateStudent.isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={updateStudent.isPending}>{common.actions.cancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={updateStudent.isPending}
@@ -74,12 +68,12 @@ export function StudentArchiveDialog({
             {updateStudent.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isActive ? "Arquivando..." : "Reativando..."}
+                {isActive ? studentsContent.archiveDialog.archiving : studentsContent.archiveDialog.reactivating}
               </>
             ) : isActive ? (
-              "Arquivar"
+              studentsContent.archiveDialog.confirmArchive
             ) : (
-              "Reativar"
+              studentsContent.archiveDialog.confirmReactivate
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -114,19 +108,16 @@ export function StudentHardDeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Excluir definitivamente?</AlertDialogTitle>
+          <AlertDialogTitle>{studentsContent.deleteDialog.title}</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja excluir definitivamente o aluno{" "}
-            <strong>{student?.name}</strong>?
+            {studentsContent.deleteDialog.description(student?.name ?? "")}
             <br />
             <br />
-            <strong className="text-destructive">Atenção:</strong> Todo o histórico de aulas e
-            cobranças deste aluno será <strong>permanentemente removido</strong>. Esta ação não
-            pode ser desfeita.
+            <strong className="text-destructive">Atenção:</strong> {studentsContent.deleteDialog.warning}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={hardDeleteStudent.isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={hardDeleteStudent.isPending}>{common.actions.cancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={hardDeleteStudent.isPending}
@@ -135,10 +126,10 @@ export function StudentHardDeleteDialog({
             {hardDeleteStudent.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Excluindo...
+                {studentsContent.deleteDialog.deleting}
               </>
             ) : (
-              "Excluir definitivamente"
+              studentsContent.deleteDialog.confirmButton
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

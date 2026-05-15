@@ -18,6 +18,7 @@ import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";
 import { logger } from "@/lib/sentry";
+import { studentPortal } from "@/content";
 
 const StudentActivitiesPage = () => {
   const { user } = useAuth();
@@ -48,13 +49,13 @@ const StudentActivitiesPage = () => {
       const url = await getActivityFileUrl(filePath);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch {
-      toast.error("Não foi possível abrir o arquivo.");
+      toast.error(studentPortal.activities.toasts.fileOpenError);
     }
   };
 
   const handleDownload = async (filePath: string, fileName: string) => {
     try {
-      toast.loading("Preparando download...");
+      toast.loading(studentPortal.activities.toasts.downloadPreparing);
       const signedUrl = await getActivityFileUrl(filePath);
       
       // Forçar download via fetch para evitar abrir em nova aba
@@ -73,11 +74,11 @@ const StudentActivitiesPage = () => {
       window.URL.revokeObjectURL(url);
       
       toast.dismiss();
-      toast.success("Download concluído");
+      toast.success(studentPortal.activities.toasts.downloadSuccess);
     } catch (error) {
       logger.error(error as Error, { context: 'download_activity_file' });
       toast.dismiss();
-      toast.error("Erro ao baixar arquivo");
+      toast.error(studentPortal.activities.toasts.downloadError);
     }
   };
 
@@ -105,9 +106,9 @@ const StudentActivitiesPage = () => {
     <PageContainer constrained maxWidth="5xl">
       {/* Header */}
       <div className="mb-4">
-        <h1 className={typography('H1')}>Minhas Atividades</h1>
+        <h1 className={typography('H1')}>{studentPortal.activities.title}</h1>
         <p className={`${typography('SMALL')} mt-1`}>
-          Visualize e entregue as atividades enviadas pelo seu professor
+          {studentPortal.activities.subtitle}
         </p>
       </div>
 
@@ -128,7 +129,7 @@ const StudentActivitiesPage = () => {
       {!studentIdLoading && !isLoading && activities.length > 0 && (
         <div className={stack('DEFAULT')}>
           <h2 className={typography('TABLE_HEADER')}>
-            Atividades
+            {studentPortal.activities.sectionTitle}
           </h2>
           <div className={stack('DEFAULT')}>
             {activities.map((activity) => (
@@ -153,22 +154,22 @@ const StudentActivitiesPage = () => {
                       {/* Lista de informações com ícones */}
                       <div className={`flex items-center ${gap('TIGHT')} ${typography('SMALL')}`}>
                         <User className={`${iconSize('SM')} flex-shrink-0`} />
-                        <span>Professor: {activity.teachers?.name || "—"}</span>
+                        <span>{studentPortal.activities.teacherLabel(activity.teachers?.name || "—")}</span>
                       </div>
                       <div className={`flex items-center ${gap('TIGHT')} ${typography('SMALL')}`}>
                         <Calendar className={`${iconSize('SM')} flex-shrink-0`} />
-                        <span>Enviada em {format(new Date(activity.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                        <span>{studentPortal.activities.sentAt(format(new Date(activity.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }))}</span>
                       </div>
                       {activity.due_date && (
                         <div className={`flex items-center ${gap('TIGHT')} ${typography('SMALL')}`}>
                           <Clock className={`${iconSize('SM')} flex-shrink-0`} />
-                          <span>Prazo: {formatActivityDueDate(activity.due_date)}</span>
+                          <span>{studentPortal.activities.dueDate(formatActivityDueDate(activity.due_date))}</span>
                         </div>
                       )}
                       {activity.delivered_at && (
                         <div className={`flex items-center ${gap('TIGHT')} ${typography('SMALL')}`}>
                           <Clock className={`${iconSize('SM')} flex-shrink-0`} />
-                          <span>Entregue em {format(new Date(activity.delivered_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                          <span>{studentPortal.activities.deliveredAt(format(new Date(activity.delivered_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }))}</span>
                         </div>
                       )}
 
@@ -180,7 +181,7 @@ const StudentActivitiesPage = () => {
                             <div className={`flex items-center ${gap('TIGHT')}`}>
                               <FileText className={`${iconSize('SM')} text-primary`} />
                               <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                                Material da atividade
+                                {studentPortal.activities.materialSection}
                               </span>
                             </div>
                             {activity.description && (
@@ -202,7 +203,7 @@ const StudentActivitiesPage = () => {
                                   size="icon"
                                   className="h-8 w-8"
                                   onClick={() => handleViewFile(activity.file_url)}
-                                  title="Visualizar na web"
+                                  title={studentPortal.activities.viewFileTitle}
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
@@ -212,7 +213,7 @@ const StudentActivitiesPage = () => {
                                   onClick={() => handleDownload(activity.file_url, activity.file_name)}
                                 >
                                   <Download className="h-4 w-4 mr-2" />
-                                  Baixar
+                                  {studentPortal.activities.downloadButton}
                                 </Button>
                               </div>
                             </div>
@@ -225,7 +226,7 @@ const StudentActivitiesPage = () => {
                               <div className="flex items-center gap-2">
                                 <File className="h-4 w-4 text-warning" />
                                 <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                                  Sua entrega
+                                  {studentPortal.activities.deliverySection}
                                 </span>
                               </div>
                               {activity.student_response_text && (
@@ -238,7 +239,7 @@ const StudentActivitiesPage = () => {
                                   <File className="h-5 w-5 text-muted-foreground" />
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium truncate">{activity.student_response_file_name}</p>
-                                    <p className="text-xs text-muted-foreground">Arquivo que você enviou</p>
+                                    <p className="text-xs text-muted-foreground">{studentPortal.activities.uploadedFileLabel}</p>
                                   </div>
                                   <div className="flex items-center gap-1 shrink-0">
                                     <Button
@@ -246,7 +247,7 @@ const StudentActivitiesPage = () => {
                                       size="icon"
                                       className="h-8 w-8"
                                       onClick={() => handleViewFile(activity.student_response_file_url!)}
-                                      title="Visualizar na web"
+                                      title={studentPortal.activities.viewFileTitle}
                                     >
                                       <Eye className="h-4 w-4" />
                                     </Button>
@@ -258,7 +259,7 @@ const StudentActivitiesPage = () => {
                                       }
                                     >
                                       <Download className="h-4 w-4 mr-2" />
-                                      Baixar
+                                      {studentPortal.activities.downloadButton}
                                     </Button>
                                   </div>
                                 </div>
@@ -275,14 +276,14 @@ const StudentActivitiesPage = () => {
                               <div className="flex items-center gap-2">
                                 <MessageSquare className="h-4 w-4 text-success" />
                                 <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                                  Feedback do professor
+                                  {studentPortal.activities.feedbackSection}
                                 </span>
                               </div>
                               {activity.grade != null && (
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-foreground">Nota:</span>
+                                  <span className="text-sm font-medium text-foreground">{studentPortal.activities.gradeLabel}</span>
                                   <span className="text-sm font-semibold tabular-nums">{Number(activity.grade).toFixed(1)}</span>
-                                  <span className="text-xs text-muted-foreground">/ 10</span>
+                                  <span className="text-xs text-muted-foreground">{studentPortal.activities.gradeOutOf}</span>
                                 </div>
                               )}
                               {activity.feedback && (
@@ -295,7 +296,7 @@ const StudentActivitiesPage = () => {
                                   <File className="h-5 w-5 text-muted-foreground" />
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium truncate">{activity.correction_file_name}</p>
-                                    <p className="text-xs text-muted-foreground">Arquivo de correção</p>
+                                    <p className="text-xs text-muted-foreground">{studentPortal.activities.correctionFileLabel}</p>
                                   </div>
                                   <div className="flex items-center gap-1 shrink-0">
                                     <Button
@@ -303,7 +304,7 @@ const StudentActivitiesPage = () => {
                                       size="icon"
                                       className="h-8 w-8"
                                       onClick={() => handleViewFile(activity.correction_file_url!)}
-                                      title="Visualizar na web"
+                                      title={studentPortal.activities.viewFileTitle}
                                     >
                                       <Eye className="h-4 w-4" />
                                     </Button>
@@ -315,14 +316,14 @@ const StudentActivitiesPage = () => {
                                       }
                                     >
                                       <Download className="h-4 w-4 mr-2" />
-                                      Baixar
+                                      {studentPortal.activities.downloadButton}
                                     </Button>
                                   </div>
                                 </div>
                               )}
                               {activity.corrected_at && (
                                 <p className="text-xs text-muted-foreground">
-                                  Corrigida em {format(new Date(activity.corrected_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                  {studentPortal.activities.correctedAt(format(new Date(activity.corrected_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }))}
                                 </p>
                               )}
                             </div>
@@ -336,7 +337,7 @@ const StudentActivitiesPage = () => {
                                 onClick={() => handleOpenDeliverDialog(activity)}
                               >
                                 <Check className="mr-2 h-4 w-4" />
-                                Entregar atividade
+                                {studentPortal.activities.deliverButton}
                               </Button>
                             </div>
                           )}
@@ -355,12 +356,12 @@ const StudentActivitiesPage = () => {
                             {expandedId === activity.id ? (
                               <>
                                 <ChevronUp className="h-4 w-4" />
-                                Ver menos
+                                {studentPortal.activities.viewLess}
                               </>
                             ) : (
                               <>
                                 <ChevronDown className="h-4 w-4" />
-                                Ver mais
+                                {studentPortal.activities.viewMore}
                               </>
                             )}
                           </Button>

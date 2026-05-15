@@ -5,6 +5,7 @@ import { Home, BookOpen, CreditCard, LogOut, Loader2, Settings, FileText } from 
 import { useAuth } from "@/contexts/AuthContext";
 import { SettingsModal } from "@/components/layout/SettingsModal";
 import { InstallPWABanner } from "@/components/pwa/InstallPWABanner";
+import { layout, common } from "@/content";
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -35,7 +36,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg"
       >
-        Pular para conteúdo principal
+        {layout.accessibility.skipToContent}
       </a>
 
       {/* Header */}
@@ -45,12 +46,12 @@ export function StudentLayout({ children }: StudentLayoutProps) {
             <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-xs">E</span>
             </div>
-            <span className="text-sm font-semibold">English School</span>
+            <span className="text-sm font-semibold">{common.app.name}</span>
           </Link>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setSettingsOpen(true)}
-              aria-label="Configurações"
+              aria-label={layout.accessibility.settingsAriaLabel}
               className="text-muted-foreground hover:text-foreground p-2"
             >
               <Settings className="h-5 w-5" />
@@ -58,7 +59,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
             <button
               onClick={handleLogout}
               disabled={isLoggingOut}
-              aria-label={isLoggingOut ? "Saindo..." : "Sair da conta"}
+              aria-label={isLoggingOut ? layout.sidebar.loggingOut : layout.accessibility.logoutAriaLabel}
               className="text-muted-foreground hover:text-foreground p-2 disabled:opacity-50"
             >
               {isLoggingOut ? (
@@ -80,7 +81,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       {/* Bottom navigation */}
       <nav 
         className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-        aria-label="Navegação principal"
+        aria-label={layout.accessibility.mainNavAriaLabel}
       >
         <div className="flex items-center justify-around py-2">
           {navigation.map((item) => {

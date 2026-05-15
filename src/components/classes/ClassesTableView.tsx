@@ -2,6 +2,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyClassesState } from "@/components/ui/contextual-empty-states";
 import { Button } from "@/components/ui/button";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { classes as classesContent } from "@/content";
 import { ClassesTableSkeleton } from "@/components/ui/table-skeleton";
 import { Table, TableHeader, TableHead, TableBody, TableRow } from "@/components/ui/table";
 import { ClassesTableRow } from "@/components/classes/ClassesTableRow";
@@ -58,17 +59,17 @@ export function ClassesTableView({
         <Table style={{ minWidth: CL_TABLE_MIN_W }}>
           <TableHeader>
             <TableRow className="border-b bg-muted/50">
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: "1%" }}>Status</TableHead>
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: CL_COL.ALUNO, minWidth: CL_COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>Aluno</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: "1%" }}>{classesContent.table.colStatus}</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: CL_COL.ALUNO, minWidth: CL_COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>{classesContent.table.colStudent}</TableHead>
               <TableHead className={cn(tableThLarge, "hidden sm:table-cell")} style={{ width: CL_COL.INFORMACOES, minWidth: CL_COL.INFORMACOES }}>
-                {showTeacherColumn ? "Informações" : "Título da aula"}
+                {showTeacherColumn ? classesContent.table.colInfo : classesContent.table.colTitle}
               </TableHead>
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: CL_COL.DATA, minWidth: CL_COL.DATA }}>Data</TableHead>
-              <TableHead className={cn(tableThSmall, "hidden sm:table-cell")} style={{ width: CL_COL.DURACAO, minWidth: CL_COL.DURACAO }}>Duração</TableHead>
-              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: CL_COL.NOTA, minWidth: CL_COL.NOTA }}>Nota</TableHead>
-              <TableHead className={cn(tableThSmall, "hidden xl:table-cell")} style={{ width: CL_COL.FINANCEIRO, minWidth: CL_COL.FINANCEIRO }}>Financeiro</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: CL_COL.DATA, minWidth: CL_COL.DATA }}>{classesContent.table.colDate}</TableHead>
+              <TableHead className={cn(tableThSmall, "hidden sm:table-cell")} style={{ width: CL_COL.DURACAO, minWidth: CL_COL.DURACAO }}>{classesContent.table.colDuration}</TableHead>
+              <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: CL_COL.NOTA, minWidth: CL_COL.NOTA }}>{classesContent.table.colGrade}</TableHead>
+              <TableHead className={cn(tableThSmall, "hidden xl:table-cell")} style={{ width: CL_COL.FINANCEIRO, minWidth: CL_COL.FINANCEIRO }}>{classesContent.table.colFinancial}</TableHead>
               <TableHead className={cn(tableThSmall, "hidden xl:table-cell")} style={{ width: CL_COL.AVALIAR, minWidth: CL_COL.AVALIAR }} aria-label="Avaliar" />
-              <TableHead className={tableThSmall} style={{ width: CL_COL.ACOES, minWidth: CL_COL.ACOES }}>Ações</TableHead>
+              <TableHead className={tableThSmall} style={{ width: CL_COL.ACOES, minWidth: CL_COL.ACOES }}>{classesContent.table.colActions}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -106,7 +107,7 @@ export function ClassesTableView({
           {logs.length === 0 ? (
             <EmptyClassesState onAction={onCreateNew} actionLabel="Registrar primeira aula" />
           ) : (
-            <EmptyState icon={Search} title="Nenhum resultado" message="Ajuste os filtros acima ou limpe a busca" />
+            <EmptyState icon={Search} title={classesContent.table.noResults} message={classesContent.table.noResultsHint} />
           )}
         </div>
       )}
@@ -119,10 +120,10 @@ export function ClassesTableView({
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" disabled={page === 0 || isFetching} onClick={() => setPage((p) => Math.max(0, p - 1))}>
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Anterior
+              {classesContent.table.prev}
             </Button>
             <Button variant="outline" size="sm" disabled={!hasMore || isFetching} onClick={() => setPage((p) => p + 1)}>
-              Próximo
+              {classesContent.table.next}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>

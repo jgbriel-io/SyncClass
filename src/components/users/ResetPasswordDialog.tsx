@@ -14,6 +14,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useResetPassword } from "@/hooks/useUsers";
 import type { UserWithProfile } from "@/hooks/useUsers";
+import { users as usersContent, common, auth } from "@/content";
 
 interface ResetPasswordDialogProps {
   open: boolean;
@@ -83,27 +84,27 @@ export function ResetPasswordDialog({
 
   const handleSubmit = () => {
     if (newPassword.length < 8) {
-      toast.error("A senha deve ter no mínimo 8 caracteres.");
+      toast.error(auth.resetPassword.toasts.minLength);
       return;
     }
     if (!PASSWORD_REGEX.upper.test(newPassword)) {
-      toast.error("A senha deve conter pelo menos uma letra maiúscula.");
+      toast.error(auth.resetPassword.toasts.uppercase);
       return;
     }
     if (!PASSWORD_REGEX.lower.test(newPassword)) {
-      toast.error("A senha deve conter pelo menos uma letra minúscula.");
+      toast.error(auth.resetPassword.toasts.lowercase);
       return;
     }
     if (!PASSWORD_REGEX.number.test(newPassword)) {
-      toast.error("A senha deve conter pelo menos um número.");
+      toast.error(auth.resetPassword.toasts.number);
       return;
     }
     if (!PASSWORD_REGEX.special.test(newPassword)) {
-      toast.error("A senha deve conter pelo menos um caractere especial.");
+      toast.error(auth.resetPassword.toasts.special);
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("As senhas não coincidem.");
+      toast.error(auth.resetPassword.toasts.passwordMismatch);
       return;
     }
 
@@ -123,11 +124,10 @@ export function ResetPasswordDialog({
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); else onOpenChange(true); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Redefinir senha</DialogTitle>
+          <DialogTitle>{usersContent.resetPasswordDialog.title}</DialogTitle>
           {user && (
             <DialogDescription>
-              Nova senha para{" "}
-              <strong>{user.profile?.full_name ?? user.email}</strong>.
+              {usersContent.resetPasswordDialog.description(user.profile?.full_name ?? user.email ?? "")}
             </DialogDescription>
           )}
         </DialogHeader>
@@ -135,19 +135,19 @@ export function ResetPasswordDialog({
           <>
             <div className="rounded-lg border bg-muted/50 p-3 space-y-2 mb-4">
               <p className="text-xs font-medium text-muted-foreground">
-                Requisitos da senha:
+                {auth.resetPassword.requirements.title}
               </p>
               <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                <li>Mínimo de 8 caracteres</li>
-                <li>Pelo menos uma letra maiúscula (A-Z)</li>
-                <li>Pelo menos uma letra minúscula (a-z)</li>
-                <li>Pelo menos um número (0-9)</li>
-                <li>Pelo menos um caractere especial (!@#$%^&*)</li>
+                <li>{auth.resetPassword.requirements.minLength}</li>
+                <li>{auth.resetPassword.requirements.uppercase}</li>
+                <li>{auth.resetPassword.requirements.lowercase}</li>
+                <li>{auth.resetPassword.requirements.number}</li>
+                <li>{auth.resetPassword.requirements.special}</li>
               </ul>
             </div>
             <div className="space-y-4 py-2">
               <div className="space-y-2">
-                <Label htmlFor="reset-password-new">Nova senha</Label>
+                <Label htmlFor="reset-password-new">{usersContent.resetPasswordDialog.newPasswordLabel}</Label>
                 <Input
                   id="reset-password-new"
                   type="password"
@@ -159,7 +159,7 @@ export function ResetPasswordDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reset-password-confirm">Confirmar senha</Label>
+                <Label htmlFor="reset-password-confirm">{usersContent.resetPasswordDialog.confirmPasswordLabel}</Label>
                 <Input
                   id="reset-password-confirm"
                   type="password"
@@ -176,12 +176,12 @@ export function ResetPasswordDialog({
                 size="sm"
                 onClick={handleGenerate}
               >
-                Gerar senha
+                {usersContent.resetPasswordDialog.generateButton}
               </Button>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={handleClose}>
-                Cancelar
+                {common.actions.cancel}
               </Button>
               <Button
                 disabled={resetPassword.isPending || !isValid}
@@ -190,10 +190,10 @@ export function ResetPasswordDialog({
                 {resetPassword.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Redefinindo...
+                    {usersContent.resetPasswordDialog.submitting}
                   </>
                 ) : (
-                  "Redefinir senha"
+                  usersContent.resetPasswordDialog.submitButton
                 )}
               </Button>
             </DialogFooter>

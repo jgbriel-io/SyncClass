@@ -25,6 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { brDateStringToDate, isValidDateString, parseMoneyToNumber, formatNumberToMoneyBR, REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { cn } from "@/lib/utils";
+import { financial } from "@/content";
 
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
@@ -32,15 +33,15 @@ function brDateToIso(value: string): string {
 }
 function createFinancialSchema(requireClassLog: boolean) {
   return z.object({
-    student_id: z.string().min(1, "Selecione um aluno"),
+    student_id: z.string().min(1, financial.validation.studentRequired),
     class_log_id: requireClassLog
-      ? z.string().min(1, "Selecione uma aula para vincular")
+      ? z.string().min(1, financial.validation.classLogRequired)
       : z.string().optional(),
-    amount: z.string().min(1, "Informe o valor"),
+    amount: z.string().min(1, financial.validation.amountRequired),
     due_date: z.string()
-      .min(1, "Informe a data de vencimento")
-      .regex(REGEX_PATTERNS.date, "Formato deve ser dd/mm/aaaa")
-      .refine(isValidDateString, { message: "Data inválida" }),
+      .min(1, financial.validation.dueDateRequired)
+      .regex(REGEX_PATTERNS.date, financial.validation.dueDateFormat)
+      .refine(isValidDateString, { message: financial.validation.dueDateInvalid }),
     payment_method: z.string().optional(),
     description: z.string().optional(),
   });
@@ -140,7 +141,7 @@ export function FinancialFormDialog({
   const handleFormSubmit = (data: FinancialFormData) => {
     // Para admin, professor é obrigatório
     if (enableTeacherSelection && !selectedTeacherId) {
-      setTeacherError("Selecione um professor");
+      setTeacherError(financial.validation.studentRequired);
       return;
     }
 
@@ -196,14 +197,14 @@ export function FinancialFormDialog({
     <BaseDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={initialData ? 'Editar Cobrança' : 'Nova Cobrança'}
+      title={initialData ? financial.formDialog.titleEdit : financial.formDialog.titleNew}
       size="SM"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Teacher Select - only when enabled (admin) */}
           {enableTeacherSelection && (
             <div className="space-y-2">
-              <Label>Professor *</Label>
+              <Label>{financial.formDialog.teacherLabel}</Label>
               {initialData && selectedTeacherId ? (
                 <>
                   <Input
@@ -212,7 +213,7 @@ export function FinancialFormDialog({
                     readOnly
                   />
                   <p className="text-xs text-muted-foreground">
-                    Professor vinculado a esta cobrança
+                    {financial.formDialog.teacherLinked}
                   </p>
                 </>
               ) : (
@@ -226,7 +227,7 @@ export function FinancialFormDialog({
                     disabled={loadingTeachers}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione um professor (opcional)" />
+                      <SelectValue placeholder={financial.formDialog.teacherPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
                       {teachers.map((teacher) => (
@@ -246,14 +247,14 @@ export function FinancialFormDialog({
 
           {/* Student Select */}
           <div className="space-y-2">
-            <Label>Aluno *</Label>
+            <Label>{financial.formDialog.studentLabel}</Label>
             <Select
               value={selectedStudentId}
               onValueChange={handleStudentChange}
               disabled={loadingStudents || !!initialData}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione um aluno" />
+                <SelectValue placeholder={financial.formDialog.studentPlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {activeStudents.map((student) => (
@@ -271,7 +272,7 @@ export function FinancialFormDialog({
 
           {/* Class Log Select */}
           <div className="space-y-2">
-            <Label>Aula Vinculada *</Label>
+            <Label>{financial.formDialog.classLabel}</Label>
             {initialData ? (
               // Ao editar: mostrar input travado com o título da aula
               <Input
@@ -303,12 +304,12 @@ export function FinancialFormDialog({
                 <SelectTrigger>
                   <SelectValue placeholder={
                     !selectedStudentId 
-                      ? "Selecione um aluno primeiro" 
+                      ? financial.formDialog.classSelectStudentFirst
                       : loadingClassLogs 
-                        ? "Carregando aulas..." 
+                        ? financial.formDialog.classLoading
                         : requireClassLog && classLogOptions.length === 0
-                          ? "Nenhuma aula disponível"
-                          : "Selecione uma aula"
+                          ? financial.formDialog.classNone
+                          : financial.formDialog.classSelect
                   } />
                 </SelectTrigger>
                 <SelectContent>
@@ -324,7 +325,7 @@ export function FinancialFormDialog({
             )}
             {selectedStudentId && classLogOptions.length === 0 && !loadingClassLogs && !initialData && (
               <p className="text-xs text-muted-foreground">
-                Nenhuma aula disponível (todas já têm cobrança ou não há aulas cadastradas). Registre uma aula na aba Aulas primeiro.
+                {financial.formDialog.classNoneWithCharge}
               </p>
             )}
             {errors.class_log_id && (
@@ -334,11 +335,11 @@ export function FinancialFormDialog({
 
           {/* Amount */}
           <div className="space-y-2">
-            <Label htmlFor="amount">Valor (R$) *</Label>
+            <Label htmlFor="amount">{financial.formDialog.amountLabel}</Label>
             <Input
               id="amount"
               type="text"
-              placeholder="1.450,00"
+              placeholder={financial.formDialog.amountPlaceholder}
               {...register("amount")}
               onChange={(e) => {
                 const value = e.target.value;
@@ -356,7 +357,7 @@ export function FinancialFormDialog({
 
           {/* Due Date */}
           <div className="space-y-2">
-            <Label htmlFor="due_date">Data de Vencimento *</Label>
+            <Label htmlFor="due_date">{financial.formDialog.dueDateLabel}</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -368,7 +369,7 @@ export function FinancialFormDialog({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dueDate || "Selecione a data"}
+                  {dueDate || financial.formDialog.selectDate}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -392,10 +393,10 @@ export function FinancialFormDialog({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
+            <Label htmlFor="description">{financial.formDialog.descriptionLabel}</Label>
             <Textarea
               id="description"
-              placeholder="Ex: Aulas de inglês - Janeiro/2025"
+              placeholder={financial.formDialog.descriptionPlaceholder}
               rows={2}
               {...register("description")}
             />
@@ -403,20 +404,20 @@ export function FinancialFormDialog({
 
           {/* Payment Method */}
           <div className="space-y-2">
-            <Label htmlFor="payment_method">Método de Pagamento</Label>
+            <Label htmlFor="payment_method">{financial.formDialog.paymentMethodLabel}</Label>
             <Select
               value={watch("payment_method") || undefined}
               onValueChange={(value) => setValue("payment_method", value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione (opcional)" />
+                <SelectValue placeholder={financial.formDialog.paymentMethodPlaceholder} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="pix">PIX</SelectItem>
-                <SelectItem value="cartao">Cartão</SelectItem>
-                <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                <SelectItem value="transferencia">Transferência</SelectItem>
-                <SelectItem value="outro">Outro</SelectItem>
+                <SelectItem value="pix">{financial.formDialog.pix}</SelectItem>
+                <SelectItem value="cartao">{financial.formDialog.card}</SelectItem>
+                <SelectItem value="dinheiro">{financial.formDialog.cash}</SelectItem>
+                <SelectItem value="transferencia">{financial.formDialog.transfer}</SelectItem>
+                <SelectItem value="outro">{financial.formDialog.other}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -429,7 +430,7 @@ export function FinancialFormDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancelar
+              {financial.formDialog.cancel}
             </Button>
             <Button
               type="submit"
@@ -441,12 +442,12 @@ export function FinancialFormDialog({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
+                  {financial.formDialog.submitting}
                 </>
               ) : initialData ? (
-                "Salvar Alterações"
+                financial.formDialog.saveChanges
               ) : (
-                "Criar Cobrança"
+                financial.formDialog.create
               )}
             </Button>
           </div>

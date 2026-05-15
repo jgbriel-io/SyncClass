@@ -18,6 +18,7 @@ import {
   getXLColumnClasses,
 } from "@/lib/design-tokens/table-columns";
 import { COL } from "./ClassesTableRow.constants";
+import { classes as classesContent } from "@/content";
 
 // Helper functions
 function formatClassDateAndTime(log: {
@@ -58,15 +59,15 @@ function getPaymentStatusVariant(status: string | null): "success" | "warning" |
 function getPaymentStatusLabel(status: string | null): string {
   switch (status) {
     case "pago":
-      return "Pago";
+      return classesContent.tableRow.statusPaid;
     case "pendente":
-      return "Pendente";
+      return classesContent.tableRow.statusPending;
     case "atrasado":
-      return "Atrasado";
+      return classesContent.tableRow.statusOverdue;
     case "validando":
-      return "Validando";
+      return classesContent.tableRow.statusValidating;
     default:
-      return "Pendente";
+      return classesContent.tableRow.statusPending;
   }
 }
 
@@ -213,13 +214,13 @@ export function ClassesTableRow({
           title={log.grade != null
             ? Number(log.grade).toFixed(1)
             : log.attendance === false
-              ? "Não compareceu"
+              ? classesContent.tableRow.noAttendance
               : "—"}
         >
           {log.grade != null
             ? Number(log.grade).toFixed(1)
             : log.attendance === false
-              ? "Não compareceu"
+              ? classesContent.tableRow.noAttendance
               : "—"}
         </span>
       </td>
@@ -232,7 +233,7 @@ export function ClassesTableRow({
           </StatusBadge>
         ) : (
           <StatusBadge variant="default">
-            Sem cobrança
+            {classesContent.tableRow.noCharge}
           </StatusBadge>
         )}
       </td>
@@ -252,16 +253,16 @@ export function ClassesTableRow({
             disabled={isEvaluationBlocked && log.attendance == null}
             onClick={() => onEvaluate(log)}
             title={isEvaluationBlocked && log.attendance == null
-              ? "Avaliar"
+              ? classesContent.tableRow.evaluate
               : log.attendance != null
-                ? "Atualizar"
-                : "Avaliar"}
+                ? classesContent.tableRow.update
+                : classesContent.tableRow.evaluate}
           >
             {isEvaluationBlocked && log.attendance == null
-              ? "Avaliar"
+              ? classesContent.tableRow.evaluate
               : log.attendance != null
-                ? "Atualizar"
-                : "Avaliar"}
+                ? classesContent.tableRow.update
+                : classesContent.tableRow.evaluate}
           </Button>
         </div>
       </td>
@@ -274,7 +275,7 @@ export function ClassesTableRow({
             size="icon"
             className="h-8 w-8"
             onClick={() => onViewDetail(log)}
-            title="Ver detalhes"
+            title={classesContent.tableRow.viewDetails}
           >
             <Eye className="h-4 w-4" />
           </Button>
@@ -287,14 +288,14 @@ export function ClassesTableRow({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(log)}>
                 <Pencil className="h-4 w-4 mr-2" />
-                Editar
+                {classesContent.tableRow.edit}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={() => onDelete(log)}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Excluir
+                {classesContent.tableRow.delete}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

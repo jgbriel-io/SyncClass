@@ -12,6 +12,7 @@ import { isValidDateString, parseMoneyToNumber, REGEX_PATTERNS } from "@/lib/uti
 import { brDateToIso, buildTimestamptzFromDateAndTime as buildTimestamptz, getDefaultDueDateForClassLog } from "@/lib/utils/classFormHelpers";
 import { ClassLogStudentSection } from "./ClassLogStudentSection";
 import { ClassLogFinancialSection } from "./ClassLogFinancialSection";
+import { classes as classesContent, common } from "@/content";
 
 // ─── Helpers locais ───────────────────────────────────────────────────────────
 
@@ -48,22 +49,22 @@ function extractTimeFromIso(iso: string | null | undefined): string {
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const classLogBaseSchema = z.object({
-  student_id: z.string().min(1, "Selecione um aluno"),
+  student_id: z.string().min(1, classesContent.validation.studentRequired),
   class_date: z.string()
-    .min(1, "Informe a data da aula")
-    .regex(REGEX_PATTERNS.date, "Formato deve ser dd/mm/aaaa")
-    .refine(isValidDateString, { message: "Data inválida" })
+    .min(1, classesContent.validation.dateRequired)
+    .regex(REGEX_PATTERNS.date, classesContent.validation.dateFormat)
+    .refine(isValidDateString, { message: classesContent.validation.dateInvalid })
     .refine((val) => {
       if (!val || !REGEX_PATTERNS.date.test(val)) return true;
       const [, , year] = val.split("/").map(Number);
       return year >= 2026;
-    }, { message: "Informe uma data de 2026 em diante" }),
+    }, { message: classesContent.validation.dateMinYear }),
   title: z.string().optional(),
   feedback: z.string().max(1000).optional(),
-  observations: z.string().max(1000, "Máximo 1000 caracteres").optional(),
-  start_time: z.string().optional().refine((v) => !v || REGEX_PATTERNS.time.test(v), { message: "Formato HH:mm" }),
-  end_time: z.string().optional().refine((v) => !v || REGEX_PATTERNS.time.test(v), { message: "Formato HH:mm" }),
-  grade: z.number({ invalid_type_error: "Informe a nota" }).min(0).max(100).optional().nullable(),
+  observations: z.string().max(1000, classesContent.validation.observationsMaxLength).optional(),
+  start_time: z.string().optional().refine((v) => !v || REGEX_PATTERNS.time.test(v), { message: classesContent.validation.timeFormat }),
+  end_time: z.string().optional().refine((v) => !v || REGEX_PATTERNS.time.test(v), { message: classesContent.validation.timeFormat }),
+  grade: z.number({ invalid_type_error: classesContent.validation.gradeRange }).min(0).max(100).optional().nullable(),
   financial_amount: z.string().optional(),
   financial_due_date: z.string().optional().refine(
     (val) => !val || isValidDateString(val),
@@ -90,14 +91,14 @@ function createClassLogSchema(isEditing: boolean) {
         const a = parseMoneyToNumber(data.financial_amount || "");
         return !isNaN(a) && a > 0;
       },
-      { message: "Informe o valor da cobrança", path: ["financial_amount"] }
+      { message: classesContent.validation.amountRequired, path: ["financial_amount"] }
     )
     .refine(
       (data) => {
         if (isEditing || data.semCobranca) return true;
         return !!(data.financial_due_date && data.financial_due_date.trim());
       },
-      { message: "Informe a data de vencimento", path: ["financial_due_date"] }
+      { message: classesContent.validation.dueDateRequired, path: ["financial_due_date"] }
     );
 }
 
@@ -317,7 +318,7 @@ export function ClassLogFormDialog({
     <BaseDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={isEditing ? "Editar Registro" : "Registrar Aula"}
+      title={isEditing ? classesContent.logFormDialog.titleEdit : classesContent.logFormDialog.titleNew}
       size="SM"
       scrollable={true}
     >
@@ -387,18 +388,18 @@ export function ClassLogFormDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Cancelar
+            {classesContent.logFormDialog.cancel}
           </Button>
           <Button type="submit" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
+                {classesContent.logFormDialog.submitting}
               </>
             ) : isEditing ? (
-              "Salvar Alterações"
+              classesContent.logFormDialog.submitButton
             ) : (
-              "Registrar Aula"
+              classesContent.logFormDialog.titleNew
             )}
           </Button>
         </div>

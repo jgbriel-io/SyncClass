@@ -19,6 +19,7 @@ import {
   getXLColumnClasses,
 } from "@/lib/design-tokens/table-columns";
 import { COL } from "./TeachersTableRow.constants";
+import { teachers as teachersContent, common } from "@/content";
 
 interface TeachersTableRowProps {
   teacher: Teacher;
@@ -130,11 +131,11 @@ export function TeachersTableRow({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(teacher)}>
                 <Pencil className="h-4 w-4 mr-2" />
-                Editar
+                {common.actions.edit}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onResetPassword(teacher)}>
                 <KeyRound className="h-4 w-4 mr-2" />
-                Redefinir senha
+                {teachersContent.resetPasswordDialog.title}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className={
@@ -145,10 +146,10 @@ export function TeachersTableRow({
                 onClick={() => onDelete(teacher)}
               >
                 {status === "ativo" && <Trash2 className="h-4 w-4 mr-2" />}
-                {status === "ativo" ? "Arquivar" : (
+                {status === "ativo" ? teachersContent.statusDialog.confirmArchive : (
                   <>
                     <Check className="h-4 w-4 mr-2" />
-                    Reativar professor
+                    {teachersContent.statusDialog.confirmReactivate}
                   </>
                 )}
               </DropdownMenuItem>
@@ -158,7 +159,7 @@ export function TeachersTableRow({
                   onClick={() => onHardDelete(teacher)}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Excluir definitivamente
+                  {teachersContent.deleteDialog.confirmButton}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

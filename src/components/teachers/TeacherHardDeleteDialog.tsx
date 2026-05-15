@@ -12,6 +12,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useHardDeleteTeacher, type Teacher } from "@/hooks/useTeachers";
+import { teachers as teachersContent, common } from "@/content";
 
 interface TeacherHardDeleteDialogProps {
   open: boolean;
@@ -59,7 +60,7 @@ export function TeacherHardDeleteDialog({
         onSuccess: () => {
           setScheduledCount(null);
           onClose();
-          toast.success("Professor e todas as aulas foram excluídos permanentemente.");
+          toast.success(teachersContent.deleteDialog.toasts.forceSuccess);
         },
       }
     );
@@ -77,17 +78,15 @@ export function TeacherHardDeleteDialog({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-destructive">
-              ⚠️ Confirmar exclusão com aulas agendadas
+              {teachersContent.deleteDialog.scheduledTitle}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Este professor possui <strong>{scheduledCount} aula(s) agendada(s)</strong>. Ao
-              confirmar, <strong>todas serão excluídas permanentemente</strong> junto com o
-              professor. Esta ação não pode ser desfeita.
+              {teachersContent.deleteDialog.scheduledDescription(scheduledCount ?? "?")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={hardDeleteTeacher.isPending} onClick={handleForceCancel}>
-              Cancelar
+              {common.actions.cancel}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleForceConfirm}
@@ -97,10 +96,10 @@ export function TeacherHardDeleteDialog({
               {hardDeleteTeacher.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Excluindo...
+                  {teachersContent.deleteDialog.deleting}
                 </>
               ) : (
-                "Excluir tudo permanentemente"
+                teachersContent.deleteDialog.forceConfirmButton
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -113,19 +112,16 @@ export function TeacherHardDeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-destructive">⚠️ EXCLUSÃO PERMANENTE</AlertDialogTitle>
+          <AlertDialogTitle className="text-destructive">{teachersContent.deleteDialog.title}</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja excluir definitivamente o professor{" "}
-            <strong>{teacher?.name}</strong>?
+            {teachersContent.deleteDialog.description(teacher?.name ?? "")}
             <br />
             <br />
-            <strong className="text-destructive">Atenção:</strong> Todo o histórico de aulas deste
-            professor será <strong>permanentemente removido</strong>. Esta ação não pode ser
-            desfeita.
+            <strong className="text-destructive">Atenção:</strong> {teachersContent.deleteDialog.warning}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={hardDeleteTeacher.isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={hardDeleteTeacher.isPending}>{common.actions.cancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={hardDeleteTeacher.isPending}
@@ -134,10 +130,10 @@ export function TeacherHardDeleteDialog({
             {hardDeleteTeacher.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Excluindo...
+                {teachersContent.deleteDialog.deleting}
               </>
             ) : (
-              "Excluir definitivamente"
+              teachersContent.deleteDialog.confirmButton
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

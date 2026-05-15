@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { StudentClassCard } from "@/components/student/StudentClassCard";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BookOpen } from "lucide-react";
+import { classes as classesContent } from "@/content";
+import { classes as classesContent } from "@/content";
 
 interface ClassLog {
   id: string;
@@ -45,7 +47,7 @@ function groupClassesByMonth(logs: ClassLog[]): Map<string, ClassLog[]> {
 export function ClassHistoryList({
   classLogs,
   showStudentName = false,
-  emptyMessage = "Nenhuma aula registrada",
+  emptyMessage = classesContent.historyList.emptyMessage,
   groupByMonth = false,
 }: ClassHistoryListProps) {
   const sortedLogs = useMemo(

@@ -20,7 +20,7 @@ import { TeacherPasswordDialog } from "@/components/teachers/TeacherPasswordDial
 import { TeacherStatusDialog } from "@/components/teachers/TeacherStatusDialog";
 import { TeacherResetPasswordDialog } from "@/components/teachers/TeacherResetPasswordDialog";
 import { TeacherHardDeleteDialog } from "@/components/teachers/TeacherHardDeleteDialog";
-import { MSG_EMAIL } from "@/lib/duplicate-messages";
+import { common } from "@/content";
 import {
   useTeachers,
   useTeachersPaginated,
@@ -200,7 +200,7 @@ export default function TeachersPage() {
           return;
         }
         if (existingProfile) {
-          toast.error(MSG_EMAIL);
+          toast.error(common.errors.duplicateEmail);
           return;
         }
       }

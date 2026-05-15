@@ -23,6 +23,7 @@ import { useStudents } from "@/hooks/useStudents";
 import { useClassLogs } from "@/hooks/useClassLogs";
 import { useFinancialRecords } from "@/hooks/useFinancialRecords";
 import { useMemo } from "react";
+import { teachers as teachersContent } from "@/content";
 
 interface TeacherDetailSheetProps {
   teacherId: string | null;
@@ -101,9 +102,9 @@ export function TeacherDetailSheet({
       ) : (
         <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
           <TabsList className="mx-6 mt-4 grid w-full grid-cols-3">
-            <TabsTrigger value="info">Informações</TabsTrigger>
-            <TabsTrigger value="students">Alunos</TabsTrigger>
-            <TabsTrigger value="stats">Estatísticas</TabsTrigger>
+            <TabsTrigger value="info">{teachersContent.detailSheet.tabInfo}</TabsTrigger>
+            <TabsTrigger value="students">{teachersContent.detailSheet.tabStudents}</TabsTrigger>
+            <TabsTrigger value="stats">{teachersContent.detailSheet.tabClasses}</TabsTrigger>
           </TabsList>
 
           {/* Tab: Informações */}

@@ -9,8 +9,10 @@ import { toast } from "sonner";
 import { getAvatarLetter } from "@/lib/utils/patterns";
 import { AVATAR_MAX_SIZE_BYTES, AVATAR_MAX_PX } from "@/lib/utils/avatarUpload";
 import { useUploadAvatar, useUpdateMyProfile } from "@/hooks/useUsers";
+import { layout } from "@/content";
 
 const MAX_MB = AVATAR_MAX_SIZE_BYTES / (1024 * 1024);
+const s = layout.settings.profile;
 
 interface SettingsPerfilTabProps {
   userId: string;
@@ -57,10 +59,10 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
     try {
       await supabase.auth.updateUser({ data: { full_name: newName.trim() } });
       await supabase.from("profiles").update({ full_name: newName.trim() }).eq("user_id", userId);
-      toast.success("Nome atualizado com sucesso!");
+      toast.success(s.toasts.nameSuccess);
       setEditingName(false);
     } catch {
-      toast.error("Erro ao atualizar nome. Tente novamente.");
+      toast.error(s.toasts.nameError);
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -73,10 +75,10 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
     setIsUpdatingProfile(true);
     try {
       await supabase.auth.updateUser({ email: normalized });
-      toast.success("Email de confirmação enviado! Verifique sua caixa de entrada.");
+      toast.success(s.toasts.emailSuccess);
       setEditingEmail(false);
     } catch {
-      toast.error("Erro ao atualizar email. Tente novamente.");
+      toast.error(s.toasts.emailError);
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -88,10 +90,10 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
     try {
       const { error } = await supabase.from("teachers").update({ pix_key: pixKey.trim() || null }).eq("id", teacherId);
       if (error) throw error;
-      toast.success("Chave PIX atualizada com sucesso!");
+      toast.success(s.toasts.pixSuccess);
       setEditingPixKey(false);
     } catch {
-      toast.error("Erro ao atualizar chave PIX. Tente novamente.");
+      toast.error(s.toasts.pixError);
     } finally {
       setIsUpdatingPixKey(false);
     }
@@ -106,16 +108,16 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
           <AvatarFallback className="text-xl">{getAvatarLetter(displayName)}</AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-2 w-full sm:w-auto">
-          <Label>Foto de perfil</Label>
+          <Label>{s.avatarLabel}</Label>
           <p className="text-xs text-muted-foreground">Máx. {MAX_MB} MB, até {AVATAR_MAX_PX}×{AVATAR_MAX_PX} px. JPEG, PNG ou WebP.</p>
           <div className="flex flex-wrap gap-2">
             <Input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileChange} />
             <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isPending}>
-              {uploadAvatar.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Enviando...</> : <><Upload className="h-4 w-4" />Enviar foto</>}
+              {uploadAvatar.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />{s.uploading}</> : <><Upload className="h-4 w-4" />{s.uploadButton}</>}
             </Button>
             {avatarUrl && (
               <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => updateAvatar.mutate({ userId, avatar_url: null })} disabled={isPending}>
-                <Trash2 className="h-4 w-4" />Remover foto
+                <Trash2 className="h-4 w-4" />{s.removeButton}
               </Button>
             )}
           </div>
@@ -124,53 +126,53 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
 
       {/* Nome */}
       <div className="space-y-2">
-        <Label htmlFor="settings-name">Nome</Label>
+        <Label htmlFor="settings-name">{s.nameLabel}</Label>
         <div className="flex gap-2">
           <Input id="settings-name" value={editingName ? newName : displayName} onChange={(e) => setNewName(e.target.value)} readOnly={!editingName} className={editingName ? "" : "bg-muted/50"} />
           {editingName ? (
             <>
-              <Button size="sm" onClick={handleUpdateName} disabled={isPending || !newName.trim()}>{isUpdatingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}</Button>
-              <Button size="sm" variant="ghost" onClick={() => { setEditingName(false); setNewName(displayName); }} disabled={isPending}>Cancelar</Button>
+              <Button size="sm" onClick={handleUpdateName} disabled={isPending || !newName.trim()}>{isUpdatingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
+              <Button size="sm" variant="ghost" onClick={() => { setEditingName(false); setNewName(displayName); }} disabled={isPending}>{s.cancelButton}</Button>
             </>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => setEditingName(true)}>Editar</Button>
+            <Button size="sm" variant="outline" onClick={() => setEditingName(true)}>{s.editButton}</Button>
           )}
         </div>
       </div>
 
       {/* Email */}
       <div className="space-y-2">
-        <Label htmlFor="settings-email">Email</Label>
+        <Label htmlFor="settings-email">{s.emailLabel}</Label>
         <div className="flex gap-2">
           <Input id="settings-email" type="email" value={editingEmail ? newEmail : email} onChange={(e) => setNewEmail(e.target.value)} readOnly={!editingEmail} className={editingEmail ? "" : "bg-muted/50"} />
           {editingEmail ? (
             <>
-              <Button size="sm" onClick={handleUpdateEmail} disabled={isPending || !newEmail.trim()}>{isUpdatingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}</Button>
-              <Button size="sm" variant="ghost" onClick={() => { setEditingEmail(false); setNewEmail(email); }} disabled={isPending}>Cancelar</Button>
+              <Button size="sm" onClick={handleUpdateEmail} disabled={isPending || !newEmail.trim()}>{isUpdatingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
+              <Button size="sm" variant="ghost" onClick={() => { setEditingEmail(false); setNewEmail(email); }} disabled={isPending}>{s.cancelButton}</Button>
             </>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => setEditingEmail(true)}>Editar</Button>
+            <Button size="sm" variant="outline" onClick={() => setEditingEmail(true)}>{s.editButton}</Button>
           )}
         </div>
-        {editingEmail && <p className="text-xs text-amber-600 dark:text-amber-400">Você receberá um email de confirmação no novo endereço.</p>}
+        {editingEmail && <p className="text-xs text-amber-600 dark:text-amber-400">{s.emailConfirmHint}</p>}
       </div>
 
       {/* PIX */}
       {isTeacher && (
         <div className="space-y-2">
-          <Label htmlFor="settings-pix-key" className="flex items-center gap-2"><Wallet className="h-4 w-4" />Chave PIX</Label>
+          <Label htmlFor="settings-pix-key" className="flex items-center gap-2"><Wallet className="h-4 w-4" />{s.pixKeyLabel}</Label>
           <div className="flex gap-2">
-            <Input id="settings-pix-key" value={pixKey} onChange={(e) => setPixKey(e.target.value)} readOnly={!editingPixKey} placeholder="CPF, email, telefone ou chave aleatória" className={editingPixKey ? "" : "bg-muted/50"} />
+            <Input id="settings-pix-key" value={pixKey} onChange={(e) => setPixKey(e.target.value)} readOnly={!editingPixKey} placeholder={s.pixKeyPlaceholder} className={editingPixKey ? "" : "bg-muted/50"} />
             {editingPixKey ? (
               <>
-                <Button size="sm" onClick={handleUpdatePixKey} disabled={isPending}>{isUpdatingPixKey ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}</Button>
-                <Button size="sm" variant="ghost" onClick={() => setEditingPixKey(false)} disabled={isPending}>Cancelar</Button>
+                <Button size="sm" onClick={handleUpdatePixKey} disabled={isPending}>{isUpdatingPixKey ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditingPixKey(false)} disabled={isPending}>{s.cancelButton}</Button>
               </>
             ) : (
-              <Button size="sm" variant="outline" onClick={() => setEditingPixKey(true)}>Editar</Button>
+              <Button size="sm" variant="outline" onClick={() => setEditingPixKey(true)}>{s.editButton}</Button>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">Esta chave será exibida para seus alunos na tela de pagamento.</p>
+          <p className="text-xs text-muted-foreground">{s.pixKeyHint}</p>
         </div>
       )}
     </div>

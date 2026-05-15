@@ -11,6 +11,7 @@ import {
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";
+import { studentPortal } from "@/content";
 
 export default function StudentHome() {
   const { data: profile, isLoading: loadingProfile } = useStudentProfile();
@@ -35,10 +36,10 @@ export default function StudentHome() {
           {/* Título + subtítulo */}
           <div className="text-center">
             <h1 className={`${typography('DISPLAY')} mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl`}>
-              Olá, {studentName}! 👋
+              {studentPortal.home.greeting(studentName)}
             </h1>
             <p className={`${typography('SMALL')} mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm mt-1`}>
-              Bom te ver por aqui
+              {studentPortal.home.subtitle}
             </p>
           </div>
 
@@ -46,10 +47,9 @@ export default function StudentHome() {
           {!profile && (
             <div className="rounded-xl border bg-card p-5 shadow-card text-center">
               <AlertCircle className="h-10 w-10 text-warning mx-auto mb-3" />
-              <h2 className={`${typography('H3')} laptop:text-base desktop:text-lg`}>Perfil não vinculado</h2>
+              <h2 className={`${typography('H3')} laptop:text-base desktop:text-lg`}>{studentPortal.home.noProfile}</h2>
               <p className={`${typography('SMALL')} mt-1`}>
-                Seu usuário ainda não está vinculado a um cadastro de aluno.
-                Entre em contato com a secretaria.
+                {studentPortal.home.noProfileDescription}
               </p>
             </div>
           )}
@@ -59,12 +59,12 @@ export default function StudentHome() {
               {/* Card Situação Financeira */}
               <StudentMetricCard
                 icon={isFinancialOk ? CheckCircle : AlertCircle}
-                label="Situação Financeira"
-                value={isFinancialOk ? "Em dia" : "Pendente"}
+                label={studentPortal.home.financialLabel}
+                value={isFinancialOk ? studentPortal.home.financialOk : studentPortal.home.financialPending}
                 description={
                   isFinancialOk
-                    ? "Você está em dia com seus pagamentos"
-                    : "Você tem pendências financeiras"
+                    ? studentPortal.home.financialOkDescription
+                    : studentPortal.home.financialPendingDescription
                 }
                 variant={isFinancialOk ? "success" : "warning"}
               />
@@ -78,7 +78,7 @@ export default function StudentHome() {
                         <BookOpen className={iconSize('MD')} />
                       </div>
                       <div>
-                        <h2 className={`${typography('H3')} laptop:text-base desktop:text-lg`}>Última Aula</h2>
+                        <h2 className={`${typography('H3')} laptop:text-base desktop:text-lg`}>{studentPortal.home.lastClassTitle}</h2>
                         <div className={`flex items-center ${gap('TIGHT')} ${typography('SMALL')}`}>
                           <Calendar className={iconSize('XS')} />
                           {formatDate(lastClass.class_date)}
@@ -88,7 +88,7 @@ export default function StudentHome() {
                     {lastClass.grade !== null && (
                       <div className="text-right">
                         <p className={typography('TABLE_HEADER')}>
-                          Nota
+                          {studentPortal.home.gradeLabel}
                         </p>
                         <p className={`text-2xl font-bold ${
                           Number(lastClass.grade) >= 7 
@@ -105,7 +105,7 @@ export default function StudentHome() {
                   {lastClass.feedback && (
                     <div className="pt-4 border-t">
                       <p className={typography('SMALL')}>
-                        <span className="font-medium text-foreground">Feedback: </span>
+                        <span className="font-medium text-foreground">{studentPortal.home.feedbackLabel} </span>
                         {lastClass.feedback}
                       </p>
                     </div>
@@ -115,7 +115,7 @@ export default function StudentHome() {
                 <div className="rounded-xl border bg-card shadow-card">
                   <EmptyState
                     icon={BookOpen}
-                    message="Nenhuma aula registrada ainda"
+                    message={studentPortal.home.noClasses}
                   />
                 </div>
               )}
@@ -124,13 +124,13 @@ export default function StudentHome() {
               <div className={`grid grid-cols-1 sm:grid-cols-2 ${gap('LOOSE')}`}>
                 <StudentMetricCard
                   icon={TrendingUp}
-                  label="Aulas realizadas"
+                  label={studentPortal.home.totalClassesLabel}
                   value={stats.totalClasses}
                   variant="default"
                 />
                 <StudentMetricCard
                   icon={Award}
-                  label="Média geral"
+                  label={studentPortal.home.averageGradeLabel}
                   value={stats.averageGrade > 0 ? stats.averageGrade.toFixed(1) : "—"}
                   variant="success"
                 />

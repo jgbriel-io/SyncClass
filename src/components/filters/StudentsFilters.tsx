@@ -15,6 +15,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { common } from "@/content";
 
 export type StudentStatusFilter = "all" | "ativo" | "inativo";
 export type StudentSortBy = "name_asc" | "name_desc" | "last_payment_desc" | "last_payment_asc";
@@ -150,7 +151,7 @@ export function StudentsFilters({
           {hasActiveFilters && onReset && (
             <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
               <X className="h-4 w-4 mr-1" />
-              Limpar
+              {common.actions.clear}
             </Button>
           )}
         </div>

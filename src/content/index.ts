@@ -1,0 +1,15 @@
+export { common } from './common';
+export { auth } from './auth';
+export { layout } from './layout';
+export { dashboard } from './dashboard';
+export { activities } from './activities';
+export { classes } from './classes';
+export { financial } from './financial';
+export { students } from './students';
+export { teachers } from './teachers';
+export { users } from './users';
+export { overview } from './overview';
+export { studentPortal } from './student-portal';
+export { validation } from './validation';
+export { ui } from './ui';
+export { pwa } from './pwa';

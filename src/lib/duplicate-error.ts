@@ -1,7 +1,10 @@
 /**
  * Traduz erros de violação de unicidade (Postgres 23505) ou trigger platform-wide para mensagens amigáveis
  */
-import { MSG_PHONE_PLATFORM, MSG_EMAIL } from "./duplicate-messages";
+import { common } from "@/content";
+
+const MSG_PHONE_PLATFORM = common.errors.duplicatePhone;
+const MSG_EMAIL = common.errors.duplicateEmail;
 
 export function getDuplicateErrorMessage(error: { code?: string; message?: string } | null): string | null {
   if (!error?.message) return null;

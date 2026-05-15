@@ -1,6 +1,7 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { useDeleteActivity, type ActivityWithRelations } from "@/hooks/useActivities";
+import { activities as activitiesContent, common } from "@/content";
 
 interface ActivityDeleteDialogProps {
   open: boolean;
@@ -23,24 +24,24 @@ export function ActivityDeleteDialog({ open, onOpenChange, activity, onClose }: 
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+          <AlertDialogTitle>{activitiesContent.deleteDialog.title}</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja excluir a atividade{" "}
-            <strong>{activity?.title}</strong>?<br />
-            Esta ação não pode ser desfeita.
+            {activitiesContent.deleteDialog.description(activity?.title ?? "")}
+            <br />
+            {activitiesContent.deleteDialog.irreversible}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteActivity.isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteActivity.isPending}>{common.actions.cancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={deleteActivity.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {deleteActivity.isPending ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Excluindo...</>
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{activitiesContent.deleteDialog.deleting}</>
             ) : (
-              "Excluir"
+              activitiesContent.deleteDialog.confirmButton
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

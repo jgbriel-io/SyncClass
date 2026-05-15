@@ -10,13 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GAP, STACK } from "@/lib/design-tokens";
+import { auth } from "@/content";
 
 const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, "Senha atual é obrigatória"),
-  newPassword: z.string().min(6, "Nova senha deve ter no mínimo 6 caracteres"),
-  confirmPassword: z.string().min(1, "Confirme a nova senha"),
+  currentPassword: z.string().min(1, auth.changePassword.toasts.currentPasswordWrong),
+  newPassword: z.string().min(6, auth.changePassword.toasts.newPasswordMinLength),
+  confirmPassword: z.string().min(1, auth.changePassword.toasts.confirmPasswordRequired),
 }).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "As senhas não coincidem",
+  message: auth.changePassword.toasts.passwordMismatch,
   path: ["confirmPassword"],
 });
 
@@ -66,11 +67,11 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
         }
       }
 
-      toast.success("Senha alterada com sucesso!");
+      toast.success(auth.changePassword.toasts.success);
       reset();
       onSuccess();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao alterar senha");
+      toast.error(error instanceof Error ? error.message : auth.changePassword.toasts.generic);
     } finally {
       setIsSubmitting(false);
     }
@@ -80,17 +81,17 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
     <Dialog open={open} onOpenChange={() => {/* Não permitir fechar */}}>
       <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Alterar senha obrigatória</DialogTitle>
+          <DialogTitle>{auth.changePassword.title}</DialogTitle>
         </DialogHeader>
 
         <div className={STACK.TIGHT}>
           <p className="text-sm text-muted-foreground">
-            Por segurança, você precisa alterar sua senha temporária antes de continuar.
+            {auth.changePassword.securityNotice}
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className={STACK.DEFAULT}>
             <div className={STACK.TIGHT}>
-              <Label htmlFor="currentPassword">Senha atual (temporária)</Label>
+              <Label htmlFor="currentPassword">{auth.changePassword.currentPasswordLabel}</Label>
               <div className="relative">
                 <Input
                   id="currentPassword"
@@ -117,7 +118,7 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
             </div>
 
             <div className={STACK.TIGHT}>
-              <Label htmlFor="newPassword">Nova senha</Label>
+              <Label htmlFor="newPassword">{auth.changePassword.newPasswordLabel}</Label>
               <div className="relative">
                 <Input
                   id="newPassword"
@@ -144,7 +145,7 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
             </div>
 
             <div className={STACK.TIGHT}>
-              <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
+              <Label htmlFor="confirmPassword">{auth.changePassword.confirmPasswordLabel}</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -173,7 +174,7 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
             <div className={`flex justify-end ${GAP.DEFAULT} pt-4`}>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Alterar senha
+                {auth.changePassword.submitButton}
               </Button>
             </div>
           </form>

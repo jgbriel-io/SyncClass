@@ -20,6 +20,8 @@ import {
   formatDuration,
 } from "./classesViewHelpers";
 import type { ClassLogWithStudent } from "@/hooks/useClassLogs";
+import { classes as classesContent } from "@/content";
+import { classes as classesContent } from "@/content";
 
 interface ClassesCardViewProps {
   logs: ClassLogWithStudent[];
@@ -92,7 +94,7 @@ export function ClassesCardView({
                       )}
                     </StatusBadge>
                   ) : (
-                    <StatusBadge variant="default">Sem cobrança</StatusBadge>
+                    <StatusBadge variant="default">{classesContent.cardView.noCharge}</StatusBadge>
                   )}
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -119,7 +121,7 @@ export function ClassesCardView({
                       {formatCurrency(log.financial_records.amount)}
                     </span>
                   ) : (
-                    <span className="text-foreground">Sem cobrança</span>
+                    <span className="text-foreground">{classesContent.cardView.noCharge}</span>
                   )}
                 </div>
                 {log.feedback && (
@@ -130,17 +132,17 @@ export function ClassesCardView({
             <div className="flex items-center gap-2">
               {log.attendance != null && (
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Nota</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">{classesContent.cardView.grade}</p>
                   {log.grade != null ? (
                     <p className={`text-3xl font-bold ${Number(log.grade) >= 7 ? "text-success" : Number(log.grade) >= 5 ? "text-warning" : "text-destructive"}`}>
                       {Number(log.grade).toFixed(1)}
                     </p>
                   ) : (
-                    <p className="text-sm font-medium text-destructive">Não compareceu</p>
+                    <p className="text-sm font-medium text-destructive">{classesContent.cardView.noAttendance}</p>
                   )}
                 </div>
               )}
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onViewDetail(log)} title="Ver detalhes">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onViewDetail(log)} title={classesContent.cardView.viewDetails}>
                 <Eye className="h-4 w-4" />
               </Button>
               <DropdownMenu>
@@ -152,11 +154,11 @@ export function ClassesCardView({
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onEdit(log)}>
                     <Pencil className="h-4 w-4 mr-2" />
-                    Editar
+                    {classesContent.cardView.edit}
                   </DropdownMenuItem>
                   <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(log)}>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Excluir
+                    {classesContent.cardView.delete}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -175,7 +177,7 @@ export function ClassesCardView({
                   onEvaluate(log);
                 }}
               >
-                {log.attendance != null ? "Atualizar" : "Avaliar"}
+                {log.attendance != null ? classesContent.cardView.update : classesContent.cardView.evaluate}
               </Button>
             </div>
           </div>
@@ -187,7 +189,7 @@ export function ClassesCardView({
           {logs.length === 0 ? (
             <EmptyClassesState onAction={onCreateNew} actionLabel="Registrar primeira aula" />
           ) : (
-            <EmptyState icon={BookOpen} title="Nenhum resultado" message="Ajuste os filtros acima ou limpe a busca" />
+            <EmptyState icon={BookOpen} title={classesContent.cardView.noResults} message={classesContent.cardView.noResultsHint} />
           )}
         </div>
       )}
@@ -200,10 +202,10 @@ export function ClassesCardView({
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" disabled={page === 0 || isFetching} onClick={() => setPage((p) => Math.max(0, p - 1))}>
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Anterior
+              {classesContent.cardView.prev}
             </Button>
             <Button variant="outline" size="sm" disabled={!hasMore || isFetching} onClick={() => setPage((p) => p + 1)}>
-              Próximo
+              {classesContent.cardView.next}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>

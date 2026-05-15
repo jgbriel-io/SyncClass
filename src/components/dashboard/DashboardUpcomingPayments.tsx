@@ -4,6 +4,7 @@ import { Clock, DollarSign, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import type { UpcomingPayment } from "./DashboardView";
+import { dashboard } from "@/content";
 
 interface DashboardUpcomingPaymentsProps {
   upcomingPayments: UpcomingPayment[];
@@ -19,8 +20,8 @@ export function DashboardUpcomingPayments({ upcomingPayments, basePath }: Dashbo
             <Clock className="h-4 w-4 text-warning" />
           </div>
           <div>
-            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Próximos Vencimentos</h2>
-            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">Pagamentos pendentes desta semana</p>
+            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">{dashboard.upcomingPayments.title}</h2>
+            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">{dashboard.upcomingPayments.subtitle}</p>
           </div>
         </div>
         <StatusBadge variant="warning">{upcomingPayments.length}</StatusBadge>
@@ -29,7 +30,7 @@ export function DashboardUpcomingPayments({ upcomingPayments, basePath }: Dashbo
         {upcomingPayments.length === 0 ? (
           <EmptyState
             icon={DollarSign}
-            message="Nenhum vencimento próximo"
+            message={dashboard.upcomingPayments.noPayments}
             size="default"
           />
         ) : (
@@ -47,7 +48,7 @@ export function DashboardUpcomingPayments({ upcomingPayments, basePath }: Dashbo
                 <div>
                   <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">{payment.studentName}</p>
                   <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
-                    Vence em {formatDate(payment.dueDate)}
+                    {dashboard.upcomingPayments.dueIn(formatDate(payment.dueDate))}
                   </p>
                 </div>
               </div>
@@ -64,7 +65,7 @@ export function DashboardUpcomingPayments({ upcomingPayments, basePath }: Dashbo
             to={`${basePath}/financial`}
             className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1"
           >
-            Ver todos
+            {dashboard.upcomingPayments.viewAll}
             <ChevronRight className="h-3 w-3" />
           </Link>
         </div>

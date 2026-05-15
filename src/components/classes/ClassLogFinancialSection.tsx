@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { brDateStringToDate } from "@/lib/utils/patterns";
 import { formatCurrency } from "@/lib/utils/formatters";
 import type { ClassLogWithStudent } from "@/hooks/useClassLogs";
+import { classes as classesContent } from "@/content";
 
 interface ClassLogFinancialSectionProps {
   register: UseFormRegister<FieldValues>;
@@ -73,26 +74,25 @@ export function ClassLogFinancialSection({
             }
           />
           <Label htmlFor="semCobranca" className="cursor-pointer font-normal">
-            Sem cobrança
+            {classesContent.logFinancialSection.noCharge}
           </Label>
         </div>
         {!semCobranca && (
           <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
             <h4 className="font-medium text-sm flex items-center gap-2">
               <Receipt className="h-4 w-4" />
-              Dados da Cobrança *
+              {classesContent.logFinancialSection.sectionTitleNew}
             </h4>
             {isFutureDate && (
               <p className="text-xs text-muted-foreground">
-                Para aula agendada: a cobrança fica em aberto; presença e feedback podem ser
-                marcados depois.
+                {classesContent.logFinancialSection.futureClassHint}
               </p>
             )}
 
             {/* Preview do valor calculado */}
             {computedAmount != null ? (
               <p className="text-sm text-muted-foreground">
-                Valor calculado:{" "}
+                {classesContent.logFinancialSection.calculatedValue}{" "}
                 <span className="font-semibold text-foreground">
                   {formatCurrency(computedAmount)}
                 </span>
@@ -104,17 +104,17 @@ export function ClassLogFinancialSection({
               </p>
             ) : hourlyRate == null || hourlyRate <= 0 ? (
               <p className="text-sm text-amber-600">
-                Aluno sem valor/hora cadastrado. Informe o valor manualmente.
+                {classesContent.logFinancialSection.noHourlyRate}
               </p>
             ) : !effectiveDurationMinutes ? (
               <p className="text-sm text-muted-foreground">
-                Informe início e término para calcular o valor.
+                {classesContent.logFinancialSection.noTimeRange}
               </p>
             ) : null}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="financial_amount">Valor (R$) *</Label>
+                <Label htmlFor="financial_amount">{classesContent.logFinancialSection.amountLabel}</Label>
                 <Input
                   id="financial_amount"
                   type="text"
@@ -129,7 +129,7 @@ export function ClassLogFinancialSection({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="financial_due_date">Vencimento *</Label>
+                <Label htmlFor="financial_due_date">{classesContent.logFinancialSection.dueDateLabel}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -141,7 +141,7 @@ export function ClassLogFinancialSection({
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {financialDueDate || "Selecione a data"}
+                      {financialDueDate || classesContent.logFinancialSection.selectDate}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -171,32 +171,32 @@ export function ClassLogFinancialSection({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="financial_description">Descrição</Label>
+              <Label htmlFor="financial_description">{classesContent.logFinancialSection.descriptionLabel}</Label>
               <Input
                 id="financial_description"
                 type="text"
-                placeholder="Aula de inglês - Janeiro"
+                placeholder={classesContent.logFinancialSection.descriptionPlaceholder}
                 {...register("financial_description")}
               />
               <p className="text-xs text-muted-foreground">
-                Se não preenchido, será "Aula do dia [data]"
+                {classesContent.logFinancialSection.descriptionHint}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="financial_payment_method">Método de Pagamento</Label>
+              <Label htmlFor="financial_payment_method">{classesContent.logFinancialSection.paymentMethodLabel}</Label>
               <Select
                 onValueChange={(value) => setValue("financial_payment_method", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione (opcional)" />
+                  <SelectValue placeholder={classesContent.logFinancialSection.paymentMethodPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="cartao">Cartão</SelectItem>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="transferencia">Transferência</SelectItem>
-                  <SelectItem value="outro">Outro</SelectItem>
+                  <SelectItem value="pix">{classesContent.logFinancialSection.pix}</SelectItem>
+                  <SelectItem value="cartao">{classesContent.logFinancialSection.card}</SelectItem>
+                  <SelectItem value="dinheiro">{classesContent.logFinancialSection.cash}</SelectItem>
+                  <SelectItem value="transferencia">{classesContent.logFinancialSection.transfer}</SelectItem>
+                  <SelectItem value="outro">{classesContent.logFinancialSection.other}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -212,12 +212,12 @@ export function ClassLogFinancialSection({
       <div className="space-y-4 rounded-lg border p-4 bg-accent/20">
         <h4 className="font-medium text-sm flex items-center gap-2">
           <Receipt className="h-4 w-4" />
-          Dados da Cobrança
+          {classesContent.logFinancialSection.sectionTitleEdit}
         </h4>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="financial_amount_edit">Valor (R$)</Label>
+            <Label htmlFor="financial_amount_edit">{classesContent.logFinancialSection.amountLabelEdit}</Label>
             <Input
               id="financial_amount_edit"
               type="text"
@@ -227,7 +227,7 @@ export function ClassLogFinancialSection({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="financial_due_date_edit">Vencimento</Label>
+            <Label htmlFor="financial_due_date_edit">{classesContent.logFinancialSection.dueDateLabelEdit}</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -239,7 +239,7 @@ export function ClassLogFinancialSection({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {financialDueDate || "Selecione a data"}
+                  {financialDueDate || classesContent.logFinancialSection.selectDate}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -263,7 +263,7 @@ export function ClassLogFinancialSection({
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          Alterar a data da aula não altera o vencimento automaticamente; edite aqui se quiser.
+          {classesContent.logFinancialSection.editDateHint}
         </p>
       </div>
     );

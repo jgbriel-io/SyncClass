@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useResetPassword } from "@/hooks/useUsers";
 import type { Teacher } from "@/hooks/useTeachers";
+import { teachers as teachersContent, common } from "@/content";
 
 interface TeacherResetPasswordDialogProps {
   open: boolean;
@@ -46,11 +47,11 @@ export function TeacherResetPasswordDialog({
   const handleSubmit = async () => {
     if (!teacher) return;
     if (newPassword.length < 6) {
-      toast.error("A senha deve ter no mínimo 6 caracteres.");
+      toast.error(teachersContent.resetPasswordDialog.toasts.minLength);
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("As senhas não coincidem.");
+      toast.error(teachersContent.resetPasswordDialog.toasts.mismatch);
       return;
     }
 
@@ -63,7 +64,7 @@ export function TeacherResetPasswordDialog({
     setLookingUpUser(false);
 
     if (profileError || !profile?.user_id) {
-      toast.error("Este professor não possui conta de acesso vinculada.");
+      toast.error(teachersContent.resetPasswordDialog.toasts.noAccount);
       return;
     }
 
@@ -89,10 +90,10 @@ export function TeacherResetPasswordDialog({
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Redefinir senha do professor</DialogTitle>
+          <DialogTitle>{teachersContent.resetPasswordDialog.title}</DialogTitle>
           {teacher && (
             <DialogDescription>
-              Nova senha para <strong>{teacher.name}</strong>. Mínimo 6 caracteres.
+              {teachersContent.resetPasswordDialog.description(teacher.name)}
             </DialogDescription>
           )}
         </DialogHeader>
@@ -101,7 +102,7 @@ export function TeacherResetPasswordDialog({
           <>
             <div className="space-y-4 py-2">
               <div className="space-y-2">
-                <Label htmlFor="reset-pw-teacher-new">Nova senha</Label>
+                <Label htmlFor="reset-pw-teacher-new">{teachersContent.resetPasswordDialog.newPasswordLabel}</Label>
                 <Input
                   id="reset-pw-teacher-new"
                   type="password"
@@ -113,7 +114,7 @@ export function TeacherResetPasswordDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reset-pw-teacher-confirm">Confirmar senha</Label>
+                <Label htmlFor="reset-pw-teacher-confirm">{teachersContent.resetPasswordDialog.confirmPasswordLabel}</Label>
                 <Input
                   id="reset-pw-teacher-confirm"
                   type="password"
@@ -136,13 +137,13 @@ export function TeacherResetPasswordDialog({
                   setConfirmPassword(p);
                 }}
               >
-                Gerar senha
+                {teachersContent.resetPasswordDialog.generateButton}
               </Button>
             </div>
 
             <DialogFooter>
               <Button variant="outline" onClick={handleClose} disabled={isPending}>
-                Cancelar
+                {common.actions.cancel}
               </Button>
               <Button
                 disabled={isPending || newPassword.length < 6 || newPassword !== confirmPassword}
@@ -151,10 +152,10 @@ export function TeacherResetPasswordDialog({
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Redefinindo...
+                    {teachersContent.resetPasswordDialog.submitting}
                   </>
                 ) : (
-                  "Redefinir senha"
+                  teachersContent.resetPasswordDialog.submitButton
                 )}
               </Button>
             </DialogFooter>

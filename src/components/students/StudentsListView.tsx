@@ -21,7 +21,8 @@ import {
 import { useInviteStudent } from "@/hooks/useUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MSG_EMAIL } from "@/lib/duplicate-messages";
+import { common } from "@/content";
+import { students as studentsContent } from "@/content";
 import { useStudentsStats } from "@/hooks/useStudentsStats";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentsTableSkeleton } from "@/components/ui/table-skeleton";
@@ -176,11 +177,11 @@ export function StudentsListView({
           .maybeSingle();
 
         if (profileError) {
-          toast.error("Erro ao validar email. Tente novamente.");
+          toast.error(common.errors.generic);
           return;
         }
         if (existingProfile) {
-          toast.error(MSG_EMAIL);
+          toast.error(common.errors.duplicateEmail);
           return;
         }
       }
@@ -199,7 +200,7 @@ export function StudentsListView({
         inviteStudent.mutate(dataWithTeacher as StudentInsert & { teacher_id?: string | null }, {
           onSuccess: () => {
             setIsFormOpen(false);
-            toast.success("Aluno cadastrado! Um email com a senha foi enviado para o aluno.");
+            toast.success(studentsContent.emptyState.toastCreated);
           },
         });
       }
@@ -226,7 +227,7 @@ export function StudentsListView({
           }}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Novo Aluno
+          {studentsContent.view.newButton}
         </Button>
       </div>
 
@@ -349,12 +350,12 @@ export function StudentsListView({
                   setSelectedStudent(null);
                   setIsFormOpen(true);
                 }}
-                actionLabel="Adicionar primeiro aluno"
+                actionLabel={studentsContent.emptyState.actionLabel}
               />
             ) : (
               <EmptyState
                 icon={Search}
-                title="Nenhum resultado"
+                title={common.table.noResults}
                 message="Ajuste os filtros acima ou limpe a busca"
               />
             ))}

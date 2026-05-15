@@ -12,6 +12,7 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { useConfirmPayment, type FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
+import { financial } from "@/content";
 
 interface FinancialConfirmPaymentDialogProps {
   open: boolean;
@@ -49,40 +50,41 @@ export function FinancialConfirmPaymentDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {isEarlyPayment ? "Atenção: confirmar pagamento antecipado" : "Confirmar pagamento"}
+            {isEarlyPayment ? financial.confirmPaymentDialog.titleEarly : financial.confirmPaymentDialog.title}
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2">
               {isEarlyPayment ? (
                 <p>
                   <span className="font-medium text-foreground block mb-1">
-                    Esta cobrança está vinculada a uma aula que ainda não foi concluída.
+                    {financial.confirmPaymentDialog.descriptionEarly}
                   </span>
-                  O pagamento já foi realizado? Ao confirmar, a cobrança de{" "}
-                  <strong>{record?.students?.name}</strong> no valor de{" "}
-                  <strong>{record ? formatCurrency(Number(record.amount)) : ""}</strong> será
-                  marcada como paga.
+                  {financial.confirmPaymentDialog.descriptionEarlyFull(
+                    record?.students?.name ?? "",
+                    record ? formatCurrency(Number(record.amount)) : ""
+                  )}
                 </p>
               ) : (
                 <p>
-                  Deseja marcar como pago a cobrança de{" "}
-                  <strong>{record?.students?.name}</strong> no valor de{" "}
-                  <strong>{record ? formatCurrency(Number(record.amount)) : ""}</strong>?
+                  {financial.confirmPaymentDialog.description(
+                    record?.students?.name ?? "",
+                    record ? formatCurrency(Number(record.amount)) : ""
+                  )}
                 </p>
               )}
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>{financial.confirmPaymentDialog.cancel}</AlertDialogCancel>
           <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Registrando...
+                {financial.confirmPaymentDialog.processing}
               </>
             ) : (
-              "Confirmar Pagamento"
+              financial.confirmPaymentDialog.confirmButton
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

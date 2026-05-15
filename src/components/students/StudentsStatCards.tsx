@@ -1,4 +1,5 @@
 import { Users, UserCheck, UserX, TrendingUp } from "lucide-react";
+import { students as studentsContent } from "@/content";
 
 interface StudentsStats {
   totalStudents: number;
@@ -13,10 +14,10 @@ interface StudentsStatCardsProps {
 
 export function StudentsStatCards({ stats }: StudentsStatCardsProps) {
   const cards = [
-    { label: "Total de Alunos", value: stats.totalStudents, icon: Users, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Alunos Ativos", value: stats.activeStudents, icon: UserCheck, color: "text-success", bg: "bg-success/10" },
-    { label: "Alunos Inativos", value: stats.inactiveStudents, icon: UserX, color: "text-muted-foreground", bg: "bg-muted" },
-    { label: "Novos este Mês", value: stats.newStudentsThisMonth, icon: TrendingUp, color: "text-primary", bg: "bg-primary/10" },
+    { label: studentsContent.view.statTotal, value: stats.totalStudents, icon: Users, color: "text-primary", bg: "bg-primary/10" },
+    { label: studentsContent.view.statActive, value: stats.activeStudents, icon: UserCheck, color: "text-success", bg: "bg-success/10" },
+    { label: studentsContent.view.statInactive, value: stats.inactiveStudents, icon: UserX, color: "text-muted-foreground", bg: "bg-muted" },
+    { label: studentsContent.view.statNew, value: stats.newStudentsThisMonth, icon: TrendingUp, color: "text-primary", bg: "bg-primary/10" },
   ];
 
   return (

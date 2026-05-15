@@ -24,6 +24,7 @@ import { DashboardBirthdayList } from "./DashboardBirthdayList";
 import { DashboardGrowthChart } from "./DashboardGrowthChart";
 import type { TodayClassesData } from "@/hooks/useTodayClasses";
 import type { ForecastedBilling } from "@/hooks/useForecastedBilling";
+import { dashboard } from "@/content";
 
 import type { ChartMonthsFilter, ChartLineFilterAdmin, ChartLineFilterTeacher, ChartDataPoint } from "./DashboardGrowthChart";
 
@@ -115,14 +116,14 @@ export function DashboardView({
             <BookOpen className="h-5 w-5 text-warning shrink-0" />
             <p className="text-sm font-medium">
               <span className="font-semibold">{pendingFeedbackCount}</span>{" "}
-              {pendingFeedbackCount === 1 ? "aula pendente de feedback" : "aulas pendentes de feedback"}
+              {pendingFeedbackCount === 1 ? dashboard.pendingFeedback.singular : dashboard.pendingFeedback.plural}
             </p>
           </div>
           <Link
             to={`${basePath}/classes?status=avaliacao_pendente`}
             className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary shrink-0 transition-colors"
           >
-            Ver e avaliar
+            {dashboard.pendingFeedback.viewLink}
             <ChevronRight className="h-3 w-3" />
           </Link>
         </div>
@@ -138,7 +139,7 @@ export function DashboardView({
             <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <Zap className="h-4 w-4 text-primary" />
             </div>
-            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Ações Rápidas</h2>
+            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">{dashboard.view.quickActionsTitle}</h2>
           </div>
           <ChevronDown
             className={cn(
@@ -154,25 +155,25 @@ export function DashboardView({
                 <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Users className="h-4 w-4 text-primary" />
                 </div>
-                <p className="text-sm">Cadastrar Aluno</p>
+                <p className="text-sm">{dashboard.view.quickActions.registerStudent}</p>
               </Link>
               <Link to={`${basePath}/classes`} className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform">
                 <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
                   <GraduationCap className="h-4 w-4 text-success" />
                 </div>
-                <p className="text-sm">Registrar Aula</p>
+                <p className="text-sm">{dashboard.view.quickActions.registerClass}</p>
               </Link>
               <Link to={`${basePath}/financial`} className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform">
                 <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
                   <DollarSign className="h-4 w-4 text-warning" />
                 </div>
-                <p className="text-sm">Visualizar cobranças</p>
+                <p className="text-sm">{dashboard.view.quickActions.viewCharges}</p>
               </Link>
               <Link to={basePath === "/admin" ? "/admin/overview" : "/teacher/overview"} className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform">
                 <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
                   <TrendingUp className="h-4 w-4 text-accent-foreground" />
                 </div>
-                <p className="text-sm">Visão Geral</p>
+                <p className="text-sm">{dashboard.view.quickActions.overview}</p>
               </Link>
               {basePath === "/admin" && (
                 <>
@@ -180,13 +181,13 @@ export function DashboardView({
                     <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <UserPlus className="h-4 w-4 text-primary" />
                     </div>
-                    <p className="text-sm">Cadastrar professor</p>
+                    <p className="text-sm">{dashboard.view.quickActions.registerTeacher}</p>
                   </Link>
                   <Link to="/admin/users" className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform">
                     <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
                       <Link2 className="h-4 w-4 text-accent-foreground" />
                     </div>
-                    <p className="text-sm">Cadastrar usuário</p>
+                    <p className="text-sm">{dashboard.view.quickActions.registerUser}</p>
                   </Link>
                 </>
               )}
@@ -222,31 +223,31 @@ export function DashboardView({
           {/* Estatísticas */}
           <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
             <MetricCard
-              title="Alunos Ativos"
+              title={dashboard.metrics.activeStudents}
               value={stats?.activeStudents || 0}
               change={stats?.newStudentsThisMonth ? Math.round((stats.newStudentsThisMonth / Math.max(stats.activeStudents - stats.newStudentsThisMonth, 1)) * 100) : undefined}
-              changeLabel="este mês"
+              changeLabel={dashboard.metrics.activeStudentsChange}
               icon={Users}
               iconColor="text-primary"
               iconBg="bg-primary/10"
             />
             <MetricCard
-              title="Inadimplentes"
+              title={dashboard.metrics.overdue}
               value={stats?.overdueCount || 0}
-              changeLabel={`${overduePercentage}% do total`}
+              changeLabel={dashboard.metrics.overdueChange(overduePercentage)}
               icon={AlertCircle}
               iconColor="text-destructive"
               iconBg="bg-destructive/10"
             />
             <MetricCard
-              title="Novos este Mês"
+              title={dashboard.metrics.newThisMonth}
               value={stats?.newStudentsThisMonth || 0}
               icon={TrendingUp}
               iconColor="text-success"
               iconBg="bg-success/10"
             />
             <MetricCard
-              title="Aulas este Mês"
+              title={dashboard.metrics.classesThisMonth}
               value={stats?.classesThisMonth || 0}
               icon={GraduationCap}
               iconColor="text-accent-foreground"

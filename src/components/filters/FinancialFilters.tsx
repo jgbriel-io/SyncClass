@@ -14,6 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { common } from "@/content";
 
 export type FinancialPeriodPreset = "all" | "today" | "this_week" | "this_month";
 export type FinancialStatusFilter = "all" | "pendente" | "pago" | "atrasado" | "validando";
@@ -145,7 +146,7 @@ export function FinancialFilters({ filters, onChange, onReset, students = [] }: 
           {hasActiveFilters && onReset && (
             <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
               <X className="h-4 w-4 mr-1" />
-              Limpar
+              {common.actions.clear}
             </Button>
           )}
         </div>

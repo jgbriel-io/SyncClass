@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { brDateToIso, buildTimestamptzFromDateAndTime as buildTimestamptz, getDefaultDueDateForPackage } from "@/lib/utils/classFormHelpers";
 import { PackageSlotList, type Slot, type ScheduleMode } from "./PackageSlotList";
 import { PackageFinancialSection } from "./PackageFinancialSection";
+import { classes as classesContent } from "@/content";
 
 // ─── Helpers locais ───────────────────────────────────────────────────────────
 
@@ -224,7 +225,7 @@ export function PackageClassesDialog({
     <BaseDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Cadastrar pacote de aulas"
+      title={classesContent.packageDialog.title}
       size="MD"
       scrollable={true}
     >
@@ -232,7 +233,7 @@ export function PackageClassesDialog({
         {/* Professor */}
         {enableTeacherSelection && (
           <div className="space-y-2">
-            <Label>Professor *</Label>
+            <Label>{classesContent.packageDialog.teacherLabel}</Label>
             <Select
               value={selectedTeacherId}
               onValueChange={(v) => {
@@ -242,7 +243,7 @@ export function PackageClassesDialog({
               disabled={loadingTeachers}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione um professor" />
+                <SelectValue placeholder={classesContent.packageDialog.teacherPlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {teachers.map((t: Teacher) => (
@@ -258,10 +259,10 @@ export function PackageClassesDialog({
 
         {/* Aluno */}
         <div className="space-y-2">
-          <Label>Aluno *</Label>
+          <Label>{classesContent.packageDialog.studentLabel}</Label>
           <Select value={studentId} onValueChange={setStudentId} disabled={loadingStudents}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione um aluno" />
+              <SelectValue placeholder={classesContent.packageDialog.studentPlaceholder} />
             </SelectTrigger>
             <SelectContent>
               {activeStudents.map((s) => (
@@ -281,7 +282,7 @@ export function PackageClassesDialog({
             onCheckedChange={(c) => setSemCobranca(!!c)}
           />
           <Label htmlFor="pkg-semCobranca" className="cursor-pointer font-normal">
-            Sem cobrança
+            {classesContent.packageDialog.noCharge}
           </Label>
         </div>
 
@@ -321,16 +322,16 @@ export function PackageClassesDialog({
             onClick={() => onOpenChange(false)}
             disabled={createPackage.isPending}
           >
-            Cancelar
+            {classesContent.packageDialog.cancel}
           </Button>
           <Button onClick={handleSubmit} disabled={createPackage.isPending}>
             {createPackage.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Cadastrando...
+                {classesContent.packageDialog.submitting}
               </>
             ) : (
-              `Cadastrar ${slots.length} aula(s)`
+              classesContent.packageDialog.submitButton(slots.length)
             )}
           </Button>
         </div>

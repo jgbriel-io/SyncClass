@@ -26,6 +26,7 @@ import type { UserFormSubmitData } from "./userFormTypes";
 import { UserFormAdminFields } from "./UserFormAdminFields";
 import { UserFormTeacherFields } from "./UserFormTeacherFields";
 import { UserFormStudentFields } from "./UserFormStudentFields";
+import { users as usersContent, common } from "@/content";
 
 type AppRole = Enums<"app_role">;
 type StudentOrigin = Enums<"student_origin">;
@@ -152,7 +153,7 @@ export function UserFormDialog({ open, onOpenChange, user, onSubmit, isLoading }
   const locationProps = { isBrazilSelected, selectedCountry, setSelectedCountry, selectedState, setSelectedState, cities, isLoadingCities, countryPopoverOpen, setCountryPopoverOpen, statePopoverOpen, setStatePopoverOpen, cityPopoverOpen, setCityPopoverOpen };
 
   return (
-    <BaseDialog open={open} onOpenChange={onOpenChange} title={user ? "Editar Usuário" : "Novo Usuário"} size={selectedRole === "admin" ? "SM" : "MD"}>
+    <BaseDialog open={open} onOpenChange={onOpenChange} title={user ? usersContent.formDialog.titleEdit : usersContent.formDialog.titleNew} size={selectedRole === "admin" ? "SM" : "MD"}>
       {!isEdit && (
         <div>
           <Label className="mb-2 block text-sm font-medium">Tipo de conta</Label>
@@ -190,11 +191,11 @@ export function UserFormDialog({ open, onOpenChange, user, onSubmit, isLoading }
         )}
 
         <div className="flex justify-end gap-4 mt-6">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancelar</Button>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>{common.actions.cancel}</Button>
           <Button type="submit" disabled={isLoading || (selectedRole === "student" && !selectedOrigin)}>
             {isLoading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{isEdit ? "Salvando..." : "Criando..."}</>
-            ) : isEdit ? "Salvar Alterações" : "Criar Usuário"}
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{isEdit ? usersContent.formDialog.submitting : usersContent.formDialog.submitting}</>
+            ) : isEdit ? usersContent.formDialog.submitButton : usersContent.formDialog.createButton}
           </Button>
         </div>
       </form>

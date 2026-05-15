@@ -7,6 +7,7 @@ import { CheckCircle, Loader2, DollarSign, Wallet } from "lucide-react";
 import { useStudentFinancialRecords, useStudentStats } from "@/hooks/useStudentPortal";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack } from "@/lib/design-tokens/spacing";
+import { studentPortal } from "@/content";
 
 export default function StudentFinancial() {
   const { data: records = [], isLoading, error } = useStudentFinancialRecords();
@@ -22,9 +23,9 @@ export default function StudentFinancial() {
       <div className={stack('RELAXED')}>
         {/* Título + subtítulo */}
         <div>
-          <h1 className={typography('H1')}>Financeiro</h1>
+          <h1 className={typography('H1')}>{studentPortal.financial.title}</h1>
           <p className={`${typography('SMALL')} mt-1`}>
-            Seus pagamentos e cobranças
+            {studentPortal.financial.subtitle}
           </p>
         </div>
 
@@ -39,7 +40,7 @@ export default function StudentFinancial() {
         {error && (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
             <p className={typography('ERROR')}>
-              Erro ao carregar dados financeiros. Tente novamente.
+              {studentPortal.financial.loadError}
             </p>
           </div>
         )}
@@ -49,22 +50,22 @@ export default function StudentFinancial() {
             {/* Card resumo */}
             <StudentMetricCard
               icon={isFinancialOk ? CheckCircle : Wallet}
-              label="Situação financeira"
-              value={isFinancialOk ? "Em dia" : `${pendingCount} pendência${pendingCount !== 1 ? "s" : ""}`}
-              description={isFinancialOk ? "Nenhuma cobrança pendente" : paidCount > 0 ? `${paidCount} quitada${paidCount !== 1 ? "s" : ""}. ${pendingCount} em aberto.` : `${pendingCount} cobrança${pendingCount !== 1 ? "s" : ""} aguardando pagamento.`}
+              label={studentPortal.financial.financialStatusLabel}
+              value={isFinancialOk ? studentPortal.financial.financialOk : studentPortal.financial.financialPending(pendingCount)}
+              description={isFinancialOk ? studentPortal.financial.financialOkDescription : paidCount > 0 ? `${paidCount} quitada${paidCount !== 1 ? "s" : ""}. ${pendingCount} em aberto.` : `${pendingCount} cobrança${pendingCount !== 1 ? "s" : ""} aguardando pagamento.`}
               variant={isFinancialOk ? "success" : "warning"}
             />
 
             {/* Lista de cobranças */}
             <div className={stack('DEFAULT')}>
               <h2 className={typography('TABLE_HEADER')}>
-                Histórico de Pagamentos
+                {studentPortal.financial.historyTitle}
               </h2>
               {records.length === 0 ? (
                 <div className="rounded-lg border bg-card">
                   <EmptyState
                     icon={DollarSign}
-                    message="Nenhuma cobrança registrada ainda"
+                    message={studentPortal.financial.noCharges}
                   />
                 </div>
               ) : (
@@ -91,7 +92,7 @@ export default function StudentFinancial() {
 
             {/* Último texto */}
             <p className={`text-center ${typography('SMALL')} px-4`}>
-              Dúvidas sobre pagamentos? Entre em contato com a secretaria.
+              {studentPortal.financial.contactNote}
             </p>
           </>
         )}

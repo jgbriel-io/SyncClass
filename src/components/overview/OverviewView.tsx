@@ -23,6 +23,7 @@ import { OverviewTableSkeleton } from "@/components/ui/table-skeleton";
 import { OverviewTableRow } from "@/components/overview/OverviewTableRow";
 import { COL as OVERVIEW_COL, TABLE_MIN_W as OVERVIEW_TABLE_MIN_W } from "@/components/overview/OverviewTableRow.constants";
 import { TABLE_HEAD_BASE, STICKY_HEADER, STICKY_SHADOW } from "@/lib/design-tokens/table-columns";
+import { overview, common } from "@/content";
 
 const PAGE_SIZE = 10;
 
@@ -34,8 +35,8 @@ interface OverviewViewProps {
 }
 
 export function OverviewView({
-  title = "Visão Geral dos Alunos",
-  subtitle = "Estatísticas completas de todos os alunos",
+  title = overview.view.title,
+  subtitle = overview.view.subtitle,
   showTeacherFilter = true,
   autoTeacherId = null,
 }: OverviewViewProps) {
@@ -174,7 +175,7 @@ export function OverviewView({
                     ) : (
                       <EmptyState
                         icon={Search}
-                        title="Nenhum resultado"
+                        title={common.table.noResults}
                         message="Ajuste os filtros acima ou limpe a busca"
                       />
                     )}

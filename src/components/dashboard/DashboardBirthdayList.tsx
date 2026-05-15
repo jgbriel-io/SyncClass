@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Birthday } from "./DashboardView";
+import { dashboard } from "@/content";
 
 function formatBirthday(dateString: string): string {
   return format(new Date(dateString + "T00:00:00"), "dd/MM", { locale: ptBR });
@@ -24,8 +25,8 @@ export function DashboardBirthdayList({ birthdays, basePath }: DashboardBirthday
             <span className="text-lg">🎂</span>
           </div>
           <div>
-            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">Aniversariantes</h2>
-            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">Este mês</p>
+            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">{dashboard.birthdays.title}</h2>
+            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">{dashboard.birthdays.subtitle}</p>
           </div>
         </div>
         <StatusBadge variant="warning">{birthdays.length}</StatusBadge>
@@ -34,7 +35,7 @@ export function DashboardBirthdayList({ birthdays, basePath }: DashboardBirthday
         {birthdays.length === 0 ? (
           <EmptyState
             icon={Calendar}
-            message="Nenhum aniversariante este mês"
+            message={dashboard.birthdays.noBirthdays}
             size="default"
           />
         ) : (
@@ -67,7 +68,7 @@ export function DashboardBirthdayList({ birthdays, basePath }: DashboardBirthday
             to={`${basePath}/students?filter=aniversariantes`}
             className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1"
           >
-            Ver todos
+            {dashboard.birthdays.viewAll}
             <ChevronRight className="h-3 w-3" />
           </Link>
         </div>

@@ -12,6 +12,7 @@ import { formatDate } from "@/lib/utils/formatters";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
 import { getClassStatusWithTime } from "@/lib/utils/classTime";
+import { studentPortal } from "@/content";
 
 function classLogToCardProps(record: {
   id: string;
@@ -131,7 +132,7 @@ export default function StudentHistory() {
   const renderClassCards = (records: typeof classLogs) =>
     records.length === 0 ? (
       <div className="rounded-lg border bg-card">
-        <EmptyState icon={BookOpen} message="Nenhuma aula registrada ainda" />
+        <EmptyState icon={BookOpen} message={studentPortal.history.noHistory} />
       </div>
     ) : (
       <div className={stack('DEFAULT')}>
@@ -145,31 +146,31 @@ export default function StudentHistory() {
     <div className="flex flex-wrap items-center gap-4 mb-4">
       <div className="flex items-center gap-3">
         <Label htmlFor="status-filter" className="text-sm font-medium whitespace-nowrap">
-          Status:
+          {studentPortal.history.statusFilterLabel}
         </Label>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger id="status-filter" className="w-[160px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="aberto">Em aberto</SelectItem>
-            <SelectItem value="concluida">Concluídas</SelectItem>
-            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="aberto">{studentPortal.history.statusOpen}</SelectItem>
+            <SelectItem value="concluida">{studentPortal.history.statusCompleted}</SelectItem>
+            <SelectItem value="all">{studentPortal.history.statusAll}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       
       <div className="flex items-center gap-3">
         <Label htmlFor="sort-order" className="text-sm font-medium whitespace-nowrap">
-          Ordenar:
+          {studentPortal.history.sortLabel}
         </Label>
         <Select value={sortOrder} onValueChange={setSortOrder}>
           <SelectTrigger id="sort-order" className="w-[160px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="recente">Mais recente</SelectItem>
-            <SelectItem value="antiga">Mais antiga</SelectItem>
+            <SelectItem value="recente">{studentPortal.history.sortRecent}</SelectItem>
+            <SelectItem value="antiga">{studentPortal.history.sortOldest}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -180,9 +181,9 @@ export default function StudentHistory() {
     <PageContainer constrained maxWidth="5xl">
       {/* Header */}
       <div className="mb-4">
-        <h1 className={typography('H1')}>Histórico Acadêmico</h1>
+        <h1 className={typography('H1')}>{studentPortal.history.title}</h1>
         <p className={`${typography('SMALL')} mt-1`}>
-          Suas aulas e progresso
+          {studentPortal.history.subtitle}
         </p>
       </div>
 
@@ -197,7 +198,7 @@ export default function StudentHistory() {
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <p className={typography('ERROR')}>
-            Erro ao carregar histórico. Tente novamente.
+            {studentPortal.history.loadError}
           </p>
         </div>
       )}
@@ -205,9 +206,9 @@ export default function StudentHistory() {
       {!isLoading && !error && (
         <Tabs defaultValue="aulas" className="w-full">
           <TabsList className="w-full sm:w-auto mb-4">
-            <TabsTrigger value="aulas" className="flex-1 sm:flex-none">Aulas</TabsTrigger>
-            <TabsTrigger value="presenca" className="flex-1 sm:flex-none">Presença</TabsTrigger>
-            <TabsTrigger value="media" className="flex-1 sm:flex-none">Média</TabsTrigger>
+            <TabsTrigger value="aulas" className="flex-1 sm:flex-none">{studentPortal.history.tabClasses}</TabsTrigger>
+            <TabsTrigger value="presenca" className="flex-1 sm:flex-none">{studentPortal.history.tabAttendance}</TabsTrigger>
+            <TabsTrigger value="media" className="flex-1 sm:flex-none">{studentPortal.history.tabGrades}</TabsTrigger>
           </TabsList>
 
           {/* Aba Aulas: resumo (total + última aula) + cards completos */}
@@ -215,16 +216,16 @@ export default function StudentHistory() {
             <div className="mb-6">
               <StudentMetricCard
                 icon={CalendarIcon}
-                label="Total de aulas"
+                label={studentPortal.history.totalClassesLabel}
                 value={stats.totalClasses}
-                description={lastClass ? `Última aula: ${formatDate(lastClass.class_date)}` : undefined}
+                description={lastClass ? studentPortal.history.lastClassLabel(formatDate(lastClass.class_date)) : undefined}
                 variant="default"
               />
             </div>
             {renderStatusFilter()}
             <div className={stack('DEFAULT')}>
               <h2 className={typography('TABLE_HEADER')}>
-                Histórico de Aulas
+                {studentPortal.history.sectionTitle}
               </h2>
               {renderClassCards(filteredClassLogs)}
             </div>
@@ -235,30 +236,30 @@ export default function StudentHistory() {
             <div className={`grid grid-cols-1 sm:grid-cols-3 ${gap('DEFAULT')} mb-6`}>
               <StudentMetricCard
                 icon={TrendingUp}
-                label="Taxa de presença"
+                label={studentPortal.history.attendanceRateLabel}
                 value={`${attendancePercentage}%`}
                 variant="success"
               />
               <StudentMetricCard
                 icon={XCircle}
-                label="Total de faltas"
+                label={studentPortal.history.totalAbsencesLabel}
                 value={totalFaltas}
                 variant={totalFaltas > 0 ? "destructive" : "default"}
               />
               <StudentMetricCard
                 icon={CalendarIcon}
-                label="Última falta"
+                label={studentPortal.history.lastAbsenceLabel}
                 value={lastAbsence ? formatDate(lastAbsence.class_date) : "—"}
                 variant="default"
               />
             </div>
             <div className={stack('DEFAULT')}>
               <h2 className={typography('TABLE_HEADER')}>
-                Aulas faltadas
+                {studentPortal.history.missedClassesTitle}
               </h2>
               {missedClasses.length === 0 ? (
                 <div className="rounded-lg border bg-card p-6 text-center">
-                  <p className={typography('SMALL')}>Nenhuma falta registrada.</p>
+                  <p className={typography('SMALL')}>{studentPortal.history.noAbsences}</p>
                 </div>
               ) : (
                 renderClassCards(missedClasses)
@@ -271,30 +272,30 @@ export default function StudentHistory() {
             <div className={`grid grid-cols-1 sm:grid-cols-2 ${gap('DEFAULT')} mb-6`}>
               <StudentMetricCard
                 icon={Award}
-                label="Média geral"
+                label={studentPortal.history.averageGradeLabel}
                 value={stats.averageGrade > 0 ? stats.averageGrade.toFixed(1) : "—"}
                 variant="default"
               />
               <StudentMetricCard
                 icon={TrendingUp}
-                label="Melhor nota"
+                label={studentPortal.history.bestGradeLabel}
                 value={classesWithGrade.length > 0 ? gradeStats.best.toFixed(1) : "—"}
                 variant="success"
               />
               <StudentMetricCard
                 icon={TrendingDown}
-                label="Pior nota"
+                label={studentPortal.history.worstGradeLabel}
                 value={classesWithGrade.length > 0 ? gradeStats.worst.toFixed(1) : "—"}
                 variant="destructive"
               />
             </div>
             <div className={stack('DEFAULT')}>
               <h2 className={typography('TABLE_HEADER')}>
-                Aulas com nota
+                {studentPortal.history.gradesSectionTitle}
               </h2>
               {classesWithGrade.length === 0 ? (
                 <div className="rounded-lg border bg-card p-6 text-center">
-                  <p className={typography('SMALL')}>Nenhuma aula com nota registrada.</p>
+                  <p className={typography('SMALL')}>{studentPortal.history.noGrades}</p>
                 </div>
               ) : (
                 renderClassCards(classesWithGrade)

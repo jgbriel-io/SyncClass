@@ -29,6 +29,7 @@ import {
 } from "@/hooks/useClassLogs";
 import { isClassEvaluationBlocked } from "@/lib/utils/classTime";
 import { StatCard } from "@/components/ui/stat-card";
+import { classes as classesContent } from "@/content";
 
 interface ClassesViewProps {
   title?: string;
@@ -187,21 +188,21 @@ export function ClassesView({
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setPackageDialogOpen(true)}>
             <Package className="h-4 w-4 mr-2" />
-            Cadastrar pacote
+            {classesContent.view.packageButton}
           </Button>
           <Button onClick={() => { setSelectedLog(null); setIsFormOpen(true); }}>
             <Plus className="h-4 w-4 mr-2" />
-            Registrar Aula
+            {classesContent.view.newButton}
           </Button>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
-        <StatCard title="Total de Aulas" value={summary?.totalClasses ?? 0} icon={BookOpen} variant="primary" />
-        <StatCard title="Presenças" value={summary?.totalPresent ?? 0} icon={UserCheck} variant="success" />
-        <StatCard title="Taxa de Presença" value={`${attendanceRate}%`} icon={Percent} variant="default" />
-        <StatCard title="Média Geral" value={summary?.averageGrade != null ? summary.averageGrade.toFixed(1) : "—"} icon={Award} variant="primaryHighlight" />
+        <StatCard title={classesContent.view.statTotal} value={summary?.totalClasses ?? 0} icon={BookOpen} variant="primary" />
+        <StatCard title={classesContent.view.statAttended} value={summary?.totalPresent ?? 0} icon={UserCheck} variant="success" />
+        <StatCard title={classesContent.view.statPending} value={`${attendanceRate}%`} icon={Percent} variant="default" />
+        <StatCard title={classesContent.view.statEvaluationPending} value={summary?.averageGrade != null ? summary.averageGrade.toFixed(1) : "—"} icon={Award} variant="primaryHighlight" />
       </div>
 
       {/* Filtros */}
@@ -216,7 +217,7 @@ export function ClassesView({
 
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-          <p className="text-destructive">Erro ao carregar registros de aula. Tente novamente.</p>
+          <p className="text-destructive">{classesContent.view.errorLoading}</p>
         </div>
       )}
 

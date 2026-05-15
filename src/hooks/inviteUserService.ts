@@ -3,7 +3,7 @@ import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import { validatePhonePlatform } from "@/lib/validate-phone-platform";
 import { isValidEmailFormat } from "@/lib/utils/patterns";
-import { MSG_EMAIL } from "@/lib/duplicate-messages";
+import { common } from "@/content";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
 type StudentInsert = TablesInsert<"students">;
@@ -203,7 +203,7 @@ export async function createUserLegacy(body: InviteUserBody): Promise<InviteUser
     .select("id")
     .ilike("email", normalizedEmail)
     .maybeSingle();
-  if (existingProfile) throw new Error(MSG_EMAIL);
+  if (existingProfile) throw new Error(common.errors.duplicateEmail);
 
   if (body.role === "teacher" && !body.teacherId && body.teacherData) {
     const { data: existingTeacher } = await supabase
@@ -211,7 +211,7 @@ export async function createUserLegacy(body: InviteUserBody): Promise<InviteUser
       .select("id")
       .ilike("email", normalizedEmail)
       .maybeSingle();
-    if (existingTeacher) throw new Error(MSG_EMAIL);
+    if (existingTeacher) throw new Error(common.errors.duplicateEmail);
   }
   if (body.role === "student" && !body.studentId && body.studentData) {
     const { data: existingStudent } = await supabase
@@ -219,7 +219,7 @@ export async function createUserLegacy(body: InviteUserBody): Promise<InviteUser
       .select("id")
       .ilike("email", normalizedEmail)
       .maybeSingle();
-    if (existingStudent) throw new Error(MSG_EMAIL);
+    if (existingStudent) throw new Error(common.errors.duplicateEmail);
   }
 
   const { data: authData, error: authError } =
@@ -234,7 +234,7 @@ export async function createUserLegacy(body: InviteUserBody): Promise<InviteUser
   if (authError) {
     const msg = authError.message?.toLowerCase() ?? "";
     if (msg.includes("already") || msg.includes("already been registered"))
-      throw new Error(MSG_EMAIL);
+      throw new Error(common.errors.duplicateEmail);
     throw authError;
   }
   if (!authData.user) throw new Error("Falha ao criar usuário");

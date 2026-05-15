@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { activities as activitiesContent, common } from "@/content";
 
 function dueDateAndTimeToIso(dueDate: string, dueTime: string): string {
   const [day, month, year] = dueDate.split("/").map(Number);
@@ -61,10 +62,10 @@ function parseDueDateForForm(dueDate: string | null | undefined): { date: string
 
 const editActivitySchema = z
   .object({
-    title: z.string().min(1, "Informe o título da atividade"),
+    title: z.string().min(1, activitiesContent.validation.titleRequired),
     description: z.string().optional(),
-    due_date: z.string().min(1, "Defina o prazo").regex(REGEX_PATTERNS.date, "Data no formato dd/mm/aaaa"),
-    due_time: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/, "Hora no formato HH:mm"),
+    due_date: z.string().min(1, activitiesContent.validation.dueDateRequired).regex(REGEX_PATTERNS.date, activitiesContent.validation.dueDateFormat),
+    due_time: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/, activitiesContent.validation.dueTimeFormat),
     fileSource: z.enum(["current", "new", "existing"]),
     file: z.instanceof(File).optional(),
     existingFileUrl: z.string().optional(),
@@ -75,7 +76,7 @@ const editActivitySchema = z
       if (data.fileSource === "existing") return !!data.existingFileUrl;
       return true;
     },
-    { message: "Selecione ou envie um arquivo", path: ["file"] }
+    { message: activitiesContent.validation.fileRequired, path: ["file"] }
   );
 
 type EditActivityFormData = z.infer<typeof editActivitySchema>;
@@ -161,7 +162,7 @@ export function EditActivityDialog({
       } else if (data.fileSource === "existing" && data.existingFileUrl) {
         const existing = existingFiles.find((f) => f.file_url === data.existingFileUrl);
         if (!existing) {
-          toast.error("Arquivo não encontrado.");
+          toast.error(activitiesContent.editDialog.toasts.fileNotFound);
           return;
         }
         file_url = existing.file_url;
@@ -183,7 +184,7 @@ export function EditActivityDialog({
 
       onOpenChange(false);
     } catch (error) {
-      toast.error("Erro ao atualizar atividade: " + (error as Error).message);
+      toast.error(activitiesContent.editDialog.toasts.error((error as Error).message));
     } finally {
       setIsUploading(false);
     }
@@ -197,16 +198,16 @@ export function EditActivityDialog({
     <BaseDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Editar atividade"
-      description={`Altere título, descrição, prazo ou arquivo. Aluno: ${activity.students?.name ?? "—"}`}
+      title={activitiesContent.editDialog.title}
+      description={activitiesContent.editDialog.description(activity.students?.name ?? "—")}
       size="SM"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="edit-title">Título *</Label>
+            <Label htmlFor="edit-title">{activitiesContent.editDialog.titleLabel}</Label>
             <Input
               id="edit-title"
-              placeholder="Ex: Reading Comprehension - Unit 5"
+              placeholder={activitiesContent.editDialog.titlePlaceholder}
               {...register("title")}
               disabled={isPending}
             />
@@ -216,8 +217,8 @@ export function EditActivityDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Prazo de entrega *</Label>
-            <p className="text-xs text-muted-foreground">Data e hora limite para o aluno entregar.</p>
+            <Label>{activitiesContent.editDialog.dueDateLabel}</Label>
+            <p className="text-xs text-muted-foreground">{activitiesContent.editDialog.dueDateHint}</p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Popover>
                 <PopoverTrigger asChild>
@@ -270,7 +271,7 @@ export function EditActivityDialog({
           </div>
 
           <div className="space-y-3">
-            <Label>Arquivo</Label>
+            <Label>{activitiesContent.editDialog.fileLabel}</Label>
             <RadioGroup
               value={fileSource}
               onValueChange={(v) => {
@@ -285,23 +286,23 @@ export function EditActivityDialog({
                 <RadioGroupItem value="current" id="edit-source-current" disabled={isPending} />
                 <Label htmlFor="edit-source-current" className="font-normal cursor-pointer flex items-center gap-1.5">
                   <FileText className="h-4 w-4" />
-                  Manter arquivo atual ({activity.file_name})
+                  {activitiesContent.editDialog.fileSourceCurrent(activity.file_name)}
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="new" id="edit-source-new" disabled={isPending} />
                 <Label htmlFor="edit-source-new" className="font-normal cursor-pointer flex items-center gap-1.5">
                   <Upload className="h-4 w-4" />
-                  Enviar novo arquivo
+                  {activitiesContent.editDialog.fileSourceNew}
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="existing" id="edit-source-existing" disabled={isPending || existingFiles.length === 0} />
                 <Label htmlFor="edit-source-existing" className="font-normal cursor-pointer flex items-center gap-1.5">
                   <FolderOpen className="h-4 w-4" />
-                  Usar arquivo já na plataforma
+                  {activitiesContent.editDialog.fileSourceExisting}
                   {existingFiles.length === 0 && (
-                    <span className="text-xs text-muted-foreground">(nenhum ainda)</span>
+                    <span className="text-xs text-muted-foreground">{activitiesContent.editDialog.fileSourceNone}</span>
                   )}
                 </Label>
               </div>
@@ -333,7 +334,7 @@ export function EditActivityDialog({
                 disabled={isPending || loadingFiles}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um arquivo" />
+                  <SelectValue placeholder={activitiesContent.editDialog.fileSelectPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
                   {existingFiles.map((f) => (
@@ -352,24 +353,24 @@ export function EditActivityDialog({
               <p className="text-sm text-destructive">{errors.file?.message ?? errors.existingFileUrl?.message}</p>
             )}
             {fileSource === "new" && (
-              <p className="text-xs text-muted-foreground">PDF, DOC, DOCX, JPG, PNG ou TXT (máx. 10 MB)</p>
+              <p className="text-xs text-muted-foreground">{activitiesContent.editDialog.fileHint}</p>
             )}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
-              Cancelar
+              {common.actions.cancel}
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
+                  {activitiesContent.editDialog.submitting}
                 </>
               ) : (
                 <>
                   <Pencil className="mr-2 h-4 w-4" />
-                  Salvar alterações
+                  {activitiesContent.editDialog.submitButton}
                 </>
               )}
             </Button>

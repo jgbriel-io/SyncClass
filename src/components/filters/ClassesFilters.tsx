@@ -14,6 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { classes as classesContent } from "@/content";
 
 export type ClassStatusFilter = "all" | "em_aberto" | "agendada" | "avaliacao_pendente" | "concluida";
 export type ClassPeriodFilter = "all" | "week" | "month" | "3months";
@@ -72,11 +73,11 @@ export function ClassesFilters({
       <div className="flex flex-col md:flex-row gap-4 flex-wrap">
         {/* Busca */}
         <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
-          <span className="text-xs font-medium text-muted-foreground">Busca</span>
+          <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.searchLabel}</span>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por título ou aluno..."
+              placeholder={classesContent.filters.searchPlaceholder}
               className="pl-9"
               value={filters.search}
               onChange={(e) => onChange({ ...filters, search: e.target.value })}
@@ -88,7 +89,7 @@ export function ClassesFilters({
         <div className="flex flex-wrap items-end gap-2">
           {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Status</span>
+            <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.statusLabel}</span>
             <Select
               value={filters.status}
               onValueChange={(v) => onChange({ ...filters, status: v as ClassStatusFilter })}
@@ -97,18 +98,18 @@ export function ClassesFilters({
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="em_aberto">Em aberto</SelectItem>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="agendada">Agendada</SelectItem>
-                <SelectItem value="pendente">Pendente</SelectItem>
-                <SelectItem value="concluida">Concluída</SelectItem>
+                <SelectItem value="em_aberto">{classesContent.filters.statusOpen}</SelectItem>
+                <SelectItem value="all">{classesContent.filters.statusAll}</SelectItem>
+                <SelectItem value="agendada">{classesContent.filters.statusScheduled}</SelectItem>
+                <SelectItem value="pendente">{classesContent.filters.statusPending}</SelectItem>
+                <SelectItem value="concluida">{classesContent.filters.statusDone}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Aluno */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Aluno</span>
+            <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.studentLabel}</span>
             <Select
               value={filters.studentId}
               onValueChange={(v) => onChange({ ...filters, studentId: v })}
@@ -118,7 +119,7 @@ export function ClassesFilters({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all" className="pl-6">
-                  Todos os alunos
+                  {classesContent.filters.studentAll}
                 </SelectItem>
                 {students.map((s) => (
                   <SelectItem key={s.id} value={s.id} className="pl-6">
@@ -131,7 +132,7 @@ export function ClassesFilters({
 
           {/* Ordenação */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Ordenar</span>
+            <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.sortLabel}</span>
             <Select
               value={filters.sort}
               onValueChange={(v) => onChange({ ...filters, sort: v as ClassSortFilter })}
@@ -140,8 +141,8 @@ export function ClassesFilters({
                 <SelectValue placeholder="Ordenação" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recent">Mais recente</SelectItem>
-                <SelectItem value="oldest">Mais antigo</SelectItem>
+                <SelectItem value="recent">{classesContent.filters.sortRecent}</SelectItem>
+                <SelectItem value="oldest">{classesContent.filters.sortOldest}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -150,7 +151,7 @@ export function ClassesFilters({
           <CollapsibleTrigger asChild>
             <Button variant="outline" size="sm" className="h-10 gap-2">
               <Filter className="h-4 w-4" />
-              Mais Filtros
+              {classesContent.filters.moreFilters}
               {isOpen ? (
                 <ChevronUp className="h-4 w-4" />
               ) : (
@@ -163,7 +164,7 @@ export function ClassesFilters({
           {hasActiveFilters && onReset && (
             <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
               <X className="h-4 w-4 mr-1" />
-              Limpar
+              {classesContent.filters.clear}
             </Button>
           )}
         </div>
@@ -176,7 +177,7 @@ export function ClassesFilters({
             {/* Professor */}
             {showTeacherFilter && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">Professor</span>
+                <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.teacherLabel}</span>
                 <Select
                   value={filters.teacherId}
                   onValueChange={(v) => onChange({ ...filters, teacherId: v })}
@@ -186,7 +187,7 @@ export function ClassesFilters({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" className="pl-6">
-                      Todos os professores
+                      {classesContent.filters.teacherAll}
                     </SelectItem>
                     {teachers.map((t) => (
                       <SelectItem key={t.id} value={t.id} className="pl-6">
@@ -200,7 +201,7 @@ export function ClassesFilters({
 
             {/* Tipo */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Tipo</span>
+              <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.typeLabel}</span>
               <Select
                 value={filters.classType}
                 onValueChange={(v) => onChange({ ...filters, classType: v as ClassTypeFilter })}
@@ -209,16 +210,16 @@ export function ClassesFilters({
                   <SelectValue placeholder="Tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="pacote">Pacote</SelectItem>
-                  <SelectItem value="individual">Individual</SelectItem>
+                  <SelectItem value="all">{classesContent.filters.typeAll}</SelectItem>
+                  <SelectItem value="pacote">{classesContent.filters.typePackage}</SelectItem>
+                  <SelectItem value="individual">{classesContent.filters.typeIndividual}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Período */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Período</span>
+              <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.periodLabel}</span>
               <Select
                 value={filters.period}
                 onValueChange={(v) => onChange({ ...filters, period: v as ClassPeriodFilter })}
@@ -227,10 +228,10 @@ export function ClassesFilters({
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="week">Semana</SelectItem>
-                  <SelectItem value="month">Mês</SelectItem>
-                  <SelectItem value="3months">3 meses</SelectItem>
+                  <SelectItem value="all">{classesContent.filters.periodAll}</SelectItem>
+                  <SelectItem value="week">{classesContent.filters.periodWeek}</SelectItem>
+                  <SelectItem value="month">{classesContent.filters.periodMonth}</SelectItem>
+                  <SelectItem value="3months">{classesContent.filters.period3Months}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

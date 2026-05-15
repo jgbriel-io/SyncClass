@@ -6,6 +6,7 @@ import { useCurrentUserProfile } from "@/hooks/useUsers";
 import { SettingsPerfilTab } from "./SettingsPerfilTab";
 import { SettingsSenhaTab } from "./SettingsSenhaTab";
 import { SettingsPreferenciasTab } from "./SettingsPreferenciasTab";
+import { layout } from "@/content";
 
 interface SettingsModalProps {
   open: boolean;
@@ -22,20 +23,20 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const isTeacher = profile?.role === "teacher";
 
   return (
-    <BaseDialog open={open} onOpenChange={onOpenChange} title="Configurações" size="SM">
+    <BaseDialog open={open} onOpenChange={onOpenChange} title={layout.settings.title} size="SM">
       <Tabs defaultValue="perfil" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="perfil" className="gap-1.5 sm:gap-2">
             <User className="h-4 w-4 shrink-0" />
-            <span className="hidden xs:inline sm:inline">Perfil</span>
+            <span className="hidden xs:inline sm:inline">{layout.settings.tabs.profile}</span>
           </TabsTrigger>
           <TabsTrigger value="senha" className="gap-1.5 sm:gap-2">
             <Lock className="h-4 w-4 shrink-0" />
-            <span className="hidden xs:inline sm:inline">Senha</span>
+            <span className="hidden xs:inline sm:inline">{layout.settings.tabs.password}</span>
           </TabsTrigger>
           <TabsTrigger value="preferencias" className="gap-1.5 sm:gap-2">
             <Palette className="h-4 w-4 shrink-0" />
-            <span className="hidden xs:inline sm:inline">Preferências</span>
+            <span className="hidden xs:inline sm:inline">{layout.settings.tabs.preferences}</span>
           </TabsTrigger>
         </TabsList>
 

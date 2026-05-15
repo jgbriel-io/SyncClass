@@ -24,6 +24,7 @@ import { GAP, STACK, ICON_SIZES } from "@/lib/design-tokens";
 import { emailSchema } from "@/lib/validation/email";
 import { StudentLocationSection } from "./StudentLocationSection";
 import { StudentContactSection } from "./StudentContactSection";
+import { students as studentsContent, common } from "@/content";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -38,7 +39,7 @@ function brDateToIso(value: string): string {
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const studentSchema = z.object({
-  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
+  name: z.string().min(2, studentsContent.validation.nameMin).max(100),
   email: emailSchema,
   hourly_rate: z.string().optional().nullable(),
   pay_day: z
@@ -51,7 +52,7 @@ const studentSchema = z.object({
         const num = Number(val);
         return !isNaN(num) && num >= 1 && num <= 31;
       },
-      { message: "Dia de pagamento deve estar entre 1 e 31" }
+      { message: studentsContent.validation.payDayRange }
     ),
   origin: z.enum(["indicacao", "google", "instagram", "passante", "outro"]),
   status: z.enum(["ativo", "inativo"]).optional(),
@@ -59,19 +60,19 @@ const studentSchema = z.object({
     .string()
     .optional()
     .nullable()
-    .refine((val) => !val || isValidDateString(val), { message: "Data inválida" }),
-  country: z.string().min(2, "País é obrigatório").max(100),
-  state: z.string().min(1, "Estado/Região é obrigatório").max(100),
-  city: z.string().min(1, "Cidade é obrigatória").max(100),
+    .refine((val) => !val || isValidDateString(val), { message: studentsContent.validation.birthDateInvalid }),
+  country: z.string().min(2, studentsContent.validation.countryRequired).max(100),
+  state: z.string().min(1, studentsContent.validation.stateRequired).max(100),
+  city: z.string().min(1, studentsContent.validation.cityRequired).max(100),
   phone: z
     .string()
-    .min(1, "Telefone é obrigatório")
+    .min(1, studentsContent.validation.phoneRequired)
     .refine(
       (v) => {
         const digitsOnly = v.replace(/\D/g, "");
         return digitsOnly.length >= 7 && digitsOnly.length <= 15;
       },
-      "Telefone deve ter entre 7 e 15 dígitos"
+      studentsContent.validation.phoneDigits
     ),
 });
 
@@ -263,7 +264,7 @@ export function StudentFormDialog({
     <BaseDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={student ? "Editar Aluno" : "Cadastrar Novo Aluno"}
+      title={student ? studentsContent.formDialog.titleEdit : studentsContent.formDialog.titleNew}
       size="MD"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className={STACK.DEFAULT}>
@@ -302,7 +303,7 @@ export function StudentFormDialog({
             <Label htmlFor="name">Nome completo *</Label>
             <Input
               id="name"
-              placeholder="Nome do aluno"
+              placeholder={studentsContent.formDialog.namePlaceholder}
               {...register("name")}
               disabled={isLoading}
             />
@@ -405,18 +406,18 @@ export function StudentFormDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Cancelar
+            {common.actions.cancel}
           </Button>
           <Button type="submit" disabled={isLoading || !selectedOrigin}>
             {isLoading ? (
               <>
                 <Loader2 className={`mr-2 ${ICON_SIZES.SM} animate-spin`} />
-                Salvando...
+                {studentsContent.formDialog.submitting}
               </>
             ) : student ? (
-              "Salvar alterações"
+              studentsContent.formDialog.submitButton
             ) : (
-              "Cadastrar"
+              studentsContent.formDialog.createButton
             )}
           </Button>
         </div>

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { useDeleteTeacher, useUpdateTeacher, type Teacher } from "@/hooks/useTeachers";
+import { teachers as teachersContent, common } from "@/content";
 
 interface TeacherStatusDialogProps {
   open: boolean;
@@ -44,26 +45,16 @@ export function TeacherStatusDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {isActive ? "Confirmar arquivamento" : "Confirmar reativação"}
+            {isActive ? teachersContent.statusDialog.titleArchive : teachersContent.statusDialog.titleReactivate}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {isActive ? (
-              <>
-                Tem certeza que deseja arquivar o professor{" "}
-                <strong>{teacher?.name}</strong>? Ele será removido da lista de ativos, mas
-                poderá ser visualizado em "Inativos".
-              </>
-            ) : (
-              <>
-                Tem certeza que deseja reativar o professor{" "}
-                <strong>{teacher?.name}</strong>? Ele voltará para a lista de ativos e terá o
-                acesso reativado.
-              </>
-            )}
+            {isActive
+              ? teachersContent.statusDialog.descriptionArchive(teacher?.name ?? "")
+              : teachersContent.statusDialog.descriptionReactivate(teacher?.name ?? "")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>{common.actions.cancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={isPending}
@@ -72,12 +63,12 @@ export function TeacherStatusDialog({
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isActive ? "Arquivando..." : "Reativando..."}
+                {isActive ? teachersContent.statusDialog.archiving : teachersContent.statusDialog.reactivating}
               </>
             ) : isActive ? (
-              "Arquivar"
+              teachersContent.statusDialog.confirmArchive
             ) : (
-              "Reativar"
+              teachersContent.statusDialog.confirmReactivate
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

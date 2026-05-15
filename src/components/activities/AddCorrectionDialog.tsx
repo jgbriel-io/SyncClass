@@ -11,11 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Upload, FileText } from "lucide-react";
 import { useAddActivityCorrection, uploadActivityFile, ActivityWithRelations } from "@/hooks/useActivities";
 import { toast } from "sonner";
+import { activities as activitiesContent, common } from "@/content";
 
 const correctionSchema = z
   .object({
-    feedback: z.string().min(1, "Informe o feedback"),
-    grade: z.string().min(1, "Informe a nota (0–100)"),
+    feedback: z.string().min(1, activitiesContent.validation.feedbackRequired),
+    grade: z.string().min(1, activitiesContent.validation.gradeRequired),
     correctionFile: z.instanceof(File).optional(),
   })
   .refine(
@@ -25,7 +26,7 @@ const correctionSchema = z
       const n = parseFloat(g.replace(",", "."));
       return !Number.isNaN(n) && n >= 0 && n <= 100;
     },
-    { message: "Informe a nota (0–100)", path: ["grade"] }
+    { message: activitiesContent.validation.gradeRange, path: ["grade"] }
   );
 
 type CorrectionFormData = z.infer<typeof correctionSchema>;
@@ -95,7 +96,7 @@ export function AddCorrectionDialog({
       setSelectedFile(null);
       onOpenChange(false);
     } catch (error) {
-      toast.error("Erro ao enviar correção: " + (error as Error).message);
+      toast.error(activitiesContent.correctionDialog.toasts.error((error as Error).message));
     } finally {
       setIsUploading(false);
     }
@@ -109,26 +110,26 @@ export function AddCorrectionDialog({
     <BaseDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Correção e feedback"
+      title={activitiesContent.correctionDialog.title}
       size="SM"
     >
       <DialogDescription asChild>
         <div className="space-y-1 mb-4">
           <p className="text-sm text-muted-foreground">
-            Atividade: <span className="font-medium text-foreground">{activity.title}</span>
+            {activitiesContent.correctionDialog.activityLabel} <span className="font-medium text-foreground">{activity.title}</span>
           </p>
           <p className="text-sm text-muted-foreground">
-            Aluno: <span className="font-medium text-foreground">{activity.students?.name}</span>
+            {activitiesContent.correctionDialog.studentLabel} <span className="font-medium text-foreground">{activity.students?.name}</span>
           </p>
         </div>
       </DialogDescription>
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Feedback */}
           <div className="space-y-2">
-            <Label htmlFor="feedback">Feedback *</Label>
+            <Label htmlFor="feedback">{activitiesContent.correctionDialog.feedbackLabel}</Label>
             <Textarea
               id="feedback"
-              placeholder="Escreva sua correção, observações, elogios..."
+              placeholder={activitiesContent.correctionDialog.feedbackPlaceholder}
               rows={5}
               {...register("feedback")}
               disabled={isPending}
@@ -140,11 +141,11 @@ export function AddCorrectionDialog({
 
           {/* Nota (opcional) */}
           <div className="space-y-2">
-            <Label htmlFor="grade">Nota (0–100) *</Label>
+            <Label htmlFor="grade">{activitiesContent.correctionDialog.gradeLabel}</Label>
             <Input
               id="grade"
               type="text"
-              placeholder="Ex: 85"
+              placeholder={activitiesContent.correctionDialog.gradePlaceholder}
               {...register("grade")}
               disabled={isPending}
             />
@@ -155,7 +156,7 @@ export function AddCorrectionDialog({
 
           {/* Upload de Arquivo de Correção (opcional) */}
           <div className="space-y-2">
-            <Label htmlFor="correctionFile">Arquivo de Correção (opcional)</Label>
+            <Label htmlFor="correctionFile">{activitiesContent.correctionDialog.correctionFileLabel}</Label>
             <div className="flex items-center gap-2">
               <Input
                 id="correctionFile"
@@ -173,7 +174,7 @@ export function AddCorrectionDialog({
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Arquivo com a correção detalhada (opcional)
+              {activitiesContent.correctionDialog.correctionFileHint}
             </p>
           </div>
 
@@ -184,18 +185,18 @@ export function AddCorrectionDialog({
               onClick={() => onOpenChange(false)}
               disabled={isPending}
             >
-              Cancelar
+              {common.actions.cancel}
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
+                  {activitiesContent.correctionDialog.submitting}
                 </>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Enviar correção
+                  {activitiesContent.correctionDialog.submitButton}
                 </>
               )}
             </Button>
