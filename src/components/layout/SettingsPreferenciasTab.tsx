@@ -2,6 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Download, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { pwa, layout } from "@/content";
 import { isPWAInstalled, isPWAInstallPromptAvailable, showPWAInstallPrompt } from "@/lib/pwa";
 
 export function SettingsPreferenciasTab() {
@@ -25,9 +26,9 @@ export function SettingsPreferenciasTab() {
               onClick={async () => {
                 if (isPWAInstallPromptAvailable()) {
                   const accepted = await showPWAInstallPrompt();
-                  if (accepted) toast.success("App instalado com sucesso!");
+                  if (accepted) toast.success(pwa.installBanner.toasts.success);
                 } else {
-                  toast.info("Use o menu do navegador para instalar o app");
+                  toast.info(layout.settings.preferences.installAppBrowserHint);
                 }
               }}
               className="w-full"

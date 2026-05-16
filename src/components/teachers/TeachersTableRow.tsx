@@ -1,3 +1,4 @@
+import { common } from "@/content";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
@@ -19,7 +20,7 @@ import {
   getXLColumnClasses,
 } from "@/lib/design-tokens/table-columns";
 import { COL } from "./TeachersTableRow.constants";
-import { teachers as teachersContent, common } from "@/content";
+import { teachers as teachersContent } from "@/content";
 
 interface TeachersTableRowProps {
   teacher: Teacher;
@@ -54,7 +55,7 @@ export function TeachersTableRow({
       {/* Status Badge */}
       <td className="px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>
         <StatusBadge variant={status === "inativo" ? "default" : "success"}>
-          {status === "inativo" ? "Inativo" : "Ativo"}
+          {status === "inativo" ? teachersContent.table.statusInactive : teachersContent.table.statusActive}
         </StatusBadge>
       </td>
 
@@ -70,8 +71,8 @@ export function TeachersTableRow({
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium truncate" title={teacher.name}>{teacher.name}</p>
             {lastUpdatedAt && (
-              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}>
-                {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
+              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={`${teachersContent.table.editedAt} ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}>
+                {`${teachersContent.table.editedAt} ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
               </p>
             )}
           </div>
@@ -119,7 +120,7 @@ export function TeachersTableRow({
       {/* Ações - XS */}
       <td className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(teacher.id)} title="Ver detalhes">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(teacher.id)} title={common.buttons.viewDetails}>
             <Eye className="h-4 w-4" />
           </Button>
           <DropdownMenu>

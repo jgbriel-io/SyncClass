@@ -1,3 +1,5 @@
+import { common, students as studentsContent } from "@/content";
+import { common } from "@/content";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { AvatarCircle } from "@/components/ui/avatar-circle";
@@ -62,7 +64,7 @@ export function StudentsTableRow({
       {/* Status Badge */}
       <td className={CELL_BASE} style={{ width: '1%' }}>
         <StatusBadge variant={student.status === "ativo" ? "success" : "default"}>
-          {student.status === "ativo" ? "Ativo" : "Inativo"}
+          {student.status === "ativo" ? studentsContent.table.statusActive : studentsContent.table.statusInactive}
         </StatusBadge>
       </td>
 
@@ -76,8 +78,8 @@ export function StudentsTableRow({
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium truncate" title={student.name}>{student.name}</p>
             {lastUpdatedAt && (
-              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}>
-                {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
+              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={`${studentsContent.table.editedAt} ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}>
+                {`${studentsContent.table.editedAt} ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
               </p>
             )}
           </div>
@@ -110,7 +112,7 @@ export function StudentsTableRow({
         {financialStatus ? (
           <StatusBadge variant={financialStatus.variant}>{financialStatus.label}</StatusBadge>
         ) : (
-          <span className="text-muted-foreground truncate block" title="Sem cobranças">Sem cobranças</span>
+          <span className="text-muted-foreground truncate block" title={studentsContent.table.noCharges}>{studentsContent.table.noCharges}</span>
         )}
       </td>
 
@@ -118,19 +120,19 @@ export function StudentsTableRow({
         <div className="space-y-0.5">
           <span className="text-muted-foreground block truncate" title={lastClassDateRaw ? format(new Date(lastClassDateRaw + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "—"}>{lastClassDateRaw ? format(new Date(lastClassDateRaw + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "—"}</span>
           {daysWithoutClass !== null && (
-            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground block truncate" title={`${daysWithoutClass} dia${daysWithoutClass === 1 ? "" : "s"} sem aula`}>{daysWithoutClass} dia{daysWithoutClass === 1 ? "" : "s"} sem aula</span>
+            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground block truncate" title={studentsContent.table.daysWithoutClass(daysWithoutClass)}>{studentsContent.table.daysWithoutClass(daysWithoutClass)}</span>
           )}
         </div>
       </td>
 
       <td className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(student.id)} title="Ver detalhes" aria-label="Ver detalhes">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(student.id)} title={common.buttons.viewDetails} aria-label={common.aria.moreOptions}>
             <Eye className="h-4 w-4" aria-hidden="true" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Mais opções">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={common.aria.moreOptions}>
                 <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>

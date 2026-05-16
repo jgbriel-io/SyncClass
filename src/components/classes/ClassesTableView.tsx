@@ -1,3 +1,4 @@
+import { common } from "@/content";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyClassesState } from "@/components/ui/contextual-empty-states";
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,7 @@ export function ClassesTableView({
               <TableHead className={cn(tableThSmall, "hidden sm:table-cell")} style={{ width: CL_COL.DURACAO, minWidth: CL_COL.DURACAO }}>{classesContent.table.colDuration}</TableHead>
               <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: CL_COL.NOTA, minWidth: CL_COL.NOTA }}>{classesContent.table.colGrade}</TableHead>
               <TableHead className={cn(tableThSmall, "hidden xl:table-cell")} style={{ width: CL_COL.FINANCEIRO, minWidth: CL_COL.FINANCEIRO }}>{classesContent.table.colFinancial}</TableHead>
-              <TableHead className={cn(tableThSmall, "hidden xl:table-cell")} style={{ width: CL_COL.AVALIAR, minWidth: CL_COL.AVALIAR }} aria-label="Avaliar" />
+              <TableHead className={cn(tableThSmall, "hidden xl:table-cell")} style={{ width: CL_COL.AVALIAR, minWidth: CL_COL.AVALIAR }} aria-label={common.aria.evaluate} />
               <TableHead className={tableThSmall} style={{ width: CL_COL.ACOES, minWidth: CL_COL.ACOES }}>{classesContent.table.colActions}</TableHead>
             </TableRow>
           </TableHeader>

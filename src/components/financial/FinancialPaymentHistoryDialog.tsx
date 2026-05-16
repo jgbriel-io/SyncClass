@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { toast } from "sonner";
+import { financial, common } from "@/content";
 import { formatCurrency, formatDateTime } from "@/lib/utils/formatters";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -49,11 +50,11 @@ export function FinancialPaymentHistoryDialog({
         p_approved: true,
         p_rejection_reason: null,
       });
-      toast.success("Pagamento confirmado!");
+      toast.success(financial.paymentHistoryDialog.toasts.approveSuccess);
       onClose();
       queryClient.invalidateQueries({ queryKey: ["financial-records"] });
     } catch {
-      toast.error("Erro ao aprovar comprovante");
+      toast.error(financial.paymentHistoryDialog.toasts.approveError);
     }
   };
 
@@ -65,11 +66,11 @@ export function FinancialPaymentHistoryDialog({
         p_approved: false,
         p_rejection_reason: "Comprovante inválido",
       });
-      toast.success("Comprovante rejeitado");
+      toast.success(financial.paymentHistoryDialog.toasts.rejectSuccess);
       onClose();
       queryClient.invalidateQueries({ queryKey: ["financial-records"] });
     } catch {
-      toast.error("Erro ao rejeitar comprovante");
+      toast.error(financial.paymentHistoryDialog.toasts.rejectError);
     }
   };
 
@@ -80,7 +81,7 @@ export function FinancialPaymentHistoryDialog({
       const url = await getPaymentProofUrl(r.payment_proof_url);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch {
-      toast.error("Erro ao abrir comprovante");
+      toast.error(financial.paymentHistoryDialog.toasts.proofOpenError);
     }
   };
 
@@ -88,7 +89,7 @@ export function FinancialPaymentHistoryDialog({
     <Dialog open={!!record} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-base">Histórico de pagamento</DialogTitle>
+          <DialogTitle className="text-base">{financial.paymentHistoryDialog.title}</DialogTitle>
         </DialogHeader>
 
         {r && (
@@ -99,7 +100,7 @@ export function FinancialPaymentHistoryDialog({
 
             {r.description && (
               <div className="rounded-lg border bg-muted/50 p-3">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Descrição</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{financial.paymentHistoryDialog.descriptionLabel}</p>
                 <p className="text-sm text-foreground break-words overflow-wrap-anywhere">
                   {r.description}
                 </p>
@@ -110,27 +111,27 @@ export function FinancialPaymentHistoryDialog({
             {r.payment_proof_url && (
               <div className="rounded-lg border bg-primary/5 p-3">
                 <p className="text-xs font-medium text-muted-foreground mb-2">
-                  Comprovante de Pagamento
+                  {financial.paymentHistoryDialog.proofLabel}
                 </p>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0 overflow-hidden">
                     <p className="text-sm font-medium break-words overflow-wrap-anywhere">
-                      {r.payment_proof_filename || "Comprovante.pdf"}
+                      {r.payment_proof_filename || financial.paymentHistoryDialog.proofFilenameDefault}
                     </p>
                     <p className="text-xs text-muted-foreground break-words">
-                      Enviado em{" "}
+                      {financial.paymentHistoryDialog.sentAt}{" "}
                       {r.payment_proof_uploaded_at
                         ? formatDateTime(r.payment_proof_uploaded_at)
                         : "—"}
                     </p>
                     {r.payment_proof_status === "pending" && (
                       <p className="text-xs text-warning font-medium mt-1">
-                        Aguardando aprovação
+                        {financial.paymentHistoryDialog.proofPending}
                       </p>
                     )}
                     {r.payment_proof_status === "rejected" && (
                       <p className="text-xs text-destructive font-medium mt-1 break-words overflow-wrap-anywhere">
-                        Rejeitado: {r.payment_proof_rejection_reason || "Sem motivo"}
+                        {financial.paymentHistoryDialog.proofRejected} {r.payment_proof_rejection_reason || common.labels.noReason}
                       </p>
                     )}
                   </div>
@@ -141,7 +142,7 @@ export function FinancialPaymentHistoryDialog({
                     onClick={handleViewProof}
                   >
                     <Eye className="h-4 w-4 mr-1" />
-                    Ver
+                    {financial.paymentHistoryDialog.view}
                   </Button>
                 </div>
 
@@ -153,7 +154,7 @@ export function FinancialPaymentHistoryDialog({
                       className="flex-1 bg-success text-white hover:bg-success/90"
                       onClick={handleApproveProof}
                     >
-                      Aprovar
+                      {financial.paymentHistoryDialog.approve}
                     </Button>
                     <Button
                       size="sm"
@@ -161,7 +162,7 @@ export function FinancialPaymentHistoryDialog({
                       className="flex-1"
                       onClick={handleRejectProof}
                     >
-                      Rejeitar
+                      {financial.paymentHistoryDialog.reject}
                     </Button>
                   </div>
                 )}
@@ -174,32 +175,32 @@ export function FinancialPaymentHistoryDialog({
                 {currentUserProfile?.role === "admin" ? (
                   <>
                     <p className="font-medium text-foreground break-words overflow-wrap-anywhere">
-                      Confirmado por {r.confirmed_by.full_name}
+                      {financial.paymentHistoryDialog.confirmedBy} {r.confirmed_by.full_name}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5 break-words">
-                      {r.updated_at ? formatDateTime(r.updated_at) : "Data não disponível"}
+                      {r.updated_at ? formatDateTime(r.updated_at) : financial.paymentHistoryDialog.dateUnavailable}
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="font-medium text-foreground break-words">Pagamento confirmado</p>
+                    <p className="font-medium text-foreground break-words">{financial.paymentHistoryDialog.paymentConfirmed}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 break-words">
-                      {r.updated_at ? formatDateTime(r.updated_at) : "Data não disponível"}
+                      {r.updated_at ? formatDateTime(r.updated_at) : financial.paymentHistoryDialog.dateUnavailable}
                     </p>
                   </>
                 )}
               </div>
             ) : r.status === "pago" ? (
               <div className="rounded-lg border bg-success/10 border-success/20 p-3 text-sm">
-                <p className="font-medium text-foreground break-words">Pagamento confirmado</p>
+                <p className="font-medium text-foreground break-words">{financial.paymentHistoryDialog.paymentConfirmed}</p>
                 <p className="text-xs text-muted-foreground mt-0.5 break-words">
-                  {r.updated_at ? formatDateTime(r.updated_at) : "Data não disponível"}
+                  {r.updated_at ? formatDateTime(r.updated_at) : financial.paymentHistoryDialog.dateUnavailable}
                 </p>
               </div>
             ) : (
               <>
                 <p className="text-sm text-muted-foreground break-words">
-                  Nenhum pagamento registrado para esta cobrança.
+                  {financial.paymentHistoryDialog.noPayment}
                 </p>
                 {(!r.payment_proof_url || r.payment_proof_status === "rejected") && (
                   <Button
@@ -209,7 +210,7 @@ export function FinancialPaymentHistoryDialog({
                       onConfirmPayment(record!);
                     }}
                   >
-                    Confirmar Pagamento
+                    {financial.paymentHistoryDialog.confirmPaymentButton}
                   </Button>
                 )}
               </>

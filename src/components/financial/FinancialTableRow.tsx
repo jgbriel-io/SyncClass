@@ -1,3 +1,4 @@
+import { common, financial } from "@/content";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { AvatarCircle } from "@/components/ui/avatar-circle";
@@ -25,13 +26,13 @@ const statusVariants: Record<string, "success" | "warning" | "destructive" | "de
 };
 
 const statusLabels: Record<string, string> = {
-  pago: "Pago",
-  pendente: "Pendente",
-  atrasado: "Atrasado",
-  validando: "Validando",
-  abonado: "Abonado",
-  extornado: "Extornado",
-  cancelado: "Cancelado",
+  pago: financial.tableRow.statusPaid,
+  pendente: financial.tableRow.statusPending,
+  atrasado: financial.tableRow.statusOverdue,
+  validando: financial.tableRow.statusValidating,
+  abonado: financial.tableRow.statusAbonado,
+  extornado: financial.tableRow.statusExtornado,
+  cancelado: financial.tableRow.statusCanceled,
 };
 
 interface FinancialTableRowProps {
@@ -77,8 +78,8 @@ export function FinancialTableRow({
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium truncate" title={record.students?.name || "—"}>{record.students?.name || "—"}</p>
             {lastUpdatedAt && (
-              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={`Editado em ${formatDateTime(lastUpdatedAt)}`}>
-                {`Editado em ${formatDateTime(lastUpdatedAt)}`}
+              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={`${financial.tableRow.editedAt} ${formatDateTime(lastUpdatedAt)}`}>
+                {`${financial.tableRow.editedAt} ${formatDateTime(lastUpdatedAt)}`}
               </p>
             )}
           </div>
@@ -97,15 +98,15 @@ export function FinancialTableRow({
                 : formatDate(record.class_logs.class_date)}
             </span>
             {showTeacherColumn && record.students?.teacher_id && (
-              <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground/80 truncate" title={`Professor: ${teacherMap.get(record.students.teacher_id) || "—"}`}>
-                Professor: {teacherMap.get(record.students.teacher_id) || "—"}
+              <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground/80 truncate" title={`${financial.tableRow.teacher} ${teacherMap.get(record.students.teacher_id) || "—"}`}>
+                {financial.tableRow.teacher} {teacherMap.get(record.students.teacher_id) || "—"}
               </span>
             )}
           </div>
         ) : record.package_classes && record.package_classes.length > 0 ? (
           <div className="flex flex-col text-xs text-muted-foreground">
-            <span className="truncate" title={`Pacote mensal - ${record.package_classes.length} aula(s)`}>
-              Pacote mensal - {record.package_classes.length} aula(s)
+            <span className="truncate" title={`${financial.tableRow.packageMonthly} - ${record.package_classes.length} ${financial.tableRow.classes}`}>
+              {financial.tableRow.packageMonthly} - {record.package_classes.length} {financial.tableRow.classes}
             </span>
             <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] mt-0.5 truncate" title={(() => {
               const sorted = [...record.package_classes].sort((a, b) =>
@@ -126,8 +127,8 @@ export function FinancialTableRow({
             </span>
           </div>
         ) : (
-          <span className="text-xs text-muted-foreground/70 truncate block" title="Sem aula vinculada">
-            Sem aula vinculada
+          <span className="text-xs text-muted-foreground/70 truncate block" title={financial.tableRow.noClass}>
+            {financial.tableRow.noClass}
           </span>
         )}
       </td>
@@ -167,15 +168,15 @@ export function FinancialTableRow({
               className="h-8 w-[7rem] shrink-0 whitespace-nowrap bg-warning text-white font-semibold hover:bg-warning/90 border-none shadow text-xs"
               disabled={isUndoing}
               onClick={() => onUndoPayment(record)}
-              title={isUndoing ? "Desfazendo..." : "Desfazer"}
+              title={isUndoing ? financial.tableRow.undoing : financial.tableRow.undo}
             >
               {isUndoing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" />
-                  Desfazendo...
+                  {financial.tableRow.undoing}
                 </>
               ) : (
-                "Desfazer"
+                financial.tableRow.undo
               )}
             </Button>
           ) : record.actualStatus === "abonado" || record.actualStatus === "extornado" || record.actualStatus === "cancelado" ? (
@@ -184,18 +185,18 @@ export function FinancialTableRow({
               className="h-8 w-[7rem] shrink-0 text-xs"
               disabled
               variant="ghost"
-              title="Cobrança finalizada"
+              title={financial.tableRow.finalized}
             >
-              Finalizado
+              {financial.tableRow.finalized}
             </Button>
           ) : (
             <Button
               size="sm"
               className="h-8 w-[7rem] shrink-0 bg-success-action text-white hover:bg-success-action/90 border-none text-xs"
               onClick={() => onConfirmPayment(record)}
-              title="Confirmar"
+              title={financial.tableRow.confirm}
             >
-              Confirmar
+              {financial.tableRow.confirm}
             </Button>
           )}
         </div>
@@ -209,21 +210,21 @@ export function FinancialTableRow({
             size="icon"
             className="h-8 w-8"
             onClick={() => onViewHistory(record)}
-            title="Ver histórico de pagamento"
-            aria-label="Ver histórico de pagamento"
+            title={financial.tableRow.viewHistory}
+            aria-label={financial.tableRow.viewHistory}
           >
             <Eye className="h-4 w-4" aria-hidden="true" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Mais opções">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={financial.tableRow.moreOptions}>
                 <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(record)}>
                 <Pencil className="h-4 w-4 mr-2" aria-hidden="true" />
-                Editar
+                {financial.tableRow.edit}
               </DropdownMenuItem>
               {canDelete && (
                 <DropdownMenuItem 
@@ -231,7 +232,7 @@ export function FinancialTableRow({
                   className="text-destructive focus:text-destructive"
                 >
                   <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Excluir
+                  {financial.tableRow.delete}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

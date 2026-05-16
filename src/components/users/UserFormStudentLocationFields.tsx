@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { BR_STATES } from "@/lib/br-locations";
 import { COMMON_COUNTRIES } from "@/lib/countries";
 import type { BrCityOption } from "@/lib/br-locations";
+import { ui } from "@/content";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyFormData = any;
@@ -57,9 +58,9 @@ export function UserFormStudentLocationFields({
           </PopoverTrigger>
           <PopoverContent className="w-full p-0" align="start">
             <Command>
-              <CommandInput placeholder="Buscar país..." />
+              <CommandInput placeholder={ui.location.countryPlaceholder} />
               <CommandList>
-                <CommandEmpty>Nenhum país encontrado.</CommandEmpty>
+                <CommandEmpty>{ui.location.countryEmpty}</CommandEmpty>
                 <CommandGroup>
                   {COMMON_COUNTRIES.map((country) => (
                     <CommandItem key={country.code} value={country.name} onSelect={() => {
@@ -94,9 +95,9 @@ export function UserFormStudentLocationFields({
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
               <Command>
-                <CommandInput placeholder="Buscar estado..." />
+                <CommandInput placeholder={ui.location.statePlaceholder} />
                 <CommandList>
-                  <CommandEmpty>Nenhum estado encontrado.</CommandEmpty>
+                  <CommandEmpty>{ui.location.stateEmpty}</CommandEmpty>
                   <CommandGroup>
                     {BR_STATES.map((state) => (
                       <CommandItem key={state.code} value={`${state.name} ${state.code}`} onSelect={() => {
@@ -119,7 +120,7 @@ export function UserFormStudentLocationFields({
       ) : (
         <div className="space-y-2">
           <Label htmlFor="state">Estado/Região *</Label>
-          <Input id="state" placeholder="Ex: California, Ontario" {...register("state")} disabled={isLoading} />
+          <Input id="state" placeholder={ui.location.stateManualPlaceholder} {...register("state")} disabled={isLoading} />
           {errors.state && <p className="text-sm text-destructive">{errors.state?.message}</p>}
         </div>
       )}
@@ -137,9 +138,9 @@ export function UserFormStudentLocationFields({
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
               <Command>
-                <CommandInput placeholder="Buscar cidade..." />
+                <CommandInput placeholder={ui.location.cityPlaceholder} />
                 <CommandList>
-                  <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
+                  <CommandEmpty>{ui.location.cityEmpty}</CommandEmpty>
                   <CommandGroup>
                     {cities.map((city) => (
                       <CommandItem key={city.value} value={city.label} onSelect={() => {
@@ -159,7 +160,7 @@ export function UserFormStudentLocationFields({
       ) : (
         <div className="space-y-2">
           <Label htmlFor="city">Cidade *</Label>
-          <Input id="city" placeholder="Ex: Londres, Paris, Nova York" {...register("city")} disabled={isLoading} />
+          <Input id="city" placeholder={ui.location.cityManualPlaceholder} {...register("city")} disabled={isLoading} />
           {errors.city && <p className="text-sm text-destructive">{errors.city?.message}</p>}
         </div>
       )}

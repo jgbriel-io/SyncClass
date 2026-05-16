@@ -198,6 +198,25 @@ export function DeleteUserDialog({
 
   const isDestructive = !(info.userIsInactive && !forceHardDelete);
 
+  const getDescription = () => {
+    if (info.isArchivedProfile) {
+      return usersContent.deleteDialog.descriptionArchived(info.displayName);
+    }
+    if (info.isHardDelete) {
+      return usersContent.deleteDialog.descriptionHardDelete(info.displayName);
+    }
+    if (info.userIsInactive && !forceHardDelete) {
+      return usersContent.deleteDialog.descriptionReactivate(info.displayName);
+    }
+    if (info.linkedStudent && info.isStudentActive) {
+      return usersContent.deleteDialog.descriptionArchiveStudent(info.displayName);
+    }
+    if (info.linkedTeacher && info.isTeacherActive) {
+      return usersContent.deleteDialog.descriptionArchiveTeacher(info.displayName);
+    }
+    return usersContent.deleteDialog.descriptionArchiveGeneric(info.displayName);
+  };
+
   return (
     <AlertDialog
       open={open}
@@ -209,47 +228,7 @@ export function DeleteUserDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>
-            {info.isArchivedProfile ? (
-              <>
-                Tem certeza que deseja excluir o arquivo morto do usuário{" "}
-                <strong>{info.displayName}</strong>?
-                <br />
-                <br />
-                A conta será removida do sistema (Supabase Auth e perfil). O
-                email ficará disponível para reutilização. Esta ação não pode
-                ser desfeita.
-              </>
-            ) : info.isHardDelete ? (
-              <>
-                A conta do usuário <strong>{info.displayName}</strong> será
-                removida do sistema (Supabase Auth, perfil e vínculos). Esta
-                ação não pode ser desfeita.
-              </>
-            ) : info.userIsInactive && !forceHardDelete ? (
-              <>
-                Tem certeza que deseja reativar o usuário{" "}
-                <strong>{info.displayName}</strong>? Ele voltará a aparecer na
-                lista de usuários ativos.
-              </>
-            ) : info.linkedStudent && info.isStudentActive ? (
-              <>
-                Tem certeza que deseja arquivar o usuário{" "}
-                <strong>{info.displayName}</strong>? Ele será removido da lista
-                de ativos e aparecerá como aluno inativo.
-              </>
-            ) : info.linkedTeacher && info.isTeacherActive ? (
-              <>
-                Tem certeza que deseja arquivar o usuário{" "}
-                <strong>{info.displayName}</strong>? Ele será removido da lista
-                de ativos e aparecerá como professor inativo.
-              </>
-            ) : (
-              <>
-                Tem certeza que deseja arquivar o usuário{" "}
-                <strong>{info.displayName}</strong>? Esta ação não remove a
-                conta do Supabase Auth, apenas arquiva o usuário no painel.
-              </>
-            )}
+            {getDescription()}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

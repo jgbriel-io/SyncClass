@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`NavLink - Snapshot > should render active nav link 1`] = `
+<div>
+  <a
+    aria-current="page"
+    class=""
+    href="/"
+    icon="Home"
+  >
+    Home
+  </a>
+</div>
+`;
+
+exports[`NavLink - Snapshot > should render nav link with centralized content 1`] = `
+<div>
+  <a
+    class=""
+    href="/test"
+    icon="Users"
+  >
+    Test Link
+  </a>
+</div>
+`;

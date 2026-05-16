@@ -25,7 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { brDateStringToDate, isValidDateString, parseMoneyToNumber, formatNumberToMoneyBR, REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { cn } from "@/lib/utils";
-import { financial } from "@/content";
+import { common, financial } from "@/content";
 
 function brDateToIso(value: string): string {
   const [day, month, year] = value.split("/");
@@ -208,7 +208,7 @@ export function FinancialFormDialog({
               {initialData && selectedTeacherId ? (
                 <>
                   <Input
-                    value={teachers.find(t => t.id === selectedTeacherId)?.name || "Professor não encontrado"}
+                    value={teachers.find(t => t.id === selectedTeacherId)?.name || common.labels.teacherNotFound}
                     disabled
                     readOnly
                   />
@@ -281,15 +281,15 @@ export function FinancialFormDialog({
                     ? (() => {
                         const firstClass = packageClasses[0];
                         const rawTitle = firstClass.title?.trim();
-                        const displayTitle = rawTitle || `Aula - ${formatClassLogDate(firstClass.class_date)}`;
-                        return `${displayTitle} (Pacote)`;
+                        const displayTitle = rawTitle || `${financial.formDialog.classDatePrefix}${formatClassLogDate(firstClass.class_date)}`;
+                        return `${displayTitle} ${financial.formDialog.packageLabel}`;
                       })()
                     : currentClassLog
                       ? (() => {
                           const rawTitle = currentClassLog.title?.trim();
-                          return rawTitle || `Aula - ${formatClassLogDate(currentClassLog.class_date)}`;
+                          return rawTitle || `${financial.formDialog.classDatePrefix}${formatClassLogDate(currentClassLog.class_date)}`;
                         })()
-                      : "Sem aula vinculada"
+                      : financial.formDialog.noClassLinked
                 }
                 disabled
                 className="bg-muted"
@@ -316,8 +316,8 @@ export function FinancialFormDialog({
                   {classLogOptions.map((log) => (
                     <SelectItem key={log.id} value={log.id}>
                       {formatClassLogDate(log.class_date)}
-                      {log.attendance === false && " (Falta)"}
-                      {log.grade && ` - Nota: ${log.grade}`}
+                      {log.attendance === false && ` (${financial.tableRow.absence})`}
+                      {log.grade && ` - ${financial.tableRow.grade} ${log.grade}`}
                     </SelectItem>
                   ))}
                 </SelectContent>

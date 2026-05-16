@@ -14,7 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { classes as classesContent } from "@/content";
+import { common, classes as classesContent } from "@/content";
 
 export type ClassStatusFilter = "all" | "em_aberto" | "agendada" | "avaliacao_pendente" | "concluida";
 export type ClassPeriodFilter = "all" | "week" | "month" | "3months";
@@ -95,7 +95,7 @@ export function ClassesFilters({
               onValueChange={(v) => onChange({ ...filters, status: v as ClassStatusFilter })}
             >
               <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={common.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="em_aberto">{classesContent.filters.statusOpen}</SelectItem>
@@ -115,7 +115,7 @@ export function ClassesFilters({
               onValueChange={(v) => onChange({ ...filters, studentId: v })}
             >
               <SelectTrigger className="w-[200px] pl-3 text-left">
-                <SelectValue placeholder="Aluno" />
+                <SelectValue placeholder={common.placeholders.student} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all" className="pl-6">
@@ -138,7 +138,7 @@ export function ClassesFilters({
               onValueChange={(v) => onChange({ ...filters, sort: v as ClassSortFilter })}
             >
               <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Ordenação" />
+                <SelectValue placeholder={common.placeholders.sorting} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="recent">{classesContent.filters.sortRecent}</SelectItem>
@@ -183,7 +183,7 @@ export function ClassesFilters({
                   onValueChange={(v) => onChange({ ...filters, teacherId: v })}
                 >
                   <SelectTrigger className="w-[200px] pl-3 text-left">
-                    <SelectValue placeholder="Professor responsável" />
+                    <SelectValue placeholder={common.placeholders.teacherResponsible} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" className="pl-6">
@@ -207,7 +207,7 @@ export function ClassesFilters({
                 onValueChange={(v) => onChange({ ...filters, classType: v as ClassTypeFilter })}
               >
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Tipo" />
+                  <SelectValue placeholder={common.placeholders.type} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{classesContent.filters.typeAll}</SelectItem>
@@ -225,7 +225,7 @@ export function ClassesFilters({
                 onValueChange={(v) => onChange({ ...filters, period: v as ClassPeriodFilter })}
               >
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Período" />
+                  <SelectValue placeholder={common.placeholders.period} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{classesContent.filters.periodAll}</SelectItem>

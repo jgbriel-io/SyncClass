@@ -151,7 +151,7 @@ export function ResetPasswordDialog({
                 <Input
                   id="reset-password-new"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={common.placeholders.password}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   minLength={8}
@@ -163,7 +163,7 @@ export function ResetPasswordDialog({
                 <Input
                   id="reset-password-confirm"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={common.placeholders.password}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   minLength={8}

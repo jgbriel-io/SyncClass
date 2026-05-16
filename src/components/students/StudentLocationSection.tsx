@@ -2,6 +2,7 @@ import { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, FieldValue
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ui, students as studentsContent, common } from "@/content";
 import {
   Command,
   CommandEmpty,
@@ -64,7 +65,7 @@ export function StudentLocationSection({
     <>
       {/* País */}
       <div className={STACK.TIGHT}>
-        <Label htmlFor="country">País *</Label>
+        <Label htmlFor="country">{studentsContent.locationSection.countryLabel}</Label>
         <Popover open={countryPopoverOpen} onOpenChange={onCountryPopoverChange}>
           <PopoverTrigger asChild>
             <Button
@@ -78,16 +79,16 @@ export function StudentLocationSection({
               disabled={isLoading}
             >
               <span className="min-w-0 truncate">
-                {selectedCountry || "Selecione o país"}
+                {selectedCountry || studentsContent.locationSection.selectCountry}
               </span>
               <ChevronsUpDown className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`} />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-full p-0" align="start">
             <Command>
-              <CommandInput placeholder="Buscar país..." />
+              <CommandInput placeholder={ui.location.countryPlaceholder} />
               <CommandList>
-                <CommandEmpty>Nenhum país encontrado.</CommandEmpty>
+                <CommandEmpty>{studentsContent.locationSection.noCountriesFound}</CommandEmpty>
                 <CommandGroup>
                   {COMMON_COUNTRIES.map((country) => (
                     <CommandItem
@@ -118,7 +119,7 @@ export function StudentLocationSection({
       {/* Estado */}
       {isBrazilSelected ? (
         <div className={STACK.TIGHT}>
-          <Label htmlFor="state">Estado (UF) *</Label>
+          <Label htmlFor="state">{studentsContent.locationSection.stateLabel}</Label>
           <Popover open={statePopoverOpen} onOpenChange={onStatePopoverChange}>
             <PopoverTrigger asChild>
               <Button
@@ -133,16 +134,16 @@ export function StudentLocationSection({
               >
                 <span className="min-w-0 truncate">
                   {BR_STATES.find((s) => s.code === selectedState)?.name ||
-                    "Selecione o estado"}
+                    studentsContent.locationSection.selectState}
                 </span>
                 <ChevronsUpDown className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`} />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
               <Command>
-                <CommandInput placeholder="Buscar estado..." />
+                <CommandInput placeholder={ui.location.statePlaceholder} />
                 <CommandList>
-                  <CommandEmpty>Nenhum estado encontrado.</CommandEmpty>
+                  <CommandEmpty>{studentsContent.locationSection.noStatesFound}</CommandEmpty>
                   <CommandGroup>
                     {BR_STATES.map((state) => (
                       <CommandItem
@@ -170,10 +171,10 @@ export function StudentLocationSection({
         </div>
       ) : (
         <div className={STACK.TIGHT}>
-          <Label htmlFor="state">Estado/Região *</Label>
+          <Label htmlFor="state">{studentsContent.locationSection.stateManualLabel}</Label>
           <Input
             id="state"
-            placeholder="Ex: California, Ontario"
+            placeholder={ui.location.stateManualPlaceholder}
             {...register("state")}
             disabled={isLoading}
           />
@@ -186,7 +187,7 @@ export function StudentLocationSection({
       {/* Cidade */}
       {isBrazilSelected ? (
         <div className={STACK.TIGHT}>
-          <Label htmlFor="city">Cidade *</Label>
+          <Label htmlFor="city">{studentsContent.locationSection.cityLabel}</Label>
           <Popover open={cityPopoverOpen} onOpenChange={onCityPopoverChange}>
             <PopoverTrigger asChild>
               <Button
@@ -204,8 +205,8 @@ export function StudentLocationSection({
                     const current = cities.find((c) => c.value === watchedCity);
                     if (current) return current.label;
                     if (watchedCity) return watchedCity;
-                    if (isLoadingCities) return "Carregando cidades...";
-                    return selectedState ? "Selecione a cidade" : "Selecione uma UF primeiro";
+                    if (isLoadingCities) return common.errors.loadingCities;
+                    return selectedState ? studentsContent.locationSection.selectCity : studentsContent.locationSection.selectStateFirst;
                   })()}
                 </span>
                 <ChevronsUpDown className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`} />
@@ -213,9 +214,9 @@ export function StudentLocationSection({
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
               <Command>
-                <CommandInput placeholder="Buscar cidade..." />
+                <CommandInput placeholder={ui.location.cityPlaceholder} />
                 <CommandList>
-                  <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
+                  <CommandEmpty>{studentsContent.locationSection.noCitiesFound}</CommandEmpty>
                   <CommandGroup>
                     {cities.map((city) => (
                       <CommandItem
@@ -240,10 +241,10 @@ export function StudentLocationSection({
         </div>
       ) : (
         <div className={STACK.TIGHT}>
-          <Label htmlFor="city">Cidade *</Label>
+          <Label htmlFor="city">{studentsContent.locationSection.cityLabel}</Label>
           <Input
             id="city"
-            placeholder="Ex: Londres, Paris, Nova York"
+            placeholder={ui.location.cityManualPlaceholder}
             {...register("city")}
             disabled={isLoading}
           />

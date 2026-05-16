@@ -229,7 +229,7 @@ export function EditActivityDialog({
                     disabled={isPending}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dueDate || "Data"}
+                    {dueDate || common.labels.date}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -260,10 +260,10 @@ export function EditActivityDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-description">Descrição (opcional)</Label>
+            <Label htmlFor="edit-description">{common.labels.description} {common.labels.optional}</Label>
             <Textarea
               id="edit-description"
-              placeholder="Instruções e observações..."
+              placeholder={common.placeholders.instructionsHint}
               rows={3}
               {...register("description")}
               disabled={isPending}

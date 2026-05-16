@@ -1,4 +1,47 @@
-# Sprint 21 - Refatoração de Componentes (TODO)
+# Sprint 21 - Refatoração de Componentes
+
+## Status
+
+✅ **Concluída** — todos os componentes refatorados para usar `src/content/`
+
+## O Que Foi Feito
+
+### Fase 1: Toasts (✅ Concluída anteriormente)
+1. ✅ `src/components/activities/DeliverActivityDialog.tsx`
+2. ✅ `src/components/activities/ActivityCorrectionFormInline.tsx`
+3. ✅ `src/components/activities/EditActivityDialog.tsx`
+4. ✅ `src/components/activities/SendActivityDialog.tsx`
+5. ✅ `src/components/activities/AddCorrectionDialog.tsx`
+6. ✅ `src/components/classes/PackageSlotList.tsx`
+7. ✅ `src/components/pwa/InstallPWABanner.tsx`
+8. ✅ `src/components/layout/SettingsPreferenciasTab.tsx`
+9. ✅ `src/components/student/StudentPixPaymentBox.tsx`
+10. ✅ `src/components/financial/FinancialPaymentHistoryDialog.tsx`
+11. ✅ `src/components/classes/PostClassDialog.tsx`
+12. ✅ `src/components/classes/PackageClassesDialog.tsx`
+13. ✅ `src/components/admin/StudentDetailActivitiesTab.tsx`
+
+### Fase 2: Validações Zod (✅ Concluída)
+- ✅ `src/components/users/userFormSchemas.ts` — substituídas 3 strings hardcoded
+- ✅ `src/content/students.ts` — adicionadas chaves `hourlyRateRequired`, `payDayRequired`, `birthDateRequired`
+
+### Fase 3: Empty States (✅ Já estava concluída)
+- ✅ `src/components/ui/contextual-empty-states.tsx` — já usava `ui.emptyStates.*`
+
+### Fase 4: Placeholders (✅ Concluída)
+- ✅ `src/components/users/UserFormStudentFields.tsx` — birthDate, year, phone, email, hourlyRate, payDay, paymentMethod
+- ✅ `src/components/users/UserFormTeacherFields.tsx` — name, email, phone
+- ✅ `src/components/users/UserFormAdminFields.tsx` — email, fullName
+- ✅ `src/components/users/UserFormStudentLocationFields.tsx` — country, state, city (placeholders e empty states)
+
+### Fase 5: Aria Labels (✅ Concluída)
+- ✅ `src/components/ui/table-pagination-bar.tsx` — tablePagination, previousPage, nextPage
+
+## Resultado
+
+- Zero strings hardcoded de UI nos arquivos refatorados
+- Build sem erros (diagnostics limpos)
+- Estrutura pronta para i18n (adicionar EN no futuro)
 
 ## Status Atual
 

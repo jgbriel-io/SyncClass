@@ -126,6 +126,15 @@ export const classes = {
     submitButton: (count: number) => `Cadastrar ${count} aula(s)`,
     description: "Registre múltiplas aulas de uma vez.",
     submitButtonBase: "Salvar pacote",
+    modeFixed: "Horário fixo",
+    modeDynamic: "Aulas individuais",
+    generateButton: "Gerar aulas do mês",
+    slotListTitle: "Aulas geradas",
+    slotListTitleDynamic: "Aulas individuais",
+    addSlotButton: "Adicionar",
+    slotDateLabel: "Data",
+    slotStartLabel: "Início",
+    slotEndLabel: "Término",
     toasts: {
       selectMonth: "Selecione o mês e o ano.",
       selectWeekday: "Selecione pelo menos um dia da semana.",
@@ -149,6 +158,7 @@ export const classes = {
     feedbackPlaceholder: "Observações sobre a aula...",
     chargeAbsenceLabel: "Cobrar esta falta",
     refundLabel: "Extornar pagamento",
+    refundDescription: "O pagamento será marcado como extornado (devolvido ao aluno)",
     confirmPaymentLabel: "Confirmar pagamento",
     cancel: "Cancelar",
     save: "Salvar",
@@ -197,6 +207,9 @@ export const classes = {
     periodWeek: "Semana",
     periodMonth: "Mês",
     period3Months: "3 meses",
+    monthLabel: "Mês",
+    yearLabel: "Ano",
+    weekdaysLabel: "Dias da semana",
   },
 
   deleteDialog: {

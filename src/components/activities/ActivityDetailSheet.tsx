@@ -1,3 +1,4 @@
+import { common } from "@/content";
 import { useState, useEffect } from "react";
 import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
 import { Button } from "@/components/ui/button";
@@ -77,35 +78,35 @@ export function ActivityDetailSheet({
       <div className="w-full max-h-full self-start overflow-auto px-6 py-3">
         <div className="space-y-4">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Data de envio</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{common.labels.sendDate}</p>
             <p className="text-sm text-foreground">{format(new Date(activity.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
           </div>
 
           {activity.due_date && (
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Prazo de entrega</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{common.labels.dueDate}</p>
               <p className="text-sm text-foreground">{format(new Date(activity.due_date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
             </div>
           )}
 
           {activity.description && (
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Descrição</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{common.labels.description}</p>
               <div className="text-sm whitespace-pre-wrap text-foreground prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(activity.description) }} />
             </div>
           )}
 
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Arquivo da atividade</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{common.labels.activityFile}</p>
             <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-3">
               <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
               <span className="text-sm truncate flex-1 min-w-0">{activity.file_name}</span>
               <div className="flex items-center gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewFile(activity.file_url)} title="Visualizar na web">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewFile(activity.file_url)} title={common.buttons.viewWeb}>
                   <Eye className="h-4 w-4" />
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => onDownload(activity.file_url, activity.file_name)}>
-                  <Download className="h-4 w-4 mr-1" />Baixar
+                  <Download className="h-4 w-4 mr-1" />{activitiesContent.detailSheet.downloadButton}
                 </Button>
               </div>
             </div>
@@ -113,7 +114,7 @@ export function ActivityDetailSheet({
 
           {(activity.status === "entregue" || activity.status === "corrigida") && hasStudentResponse && (
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Resposta do aluno</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{common.labels.studentResponse}</p>
               {activity.student_response_text && (
                 <div className="rounded-lg border bg-muted/30 p-4 mb-3">
                   <p className="text-sm whitespace-pre-wrap text-foreground">{sanitizeText(activity.student_response_text)}</p>
@@ -124,17 +125,17 @@ export function ActivityDetailSheet({
                   <File className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                   <span className="text-sm truncate flex-1 min-w-0">{activity.student_response_file_name}</span>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewFile(activity.student_response_file_url || "")} title="Visualizar na web">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewFile(activity.student_response_file_url || "")} title={common.buttons.viewWeb}>
                       <Eye className="h-4 w-4" />
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => onDownload(activity.student_response_file_url || "", activity.student_response_file_name || "")}>
-                      <Download className="h-4 w-4 mr-1" />Baixar
+                      <Download className="h-4 w-4 mr-1" />{activitiesContent.detailSheet.downloadButton}
                     </Button>
                   </div>
                 </div>
               )}
               {activity.delivered_at && (
-                <p className="text-xs text-muted-foreground mt-2">Entregue em {format(new Date(activity.delivered_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+                <p className="text-xs text-muted-foreground mt-2">{common.labels.deliveredAt} {format(new Date(activity.delivered_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
               )}
             </div>
           )}
@@ -142,11 +143,11 @@ export function ActivityDetailSheet({
           {activity.status === "corrigida" && (activity.feedback || activity.grade != null || (activity.correction_file_url && activity.correction_file_name)) && (
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
-                <MessageSquare className="h-3.5 w-3.5" />Feedback / Correção
+                <MessageSquare className="h-3.5 w-3.5" />{common.labels.feedbackCorrection}
               </p>
               {activity.grade != null && (
                 <div className="mb-3 flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">Nota:</span>
+                  <span className="text-sm font-medium text-foreground">{common.labels.grade}:</span>
                   <span className="text-sm font-semibold tabular-nums">{Number(activity.grade).toFixed(1)}</span>
                   <span className="text-xs text-muted-foreground">/ 100</span>
                 </div>
@@ -161,17 +162,17 @@ export function ActivityDetailSheet({
                   <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                   <span className="text-sm truncate flex-1 min-w-0">{activity.correction_file_name}</span>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewFile(activity.correction_file_url!)} title="Visualizar na web">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewFile(activity.correction_file_url!)} title={common.buttons.viewWeb}>
                       <Eye className="h-4 w-4" />
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => onDownload(activity.correction_file_url!, activity.correction_file_name!)}>
-                      <Download className="h-4 w-4 mr-1" />Baixar
+                      <Download className="h-4 w-4 mr-1" />{activitiesContent.detailSheet.downloadButton}
                     </Button>
                   </div>
                 </div>
               )}
               {activity.corrected_at && (
-                <p className="text-xs text-muted-foreground mt-2">Corrigida em {format(new Date(activity.corrected_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+                <p className="text-xs text-muted-foreground mt-2">{common.labels.correctedAt} {format(new Date(activity.corrected_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
               )}
             </div>
           )}
@@ -191,7 +192,7 @@ export function ActivityDetailSheet({
             />
           ) : (
             <Button className="w-full h-10 border-none bg-success-action text-white hover:bg-success-action/90" onClick={() => setShowCorrectionForm(true)}>
-              <Edit className="h-4 w-4 mr-2" />Corrigir atividade
+              <Edit className="h-4 w-4 mr-2" />{activitiesContent.detailSheet.correctActivityButton}
             </Button>
           )}
         </div>

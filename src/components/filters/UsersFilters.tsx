@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Search, X, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { common, filters as filtersContent } from "@/content";
 import {
   Select,
   SelectContent,
@@ -14,7 +15,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { common } from "@/content";
 
 export type UserRoleFilter = "all" | "admin" | "teacher" | "student";
 export type UserStatusFilter = "all" | "active" | "inactive";
@@ -49,11 +49,11 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
       <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
         {/* Busca */}
         <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
-          <span className="text-xs font-medium text-muted-foreground">Busca</span>
+          <span className="text-xs font-medium text-muted-foreground">{filtersContent.users.labels.search}</span>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome ou email..."
+              placeholder={common.placeholders.searchByNameOrEmail}
               className="pl-9"
               value={filters.search}
               onChange={(e) => onChange({ ...filters, search: e.target.value })}
@@ -65,37 +65,37 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
         <div className="flex flex-wrap items-end gap-2">
           {/* Privilégio */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Privilégio</span>
+            <span className="text-xs font-medium text-muted-foreground">{filtersContent.users.labels.privilege}</span>
             <Select
               value={filters.role}
               onValueChange={(v) => onChange({ ...filters, role: v as UserRoleFilter })}
             >
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Privilégio" />
+                <SelectValue placeholder={common.placeholders.privilege} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="teacher">Professor</SelectItem>
-                <SelectItem value="student">Aluno</SelectItem>
+                <SelectItem value="all">{filtersContent.users.privilege.all}</SelectItem>
+                <SelectItem value="admin">{filtersContent.users.privilege.admin}</SelectItem>
+                <SelectItem value="teacher">{filtersContent.users.privilege.teacher}</SelectItem>
+                <SelectItem value="student">{filtersContent.users.privilege.student}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Status</span>
+            <span className="text-xs font-medium text-muted-foreground">{filtersContent.users.labels.status}</span>
             <Select
               value={filters.status}
               onValueChange={(v) => onChange({ ...filters, status: v as UserStatusFilter })}
             >
               <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={common.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Ativos</SelectItem>
-                <SelectItem value="inactive">Arquivados</SelectItem>
+                <SelectItem value="all">{filtersContent.users.status.all}</SelectItem>
+                <SelectItem value="active">{filtersContent.users.status.active}</SelectItem>
+                <SelectItem value="inactive">{filtersContent.users.status.inactive}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -104,7 +104,7 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
           <CollapsibleTrigger asChild>
             <Button variant="outline" size="sm" className="h-10 gap-2">
               <Filter className="h-4 w-4" />
-              Mais Filtros
+              {filtersContent.buttons.moreFilters}
               {isOpen ? (
                 <ChevronUp className="h-4 w-4" />
               ) : (
@@ -117,7 +117,7 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
           {hasActiveFilters && onReset && (
             <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
               <X className="h-4 w-4 mr-1" />
-              {common.actions.clear}
+              {filtersContent.buttons.clear}
             </Button>
           )}
         </div>
@@ -129,19 +129,19 @@ export function UsersFilters({ filters, onChange, onReset, primaryStatus = "acti
           <div className="flex flex-wrap gap-4">
             {/* Ordenar */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Ordenar</span>
+              <span className="text-xs font-medium text-muted-foreground">{filtersContent.users.labels.sort}</span>
               <Select
                 value={filters.sortBy}
                 onValueChange={(v) => onChange({ ...filters, sortBy: v as UserSortBy })}
               >
                 <SelectTrigger className="w-[220px] pl-3 text-left">
-                  <SelectValue placeholder="Ordenar por" />
+                  <SelectValue placeholder={common.placeholders.sortBy} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="created_desc">Cadastro (mais recente)</SelectItem>
-                  <SelectItem value="created_asc">Cadastro (mais antigo)</SelectItem>
-                  <SelectItem value="name_asc">Nome (A-Z)</SelectItem>
-                  <SelectItem value="name_desc">Nome (Z-A)</SelectItem>
+                  <SelectItem value="created_desc">{filtersContent.users.sort.createdDesc}</SelectItem>
+                  <SelectItem value="created_asc">{filtersContent.users.sort.createdAsc}</SelectItem>
+                  <SelectItem value="name_asc">{filtersContent.users.sort.nameAsc}</SelectItem>
+                  <SelectItem value="name_desc">{filtersContent.users.sort.nameDesc}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -9,10 +9,11 @@ import {
   EmptyActivitiesIllustration,
 } from "@/components/ui/empty-state-illustrations";
 import { Plus, Search, Calendar, DollarSign } from "lucide-react";
+import { ui } from "@/content";
 
 /**
  * Empty States contextualizados para casos de uso específicos
- * 
+ *
  * Cada componente inclui:
  * - Ilustração customizada
  * - Mensagem humanizada
@@ -24,12 +25,12 @@ interface EmptyStateWithActionProps {
   actionLabel?: string;
 }
 
-export function EmptyStudentsState({ onAction, actionLabel = "Adicionar primeiro aluno" }: EmptyStateWithActionProps) {
+export function EmptyStudentsState({ onAction, actionLabel = ui.emptyStates.students.actionLabel }: EmptyStateWithActionProps) {
   return (
     <EmptyState
       illustration={<EmptyStudentsIllustration />}
-      title="Nenhum aluno cadastrado"
-      message="Comece adicionando seu primeiro aluno para começar a acompanhar aulas e pagamentos."
+      title={ui.emptyStates.students.title}
+      message={ui.emptyStates.students.description}
       actionLabel={onAction ? actionLabel : undefined}
       onAction={onAction}
       size="lg"
@@ -37,12 +38,12 @@ export function EmptyStudentsState({ onAction, actionLabel = "Adicionar primeiro
   );
 }
 
-export function EmptyClassesState({ onAction, actionLabel = "Registrar primeira aula" }: EmptyStateWithActionProps) {
+export function EmptyClassesState({ onAction, actionLabel = ui.emptyStates.classes.actionLabel }: EmptyStateWithActionProps) {
   return (
     <EmptyState
       illustration={<EmptyClassesIllustration />}
-      title="Nenhuma aula registrada"
-      message="Registre as aulas ministradas para acompanhar o progresso e gerar cobranças automaticamente."
+      title={ui.emptyStates.classes.title}
+      message={ui.emptyStates.classes.description}
       actionLabel={onAction ? actionLabel : undefined}
       onAction={onAction}
       size="lg"
@@ -52,13 +53,13 @@ export function EmptyClassesState({ onAction, actionLabel = "Registrar primeira 
 
 export function EmptyFinancialState({
   onAction,
-  actionLabel = "Criar primeira cobrança",
-  message = "As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças.",
+  actionLabel = ui.emptyStates.financial.actionLabel,
+  message = ui.emptyStates.financial.description,
 }: EmptyStateWithActionProps & { message?: string }) {
   return (
     <EmptyState
       illustration={<EmptyFinancialIllustration />}
-      title="Nenhuma cobrança registrada"
+      title={ui.emptyStates.financial.title}
       message={message}
       actionLabel={onAction ? actionLabel : undefined}
       onAction={onAction}
@@ -71,8 +72,8 @@ export function EmptyHistoryState() {
   return (
     <EmptyState
       illustration={<EmptyHistoryIllustration />}
-      title="Nenhum histórico disponível"
-      message="As aulas realizadas aparecerão aqui com suas notas e feedback."
+      title={ui.emptyStates.history.title}
+      message={ui.emptyStates.history.description}
       size="default"
     />
   );
@@ -82,23 +83,23 @@ export function EmptySearchState({ query }: { query?: string }) {
   return (
     <EmptyState
       illustration={<EmptySearchIllustration />}
-      title="Nenhum resultado encontrado"
+      title={ui.emptyStates.search.title}
       message={
         query
-          ? `Não encontramos resultados para "${query}". Tente ajustar os filtros ou termos de busca.`
-          : "Ajuste os filtros para ver os resultados."
+          ? ui.emptyStates.search.description(query)
+          : ui.emptyStates.search.descriptionNoQuery
       }
       size="default"
     />
   );
 }
 
-export function EmptyActivitiesState({ onAction, actionLabel = "Enviar primeira atividade" }: EmptyStateWithActionProps) {
+export function EmptyActivitiesState({ onAction, actionLabel = ui.emptyStates.activities.actionLabel }: EmptyStateWithActionProps) {
   return (
     <EmptyState
       illustration={<EmptyActivitiesIllustration />}
-      title="Nenhuma atividade enviada"
-      message="Envie materiais e tarefas para seus alunos. Eles poderão entregar as respostas e você poderá corrigir aqui."
+      title={ui.emptyStates.activities.title}
+      message={ui.emptyStates.activities.description}
       actionLabel={onAction ? actionLabel : undefined}
       onAction={onAction}
       size="lg"
@@ -110,8 +111,8 @@ export function EmptyActivitiesStudentState() {
   return (
     <EmptyState
       illustration={<EmptyActivitiesIllustration />}
-      title="Nenhuma atividade recebida"
-      message="Quando seu professor enviar atividades, elas aparecerão aqui para você visualizar e entregar."
+      title={ui.emptyStates.activitiesStudent.title}
+      message={ui.emptyStates.activitiesStudent.description}
       size="lg"
     />
   );
@@ -121,8 +122,8 @@ export function EmptyBirthdaysState() {
   return (
     <EmptyState
       icon={Calendar}
-      title="Nenhum aniversariante este mês"
-      message="Quando houver aniversários próximos, eles aparecerão aqui."
+      title={ui.emptyStates.birthdays.title}
+      message={ui.emptyStates.birthdays.description}
       size="sm"
     />
   );
@@ -132,8 +133,8 @@ export function EmptyPaymentsState() {
   return (
     <EmptyState
       icon={DollarSign}
-      title="Nenhum pagamento pendente"
-      message="Você está em dia com todos os seus pagamentos."
+      title={ui.emptyStates.payments.title}
+      message={ui.emptyStates.payments.description}
       size="sm"
     />
   );

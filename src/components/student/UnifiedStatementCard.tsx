@@ -8,16 +8,17 @@ import type { StudentStatementEntry } from "@/hooks/useStudentStatement";
 import { getClassStatusFromDate, getClassStatusWithTime } from "@/lib/utils/classTime";
 import { cn } from "@/lib/utils";
 import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
+import { studentPortal } from "@/content/student-portal";
 
 const BILLING_LABELS: Record<
   NonNullable<StudentStatementEntry["billing_status_consolidated"]>,
   string
 > = {
-  paid: "Pago",
-  pending: "Pendente",
-  overdue: "Atrasado",
-  not_billed: "Não Faturado",
-  unknown: "—",
+  paid: studentPortal.statement.billingStatusPaid,
+  pending: studentPortal.statement.billingStatusPending,
+  overdue: studentPortal.statement.billingStatusOverdue,
+  not_billed: studentPortal.statement.billingStatusNotBilled,
+  unknown: studentPortal.statement.billingStatusUnknown,
 };
 
 const BILLING_VARIANTS: Record<
@@ -105,7 +106,7 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
               )}
             </div>
             <span className="text-sm text-muted-foreground truncate max-w-[180px] sm:max-w-none">
-              {escapeHtml(title?.trim() || "Aula")}
+              {escapeHtml(title?.trim() || common.labels.class)}
             </span>
             <StatusBadge
               variant={
@@ -121,8 +122,8 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
             >
               {isConcluida
                 ? attendance
-                  ? "Presente"
-                  : "Falta"
+                  ? studentPortal.classCard.presentLabel
+                  : studentPortal.classCard.absenceLabel
                 : classStatus.label}
             </StatusBadge>
           </div>
@@ -141,7 +142,7 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
             </span>
           ) : attendance === false ? (
             <span className="text-sm font-medium text-destructive shrink-0">
-              Não compareceu
+              {studentPortal.classCard.notAttendedLabel}
             </span>
           ) : null}
         </div>

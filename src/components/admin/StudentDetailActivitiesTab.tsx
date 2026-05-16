@@ -13,6 +13,7 @@ import { getActivityFileUrl, getActivityDisplayStatus, formatActivityDueDate, ty
 import { ActivityCorrectionFormInline } from "@/components/activities/ActivityCorrectionFormInline";
 import { sanitizeHtml, sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 import { toast } from "sonner";
+import { activities as activitiesContent, common } from "@/content";
 
 interface StudentDetailActivitiesTabProps {
   activities: ActivityWithRelations[];
@@ -28,21 +29,21 @@ export function StudentDetailActivitiesTab({ activities, activitiesLoading, onRe
       const url = await getActivityFileUrl(filePath);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch {
-      toast.error("Não foi possível abrir o arquivo.");
+      toast.error(activitiesContent.view.toasts.fileOpenError);
     }
   };
 
   return (
     <ScrollArea className="h-full">
       <div className="p-6 space-y-4">
-        <h3 className="text-sm font-medium text-muted-foreground">Atividades do aluno</h3>
+        <h3 className="text-sm font-medium text-muted-foreground">{common.labels.noActivities}</h3>
 
         {activitiesLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : activities.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4">Nenhuma atividade enviada.</p>
+          <p className="text-sm text-muted-foreground py-4">{common.labels.noActivities}</p>
         ) : (
           <div className="space-y-3">
             {activities.map((activity) => (
@@ -64,11 +65,11 @@ export function StudentDetailActivitiesTab({ activities, activitiesLoading, onRe
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4 flex-shrink-0" />
-                        <span>Enviada em {format(new Date(activity.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                        <span>{common.labels.sentAt} {format(new Date(activity.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
                       </div>
                       {activity.due_date && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>Prazo: {formatActivityDueDate(activity.due_date)}</span>
+                          <span>{common.labels.dueAt}: {formatActivityDueDate(activity.due_date)}</span>
                         </div>
                       )}
 
@@ -78,7 +79,7 @@ export function StudentDetailActivitiesTab({ activities, activitiesLoading, onRe
                           <div className="border-t pt-4 space-y-3">
                             <div className="flex items-center gap-2">
                               <FileText className="h-4 w-4 text-primary" />
-                              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Material</span>
+                              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{common.labels.material}</span>
                             </div>
                             {activity.description && (
                               <div className="rounded-lg p-3 bg-muted/30">
@@ -97,7 +98,7 @@ export function StudentDetailActivitiesTab({ activities, activitiesLoading, onRe
                                 )}
                               </div>
                               <Button size="sm" variant="outline" onClick={() => handleActivityDownload(activity.file_url, activity.file_name)}>
-                                <Download className="h-4 w-4 mr-2" />Baixar
+                                <Download className="h-4 w-4 mr-2" />{common.buttons.download}
                               </Button>
                             </div>
                           </div>
@@ -108,7 +109,7 @@ export function StudentDetailActivitiesTab({ activities, activitiesLoading, onRe
                             <div className="border-t pt-4 space-y-3">
                               <div className="flex items-center gap-2">
                                 <File className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Resposta do aluno</span>
+                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{common.labels.studentResponse}</span>
                               </div>
                               {activity.student_response_text && (
                                 <div className="rounded-lg p-3 bg-muted/30">
@@ -122,7 +123,7 @@ export function StudentDetailActivitiesTab({ activities, activitiesLoading, onRe
                                     <p className="text-sm font-medium truncate">{activity.student_response_file_name}</p>
                                   </div>
                                   <Button size="sm" variant="outline" onClick={() => handleActivityDownload(activity.student_response_file_url!, activity.student_response_file_name!)}>
-                                    <Download className="h-4 w-4 mr-2" />Baixar
+                                    <Download className="h-4 w-4 mr-2" />{common.buttons.download}
                                   </Button>
                                 </div>
                               )}
@@ -135,10 +136,10 @@ export function StudentDetailActivitiesTab({ activities, activitiesLoading, onRe
                             <div className="border-t pt-4 space-y-3">
                               <div className="flex items-center gap-2">
                                 <MessageSquare className="h-4 w-4 text-success" />
-                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Feedback</span>
+                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{common.labels.feedback}</span>
                               </div>
                               {activity.grade != null && (
-                                <p className="text-sm">Nota: <span className="font-semibold">{Number(activity.grade).toFixed(1)}</span>/100</p>
+                                <p className="text-sm">{common.labels.grade}: <span className="font-semibold">{Number(activity.grade).toFixed(1)}</span>/100</p>
                               )}
                               {activity.feedback && (
                                 <div className="rounded-lg p-3 bg-muted/30">
@@ -150,7 +151,7 @@ export function StudentDetailActivitiesTab({ activities, activitiesLoading, onRe
                                   <FileText className="h-5 w-5 text-muted-foreground" />
                                   <span className="text-sm truncate flex-1">{activity.correction_file_name}</span>
                                   <Button size="sm" variant="outline" onClick={() => handleActivityDownload(activity.correction_file_url!, activity.correction_file_name!)}>
-                                    <Download className="h-4 w-4 mr-2" />Baixar
+                                    <Download className="h-4 w-4 mr-2" />{common.buttons.download}
                                   </Button>
                                 </div>
                               )}
@@ -168,9 +169,9 @@ export function StudentDetailActivitiesTab({ activities, activitiesLoading, onRe
                         <CollapsibleTrigger asChild>
                           <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground hover:text-foreground -ml-2">
                             {expandedId === activity.id ? (
-                              <><ChevronUp className="h-4 w-4" />Ver menos</>
+                              <><ChevronUp className="h-4 w-4" />{common.labels.viewLess}</>
                             ) : (
-                              <><ChevronDown className="h-4 w-4" />Ver mais</>
+                              <><ChevronDown className="h-4 w-4" />{common.labels.viewMore}</>
                             )}
                           </Button>
                         </CollapsibleTrigger>

@@ -1,3 +1,4 @@
+import { common } from "@/content";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
@@ -30,6 +31,7 @@ import {
   getXLColumnClasses,
 } from "@/lib/design-tokens/table-columns";
 import { COL, TABLE_MIN_W } from "./ActivitiesTableRow.constants";
+import { activities as activitiesContent } from "@/content";
 
 interface ActivitiesTableRowProps {
   activity: ActivityWithRelations;
@@ -127,16 +129,16 @@ export function ActivitiesTableRow({
       <td className={CELL_BASE} style={{ width: COL.AVALIAR, minWidth: COL.AVALIAR }}>
         <div className="flex items-center justify-end">
           {activity.status === "enviada" ? (
-            <Button size="sm" variant="outline" disabled className="h-8 w-[7rem] shrink-0 opacity-50 cursor-not-allowed text-xs" title="Aguardando">
-              Aguardando
+            <Button size="sm" variant="outline" disabled className="h-8 w-[7rem] shrink-0 opacity-50 cursor-not-allowed text-xs" title={common.buttons.waiting}>
+              {activitiesContent.table.statusAwaiting}
             </Button>
           ) : activity.status === "entregue" ? (
-            <Button size="sm" className="h-8 w-[7rem] shrink-0 border-none bg-success-action text-white hover:bg-success-action/90 text-xs" onClick={() => onViewDetail(activity, true)} title="Corrigir">
-              Corrigir
+            <Button size="sm" className="h-8 w-[7rem] shrink-0 border-none bg-success-action text-white hover:bg-success-action/90 text-xs" onClick={() => onViewDetail(activity, true)} title={common.buttons.correct}>
+              {activitiesContent.table.actionCorrect}
             </Button>
           ) : (
-            <Button size="sm" className="h-8 w-[7rem] shrink-0 border-none bg-warning text-white font-semibold hover:bg-warning/90 shadow text-xs" onClick={() => onUpdateCorrection(activity)} title="Atualizar">
-              Atualizar
+            <Button size="sm" className="h-8 w-[7rem] shrink-0 border-none bg-warning text-white font-semibold hover:bg-warning/90 shadow text-xs" onClick={() => onUpdateCorrection(activity)} title={common.buttons.update}>
+              {activitiesContent.table.actionUpdate}
             </Button>
           )}
         </div>
@@ -145,7 +147,7 @@ export function ActivitiesTableRow({
       {/* Ações - XS */}
       <td className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(activity, false)} title="Ver detalhes">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(activity, false)} title={common.buttons.viewDetails}>
             <Eye className="h-4 w-4" />
           </Button>
           <DropdownMenu>
@@ -155,21 +157,21 @@ export function ActivitiesTableRow({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onViewFile(activity.file_url)} aria-label="Visualizar arquivo">
+              <DropdownMenuItem onClick={() => onViewFile(activity.file_url)} aria-label={common.aria.viewFile}>
                 <Eye className="h-4 w-4 mr-2" />
-                Ver anexo
+                {activitiesContent.table.actionViewAttachment}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDownload(activity.file_url, activity.file_name)}>
                 <Download className="h-4 w-4 mr-2" />
-                Baixar arquivo
+                {activitiesContent.table.actionDownloadFile}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(activity)}>
                 <Pencil className="h-4 w-4 mr-2" />
-                Editar atividade
+                {activitiesContent.table.actionEditActivity}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(activity)} className="text-destructive focus:text-destructive">
                 <Trash2 className="h-4 w-4 mr-2" />
-                Excluir
+                {activitiesContent.table.actionDelete}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

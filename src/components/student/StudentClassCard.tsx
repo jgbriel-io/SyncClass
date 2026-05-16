@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { getClassStatusWithTime } from "@/lib/utils/classTime";
 import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
+import { studentPortal } from "@/content/student-portal";
+import { common } from "@/content/common";
 
 interface StudentClassCardProps {
   classLog: {
@@ -79,9 +81,9 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
   const hasDetails = !!classLog.feedback?.trim();
 
   const badgeLabel = isConcluida
-    ? "Concluída"
+    ? studentPortal.classCard.completedLabel
     : status.label === "Pendente"
-      ? "Não avaliada"
+      ? studentPortal.classCard.notEvaluatedLabel
       : status.label;
   const badgeVariant = isConcluida
     ? "success"
@@ -152,14 +154,14 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
             </h3>
             <div className="flex items-center gap-3 shrink-0">
               <div className="flex flex-col items-end gap-0.5">
-                <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">Presença</span>
+                <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">{studentPortal.classCard.attendanceLabel}</span>
                 <StatusBadge variant={badgeVariant} className="shrink-0">
                   {badgeLabel}
                 </StatusBadge>
               </div>
               {paymentBadgeLabel && (
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">Pagamento</span>
+                  <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">{studentPortal.classCard.paymentLabel}</span>
                   <StatusBadge variant={paymentBadgeVariant} className="shrink-0">
                     {paymentBadgeLabel}
                   </StatusBadge>
@@ -174,12 +176,12 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
               {classLog.attendance ? (
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-success" />
-                  <span className="text-sm font-medium text-success">Presente</span>
+                  <span className="text-sm font-medium text-success">{studentPortal.classCard.presentLabel}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5">
                   <XCircle className="h-4 w-4 text-destructive" />
-                  <span className="text-sm font-medium text-destructive">Não compareceu</span>
+                  <span className="text-sm font-medium text-destructive">{studentPortal.classCard.notAttendedLabel}</span>
                 </div>
               )}
             </div>
@@ -202,19 +204,19 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
             <>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                <span>Professor: {classLog.teacher_name || "—"}</span>
+                <span>{studentPortal.classCard.teacherLabel}: {classLog.teacher_name || "—"}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <DollarSign className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                <span>Valor da aula: {classLog.amount != null ? formatCurrency(classLog.amount) : "—"}</span>
+                <span>{studentPortal.classCard.classValueLabel}: {classLog.amount != null ? formatCurrency(classLog.amount) : "—"}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Star className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                <span>Nota: {classLog.grade != null ? Number(classLog.grade).toFixed(1) : "—"}</span>
+                <span>{common.labels.grade}: {classLog.grade != null ? Number(classLog.grade).toFixed(1) : "—"}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Timer className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                <span>Duração: {formatDuration(classLog.duration_minutes, classLog.start_at, classLog.end_at)}</span>
+                <span>{studentPortal.classCard.durationLabel}: {formatDuration(classLog.duration_minutes, classLog.start_at, classLog.end_at)}</span>
               </div>
               
               {/* Observações (preenchidas ao criar a aula) */}
@@ -222,7 +224,7 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
                 <div className="flex items-start gap-2 text-sm text-muted-foreground">
                   <MessageSquare className="h-4 w-4 flex-shrink-0 text-muted-foreground mt-0.5" />
                   <div className="min-w-0 flex-1">
-                    <span className="font-medium">Observações: </span>
+                    <span className="font-medium">{studentPortal.classCard.observationsLabel}: </span>
                     <span className="whitespace-pre-wrap">{sanitizeText(classLog.observations)}</span>
                   </div>
                 </div>
@@ -230,7 +232,7 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
               
               {/* Feedback (preenchido ao avaliar a aula) - abaixo da lista */}
               <div className="pt-3 space-y-2">
-                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Feedback</p>
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">{studentPortal.classCard.feedbackSectionLabel}</p>
                 <div className="flex items-start gap-2 text-sm">
                   <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
@@ -238,7 +240,7 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
                       {hasDetails ? (
                         <span className="whitespace-pre-wrap">{sanitizeText(classLog.feedback)}</span>
                       ) : (
-                        <span className="italic">Nenhum feedback registrado para esta aula.</span>
+                        <span className="italic">{studentPortal.classCard.noFeedbackMessage}</span>
                       )}
                     </span>
                   </div>
@@ -259,12 +261,12 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
               {expanded ? (
                 <>
                   <ChevronUp className="h-4 w-4" />
-                  Ver menos
+                  {studentPortal.classCard.viewLessLabel}
                 </>
               ) : (
                 <>
                   <ChevronDown className="h-4 w-4" />
-                  Ver mais
+                  {studentPortal.classCard.viewMoreLabel}
                 </>
               )}
             </Button>

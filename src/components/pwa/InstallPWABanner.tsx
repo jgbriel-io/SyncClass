@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Download, X } from "lucide-react";
 import { isPWAInstalled, isPWAInstallPromptAvailable, showPWAInstallPrompt } from "@/lib/pwa";
 import { toast } from "sonner";
+import { pwa } from "@/content";
 
 /**
  * Banner para instalação do PWA
@@ -53,13 +54,13 @@ export function InstallPWABanner() {
       const accepted = await showPWAInstallPrompt();
       
       if (accepted) {
-        toast.success("App instalado com sucesso!");
+        toast.success(pwa.installBanner.toasts.success);
         setIsVisible(false);
       } else {
-        toast.info("Instalação cancelada");
+        toast.info(pwa.installBanner.toasts.cancelled);
       }
     } catch (error) {
-      toast.error("Erro ao instalar o app");
+      toast.error(pwa.installBanner.toasts.error);
     } finally {
       setIsInstalling(false);
     }
@@ -84,10 +85,10 @@ export function InstallPWABanner() {
           
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm mb-1">
-              Instalar App
+              {pwa.installBanner.title}
             </h3>
             <p className="text-xs text-muted-foreground mb-3">
-              Acesse mais rápido instalando o app na sua tela inicial. Funciona offline!
+              {pwa.installBanner.descriptionFull}
             </p>
             
             <div className="flex gap-2">
@@ -97,7 +98,7 @@ export function InstallPWABanner() {
                 disabled={isInstalling}
                 className="flex-1"
               >
-                {isInstalling ? "Instalando..." : "Instalar"}
+                {isInstalling ? pwa.installBanner.installingButton : pwa.installBanner.installButton}
               </Button>
               <Button
                 size="sm"
@@ -105,7 +106,7 @@ export function InstallPWABanner() {
                 onClick={handleDismiss}
                 disabled={isInstalling}
               >
-                Agora não
+                {pwa.installBanner.laterButton}
               </Button>
             </div>
           </div>

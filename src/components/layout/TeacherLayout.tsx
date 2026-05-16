@@ -125,7 +125,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
   };
 
   const userInitial = user?.email?.charAt(0).toUpperCase() || "P";
-  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Professor";
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || common.tooltips.teacher;
 
   return (
     <div className="min-h-screen bg-background">

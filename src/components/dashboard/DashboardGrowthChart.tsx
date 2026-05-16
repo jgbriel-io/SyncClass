@@ -18,7 +18,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { cn } from "@/lib/utils";
-import { dashboard } from "@/content";
+import { common, dashboard } from "@/content";
 
 export interface ChartDataPoint {
   month: string;
@@ -103,7 +103,7 @@ export function DashboardGrowthChart({
                 onValueChange={(v) => onChartMonthsChange(Number(v) as ChartMonthsFilter)}
               >
                 <SelectTrigger className="w-[120px] h-8">
-                  <SelectValue placeholder="Período" />
+                  <SelectValue placeholder={common.placeholders.period} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">{dashboard.chart.months1}</SelectItem>

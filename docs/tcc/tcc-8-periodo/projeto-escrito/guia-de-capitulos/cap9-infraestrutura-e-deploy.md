@@ -1,0 +1,115 @@
+---
+capitulo: 9
+titulo: Infraestrutura e Deploy
+status: 🟠 Rascunho
+ultima_atualizacao: 21/04/2026
+tags:
+  - status/rascunho
+  - tcc/escrita
+---
+> [!INFO] Resumo do Capítulo
+> Descrição do ambiente de hospedagem, configuração de containers, gestão de banco de dados em nuvem e automação do pipeline de CI/CD.
+
+---
+
+## 9.1 Visão Geral
+
+A infraestrutura do projeto **está dividida** em duas frentes independentes que se comunicam via SDK:
+
+- **Frontend:** A aplicação React compilada **é servida** via Nginx dentro de um container Docker.
+- **Backend (BaaS):** O Supabase **gerencia** o PostgreSQL, autenticação, armazenamento e as funções de borda (Edge Functions).
+
+Esta arquitetura elimina a necessidade de um servidor de aplicação tradicional, permitindo que o frontend consuma os serviços de backend diretamente com segurança.
+
+## 9.2 Ambientes de Execução
+
+O sistema **opera** sob a seguinte matriz de ambientes:
+
+| **Ambiente** | **Branch** | **URL / Acesso** | **Instância de Banco** |
+| :--- | :--- | :--- | :--- |
+| Desenvolvimento | `dev` / local | `localhost:8080` | Supabase (Cloud) |
+| Homologação | `homolog` | — | Supabase (Cloud) |
+| Produção | `main` | VPS Própria | Supabase (Cloud) |
+
+🖼️ **Figura:** Diagrama de infraestrutura
+
+## 9.3 Frontend — Dockerização
+
+### 9.3.1 Estratégia de Build (Multi-stage)
+Para otimizar o deploy, o **Dockerfile adota** o modelo multi-stage:
+
+1.  **Estágio de Build (builder):** Utiliza Node 18 Alpine para instalar dependências e gerar o bundle estático via `npm run build`.
+2.  **Estágio de Runtime:** Utiliza uma imagem leve do Nginx para servir os arquivos gerados na porta 80.
+
+**Benefícios observados:**
+- Redução drástica da imagem final (~20MB contra ~300MB da imagem com Node).
+- Maior segurança, pois o ambiente de execução não possui ferramentas de desenvolvimento.
+- Alta performance no serviço de arquivos estáticos.
+
+### 9.3.2 Variáveis de Ambiente
+O gerenciamento de segredos **ocorre** via variáveis injetadas pelo Vite em tempo de build:
+
+| **Variável** | **Finalidade** | **Status** |
+| :--- | :--- | :---: |
+| `VITE_SUPABASE_URL` | Endpoint de conexão com o BaaS | ✅ |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Chave pública de acesso | ✅ |
+
+> [!CAUTION] Alerta de Segurança
+> A `SUPABASE_SERVICE_ROLE_KEY` **está restrita** exclusivamente às Edge Functions e nunca é exposta no código do frontend.
+
+## 9.4 Backend — Supabase as a Service
+
+O backend **sustenta-se** nos seguintes serviços gerenciados:
+
+- **PostgreSQL:** Banco de dados relacional (gerenciado via 23 migrations ativas).
+- **Supabase Auth:** Autenticação baseada em JWT e controle de sessões.
+- **Supabase Storage:** Armazenamento de arquivos (atividades, comprovantes e avatares).
+- **PostgREST:** Camada que expõe o banco como uma API REST de forma automática.
+
+### 9.4.1 Edge Functions (Deno/TypeScript)
+Para operações sensíveis que exigem privilégios administrativos, as seguintes funções **estão implementadas**:
+
+| **Função** | **Gatilho** | **Responsabilidade** |
+| :--- | :--- | :--- |
+| `invite-user` | HTTP POST | Cadastro atômico de usuários com tratamento de erro. |
+| `reset-password` | HTTP POST | Redefinição de credenciais via *service_role*. |
+| `cleanup-storage` | Agendado | Rotina de limpeza de arquivos órfãos no Storage. |
+
+## 9.5 CI/CD — Automação via GitHub Actions
+
+A garantia de qualidade no fluxo de código **é automatizada** através de dois pipelines principais:
+
+### 9.5.1 Pipeline de Integração (`ci.yml`)
+Ativado em cada Push ou PR, o fluxo **executa**:
+1.  Instalação de dependências (`npm ci`).
+2.  Análise estática de código (ESLint).
+3.  Checagem de tipos (TypeScript `noEmit`).
+4.  Execução de testes unitários (Vitest).
+5.  Validação de Build (Vite).
+
+### 9.5.2 Pipeline de Segurança
+Semanalmente, o sistema **realiza** uma auditoria automática de dependências (`npm audit`) para identificar vulnerabilidades em bibliotecas de terceiros.
+
+🖼️ **Figura:** Diagrama do pipeline CI/CD
+
+## 9.6 Mecanismos de Segurança em Produção
+
+O sistema **protege** os dados através de múltiplas camadas:
+- **Transporte:** Uso obrigatório de HTTPS com certificados SSL.
+- **Autorização:** Aplicação rigorosa de Row Level Security (RLS) no banco.
+- **Defesa:** Rate limiting implementado via função SQL (`check_rate_limit`) para mitigar ataques de força bruta.
+- **Monitoramento:** Integração com Sentry para captura de erros em tempo real.
+
+## 9.7 Fluxo de Deploy Atual
+
+Atualmente, o deploy **segue** o seguinte fluxo:
+1.  O desenvolvedor realiza o `git push`.
+2.  O GitHub Actions **valida** a qualidade do código.
+3.  Após o sucesso, o deploy na VPS **é realizado** manualmente via acesso SSH, executando `docker compose pull` e `up`.
+
+
+---
+
+## Assets Necessários
+- [ ] 🖼️ **Figura:** Diagrama de infraestrutura (VPS + Docker + Supabase).
+- [ ] 🖼️ **Figura:** Diagrama do pipeline CI/CD (GitHub Actions).

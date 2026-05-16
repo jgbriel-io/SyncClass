@@ -9,6 +9,7 @@ import { ptBR } from "date-fns/locale";
 import { Receipt, Calendar, Clock, User, BookOpen } from "lucide-react";
 import type { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
+import { classes as classesContent, common } from "@/content";
 
 function formatClassDateAndTime(log: {
   class_date: string;
@@ -48,13 +49,13 @@ function getPaymentStatusVariant(status: string | null): "success" | "warning" |
 function getPaymentStatusLabel(status: string | null): string {
   switch (status) {
     case "pago":
-      return "Pago";
+      return classesContent.tableRow.statusPaid;
     case "pendente":
-      return "Pendente";
+      return classesContent.tableRow.statusPending;
     case "atrasado":
-      return "Atrasado";
+      return classesContent.tableRow.statusOverdue;
     default:
-      return "Pendente";
+      return classesContent.tableRow.statusPending;
   }
 }
 
@@ -112,7 +113,7 @@ export function ClassDetailSheet({
       subtitle={
         <>
           <p className="text-sm font-normal text-muted-foreground">
-            {classLog.students?.name || "Aluno não encontrado"}
+            {classLog.students?.name || common.errors.studentNotFound}
           </p>
           <StatusBadge variant={statusBadge.variant}>
             {statusBadge.label}
@@ -150,7 +151,7 @@ export function ClassDetailSheet({
             classLog.grade != null
               ? Number(classLog.grade).toFixed(1)
               : classLog.attendance === false
-                ? "Não compareceu"
+                ? classesContent.tableRow.noAttendance
                 : "—"
           }
         />
@@ -158,7 +159,7 @@ export function ClassDetailSheet({
         {classLog.financial_records && classLog.financial_records.length > 0 && (
           <DetailSection
             icon={Receipt}
-            label="Financeiro"
+            label={classesContent.detailSheet.financialSection}
             value={
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge variant={getPaymentStatusVariant(financialStatus)}>
@@ -168,7 +169,7 @@ export function ClassDetailSheet({
                   {formatCurrency(classLog.financial_records[0].amount)}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  Venc.: {formatDate(classLog.financial_records[0].due_date)}
+                  {classesContent.detailSheet.financialSection}: {formatDate(classLog.financial_records[0].due_date)}
                 </span>
               </div>
             }
@@ -181,7 +182,7 @@ export function ClassDetailSheet({
           {classLog.observations?.trim() && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Observações
+                {classesContent.detailSheet.observationsSection}
               </p>
               <p className="text-sm whitespace-pre-wrap text-foreground rounded-lg border bg-muted/30 p-3">
                 {sanitizeText(classLog.observations)}
@@ -192,7 +193,7 @@ export function ClassDetailSheet({
           {/* Feedback (preenchido ao avaliar a aula) */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Feedback
+              {classesContent.detailSheet.feedbackSection}
             </p>
             {classLog.feedback?.trim() ? (
               <p className="text-sm whitespace-pre-wrap text-foreground rounded-lg border bg-muted/30 p-3">
@@ -205,7 +206,7 @@ export function ClassDetailSheet({
           
           {classLog.updated_at && (
             <p className="text-xs text-muted-foreground">
-              Editado em {format(new Date(classLog.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              {classesContent.tableRow.editedAt} {format(new Date(classLog.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
             </p>
           )}
         </div>

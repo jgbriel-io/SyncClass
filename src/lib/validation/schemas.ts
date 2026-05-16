@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 import { REGEX_PATTERNS, isValidDateString } from "@/lib/utils/patterns";
+import { validation } from "@/content";
 
 /**
  * Schema para telefone (formato: (00) 0000-0000 ou (00) 00000-0000)
@@ -17,7 +18,7 @@ export const phoneSchema = z
     (v) =>
       !v ||
       ((v.length === 14 || v.length === 15) && REGEX_PATTERNS.phone.test(v)),
-    { message: "Telefone inválido (formato: (00) 00000-0000)" }
+    { message: validation.phoneInvalid }
   );
 
 /**
@@ -25,10 +26,10 @@ export const phoneSchema = z
  */
 export const phoneRequiredSchema = z
   .string()
-  .min(1, "Telefone é obrigatório")
+  .min(1, validation.phoneRequired)
   .refine(
     (v) => (v.length === 14 || v.length === 15) && REGEX_PATTERNS.phone.test(v),
-    { message: "Telefone inválido (formato: (00) 00000-0000)" }
+    { message: validation.phoneInvalid }
   );
 
 /**
@@ -40,7 +41,7 @@ export const emailSchema = z
   .optional()
   .refine(
     (v) => !v || REGEX_PATTERNS.email.test(v),
-    { message: "Email inválido" }
+    { message: validation.emailInvalid }
   );
 
 /**
@@ -48,8 +49,8 @@ export const emailSchema = z
  */
 export const emailRequiredSchema = z
   .string()
-  .min(1, "Email é obrigatório")
-  .email("Email inválido");
+  .min(1, validation.emailRequired)
+  .email(validation.emailInvalid);
 
 /**
  * Schema para data no formato dd/mm/aaaa
@@ -60,7 +61,7 @@ export const dateSchema = z
   .optional()
   .refine(
     (v) => !v || (REGEX_PATTERNS.date.test(v) && isValidDateString(v)),
-    { message: "Data inválida (formato: dd/mm/aaaa)" }
+    { message: validation.dateInvalid }
   );
 
 /**
@@ -68,10 +69,10 @@ export const dateSchema = z
  */
 export const dateRequiredSchema = z
   .string()
-  .min(1, "Data é obrigatória")
+  .min(1, validation.dateRequired)
   .refine(
     (v) => REGEX_PATTERNS.date.test(v) && isValidDateString(v),
-    { message: "Data inválida (formato: dd/mm/aaaa)" }
+    { message: validation.dateInvalid }
   );
 
 /**
@@ -85,7 +86,7 @@ export const cepSchema = z
   .optional()
   .refine(
     (v) => !v || (v.length === 9 && CEP_REGEX.test(v)),
-    { message: "CEP inválido (formato: 00000-000)" }
+    { message: validation.cepInvalid }
   );
 
 /**
@@ -93,10 +94,10 @@ export const cepSchema = z
  */
 export const cepRequiredSchema = z
   .string()
-  .min(1, "CEP é obrigatório")
+  .min(1, validation.cepRequired)
   .refine(
     (v) => v.length === 9 && CEP_REGEX.test(v),
-    { message: "CEP inválido (formato: 00000-000)" }
+    { message: validation.cepInvalid }
   );
 
 /**
@@ -110,7 +111,7 @@ export const moneySchema = z
   .optional()
   .refine(
     (v) => !v || MONEY_REGEX.test(v),
-    { message: "Valor inválido (formato: 0,00)" }
+    { message: validation.amountInvalid }
   );
 
 /**
@@ -118,10 +119,10 @@ export const moneySchema = z
  */
 export const moneyRequiredSchema = z
   .string()
-  .min(1, "Valor é obrigatório")
+  .min(1, validation.amountRequired)
   .refine(
     (v) => MONEY_REGEX.test(v),
-    { message: "Valor inválido (formato: 0,00)" }
+    { message: validation.amountInvalid }
   );
 
 /**
@@ -129,15 +130,15 @@ export const moneyRequiredSchema = z
  */
 export const nameSchema = z
   .string()
-  .min(2, "Nome deve ter pelo menos 2 caracteres")
-  .max(100, "Nome deve ter no máximo 100 caracteres");
+  .min(2, validation.nameMin)
+  .max(100, validation.nameMax);
 
 /**
  * Schema para nome opcional
  */
 export const nameOptionalSchema = z
   .string()
-  .max(100, "Nome deve ter no máximo 100 caracteres")
+  .max(100, validation.nameMax)
   .optional();
 
 /**
@@ -145,7 +146,7 @@ export const nameOptionalSchema = z
  */
 export const observationsSchema = z
   .string()
-  .max(1000, "Máximo 1000 caracteres")
+  .max(1000, validation.observationsMax)
   .optional();
 
 /**
@@ -153,7 +154,7 @@ export const observationsSchema = z
  */
 export const descriptionSchema = z
   .string()
-  .max(500, "Máximo 500 caracteres")
+  .max(500, validation.descriptionMax)
   .optional();
 
 /**
@@ -166,7 +167,7 @@ export const timeSchema = z
   .optional()
   .refine(
     (v) => !v || REGEX_TIME.test(v),
-    { message: "Formato inválido (HH:mm)" }
+    { message: validation.timeInvalid }
   );
 
 /**
@@ -174,19 +175,19 @@ export const timeSchema = z
  */
 export const timeRequiredSchema = z
   .string()
-  .min(1, "Horário é obrigatório")
+  .min(1, validation.timeRequired)
   .refine(
     (v) => REGEX_TIME.test(v),
-    { message: "Formato inválido (HH:mm)" }
+    { message: validation.timeInvalid }
   );
 
 /**
  * Schema para nota (0-10)
  */
 export const gradeSchema = z
-  .number({ invalid_type_error: "Informe a nota" })
-  .min(0, "Nota mínima é 0")
-  .max(10, "Nota máxima é 10")
+  .number({ invalid_type_error: validation.gradeInvalid })
+  .min(0, validation.gradeMin)
+  .max(10, validation.gradeMax)
   .optional()
   .nullable();
 
@@ -195,7 +196,7 @@ export const gradeSchema = z
  */
 export const urlSchema = z
   .string()
-  .url("URL inválida")
+  .url(validation.urlInvalid)
   .optional();
 
 /**
@@ -203,7 +204,7 @@ export const urlSchema = z
  */
 export const passwordSchema = z
   .string()
-  .min(6, "Senha deve ter pelo menos 6 caracteres");
+  .min(6, validation.passwordMin);
 
 /**
  * Schema para confirmação de senha
@@ -215,7 +216,7 @@ export function passwordConfirmSchema(passwordField: string = "password") {
       confirmPassword: z.string(),
     })
     .refine((data) => data[passwordField] === data.confirmPassword, {
-      message: "As senhas não coincidem",
+      message: validation.passwordMismatch,
       path: ["confirmPassword"],
     });
 }

@@ -9,7 +9,7 @@ import { StudentDetailInfoTab } from "@/components/admin/StudentDetailInfoTab";
 import { StudentDetailClassesTab } from "@/components/admin/StudentDetailClassesTab";
 import { StudentDetailActivitiesTab } from "@/components/admin/StudentDetailActivitiesTab";
 import { StudentDetailFinancialTab } from "@/components/admin/StudentDetailFinancialTab";
-import { students as studentsContent } from "@/content";
+import { students as studentsContent, common } from "@/content";
 
 interface StudentDetailSheetProps {
   studentId: string | null;
@@ -41,7 +41,7 @@ export function StudentDetailSheet({
           <Skeleton className="h-4 w-20" />
         ) : (
           <StatusBadge variant={student?.status === "ativo" ? "success" : "default"}>
-            {student?.status === "ativo" ? "Ativo" : "Inativo"}
+            {student?.status === "ativo" ? common.labels.active : common.labels.inactive}
           </StatusBadge>
         )
       }
@@ -92,7 +92,7 @@ export function StudentDetailSheet({
           </TabsContent>
         </Tabs>
       ) : (
-        <div className="p-6 text-center text-muted-foreground">Aluno não encontrado</div>
+        <div className="p-6 text-center text-muted-foreground">{common.errors.studentNotFound}</div>
       )}
     </BaseDetailSheet>
   );

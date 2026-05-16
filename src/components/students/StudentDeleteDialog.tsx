@@ -51,7 +51,7 @@ export function StudentArchiveDialog({
                 {studentsContent.archiveDialog.descriptionArchive(student?.name ?? "")}
                 <br />
                 <br />
-                <strong>Importante:</strong> {studentsContent.archiveDialog.archiveNote}
+                <strong>{studentsContent.archiveDialog.importantLabel}</strong> {studentsContent.archiveDialog.archiveNote}
               </>
             ) : (
               studentsContent.archiveDialog.descriptionReactivate(student?.name ?? "")
@@ -113,7 +113,7 @@ export function StudentHardDeleteDialog({
             {studentsContent.deleteDialog.description(student?.name ?? "")}
             <br />
             <br />
-            <strong className="text-destructive">Atenção:</strong> {studentsContent.deleteDialog.warning}
+            <strong className="text-destructive">{studentsContent.deleteDialog.warningLabel}</strong> {studentsContent.deleteDialog.warning}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

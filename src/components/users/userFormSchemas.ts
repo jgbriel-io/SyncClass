@@ -14,13 +14,13 @@ export const adminSchema = z.object({
 export const baseStudentSchema = z.object({
   name: z.string().min(2, studentsContent.validation.nameMin).max(100),
   email: emailSchema,
-  hourly_rate: z.string().min(1, "Valor por hora é obrigatório"),
-  pay_day: z.string().min(1, "Dia de pagamento é obrigatório"),
+  hourly_rate: z.string().min(1, studentsContent.validation.hourlyRateRequired),
+  pay_day: z.string().min(1, studentsContent.validation.payDayRequired),
   origin: z.enum(["indicacao", "google", "instagram", "passante", "outro"]),
   status: z.enum(["ativo", "inativo"]).optional(),
   birth_date: z
     .string()
-    .min(1, "Data de nascimento é obrigatória")
+    .min(1, studentsContent.validation.birthDateRequired)
     .refine((val) => isValidDateString(val), { message: studentsContent.validation.birthDateInvalid }),
   role: z.literal("student"),
 });

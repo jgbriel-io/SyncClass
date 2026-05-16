@@ -19,7 +19,7 @@ import { useUsersPaginated } from "@/hooks/useUsers";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useMemo } from "react";
-import { users as usersContent } from "@/content";
+import { users as usersContent, common } from "@/content";
 
 interface UserDetailSheetProps {
   userId: string | null;
@@ -28,10 +28,10 @@ interface UserDetailSheetProps {
 }
 
 const getRoleLabel = (role: string | null): string => {
-  if (role === "admin") return "Administrador";
-  if (role === "teacher") return "Professor";
-  if (role === "student") return "Aluno";
-  return "Sem privilégio";
+  if (role === "admin") return common.tooltips.administrator;
+  if (role === "teacher") return common.tooltips.teacher;
+  if (role === "student") return common.tooltips.student;
+  return common.labels.noPrivilege;
 };
 
 const getRoleVariant = (
@@ -85,7 +85,7 @@ export function UserDetailSheet({
     return storedRole;
   }, [storedRole, linkedTeacher, linkedStudent]);
 
-  const displayName = user?.profile?.full_name?.trim() || "(sem nome)";
+  const displayName = user?.profile?.full_name?.trim() || common.labels.noName;
   const isActive = user?.profile?.active ?? true;
 
   if (!open) return null;
@@ -94,7 +94,7 @@ export function UserDetailSheet({
     <BaseDetailSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Detalhes do Usuário"
+      title={common.buttons.viewDetails}
       subtitle={
         !user ? (
           <Skeleton className="h-8 w-3/4" />
@@ -102,11 +102,11 @@ export function UserDetailSheet({
           <>
             <h2 className="text-2xl font-bold">{displayName}</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {user.email || "Sem email"}
+              {user.email || common.errors.noEmail}
             </p>
             <div className="flex flex-row gap-2 items-center mt-2">
               <StatusBadge variant={isActive ? "success" : "default"}>
-                {isActive ? "Ativo" : "Inativo"}
+                {isActive ? common.labels.active : common.labels.inactive}
               </StatusBadge>
               <StatusBadge variant={getRoleVariant(role)}>
                 {getRoleLabel(role)}
@@ -126,8 +126,8 @@ export function UserDetailSheet({
       ) : (
         <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
           <TabsList className="mx-6 mt-4 grid w-full grid-cols-2">
-            <TabsTrigger value="info">Informações</TabsTrigger>
-            <TabsTrigger value="links">Vínculos</TabsTrigger>
+            <TabsTrigger value="info">{usersContent.detailSheet.tabInfo}</TabsTrigger>
+            <TabsTrigger value="links">{usersContent.detailSheet.tabLinks}</TabsTrigger>
           </TabsList>
 
           {/* Tab: Informações */}
@@ -135,26 +135,26 @@ export function UserDetailSheet({
             <Card className="p-4 space-y-3">
               <h3 className="font-semibold text-sm flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Dados da Conta
+                {usersContent.detailSheet.accountDataSection}
               </h3>
               <div className="grid gap-4 text-sm">
-                <DetailSection icon={Mail} label="Email" value={user.email || "—"} inline />
+                <DetailSection icon={Mail} label={common.labels.email} value={user.email || "—"} inline />
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Privilégio:</span>
+                  <span className="text-muted-foreground">{usersContent.detailSheet.privilegeLabel}:</span>
                   <StatusBadge variant={getRoleVariant(role)} className="text-xs">
                     {getRoleLabel(role)}
                   </StatusBadge>
                 </div>
                 <DetailSection
                   icon={FileText}
-                  label="Status"
-                  value={isActive ? "Conta ativa" : "Conta arquivada"}
+                  label={usersContent.detailSheet.statusLabel}
+                  value={isActive ? usersContent.detailSheet.accountActive : usersContent.detailSheet.accountArchived}
                   inline
                 />
                 <DetailSection
                   icon={Calendar}
-                  label="Criado em"
+                  label={usersContent.detailSheet.createdAtLabel}
                   value={
                     user.created_at
                       ? format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })
@@ -165,7 +165,7 @@ export function UserDetailSheet({
                 {user.profile?.updated_at && (
                   <DetailSection
                     icon={Calendar}
-                    label="Atualizado em"
+                    label={usersContent.detailSheet.updatedAtLabel}
                     value={format(
                       new Date(user.profile.updated_at),
                       "dd/MM/yyyy HH:mm",
@@ -183,12 +183,12 @@ export function UserDetailSheet({
             <Card className="p-4">
               <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
                 <Link2 className="h-4 w-4" />
-                Vínculos com Perfis
+                {usersContent.detailSheet.linksSection}
               </h3>
 
               {!linkedStudent && !linkedTeacher ? (
                 <p className="text-sm text-muted-foreground">
-                  Nenhum vínculo com aluno ou professor
+                  {usersContent.detailSheet.noLinksMessage}
                 </p>
               ) : (
                 <div className="space-y-3">
@@ -196,7 +196,7 @@ export function UserDetailSheet({
                     <div className="p-3 rounded-lg border bg-muted/30">
                       <div className="flex items-center gap-2 mb-2">
                         <User className="h-4 w-4 text-success" />
-                        <span className="text-sm font-medium">Aluno Vinculado</span>
+                        <span className="text-sm font-medium">{usersContent.detailSheet.linkedStudentLabel}</span>
                       </div>
                       <div className="space-y-1 text-sm">
                         <p className="font-medium">{linkedStudent.name}</p>
@@ -207,7 +207,7 @@ export function UserDetailSheet({
                           variant={linkedStudent.status === "ativo" ? "success" : "default"}
                           className="text-xs mt-2"
                         >
-                          {linkedStudent.status === "ativo" ? "Ativo" : "Inativo"}
+                          {linkedStudent.status === "ativo" ? common.labels.active : common.labels.inactive}
                         </StatusBadge>
                       </div>
                     </div>
@@ -217,7 +217,7 @@ export function UserDetailSheet({
                     <div className="p-3 rounded-lg border bg-muted/30">
                       <div className="flex items-center gap-2 mb-2">
                         <Shield className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-medium">Professor Vinculado</span>
+                        <span className="text-sm font-medium">{usersContent.detailSheet.linkedTeacherLabel}</span>
                       </div>
                       <div className="space-y-1 text-sm">
                         <p className="font-medium">{linkedTeacher.name}</p>
@@ -228,7 +228,7 @@ export function UserDetailSheet({
                           variant={linkedTeacher.status === "ativo" ? "success" : "default"}
                           className="text-xs mt-2"
                         >
-                          {linkedTeacher.status === "ativo" ? "Ativo" : "Inativo"}
+                          {linkedTeacher.status === "ativo" ? common.labels.active : common.labels.inactive}
                         </StatusBadge>
                       </div>
                     </div>

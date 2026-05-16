@@ -40,6 +40,10 @@ export const ui = {
       title: "Nenhum aniversariante hoje",
       description: "Não há aniversariantes para hoje.",
     },
+    payments: {
+      title: "Nenhum pagamento pendente",
+      description: "Você está em dia com todos os seus pagamentos.",
+    },
   },
 
   pagination: {

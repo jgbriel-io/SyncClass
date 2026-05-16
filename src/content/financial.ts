@@ -45,6 +45,10 @@ export const financial = {
     classes: "aula(s)",
     teacher: "Professor:",
     editedAt: "Editado em",
+    absence: "Falta",
+    grade: "Nota:",
+    packageLabel: "(Pacote)",
+    classDatePrefix: "Aula - ",
     undoing: "Desfazendo...",
     undo: "Desfazer",
     finalized: "Finalizado",
@@ -87,6 +91,9 @@ export const financial = {
     submitting: "Salvando...",
     saveChanges: "Salvar Alterações",
     create: "Criar Cobrança",
+    classDatePrefix: "Aula - ",
+    packageLabel: "(Pacote)",
+    noClassLinked: "Sem aula vinculada",
     toasts: {
       success: "Cobrança criada com sucesso!",
       successEdit: "Cobrança atualizada com sucesso!",
@@ -158,6 +165,7 @@ export const financial = {
     dateUnavailable: "Data não disponível",
     noPayment: "Nenhum pagamento registrado para esta cobrança.",
     confirmPaymentButton: "Confirmar Pagamento",
+    proofFilenameDefault: "Comprovante.pdf",
     toasts: {
       approveSuccess: "Pagamento confirmado!",
       approveError: "Erro ao aprovar comprovante",

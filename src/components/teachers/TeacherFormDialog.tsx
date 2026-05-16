@@ -110,7 +110,7 @@ export function TeacherFormDialog({
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 mt-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2 space-y-2">
-              <Label htmlFor="name">Nome completo *</Label>
+              <Label htmlFor="name">{teachersContent.formDialog.nameLabel}</Label>
               <Input
                 id="name"
               placeholder={teachersContent.formDialog.namePlaceholder}
@@ -124,11 +124,11 @@ export function TeacherFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">{teachersContent.formDialog.emailLabel}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="email@exemplo.com"
+                placeholder={common.placeholders.email}
                 disabled={isLoading}
                 {...register("email")}
               />
@@ -138,13 +138,13 @@ export function TeacherFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
+              <Label htmlFor="phone">{teachersContent.formDialog.phoneLabel}</Label>
               <Input
                 id="phone"
                 type="text"
                 inputMode="numeric"
                 maxLength={15}
-                placeholder="(00) 00000-0000"
+                placeholder={common.placeholders.phone}
                 disabled={isLoading}
                 {...register("phone")}
                 onChange={handlePhoneChange}

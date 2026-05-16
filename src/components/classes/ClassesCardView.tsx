@@ -20,8 +20,7 @@ import {
   formatDuration,
 } from "./classesViewHelpers";
 import type { ClassLogWithStudent } from "@/hooks/useClassLogs";
-import { classes as classesContent } from "@/content";
-import { classes as classesContent } from "@/content";
+import { classes as classesContent, common } from "@/content";
 
 interface ClassesCardViewProps {
   logs: ClassLogWithStudent[];
@@ -71,7 +70,7 @@ export function ClassesCardView({
               </div>
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-semibold">{log.students?.name || "Aluno não encontrado"}</h3>
+                  <h3 className="font-semibold">{log.students?.name || common.errors.studentNotFound}</h3>
                   <StatusBadge variant={getClassStatusBadge(log).variant}>
                     {getClassStatusBadge(log).label}
                   </StatusBadge>

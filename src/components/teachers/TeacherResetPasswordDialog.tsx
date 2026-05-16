@@ -106,7 +106,7 @@ export function TeacherResetPasswordDialog({
                 <Input
                   id="reset-pw-teacher-new"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={common.placeholders.password}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   minLength={6}
@@ -118,7 +118,7 @@ export function TeacherResetPasswordDialog({
                 <Input
                   id="reset-pw-teacher-confirm"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={common.placeholders.password}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   minLength={6}

@@ -1,3 +1,4 @@
+import { common, teachers as teachersContent } from "@/content";
 import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
 import { DetailSection } from "@/components/ui/custom/DetailSection";
 import { formatCurrency } from "@/lib/utils/formatters";
@@ -23,7 +24,6 @@ import { useStudents } from "@/hooks/useStudents";
 import { useClassLogs } from "@/hooks/useClassLogs";
 import { useFinancialRecords } from "@/hooks/useFinancialRecords";
 import { useMemo } from "react";
-import { teachers as teachersContent } from "@/content";
 
 interface TeacherDetailSheetProps {
   teacherId: string | null;
@@ -72,7 +72,7 @@ export function TeacherDetailSheet({
     <BaseDetailSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Detalhes do Professor"
+      title={common.buttons.viewDetails}
       subtitle={
         !teacher ? (
           <Skeleton className="h-8 w-3/4" />
@@ -80,13 +80,13 @@ export function TeacherDetailSheet({
           <>
             <h2 className="text-2xl font-bold">{teacher.name}</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {teacher.email || "Sem email"}
+              {teacher.email || common.errors.noEmail}
             </p>
             <StatusBadge
               variant={teacher.status === "ativo" ? "success" : "default"}
               className="mt-2"
             >
-              {teacher.status === "ativo" ? "Ativo" : "Inativo"}
+              {teacher.status === "ativo" ? common.labels.active : common.labels.inactive}
             </StatusBadge>
           </>
         )
@@ -112,14 +112,14 @@ export function TeacherDetailSheet({
             <Card className="p-4 space-y-3">
               <h3 className="font-semibold text-sm flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Dados Pessoais
+                {teachersContent.detailSheet.personalDataSection}
               </h3>
               <div className="grid gap-4 text-sm">
-                <DetailSection icon={Mail} label="Email" value={teacher.email || "—"} inline />
-                <DetailSection icon={Phone} label="Telefone" value={formatPhoneDisplay(teacher.phone, "Brasil") || "—"} inline />
+                <DetailSection icon={Mail} label={common.labels.email} value={teacher.email || "—"} inline />
+                <DetailSection icon={Phone} label={common.labels.phone} value={formatPhoneDisplay(teacher.phone, "Brasil") || "—"} inline />
                 <DetailSection
                   icon={Calendar}
-                  label="Cadastrado em"
+                  label={common.labels.createdAt}
                   value={
                     teacher.created_at
                       ? format(new Date(teacher.created_at), "dd/MM/yyyy", { locale: ptBR })
@@ -136,11 +136,11 @@ export function TeacherDetailSheet({
             <Card className="p-4">
               <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
                 <Users className="h-4 w-4" />
-                Alunos Ativos ({teacherStudents.length})
+                {teachersContent.detailSheet.activeStudentsLabel} ({teacherStudents.length})
               </h3>
               {teacherStudents.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Nenhum aluno ativo vinculado
+                  {teachersContent.detailSheet.noActiveStudentsMessage}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -177,7 +177,7 @@ export function TeacherDetailSheet({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-primary" />
-                    <span className="text-sm text-muted-foreground">Total de Alunos</span>
+                    <span className="text-sm text-muted-foreground">{teachersContent.detailSheet.totalStudentsLabel}</span>
                   </div>
                   <span className="text-2xl font-bold">{teacherStudents.length}</span>
                 </div>
@@ -187,7 +187,7 @@ export function TeacherDetailSheet({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-primary" />
-                    <span className="text-sm text-muted-foreground">Total de Aulas</span>
+                    <span className="text-sm text-muted-foreground">{teachersContent.detailSheet.totalClassesLabel}</span>
                   </div>
                   <span className="text-2xl font-bold">{teacherClasses.length}</span>
                 </div>
@@ -197,7 +197,7 @@ export function TeacherDetailSheet({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5 text-success" />
-                    <span className="text-sm text-muted-foreground">Valor Recebido</span>
+                    <span className="text-sm text-muted-foreground">{teachersContent.detailSheet.totalReceivedLabel}</span>
                   </div>
                   <span className="text-2xl font-bold text-success">
                     {formatCurrency(totalReceived)}
@@ -209,7 +209,7 @@ export function TeacherDetailSheet({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5 text-primary" />
-                    <span className="text-sm text-muted-foreground">Média por Aula</span>
+                    <span className="text-sm text-muted-foreground">{teachersContent.detailSheet.averagePerClassLabel}</span>
                   </div>
                   <span className="text-2xl font-bold">
                     {teacherClasses.length > 0

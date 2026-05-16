@@ -25,6 +25,13 @@ export const activities = {
     colStatus: "Status",
     colDeliveredAt: "Entregue em",
     colActions: "Ações",
+    actionViewAttachment: "Ver anexo",
+    actionDownloadFile: "Baixar arquivo",
+    actionEditActivity: "Editar atividade",
+    actionDelete: "Excluir",
+    statusAwaiting: "Aguardando",
+    actionCorrect: "Corrigir",
+    actionUpdate: "Atualizar",
   },
 
   sendDialog: {
@@ -104,8 +111,11 @@ export const activities = {
   deliverDialog: {
     title: "Entregar atividade",
     activityLabel: "Atividade:",
+    responseTextLabel: "Resposta (texto)",
     fileLabel: "Arquivo *",
     fileHint: "Envie sua resposta (PDF, DOC, DOCX, JPG, PNG ou TXT - máx. 10 MB)",
+    fileSelectLabel: "Clique para selecionar um arquivo",
+    orDivider: "Ou",
     submitButton: "Entregar",
     submitting: "Enviando...",
     toasts: {
@@ -130,6 +140,11 @@ export const activities = {
     title: "Nenhuma atividade encontrada",
     description: "Envie a primeira atividade para um aluno.",
     actionLabel: "Enviar primeira atividade",
+  },
+
+  detailSheet: {
+    downloadButton: "Baixar",
+    correctActivityButton: "Corrigir atividade",
   },
 
   validation: {

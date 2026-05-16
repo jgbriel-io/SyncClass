@@ -14,6 +14,7 @@ import { UserFormStudentLocationFields } from "./UserFormStudentLocationFields";
 import type { BrCityOption } from "@/lib/br-locations";
 import type { Enums } from "@/integrations/supabase/types";
 import type { Teacher } from "@/hooks/useTeachers";
+import { students as studentsContent } from "@/content";
 
 type StudentOrigin = Enums<"student_origin">;
 
@@ -75,7 +76,7 @@ export function UserFormStudentFields({
       <div className="sm:col-span-2 space-y-2">
         <Label htmlFor="teacher">Professor *</Label>
         <Select value={selectedTeacherId} onValueChange={(v) => { setSelectedTeacherId(v); setTeacherError(null); }} disabled={isLoading || loadingTeachers}>
-          <SelectTrigger><SelectValue placeholder="Selecione um professor" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder={studentsContent.formDialog.teacherPlaceholder} /></SelectTrigger>
           <SelectContent>
             {activeTeachers.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
           </SelectContent>
@@ -86,7 +87,7 @@ export function UserFormStudentFields({
       {/* Nome */}
       <div className="sm:col-span-2 space-y-2">
         <Label htmlFor="name">Nome completo *</Label>
-        <Input id="name" placeholder="Nome do aluno" {...register("name")} disabled={isLoading} />
+        <Input id="name" placeholder={studentsContent.formDialog.namePlaceholder} {...register("name")} disabled={isLoading} />
         {errors.name && <p className="text-sm text-destructive">{errors.name?.message}</p>}
       </div>
 
@@ -105,7 +106,7 @@ export function UserFormStudentFields({
       <div className="space-y-2">
         <Label htmlFor="birth_date">Data de Nascimento *</Label>
         <div className="flex gap-2">
-          <Input id="birth_date" type="text" placeholder="dd/mm/aaaa" maxLength={10} value={birthDate || ""} onChange={handleDateChange} onKeyDown={handleDateKeyDown} disabled={isLoading} className="flex-1" />
+          <Input id="birth_date" type="text" placeholder={studentsContent.formDialog.birthDatePlaceholder} maxLength={10} value={birthDate || ""} onChange={handleDateChange} onKeyDown={handleDateKeyDown} disabled={isLoading} className="flex-1" />
           <Popover>
             <PopoverTrigger asChild>
               <Button type="button" variant="outline" size="icon" className="shrink-0" disabled={isLoading}>
@@ -122,7 +123,7 @@ export function UserFormStudentFields({
                     setValue("birth_date", format(newDate, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
                   }}
                 >
-                  <SelectTrigger className="w-full"><SelectValue placeholder="Ano" /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue placeholder={studentsContent.formDialog.yearPlaceholder} /></SelectTrigger>
                   <SelectContent className="max-h-[200px]">
                     {Array.from({ length: new Date().getFullYear() - 1920 + 1 }, (_, i) => new Date().getFullYear() - i).map((year) => (
                       <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
@@ -154,7 +155,7 @@ export function UserFormStudentFields({
           id="phone" type="text"
           inputMode={isBrazilSelected ? "numeric" : "text"}
           maxLength={isBrazilSelected ? 15 : 20}
-          placeholder={isBrazilSelected ? "(00) 00000-0000" : "Ex: 555 123 4567"}
+          placeholder={isBrazilSelected ? studentsContent.formDialog.phonePlaceholder : "Ex: 555 123 4567"}
           {...register("phone")}
           onChange={(e) => {
             if (isBrazilSelected) {
@@ -171,21 +172,21 @@ export function UserFormStudentFields({
       {/* Email */}
       <div className="space-y-2">
         <Label htmlFor="email">Email *</Label>
-        <Input id="email" type="email" placeholder="email@exemplo.com" {...register("email")} disabled={isLoading || isEdit} />
+        <Input id="email" type="email" placeholder={studentsContent.formDialog.emailPlaceholder} {...register("email")} disabled={isLoading || isEdit} />
         {errors.email && <p className="text-sm text-destructive">{errors.email?.message}</p>}
       </div>
 
       {/* Valor por hora */}
       <div className="space-y-2">
         <Label htmlFor="hourly_rate">Valor por hora *</Label>
-        <Input id="hourly_rate_valor" type="text" placeholder="Ex: 120,00" {...register("hourly_rate")} disabled={isLoading} />
+        <Input id="hourly_rate_valor" type="text" placeholder={studentsContent.formDialog.hourlyRatePlaceholder} {...register("hourly_rate")} disabled={isLoading} />
         {errors.hourly_rate && <p className="text-sm text-destructive">{errors.hourly_rate?.message}</p>}
       </div>
 
       {/* Dia de pagamento */}
       <div className="space-y-2">
         <Label htmlFor="pay_day">Dia de pagamento *</Label>
-        <Input id="pay_day" type="number" min={1} max={31} placeholder="1 a 31" {...register("pay_day")} disabled={isLoading} />
+        <Input id="pay_day" type="number" min={1} max={31} placeholder={studentsContent.formDialog.payDayPlaceholder} {...register("pay_day")} disabled={isLoading} />
         {errors.pay_day && <p className="text-sm text-destructive">{errors.pay_day?.message}</p>}
       </div>
 
@@ -193,7 +194,7 @@ export function UserFormStudentFields({
       <div className="space-y-2">
         <Label>Origem do Aluno *</Label>
         <Select value={selectedOrigin} onValueChange={(v) => { setSelectedOrigin(v as StudentOrigin); setValue("origin", v, { shouldValidate: true }); }} disabled={isLoading}>
-          <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder={studentsContent.formDialog.paymentMethodPlaceholder} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="indicacao">Indicação</SelectItem>
             <SelectItem value="google">Google</SelectItem>

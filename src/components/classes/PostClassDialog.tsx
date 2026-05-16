@@ -18,7 +18,7 @@ import { useMarkAsPaid, useUpdateFinancialStatus } from "@/hooks/useFinancialRec
 import { logger } from "@/lib/sentry";
 import { getActivityFileUrl } from "@/hooks/useActivities";
 import { STACK, GAP, ICON_SIZES, TYPOGRAPHY } from "@/lib/design-tokens";
-import { classes as classesContent } from "@/content";
+import { classes as classesContent, common } from "@/content";
 
 /** Schema do modal Avaliar aula: nota, feedback e confirmar pagamento obrigatórios quando aplicável */
 function createPostClassSchema(requirePaymentConfirmation: boolean) {
@@ -120,7 +120,7 @@ export function PostClassDialog({
       const url = await getActivityFileUrl(paymentProofUrl);
       window.open(url, "_blank");
     } catch (error) {
-      toast.error("Erro ao abrir comprovante");
+      toast.error(classesContent.postClassDialog.toasts.proofOpenError);
     } finally {
       setIsViewingProof(false);
     }
@@ -252,7 +252,7 @@ export function PostClassDialog({
       // Restaurar toast original em caso de erro
       toast.success = originalToastSuccess;
       logger.error(error as Error, { context: 'post_class_evaluation' });
-      toast.error("Erro ao registrar avaliação. Tente novamente.");
+      toast.error(classesContent.postClassDialog.toasts.evaluationError);
     }
   };
 
@@ -312,7 +312,7 @@ export function PostClassDialog({
                 id="grade"
                 type="text"
                 inputMode="numeric"
-                placeholder="Ex: 85"
+                placeholder={common.placeholders.gradeHint}
                 {...register("grade")}
                 onKeyDown={(e) => {
                   // Permitir: backspace, delete, tab, escape, enter, ponto, vírgula
@@ -379,7 +379,7 @@ export function PostClassDialog({
                       {classesContent.postClassDialog.refundLabel}
                     </Label>
                     <p className={`${TYPOGRAPHY.SMALL} mt-1`}>
-                      O pagamento será marcado como extornado (devolvido ao aluno)
+                      {classesContent.postClassDialog.refundDescription}
                     </p>
                   </div>
                 </div>
@@ -391,7 +391,7 @@ export function PostClassDialog({
             <Label htmlFor="feedback">{classesContent.postClassDialog.feedbackLabel}</Label>
             <Textarea
               id="feedback"
-              placeholder="Observações sobre a aula..."
+              placeholder={common.placeholders.classNotesHint}
               rows={3}
               {...register("feedback")}
             />

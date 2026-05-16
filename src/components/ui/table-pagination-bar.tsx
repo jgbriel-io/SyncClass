@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { common } from "@/content";
 
 interface TablePaginationBarProps {
   page: number;
@@ -29,7 +30,7 @@ export function TablePaginationBar({
     <div
       className={`border-t px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 flex items-center justify-between gap-4 bg-muted/30 ${className}`}
       role="navigation"
-      aria-label="Paginação da tabela"
+      aria-label={common.aria.tablePagination}
     >
       <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">
         {totalCount > 0 ? `${from}-${to} de ${totalCount}` : "0 registros"}
@@ -40,19 +41,19 @@ export function TablePaginationBar({
           size="sm"
           disabled={page === 0 || isFetching}
           onClick={() => onPageChange((p) => Math.max(0, p - 1))}
-          aria-label="Página anterior"
+          aria-label={common.aria.previousPage}
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
-          Anterior
+          {common.table.previous}
         </Button>
         <Button
           variant="outline"
           size="sm"
           disabled={!hasMore || isFetching}
           onClick={() => onPageChange((p) => p + 1)}
-          aria-label="Próxima página"
+          aria-label={common.aria.nextPage}
         >
-          Próximo
+          {common.table.next}
           <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>

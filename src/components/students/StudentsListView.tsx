@@ -252,7 +252,7 @@ export function StudentsListView({
       {/* Error state */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-          <p className="text-destructive">Erro ao carregar alunos. Tente novamente.</p>
+          <p className="text-destructive">{common.errors.generic}</p>
         </div>
       )}
 
@@ -264,36 +264,36 @@ export function StudentsListView({
               <TableHeader>
                 <TableRow className="border-b bg-muted/50">
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: "1%" }}>
-                    Status
+                    {common.labels.status}
                   </TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: COL.ALUNO, minWidth: COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>
-                    Aluno
+                    {studentsContent.view.title}
                   </TableHead>
                   {showTeacherColumn && (
                     <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.PROFESSOR, minWidth: COL.PROFESSOR }}>
-                      Professor
+                      {common.labels.teacher}
                     </TableHead>
                   )}
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.VALOR_HORA, minWidth: COL.VALOR_HORA }}>
-                    Valor/hora
+                    {studentsContent.table.colHourlyRate}
                   </TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.AULAS_SEMANA, minWidth: COL.AULAS_SEMANA }}>
-                    Aulas
+                    {studentsContent.table.colClasses}
                   </TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.TOTAL_MENSAL, minWidth: COL.TOTAL_MENSAL }}>
-                    Total mensal
+                    {studentsContent.table.colMonthlyTotal}
                   </TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.DIA_PAGTO, minWidth: COL.DIA_PAGTO }}>
-                    Dia pagto
+                    {studentsContent.table.colPaymentDay}
                   </TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.FINANCEIRO, minWidth: COL.FINANCEIRO }}>
-                    Financeiro
+                    {studentsContent.table.colFinancial}
                   </TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.ULTIMA_AULA, minWidth: COL.ULTIMA_AULA }}>
                     Última aula
                   </TableHead>
                   <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
-                    Ações
+                    {common.labels.actions}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -356,7 +356,7 @@ export function StudentsListView({
               <EmptyState
                 icon={Search}
                 title={common.table.noResults}
-                message="Ajuste os filtros acima ou limpe a busca"
+                message={common.emptyStates.noResultsHint}
               />
             ))}
 

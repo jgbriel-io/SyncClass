@@ -2,6 +2,7 @@ import { type UseFormRegister, type FieldErrors, type UseFormSetValue } from "re
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { TeacherFormData } from "./userFormSchemas";
+import { teachers as teachersContent } from "@/content";
 
 interface UserFormTeacherFieldsProps {
   register: UseFormRegister<TeacherFormData>;
@@ -16,12 +17,12 @@ export function UserFormTeacherFields({ register, errors, setValue, isLoading, i
     <div className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2 space-y-2">
         <Label htmlFor="name">Nome completo *</Label>
-        <Input id="name" placeholder="Nome do professor" {...register("name")} disabled={isLoading} />
+        <Input id="name" placeholder={teachersContent.formDialog.namePlaceholder} {...register("name")} disabled={isLoading} />
         {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
       </div>
       <div className="space-y-2">
         <Label htmlFor="email">Email *</Label>
-        <Input id="email" type="email" placeholder="email@exemplo.com" {...register("email")} disabled={isLoading || isEdit} />
+        <Input id="email" type="email" placeholder={teachersContent.formDialog.emailPlaceholder} {...register("email")} disabled={isLoading || isEdit} />
         {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
       </div>
       <div className="space-y-2">
@@ -31,7 +32,7 @@ export function UserFormTeacherFields({ register, errors, setValue, isLoading, i
           type="text"
           inputMode="numeric"
           maxLength={15}
-          placeholder="(00) 00000-0000"
+          placeholder={teachersContent.formDialog.phonePlaceholder}
           {...register("phone")}
           onChange={(e) => {
             const digits = e.target.value.replace(/\D/g, "").slice(0, 11);

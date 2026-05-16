@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { brDateStringToDate } from "@/lib/utils/patterns";
 import { formatCurrency } from "@/lib/utils/formatters";
 import type { ClassLogWithStudent } from "@/hooks/useClassLogs";
-import { classes as classesContent } from "@/content";
+import { classes as classesContent, common } from "@/content";
 
 interface ClassLogFinancialSectionProps {
   register: UseFormRegister<FieldValues>;
@@ -118,7 +118,7 @@ export function ClassLogFinancialSection({
                 <Input
                   id="financial_amount"
                   type="text"
-                  placeholder="100,00"
+                  placeholder={common.placeholders.amount}
                   {...register("financial_amount")}
                 />
                 {errors.financial_amount && (
@@ -221,7 +221,7 @@ export function ClassLogFinancialSection({
             <Input
               id="financial_amount_edit"
               type="text"
-              placeholder="100,00"
+              placeholder={common.placeholders.amount}
               {...register("financial_amount")}
             />
           </div>

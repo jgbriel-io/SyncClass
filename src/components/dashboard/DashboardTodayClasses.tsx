@@ -6,7 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
 import type { TodayClassesData } from "@/hooks/useTodayClasses";
 import { getTodayClassStatus } from "@/hooks/useTodayClasses";
-import { dashboard } from "@/content";
+import { common, dashboard } from "@/content";
 
 interface DashboardTodayClassesProps {
   todayClasses: TodayClassesData | undefined;
@@ -58,7 +58,7 @@ export function DashboardTodayClasses({ todayClasses, basePath }: DashboardToday
                         {item.timeLabel} — {item.studentName}
                       </p>
                       <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
-                        {item.title?.trim() || "Aula"}
+                        {item.title?.trim() || common.labels.class}
                       </p>
                     </div>
                   </div>

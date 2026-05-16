@@ -66,6 +66,7 @@ export const teachers = {
       `Tem certeza que deseja excluir definitivamente o professor ${name}?`,
     warning:
       "Todo o histórico de aulas deste professor será permanentemente removido. Esta ação não pode ser desfeita.",
+    warningLabel: "Atenção:",
     confirmButton: "Excluir definitivamente",
     deleting: "Excluindo...",
     scheduledTitle: "⚠️ Confirmar exclusão com aulas agendadas",
@@ -102,6 +103,13 @@ export const teachers = {
     tabInfo: "Informações",
     tabStudents: "Alunos",
     tabClasses: "Aulas",
+    personalDataSection: "Dados Pessoais",
+    activeStudentsLabel: "Alunos Ativos",
+    noActiveStudentsMessage: "Nenhum aluno ativo vinculado",
+    totalStudentsLabel: "Total de Alunos",
+    totalClassesLabel: "Total de Aulas",
+    totalReceivedLabel: "Valor Recebido",
+    averagePerClassLabel: "Média por Aula",
   },
 
   emptyState: {

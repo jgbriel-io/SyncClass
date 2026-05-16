@@ -84,4 +84,11 @@ export const dashboard = {
     plural: "aulas pendentes de feedback",
     viewLink: "Ver e avaliar",
   },
+
+  nextClass: {
+    teacher: "Sua próxima aula",
+    admin: "Próxima aula do dia",
+    withStudent: "é com o(a) aluno(a)",
+    timeUndefined: "Horário não definido",
+  },
 } as const;

@@ -46,11 +46,11 @@ export function ClassDeleteDialog({
                   classLog ? formatDate(classLog.class_date) : ""
                 )}
               </p>
-              {classLog?.financial_records?.status === "pago" ? (
+              {classLog?.financial_records?.[0]?.status === "pago" ? (
                 <p className="text-destructive font-medium">
                   {classesContent.deleteDialog.warningPaid}
                 </p>
-              ) : classLog?.financial_records ? (
+              ) : classLog?.financial_records?.length ? (
                 <span className="block text-warning">
                   {classesContent.deleteDialog.warningLinked}
                 </span>

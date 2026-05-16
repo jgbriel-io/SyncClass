@@ -117,7 +117,7 @@ export function TeacherHardDeleteDialog({
             {teachersContent.deleteDialog.description(teacher?.name ?? "")}
             <br />
             <br />
-            <strong className="text-destructive">Atenção:</strong> {teachersContent.deleteDialog.warning}
+            <strong className="text-destructive">{teachersContent.deleteDialog.warningLabel}</strong> {teachersContent.deleteDialog.warning}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

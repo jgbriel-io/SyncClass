@@ -5,6 +5,7 @@ import { Calendar, FileText, CreditCard, AlertCircle, CheckCircle2 } from "lucid
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { sanitizeText } from "@/lib/utils/sanitize";
+import { studentPortal } from "@/content/student-portal";
 
 type FinancialStatus = "pago" | "pendente" | "atrasado" | "validando";
 
@@ -27,22 +28,22 @@ const statusConfig: Record<FinancialStatus, {
 }> = {
   pago: {
     variant: "success",
-    label: "Pago",
+    label: studentPortal.financialCard.paidLabel,
     borderColor: "border-l-success",
   },
   pendente: {
     variant: "warning",
-    label: "Pendente",
+    label: studentPortal.financialCard.pendingLabel,
     borderColor: "border-l-warning",
   },
   atrasado: {
     variant: "destructive",
-    label: "Atrasado",
+    label: studentPortal.financialCard.overdueLabel,
     borderColor: "border-l-destructive",
   },
   validando: {
     variant: "warning",
-    label: "Validando",
+    label: studentPortal.financialCard.validatingLabel,
     borderColor: "border-l-warning",
   },
 };
@@ -71,7 +72,7 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-muted-foreground">
-              Vencimento: <span className="font-medium text-foreground">{formattedDueDate}</span>
+              {studentPortal.financialCard.dueDateLabel}: <span className="font-medium text-foreground">{formattedDueDate}</span>
             </span>
           </div>
 
@@ -80,7 +81,7 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
               <span className="text-muted-foreground">
-                Pago em: <span className="font-medium text-foreground">{formattedPaymentDate}</span>
+                {studentPortal.financialCard.paidAtLabel}: <span className="font-medium text-foreground">{formattedPaymentDate}</span>
               </span>
             </div>
           )}
@@ -97,7 +98,7 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
           {record.status === "atrasado" && (
             <div className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span className="text-sm font-medium">Pagamento em atraso</span>
+              <span className="text-sm font-medium">{studentPortal.financialCard.overdueMessage}</span>
             </div>
           )}
 
@@ -105,7 +106,7 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
           {record.status === "validando" && (
             <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
               <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-              <span className="text-sm font-medium">Comprovante enviado. Aguardando confirmação do professor.</span>
+              <span className="text-sm font-medium">{studentPortal.financialCard.validatingMessage}</span>
             </div>
           )}
         </div>
@@ -119,7 +120,7 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
             onClick={onPayClick}
           >
             <CreditCard className="h-4 w-4 mr-2" />
-            Pagar Agora
+            {studentPortal.financialCard.payNowButton}
           </Button>
         )}
       </div>

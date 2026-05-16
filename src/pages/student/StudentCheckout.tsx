@@ -16,6 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSubmitPaymentProof } from "@/hooks/usePaymentProof";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
+import { common } from "@/content";
 
 export default function StudentCheckout() {
   const { recordId } = useParams<{ recordId: string }>();
@@ -76,13 +77,13 @@ export default function StudentCheckout() {
     // Validar tipo de arquivo
     const validTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
     if (!validTypes.includes(file.type)) {
-      toast.error("Apenas imagens (JPEG, PNG, WebP) ou PDF são permitidos");
+      toast.error(common.errors.invalidFileType);
       return;
     }
 
     // Validar tamanho (máx 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Arquivo muito grande. Máximo 5MB");
+      toast.error(common.errors.fileTooLarge);
       return;
     }
 

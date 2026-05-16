@@ -17,6 +17,7 @@ import { ptBR } from "date-fns/locale";
 import { STACK, GAP, ICON_SIZES } from "@/lib/design-tokens";
 import { maskPhone, brDateStringToDate } from "@/lib/utils/patterns";
 import { useDateMask } from "@/hooks/useDateMask";
+import { students as studentsContent, common } from "@/content";
 
 interface StudentContactSectionProps {
   register: UseFormRegister<FieldValues>;
@@ -44,12 +45,12 @@ export function StudentContactSection({
     <>
       {/* Data de Nascimento */}
       <div className={STACK.TIGHT}>
-        <Label htmlFor="birth_date">Data de Nascimento</Label>
+        <Label htmlFor="birth_date">{studentsContent.contactSection.birthDateLabel}</Label>
         <div className={`flex ${GAP.TIGHT}`}>
           <Input
             id="birth_date"
             type="text"
-            placeholder="dd/mm/aaaa"
+            placeholder={common.placeholders.date}
             maxLength={10}
             value={birthDate || ""}
             onChange={handleDateChange}
@@ -88,7 +89,7 @@ export function StudentContactSection({
                   }}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Ano" />
+                    <SelectValue placeholder={common.placeholders.year} />
                   </SelectTrigger>
                   <SelectContent className="max-h-[200px]">
                     {Array.from(
@@ -133,12 +134,12 @@ export function StudentContactSection({
 
       {/* Telefone */}
       <div className={STACK.TIGHT}>
-        <Label htmlFor="phone">Telefone *</Label>
+        <Label htmlFor="phone">{studentsContent.contactSection.phoneLabel}</Label>
         <Input
           id="phone"
           type="text"
           inputMode={isBrazilSelected ? "numeric" : "text"}
-          placeholder={isBrazilSelected ? "(00) 00000-0000" : "Ex: 555 123 4567"}
+          placeholder={isBrazilSelected ? "(00) 00000-0000" : studentsContent.contactSection.phoneInternational}
           {...register("phone")}
           onChange={(e) => {
             if (isBrazilSelected) {
@@ -156,11 +157,11 @@ export function StudentContactSection({
 
       {/* Email */}
       <div className={STACK.TIGHT}>
-        <Label htmlFor="email">Email *</Label>
+        <Label htmlFor="email">{studentsContent.contactSection.emailLabel}</Label>
         <Input
           id="email"
           type="email"
-          placeholder="email@exemplo.com"
+          placeholder={common.placeholders.email}
           {...register("email")}
           disabled={isLoading}
         />

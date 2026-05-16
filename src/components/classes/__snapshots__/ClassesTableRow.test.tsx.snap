@@ -1,0 +1,439 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ClassesTableRow - Snapshot > should render class row with centralized content 1`] = `
+<div>
+  <table>
+    <tbody>
+      <tr
+        class="group hover:bg-muted/30 transition-colors"
+      >
+        <td
+          class="px-2 py-2 align-middle whitespace-nowrap"
+          style="width: 1%;"
+        >
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border bg-success-muted text-success border-success/20 justify-center"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-success"
+            />
+            Concluída
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap sticky left-0 z-20 bg-card group-hover:bg-muted transition-colors w-[280px] min-w-[280px] max-w-[280px] desktop:w-[360px] desktop:min-w-[360px] desktop:max-w-[360px]"
+          style="box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);"
+        >
+          <div
+            class="flex items-center gap-4 overflow-hidden"
+          >
+            <div
+              class="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0"
+            >
+              <span
+                class="text-xs font-medium text-accent-foreground"
+              >
+                J
+              </span>
+            </div>
+            <div
+              class="flex-1 min-w-0"
+            >
+              <p
+                class="text-xs font-medium truncate"
+                title="João Silva"
+              >
+                João Silva
+              </p>
+              <p
+                class="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate"
+                title="Editado em 15/01/2024 07:30"
+              >
+                Editado em 15/01/2024 07:30
+              </p>
+            </div>
+          </div>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 240px; min-width: 240px;"
+        >
+          <div
+            class="flex flex-col gap-0.5"
+          >
+            <span
+              class="text-xs font-medium text-foreground whitespace-normal line-clamp-2"
+              title="Aulas - 15/01/2024"
+            >
+              Aulas - 15/01/2024
+            </span>
+            <span
+              class="text-xs text-muted-foreground whitespace-nowrap truncate"
+              title="Prof. Maria"
+            >
+              Prof. Maria
+            </span>
+          </div>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap tabular-nums"
+          style="width: 140px; min-width: 140px;"
+        >
+          <div
+            class="flex flex-col gap-0.5 text-muted-foreground"
+          >
+            <span
+              class="truncate"
+              title="15/01/2024"
+            >
+              15/01/2024
+            </span>
+            <span
+              class="truncate"
+              title="07:00 às 08:00"
+            >
+              07:00 às 08:00
+            </span>
+          </div>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap tabular-nums"
+          style="width: 110px; min-width: 110px;"
+        >
+          <span
+            class="text-muted-foreground truncate block"
+            title="1h"
+          >
+            1h
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap tabular-nums"
+          style="width: 140px; min-width: 140px;"
+        >
+          <span
+            class="font-medium truncate block "
+            title="8.5"
+          >
+            8.5
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 140px; min-width: 140px;"
+        >
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border bg-muted text-muted-foreground border-border justify-center"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-muted-foreground"
+            />
+            Sem cobrança
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 110px; min-width: 110px;"
+        >
+          <div
+            class="flex items-center justify-end"
+          >
+            <button
+              class="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-md px-3 h-8 w-[7rem] shrink-0 border-none text-xs bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+              title="Atualizar"
+            >
+              Atualizar
+            </button>
+          </div>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 90px; min-width: 90px;"
+        >
+          <div
+            class="flex items-center gap-2"
+          >
+            <button
+              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+              title="Ver detalhes"
+            >
+              <svg
+                class="lucide lucide-eye h-4 w-4"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="3"
+                />
+              </svg>
+            </button>
+            <button
+              aria-expanded="false"
+              aria-haspopup="menu"
+              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+              data-state="closed"
+              id="radix-:r0:"
+              type="button"
+            >
+              <svg
+                class="lucide lucide-ellipsis h-4 w-4"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="1"
+                />
+                <circle
+                  cx="19"
+                  cy="12"
+                  r="1"
+                />
+                <circle
+                  cx="5"
+                  cy="12"
+                  r="1"
+                />
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;
+
+exports[`ClassesTableRow - Snapshot > should render class row without teacher column 1`] = `
+<div>
+  <table>
+    <tbody>
+      <tr
+        class="group hover:bg-muted/30 transition-colors"
+      >
+        <td
+          class="px-2 py-2 align-middle whitespace-nowrap"
+          style="width: 1%;"
+        >
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border bg-success-muted text-success border-success/20 justify-center"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-success"
+            />
+            Concluída
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap sticky left-0 z-20 bg-card group-hover:bg-muted transition-colors w-[280px] min-w-[280px] max-w-[280px] desktop:w-[360px] desktop:min-w-[360px] desktop:max-w-[360px]"
+          style="box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);"
+        >
+          <div
+            class="flex items-center gap-4 overflow-hidden"
+          >
+            <div
+              class="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0"
+            >
+              <span
+                class="text-xs font-medium text-accent-foreground"
+              >
+                J
+              </span>
+            </div>
+            <div
+              class="flex-1 min-w-0"
+            >
+              <p
+                class="text-xs font-medium truncate"
+                title="João Silva"
+              >
+                João Silva
+              </p>
+              <p
+                class="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate"
+                title="Editado em 15/01/2024 07:30"
+              >
+                Editado em 15/01/2024 07:30
+              </p>
+            </div>
+          </div>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 240px; min-width: 240px;"
+        >
+          <span
+            class="text-xs font-medium text-foreground whitespace-normal line-clamp-2"
+            title="Aulas - 15/01/2024"
+          >
+            Aulas - 15/01/2024
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap tabular-nums"
+          style="width: 140px; min-width: 140px;"
+        >
+          <div
+            class="flex flex-col gap-0.5 text-muted-foreground"
+          >
+            <span
+              class="truncate"
+              title="15/01/2024"
+            >
+              15/01/2024
+            </span>
+            <span
+              class="truncate"
+              title="07:00 às 08:00"
+            >
+              07:00 às 08:00
+            </span>
+          </div>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap tabular-nums"
+          style="width: 110px; min-width: 110px;"
+        >
+          <span
+            class="text-muted-foreground truncate block"
+            title="1h"
+          >
+            1h
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap tabular-nums"
+          style="width: 140px; min-width: 140px;"
+        >
+          <span
+            class="font-medium truncate block "
+            title="8.5"
+          >
+            8.5
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 140px; min-width: 140px;"
+        >
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border bg-muted text-muted-foreground border-border justify-center"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-muted-foreground"
+            />
+            Sem cobrança
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 110px; min-width: 110px;"
+        >
+          <div
+            class="flex items-center justify-end"
+          >
+            <button
+              class="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-md px-3 h-8 w-[7rem] shrink-0 border-none text-xs bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+              title="Atualizar"
+            >
+              Atualizar
+            </button>
+          </div>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 90px; min-width: 90px;"
+        >
+          <div
+            class="flex items-center gap-2"
+          >
+            <button
+              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+              title="Ver detalhes"
+            >
+              <svg
+                class="lucide lucide-eye h-4 w-4"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="3"
+                />
+              </svg>
+            </button>
+            <button
+              aria-expanded="false"
+              aria-haspopup="menu"
+              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+              data-state="closed"
+              id="radix-:r2:"
+              type="button"
+            >
+              <svg
+                class="lucide lucide-ellipsis h-4 w-4"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="1"
+                />
+                <circle
+                  cx="19"
+                  cy="12"
+                  r="1"
+                />
+                <circle
+                  cx="5"
+                  cy="12"
+                  r="1"
+                />
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;

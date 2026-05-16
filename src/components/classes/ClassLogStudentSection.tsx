@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { brDateStringToDate, REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { brDateToIso } from "@/lib/utils/classFormHelpers";
 import type { Teacher } from "@/hooks/useTeachers";
+import { classes as classesContent, common } from "@/content";
 
 type Student = { id: string; name: string; status: string };
 
@@ -67,16 +68,16 @@ export function ClassLogStudentSection({
       {/* Professor (só quando habilitado — admin) */}
       {enableTeacherSelection && (
         <div className="space-y-2">
-          <Label>Professor *</Label>
+          <Label>{common.labels.teacher} *</Label>
           {isEditing && selectedTeacherId ? (
             <>
               <Input
-                value={selectedTeacherName || "Professor não encontrado"}
+                value={selectedTeacherName || common.labels.teacherNotFound}
                 disabled
                 readOnly
               />
               <p className="text-xs text-muted-foreground">
-                Professor que registrou esta aula
+                {common.hints.teacherCannotChange}
               </p>
             </>
           ) : (
@@ -87,7 +88,7 @@ export function ClassLogStudentSection({
                 disabled={loadingTeachers}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um professor" />
+                  <SelectValue placeholder={common.placeholders.selectTeacher} />
                 </SelectTrigger>
                 <SelectContent>
                   {teachers.map((teacher) => (
@@ -107,14 +108,14 @@ export function ClassLogStudentSection({
 
       {/* Aluno */}
       <div className="space-y-2">
-        <Label>Aluno *</Label>
+        <Label>{common.labels.student} *</Label>
         <Select
           value={selectedStudentId}
           onValueChange={onStudentChange}
           disabled={loadingStudents || isEditing}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecione um aluno" />
+            <SelectValue placeholder={common.placeholders.selectStudent} />
           </SelectTrigger>
           <SelectContent>
             {activeStudents.map((student) => (
@@ -132,18 +133,18 @@ export function ClassLogStudentSection({
 
       {/* Título da Aula */}
       <div className="space-y-2">
-        <Label htmlFor="title">Título da Aula</Label>
+        <Label htmlFor="title">{classesContent.logFormDialog.titleFieldLabel}</Label>
         <Input
           id="title"
           type="text"
-          placeholder="Ex: Present Perfect - Unit 8"
+          placeholder={common.placeholders.classTopicHint}
           {...register("title")}
         />
       </div>
 
       {/* Data da Aula */}
       <div className="space-y-2">
-        <Label htmlFor="class_date">Data da Aula *</Label>
+        <Label htmlFor="class_date">{classesContent.logFormDialog.dateLabel}</Label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -155,7 +156,7 @@ export function ClassLogStudentSection({
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {classDate || "Selecione a data"}
+              {classDate || classesContent.logFormDialog.datePlaceholder}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -186,14 +187,14 @@ export function ClassLogStudentSection({
 
       {/* Horário */}
       <div className="space-y-3 rounded-lg border p-3">
-        <p className="text-sm font-medium">Horário</p>
+        <p className="text-sm font-medium">{classesContent.logFormDialog.titleFieldLabel}</p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="start_time">Início</Label>
+            <Label htmlFor="start_time">{classesContent.logFormDialog.startTimeLabel}</Label>
             <Input id="start_time" type="time" {...register("start_time")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="end_time">Término</Label>
+            <Label htmlFor="end_time">{classesContent.logFormDialog.endTimeLabel}</Label>
             <Input id="end_time" type="time" {...register("end_time")} />
             {errors.end_time && (
               <p className="text-xs text-destructive">{String(errors.end_time.message)}</p>
@@ -202,17 +203,17 @@ export function ClassLogStudentSection({
         </div>
         {effectiveDurationMinutes != null && (
           <p className="text-xs text-muted-foreground">
-            Duração: {effectiveDurationMinutes} min
+            {classesContent.logFormDialog.titleFieldLabel}: {effectiveDurationMinutes} min
           </p>
         )}
       </div>
 
       {/* Observações */}
       <div className="space-y-2">
-        <Label htmlFor="observations">Observações</Label>
+        <Label htmlFor="observations">{classesContent.logFormDialog.observationsLabel}</Label>
         <Textarea
           id="observations"
-          placeholder="Notas pré-aula (opcional)..."
+          placeholder={common.placeholders.preClassNotesHint}
           rows={2}
           {...register("observations")}
         />

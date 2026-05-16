@@ -36,6 +36,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { UsersTableRow } from "@/components/users/UsersTableRow";
 import { COL as USER_COL, TABLE_MIN_W as USER_TABLE_MIN_W } from "@/components/users/UsersTableRow.constants";
 import { UserDetailSheet } from "@/components/admin/UserDetailSheet";
+import { common } from "@/content";
 
 export default function UsersPage() {
   const [filters, setFilters] = useState<UsersFiltersState>({
@@ -340,13 +341,13 @@ export default function UsersPage() {
                     onReactivateStudent={(studentId) => {
                       updateStudent.mutate(
                         { id: studentId, status: "ativo" },
-                        { onSuccess: () => toast.success("Aluno reativado com sucesso!") }
+                        { onSuccess: () => toast.success(common.toasts.success) }
                       );
                     }}
                     onReactivateTeacher={(teacherId) => {
                       updateTeacher.mutate(
                         { id: teacherId, status: "ativo" },
-                        { onSuccess: () => toast.success("Professor reativado com sucesso!") }
+                        { onSuccess: () => toast.success(common.toasts.success) }
                       );
                     }}
                     onDelete={(u) => {

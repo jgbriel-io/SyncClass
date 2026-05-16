@@ -80,7 +80,7 @@ const classLogBaseSchema = z.object({
     const [eh, em] = data.end_time.split(":").map(Number);
     return eh > sh || (eh === sh && em > sm);
   },
-  { message: "Horário de término deve ser posterior ao início", path: ["end_time"] }
+  { message: classesContent.validation.endTimeAfterStart, path: ["end_time"] }
 );
 
 function createClassLogSchema(isEditing: boolean) {

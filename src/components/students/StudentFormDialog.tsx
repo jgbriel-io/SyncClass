@@ -272,7 +272,7 @@ export function StudentFormDialog({
           {/* Professor (só ao criar) */}
           {!student && (
             <div className={`sm:col-span-2 ${STACK.TIGHT}`}>
-              <Label htmlFor="teacher">Professor *</Label>
+              <Label htmlFor="teacher">{studentsContent.formDialog.teacherLabel}</Label>
               <Select
                 value={selectedTeacherId}
                 onValueChange={(value) => {
@@ -282,7 +282,7 @@ export function StudentFormDialog({
                 disabled={isLoading || loadingTeachers || !!autoTeacherId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um professor" />
+                  <SelectValue placeholder={common.placeholders.selectTeacher} />
                 </SelectTrigger>
                 <SelectContent>
                   {activeTeachers.map((teacher) => (
@@ -300,7 +300,7 @@ export function StudentFormDialog({
 
           {/* Nome */}
           <div className={`sm:col-span-2 ${STACK.TIGHT}`}>
-            <Label htmlFor="name">Nome completo *</Label>
+            <Label htmlFor="name">{studentsContent.formDialog.nameLabel}</Label>
             <Input
               id="name"
               placeholder={studentsContent.formDialog.namePlaceholder}
@@ -346,11 +346,11 @@ export function StudentFormDialog({
 
           {/* Valor por hora */}
           <div className={STACK.TIGHT}>
-            <Label htmlFor="hourly_rate_valor">Valor por hora</Label>
+            <Label htmlFor="hourly_rate_valor">{studentsContent.formDialog.hourlyRateLabel}</Label>
             <Input
               id="hourly_rate_valor"
               type="text"
-              placeholder="Ex: 120,00"
+              placeholder={common.placeholders.gradeHint}
               {...register("hourly_rate")}
               disabled={isLoading}
             />
@@ -358,13 +358,13 @@ export function StudentFormDialog({
 
           {/* Dia de pagamento */}
           <div className={STACK.TIGHT}>
-            <Label htmlFor="pay_day">Dia de pagamento</Label>
+            <Label htmlFor="pay_day">{studentsContent.formDialog.payDayLabel}</Label>
             <Input
               id="pay_day"
               type="number"
               min={1}
               max={31}
-              placeholder="1 a 31"
+              placeholder={common.placeholders.payDay}
               {...register("pay_day")}
               disabled={isLoading}
             />
@@ -372,7 +372,7 @@ export function StudentFormDialog({
 
           {/* Origem */}
           <div className={STACK.TIGHT}>
-            <Label>Origem do Aluno *</Label>
+            <Label>{studentsContent.formDialog.originLabel}</Label>
             <Select
               value={selectedOrigin}
               onValueChange={(value) => {
@@ -383,14 +383,14 @@ export function StudentFormDialog({
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
+                <SelectValue placeholder={common.placeholders.select} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="indicacao">Indicação</SelectItem>
-                <SelectItem value="google">Google</SelectItem>
-                <SelectItem value="instagram">Instagram</SelectItem>
-                <SelectItem value="passante">Passante</SelectItem>
-                <SelectItem value="outro">Outro</SelectItem>
+                <SelectItem value="indicacao">{studentsContent.originOptions.indicacao}</SelectItem>
+                <SelectItem value="google">{studentsContent.originOptions.google}</SelectItem>
+                <SelectItem value="instagram">{studentsContent.originOptions.instagram}</SelectItem>
+                <SelectItem value="passante">{studentsContent.originOptions.passante}</SelectItem>
+                <SelectItem value="outro">{studentsContent.originOptions.outro}</SelectItem>
               </SelectContent>
             </Select>
             {errors.origin && (

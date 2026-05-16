@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
+import { common } from "@/content";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -27,18 +28,17 @@ function DefaultErrorFallback({ error, resetError }: ErrorBoundaryFallbackProps)
         <CardHeader>
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-destructive" />
-            <CardTitle>Algo deu errado</CardTitle>
+            <CardTitle>{common.errors.errorBoundaryTitle}</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Ocorreu um erro inesperado. Nossa equipe foi notificada e está trabalhando para
-            resolver o problema.
+            {common.errors.errorBoundaryMessage}
           </p>
           {import.meta.env.DEV && (
             <details className="mt-4">
               <summary className="cursor-pointer text-sm font-medium mb-2">
-                Detalhes técnicos (apenas em desenvolvimento)
+                {common.errors.errorBoundaryTechnical}
               </summary>
               <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-48">
                 {error.message}
@@ -50,13 +50,13 @@ function DefaultErrorFallback({ error, resetError }: ErrorBoundaryFallbackProps)
         </CardContent>
         <CardFooter className="flex gap-2">
           <Button onClick={resetError} variant="default">
-            Tentar novamente
+            {common.errors.errorBoundaryRetry}
           </Button>
           <Button
             onClick={() => (window.location.href = "/")}
             variant="outline"
           >
-            Voltar ao início
+            {common.errors.errorBoundaryHome}
           </Button>
         </CardFooter>
       </Card>

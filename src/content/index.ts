@@ -13,3 +13,4 @@ export { studentPortal } from './student-portal';
 export { validation } from './validation';
 export { ui } from './ui';
 export { pwa } from './pwa';
+export { filters } from './filters';

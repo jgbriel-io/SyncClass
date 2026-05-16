@@ -1,3 +1,5 @@
+import { common } from "@/content";
+import { studentPortal } from "@/content/student-portal";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,10 +21,10 @@ export function StudentPixPaymentBox({ pixKey, className }: StudentPixPaymentBox
     try {
       await navigator.clipboard.writeText(pixKey);
       setCopied(true);
-      toast.success("Chave PIX copiada!");
+      toast.success(studentPortal.pixPayment.toasts.copied);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Não foi possível copiar.");
+      toast.error(studentPortal.pixPayment.toasts.copyError);
     }
   };
 
@@ -33,15 +35,15 @@ export function StudentPixPaymentBox({ pixKey, className }: StudentPixPaymentBox
           <Wallet className="h-4 w-4 text-primary" />
         </div>
         <div>
-          <h3 className="font-semibold text-sm">Pagar com PIX</h3>
+          <h3 className="font-semibold text-sm">{studentPortal.pixPayment.title}</h3>
           <p className="text-xs text-muted-foreground">
-            Use a chave abaixo no app do seu banco. Após pagar, envie o comprovante ao professor para que o status seja atualizado.
+            {studentPortal.pixPayment.description}
           </p>
         </div>
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Chave PIX (copia e cola)</label>
+        <label className="text-xs font-medium text-muted-foreground">{studentPortal.pixPayment.keyLabel}</label>
         <div className="flex gap-2">
           <Input
             readOnly
@@ -54,7 +56,7 @@ export function StudentPixPaymentBox({ pixKey, className }: StudentPixPaymentBox
             size="icon"
             onClick={handleCopy}
             className="shrink-0"
-            aria-label="Copiar chave PIX"
+            aria-label={common.aria.copyPix}
           >
             {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
           </Button>
@@ -62,7 +64,7 @@ export function StudentPixPaymentBox({ pixKey, className }: StudentPixPaymentBox
       </div>
 
       <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
-        O pagamento não é confirmado automaticamente. Após realizar o PIX, envie o comprovante ao seu professor para que ele confirme na plataforma.
+        {studentPortal.pixPayment.note}
       </p>
     </Card>
   );

@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { brDateToIso, buildTimestamptzFromDateAndTime as buildTimestamptz, getDefaultDueDateForPackage } from "@/lib/utils/classFormHelpers";
 import { PackageSlotList, type Slot, type ScheduleMode } from "./PackageSlotList";
 import { PackageFinancialSection } from "./PackageFinancialSection";
-import { classes as classesContent } from "@/content";
+import { classes as classesContent, common } from "@/content";
 
 // ─── Helpers locais ───────────────────────────────────────────────────────────
 
@@ -122,8 +122,8 @@ export function PackageClassesDialog({
   }, [open, initialStudentId, teacherId]);
 
   const validate = (): string | null => {
-    if (enableTeacherSelection && !selectedTeacherId) return "Selecione um professor.";
-    if (!studentId) return "Selecione um aluno.";
+    if (enableTeacherSelection && !selectedTeacherId) return common.errors.selectTeacher;
+    if (!studentId) return common.errors.selectStudent;
     if (slots.length === 0)
       return "Adicione ao menos uma aula ou use Horário fixo para gerar as aulas do mês.";
     for (let i = 0; i < slots.length; i++) {
@@ -198,7 +198,7 @@ export function PackageClassesDialog({
         const [, m, y] = firstDate?.split("/") ?? [];
         const monthYear = m && y ? `${getMonthName(Number(m))} ${y}` : "";
         if (!paymentMethod?.trim()) {
-          toast.error("Selecione o método de pagamento.");
+          toast.error(classesContent.packageDialog.toasts.selectPaymentMethod);
           return;
         }
         packageFinancial = {

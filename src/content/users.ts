@@ -56,6 +56,18 @@ export const users = {
       `Tem certeza que deseja desativar o usuário ${name}? O acesso será bloqueado, mas os dados serão preservados.`,
     descriptionHard: (name: string) =>
       `Tem certeza que deseja excluir definitivamente o usuário ${name}? Esta ação não pode ser desfeita.`,
+    descriptionArchived: (name: string) =>
+      `Tem certeza que deseja excluir o arquivo morto do usuário ${name}? A conta será removida do sistema (Supabase Auth e perfil). O email ficará disponível para reutilização. Esta ação não pode ser desfeita.`,
+    descriptionHardDelete: (name: string) =>
+      `A conta do usuário ${name} será removida do sistema (Supabase Auth, perfil e vínculos). Esta ação não pode ser desfeita.`,
+    descriptionReactivate: (name: string) =>
+      `Tem certeza que deseja reativar o usuário ${name}? Ele voltará a aparecer na lista de usuários ativos.`,
+    descriptionArchiveStudent: (name: string) =>
+      `Tem certeza que deseja arquivar o usuário ${name}? Ele será removido da lista de ativos e aparecerá como aluno inativo.`,
+    descriptionArchiveTeacher: (name: string) =>
+      `Tem certeza que deseja arquivar o usuário ${name}? Ele será removido da lista de ativos e aparecerá como professor inativo.`,
+    descriptionArchiveGeneric: (name: string) =>
+      `Tem certeza que deseja arquivar o usuário ${name}? Esta ação não remove a conta do Supabase Auth, apenas arquiva o usuário no painel.`,
     confirmSoft: "Desativar",
     confirmHard: "Excluir definitivamente",
     confirmArchive: "Arquivar",
@@ -110,5 +122,22 @@ export const users = {
     roleRequired: "Selecione o perfil",
     nameMin: "Nome deve ter pelo menos 2 caracteres",
     emailInvalid: "Email inválido",
+  },
+
+  detailSheet: {
+    title: "Detalhes do Usuário",
+    tabInfo: "Informações",
+    tabLinks: "Vínculos",
+    accountDataSection: "Dados da Conta",
+    privilegeLabel: "Privilégio",
+    statusLabel: "Status",
+    createdAtLabel: "Criado em",
+    updatedAtLabel: "Atualizado em",
+    accountActive: "Conta ativa",
+    accountArchived: "Conta arquivada",
+    linksSection: "Vínculos com Perfis",
+    noLinksMessage: "Nenhum vínculo com aluno ou professor",
+    linkedStudentLabel: "Aluno Vinculado",
+    linkedTeacherLabel: "Professor Vinculado",
   },
 } as const;

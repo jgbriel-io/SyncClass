@@ -20,6 +20,7 @@ import { ptBR } from "date-fns/locale";
 import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { isClassEvaluationBlocked, getClassStatusWithTime } from "@/lib/utils/classTime";
 import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
+import { classes as classesContent, common } from "@/content";
 
 /* ── Layout constants (espelhando o padrão da aba Alunos) ─────────── */
 
@@ -143,9 +144,9 @@ export function ClassLogRow({
           <div className="min-w-0 space-y-1">
             <p
               className="text-sm font-medium truncate"
-              title={log.students?.name || "Aluno não encontrado"}
+              title={log.students?.name || common.errors.studentNotFound}
             >
-              {log.students?.name || "Aluno não encontrado"}
+              {log.students?.name || common.errors.studentNotFound}
             </p>
             {lastUpdatedAt && (
               <p className="text-[11px] text-muted-foreground">
@@ -192,7 +193,7 @@ export function ClassLogRow({
           {log.grade != null
             ? Number(log.grade).toFixed(1)
             : log.attendance === false
-              ? "Não compareceu"
+              ? classesContent.tableRow.noAttendance
               : "—"}
         </span>
       </td>
@@ -226,7 +227,7 @@ export function ClassLogRow({
           
           return (
             <StatusBadge variant="default">
-              Sem cobrança
+              {classesContent.tableRow.noCharge}
             </StatusBadge>
           );
         })()}
@@ -243,7 +244,7 @@ export function ClassLogRow({
         >
           {log.financial_records
             ? formatCurrency(Number(log.financial_records.amount))
-            : "sem cobrança"}
+            : classesContent.tableRow.noCharge}
         </span>
       </td>
 
@@ -266,14 +267,14 @@ export function ClassLogRow({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(log)}>
                 <Pencil className="h-4 w-4 mr-2" />
-                Editar
+                {classesContent.tableRow.edit}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={() => onDelete(log)}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Excluir
+                {classesContent.tableRow.delete}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -295,12 +296,12 @@ export function ClassLogRow({
             {blocked && log.attendance == null ? (
               <>
                 <Lock className="h-3.5 w-3.5 mr-1.5" />
-                Avaliar
+                {classesContent.tableRow.evaluate}
               </>
             ) : (
               <>
                 <Check className="h-3.5 w-3.5 mr-1.5" />
-                {log.attendance != null ? "Atualizar" : "Avaliar"}
+                {log.attendance != null ? classesContent.tableRow.update : classesContent.tableRow.evaluate}
               </>
             )}
           </Button>

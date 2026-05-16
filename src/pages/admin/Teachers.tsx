@@ -196,7 +196,7 @@ export default function TeachersPage() {
           .maybeSingle();
 
         if (profileError) {
-          toast.error("Erro ao validar email. Tente novamente.");
+          toast.error(common.errors.validateEmail);
           return;
         }
         if (existingProfile) {

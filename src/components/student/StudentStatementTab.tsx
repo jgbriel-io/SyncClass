@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/utils/formatters";
 import { useStudentStatement } from "@/hooks/useStudentStatement";
 import { UnifiedStatementCard } from "./UnifiedStatementCard";
 import type { StudentStatementEntry } from "@/hooks/useStudentStatement";
+import { studentPortal } from "@/content/student-portal";
 
 interface StudentStatementTabProps {
   studentId: string | null;
@@ -66,7 +67,7 @@ export const StudentStatementTab = memo(function StudentStatementTab({
     <div className={embedded ? "space-y-4" : "p-6 space-y-4"}>
       {/* Header informativo */}
       <div className="rounded-lg border bg-card p-3 flex items-center justify-between gap-4">
-        <p className="text-sm font-medium">{totalAmount != null ? "Total" : "Histórico de Movimentações"}</p>
+        <p className="text-sm font-medium">{totalAmount != null ? studentPortal.statement.totalLabel : studentPortal.statement.historyLabel}</p>
         {(totalAmount != null ? totalAmount : totalBilled) > 0 && (
           <p className="text-2xl font-semibold tabular-nums">
             {formatCurrency(totalAmount != null ? totalAmount : totalBilled)}
@@ -77,9 +78,9 @@ export const StudentStatementTab = memo(function StudentStatementTab({
       {/* Timeline agrupada por mês/ano */}
       {grouped.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          <p>Nenhum registro encontrado</p>
+          <p>{studentPortal.statement.noRecordsMessage}</p>
           <p className="text-sm mt-1">
-            O histórico aparecerá aqui quando houver aulas
+            {studentPortal.statement.noRecordsHint}
           </p>
         </div>
       ) : (
@@ -105,11 +106,11 @@ export const StudentStatementTab = memo(function StudentStatementTab({
 
       {/* Footer */}
       <div className="pt-4 border-t text-xs text-muted-foreground text-center">
-        <p>Extrato de {studentName}</p>
+        <p>{studentPortal.statement.statementLabel} {studentName}</p>
         <p className="mt-1">
-          {totalClasses} aula{totalClasses !== 1 ? "s" : ""}
+          {totalClasses} {totalClasses !== 1 ? studentPortal.statement.classesPlural : studentPortal.statement.classesLabel}
           {openBilling > 0 &&
-            ` • ${openBilling} cobrança${openBilling !== 1 ? "s" : ""} em aberto`}
+            ` • ${openBilling} ${openBilling !== 1 ? studentPortal.statement.chargesPlural : studentPortal.statement.chargesLabel} ${studentPortal.statement.openChargesLabel}`}
         </p>
       </div>
     </div>

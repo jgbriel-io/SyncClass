@@ -81,13 +81,13 @@ function getClassLogDisplayTitle(log: {
   
   // Se tem título customizado
   if (rawTitle) {
-    return isPackage ? `${rawTitle} (Pacote)` : rawTitle;
+    return isPackage ? `${rawTitle} (${classesContent.packageDialog.title})` : rawTitle;
   }
   
   // Fallback: "Aula - data"
   const d = log.class_date ? format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "";
-  const fallbackTitle = d ? `Aula - ${d}` : "Aula";
-  return isPackage ? `${fallbackTitle} (Pacote)` : fallbackTitle;
+  const fallbackTitle = d ? `${classesContent.view.title} - ${d}` : classesContent.view.title;
+  return isPackage ? `${fallbackTitle} (${classesContent.packageDialog.title})` : fallbackTitle;
 }
 
 interface ClassesTableRowProps {
@@ -159,9 +159,9 @@ export function ClassesTableRow({
           <div className="flex-1 min-w-0">
             <p
               className="text-xs font-medium truncate"
-              title={log.students?.name || "Aluno não encontrado"}
+              title={log.students?.name || common.errors.studentNotFound}
             >
-              {log.students?.name || "Aluno não encontrado"}
+              {log.students?.name || common.errors.studentNotFound}
             </p>
             {lastUpdatedAt && (
               <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}>

@@ -143,7 +143,7 @@ export function OverviewView({
       {/* Error state */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-          <p className="text-destructive">Erro ao carregar dados. Tente novamente.</p>
+          <p className="text-destructive">{overview.errors.loadingError}</p>
         </div>
       )}
 
@@ -153,15 +153,15 @@ export function OverviewView({
           <Table className="table-fixed" style={{ minWidth: OVERVIEW_TABLE_MIN_W }}>
             <TableHeader>
               <TableRow className="border-b bg-muted/50">
-                <TableHead className={`${TABLE_HEAD_BASE} ${STICKY_HEADER}`} style={{ ...STICKY_SHADOW, width: OVERVIEW_COL.ALUNO, minWidth: OVERVIEW_COL.ALUNO }}>Aluno</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ENTRADA, minWidth: OVERVIEW_COL.ENTRADA }}>Entrada</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.AULAS, minWidth: OVERVIEW_COL.AULAS }}>Aulas</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.FREQUENCIA, minWidth: OVERVIEW_COL.FREQUENCIA }}>Frequência</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.MEDIA, minWidth: OVERVIEW_COL.MEDIA }}>Média</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PAGO, minWidth: OVERVIEW_COL.PAGO }}>Pago</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PENDENTE, minWidth: OVERVIEW_COL.PENDENTE }}>Pendente</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ATRASADO, minWidth: OVERVIEW_COL.ATRASADO }}>Atrasado</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ACOES, minWidth: OVERVIEW_COL.ACOES }}>Ações</TableHead>
+                <TableHead className={`${TABLE_HEAD_BASE} ${STICKY_HEADER}`} style={{ ...STICKY_SHADOW, width: OVERVIEW_COL.ALUNO, minWidth: OVERVIEW_COL.ALUNO }}>{overview.table.student}</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ENTRADA, minWidth: OVERVIEW_COL.ENTRADA }}>{overview.table.entry}</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.AULAS, minWidth: OVERVIEW_COL.AULAS }}>{overview.table.classes}</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.FREQUENCIA, minWidth: OVERVIEW_COL.FREQUENCIA }}>{overview.table.frequency}</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.MEDIA, minWidth: OVERVIEW_COL.MEDIA }}>{overview.table.average}</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PAGO, minWidth: OVERVIEW_COL.PAGO }}>{overview.table.paid}</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PENDENTE, minWidth: OVERVIEW_COL.PENDENTE }}>{overview.table.pending}</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ATRASADO, minWidth: OVERVIEW_COL.ATRASADO }}>{overview.table.overdue}</TableHead>
+                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ACOES, minWidth: OVERVIEW_COL.ACOES }}>{overview.table.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -176,7 +176,7 @@ export function OverviewView({
                       <EmptyState
                         icon={Search}
                         title={common.table.noResults}
-                        message="Ajuste os filtros acima ou limpe a busca"
+                        message={overview.messages.adjustFilters}
                       />
                     )}
                   </td>

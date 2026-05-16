@@ -210,10 +210,10 @@ export function DashboardView({
             <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 flex items-center gap-4">
               <Bell className="h-5 w-5 text-primary shrink-0" />
               <p className="text-sm font-medium">
-                {basePath === "/teacher" ? "Sua próxima aula" : "Próxima aula do dia"}{" "}
-                é com o(a) aluno(a){" "}
+                {basePath === "/teacher" ? dashboard.nextClass.teacher : dashboard.nextClass.admin}{" "}
+                {dashboard.nextClass.withStudent}{" "}
                 <span className="font-semibold text-primary">{todayClasses.nextClass.studentName}</span>
-                {todayClasses.nextClass.timeLabel !== "Horário não definido" && (
+                {todayClasses.nextClass.timeLabel !== dashboard.nextClass.timeUndefined && (
                   <span className="font-normal"> das {todayClasses.nextClass.timeLabel}</span>
                 )}
               </p>

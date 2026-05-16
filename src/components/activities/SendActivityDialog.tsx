@@ -260,7 +260,7 @@ export function SendActivityDialog({
                 </SelectContent>
               </Select>
               {!selectedTeacherId && (
-                <p className="text-sm text-destructive">Selecione um professor</p>
+                <p className="text-sm text-destructive">{common.errors.selectTeacher}</p>
               )}
             </div>
           )}
@@ -350,10 +350,10 @@ export function SendActivityDialog({
 
           {/* Descrição */}
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição (opcional)</Label>
+            <Label htmlFor="description">{common.labels.description} {common.labels.optional}</Label>
             <Textarea
               id="description"
-              placeholder="Instruções e observações..."
+              placeholder={common.placeholders.instructionsHint}
               rows={3}
               {...register("description")}
               disabled={isPending}

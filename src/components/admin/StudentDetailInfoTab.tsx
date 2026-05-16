@@ -2,15 +2,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { formatPhoneDisplay } from "@/lib/utils/format-phone";
 import { User, Mail, Phone, Calendar, TrendingUp, BookOpen, MapPin, CreditCard } from "lucide-react";
+import { common, students as studentsContent } from "@/content";
 import type { StudentDetails } from "@/hooks/useStudentDetails";
-
-const originLabels: Record<string, string> = {
-  indicacao: "Indicação",
-  google: "Google",
-  instagram: "Instagram",
-  passante: "Passante",
-  outro: "Outro",
-};
 
 interface StudentDetailInfoTabProps {
   student: StudentDetails;
@@ -46,33 +39,33 @@ export function StudentDetailInfoTab({ student }: StudentDetailInfoTabProps) {
           <div className="rounded-lg border bg-card p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <TrendingUp className="h-4 w-4" />
-              Frequência
+              {common.labels.frequency}
             </div>
             <p className="text-2xl font-bold">{student.stats.attendanceRate.toFixed(0)}%</p>
             <p className="text-xs text-muted-foreground">
-              {student.stats.presentClasses}/{student.stats.totalClasses} aulas
+              {student.stats.presentClasses}/{student.stats.totalClasses} {common.labels.classes}
             </p>
           </div>
           <div className="rounded-lg border bg-card p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <BookOpen className="h-4 w-4" />
-              Média
+              {common.labels.average}
             </div>
             <p className="text-2xl font-bold">
               {student.stats.averageGrade > 0 ? student.stats.averageGrade.toFixed(1) : "—"}
             </p>
-            <p className="text-xs text-muted-foreground">Nota geral</p>
+            <p className="text-xs text-muted-foreground">{common.labels.generalGrade}</p>
           </div>
         </div>
 
         {/* Informações Pessoais */}
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-muted-foreground">Informações Pessoais</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">{common.labels.personalInfo}</h3>
           <div className="space-y-3">
             {[
-              { icon: Mail, label: "Email", value: student.email || "—" },
-              { icon: Phone, label: "Telefone", value: formatPhoneDisplay(student.phone, student.country) || "—" },
-              { icon: Calendar, label: "Data de Nascimento", value: student.birth_date ? formatDate(student.birth_date) : "—" },
+              { icon: Mail, label: common.labels.email, value: student.email || "—" },
+              { icon: Phone, label: common.labels.phone, value: formatPhoneDisplay(student.phone, student.country) || "—" },
+              { icon: Calendar, label: common.labels.birthDate, value: student.birth_date ? formatDate(student.birth_date) : "—" },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="flex items-center gap-4">
                 <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
@@ -89,13 +82,13 @@ export function StudentDetailInfoTab({ student }: StudentDetailInfoTabProps) {
 
         {/* Localização */}
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground">Localização</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">{common.labels.location}</h3>
           <div className="flex items-center gap-4">
             <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
               <MapPin className="h-4 w-4 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">País - Estado - Cidade</p>
+              <p className="text-xs text-muted-foreground">{common.labels.countryStateCity}</p>
               <p className="text-sm font-medium">
                 {`${student.country || "—"} - ${student.state || "—"} - ${student.city || "—"}`}
               </p>
@@ -105,13 +98,13 @@ export function StudentDetailInfoTab({ student }: StudentDetailInfoTabProps) {
 
         {/* Plano de aulas e cobrança */}
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground">Plano de aulas e cobrança</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">{common.labels.planAndBilling}</h3>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { label: "Valor por hora", value: hourlyRate != null ? formatCurrency(hourlyRate) : "—" },
-              { label: "Aulas por semana", value: classesPerWeek != null ? String(classesPerWeek) : "—" },
-              { label: "Total mensal", value: monthlyTotal != null ? formatCurrency(monthlyTotal) : "—" },
-              { label: "Dia de pagamento", value: student.pay_day != null ? String(student.pay_day) : "—" },
+              { label: common.labels.hourlyRate, value: hourlyRate != null ? formatCurrency(hourlyRate) : "—" },
+              { label: common.labels.classesPerWeek, value: classesPerWeek != null ? String(classesPerWeek) : "—" },
+              { label: common.labels.monthlyTotal, value: monthlyTotal != null ? formatCurrency(monthlyTotal) : "—" },
+              { label: common.labels.paymentDay, value: student.pay_day != null ? String(student.pay_day) : "—" },
             ].map(({ label, value }) => (
               <div key={label} className="rounded-lg border bg-card p-3">
                 <p className="text-xs text-muted-foreground mb-1">{label}</p>
@@ -123,15 +116,15 @@ export function StudentDetailInfoTab({ student }: StudentDetailInfoTabProps) {
 
         {/* Datas */}
         <div className="space-y-1 text-xs text-muted-foreground">
-          {student.created_at && <p>Cadastro em {formatDate(student.created_at)}</p>}
-          {student.updated_at && <p>Última edição em {formatDate(student.updated_at)}</p>}
+          {student.created_at && <p>{common.labels.registeredAt} {formatDate(student.created_at)}</p>}
+          {student.updated_at && <p>{common.labels.lastEdited} {formatDate(student.updated_at)}</p>}
         </div>
 
         {/* Origem */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Origem</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">{common.labels.origin}</h3>
           <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-accent text-accent-foreground text-sm">
-            {student.origin ? originLabels[student.origin] || student.origin : "Não informado"}
+            {student.origin ? studentsContent.originOptions[student.origin as keyof typeof studentsContent.originOptions] || student.origin : common.labels.notInformed}
           </div>
         </div>
       </div>

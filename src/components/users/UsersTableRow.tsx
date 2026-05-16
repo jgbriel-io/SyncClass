@@ -207,7 +207,7 @@ export function UsersTableRow({
       {/* Ações */}
       <td className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(user.id)} title="Ver detalhes">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(user.id)} title={common.tooltips.viewDetails}>
             <Eye className="h-4 w-4" />
           </Button>
           <DropdownMenu>

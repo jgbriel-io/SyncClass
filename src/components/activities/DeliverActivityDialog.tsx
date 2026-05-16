@@ -140,12 +140,12 @@ export function DeliverActivityDialog({
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="response_text">
-              Resposta (texto)
+              {activitiesContent.deliverDialog.responseTextLabel}
             </Label>
             <Textarea
               id="response_text"
               {...register("response_text")}
-              placeholder="Digite sua resposta aqui..."
+              placeholder={common.placeholders.answerHint}
               rows={6}
               className="resize-none"
             />
@@ -161,7 +161,7 @@ export function DeliverActivityDialog({
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                Ou
+                {activitiesContent.deliverDialog.orDivider}
               </span>
             </div>
           </div>
@@ -177,7 +177,7 @@ export function DeliverActivityDialog({
                   htmlFor="response_file"
                   className="cursor-pointer text-sm text-primary hover:underline"
                 >
-                  Clique para selecionar um arquivo
+                  {activitiesContent.deliverDialog.fileSelectLabel}
                 </Label>
                 <input
                   id="response_file"

@@ -16,7 +16,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { brDateStringToDate, REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { toast } from "sonner";
-import { classes as classesContent } from "@/content";
+import { classes as classesContent, common } from "@/content";
 
 export type Slot = { class_date: string; start_time: string; end_time: string };
 export type ScheduleMode = "fixed" | "dynamic";
@@ -158,7 +158,7 @@ export function PackageSlotList({
     <>
       {/* Seletor de modo */}
       <div className="space-y-2">
-        <Label>Como preencher as aulas</Label>
+        <Label>{classesContent.packageDialog.title}</Label>
         <div className="flex rounded-lg border p-1 bg-muted/30">
           <button
             type="button"
@@ -171,7 +171,7 @@ export function PackageSlotList({
             )}
           >
             <CalendarDays className="h-4 w-4" />
-            Horário fixo
+            {classesContent.packageDialog.modeFixed}
           </button>
           <button
             type="button"
@@ -184,7 +184,7 @@ export function PackageSlotList({
             )}
           >
             <List className="h-4 w-4" />
-            Dinâmico (manual)
+            {classesContent.packageDialog.modeDynamic}
           </button>
         </div>
       </div>
@@ -192,16 +192,16 @@ export function PackageSlotList({
       {/* Configuração de horário fixo */}
       {scheduleMode === "fixed" && (
         <div className="space-y-3">
-          <p className="text-sm font-medium">Gerar aulas em horário fixo no mês</p>
+          <p className="text-sm font-medium">{classesContent.packageDialog.description}</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Mês</Label>
+              <Label>{classesContent.packageDialog.filters?.monthLabel || classesContent.filters.monthLabel}</Label>
               <Select
                 value={fixedMonth ? String(fixedMonth) : ""}
                 onValueChange={(v) => onFixedMonthChange(Number(v))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder={common.placeholders.select} />
                 </SelectTrigger>
                 <SelectContent>
                   {MONTH_NAMES.map((name, i) => (
@@ -213,13 +213,13 @@ export function PackageSlotList({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Ano</Label>
+              <Label>{classesContent.packageDialog.filters?.yearLabel || classesContent.filters.yearLabel}</Label>
               <Select
                 value={fixedYear ? String(fixedYear) : ""}
                 onValueChange={(v) => onFixedYearChange(Number(v))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder={common.placeholders.select} />
                 </SelectTrigger>
                 <SelectContent>
                   {[2026, 2027, 2028].map((y) => (
@@ -232,7 +232,7 @@ export function PackageSlotList({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Dias da semana</Label>
+            <Label>{classesContent.packageDialog.filters?.weekdaysLabel || classesContent.filters.weekdaysLabel}</Label>
             <div className="flex flex-wrap gap-2">
               {WEEKDAYS.map(({ value, label }) => (
                 <label
@@ -257,7 +257,7 @@ export function PackageSlotList({
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Horário início</Label>
+              <Label>{classesContent.logFormDialog.startTimeLabel}</Label>
               <Input
                 type="time"
                 value={fixedStartTime}
@@ -265,7 +265,7 @@ export function PackageSlotList({
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Horário término</Label>
+              <Label>{classesContent.logFormDialog.endTimeLabel}</Label>
               <Input
                 type="time"
                 value={fixedEndTime}
@@ -280,10 +280,10 @@ export function PackageSlotList({
               className="w-full sm:w-auto min-w-[200px] h-10 font-medium"
             >
               <CalendarIcon className="h-4 w-4 mr-2" />
-              Gerar aulas do mês
+              {classesContent.packageDialog.generateButton}
             </Button>
             <p className="text-xs text-muted-foreground mt-1.5">
-              Gera as datas do mês com os dias e horários escolhidos acima.
+              {classesContent.packageDialog.description}
             </p>
           </div>
         </div>
@@ -296,13 +296,13 @@ export function PackageSlotList({
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium">
               {scheduleMode === "fixed"
-                ? `Aulas geradas (${slots.length})`
-                : `Aulas do pacote (${slots.length})`}
+                ? `${classesContent.packageDialog.slotListTitle} (${slots.length})`
+                : `${classesContent.packageDialog.slotListTitleDynamic} (${slots.length})`}
             </Label>
             {scheduleMode === "dynamic" && (
               <Button type="button" variant="outline" size="sm" onClick={addSlot}>
                 <Plus className="h-4 w-4 mr-1" />
-                Adicionar
+                {classesContent.packageDialog.addSlotButton}
               </Button>
             )}
           </div>
@@ -310,7 +310,7 @@ export function PackageSlotList({
             {slots.map((slot, index) => (
               <div key={index} className="flex flex-wrap items-end gap-2 rounded-lg">
                 <div className="flex-1 min-w-[120px] space-y-1">
-                  <Label className="text-xs">Data</Label>
+                  <Label className="text-xs">{classesContent.packageDialog.slotDateLabel}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -321,7 +321,7 @@ export function PackageSlotList({
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {slot.class_date || "dd/mm/aaaa"}
+                        {slot.class_date || classesContent.logFormDialog.datePlaceholder}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -345,7 +345,7 @@ export function PackageSlotList({
                   </Popover>
                 </div>
                 <div className="w-[90px] space-y-1">
-                  <Label className="text-xs">Início</Label>
+                  <Label className="text-xs">{classesContent.packageDialog.slotStartLabel}</Label>
                   <Input
                     type="time"
                     value={slot.start_time}
@@ -354,7 +354,7 @@ export function PackageSlotList({
                   />
                 </div>
                 <div className="w-[90px] space-y-1">
-                  <Label className="text-xs">Término</Label>
+                  <Label className="text-xs">{classesContent.packageDialog.slotEndLabel}</Label>
                   <Input
                     type="time"
                     value={slot.end_time}

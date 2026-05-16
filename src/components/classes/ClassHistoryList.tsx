@@ -2,8 +2,7 @@ import { useMemo } from "react";
 import { StudentClassCard } from "@/components/student/StudentClassCard";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BookOpen } from "lucide-react";
-import { classes as classesContent } from "@/content";
-import { classes as classesContent } from "@/content";
+import { classes as classesContent, common } from "@/content";
 
 interface ClassLog {
   id: string;
@@ -90,8 +89,8 @@ export function ClassHistoryList({
                   classLog={{
                     ...log,
                     title: showStudentName && log.student_name
-                      ? `${log.title || "Aula"} - ${log.student_name}`
-                      : log.title || "Aula",
+                      ? `${log.title || common.labels.date} - ${log.student_name}`
+                      : log.title || common.labels.date,
                   }}
                 />
               ))}
@@ -110,8 +109,8 @@ export function ClassHistoryList({
           classLog={{
             ...log,
             title: showStudentName && log.student_name
-              ? `${log.title || "Aula"} - ${log.student_name}`
-              : log.title || "Aula",
+              ? `${log.title || common.labels.date} - ${log.student_name}`
+              : log.title || common.labels.date,
           }}
         />
       ))}

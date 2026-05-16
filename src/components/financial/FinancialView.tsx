@@ -1,3 +1,4 @@
+import { common } from "@/content";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyFinancialState } from "@/components/ui/contextual-empty-states";
 import { Button } from "@/components/ui/button";
@@ -342,7 +343,7 @@ export function FinancialView({
                 <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.METODO, minWidth: FIN_COL.METODO }}>{financialContent.view.colMethod}</TableHead>
                 <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: FIN_COL.VENCIMENTO, minWidth: FIN_COL.VENCIMENTO }}>{financialContent.view.colDueDate}</TableHead>
                 <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.STATUS, minWidth: FIN_COL.STATUS }}>{financialContent.view.colStatus}</TableHead>
-                <TableHead className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }} aria-label="Avaliar" />
+                <TableHead className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }} aria-label={common.aria.evaluate} />
                 <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.ACOES, minWidth: FIN_COL.ACOES }}>{financialContent.table.colActions}</TableHead>
               </TableRow>
             </TableHeader>
@@ -387,7 +388,7 @@ export function FinancialView({
               ) : (
                 <EmptyState
                   icon={Search}
-                  title="Nenhum resultado"
+                  title={common.table.noResults}
                   message="Ajuste os filtros acima ou limpe a busca"
                 />
               )}

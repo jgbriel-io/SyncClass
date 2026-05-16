@@ -1,3 +1,4 @@
+import { common, overview } from "@/content";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { formatPhoneDisplay } from "@/lib/utils/format-phone";
 import { Button } from "@/components/ui/button";
@@ -39,19 +40,17 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
     student.stats.attendanceRate < 75;
 
   const formatSince = (dateStr?: string | null) => {
-    if (!dateStr) return "—";
+    if (!dateStr) return overview.symbols.emDash;
     const created = new Date(dateStr);
-    if (isNaN(created.getTime())) return "—";
+    if (isNaN(created.getTime())) return overview.symbols.emDash;
     const now = new Date();
     const diffMs = now.getTime() - created.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays < 1) return "há 0 dias";
-    if (diffDays < 30) return `há ${diffDays} dia${diffDays === 1 ? "" : "s"}`;
+    if (diffDays < 1) return overview.timeFormat.zeroDay;
+    if (diffDays < 30) return overview.timeFormat.days(diffDays);
     const months = Math.floor(diffDays / 30);
     const days = diffDays % 30;
-    const monthLabel = `mês${months === 1 ? "" : "es"}`;
-    const dayLabel = days === 0 ? "" : ` e ${days} dia${days === 1 ? "" : "s"}`;
-    return `há ${months} ${monthLabel}${dayLabel}`;
+    return overview.timeFormat.months(months, days);
   };
 
   return (
@@ -111,8 +110,8 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
               </span>
             </>
           ) : (
-            <span className="text-xs text-muted-foreground truncate" title="—">
-              —
+            <span className="text-xs text-muted-foreground truncate" title={overview.symbols.emDash}>
+              {overview.symbols.emDash}
             </span>
           )}
         </div>
@@ -134,8 +133,8 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
             {student.stats.averageGrade.toFixed(1)}
           </span>
         ) : (
-          <span className="text-xs text-muted-foreground truncate block" title="—">
-            —
+          <span className="text-xs text-muted-foreground truncate block" title={overview.symbols.emDash}>
+            {overview.symbols.emDash}
           </span>
         )}
       </td>
@@ -174,7 +173,7 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
             size="icon"
             className="h-8 w-8"
             onClick={() => onViewStudent(student.id)}
-            title="Ver detalhes"
+            title={common.buttons.viewDetails}
           >
             <Eye className="h-4 w-4" />
           </Button>

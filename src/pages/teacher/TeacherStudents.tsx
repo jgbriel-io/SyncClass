@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTeachers } from "@/hooks/useTeachers";
 import { typography } from "@/lib/design-tokens/typography";
+import { common } from "@/content";
 
 const TeacherStudentsPage = () => {
   const { user, role, isLoading: authLoading } = useAuth();
@@ -31,7 +32,7 @@ const TeacherStudentsPage = () => {
   });
 
   useEffect(() => {
-    if (teacherIdError) toast.error("Erro ao carregar seu perfil. Tente recarregar a página.");
+    if (teacherIdError) toast.error(common.errors.loadProfile);
   }, [teacherIdError]);
 
   if (authLoading || teacherIdLoading) {

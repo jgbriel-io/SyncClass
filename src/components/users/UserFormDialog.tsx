@@ -132,7 +132,7 @@ export function UserFormDialog({ open, onOpenChange, user, onSubmit, isLoading }
     if (selectedRole === "admin" && "fullName" in data) {
       onSubmit({ email: data.email, fullName: data.fullName, role: "admin" });
     } else if (selectedRole === "student" && "name" in data) {
-      if (!selectedTeacherId) { setTeacherError("Selecione um professor"); return; }
+      if (!selectedTeacherId) { setTeacherError(common.errors.selectTeacher); return; }
       setTeacherError(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const s = data as any;

@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getClassStatusWithTime } from "@/lib/utils/classTime";
+import { classes as classesContent } from "@/content";
 
 export function formatClassDateAndTime(log: {
   class_date: string;
@@ -35,10 +36,10 @@ export function formatDuration(minutes: number | null | undefined): string {
 
 export function getPaymentStatusLabel(status: string | null): string {
   switch (status) {
-    case "pago": return "Pago";
-    case "pendente": return "Pendente";
-    case "atrasado": return "Atrasado";
-    default: return "Pendente";
+    case "pago": return classesContent.tableRow.statusPaid;
+    case "pendente": return classesContent.tableRow.statusPending;
+    case "atrasado": return classesContent.tableRow.statusOverdue;
+    default: return classesContent.tableRow.statusPending;
   }
 }
 
@@ -58,10 +59,10 @@ export function getClassLogDisplayTitle(log: {
 }): string {
   const rawTitle = log.title?.trim();
   const isPackage = log.financial_record_via_package;
-  if (rawTitle) return isPackage ? `${rawTitle} (Pacote)` : rawTitle;
+  if (rawTitle) return isPackage ? `${rawTitle} (${classesContent.packageDialog.title})` : rawTitle;
   const d = log.class_date
     ? format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR })
     : "";
-  const fallback = d ? `Aula - ${d}` : "Aula";
-  return isPackage ? `${fallback} (Pacote)` : fallback;
+  const fallback = d ? `${classesContent.view.title} - ${d}` : classesContent.view.title;
+  return isPackage ? `${fallback} (${classesContent.packageDialog.title})` : fallback;
 }

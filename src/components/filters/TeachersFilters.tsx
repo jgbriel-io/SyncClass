@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Search, Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { common, filters as filtersContent } from "@/content";
 import {
   Select,
   SelectContent,
@@ -14,7 +15,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { common } from "@/content";
 
 export type TeacherStatusFilter = "all" | "ativo" | "inativo";
 export type TeacherSortBy = "name_asc" | "name_desc";
@@ -55,11 +55,11 @@ export function TeachersFilters({
       <div className="flex flex-col md:flex-row gap-4 flex-wrap">
         {/* Busca */}
         <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
-          <span className="text-xs font-medium text-muted-foreground">Busca</span>
+          <span className="text-xs font-medium text-muted-foreground">{filtersContent.teachers.labels.search}</span>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome ou email..."
+              placeholder={common.placeholders.searchByNameOrEmail}
               className="pl-9"
               value={filters.search}
               onChange={(e) => onChange({ ...filters, search: e.target.value })}
@@ -71,18 +71,18 @@ export function TeachersFilters({
         <div className="flex flex-wrap items-end gap-2">
           {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Status</span>
+            <span className="text-xs font-medium text-muted-foreground">{filtersContent.teachers.labels.status}</span>
             <Select
               value={filters.status}
               onValueChange={(v) => onChange({ ...filters, status: v as TeacherStatusFilter })}
             >
               <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={common.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="ativo">Ativos</SelectItem>
-                <SelectItem value="inativo">Arquivados</SelectItem>
+                <SelectItem value="all">{filtersContent.teachers.status.all}</SelectItem>
+                <SelectItem value="ativo">{filtersContent.teachers.status.active}</SelectItem>
+                <SelectItem value="inativo">{filtersContent.teachers.status.inactive}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -91,7 +91,7 @@ export function TeachersFilters({
           <CollapsibleTrigger asChild>
             <Button variant="outline" size="sm" className="h-10 gap-2">
               <Filter className="h-4 w-4" />
-              Mais Filtros
+              {filtersContent.buttons.moreFilters}
               {isOpen ? (
                 <ChevronUp className="h-4 w-4" />
               ) : (
@@ -104,7 +104,7 @@ export function TeachersFilters({
           {hasActiveFilters && onReset && (
             <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
               <X className="h-4 w-4 mr-1" />
-              {common.actions.clear}
+              {filtersContent.buttons.clear}
             </Button>
           )}
         </div>
@@ -116,17 +116,17 @@ export function TeachersFilters({
           <div className="flex flex-wrap gap-4">
             {/* Ordenar */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Ordenar</span>
+              <span className="text-xs font-medium text-muted-foreground">{filtersContent.teachers.labels.sort}</span>
               <Select
                 value={filters.sortBy}
                 onValueChange={(v) => onChange({ ...filters, sortBy: v as TeacherSortBy })}
               >
                 <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Ordenar por" />
+                  <SelectValue placeholder={common.placeholders.sortBy} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="name_asc">Nome (A-Z)</SelectItem>
-                  <SelectItem value="name_desc">Nome (Z-A)</SelectItem>
+                  <SelectItem value="name_asc">{filtersContent.teachers.sort.nameAsc}</SelectItem>
+                  <SelectItem value="name_desc">{filtersContent.teachers.sort.nameDesc}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -134,16 +134,16 @@ export function TeachersFilters({
             {/* Especialidade */}
             {specializations.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">Especialidade</span>
+                <span className="text-xs font-medium text-muted-foreground">{filtersContent.teachers.labels.specialization}</span>
                 <Select
                   value={filters.specialization}
                   onValueChange={(v) => onChange({ ...filters, specialization: v })}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Especialidade" />
+                    <SelectValue placeholder={common.placeholders.specialty} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="all">{filtersContent.teachers.options.allSpecializations}</SelectItem>
                     {specializations.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
