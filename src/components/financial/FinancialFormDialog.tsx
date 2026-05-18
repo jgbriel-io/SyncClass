@@ -25,6 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { brDateStringToDate, isValidDateString, parseMoneyToNumber, formatNumberToMoneyBR, REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { cn } from "@/lib/utils";
+import { FinancialClassLogField } from "./FinancialClassLogField";
 import { common, financial } from "@/content";
 
 function brDateToIso(value: string): string {
@@ -82,6 +83,28 @@ export function FinancialFormDialog({
   );
 
   const requireClassLog = !initialData;
+  
+  // Ao editar, a aula atual não aparece em availableClassLogs (já tem cobrança); incluir para exibição
+  const currentClassLog =
+    initialData && "class_logs" in initialData && initialData.class_logs
+      ? {
+          id: initialData.class_logs.id,
+          class_date: initialData.class_logs.class_date,
+          attendance: initialData.class_logs.attendance,
+          grade: initialData.class_logs.grade,
+          title: initialData.class_logs.title,
+        }
+      : null;
+  
+  // Para cobranças de pacote, pegar a primeira aula do pacote
+  const packageClasses = initialData && "package_classes" in initialData ? initialData.package_classes : null;
+  const isPackage = !initialData?.class_log_id && packageClasses && packageClasses.length > 0;
+  
+  const classLogOptions =
+    currentClassLog && !availableClassLogs.some((a) => a.id === currentClassLog.id)
+      ? [currentClassLog, ...availableClassLogs]
+      : availableClassLogs;
+  
   const {
     register,
     handleSubmit,
@@ -172,27 +195,6 @@ export function FinancialFormDialog({
   // Filter only active students
   const activeStudents = students.filter((s) => s.status === "ativo");
 
-  // Ao editar, a aula atual não aparece em availableClassLogs (já tem cobrança); incluir para exibição
-  const currentClassLog =
-    initialData && "class_logs" in initialData && initialData.class_logs
-      ? {
-          id: initialData.class_logs.id,
-          class_date: initialData.class_logs.class_date,
-          attendance: initialData.class_logs.attendance,
-          grade: initialData.class_logs.grade,
-          title: initialData.class_logs.title,
-        }
-      : null;
-  
-  // Para cobranças de pacote, pegar a primeira aula do pacote
-  const packageClasses = initialData && "package_classes" in initialData ? initialData.package_classes : null;
-  const isPackage = !initialData?.class_log_id && packageClasses && packageClasses.length > 0;
-  
-  const classLogOptions =
-    currentClassLog && !availableClassLogs.some((a) => a.id === currentClassLog.id)
-      ? [currentClassLog, ...availableClassLogs]
-      : availableClassLogs;
-
   return (
     <BaseDialog
       open={open}
@@ -271,67 +273,19 @@ export function FinancialFormDialog({
           </div>
 
           {/* Class Log Select */}
-          <div className="space-y-2">
-            <Label>{financial.formDialog.classLabel}</Label>
-            {initialData ? (
-              // Ao editar: mostrar input travado com o título da aula
-              <Input
-                value={
-                  isPackage && packageClasses
-                    ? (() => {
-                        const firstClass = packageClasses[0];
-                        const rawTitle = firstClass.title?.trim();
-                        const displayTitle = rawTitle || `${financial.formDialog.classDatePrefix}${formatClassLogDate(firstClass.class_date)}`;
-                        return `${displayTitle} ${financial.formDialog.packageLabel}`;
-                      })()
-                    : currentClassLog
-                      ? (() => {
-                          const rawTitle = currentClassLog.title?.trim();
-                          return rawTitle || `${financial.formDialog.classDatePrefix}${formatClassLogDate(currentClassLog.class_date)}`;
-                        })()
-                      : financial.formDialog.noClassLinked
-                }
-                disabled
-                className="bg-muted"
-              />
-            ) : (
-              // Ao criar: mostrar select normal
-              <Select
-                value={selectedClassLogId || undefined}
-                onValueChange={handleClassLogChange}
-                disabled={!selectedStudentId || loadingClassLogs || (requireClassLog && classLogOptions.length === 0)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={
-                    !selectedStudentId 
-                      ? financial.formDialog.classSelectStudentFirst
-                      : loadingClassLogs 
-                        ? financial.formDialog.classLoading
-                        : requireClassLog && classLogOptions.length === 0
-                          ? financial.formDialog.classNone
-                          : financial.formDialog.classSelect
-                  } />
-                </SelectTrigger>
-                <SelectContent>
-                  {classLogOptions.map((log) => (
-                    <SelectItem key={log.id} value={log.id}>
-                      {formatClassLogDate(log.class_date)}
-                      {log.attendance === false && ` (${financial.tableRow.absence})`}
-                      {log.grade && ` - ${financial.tableRow.grade} ${log.grade}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            {selectedStudentId && classLogOptions.length === 0 && !loadingClassLogs && !initialData && (
-              <p className="text-xs text-muted-foreground">
-                {financial.formDialog.classNoneWithCharge}
-              </p>
-            )}
-            {errors.class_log_id && (
-              <p className="text-sm text-destructive">{errors.class_log_id.message}</p>
-            )}
-          </div>
+          <FinancialClassLogField
+            isEditMode={!!initialData}
+            isPackage={isPackage}
+            selectedClassLogId={selectedClassLogId}
+            classLogOptions={classLogOptions}
+            currentClassLog={currentClassLog}
+            packageClasses={packageClasses}
+            selectedStudentId={selectedStudentId}
+            loadingClassLogs={loadingClassLogs}
+            requireClassLog={requireClassLog}
+            onClassLogChange={handleClassLogChange}
+            errorMessage={errors.class_log_id?.message}
+          />
 
           {/* Amount */}
           <div className="space-y-2">

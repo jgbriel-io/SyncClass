@@ -1,4 +1,9 @@
-# Skill: Code Development
+---
+name: syncclass-code
+description: SyncClass development guide — React 18 + TypeScript + Supabase. Use when implementing components, hooks, pages, forms, or Supabase integrations. Reference for stack versions, folder structure, naming conventions, data fetching patterns, and performance rules.
+---
+
+# Code — SyncClass
 
 Desenvolvimento do SyncClass — React + TypeScript + Supabase.
 

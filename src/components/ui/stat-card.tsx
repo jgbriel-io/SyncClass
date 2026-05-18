@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { ui } from "@/content";
 import { LucideIcon } from "lucide-react";
 
 const iconVariantStyles = {
@@ -79,7 +80,7 @@ export function StatCard({
               {trend.positive ? "+" : "-"}
               {Math.abs(trend.value)}%
               <span className="text-muted-foreground font-normal ml-1">
-                vs mês anterior
+                {ui.comparison.vsPreviousMonth}
               </span>
             </p>
           )}

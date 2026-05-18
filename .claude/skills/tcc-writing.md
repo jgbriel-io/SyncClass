@@ -1,4 +1,9 @@
-# Skill: TCC Writing
+---
+name: syncclass-tcc
+description: TCC SyncClass writing guide — FEPI/ABNT 2026 norms, impersonal voice, 10-chapter structure, academic vocabulary, code-to-text translation patterns. Use when writing, reviewing, or finalizing TCC chapters. For drafting process, use global skills tcc-fragmentos, tcc-rascunho, tcc-revisao-impessoal.
+---
+
+# TCC Writing — SyncClass
 
 Escrita acadêmica para TCC SyncClass — 10 capítulos, normas FEPI/ABNT 2026.
 
@@ -226,86 +231,3 @@ Antes de salvar capítulo, fazer Find/Replace:
 - "minha", "meu", "nosso", "nossa" → "o presente trabalho", "o projeto"
 - "vou explicar" → "explica-se", "será explicado"
 - "achei que" → "considerou-se", "constatou-se"
-
----
-
-## 🛠️ Processo Iterativo de Drafting
-
-Normas acima dizem **o que** o texto deve ser. Esta seção diz **como** chegar lá. Drafting acadêmico em três fases.
-
-### Fase 1 — Fragmentos (matéria-prima bruta)
-
-Antes de escrever capítulo formal, capturar fragmentos: notas, observações sobre código, decisões técnicas anotadas, citações encontradas em leitura, ideias soltas.
-
-**Arquivo de matéria-prima:** `docs/tcc/_fragmentos/cap{N}-fragmentos.md`
-
-Formato: fragmentos separados por `---`, sem frontmatter, sem estrutura imposta. H1 com título de trabalho do capítulo no topo.
-
-Exemplo:
-```markdown
-# Fragmentos — Capítulo 3 Metodologia
-
-A escolha de Pesquisa-Ação se justifica porque o pesquisador participa
-da construção da solução. Citar Thiollent.
-
----
-
-> "A pesquisa-ação é um tipo de pesquisa social com base empírica..."
-> (THIOLLENT, 2011, p. 14)
-
-Trecho útil pra abertura. Confirma citação na fonte original.
-
----
-
-Kanban entrou porque o projeto teve 24 sprints fluidas, sem
-cerimônias rígidas. Ver `docs/sprints/`. Anderson é a referência.
-Pesquisar paper original.
-
----
-
-Hipótese: IA não substitui metodologia, atua como copiloto dentro
-dela. Diferenciar de "metodologia da IA" vs "IA na metodologia".
-```
-
-**Regra crucial:** fragmento existe para autor entender, não para leitor frio. Bar é "isso me serve quando eu voltar?", não "isso está pronto para o TCC?".
-
-### Fase 2 — Forma (matéria-prima → seção formatada)
-
-Quando fragmentos do capítulo estão maduros (10–20 fragmentos), começar a moldagem.
-
-**Loop por seção:**
-
-1. **Ler** o arquivo de fragmentos do capítulo do início ao fim.
-2. **Propor 2–3 aberturas candidatas** para a seção, cada uma implicando tese/ângulo diferente. Mostrar ao usuário. Não escrever no arquivo do TCC ainda.
-3. **Usuário escolhe** uma abertura (ou pede híbrida).
-4. **Escrever apenas o parágrafo de abertura** no arquivo do capítulo (`docs/tcc/cap{N}-{slug}.md`).
-5. **Perguntar:** "dado este parágrafo, o que o leitor precisa ler em seguida?" Puxar fragmento relevante da pilha, transformá-lo em parágrafo acadêmico (voz impessoal, citação ABNT, vocabulário formal).
-6. **Discutir o formato do próximo bloco:** prosa, lista, tabela, figura, callout? Decisão deliberada:
-   - **Prosa vs. lista:** prosa carrega argumento; lista carrega itens paralelos. Se não são paralelos, prosa.
-   - **Tabela vs. estrutura repetida em prosa:** se mesma forma se repete 3+ vezes com mesmos campos, tabela. Senão prosa.
-   - **Figura vs. descrição textual:** figura quando estrutura é o ponto (DER, fluxo, UML). Prosa quando o ponto é argumento.
-   - **Citação direta vs. paráfrase:** direta quando palavras exatas importam. Paráfrase quando só a ideia importa.
-   - **Código no corpo vs. apêndice:** trechos curtos (≤5 linhas) inline; mais que isso → Apêndice.
-7. **Escrever esse bloco** no arquivo do capítulo. Re-ler o arquivo antes de cada escrita — usuário pode ter editado entre turnos.
-8. **Loop 5–7** até a seção fechar.
-
-**Regra:** nunca escrever vários parágrafos de uma vez. Um bloco por turno. Drift acontece quando se escreve adiante.
-
-### Fase 3 — Revisão impessoal final
-
-Antes de marcar capítulo como ✅ no índice, varredura final automatizada. Skill global `tcc-revisao-impessoal` cobre isso, mas resumo:
-
-1. Find/Replace de pronomes pessoais (checklist da seção anterior).
-2. Find de clichês: "é importante", "é crucial", "é vital", "atualmente", "nos dias de hoje".
-3. Find de informalidade: "tipo", "a gente", "rolou", "tá", "pra" (em prosa formal — em citação direta literal mantém).
-4. Conferir cada figura/tabela citada **antes** de aparecer.
-5. Conferir cada autor citado no corpo presente em `Referências Bibliográficas.md`.
-6. Conferir glossário: termo técnico explicado na primeira ocorrência do capítulo.
-
-### Quando NÃO usar processo iterativo
-
-- Reescrita de parágrafo já existente: editar direto, não voltar pra fragmentos.
-- Correção pontual (erro de norma, citação errada): edit em lugar.
-- Tradução de tabela já decidida: aplicação direta das normas, sem brainstorm.
-
-Processo iterativo é para **conteúdo novo** que ainda não tem forma decidida.

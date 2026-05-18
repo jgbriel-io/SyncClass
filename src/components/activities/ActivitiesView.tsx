@@ -17,7 +17,8 @@ import {
   Inbox,
   CheckCircle2,
 } from "lucide-react";
-import { useActivities, getActivityFileUrl, getActivityDisplayStatus, formatActivityDueDate, ActivityWithRelations } from "@/hooks/useActivities";
+import { useActivities, getActivityDisplayStatus, formatActivityDueDate, ActivityWithRelations } from "@/hooks/useActivities";
+import { useActivityFileActions } from "@/hooks/useActivityFileActions";
 import { activities as activitiesContent } from "@/content/activities";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
@@ -39,13 +40,11 @@ import { cn } from "@/lib/utils";
 import { Table, TableHeader, TableHead, TableBody, TableRow } from "@/components/ui/table";
 import { ActivitiesTableRow } from "@/components/activities/ActivitiesTableRow";
 import { COL as ACT_COL, TABLE_MIN_W as ACT_TABLE_MIN_W } from "@/components/activities/ActivitiesTableRow.constants";
-import { logger } from "@/lib/sentry";
 import {
   ActivitiesFilters,
   type ActivitiesFiltersState,
 } from "@/components/filters/ActivitiesFilters";
 import { defaultActivitiesFilters } from "@/components/filters/filterDefaults";
-import { toast } from "sonner";
 
 const PAGE_SIZE = 10;
 
@@ -100,37 +99,7 @@ export function ActivitiesView({
     []
   );
 
-  const handleViewFile = async (filePath: string) => {
-    try {
-      const url = await getActivityFileUrl(filePath);
-      window.open(url, "_blank", "noopener,noreferrer");
-    } catch {
-      toast.error(activitiesContent.view.toasts.fileOpenError);
-    }
-  };
-
-  const handleDownload = async (filePath: string, fileName: string) => {
-    try {
-      toast.loading(activitiesContent.view.toasts.downloadPreparing);
-      const signedUrl = await getActivityFileUrl(filePath);
-      const response = await fetch(signedUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      toast.dismiss();
-      toast.success(activitiesContent.view.toasts.downloadSuccess);
-    } catch (error) {
-      logger.error(error as Error, { context: 'download_activity_file' });
-      toast.dismiss();
-      toast.error(activitiesContent.view.toasts.downloadError);
-    }
-  };
+  const { viewFile, downloadFile } = useActivityFileActions();
 
   const totalActivities = activities.length;
   const countEmAndamento = activities.filter((a) => a.status === "enviada" && !isOverdue(a)).length;
@@ -272,8 +241,8 @@ export function ActivitiesView({
                 key={activity.id}
                 activity={activity}
                 isAdmin={isAdmin}
-                onViewFile={handleViewFile}
-                onDownload={handleDownload}
+                onViewFile={viewFile}
+                onDownload={downloadFile}
                 onEdit={(activity) => {
                   setActivityToEdit(activity);
                   setEditDialogOpen(true);
@@ -348,7 +317,7 @@ export function ActivitiesView({
           setDetailSheetOpen(open);
           if (!open) setOpenSheetInCorrectionMode(false);
         }}
-        onDownload={handleDownload}
+        onDownload={downloadFile}
         getStatusLabel={(a) => (a ? getActivityDisplayStatus(a).label : "")}
         getStatusVariant={(a) => (a ? getActivityDisplayStatus(a).variant : "default")}
         initialCorrectionMode={openSheetInCorrectionMode}

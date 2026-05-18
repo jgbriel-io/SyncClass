@@ -2,12 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import { MetricCard } from './MetricCard';
 import { Users } from 'lucide-react';
+import { dashboard } from '@/content';
 
 describe('MetricCard - Snapshot', () => {
   it('should render metric card with centralized content', () => {
     const { container } = render(
       <MetricCard
-        title="Total de Alunos"
+        title={dashboard.metrics.totalStudents}
         value={45}
         icon={Users}
         trend={{ value: 5, direction: 'up' }}
@@ -19,7 +20,7 @@ describe('MetricCard - Snapshot', () => {
   it('should render metric card with downward trend', () => {
     const { container } = render(
       <MetricCard
-        title="Cancelamentos"
+        title={dashboard.metrics.cancellations}
         value={3}
         icon={Users}
         trend={{ value: 2, direction: 'down' }}
@@ -31,7 +32,7 @@ describe('MetricCard - Snapshot', () => {
   it('should render metric card without trend', () => {
     const { container } = render(
       <MetricCard
-        title="Receita"
+        title={dashboard.metrics.revenue}
         value={15000}
         icon={Users}
       />

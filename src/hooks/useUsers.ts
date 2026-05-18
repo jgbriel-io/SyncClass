@@ -394,4 +394,6 @@ export {
   useCreateAuthUserForTeacher,
   useInviteStudent,
   useInviteTeacher,
+  useUpdateProfileName,
+  useUpdateProfileEmail,
 } from "./useUserMutations";

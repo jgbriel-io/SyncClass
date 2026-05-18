@@ -146,7 +146,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         )}>
           <Link to="/admin" className="flex items-center gap-4">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 flex items-center justify-center shadow-lg">
-              <span className="text-sidebar-primary-foreground font-bold text-base">E</span>
+              <span className="text-sidebar-primary-foreground font-bold text-base">{layout.logo.initial}</span>
             </div>
             {!sidebarCollapsed && (
             <span className="text-base font-semibold text-sidebar-foreground tracking-tight">

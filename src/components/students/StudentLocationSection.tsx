@@ -16,7 +16,8 @@ import { ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BR_STATES, type BrCityOption } from "@/lib/br-locations";
 import { COMMON_COUNTRIES } from "@/lib/countries";
-import { STACK, ICON_SIZES } from "@/lib/design-tokens";
+import { STACK } from "@/lib/design-tokens/spacing";
+import { ICON_SIZES } from "@/lib/design-tokens/icon-sizes";
 
 interface StudentLocationSectionProps {
   register: UseFormRegister<FieldValues>;

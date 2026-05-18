@@ -42,9 +42,11 @@ description: Assistente de escrita acadêmica para o TCC do SyncClass — pesqui
 
 **Tom:** formal acadêmico, mas fluido — sem ser engessado ou robótico
 
-**Voz:** ativa predominante
-- ✅ "O sistema registra as aulas automaticamente"
-- ❌ "As aulas são registradas automaticamente pelo sistema"
+**Voz:** sempre IMPESSOAL (ABNT/FEPI) — nunca "eu", "nós", "meu", "implementei". Dentro do impessoal, preferir **ativa em 3ª pessoa** à passiva longa.
+- ✅ "O sistema registra as aulas automaticamente" (ativa 3ª pessoa, impessoal)
+- ✅ "Desenvolveu-se a infraestrutura sobre Supabase" (ativa com pronome `se`, impessoal)
+- ⚠️ "As aulas são registradas automaticamente pelo sistema" (passiva — aceita mas evitar excesso)
+- ❌ "Eu desenvolvi", "Nós implementamos", "Achei melhor" (1ª pessoa — proibido)
 
 **Parágrafos:** curtos e diretos
 - Máximo 5 linhas
@@ -152,16 +154,19 @@ Por quê: [explicação curta]
 
 ```
 docs/tcc/
-├── capitulo1-final.md          ✅ concluído
-├── TCC - 8º Período/
-│   └── Capítulos TCC/
-│       ├── Cap. 1 — Introdução.md
-│       ├── Cap. 2 — Referencial Teórico.md
-│       └── ...
-└── referencias.md
+├── cap1-introducao.md              ✅ concluído
+├── cap2-referencial-teorico.md     🟠 rascunho
+├── cap3-metodologia.md             🔴 pendente
+├── ...                              (até cap10)
+├── tcc-referencia.md                # tabelas RF/RNF, números do projeto
+├── assets-pendentes.md
+└── tcc-8-periodo/projeto-escrito/
+    └── Referências Bibliográficas.md
 ```
 
-Ao sugerir onde inserir conteúdo, referenciar o capítulo correspondente.
+Convenção: `cap{N}-{slug}.md`. Ao sugerir onde inserir conteúdo, referenciar o capítulo correspondente.
+
+Skills globais para drafting iterativo: `tcc-fragmentos` → `tcc-rascunho` → `tcc-revisao-impessoal`.
 
 ---
 

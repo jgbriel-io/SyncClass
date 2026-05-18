@@ -1,8 +1,7 @@
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUserProfile } from "@/hooks/useUsers";
 import {
   useTeacherDashboardStats,
   useTeacherUpcomingPayments,
@@ -18,26 +17,10 @@ import type { ChartMonthsFilter } from "@/components/dashboard/DashboardGrowthCh
 const TeacherHome = () => {
   const { user } = useAuth();
   const [chartMonths, setChartMonths] = useState<ChartMonthsFilter>(3);
-  
-  // Get teacher_id and display name from profile
-  const { data: teacherProfile } = useQuery({
-    queryKey: ["teacher-profile", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("teacher_id, full_name")
-        .eq("user_id", user.id)
-        .single();
+  const { data: profile } = useCurrentUserProfile(user?.id);
 
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
-
-  const teacherId = teacherProfile?.teacher_id;
-  const displayName = teacherProfile?.full_name?.trim() || "Professor";
+  const teacherId = profile?.teacher_id;
+  const displayName = profile?.full_name?.trim() || "Professor";
 
   const { data: stats, isLoading: loadingStats } = useTeacherDashboardStats(teacherId);
   const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary(teacherId ?? undefined);

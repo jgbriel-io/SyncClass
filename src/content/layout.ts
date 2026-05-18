@@ -31,6 +31,7 @@ export const layout = {
     logout: "Sair",
     loggingOut: "Saindo...",
     openMenu: "Abrir menu",
+    toggleSidebar: "Alternar barra lateral",
   },
 
   topbar: {
@@ -113,5 +114,9 @@ export const layout = {
     logoutAriaLabel: "Sair da conta",
     settingsAriaLabel: "Configurações",
     mainNavAriaLabel: "Navegação principal",
+  },
+
+  logo: {
+    initial: "E",
   },
 } as const;

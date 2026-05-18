@@ -12,8 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useResetPassword } from "@/hooks/useUsers";
+import { useTeacherUserId } from "@/hooks/useTeachers";
 import type { Teacher } from "@/hooks/useTeachers";
 import { teachers as teachersContent, common } from "@/content";
 
@@ -33,7 +33,7 @@ export function TeacherResetPasswordDialog({
 }: TeacherResetPasswordDialogProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [lookingUpUser, setLookingUpUser] = useState(false);
+  const { data: userId, isLoading: lookingUpUser } = useTeacherUserId(teacher?.id);
   const adminResetPassword = useResetPassword();
 
   const isPending = adminResetPassword.isPending || lookingUpUser;
@@ -55,22 +55,14 @@ export function TeacherResetPasswordDialog({
       return;
     }
 
-    setLookingUpUser(true);
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("user_id")
-      .eq("teacher_id", teacher.id)
-      .maybeSingle();
-    setLookingUpUser(false);
-
-    if (profileError || !profile?.user_id) {
+    if (!userId) {
       toast.error(teachersContent.resetPasswordDialog.toasts.noAccount);
       return;
     }
 
     const passwordToShow = newPassword;
     adminResetPassword.mutate(
-      { userId: profile.user_id, password: newPassword },
+      { userId, password: newPassword },
       {
         onSuccess: () => {
           handleClose();

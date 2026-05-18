@@ -1,4 +1,9 @@
-# Skill: Architecture
+---
+name: syncclass-architecture
+description: SyncClass architecture guide — layered architecture, 6 frontend layers, design patterns (Singleton, Strategy, Repository, Factory, Observer), performance anti-patterns (N+1, client-side aggregation). Use when deciding feature architecture, refactoring layer violations, or optimizing queries.
+---
+
+# Architecture — SyncClass
 
 Arquitetura SyncClass — camadas, padrões, design decisions.
 

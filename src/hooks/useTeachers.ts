@@ -232,6 +232,75 @@ export function useSoftDeleteTeacher() {
   });
 }
 
+/**
+ * Busca user_id vinculado a um teacher_id via profiles
+ */
+export function useTeacherUserId(teacherId: string | undefined) {
+  return useQuery({
+    queryKey: ["teacher_user_id", teacherId],
+    queryFn: async () => {
+      if (!teacherId) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("teacher_id", teacherId)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.user_id ?? null;
+    },
+    enabled: !!teacherId,
+  });
+}
+
+/**
+ * Busca chave PIX de um professor
+ */
+export function useTeacherPixKey(teacherId: string | undefined) {
+  return useQuery({
+    queryKey: ["teacher_pix_key", teacherId],
+    queryFn: async () => {
+      if (!teacherId) return null;
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("pix_key")
+        .eq("id", teacherId)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.pix_key ?? null;
+    },
+    enabled: !!teacherId,
+  });
+}
+
+/**
+ * Atualiza chave PIX de um professor
+ */
+export function useUpdatePixKey() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ teacherId, pixKey }: { teacherId: string; pixKey: string | null }) => {
+      const { data, error } = await supabase
+        .from("teachers")
+        .update({ pix_key: pixKey })
+        .eq("id", teacherId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, { teacherId }) => {
+      queryClient.invalidateQueries({ queryKey: ["teacher_pix_key", teacherId] });
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      toast.success("Chave PIX atualizada com sucesso!");
+    },
+    onError: (error: unknown) => {
+      const userMessage = sanitizeErrorMessage(error);
+      toast.error(userMessage);
+      logError(error as Error, { context: 'update_pix_key' });
+    },
+  });
+}
+
 export const useDeleteTeacher = useSoftDeleteTeacher;
 
 /**

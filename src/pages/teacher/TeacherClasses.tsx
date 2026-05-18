@@ -1,9 +1,8 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { ClassesView } from "@/components/classes/ClassesView";
 import { Loader2 } from "lucide-react";
+import { useCurrentUserProfile } from "@/hooks/useUsers";
 import type { ClassStatusFilter } from "@/components/filters/ClassesFilters";
 import { typography } from "@/lib/design-tokens/typography";
 
@@ -18,22 +17,9 @@ function TeacherClassesPage() {
       ? (statusFromUrl as ClassStatusFilter)
       : undefined;
 
-  const { data: teacherId, isLoading: teacherIdLoading } = useQuery({
-    queryKey: ["teacherId", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("teacher_id")
-        .eq("user_id", user.id)
-        .single();
-      if (error) return null;
-      return data?.teacher_id as string | null;
-    },
-    enabled: !!user?.id && role === "teacher",
-  });
+  const { data: profile, isLoading: profileLoading } = useCurrentUserProfile(user?.id);
 
-  if (authLoading || teacherIdLoading) {
+  if (authLoading || profileLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -45,7 +31,7 @@ function TeacherClassesPage() {
     return <Navigate to="/login" replace />;
   }
 
-  if (!teacherId) {
+  if (!profile?.teacher_id) {
     return (
       <div className="text-center py-12">
         <p className={typography('SMALL')}>Não foi possível carregar seu perfil de professor.</p>
@@ -60,7 +46,7 @@ function TeacherClassesPage() {
       viewMode="table"
       showTeacherColumn={false}
       enableTeacherSelection={false}
-      autoTeacherId={teacherId}
+      autoTeacherId={profile.teacher_id}
       initialStatus={initialStatus}
     />
   );

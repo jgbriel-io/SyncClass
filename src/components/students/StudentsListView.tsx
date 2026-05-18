@@ -13,15 +13,10 @@ import { StudentsStatCards } from "@/components/students/StudentsStatCards";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
 import {
   useStudentsPaginated,
-  useCreateStudent,
-  useUpdateStudent,
   Student,
   StudentInsert,
 } from "@/hooks/useStudents";
-import { useInviteStudent } from "@/hooks/useUsers";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { common } from "@/content";
+import { useStudentFormSubmit } from "@/hooks/useStudentFormSubmit";
 import { students as studentsContent } from "@/content";
 import { useStudentsStats } from "@/hooks/useStudentsStats";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
@@ -121,9 +116,14 @@ export function StudentsListView({
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [page]);
 
-  const createStudent = useCreateStudent();
-  const inviteStudent = useInviteStudent();
-  const updateStudent = useUpdateStudent();
+  const { submit: handleCreateOrUpdate, isPending: isSubmitting } = useStudentFormSubmit({
+    selectedStudent,
+    autoTeacherId,
+    onSuccess: () => {
+      setIsFormOpen(false);
+      setSelectedStudent(null);
+    },
+  });
 
   const teacherMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -164,50 +164,7 @@ export function StudentsListView({
     return result;
   }, [students, filters, currentMonth]);
 
-  const handleCreateOrUpdate = (data: StudentInsert) => {
-    const run = async () => {
-      const dataWithTeacher = autoTeacherId ? { ...data, teacher_id: autoTeacherId } : data;
-      const normalizedEmail = dataWithTeacher.email?.trim().toLowerCase();
 
-      if (!selectedStudent && normalizedEmail) {
-        const { data: existingProfile, error: profileError } = await supabase
-          .from("profiles")
-          .select("id")
-          .ilike("email", normalizedEmail)
-          .maybeSingle();
-
-        if (profileError) {
-          toast.error(common.errors.generic);
-          return;
-        }
-        if (existingProfile) {
-          toast.error(common.errors.duplicateEmail);
-          return;
-        }
-      }
-
-      if (selectedStudent) {
-        updateStudent.mutate(
-          { id: selectedStudent.id, ...dataWithTeacher },
-          {
-            onSuccess: () => {
-              setIsFormOpen(false);
-              setSelectedStudent(null);
-            },
-          }
-        );
-      } else {
-        inviteStudent.mutate(dataWithTeacher as StudentInsert & { teacher_id?: string | null }, {
-          onSuccess: () => {
-            setIsFormOpen(false);
-            toast.success(studentsContent.emptyState.toastCreated);
-          },
-        });
-      }
-    };
-
-    void run();
-  };
 
   return (
     <div className="space-y-6">
@@ -387,7 +344,7 @@ export function StudentsListView({
         }}
         student={selectedStudent}
         onSubmit={handleCreateOrUpdate}
-        isLoading={createStudent.isPending || inviteStudent.isPending || updateStudent.isPending}
+        isLoading={isSubmitting}
         autoTeacherId={autoTeacherId}
       />
 

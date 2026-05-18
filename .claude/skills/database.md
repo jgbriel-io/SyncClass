@@ -1,4 +1,9 @@
-# Skill: Database
+---
+name: syncclass-database
+description: SyncClass database guide — Supabase migrations, PostgreSQL schema (11 tables), TypeScript type generation, RLS policies. Use when creating or modifying tables, columns, indexes, constraints, RLS policies, or generating types after schema changes.
+---
+
+# Database — SyncClass
 
 Schema management — Supabase, migrations, type generation.
 

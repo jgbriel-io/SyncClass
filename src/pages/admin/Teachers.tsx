@@ -33,7 +33,6 @@ import { useCreateAuthUserForTeacher, useInviteTeacher } from "@/hooks/useUsers"
 import { useStudents } from "@/hooks/useStudents";
 import { useClassLogs } from "@/hooks/useClassLogs";
 import { useFinancialRecords } from "@/hooks/useFinancialRecords";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { TeachersTableSkeleton } from "@/components/ui/table-skeleton";
@@ -189,6 +188,7 @@ export default function TeachersPage() {
       const normalizedEmail = data.email?.trim().toLowerCase();
 
       if (!selectedTeacher && normalizedEmail) {
+        const { supabase } = await import("@/integrations/supabase/client");
         const { data: existingProfile, error: profileError } = await supabase
           .from("profiles")
           .select("id")

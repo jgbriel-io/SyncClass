@@ -10,8 +10,8 @@ Arquivos em `.kiro/steering/` que injetam contexto e regras automaticamente nas 
 ## Convenção de Nomenclatura
 
 ```
-g-*.md  →  regras genéricas (boas práticas técnicas, reutilizáveis)
-p-*.md  →  regras do projeto (contexto e convenções específicas do JLAC)
+g-*.md  →  regras genéricas reutilizáveis (apenas este guia)
+p-*.md  →  regras do projeto (contexto e convenções específicas do SyncClass)
 ```
 
 ## Front Matter Obrigatório
@@ -37,28 +37,22 @@ description: ...
 ## Quando Usar Cada Tipo
 
 - `always` — contexto do projeto, comportamento, segurança, code review
-- `fileMatch` — regras de tecnologia específica (frontend só quando editando `.tsx`, backend só quando editando hooks/supabase)
+- `fileMatch` — regras de tecnologia específica (frontend só quando editando `.tsx`, banco só quando editando hooks/supabase)
 - `manual` — guias de referência longos, documentação opcional
 
 ## Arquivos Existentes
 
 **Projeto (`p-`) — `always`:**
-- `p-project-context.md` — stack, roles, estrutura de pastas, design tokens
-- `p-architecture.md` — separação de responsabilidades, padrões de código
+- `p-project-context.md` — stack, roles, estrutura de pastas, design tokens, scripts
+- `p-architecture.md` — separação de responsabilidades, TanStack Query, mutations, real-time, queries
 - `p-behavior.md` — como o assistente deve agir, mapeamento de intenções
+- `p-security.md` — RLS, isolamento de tenant, validação de inputs, dados sensíveis, operações financeiras
+- `p-code-reviewer.md` — checklist de code review (arquitetura, qualidade, segurança, performance, UI, TS)
+- `p-tcc-writing-style.md` — estilo de escrita TCC (voz impessoal, citações, vocabulário acadêmico)
 
 **Projeto (`p-`) — `fileMatch`:**
 - `p-ui-patterns.md` — design tokens, componentes shadcn, spacing, cores (`**/*.tsx`)
-
-**Genéricos (`g-`) — `always`:**
-- `g-senior-security.md` — RLS, isolamento de tenant, validação, dados sensíveis
-- `g-code-reviewer.md` — checklist de code review
-
-**Genéricos (`g-`) — `fileMatch`:**
-- `g-senior-frontend.md` — boas práticas React/Tailwind (`**/*.tsx`, `**/*.ts`)
-- `g-senior-backend.md` — padrões Supabase/hooks (`src/hooks/**`, `supabase/**`)
-- `g-react-best-practices.md` — performance React (`**/*.tsx`, `**/*.ts`)
-- `g-supabase-postgres-best-practices.md` — Postgres, índices, RLS (`src/integrations/**`, `supabase/**`)
+- `p-database-patterns.md` — Supabase/Postgres patterns, índices, RLS, views, schema (`src/integrations/**`, `src/hooks/**`, `supabase/**`)
 
 **Genéricos (`g-`) — `manual`:**
 - `g-steering-guide.md` — este arquivo

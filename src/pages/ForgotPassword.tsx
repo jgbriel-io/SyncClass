@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GraduationCap, Loader2, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
@@ -21,6 +20,7 @@ export default function ForgotPassword() {
     if (!email.trim()) return;
     setIsLoading(true);
     try {
+      const { supabase } = await import("@/integrations/supabase/client");
       const redirectTo = `${window.location.origin}/redefinir-senha`;
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo,

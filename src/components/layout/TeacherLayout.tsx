@@ -21,8 +21,6 @@ import {
   FileText,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
 import { useCurrentUserProfile } from "@/hooks/useUsers";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,7 +36,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SettingsModal } from "@/components/layout/SettingsModal";
 import { Footer } from "@/components/layout/Footer";
-import { layout } from "@/content";
+import { layout, common } from "@/content";
 
 interface TeacherLayoutProps {
   children: React.ReactNode;
@@ -71,21 +69,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
     }
   }, [location.pathname, searchParams]);
   const { data: profile } = useCurrentUserProfile(user?.id);
-  const { data: teacherProfile } = useQuery({
-    queryKey: ["teacher-profile", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("teacher_id")
-        .eq("user_id", user.id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
-  const teacherId = teacherProfile?.teacher_id;
+  const teacherId = profile?.teacher_id;
   const { data: pendingClasses = [], isLoading: loadingNotifications } = usePendingEvaluationClassLogs(teacherId);
 
   useEffect(() => {
@@ -152,7 +136,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         )}>
           <Link to="/teacher" className="flex items-center gap-4">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 flex items-center justify-center shadow-lg">
-              <span className="text-sidebar-primary-foreground font-bold text-base">E</span>
+              <span className="text-sidebar-primary-foreground font-bold text-base">{layout.logo.initial}</span>
             </div>
             {!sidebarCollapsed && (
               <span className="text-base font-semibold text-sidebar-foreground tracking-tight">

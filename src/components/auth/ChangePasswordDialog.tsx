@@ -1,27 +1,15 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GAP, STACK } from "@/lib/design-tokens";
+import { STACK } from "@/lib/design-tokens/spacing";
+import { GAP } from "@/lib/design-tokens/spacing";
 import { auth } from "@/content";
-
-const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, auth.changePassword.toasts.currentPasswordWrong),
-  newPassword: z.string().min(6, auth.changePassword.toasts.newPasswordMinLength),
-  confirmPassword: z.string().min(1, auth.changePassword.toasts.confirmPasswordRequired),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: auth.changePassword.toasts.passwordMismatch,
-  path: ["confirmPassword"],
-});
-
-type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
+import { useChangePassword, type ChangePasswordForm } from "@/hooks/useChangePassword";
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -32,7 +20,8 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { mutate, isSubmitting, schema } = useChangePassword();
 
   const {
     register,
@@ -40,40 +29,14 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
     formState: { errors },
     reset,
   } = useForm<ChangePasswordForm>({
-    resolver: zodResolver(changePasswordSchema),
+    resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data: ChangePasswordForm) => {
-    setIsSubmitting(true);
-
-    try {
-      // Atualizar senha no Supabase Auth
-      const { error: authError } = await supabase.auth.updateUser({
-        password: data.newPassword,
-      });
-
-      if (authError) throw authError;
-
-      // Atualizar flag must_change_password no profile
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ must_change_password: false })
-          .eq("user_id", user.id);
-
-        if (profileError) {
-          // Não falhar a operação se só o profile não atualizar
-        }
-      }
-
-      toast.success(auth.changePassword.toasts.success);
+    const result = await mutate(data);
+    if (result.success) {
       reset();
       onSuccess();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : auth.changePassword.toasts.generic);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

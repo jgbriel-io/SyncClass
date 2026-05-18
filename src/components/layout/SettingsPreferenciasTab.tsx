@@ -9,18 +9,18 @@ export function SettingsPreferenciasTab() {
   return (
     <div className="space-y-4 pt-4">
       <p className="text-sm text-muted-foreground">
-        Opções de tema, idioma e notificações em breve.
+        {layout.settings.preferences.comingSoon}
       </p>
 
       {!isPWAInstalled() && (
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <Download className="h-4 w-4" />
-            Instalar App
+            {layout.settings.preferences.installAppLabel}
           </Label>
           <div className="rounded-lg border bg-muted/50 p-3">
             <p className="text-sm text-muted-foreground mb-3">
-              Instale o app na sua tela inicial para acesso mais rápido e funcionamento offline.
+              {layout.settings.preferences.installAppDescription}
             </p>
             <Button
               onClick={async () => {
@@ -35,7 +35,7 @@ export function SettingsPreferenciasTab() {
               disabled={!isPWAInstallPromptAvailable()}
             >
               <Download className="h-4 w-4 mr-2" />
-              Instalar App
+              {layout.settings.preferences.installAppButton}
             </Button>
           </div>
         </div>
@@ -45,7 +45,7 @@ export function SettingsPreferenciasTab() {
         <div className="rounded-lg border bg-success/10 border-success/20 p-3">
           <div className="flex items-center gap-2 text-success">
             <CheckCircle2 className="h-4 w-4" />
-            <span className="text-sm font-medium">App instalado!</span>
+            <span className="text-sm font-medium">{layout.settings.preferences.pwaInstalled}</span>
           </div>
         </div>
       )}

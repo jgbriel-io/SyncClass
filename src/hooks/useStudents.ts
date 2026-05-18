@@ -594,3 +594,32 @@ export function useUpdateStudentPaymentDay() {
     },
   });
 }
+
+/** Hook para buscar chave PIX do professor de um aluno */
+export function useTeacherPixKeyByStudent(studentId: string | undefined | null) {
+  return useQuery({
+    queryKey: ["teacher-pix-key", studentId],
+    queryFn: async () => {
+      if (!studentId) return null;
+      
+      const { data: student, error: studentError } = await supabase
+        .from("students")
+        .select("teacher_id")
+        .eq("id", studentId)
+        .maybeSingle();
+      
+      if (studentError || !student?.teacher_id) return null;
+      
+      const { data: teacher, error: teacherError } = await supabase
+        .from("teachers")
+        .select("pix_key")
+        .eq("id", student.teacher_id)
+        .maybeSingle();
+      
+      if (teacherError || !teacher?.pix_key) return null;
+      
+      return teacher.pix_key;
+    },
+    enabled: !!studentId,
+  });
+}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, FileText, Eye } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -16,8 +15,11 @@ import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { useUpdateClassLog } from "@/hooks/useClassLogs";
 import { useMarkAsPaid, useUpdateFinancialStatus } from "@/hooks/useFinancialRecords";
 import { logger } from "@/lib/sentry";
-import { getActivityFileUrl } from "@/hooks/useActivities";
-import { STACK, GAP, ICON_SIZES, TYPOGRAPHY } from "@/lib/design-tokens";
+import { PostClassAbsenceSection } from "./PostClassAbsenceSection";
+import { PostClassPaymentSection } from "./PostClassPaymentSection";
+import { STACK, GAP } from "@/lib/design-tokens/spacing";
+import { ICON_SIZES } from "@/lib/design-tokens/icon-sizes";
+import { TYPOGRAPHY } from "@/lib/design-tokens/typography";
 import { classes as classesContent, common } from "@/content";
 
 /** Schema do modal Avaliar aula: nota, feedback e confirmar pagamento obrigatórios quando aplicável */
@@ -109,22 +111,6 @@ export function PostClassDialog({
   const paymentProofFilename = (financialRecord as any)?.payment_proof_filename || "Comprovante";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const paymentProofStatus = (financialRecord as any)?.payment_proof_status;
-
-  const [isViewingProof, setIsViewingProof] = useState(false);
-
-  const handleViewProof = async () => {
-    if (!paymentProofUrl) return;
-    
-    setIsViewingProof(true);
-    try {
-      const url = await getActivityFileUrl(paymentProofUrl);
-      window.open(url, "_blank");
-    } catch (error) {
-      toast.error(classesContent.postClassDialog.toasts.proofOpenError);
-    } finally {
-      setIsViewingProof(false);
-    }
-  };
 
   const postClassSchema = useMemo(
     () => createPostClassSchema(requirePaymentConfirmation),
@@ -342,49 +328,13 @@ export function PostClassDialog({
           )}
 
           {!attendance && hasFinancialRecord && (
-            <div className={`${STACK.TIGHT} p-3 bg-muted/50 rounded-lg border`}>
-              <div className={`flex items-start ${GAP.TIGHT}`}>
-                <Checkbox
-                  id="chargeAbsence"
-                  checked={chargeAbsence}
-                  onCheckedChange={(checked) =>
-                    setValue("chargeAbsence", !!checked)
-                  }
-                />
-                <div className="flex-1">
-                  <Label htmlFor="chargeAbsence" className="cursor-pointer font-medium">
-                    {classesContent.postClassDialog.chargeAbsenceLabel}
-                  </Label>
-                  <p className={`${TYPOGRAPHY.SMALL} mt-1`}>
-                    {chargeAbsence 
-                      ? "A cobrança será mantida com o status atual"
-                      : isPaymentAlreadyPaid
-                        ? "A cobrança será mantida como paga (ou extornada se marcar abaixo)"
-                        : "A cobrança será marcada como abonada (não cobrada)"}
-                  </p>
-                </div>
-              </div>
-              
-              {!chargeAbsence && isPaymentAlreadyPaid && (
-                <div className={`flex items-start ${GAP.TIGHT} ml-6 pt-2 border-t`}>
-                  <Checkbox
-                    id="refundPayment"
-                    checked={refundPayment}
-                    onCheckedChange={(checked) =>
-                      setValue("refundPayment", !!checked)
-                    }
-                  />
-                  <div className="flex-1">
-                    <Label htmlFor="refundPayment" className="cursor-pointer font-medium text-amber-600">
-                      {classesContent.postClassDialog.refundLabel}
-                    </Label>
-                    <p className={`${TYPOGRAPHY.SMALL} mt-1`}>
-                      {classesContent.postClassDialog.refundDescription}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
+            <PostClassAbsenceSection
+              chargeAbsence={chargeAbsence}
+              refundPayment={refundPayment}
+              isPaymentAlreadyPaid={isPaymentAlreadyPaid}
+              onChargeAbsenceChange={(checked) => setValue("chargeAbsence", checked)}
+              onRefundPaymentChange={(checked) => setValue("refundPayment", checked)}
+            />
           )}
 
           <div className={STACK.TIGHT}>
@@ -401,58 +351,16 @@ export function PostClassDialog({
           </div>
 
           {attendance && hasFinancialRecord && (
-            <div className={STACK.TIGHT}>
-              <div className={`flex items-center ${GAP.TIGHT}`}>
-                <Checkbox
-                  id="confirmPayment"
-                  checked={confirmPayment}
-                  disabled={isPaymentAlreadyPaid}
-                  onCheckedChange={(checked) =>
-                    setValue("confirmPayment", !!checked)
-                  }
-                />
-                <Label
-                  htmlFor="confirmPayment"
-                  className={isPaymentAlreadyPaid ? "cursor-default text-muted-foreground" : "cursor-pointer"}
-                >
-                  {classesContent.postClassDialog.confirmPaymentLabel}
-                </Label>
-              </div>
-              {errors.confirmPayment && (
-                <p className={`${TYPOGRAPHY.BODY} text-destructive`}>{errors.confirmPayment.message}</p>
-              )}
-              
-              {hasPaymentProof && (
-                <div className={`flex items-center ${GAP.TIGHT} rounded-lg border bg-muted/30 p-3`}>
-                  <FileText className={`${ICON_SIZES.SM} text-muted-foreground flex-shrink-0`} />
-                  <div className="flex-1 min-w-0">
-                    <p className={`${TYPOGRAPHY.BODY} font-medium truncate`}>{paymentProofFilename}</p>
-                    <p className={TYPOGRAPHY.SMALL}>
-                      {paymentProofStatus === "pending" && classesContent.postClassDialog.proofPending}
-                      {paymentProofStatus === "approved" && classesContent.postClassDialog.proofApproved}
-                      {paymentProofStatus === "rejected" && classesContent.postClassDialog.proofRejected}
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={handleViewProof}
-                    disabled={isViewingProof}
-                    className="flex-shrink-0"
-                  >
-                    {isViewingProof ? (
-                      <Loader2 className={`${ICON_SIZES.SM} animate-spin`} />
-                    ) : (
-                      <>
-                        <Eye className={`${ICON_SIZES.SM} mr-1`} />
-                        {classesContent.postClassDialog.viewProof}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-            </div>
+            <PostClassPaymentSection
+              confirmPayment={confirmPayment}
+              isPaymentAlreadyPaid={isPaymentAlreadyPaid}
+              hasPaymentProof={hasPaymentProof}
+              paymentProofUrl={paymentProofUrl}
+              paymentProofFilename={paymentProofFilename}
+              paymentProofStatus={paymentProofStatus}
+              onConfirmPaymentChange={(checked) => setValue("confirmPayment", checked)}
+              errorMessage={errors.confirmPayment?.message}
+            />
           )}
 
           <div className={`flex justify-end ${GAP.TIGHT} pt-2`}>

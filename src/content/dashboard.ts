@@ -19,6 +19,9 @@ export const dashboard = {
     overdueChange: (pct: string) => `${pct}% do total`,
     newThisMonth: "Novos este Mês",
     classesThisMonth: "Aulas este Mês",
+    totalStudents: "Total de Alunos",
+    cancellations: "Cancelamentos",
+    revenue: "Receita",
   },
 
   financial: {

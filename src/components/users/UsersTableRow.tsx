@@ -27,7 +27,7 @@ import {
   getXLColumnClasses,
 } from "@/lib/design-tokens/table-columns";
 import { COL } from "./UsersTableRow.constants";
-import { common } from "@/content";
+import { common, users } from "@/content";
 
 interface Student {
   id: string;
@@ -100,7 +100,7 @@ export function UsersTableRow({
       {/* Status Badge */}
       <td className="px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>
         <StatusBadge variant={isActive ? "success" : "default"}>
-          {isActive ? "Ativo" : "Inativo"}
+          {isActive ? users.table.statusActive : users.table.statusInactive}
         </StatusBadge>
       </td>
 
@@ -134,7 +134,7 @@ export function UsersTableRow({
             )}
             {!isActive && (
               <p className="text-xs text-amber-600">
-                Conta arquivada
+                {users.table.statusArchived}
               </p>
             )}
           </div>
@@ -149,7 +149,7 @@ export function UsersTableRow({
           </StatusBadge>
           {!isActive && (
             <span className="text-xs text-muted-foreground">
-              Arquivado
+              {users.table.statusArchivedShort}
             </span>
           )}
         </div>
@@ -162,19 +162,19 @@ export function UsersTableRow({
             {linkedStudent && (
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs truncate" title={`Aluno: ${linkedStudent.name}`}>Aluno: {linkedStudent.name}</span>
+                <span className="text-xs truncate" title={users.table.linkedStudent(linkedStudent.name)}>{users.table.linkedStudent(linkedStudent.name)}</span>
               </div>
             )}
             {linkedTeacher && (
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs truncate" title={`Professor: ${linkedTeacher.name}`}>Professor: {linkedTeacher.name}</span>
+                <span className="text-xs truncate" title={users.table.linkedTeacher(linkedTeacher.name)}>{users.table.linkedTeacher(linkedTeacher.name)}</span>
               </div>
             )}
             {role === "admin" && !linkedStudent && !linkedTeacher && (
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs truncate" title={`Admin: ${displayName}`}>Admin: {displayName}</span>
+                <span className="text-xs truncate" title={users.table.linkedAdmin(displayName)}>{users.table.linkedAdmin(displayName)}</span>
               </div>
             )}
           </div>

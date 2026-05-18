@@ -111,6 +111,52 @@ export function useUploadAvatar() {
   });
 }
 
+/**
+ * Atualiza nome do perfil (auth.user_metadata.full_name + profiles.full_name)
+ */
+export function useUpdateProfileName() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, fullName }: { userId: string; fullName: string }) => {
+      const trimmed = fullName.trim();
+      await supabase.auth.updateUser({ data: { full_name: trimmed } });
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: trimmed })
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: (_, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: ["current_user_profile", userId] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      toast.success("Nome atualizado com sucesso!");
+    },
+    onError: (err: Error) => {
+      toast.error(err?.message?.trim() ? String(err.message) : "Erro ao atualizar nome.");
+    },
+  });
+}
+
+/**
+ * Atualiza email do usuário (auth.updateUser)
+ */
+export function useUpdateProfileEmail() {
+  return useMutation({
+    mutationFn: async ({ email }: { email: string }) => {
+      const normalized = email.trim().toLowerCase();
+      const { error } = await supabase.auth.updateUser({ email: normalized });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Email atualizado! Confirme no link enviado.");
+    },
+    onError: (err: Error) => {
+      toast.error(err?.message?.trim() ? String(err.message) : "Erro ao atualizar email.");
+    },
+  });
+}
+
 export function useDeleteUser() {
   const queryClient = useQueryClient();
   return useMutation({

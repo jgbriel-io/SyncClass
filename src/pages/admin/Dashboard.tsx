@@ -1,8 +1,7 @@
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUserProfile } from "@/hooks/useUsers";
 import {
   useDashboardStats,
   useUpcomingPayments,
@@ -18,21 +17,7 @@ import type { ChartMonthsFilter } from "@/components/dashboard/DashboardGrowthCh
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [chartMonths, setChartMonths] = useState<ChartMonthsFilter>(3);
-
-  const { data: profile } = useQuery({
-    queryKey: ["profile-display-name", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
+  const { data: profile } = useCurrentUserProfile(user?.id);
 
   const { data: stats, isLoading: loadingStats } = useDashboardStats();
   const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary();

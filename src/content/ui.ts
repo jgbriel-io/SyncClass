@@ -72,4 +72,17 @@ export const ui = {
     cityEmpty: "Nenhuma cidade encontrada.",
     cityManualPlaceholder: "Ex: Londres, Paris, Nova York",
   },
+
+  // sr-only labels for accessibility
+  srOnly: {
+    more: "Mais",
+    previousSlide: "Slide anterior",
+    nextSlide: "Próximo slide",
+    close: "Fechar",
+  },
+
+  // Comparison text
+  comparison: {
+    vsPreviousMonth: "vs mês anterior",
+  },
 } as const;

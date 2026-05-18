@@ -17,6 +17,8 @@ export const users = {
     colActions: "Ações",
     statusActive: "Ativo",
     statusInactive: "Inativo",
+    statusArchived: "Conta arquivada",
+    statusArchivedShort: "Arquivado",
     roleAdmin: "Admin",
     roleTeacher: "Professor",
     roleStudent: "Aluno",

@@ -8,13 +8,16 @@ description: Separação de responsabilidades, padrões de componentes, TanStack
 ## Separação de Responsabilidades
 
 ```
-Components → Hooks → Services (Supabase client) → Banco
+Components → Hooks (queries + services) → Supabase client → Banco
 ```
 
 - **Components**: apenas UI, delega lógica para hooks
-- **Hooks**: lógica de negócio, TanStack Query, mutations
+- **Hooks**: TanStack Query + mutations em `src/hooks/use*.ts`
+- **Services**: lógica de domínio em `src/hooks/*Service.ts` (convivem com hooks — não existe pasta `src/lib/services/`)
 - **Contexts**: AuthContext para estado global de auth
 - Nunca chamar Supabase diretamente em componentes
+
+Exemplos de services existentes: `classLogsService.ts`, `financialRecordsService.ts`, `activitiesService.ts`, `teachersService.ts`, `inviteUserService.ts`.
 
 ## Componentes
 
@@ -79,6 +82,13 @@ export const useCreateStudent = () => {
 };
 ```
 
+### Wrappers de Mutation do Projeto
+
+Antes de escrever `useMutation` cru, verificar wrappers existentes:
+
+- `useOptimisticMutation` — atualização otimista (rollback automático em erro). Usar para edições inline, toggles e ações onde feedback instantâneo importa.
+- `useRetryMutation` — retry com backoff exponencial. Usar para operações flaky (rede instável, locks transitórios).
+
 ## Formulários — React Hook Form + Zod
 
 ```tsx
@@ -96,14 +106,50 @@ const form = useForm<z.infer<typeof schema>>({
 - Erros em português, próximos ao input, usando `text-destructive`
 - Formulários são Dialogs/Modals — não criar rotas separadas para forms
 
-## Supabase — Padrão de Query
+## Supabase — Padrões de Query
 
 ```ts
-// ✅ Sempre verificar error antes de usar data
+// Verificar error sempre antes de usar data
 const { data, error } = await supabase.from('students').select('*').single();
 if (error) throw error;
 if (!data) throw new Error('Não encontrado');
 return data;
+
+// .single() → lança erro se não encontrar (espera exatamente 1 registro)
+// .maybeSingle() → retorna null se não encontrar (registro opcional)
+const { data } = await supabase.from('profiles').select('role').eq('user_id', id).maybeSingle();
+
+// Paginação obrigatória para listas grandes
+const { data } = await supabase
+  .from('class_logs')
+  .select('id, class_date, duration, student_id')
+  .range(page * pageSize, (page + 1) * pageSize - 1)
+  .order('class_date', { ascending: false });
+
+// RPC para operações complexas (preferir ao invés de múltiplas queries)
+const { data } = await supabase.rpc('create_class_package', {
+  p_teacher_id: teacherId,
+  p_student_id: studentId,
+  p_classes: classesArray,
+  p_financial: financialData,
+});
+```
+
+## Real-time
+
+```ts
+const channel = supabase
+  .channel('financial-updates')
+  .on('postgres_changes', {
+    event: 'UPDATE',
+    schema: 'public',
+    table: 'financial_records',
+    filter: `student_id=eq.${studentId}`
+  }, handleUpdate)
+  .subscribe();
+
+// Sempre limpar no cleanup — sem isso vaza conexão
+return () => supabase.removeChannel(channel);
 ```
 
 ## Anti-patterns
@@ -114,3 +160,5 @@ return data;
 - ❌ Class components
 - ❌ Prop drilling (usar composição)
 - ❌ Validação manual sem Zod
+- ❌ `.single()` quando registro pode não existir (usar `.maybeSingle()`)
+- ❌ Real-time subscription sem cleanup

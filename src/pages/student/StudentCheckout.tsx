@@ -6,13 +6,12 @@ import { StudentPixPaymentBox } from "@/components/student/StudentPixPaymentBox"
 import { useStudentFinancialRecords } from "@/hooks/useStudentPortal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserProfile } from "@/hooks/useUsers";
-import { supabase } from "@/integrations/supabase/client";
+import { useTeacherPixKeyByStudent } from "@/hooks/useStudents";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { ArrowLeft, Loader2, FileText, Calendar, Wallet, Upload, CheckCircle2 } from "lucide-react";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";
-import { useQuery } from "@tanstack/react-query";
 import { useSubmitPaymentProof } from "@/hooks/usePaymentProof";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
@@ -23,44 +22,10 @@ export default function StudentCheckout() {
   const { user } = useAuth();
   const { data: profile } = useCurrentUserProfile(user?.id);
   const { data: records = [], isLoading, error } = useStudentFinancialRecords();
+  const { data: teacherPixKey, isLoading: isLoadingPixKey } = useTeacherPixKeyByStudent(profile?.student_id);
   const submitProof = useSubmitPaymentProof();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  // Buscar chave PIX do professor do aluno
-  const { data: teacherPixKey, isLoading: isLoadingPixKey } = useQuery({
-    queryKey: ["teacher-pix-key", profile?.student_id],
-    queryFn: async () => {
-      if (!profile?.student_id) {
-        return null;
-      }
-      
-      // Buscar o student para pegar o teacher_id
-      const { data: student, error: studentError } = await supabase
-        .from("students")
-        .select("teacher_id")
-        .eq("id", profile.student_id)
-        .maybeSingle();
-      
-      if (studentError || !student?.teacher_id) {
-        return null;
-      }
-      
-      // Buscar a chave PIX do professor
-      const { data: teacher, error: teacherError } = await supabase
-        .from("teachers")
-        .select("pix_key")
-        .eq("id", student.teacher_id)
-        .maybeSingle();
-      
-      if (teacherError || !teacher?.pix_key) {
-        return null;
-      }
-      
-      return teacher.pix_key;
-    },
-    enabled: !!profile?.student_id,
-  });
 
   const record = recordId ? records.find((r) => r.id === recordId) : null;
   const isPaid = record?.status === "pago";

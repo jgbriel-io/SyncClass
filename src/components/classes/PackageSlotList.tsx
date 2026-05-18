@@ -1,40 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, CalendarDays, List, Plus, Trash2 } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { CalendarDays, List } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { brDateStringToDate, REGEX_PATTERNS } from "@/lib/utils/patterns";
+import { REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { toast } from "sonner";
-import { classes as classesContent, common } from "@/content";
+import { PackageFixedScheduleConfig } from "./PackageFixedScheduleConfig";
+import { PackageSlotListView } from "./PackageSlotListView";
+import { Label } from "@/components/ui/label";
+import { classes as classesContent } from "@/content";
 
 export type Slot = { class_date: string; start_time: string; end_time: string };
 export type ScheduleMode = "fixed" | "dynamic";
-
-const MONTH_NAMES = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
-
-const WEEKDAYS: { value: number; label: string }[] = [
-  { value: 0, label: "Dom" },
-  { value: 1, label: "Seg" },
-  { value: 2, label: "Ter" },
-  { value: 3, label: "Qua" },
-  { value: 4, label: "Qui" },
-  { value: 5, label: "Sex" },
-  { value: 6, label: "Sáb" },
-];
 
 function isDateTodayOrFuture(brDate: string): boolean {
   if (!brDate || !REGEX_PATTERNS.date.test(brDate)) return false;
@@ -119,13 +94,6 @@ export function PackageSlotList({
     onSlotsChange(slots.map((s, i) => (i === index ? { ...s, [field]: value } : s)));
   };
 
-  const toggleWeekday = (day: number) => {
-    const next = fixedWeekdays.includes(day)
-      ? fixedWeekdays.filter((d) => d !== day)
-      : [...fixedWeekdays, day].sort((a, b) => a - b);
-    onFixedWeekdaysChange(next);
-  };
-
   const handleGenerate = () => {
     if (!fixedMonth || !fixedYear) {
       toast.error(classesContent.packageDialog.toasts.selectMonth);
@@ -151,6 +119,10 @@ export function PackageSlotList({
       return;
     }
     onSlotsChange(generated);
+    const MONTH_NAMES = [
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+    ];
     toast.success(classesContent.packageDialog.toasts.generated(generated.length, MONTH_NAMES[fixedMonth - 1], fixedYear));
   };
 
@@ -191,191 +163,31 @@ export function PackageSlotList({
 
       {/* Configuração de horário fixo */}
       {scheduleMode === "fixed" && (
-        <div className="space-y-3">
-          <p className="text-sm font-medium">{classesContent.packageDialog.description}</p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>{classesContent.packageDialog.filters?.monthLabel || classesContent.filters.monthLabel}</Label>
-              <Select
-                value={fixedMonth ? String(fixedMonth) : ""}
-                onValueChange={(v) => onFixedMonthChange(Number(v))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={common.placeholders.select} />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTH_NAMES.map((name, i) => (
-                    <SelectItem key={i} value={String(i + 1)}>
-                      {name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>{classesContent.packageDialog.filters?.yearLabel || classesContent.filters.yearLabel}</Label>
-              <Select
-                value={fixedYear ? String(fixedYear) : ""}
-                onValueChange={(v) => onFixedYearChange(Number(v))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={common.placeholders.select} />
-                </SelectTrigger>
-                <SelectContent>
-                  {[2026, 2027, 2028].map((y) => (
-                    <SelectItem key={y} value={String(y)}>
-                      {y}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>{classesContent.packageDialog.filters?.weekdaysLabel || classesContent.filters.weekdaysLabel}</Label>
-            <div className="flex flex-wrap gap-2">
-              {WEEKDAYS.map(({ value, label }) => (
-                <label
-                  key={value}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm cursor-pointer transition-colors",
-                    fixedWeekdays.includes(value)
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-input hover:bg-muted/50"
-                  )}
-                >
-                  <input
-                    type="checkbox"
-                    checked={fixedWeekdays.includes(value)}
-                    onChange={() => toggleWeekday(value)}
-                    className="sr-only"
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>{classesContent.logFormDialog.startTimeLabel}</Label>
-              <Input
-                type="time"
-                value={fixedStartTime}
-                onChange={(e) => onFixedStartTimeChange(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{classesContent.logFormDialog.endTimeLabel}</Label>
-              <Input
-                type="time"
-                value={fixedEndTime}
-                onChange={(e) => onFixedEndTimeChange(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="pt-2">
-            <Button
-              type="button"
-              onClick={handleGenerate}
-              className="w-full sm:w-auto min-w-[200px] h-10 font-medium"
-            >
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              {classesContent.packageDialog.generateButton}
-            </Button>
-            <p className="text-xs text-muted-foreground mt-1.5">
-              {classesContent.packageDialog.description}
-            </p>
-          </div>
-        </div>
+        <PackageFixedScheduleConfig
+          fixedMonth={fixedMonth}
+          fixedYear={fixedYear}
+          fixedWeekdays={fixedWeekdays}
+          fixedStartTime={fixedStartTime}
+          fixedEndTime={fixedEndTime}
+          onFixedMonthChange={onFixedMonthChange}
+          onFixedYearChange={onFixedYearChange}
+          onFixedWeekdaysChange={onFixedWeekdaysChange}
+          onFixedStartTimeChange={onFixedStartTimeChange}
+          onFixedEndTimeChange={onFixedEndTimeChange}
+          onGenerate={handleGenerate}
+        />
       )}
 
       {/* Lista de slots */}
       {((scheduleMode === "fixed" && slots.some((s) => s.class_date)) ||
         scheduleMode === "dynamic") && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">
-              {scheduleMode === "fixed"
-                ? `${classesContent.packageDialog.slotListTitle} (${slots.length})`
-                : `${classesContent.packageDialog.slotListTitleDynamic} (${slots.length})`}
-            </Label>
-            {scheduleMode === "dynamic" && (
-              <Button type="button" variant="outline" size="sm" onClick={addSlot}>
-                <Plus className="h-4 w-4 mr-1" />
-                {classesContent.packageDialog.addSlotButton}
-              </Button>
-            )}
-          </div>
-          <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-1">
-            {slots.map((slot, index) => (
-              <div key={index} className="flex flex-wrap items-end gap-2 rounded-lg">
-                <div className="flex-1 min-w-[120px] space-y-1">
-                  <Label className="text-xs">{classesContent.packageDialog.slotDateLabel}</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal h-9 text-sm",
-                          !slot.class_date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {slot.class_date || classesContent.logFormDialog.datePlaceholder}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={brDateStringToDate(slot.class_date) ?? undefined}
-                        onSelect={(date) => {
-                          if (date)
-                            updateSlot(index, "class_date", format(date, "dd/MM/yyyy", { locale: ptBR }));
-                        }}
-                        locale={ptBR}
-                        disabled={(date) => {
-                          const today = new Date();
-                          today.setHours(0, 0, 0, 0);
-                          const d = new Date(date);
-                          d.setHours(0, 0, 0, 0);
-                          return d < today;
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="w-[90px] space-y-1">
-                  <Label className="text-xs">{classesContent.packageDialog.slotStartLabel}</Label>
-                  <Input
-                    type="time"
-                    value={slot.start_time}
-                    onChange={(e) => updateSlot(index, "start_time", e.target.value)}
-                    className="h-9"
-                  />
-                </div>
-                <div className="w-[90px] space-y-1">
-                  <Label className="text-xs">{classesContent.packageDialog.slotEndLabel}</Label>
-                  <Input
-                    type="time"
-                    value={slot.end_time}
-                    onChange={(e) => updateSlot(index, "end_time", e.target.value)}
-                    className="h-9"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 shrink-0 text-destructive hover:text-destructive"
-                  onClick={() => removeSlot(index)}
-                  disabled={slots.length <= 1}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
+        <PackageSlotListView
+          slots={slots}
+          scheduleMode={scheduleMode}
+          onAddSlot={addSlot}
+          onRemoveSlot={removeSlot}
+          onUpdateSlot={updateSlot}
+        />
       )}
     </>
   );

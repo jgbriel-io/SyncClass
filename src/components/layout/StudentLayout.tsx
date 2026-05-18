@@ -44,7 +44,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
         <div className="flex h-14 items-center justify-between px-4">
           <Link to="/student" className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xs">E</span>
+              <span className="text-primary-foreground font-bold text-xs">{layout.logo.initial}</span>
             </div>
             <span className="text-sm font-semibold">{common.app.name}</span>
           </Link>

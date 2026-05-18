@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Upload, FileText, FolderOpen, CalendarIcon, Pencil } from "lucide-react";
+import { Loader2, Upload, CalendarIcon, Pencil } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { REGEX_PATTERNS } from "@/lib/utils/patterns";
@@ -21,14 +21,7 @@ import {
   type ActivityWithRelations,
 } from "@/hooks/useActivities";
 import { toast } from "sonner";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ActivityFileSourceField } from "./ActivityFileSourceField";
 import { activities as activitiesContent, common } from "@/content";
 
 function dueDateAndTimeToIso(dueDate: string, dueTime: string): string {
@@ -270,92 +263,24 @@ export function EditActivityDialog({
             />
           </div>
 
-          <div className="space-y-3">
-            <Label>{activitiesContent.editDialog.fileLabel}</Label>
-            <RadioGroup
-              value={fileSource}
-              onValueChange={(v) => {
-                setValue("fileSource", v as "current" | "new" | "existing");
-                setSelectedFile(null);
-                setValue("file", undefined);
-                setValue("existingFileUrl", undefined);
-              }}
-              className="flex flex-col gap-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="current" id="edit-source-current" disabled={isPending} />
-                <Label htmlFor="edit-source-current" className="font-normal cursor-pointer flex items-center gap-1.5">
-                  <FileText className="h-4 w-4" />
-                  {activitiesContent.editDialog.fileSourceCurrent(activity.file_name)}
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="new" id="edit-source-new" disabled={isPending} />
-                <Label htmlFor="edit-source-new" className="font-normal cursor-pointer flex items-center gap-1.5">
-                  <Upload className="h-4 w-4" />
-                  {activitiesContent.editDialog.fileSourceNew}
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="existing" id="edit-source-existing" disabled={isPending || existingFiles.length === 0} />
-                <Label htmlFor="edit-source-existing" className="font-normal cursor-pointer flex items-center gap-1.5">
-                  <FolderOpen className="h-4 w-4" />
-                  {activitiesContent.editDialog.fileSourceExisting}
-                  {existingFiles.length === 0 && (
-                    <span className="text-xs text-muted-foreground">{activitiesContent.editDialog.fileSourceNone}</span>
-                  )}
-                </Label>
-              </div>
-            </RadioGroup>
-
-            {fileSource === "new" && (
-              <div className="flex items-center gap-2">
-                <Input
-                  id="edit-file"
-                  type="file"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-                  onChange={handleFileChange}
-                  disabled={isPending}
-                  className="cursor-pointer"
-                />
-                {selectedFile && (
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <FileText className="h-4 w-4 shrink-0" />
-                    <span className="truncate max-w-[150px]">{selectedFile.name}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {fileSource === "existing" && existingFiles.length > 0 && (
-              <Select
-                value={watch("existingFileUrl") ?? ""}
-                onValueChange={(v) => setValue("existingFileUrl", v)}
-                disabled={isPending || loadingFiles}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={activitiesContent.editDialog.fileSelectPlaceholder} />
-                </SelectTrigger>
-                <SelectContent>
-                  {existingFiles.map((f) => (
-                    <SelectItem key={f.file_url} value={f.file_url}>
-                      <span className="truncate block max-w-[240px]">
-                        {f.file_name}
-                        {f.file_size != null ? ` · ${(f.file_size / 1024).toFixed(1)} KB` : ""}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {(errors.file || errors.existingFileUrl) && (
-              <p className="text-sm text-destructive">{errors.file?.message ?? errors.existingFileUrl?.message}</p>
-            )}
-            {fileSource === "new" && (
-              <p className="text-xs text-muted-foreground">{activitiesContent.editDialog.fileHint}</p>
-            )}
-          </div>
+          <ActivityFileSourceField
+            fileSource={fileSource}
+            selectedFile={selectedFile}
+            existingFileUrl={watch("existingFileUrl")}
+            existingFiles={existingFiles}
+            isPending={isPending}
+            loadingFiles={loadingFiles}
+            currentFileName={activity.file_name}
+            onFileSourceChange={(source) => {
+              setValue("fileSource", source);
+              setSelectedFile(null);
+              setValue("file", undefined);
+              setValue("existingFileUrl", undefined);
+            }}
+            onFileChange={handleFileChange}
+            onExistingFileChange={(url) => setValue("existingFileUrl", url)}
+            errorMessage={errors.file?.message ?? errors.existingFileUrl?.message}
+          />
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>

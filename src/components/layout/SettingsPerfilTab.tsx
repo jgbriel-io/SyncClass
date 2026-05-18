@@ -4,11 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Upload, Trash2, Wallet } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { getAvatarLetter } from "@/lib/utils/patterns";
 import { AVATAR_MAX_SIZE_BYTES, AVATAR_MAX_PX } from "@/lib/utils/avatarUpload";
 import { useUploadAvatar, useUpdateMyProfile } from "@/hooks/useUsers";
+import { useTeacherPixKey, useUpdatePixKey } from "@/hooks/useTeachers";
+import { useUpdateProfileName, useUpdateProfileEmail } from "@/hooks/useUserProfileMutations";
 import { layout } from "@/content";
 
 const MAX_MB = AVATAR_MAX_SIZE_BYTES / (1024 * 1024);
@@ -27,24 +27,25 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAvatar = useUploadAvatar();
   const updateAvatar = useUpdateMyProfile();
+  const updateProfileName = useUpdateProfileName();
+  const updateProfileEmail = useUpdateProfileEmail();
+  const updatePixKey = useUpdatePixKey();
 
   const [editingName, setEditingName] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [newName, setNewName] = useState(displayName);
   const [newEmail, setNewEmail] = useState(email);
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
+  const { data: pixKeyData } = useTeacherPixKey(teacherId ?? undefined);
   const [pixKey, setPixKey] = useState("");
   const [editingPixKey, setEditingPixKey] = useState(false);
-  const [isUpdatingPixKey, setIsUpdatingPixKey] = useState(false);
 
+  // Sync pixKey from query
   useEffect(() => {
-    if (!teacherId || !isTeacher) return;
-    supabase.from("teachers").select("pix_key").eq("id", teacherId).maybeSingle().then(({ data, error }) => {
-      if (!error && data?.pix_key) setPixKey(data.pix_key);
-    });
-  }, [teacherId, isTeacher]);
+    if (pixKeyData) setPixKey(pixKeyData);
+  }, [pixKeyData]);
 
-  const isPending = uploadAvatar.isPending || updateAvatar.isPending || isUpdatingProfile || isUpdatingPixKey;
+  const isPending = uploadAvatar.isPending || updateAvatar.isPending || updateProfileName.isPending || updateProfileEmail.isPending || updatePixKey.isPending;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,50 +54,33 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
     e.target.value = "";
   };
 
-  const handleUpdateName = async () => {
+  const handleUpdateName = () => {
     if (!newName.trim()) return;
-    setIsUpdatingProfile(true);
-    try {
-      await supabase.auth.updateUser({ data: { full_name: newName.trim() } });
-      await supabase.from("profiles").update({ full_name: newName.trim() }).eq("user_id", userId);
-      toast.success(s.toasts.nameSuccess);
-      setEditingName(false);
-    } catch {
-      toast.error(s.toasts.nameError);
-    } finally {
-      setIsUpdatingProfile(false);
-    }
+    updateProfileName.mutate(
+      { userId, fullName: newName.trim() },
+      { onSuccess: () => setEditingName(false) }
+    );
   };
 
-  const handleUpdateEmail = async () => {
+  const handleUpdateEmail = () => {
     if (!newEmail.trim()) return;
     const normalized = newEmail.trim().toLowerCase();
-    if (normalized === email) { setEditingEmail(false); return; }
-    setIsUpdatingProfile(true);
-    try {
-      await supabase.auth.updateUser({ email: normalized });
-      toast.success(s.toasts.emailSuccess);
+    if (normalized === email) {
       setEditingEmail(false);
-    } catch {
-      toast.error(s.toasts.emailError);
-    } finally {
-      setIsUpdatingProfile(false);
+      return;
     }
+    updateProfileEmail.mutate(
+      { email: normalized },
+      { onSuccess: () => setEditingEmail(false) }
+    );
   };
 
-  const handleUpdatePixKey = async () => {
+  const handleUpdatePixKey = () => {
     if (!teacherId) return;
-    setIsUpdatingPixKey(true);
-    try {
-      const { error } = await supabase.from("teachers").update({ pix_key: pixKey.trim() || null }).eq("id", teacherId);
-      if (error) throw error;
-      toast.success(s.toasts.pixSuccess);
-      setEditingPixKey(false);
-    } catch {
-      toast.error(s.toasts.pixError);
-    } finally {
-      setIsUpdatingPixKey(false);
-    }
+    updatePixKey.mutate(
+      { teacherId, pixKey: pixKey.trim() || null },
+      { onSuccess: () => setEditingPixKey(false) }
+    );
   };
 
   return (
@@ -131,7 +115,7 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
           <Input id="settings-name" value={editingName ? newName : displayName} onChange={(e) => setNewName(e.target.value)} readOnly={!editingName} className={editingName ? "" : "bg-muted/50"} />
           {editingName ? (
             <>
-              <Button size="sm" onClick={handleUpdateName} disabled={isPending || !newName.trim()}>{isUpdatingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
+              <Button size="sm" onClick={handleUpdateName} disabled={isPending || !newName.trim()}>{updateProfileName.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
               <Button size="sm" variant="ghost" onClick={() => { setEditingName(false); setNewName(displayName); }} disabled={isPending}>{s.cancelButton}</Button>
             </>
           ) : (
@@ -147,7 +131,7 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
           <Input id="settings-email" type="email" value={editingEmail ? newEmail : email} onChange={(e) => setNewEmail(e.target.value)} readOnly={!editingEmail} className={editingEmail ? "" : "bg-muted/50"} />
           {editingEmail ? (
             <>
-              <Button size="sm" onClick={handleUpdateEmail} disabled={isPending || !newEmail.trim()}>{isUpdatingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
+              <Button size="sm" onClick={handleUpdateEmail} disabled={isPending || !newEmail.trim()}>{updateProfileEmail.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
               <Button size="sm" variant="ghost" onClick={() => { setEditingEmail(false); setNewEmail(email); }} disabled={isPending}>{s.cancelButton}</Button>
             </>
           ) : (
@@ -165,7 +149,7 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
             <Input id="settings-pix-key" value={pixKey} onChange={(e) => setPixKey(e.target.value)} readOnly={!editingPixKey} placeholder={s.pixKeyPlaceholder} className={editingPixKey ? "" : "bg-muted/50"} />
             {editingPixKey ? (
               <>
-                <Button size="sm" onClick={handleUpdatePixKey} disabled={isPending}>{isUpdatingPixKey ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
+                <Button size="sm" onClick={handleUpdatePixKey} disabled={isPending}>{updatePixKey.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
                 <Button size="sm" variant="ghost" onClick={() => setEditingPixKey(false)} disabled={isPending}>{s.cancelButton}</Button>
               </>
             ) : (

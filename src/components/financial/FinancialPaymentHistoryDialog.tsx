@@ -9,10 +9,9 @@ import { Eye } from "lucide-react";
 import { toast } from "sonner";
 import { financial, common } from "@/content";
 import { formatCurrency, formatDateTime } from "@/lib/utils/formatters";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUserProfile } from "@/hooks/useUsers";
 import { useAuth } from "@/contexts/AuthContext";
+import { useReviewPaymentProof } from "@/hooks/usePaymentProof";
 import type { FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 
 // Tipo estendido para campos de comprovante (não tipados no schema base)
@@ -36,42 +35,26 @@ export function FinancialPaymentHistoryDialog({
   onClose,
   onConfirmPayment,
 }: FinancialPaymentHistoryDialogProps) {
-  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { data: currentUserProfile } = useCurrentUserProfile(user?.id);
+  const reviewPaymentProof = useReviewPaymentProof();
 
   const r = record as RecordWithProof | null;
 
-  const handleApproveProof = async () => {
+  const handleApproveProof = () => {
     if (!r) return;
-    try {
-      await supabase.rpc("review_payment_proof", {
-        p_financial_record_id: r.id,
-        p_approved: true,
-        p_rejection_reason: null,
-      });
-      toast.success(financial.paymentHistoryDialog.toasts.approveSuccess);
-      onClose();
-      queryClient.invalidateQueries({ queryKey: ["financial-records"] });
-    } catch {
-      toast.error(financial.paymentHistoryDialog.toasts.approveError);
-    }
+    reviewPaymentProof.mutate(
+      { financialRecordId: r.id, approved: true },
+      { onSuccess: onClose }
+    );
   };
 
-  const handleRejectProof = async () => {
+  const handleRejectProof = () => {
     if (!r) return;
-    try {
-      await supabase.rpc("review_payment_proof", {
-        p_financial_record_id: r.id,
-        p_approved: false,
-        p_rejection_reason: "Comprovante inválido",
-      });
-      toast.success(financial.paymentHistoryDialog.toasts.rejectSuccess);
-      onClose();
-      queryClient.invalidateQueries({ queryKey: ["financial-records"] });
-    } catch {
-      toast.error(financial.paymentHistoryDialog.toasts.rejectError);
-    }
+    reviewPaymentProof.mutate(
+      { financialRecordId: r.id, approved: false, rejectionReason: "Comprovante inválido" },
+      { onSuccess: onClose }
+    );
   };
 
   const handleViewProof = async () => {
