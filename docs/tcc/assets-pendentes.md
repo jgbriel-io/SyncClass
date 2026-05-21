@@ -58,8 +58,7 @@ npm run test:e2e:report
 
 ## Cap. 7 — Qualidade
 
-- [ ] 🖼️ Output do Vitest: `npm run test`
-- [ ] 🖼️ Relatório Playwright: `npm run test:e2e:report`
+- [ ] Relatório de testes unitários (Vitest) — capturar output do terminal
 - [ ] 🖼️ Tabela ISO 25010 formatada para impressão
 
 ## Cap. 8 — Gestão

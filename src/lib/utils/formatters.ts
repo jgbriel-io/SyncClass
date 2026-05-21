@@ -112,3 +112,17 @@ export function formatShortName(fullName: string): string {
   
   return `${firstName} ${lastName}`;
 }
+
+
+/** Converte data no formato BR (DD/MM/YYYY) para ISO (YYYY-MM-DD). */
+export function brDateToIso(value: string): string {
+  const [day, month, year] = value.split("/");
+  return `${year}-${month}-${day}`;
+}
+
+
+/** Converte data no formato BR (DD/MM/YYYY) para ISO (YYYY-MM-DD). */
+export function brDateToIso(value: string): string {
+  const [day, month, year] = value.split("/");
+  return `${year}-${month}-${day}`;
+}

@@ -1,6 +1,7 @@
 # TCC — Referência Extraída do Projeto
 
-> Informações extraídas automaticamente do código-fonte em 21/04/2026.
+> Informações extraídas automaticamente do código-fonte.  
+> **Última Atualização:** 20/05/2026  
 > Usar como base para os capítulos 3 a 7.
 
 ---
@@ -20,16 +21,33 @@
 | Formulários | React Hook Form + Zod | 7.61.1 / 3.25.76 |
 | Ícones | Lucide React | 0.462.0 |
 | Notificações | Sonner | 1.7.4 |
-| Monitoramento | Sentry | 10.38.0 |
 | Testes unitários | Vitest + Testing Library | 3.2.4 |
-| Testes E2E | Playwright | 1.59.1 |
 | IA utilizada | Claude (Anthropic), GitHub Copilot | — |
 
 ---
 
 ## Cap. 4 — Requisitos
 
-### Funcionais
+> **Nota:** Documentação completa em `docs/tcc/cap4-requisitos.md`
+
+### Resumo Quantitativo
+
+- **Requisitos Funcionais:** 35 (30 implementados + 5 futuros)
+  - RF01-RF20: Principais (100% implementados)
+  - RF21-RF30: Adicionais (100% implementados)
+  - RF31-RF35: Futuros (planejados para sprints 14-18)
+- **Requisitos Não Funcionais:** 35 (100% implementados)
+  - RNF01-RNF09: Principais
+  - RNF10-RNF15: Segurança avançada
+  - RNF16-RNF20: Performance
+  - RNF21-RNF26: Usabilidade
+  - RNF27-RNF31: Rastreabilidade
+  - RNF32-RNF35: Manutenção
+- **Regras de Negócio:** 55 principais (59 completas)
+- **Casos de Uso:** 26
+- **Taxa de Implementação:** 100% dos requisitos documentados
+
+### Requisitos Funcionais Principais (RF01-RF20)
 
 | ID | Requisito | Módulo |
 |---|---|---|
@@ -50,11 +68,36 @@
 | RF15 | Visão geral consolidada (admin vê todos os professores) | Admin |
 | RF16 | Gerenciamento de usuários e roles (admin/teacher/student) | Admin |
 | RF17 | Convite de usuários por e-mail | Auth |
-| RF18 | Redefinição de senha obrigatória no primeiro acesso | Auth |
+| RF18 | Redefinição de senha (self-service e admin) | Auth |
 | RF19 | Portal do aluno (histórico de aulas, financeiro, atividades) | Aluno |
 | RF20 | Anonimização de dados pessoais (LGPD) | LGPD |
 
-### Não Funcionais
+### Requisitos Funcionais Adicionais (RF21-RF30)
+
+| ID | Requisito | Módulo |
+|---|---|---|
+| RF21 | Soft delete e restauração de alunos e professores | Gestão |
+| RF22 | Hard delete com validação de segurança (admin) | Admin |
+| RF23 | Gestão de faltas em aulas | Aulas |
+| RF24 | Suporte a alunos estrangeiros (sem CPF obrigatório) | Alunos |
+| RF25 | Upload de foto de perfil | Usuários |
+| RF26 | Histórico completo de aulas e pagamentos | Aluno |
+| RF27 | Integração com API de CEP para preenchimento automático | Alunos |
+| RF28 | Timeline de transações financeiras | Financeiro |
+| RF29 | Invalidação de sessões ao desativar/deletar conta | Auth |
+| RF30 | Limpeza automática de dados antigos (LGPD) | LGPD |
+
+### Requisitos Futuros (RF31-RF35)
+
+| ID | Requisito | Módulo | Status |
+|---|---|---|---|
+| RF31 | Sistema de notificações (email, push, in-app) | Notificações | Sprint 14 |
+| RF32 | Exportação de relatórios em PDF | Relatórios | Sprint 15 |
+| RF33 | Integração com Google Calendar | Integrações | Sprint 16 |
+| RF34 | Gateway de pagamento real (Stripe/Mercado Pago) | Financeiro | Sprint 17 |
+| RF35 | Sistema de gamificação (badges, conquistas) | Gamificação | Sprint 18 |
+
+### Requisitos Não Funcionais Principais (RNF01-RNF10)
 
 | ID | Requisito | Categoria |
 |---|---|---|
@@ -67,7 +110,87 @@
 | RNF07 | PWA instalável (offline-ready) | Usabilidade |
 | RNF08 | Interface responsiva (mobile-first) | Usabilidade |
 | RNF09 | Logs de auditoria para todas as operações | Rastreabilidade |
-| RNF10 | Monitoramento de erros em produção (Sentry) | Observabilidade |
+
+### Segurança Avançada (RNF10-RNF15)
+
+| ID | Requisito | Categoria |
+|---|---|---|
+| RNF10 | Sanitização de inputs contra XSS (DOMPurify) | Segurança |
+| RNF11 | Validação de email com whitelist de provedores | Segurança |
+| RNF12 | Encriptação de dados sensíveis (PIX keys) | Segurança |
+| RNF13 | Search path security em funções SQL | Segurança |
+| RNF14 | Invalidação automática de sessões | Segurança |
+| RNF15 | SECURITY DEFINER em funções críticas | Segurança |
+
+### Performance e Otimização (RNF16-RNF20)
+
+| ID | Requisito | Categoria |
+|---|---|---|
+| RNF16 | Índices compostos para queries frequentes | Performance |
+| RNF17 | Materialized views para dashboards | Performance |
+| RNF18 | Paginação obrigatória em listagens grandes | Performance |
+| RNF19 | Code splitting e lazy loading por rota | Performance |
+| RNF20 | Query optimization (select apenas colunas necessárias) | Performance |
+
+### Usabilidade e Design (RNF21-RNF26)
+
+| ID | Requisito | Categoria |
+|---|---|---|
+| RNF21 | Design tokens centralizados (129 testes) | Usabilidade |
+| RNF22 | Skeleton screens para estados de loading | Usabilidade |
+| RNF23 | Empty states personalizados por módulo | Usabilidade |
+| RNF24 | Formatters centralizados (currency, date, phone) | Usabilidade |
+| RNF25 | Sistema de toasts para feedback visual | Usabilidade |
+| RNF26 | Dialogs padronizados e acessíveis | Usabilidade |
+
+### Rastreabilidade e Observabilidade (RNF27-RNF31)
+
+| ID | Requisito | Categoria |
+|---|---|---|
+| RNF28 | Audit logs automáticos via triggers | Rastreabilidade |
+| RNF29 | Performance logs para queries lentas | Observabilidade |
+| RNF30 | Histórico completo de operações financeiras | Rastreabilidade |
+| RNF31 | Rastreamento de quem confirmou pagamentos | Rastreabilidade |
+| RNF32 | Logs estruturados para análise | Observabilidade |
+
+### Manutenção e Operações (RNF33-RNF36)
+
+| ID | Requisito | Categoria |
+|---|---|---|
+| RNF33 | Cleanup automático de registros antigos | Manutenção |
+| RNF34 | Cleanup automático de arquivos órfãos | Manutenção |
+| RNF35 | Migrations versionadas e rastreáveis | Manutenção |
+| RNF36 | Edge Functions para operações assíncronas | Arquitetura |
+
+### Regras de Negócio
+
+> **Nota:** Documentação completa em `docs/REGRAS_DE_NEGOCIO.md` (59 regras)
+
+**Resumo por Categoria:**
+
+| Categoria | Quantidade | IDs |
+|-----------|------------|-----|
+| Usuários e Autenticação | 6 | RN-001 a RN-006 |
+| Professores | 5 | RN-007 a RN-011 |
+| Alunos | 5 | RN-012 a RN-016 |
+| Aulas | 6 | RN-017 a RN-022 |
+| Financeiro | 8 | RN-023 a RN-030 |
+| Atividades | 5 | RN-031 a RN-035 |
+| Segurança e Permissões | 7 | RN-036 a RN-042 |
+| LGPD e Privacidade | 5 | RN-043 a RN-047 |
+| Performance | 4 | RN-048 a RN-051 |
+| Validação Frontend | 4 | RN-052 a RN-055 |
+
+**Exemplos de Regras Principais:**
+
+- **RN-001:** Sistema possui 3 roles: admin, teacher, student
+- **RN-012:** Aluno vinculado a exatamente 1 professor
+- **RN-013:** Dia de pagamento entre 1 e 31
+- **RN-022:** Pacote cria múltiplas aulas + 1 cobrança
+- **RN-028:** Operações financeiras são idempotentes
+- **RN-036:** RLS habilitado em todas as tabelas
+- **RN-037:** Professor só acessa seus próprios alunos
+- **RN-044:** Usuário pode solicitar anonimização
 
 ---
 
@@ -149,7 +272,7 @@ supabase/
 | Linhas de código | ~46.400 |
 | Componentes React | 126 |
 | Hooks customizados | 23 |
-| Migrations SQL | 23 |
+| Migrations SQL | 25 |
 | Edge Functions | 5 |
 
 ---
@@ -158,21 +281,20 @@ supabase/
 
 ### Cobertura de Testes
 
-| Tipo | Quantidade | Ferramenta |
-|---|---|---|
-| Testes unitários | 18 arquivos | Vitest + Testing Library |
-| Testes E2E | 6 suites | Playwright |
+| Tipo | Quantidade | Ferramenta | Detalhes |
+|---|---|---|---|
+| Testes unitários | 18 arquivos | Vitest + Testing Library | 32 testes principais |
+| Testes design tokens | 129 testes | Vitest | typography, spacing, icons |
+| Testes rate limiting | 12 casos | Vitest | 145 linhas |
 
-### Suites E2E
+**Cobertura Total:** ~75% dos requisitos com testes automatizados
 
-| Arquivo | Cobertura |
-|---|---|
-| `complete-students` | CRUD completo de alunos |
-| `complete-financial` | Fluxo financeiro completo |
-| `complete-all-features` | Smoke test geral |
-| `complete-edge-cases` | Casos extremos |
-| `security-audit-sprint1` | Auditoria de segurança (RLS, isolamento) |
-| `security-audit-sprint3-4` | Auditoria de segurança avançada |
+**Detalhamento:**
+- **32 testes Vitest:** hooks, services, utils, validação
+- **129 testes design tokens:** cobertura completa do sistema de design
+- **12 testes rate limiting:** validação de segurança
+
+**Nota:** Testes E2E não foram implementados no escopo do MVP. Validação de fluxos críticos foi feita manualmente.
 
 ### Hooks com Testes Unitários
 
@@ -182,6 +304,8 @@ supabase/
 - `useUserMutations`
 - `useOptimisticMutation`
 - `useDebouncedValue`
+
+**Nota:** Testes E2E (end-to-end) não foram implementados. A validação de fluxos completos foi realizada através de testes manuais estruturados durante o desenvolvimento.
 
 ---
 

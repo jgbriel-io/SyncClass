@@ -1,5 +1,5 @@
 > **Status:** 🟠 Rascunho
-> **Última Atualização:** 21/04/2026
+> **Última Atualização:** 20/05/2026
 
 ## 9.1 Visão Geral
 
@@ -59,7 +59,7 @@ As variáveis são injetadas em tempo de build pelo Vite (prefixo `VITE_`):
 
 |**Serviço**|**Uso**|
 |---|---|
-|PostgreSQL|Banco de dados principal (23 migrations)|
+|PostgreSQL|Banco de dados principal (25 migrations)|
 |Supabase Auth|Autenticação JWT, gestão de usuários|
 |Supabase Storage|Arquivos de atividades, avatares, comprovantes|
 |Edge Functions|Operações server-side com service_role|

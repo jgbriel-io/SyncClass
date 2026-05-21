@@ -5,7 +5,7 @@ import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
-import { logger } from "@/lib/sentry";
+import { logger } from "@/lib/logger";
 import { sanitizeStudentUpdateForEdit } from "@/lib/utils/sanitizeStudentUpdate";
 
 const DEFAULT_PAGE_SIZE = 10;

@@ -23,22 +23,49 @@ src/
 │   ├── layout/        # Shells por role (AdminShell, TeacherShell, StudentShell)
 │   ├── filters/       # Filtros por módulo
 │   └── auth/          # AuthRedirect, ProtectedRoute, ChangePasswordDialog
-├── hooks/             # 23 hooks (TanStack Query + mutations)
+├── hooks/             # Hooks organizados por domínio (Sprint 8-9)
+│   ├── students/      # useStudents, useStudentFilters, useStudentActions
+│   ├── financial/     # useFinancialRecords, usePaymentApproval
+│   ├── classes/       # useClasses, useClassPackages, useAttendance
+│   ├── activities/    # useActivities, useSendActivity, useDeliverActivity
+│   ├── teachers/      # useTeachers, useTeacherActions
+│   └── users/         # useUsers, usePasswordManagement
 ├── pages/             # Páginas por role (admin/, teacher/, student/)
 ├── contexts/          # AuthContext
+├── content/           # Centralização de strings UI (Sprint 12-15)
+│   ├── common.ts      # Textos compartilhados (actions, errors, status)
+│   ├── auth.ts        # Login, senha, autenticação
+│   ├── layout.ts      # Navegação, footer
+│   ├── students.ts    # Módulo de alunos
+│   ├── financial.ts   # Módulo financeiro
+│   ├── classes.ts     # Módulo de aulas
+│   ├── activities.ts  # Módulo de atividades
+│   ├── validation.ts  # Mensagens de validação Zod
+│   └── index.ts       # Barrel export
 ├── integrations/
 │   └── supabase/      # client.ts, types gerados, env.ts
 └── lib/
     ├── design-tokens/ # typography(), stack(), iconSize()
-    ├── utils/         # formatters, patterns, errorMapper, sanitize
+    ├── queries/       # Query builders reutilizáveis (Sprint 10)
+    │   ├── students.ts
+    │   ├── financial.ts
+    │   ├── classes.ts
+    │   └── activities.ts
+    ├── utils/         # formatters, patterns, errorMapper, sanitize, timezone
     ├── validation/    # schemas Zod
     └── security/      # errorHandler
 supabase/
-├── migrations/        # 23 migrations SQL
+├── migrations/        # 25 migrations SQL
 └── functions/         # 5 Edge Functions (Deno/TypeScript)
 ```
 
 > 🖼️ **Figura:** Estrutura de pastas formatada
+
+**Evolução da Estrutura:**
+- **Sprint 8:** Separação de hooks por domínio (antes: `hooks/useStudents.ts`, depois: `hooks/students/useStudents.ts`)
+- **Sprint 9:** Split de arquivos grandes (hooks de 250 linhas → múltiplos arquivos de 50 linhas)
+- **Sprint 10:** Criação de query builders em `lib/queries/` para eliminar duplicação
+- **Sprint 12-15:** Centralização de strings UI em `src/content/` (preparação para i18n)
 
 ## 6.3 Padrões de Código
 
@@ -55,21 +82,39 @@ Components → Hooks → Supabase SDK → PostgreSQL
 ### 6.3.2 Exemplo — Hook de Dados
 
 ```ts
+// Sprint 8-9: Hooks organizados por domínio e responsabilidade
+// hooks/students/useStudents.ts
 export const useStudents = (teacherId?: string) => {
   return useQuery({
     queryKey: ['students', teacherId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('students')
-        .select('id, name, email, status, pay_day, hourly_rate')
-        .eq('teacher_id', teacherId)
-        .order('name');
-      if (error) throw error;
+      // Sprint 10: Query builders eliminam duplicação
+      const data = await getStudentsByTeacher(teacherId);
       return data;
     },
     enabled: !!teacherId,
     staleTime: 2 * 60 * 1000,
   });
+};
+
+// lib/queries/students.ts (Sprint 10)
+export const getStudentsByTeacher = async (
+  teacherId: string,
+  options?: { includeDeleted?: boolean }
+) => {
+  let query = supabase
+    .from('students')
+    .select('id, name, email, status, pay_day, hourly_rate')
+    .eq('teacher_id', teacherId)
+    .order('name');
+  
+  if (!options?.includeDeleted) {
+    query = query.is('deleted_at', null);
+  }
+  
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
 };
 ```
 
@@ -82,6 +127,28 @@ Sistema de tokens para consistência visual:
 <div className={stack('DEFAULT')}>...</div>
 <Icon className={iconSize('SM')} />
 ```
+
+### 6.3.4 Centralização de Strings (Sprint 12-15)
+
+Todos os textos de UI foram centralizados em `src/content/` para facilitar manutenção e preparar i18n:
+
+```tsx
+// Antes (Sprint 1-11)
+<Button>Salvar</Button>
+toast.success('Aluno criado com sucesso!');
+
+// Depois (Sprint 12-15)
+import { common, students } from '@/content';
+<Button>{common.actions.save}</Button>
+toast.success(students.formDialog.toasts.success);
+```
+
+**Estrutura de Content:**
+- 13 arquivos por domínio (`common.ts`, `students.ts`, `financial.ts`, etc.)
+- 860 linhas de strings centralizadas
+- ~470 strings hardcoded removidas
+- 100% dos textos de UI centralizados
+- Estrutura pronta para adicionar inglês/espanhol
 
 ## 6.4 Módulos Implementados
 
@@ -147,11 +214,18 @@ Sistema de tokens para consistência visual:
 |Total de arquivos|391|
 |Linhas de código|~46.400|
 |Componentes React|126|
-|Hooks customizados|23|
-|Migrations SQL|23|
+|Hooks customizados|24 arquivos organizados por domínio|
+|Query builders|22 funções reutilizáveis|
+|Arquivos de content|13 (860 linhas)|
+|Migrations SQL|25|
 |Edge Functions|5|
-|Commits (histórico completo)|~218|
-|Tempo de desenvolvimento|~3 meses|
+|Commits (histórico completo)|~276|
+|Tempo de desenvolvimento|~4 meses (jan–mai 2026)|
+
+**Evolução do Projeto:**
+- **Jan-Fev (Sprints 1-7):** MVP completo + hardening de segurança
+- **Mar-Abr (Sprints 8-11):** Refatorações arquiteturais (separação hooks, split de arquivos, query builders, timezone fix)
+- **Mai (Sprints 12-15):** Centralização de strings UI (preparação i18n)
 
 ---
 

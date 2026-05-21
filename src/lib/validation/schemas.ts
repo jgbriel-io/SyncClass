@@ -187,7 +187,7 @@ export const timeRequiredSchema = z
 export const gradeSchema = z
   .number({ invalid_type_error: validation.gradeInvalid })
   .min(0, validation.gradeMin)
-  .max(10, validation.gradeMax)
+  .max(100, validation.gradeMax)
   .optional()
   .nullable();
 

@@ -1,93 +1,125 @@
-# Sprints — Visão Geral
+# Sprints — Documentação Oficial
 
-## Histórico de Desenvolvimento
+**Última Atualização:** 2026-05-20
 
-| Sprint | Período | Foco | Arquivo |
-|---|---|---|---|
-| Sprint 1 | 19–23 jan 2026 | Fundação | [sprint-01-fundacao.md](./sprint-01-fundacao.md) |
-| Sprint 2 | 26–29 jan 2026 | Autenticação & Usuários | [sprint-02-autenticacao-usuarios.md](./sprint-02-autenticacao-usuarios.md) |
-| Sprint 3 | 29–30 jan 2026 | Qualidade & Infraestrutura | [sprint-03-qualidade-infra.md](./sprint-03-qualidade-infra.md) |
-| Sprint 4 | 31 jan–08 fev 2026 | Features Avançadas | [sprint-04-features-avancadas.md](./sprint-04-features-avancadas.md) |
-| Sprint 5 | 09–13 fev 2026 | Estabilização & UX | [sprint-05-estabilizacao-ux.md](./sprint-05-estabilizacao-ux.md) |
-| Sprint 6 | 14–18 fev 2026 | Segurança & Correções | [sprint-06-seguranca-correcoes.md](./sprint-06-seguranca-correcoes.md) |
-| Sprint 7 | 19 fev–11 mar 2026 | Auditorias & Migrations | [sprint-07-auditorias-migrations.md](./sprint-07-auditorias-migrations.md) |
-| Sprint 8 | 10–11 mar 2026 | Reestruturação | [sprint-08-reestruturacao.md](./sprint-08-reestruturacao.md) |
-| Sprint 9 | 21 abr 2026 | Restore & TCC | [sprint-09-restore-tcc.md](./sprint-09-restore-tcc.md) |
+## Contexto
 
-> Histórico completo com commits em [historico-completo.md](./historico-completo.md)
+Sprints documentam desenvolvimento incremental do SyncClass. Cada sprint = conjunto de features/refatorações implementadas em período específico.
+
+**Características:**
+- Documentação retroativa (escrita após implementação)
+- Validada contra commits reais (97.8% evidência — ver `docs/archive/gestao-projeto/validacao-sprints-1-15.md`)
+- Estrutura padronizada (Problem → Requirements → Tasks → Results)
+- Foco em decisões técnicas e lições aprendidas
+
+**Quando usar:**
+- Entender evolução de feature específica
+- Ver decisões técnicas e trade-offs
+- Aprender com lições (o que funcionou, o que melhorar)
+- Referência para Cap8 (Gestão de Projeto)
+
+**Quando NÃO usar:**
+- Detalhes técnicos completos → use `docs/archive/requisitos/`
+- Arquitetura atual → use `docs/architecture.md`
+- Validação de metodologia → use `docs/archive/gestao-projeto/validacao-sprints-1-15.md`
 
 ---
 
-## Sprints Planejadas
+## Histórico de Desenvolvimento
 
-### Correções de Código
+| Sprint | Período | Foco | Status | Arquivo |
+|---|---|---|---|---|
+| Sprint 1 | 19–23 jan 2026 | MVP: CRUD Básico & Financeiro | ✅ Implementada | [sprint-01](./sprint-01-mvp-crud-basico-financeiro.md) |
+| Sprint 2 | 26–29 jan 2026 | MVP: Auth, Roles & Profiles | ✅ Implementada | [sprint-02](./sprint-02-mvp-auth-roles-profiles.md) |
+| Sprint 3 | 29–30 jan 2026 | MVP: CI, Soft Delete & Design Tokens | ✅ Implementada | [sprint-03](./sprint-03-mvp-ci-soft-delete-design-tokens.md) |
+| Sprint 4 | 31 jan–08 fev 2026 | MVP: Dashboard, Histórico & Reset Senha | ✅ Implementada | [sprint-04](./sprint-04-mvp-dashboard-historico-reset-senha.md) |
+| Sprint 5 | 09–13 fev 2026 | MVP: Mobile, Atividades, Pacotes & PIX | ✅ Implementada | [sprint-05](./sprint-05-mvp-mobile-atividades-pacotes-pix.md) |
+| Sprint 6 | 14–18 fev 2026 | MVP: Idempotência, Faltas & Estrangeiros | ✅ Implementada | [sprint-06](./sprint-06-mvp-idempotencia-faltas-estrangeiros.md) |
+| Sprint 7 | 19 fev–11 mar 2026 | MVP: Hardening, RLS & Rate Limit | ✅ Implementada | [sprint-07](./sprint-07-mvp-hardening-rls-rate-limit.md) |
+| Sprint 8 | 11 mar–21 abr 2026 | Refactor: Supabase/Hooks Separation | ✅ Implementada | [sprint-08](./sprint-08-refactor-supabase-hooks-separation.md) |
+| Sprint 9 | 21 abr 2026 | Refactor: Split Large Files | ✅ Implementada | [sprint-09](./sprint-09-refactor-split-large-files.md) |
+| Sprint 10 | 21 abr 2026 | Refactor: Remove Duplicate Queries | ✅ Implementada | [sprint-10](./sprint-10-refactor-remove-duplicate-queries.md) |
+| Sprint 11 | 21 abr 2026 | Fix: Timezone & Error Boundary | ✅ Implementada | [sprint-11](./sprint-11-fix-timezone-error-boundary.md) |
+| Sprint 12 | 21 abr–20 mai 2026 | Refactor: Content Structure (I18n Prep) | ✅ Implementada | [sprint-12](./sprint-12-refactor-content-structure-i18n-prep.md) |
+| Sprint 13 | 20 mai 2026 | Refactor: Centralize UI Strings | ✅ Implementada | [sprint-13](./sprint-13-refactor-centralize-ui-strings.md) |
+| Sprint 14 | 20 mai 2026 | Refactor: Remove Hardcoded Strings | ✅ Implementada | [sprint-14](./sprint-14-refactor-remove-hardcoded-strings.md) |
+| Sprint 15 | 20 mai 2026 | Refactor: Final String Audit | ✅ Implementada | [sprint-15](./sprint-15-refactor-final-string-audit.md) |
+| Sprint 16 | 21 mai 2026 | Refactor: Docs Architecture Organization | 🚧 Em andamento | [sprint-16](./sprint-16-refactor-docs-architecture-organization.md) |
+| Sprint 17 | — | Notificações | ❌ Não implementada | [sprint-17](./sprint-17-notificacoes-NAO-IMPLEMENTADA.md) |
+| Sprint 17 | — | Notificações | ❌ Não implementada | [sprint-17](./sprint-17-notificacoes-NAO-IMPLEMENTADA.md) |
+| Sprint 18 | — | Exportação PDF | ❌ Não implementada | [sprint-18](./sprint-18-exportacao-pdf-NAO-IMPLEMENTADA.md) |
+| Sprint 19 | — | Google Calendar | ❌ Não implementada | [sprint-19](./sprint-19-google-calendar-NAO-IMPLEMENTADA.md) |
+| Sprint 20 | — | Pagamento Real | ❌ Não implementada | [sprint-20](./sprint-20-pagamento-real-NAO-IMPLEMENTADA.md) |
+| Sprint 21 | — | Gamificação | ❌ Não implementada | [sprint-21](./sprint-21-gamificacao-NAO-IMPLEMENTADA.md) |
 
-| Sprint | Foco | Prioridade |
-|---|---|---|
-| [Sprint 10](./sprint-10-correcao-arquitetura.md) | Supabase direto em componentes/páginas | 🔴 Alta |
-| [Sprint 11](./sprint-11-correcao-componentes.md) | Componentes e hooks acima de 500 linhas | 🟠 Média |
-| [Sprint 12](./sprint-12-correcao-duplicacao.md) | Lógica duplicada (teacherId query repetida) | 🟡 Baixa |
+**Resumo:**
+- **Implementadas:** 16 sprints (1-16)
+- **Não implementadas:** 5 sprints (17-21)
+- **Total:** 21 sprints documentadas---
 
-### Pré-Defesa
+## Organização por Tipo
 
-| Sprint | Foco | Estimativa |
-|---|---|---|
-| [Sprint 13](./sprint-13-correcoes-pre-defesa.md) | Bugs críticos (Sentry LGPD, timezone, ErrorBoundary) | ~1h |
+### MVP (Sprints 1-7)
+Features principais do produto. CRUD, auth, financeiro, atividades, segurança.
 
-### Novas Funcionalidades
+### Refactor (Sprints 8-16)
+Melhorias de código. Separação de responsabilidades, remoção de duplicação, centralização de strings, organização de docs.
 
-| Sprint | Foco | Estimativa |
-|---|---|---|
-| [Sprint 14](./sprint-14-notificacoes.md) | Notificações em tempo real | ~3h |
-| [Sprint 15](./sprint-15-exportacao-pdf.md) | Exportação de relatórios em PDF | ~2h |
-| [Sprint 16](./sprint-16-google-calendar.md) | Integração com Google Calendar | ~6h |
-| [Sprint 17](./sprint-17-pagamento-real.md) | Integração com pagamento real (Stripe/Pix API) | ~8h |
-| [Sprint 18](./sprint-18-gamificacao.md) | Gamificação do portal do aluno | ~5h |
+### Fix (Sprint 11)
+Correções críticas. Timezone, error boundary.
 
-## Problemas Encontrados
+### Não Implementadas (Sprints 17-21)
+Features planejadas mas não desenvolvidas. Notificações, PDF, integrações.
 
-### 🔴 Críticos (arquitetura quebrada)
+---
 
-**Supabase chamado diretamente em componentes e páginas** — viola a separação `Components → Hooks → Supabase`:
-- `src/pages/teacher/TeacherHome.tsx` — query inline de `profiles`
-- `src/pages/teacher/TeacherStudents.tsx` — query inline de `profiles`
-- `src/pages/teacher/TeacherClasses.tsx` — query inline de `profiles`
-- `src/pages/teacher/TeacherFinancial.tsx` — query inline de `profiles`
-- `src/pages/teacher/TeacherOverview.tsx` — query inline de `profiles`
-- `src/pages/admin/Teachers.tsx` — lógica de dados inline (805 linhas)
-- `src/pages/admin/Users.tsx` — lógica de dados inline (958 linhas)
-- `src/components/financial/FinancialView.tsx` — supabase direto
-- `src/components/students/StudentsListView.tsx` — supabase direto
-- `src/components/layout/TeacherLayout.tsx` — supabase direto
-- `src/components/layout/SettingsModal.tsx` — supabase direto
-- `src/pages/student/StudentActivities.tsx` — supabase direto
-- `src/pages/student/StudentCheckout.tsx` — supabase direto
-- `src/pages/admin/Dashboard.tsx` — supabase direto
-- `src/components/auth/ChangePasswordDialog.tsx` — supabase direto
-- `src/pages/ForgotPassword.tsx` — supabase direto (aceitável, fluxo de auth)
-- `src/pages/ResetPassword.tsx` — supabase direto (aceitável, fluxo de auth)
+## Validação de Hipóteses do TCC
 
-### 🟠 Médios (qualidade/manutenibilidade)
+As sprints implementadas fornecem evidências quantitativas para as hipóteses do trabalho:
 
-**Arquivos acima de 500 linhas** (limite recomendado ~150 para componentes):
-- `src/pages/admin/Users.tsx` — 958 linhas
-- `src/pages/admin/Teachers.tsx` — 805 linhas
-- `src/hooks/useUserMutations.ts` — 944 linhas (25+ funções)
-- `src/components/students/StudentsListView.tsx` — 865 linhas
-- `src/components/dashboard/DashboardView.tsx` — 830 linhas
-- `src/components/financial/FinancialView.tsx` — 818 linhas
-- `src/components/classes/ClassesView.tsx` — 791 linhas
-- `src/components/users/UserFormDialog.tsx` — 955 linhas
-- `src/components/students/StudentFormDialog.tsx` — 700 linhas
-- `src/components/classes/ClassLogFormDialog.tsx` — 759 linhas
-- `src/components/classes/PackageClassesDialog.tsx` — 661 linhas
-- `src/components/admin/StudentDetailSheet.tsx` — 660 linhas
-- `src/hooks/useClassLogs.ts` — 774 linhas
-- `src/hooks/useFinancialRecords.ts` — 566 linhas
-- `src/hooks/useStudents.ts` — 540 linhas
-- `src/components/layout/SettingsModal.tsx` — 515 linhas
-- `src/components/ui/sidebar.tsx` — 584 linhas (shadcn, não mexer)
+| Hipótese | Sprints Relacionadas | Evidência | Status |
+|----------|---------------------|-----------|--------|
+| **H1:** SaaS solo em ~3 meses com IA | 01-15 (todas) | 276 commits, 46.400 linhas, 391 arquivos, 1 desenvolvedor | ✅ Validada |
+| **H2:** Supabase reduz ≥60% esforço backend | 01, 02, 07 | 23 migrations SQL vs ~80 endpoints REST estimados; RLS elimina middleware de auth | ✅ Validada |
+| **H3:** Unificação reduz tarefas manuais | 04, 05, 12-15 | Portal unificado (aluno + professor); i18n prep centraliza 170+ strings | ✅ Validada |
 
-### 🟡 Baixos (duplicação)
+### Detalhamento por Hipótese
 
-**Query de `teacherId` duplicada em todas as páginas teacher** — o mesmo bloco de código aparece em `TeacherHome`, `TeacherStudents`, `TeacherClasses`, `TeacherFinancial`, `TeacherOverview`. Deveria ser um hook `useTeacherId()`.
+**H1 — Produtividade com IA:**
+- Sprints 01-07: MVP completo em ~30 dias (19/jan–18/fev)
+- Sprints 08-11: Refactoring + fixes em ~2 meses (mar–abr)
+- Sprints 12-15: Centralização de strings em 1 dia (20/mai)
+- Assistência de IA (Claude/Kiro) em 100% das sprints
+
+**H2 — Supabase como BaaS:**
+- Sprint 01: Schema inicial + RLS em 5 dias vs ~2 semanas para backend tradicional
+- Sprint 02: Auth por role em 4 dias (Supabase Auth + policies)
+- Sprint 07: 17 migrations de segurança (RLS, triggers, RPCs) — complexidade gerenciada pelo Supabase
+
+**H3 — Unificação de Plataforma:**
+- Sprint 04: Dashboard unificado (métricas de alunos, aulas, financeiro)
+- Sprint 05: Portal do aluno (histórico, financeiro, atividades em 1 lugar)
+- Sprints 12-15: Estrutura `src/content/` prepara i18n sem duplicação
+
+---
+
+## Sprints Não Implementadas
+
+| Sprint | Foco | Estimativa | Arquivo |
+|---|---|---|---|
+| Sprint 17 | Notificações em tempo real | ~3h | [sprint-17](./sprint-17-notificacoes-NAO-IMPLEMENTADA.md) |
+| Sprint 18 | Exportação de relatórios em PDF | ~2h | [sprint-18](./sprint-18-exportacao-pdf-NAO-IMPLEMENTADA.md) |
+| Sprint 19 | Integração com Google Calendar | ~6h | [sprint-19](./sprint-19-google-calendar-NAO-IMPLEMENTADA.md) |
+| Sprint 20 | Integração com pagamento real (Stripe/Pix API) | ~8h | [sprint-20](./sprint-20-pagamento-real-NAO-IMPLEMENTADA.md) |
+| Sprint 21 | Gamificação do portal do aluno | ~5h | [sprint-21](./sprint-21-gamificacao-NAO-IMPLEMENTADA.md) |
+
+**Razão:** Escopo do TCC limitado a MVP + refatorações. Features futuras documentadas para extensão.
+
+---
+
+## Referências
+
+- **Validação:** `docs/archive/gestao-projeto/validacao-sprints-1-15.md` — prova que sprints batem com commits reais
+- **Histórico:** `docs/archive/gestao-projeto/historico-desenvolvimento.md` — análise de 165 commits
+- **Template:** `TEMPLATE.md` — estrutura padrão para novas sprints
+- **Commits:** `historico-completo.md` — lista completa de commits por sprint

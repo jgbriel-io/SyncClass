@@ -5,7 +5,7 @@ import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/type
 import { toast } from "sonner";
 import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
 import { logError } from "@/lib/security/errorHandler";
-import { logger } from "@/lib/sentry";
+import { logger } from "@/lib/logger";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
 import { useOptimisticMutation } from "@/hooks/useOptimisticMutation";
 import {

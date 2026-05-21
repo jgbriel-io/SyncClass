@@ -49,7 +49,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
-import { logger } from "@/lib/sentry";
+import { logger } from "@/lib/logger";
 import { useOptimisticMutation } from "@/hooks/useOptimisticMutation";
 import {
   fetchFinancialRecordsByStudentIds,

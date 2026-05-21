@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { getActivityFileUrl } from "./useActivities";
-import { logger } from "@/lib/sentry";
+import { logger } from "@/lib/logger";
 import { activities } from "@/content";
 
 export const useActivityFileActions = () => {

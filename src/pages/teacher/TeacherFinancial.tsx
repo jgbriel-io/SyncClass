@@ -1,22 +1,20 @@
 import { useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { FinancialView } from "@/components/financial/FinancialView";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useCurrentUserProfile } from "@/hooks/useUsers";
+import { useTeacherId } from "@/hooks/useTeacherId";
 import { typography } from "@/lib/design-tokens/typography";
 import { common } from "@/content";
 
 const TeacherFinancialPage = () => {
-  const { user, role, isLoading: authLoading } = useAuth();
-  const { data: profile, isLoading: profileLoading, isError: profileError } = useCurrentUserProfile(user?.id);
+  const { role, isLoading, teacherId, isError: profileError } = useTeacherId();
 
   useEffect(() => {
     if (profileError) toast.error(common.errors.loadProfile);
   }, [profileError]);
 
-  if (authLoading || profileLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -24,11 +22,11 @@ const TeacherFinancialPage = () => {
     );
   }
 
-  if (!user || role !== "teacher") {
+  if (role !== "teacher") {
     return <Navigate to="/login" replace />;
   }
 
-  if (!profile?.teacher_id) {
+  if (!teacherId) {
     return (
       <div className="text-center py-12">
         <p className={typography('SMALL')}>Não foi possível carregar seu perfil de professor.</p>
@@ -42,7 +40,7 @@ const TeacherFinancialPage = () => {
         subtitle="Gerencie cobranças e pagamentos"
         showTeacherColumn={false}
         enableTeacherSelection={false}
-        autoTeacherId={profile.teacher_id}
+        autoTeacherId={teacherId}
       />
   );
 };

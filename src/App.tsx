@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthRedirect } from "@/components/auth/AuthRedirect";
 import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
 import { checkStorageQuota, clearStorageExcept } from "@/lib/utils/storage";
 import { toast } from "sonner";
@@ -204,7 +205,9 @@ const App = () => (
         }}
       >
         <AuthProvider>
-          <AppContent />
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

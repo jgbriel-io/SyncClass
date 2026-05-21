@@ -45,9 +45,21 @@ Reconstruído a partir do histórico git (`homolog-old`, 185 commits, 19/jan–1
 |Segurança & Correções|14–18 fev 2026|5 dias|Idempotência, gestão de faltas, cascade delete, estrangeiros|
 |Auditorias & Migrations|19 fev–11 mar 2026|~20 dias|17 migrations de segurança, 6 auditorias, docs técnicas|
 |Reestruturação|10–11 mar 2026|2 dias|Novo repo, renomeação, steering files|
-|Restore & TCC|21 abr 2026|1 dia|Restore codebase, migrations 22–23, organização docs|
+|Refatorações Arquiteturais|11 mar–21 abr 2026|~40 dias|Separação hooks, split arquivos, query builders, timezone fix|
+|Centralização de Strings|21 abr–20 mai 2026|~30 dias|Estrutura content, substituição strings, auditoria final|
+|Restore & TCC|21 abr 2026|1 dia|Restore codebase, migrations 24-25, organização docs|
 
-**Total:** ~3 meses de desenvolvimento ativo (jan–abr 2026)
+**Total:** ~4 meses de desenvolvimento ativo (jan–mai 2026)
+
+**Detalhamento das Refatorações (Mar-Mai):**
+- **Sprint 8 (11 mar–21 abr):** Separação Supabase/Hooks — nenhum componente chama Supabase diretamente
+- **Sprint 9 (21 abr):** Split de arquivos grandes — 6 hooks de 250 linhas → 24 arquivos de 50 linhas
+- **Sprint 10 (21 abr):** Query builders — 22 funções reutilizáveis eliminam 75 linhas duplicadas
+- **Sprint 11 (21 abr):** Fix timezone + ErrorBoundary — conversões UTC↔BRT, UI amigável para erros
+- **Sprint 12 (21 abr–20 mai):** Estrutura de content — 13 arquivos, 860 linhas
+- **Sprint 13 (20 mai):** Expansão de content — toasts, placeholders, validações
+- **Sprint 14 (20 mai):** Substituição de strings — 58 componentes, 190 strings removidas
+- **Sprint 15 (20 mai):** Auditoria final — 100% centralização, 0 strings hardcoded
 
 > 🖼️ **Figura:** Gantt retroativo — ver `docs/tcc/assets-pendentes.md`
 
@@ -59,11 +71,13 @@ O projeto foi desenvolvido com assistência intensiva de IA (Claude/Anthropic vi
 
 |**Métrica**|**Valor**|
 |---|---|
-|Commits em ~3 meses|~218|
+|Commits em ~4 meses|~276|
 |Arquivos no projeto|391|
 |Linhas de código|~46.400|
-|Migrations SQL|23|
-|Testes escritos|161 (unitários + E2E)|
+|Migrations SQL|25|
+|Arquivos de teste unitários|26 (Vitest)|
+|Query builders criados|22|
+|Strings UI centralizadas|~470|
 |Desenvolvedores|1|
 
 ### 8.4.2 O que a IA Acelerou
@@ -72,7 +86,12 @@ O projeto foi desenvolvido com assistência intensiva de IA (Claude/Anthropic vi
 - _Scaffolding_ de componentes seguindo padrões do projeto.
 - Auditorias de segurança (identificou 36 bugs em sessão única).
 - Documentação técnica retroativa.
-- Refatorações com contexto de todo o codebase.
+- Refatorações com contexto de todo o codebase:
+  - Sprint 8: Separação de hooks (6 componentes auditados, padrão identificado)
+  - Sprint 9: Split de arquivos (6 hooks grandes → 24 arquivos menores)
+  - Sprint 10: Query builders (15 queries duplicadas identificadas e eliminadas)
+  - Sprint 12-15: Centralização de strings (168 strings analisadas, classificadas UI vs Técnica)
+- Geração de conteúdo estruturado (13 arquivos de content, 860 linhas)
 
 ### 8.4.3 O que Exigiu Trabalho Humano
 
@@ -83,7 +102,15 @@ O projeto foi desenvolvido com assistência intensiva de IA (Claude/Anthropic vi
 
 ### 8.4.4 Reflexão
 
-A IA funcionou como um par de programação disponível 24h, com conhecimento técnico amplo mas sem contexto de negócio. O desenvolvedor manteve o papel de arquiteto e tomador de decisões; a IA acelerou a execução. Isso permitiu que um único desenvolvedor entregasse em 3 meses o que normalmente exigiria uma equipe de 2–3 pessoas em 6 meses.
+A IA funcionou como um par de programação disponível 24h, com conhecimento técnico amplo mas sem contexto de negócio. O desenvolvedor manteve o papel de arquiteto e tomador de decisões; a IA acelerou a execução. 
+
+**Impacto nas Refatorações:**
+As sprints 8-15 (refatorações arquiteturais e centralização de strings) demonstram o valor da IA em tarefas repetitivas e de grande escala:
+- Sprint 9: Split de 6 hooks grandes em 24 arquivos — tarefa manual levaria ~2 dias, com IA levou ~4 horas
+- Sprint 10: Identificação de 15 queries duplicadas — análise manual levaria ~1 dia, com IA levou ~2 horas
+- Sprint 14: Substituição de 190 strings em 58 componentes — tarefa manual levaria ~3 dias, com IA levou ~6 horas
+
+Isso permitiu que um único desenvolvedor entregasse em 4 meses o que normalmente exigiria uma equipe de 2–3 pessoas em 8–10 meses.
 
 ## 8.5 Tabela de Riscos
 

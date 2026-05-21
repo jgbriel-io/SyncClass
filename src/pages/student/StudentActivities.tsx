@@ -10,7 +10,7 @@ import { DeliverActivityDialog } from "@/components/activities/DeliverActivityDi
 import { StudentActivityCard } from "@/components/student/StudentActivityCard";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack } from "@/lib/design-tokens/spacing";
-import { logger } from "@/lib/sentry";
+import { logger } from "@/lib/logger";
 import { studentPortal } from "@/content";
 
 const StudentActivitiesPage = () => {

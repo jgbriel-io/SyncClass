@@ -4,7 +4,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/integrations/supabase/env";
 import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
 import { toast } from "sonner";
 import type { Enums, TablesInsert } from "@/integrations/supabase/types";
-import { logger } from "@/lib/sentry";
+import { logger } from "@/lib/logger";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
 import { useQueryClient } from "@tanstack/react-query";
 import {

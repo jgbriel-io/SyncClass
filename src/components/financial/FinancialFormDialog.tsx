@@ -27,11 +27,7 @@ import { brDateStringToDate, isValidDateString, parseMoneyToNumber, formatNumber
 import { cn } from "@/lib/utils";
 import { FinancialClassLogField } from "./FinancialClassLogField";
 import { common, financial } from "@/content";
-
-function brDateToIso(value: string): string {
-  const [day, month, year] = value.split("/");
-  return `${year}-${month}-${day}`;
-}
+import { brDateToIso } from "@/lib/utils/formatters";
 function createFinancialSchema(requireClassLog: boolean) {
   return z.object({
     student_id: z.string().min(1, financial.validation.studentRequired),

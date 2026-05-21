@@ -1,7 +1,6 @@
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useCurrentUserProfile } from "@/hooks/useUsers";
+import { useTeacherId } from "@/hooks/useTeacherId";
 import {
   useTeacherDashboardStats,
   useTeacherUpcomingPayments,
@@ -15,12 +14,9 @@ import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
 import type { ChartMonthsFilter } from "@/components/dashboard/DashboardGrowthChart";
 
 const TeacherHome = () => {
-  const { user } = useAuth();
+  const { teacherId, fullName } = useTeacherId();
   const [chartMonths, setChartMonths] = useState<ChartMonthsFilter>(3);
-  const { data: profile } = useCurrentUserProfile(user?.id);
-
-  const teacherId = profile?.teacher_id;
-  const displayName = profile?.full_name?.trim() || "Professor";
+  const displayName = fullName?.trim() || "Professor";
 
   const { data: stats, isLoading: loadingStats } = useTeacherDashboardStats(teacherId);
   const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary(teacherId ?? undefined);

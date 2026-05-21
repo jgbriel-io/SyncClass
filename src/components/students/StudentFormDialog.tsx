@@ -19,6 +19,7 @@ import { Student, StudentInsert } from "@/hooks/useStudents";
 import type { Enums } from "@/integrations/supabase/types";
 import { fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib/br-locations";
 import { isValidDateString, isMasked, maskPhone } from "@/lib/utils/patterns";
+import { brDateToIso } from "@/lib/utils/formatters";
 import { useTeachers } from "@/hooks/useTeachers";
 import { GAP, STACK } from "@/lib/design-tokens/spacing";
 import { ICON_SIZES } from "@/lib/design-tokens/icon-sizes";
@@ -32,10 +33,7 @@ import { students as studentsContent, common } from "@/content";
 type StudentOrigin = Enums<"student_origin">;
 type StudentStatus = Enums<"student_status">;
 
-function brDateToIso(value: string): string {
-  const [day, month, year] = value.split("/");
-  return `${year}-${month}-${day}`;
-}
+
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 

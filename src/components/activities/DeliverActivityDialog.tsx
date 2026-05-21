@@ -12,7 +12,7 @@ import { uploadActivityFile } from "@/hooks/useActivities";
 import { useAuth } from "@/contexts/AuthContext";
 import { validateFile, checkUploadRateLimit, FILE_TYPES, formatFileSize } from "@/lib/utils/fileValidation";
 import { toast } from "sonner";
-import { logger } from "@/lib/sentry";
+import { logger } from "@/lib/logger";
 
 import { activities as activitiesContent, common } from "@/content";
 
@@ -87,7 +87,7 @@ export function DeliverActivityDialog({
     if (user?.id) {
       const rateLimit = checkUploadRateLimit(user.id, 10, 60000); // 10 uploads por minuto
       if (!rateLimit.allowed) {
-        toast.error(`Muitos uploads. Aguarde ${rateLimit.retryAfter} segundos.`);
+        toast.error(activitiesContent.sendDialog.toasts.rateLimitExceeded(rateLimit.retryAfter ?? 0));
         return;
       }
     }

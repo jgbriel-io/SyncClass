@@ -3,11 +3,8 @@
  * Funções puras de conversão de data/hora para formulários de aula.
  */
 
-/** Converte data no formato dd/mm/yyyy para yyyy-mm-dd. */
-export function brDateToIso(value: string): string {
-  const [day, month, year] = value.split("/");
-  return `${year}-${month}-${day}`;
-}
+import { brDateToIso } from "@/lib/utils/formatters";
+export { brDateToIso };
 
 /**
  * Constrói um timestamptz ISO a partir de uma data ISO (yyyy-mm-dd) e horário (HH:mm).

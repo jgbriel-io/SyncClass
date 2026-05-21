@@ -3,15 +3,15 @@
 
 ## 7.1 Estratégia de Testes
 
-O projeto adota a pirâmide de testes com três níveis:
+O projeto adota uma estratégia de testes em dois níveis: testes automatizados unitários (base da pirâmide) e testes manuais estruturados de fluxos críticos. Testes E2E automatizados foram identificados como trabalho futuro após a estabilização da arquitetura de componentes (ver Seção 10.4).
 
 ```
         /\
-       /E2E\        ← 6 suites Playwright
+       /E2E \       ← não implementado (trabalho futuro)
       /──────\
-     /Integr. \     ← (coberto via E2E)
+     /Manual  \     ← 4 fluxos críticos validados
     /────────────\
-   / Unitários   \  ← 18 arquivos Vitest
+   / Unitários   \  ← 26 arquivos Vitest
   /────────────────\
 ```
 
@@ -42,26 +42,32 @@ O projeto adota a pirâmide de testes com três níveis:
 |`table-columns.test.ts`|Design tokens — colunas de tabela|
 |`button.test.tsx`|Componente Button|
 
-**Total:** 18 arquivos de teste
+**Total:** 26 arquivos de teste
+
+Os 8 arquivos adicionados após a sprint de refatoração de componentes (sprints 10–12):
+
+|**Arquivo de Teste**|**O que Testa**|
+|---|---|
+|`StudentsTableRow.test.tsx`|Renderização e interações da linha de aluno|
+|`NavLink.test.tsx`|Navegação ativa/inativa por rota|
+|`TeachersTableRow.test.tsx`|Renderização da linha de professor|
+|`ActivitiesTableRow.test.tsx`|Renderização da linha de atividade|
+|`FinancialTableRow.test.tsx`|Renderização da linha de cobrança|
+|`ClassesTableRow.test.tsx`|Renderização da linha de aula|
+|`MetricCard.test.tsx`|Componente de métricas do dashboard|
+|`ChangePasswordDialog.test.tsx`|Fluxo de troca obrigatória de senha|
 
 > 🖼️ **Figura:** Output do Vitest com resultados
 
-## 7.3 Testes E2E
+## 7.3 Ausência de Testes E2E e Justificativa
 
-**Ferramenta:** Playwright
+Testes E2E automatizados com Playwright não foram implementados no escopo do MVP. A decisão foi técnica e deliberada:
 
-|**Suite**|**Cenários Cobertos**|
-|---|---|
-|`complete-students`|Criar, editar, arquivar e restaurar aluno; filtros; paginação|
-|`complete-financial`|Criar cobrança, marcar como pago, upload comprovante, extorno|
-|`complete-all-features`|Smoke test: login por role, navegação, CRUD básico|
-|`complete-edge-cases`|Validações, campos obrigatórios, duplicatas, limites|
-|`security-audit-sprint1`|RLS: professor não acessa dados de outro professor|
-|`security-audit-sprint3-4`|Rate limiting, XSS, IDOR, permissões por role|
+- A prioridade do desenvolvimento foi a cobertura de lógica de negócio via testes unitários, onde o custo de manutenção é menor e o retorno imediato é maior.
+- A arquitetura de componentes passou por refatorações até as sprints 10–12, tornando a escrita de seletores E2E estáveis prematura.
+- O prazo de desenvolvimento (~3 meses, um desenvolvedor) não comportava a infraestrutura de CI/CD adicional necessária para testes E2E confiáveis.
 
-**Total:** 6 suites
-
-> 🖼️ **Figura:** Relatório Playwright com resultados
+Os fluxos críticos foram validados por testes manuais estruturados (Seção 7.4). A implementação de E2E com Playwright está planejada como trabalho futuro (Seção 10.4), após a estabilização dos componentes.
 
 ## 7.4 Testes Manuais
 
@@ -83,7 +89,7 @@ Além dos testes automatizados, foram realizadas sessões de teste manual:
 |Confiabilidade|✅ Alta|Idempotência, soft delete, audit logs|
 |Segurança|✅ Alta|RLS, JWT, rate limiting, sanitização, LGPD|
 |Manutenibilidade|🟡 Média|Arquivos grandes (ver sprints 10–12)|
-|Portabilidade|✅ Alta|Docker, variáveis de ambiente, sem dependência de SO|
+|Portabilidade|✅ Alta|Variáveis de ambiente, sem dependência de SO específico|
 
 > 🖼️ **Figura:** Tabela ISO 25010 formatada
 
@@ -92,6 +98,5 @@ Além dos testes automatizados, foram realizadas sessões de teste manual:
 ## Assets Necessários
 
 - [ ] 🖼️ Figura: Output do Vitest — rodar `npm test` e capturar
-- [ ] 🖼️ Figura: Relatório Playwright — rodar `npm run test:e2e:report`
 - [ ] 🖼️ Figura: Pirâmide de testes do projeto
 - [ ] 🖼️ Figura: Tabela ISO 25010 formatada para impressão

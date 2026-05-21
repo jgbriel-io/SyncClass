@@ -6,7 +6,8 @@
         "ctx_batch_execute",
         "ctx_execute",
         "ctx_fetch_and_index",
-        "ctx_search"
+        "ctx_search",
+        "ctx_execute_file"
       ]
     },
     "supabase": {

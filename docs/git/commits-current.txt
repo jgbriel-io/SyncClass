@@ -1,0 +1,10 @@
+2026-05-18 01:27:05 -0300|chore: major cleanup and docs reorganization
+2026-05-16 15:51:27 -0300|feat(sprint-23): complete string centralization validation and documentation
+2026-05-15 18:24:13 -0300|feat(i18n): centralizar strings em src/content + refatorar activities/classes
+2026-05-12 17:39:18 -0300|  refactor: quebrar arquivos grandes em subcomponentes e services
+2026-04-21 17:15:56 -0300|docs: estrutura completa de documentação para TCC
+2026-04-21 15:08:32 -0300|chore: remove referencias de nome especifico da escola
+2026-04-21 14:27:55 -0300|fix: lint error
+2026-04-21 14:23:39 -0300|chore: restore full codebase
+2026-03-11 00:37:30 -0300|refactor: simplificar onboarding removendo troca obrigatória de senha
+2026-03-10 18:25:10 -0300|Initial commit - English School Platform

@@ -10,6 +10,7 @@ import { UserWithProfile } from "@/hooks/useUsers";
 import type { Enums } from "@/integrations/supabase/types";
 import { fetchIbgeCitiesByUf, BrCityOption, BrStateCode } from "@/lib/br-locations";
 import { removeCountryCode } from "@/lib/utils/format-phone";
+import { brDateToIso } from "@/lib/utils/formatters";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTeachers } from "@/hooks/useTeachers";
@@ -31,11 +32,6 @@ import { users as usersContent, common } from "@/content";
 type AppRole = Enums<"app_role">;
 type StudentOrigin = Enums<"student_origin">;
 type StudentStatus = Enums<"student_status">;
-
-function brDateToIso(value: string): string {
-  const [day, month, year] = value.split("/");
-  return `${year}-${month}-${day}`;
-}
 
 interface UserFormDialogProps {
   open: boolean;

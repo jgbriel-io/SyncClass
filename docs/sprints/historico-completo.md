@@ -16,11 +16,8 @@
 31 jan–08 fev → Sprint 4: Features Avançadas
 09–13 fev     → Sprint 5: Estabilização & UX
 14–18 fev     → Sprint 6: Segurança & Correções Críticas
-              → [GAP: ~33 commits perdidos do histórico git]
-19 fev–11 mar → Sprint 7: Auditorias, Migrations & Refatoração (reconstruída)
-10–11 mar     → Sprint 8: Reestruturação do Projeto (novo repo)
-21 abr 2026   → Restore do codebase + organização para TCC
-              → Sprint 9: TCC & Pendências (em andamento)
+19 fev–11 mar → Sprint 7: Auditorias, Migrations & Refatoração
+11 mar–20 mai → Sprint 8-15: Refatorações, I18n, Centralização
 ```
 
 ---
@@ -372,7 +369,7 @@
 ## Sprint 9 — Restore & Organização para TCC
 **Período:** 21 abril 2026
 **Commits:** `efc89d4`, `7f94c85`
-**Status:** ✅ Concluída (base) / 🔄 Em andamento (pendências)
+**Status:** ✅ Concluída
 
 ### O que foi feito
 - Restore completo do codebase (`chore: restore full codebase`)
@@ -383,31 +380,126 @@
 - Validação do estado do projeto vs auditorias
 - Correção de lint errors
 
-### Pendências identificadas (Sprint 10)
-| ID | Severidade | Descrição |
-|----|-----------|-----------|
-| BUG-FRONT-001 | Alta | `sendDefaultPii: true` no Sentry — envia email do usuário (LGPD) |
-| BUG-FRONT-002 | Alta | `useNewStudentsByMonth` carrega todos os registros sem paginação |
-| BUG-FRONT-004 | Média | `App.tsx` sem `ErrorBoundary` global |
-| BUG-BACK-002 | Alta | Timezone bug em `getDateRangeForPeriod` |
-| BUG-BACK-003 | Alta | Timezone bug em `isOverdue` |
-| BUG-BACK-004 | Alta | Mistura DATE e TIMESTAMPTZ em `classTime.ts` |
-| REFORMA-001 | Alta | Dois `sanitizeErrorMessage` coexistindo com lógica diferente |
-| REFORMA-003 | Alta | Detecção de overlap duplicada em 3 hooks |
-| REFORMA-008 | Baixa | `gradeSchema` com `max(10)` mas banco aceita 0–100 |
+---
+
+## Sprint 10 — Remove Duplicate Queries
+**Período:** 21 abril 2026
+**Status:** ✅ Concluída
+
+### O que foi feito
+- Query builders criados em `src/lib/queries/`
+- 15 queries duplicadas removidas
+- 22 query builders implementados (students, financial, classes, activities, teachers, users)
+- 17 hooks refatorados para usar query builders
+- Documentação em `docs/architecture/query-builders.md`
 
 ---
 
-## Sprint 10 — Correções & TCC (Planejada)
-**Período:** Abril 2026 →
-**Status:** 🔄 Em andamento
+## Sprint 11 — Fix Timezone & Error Boundary
+**Período:** 21 abril 2026
+**Status:** ✅ Concluída
 
-### Objetivos
-- Resolver pendências das auditorias (tabela acima)
-- Documentação retroativa completa para TCC
-- Definição de metodologia (Kanban via GitHub Projects)
-- Testes E2E com Playwright
-- Documentação técnica final
+### O que foi feito
+- Utilitários de timezone (`src/lib/utils/timezone.ts`)
+- Conversões UTC ↔ BRT aplicadas em aulas, cobranças, atividades
+- ErrorBoundary component criado
+- ErrorFallback UI amigável
+- date-fns-tz instalado
+- 2 bugs críticos corrigidos
+
+---
+
+## Sprint 12 — Content Structure (I18n Prep)
+**Período:** 21 abril – 20 maio 2026
+**Status:** ✅ Concluída
+
+### O que foi feito
+- Estrutura `src/content/` criada (13 arquivos)
+- 860 linhas de content por domínio
+- 97 componentes migrados para usar `@/content`
+- ~470 strings hardcoded removidas
+- Estrutura pronta para i18n (adicionar EN depois)
+
+---
+
+## Sprint 13 — Centralize UI Strings
+**Período:** 20 maio 2026
+**Status:** ✅ Concluída
+
+### O que foi feito
+- `src/content/validation.ts` criado (validações Zod)
+- `src/content/ui.ts` criado (empty states, paginação)
+- `src/content/pwa.ts` criado (PWA texts)
+- 7 arquivos expandidos com toasts, placeholders, labels
+- 185 novas chaves adicionadas
+
+---
+
+## Sprint 14 — Remove Hardcoded Strings
+**Período:** 20 maio 2026
+**Status:** ✅ Concluída
+
+### O que foi feito
+- 58 componentes atualizados
+- 190 strings hardcoded substituídas
+- Toasts, placeholders, validações Zod, empty states, aria-labels migrados
+- 100% dos textos centralizados
+
+---
+
+## Sprint 15 — Final String Audit
+**Período:** 20 maio 2026
+**Status:** ✅ Concluída
+
+### O que foi feito
+- Auditoria completa executada (5 greps)
+- 168 strings analisadas
+- 3 strings de UI substituídas
+- 69 strings técnicas documentadas
+- 100% de centralização alcançado
+- Documentação em `docs/architecture/string-centralization.md`
+
+---
+
+---
+
+## Sprint 16 — Notificações em Tempo Real
+**Período:** Não implementada
+**Status:** ⬜ Planejada
+
+Sistema de notificações em tempo real usando Supabase Realtime, com sino na UI, badge de contagem e marcação de lidas. Notificações para eventos críticos: cobrança vencendo, atividade entregue, comprovante enviado, aula agendada.
+
+---
+
+## Sprint 17 — Exportação de Relatórios em PDF
+**Período:** Não implementada
+**Status:** ⬜ Planejada
+
+Exportação de extrato financeiro e histórico de aulas em PDF formatado usando jsPDF e jspdf-autotable. Geração client-side com cabeçalho, tabelas formatadas e rodapé profissional.
+
+---
+
+## Sprint 18 — Integração com Google Calendar
+**Período:** Não implementada
+**Status:** ⬜ Planejada
+
+Sincronização automática de aulas registradas no SyncClass com Google Calendar do professor e aluno via OAuth. Criação, edição e deleção de eventos com confirmação via webhook.
+
+---
+
+## Sprint 19 — Pagamento Real (Stripe / Pix API)
+**Período:** Não implementada
+**Status:** ⬜ Planejada
+
+Substituição do fluxo manual de comprovante por pagamento real via EfiBank (Pix) ou Stripe (cartão internacional). Confirmação automática via webhook com validação de assinatura e idempotência.
+
+---
+
+## Sprint 20 — Gamificação do Portal do Aluno
+**Período:** Não implementada
+**Status:** ⬜ Planejada
+
+Mecânicas de gamificação no portal do aluno: contador de streak de presença, badges por conquistas (primeira aula, 5 aulas seguidas, 10 atividades), barra de progresso mensal e animações de conquista.
 
 ---
 
@@ -415,6 +507,8 @@
 
 | Métrica | Valor |
 |---------|-------|
+| **Sprints implementadas** | 15 |
+| **Sprints planejadas (não implementadas)** | 5 |
 | Total de commits (histórico real estimado) | ~218 |
 | Commits preservados (homolog-old) | 185 |
 | Commits do gap (reconstruídos por inferência) | ~33 |

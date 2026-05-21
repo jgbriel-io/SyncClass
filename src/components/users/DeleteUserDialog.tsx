@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { logger } from "@/lib/sentry";
+import { logger } from "@/lib/logger";
 import {
   useDeleteUser,
   useHardDeleteUser,

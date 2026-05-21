@@ -14,7 +14,7 @@ import { ptBR } from "date-fns/locale";
 import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { useUpdateClassLog } from "@/hooks/useClassLogs";
 import { useMarkAsPaid, useUpdateFinancialStatus } from "@/hooks/useFinancialRecords";
-import { logger } from "@/lib/sentry";
+import { logger } from "@/lib/logger";
 import { PostClassAbsenceSection } from "./PostClassAbsenceSection";
 import { PostClassPaymentSection } from "./PostClassPaymentSection";
 import { STACK, GAP } from "@/lib/design-tokens/spacing";

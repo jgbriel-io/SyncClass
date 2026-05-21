@@ -81,7 +81,7 @@ export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: 
   return (
     <form
       onSubmit={handleSubmit(handleCorrectionSubmit, (err) =>
-        toast.error(err.feedback?.message ?? err.grade?.message ?? "Preencha o feedback e a nota.")
+        toast.error(err.feedback?.message ?? err.grade?.message ?? common.errors.validation)
       )}
       className="space-y-4 border-t pt-4 mt-4"
     >
