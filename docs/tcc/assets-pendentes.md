@@ -40,7 +40,7 @@ npm run test:e2e:report
 
 ## Cap. 5 — Modelagem e Arquitetura
 
-- [ ] 🖼️ DER completo — gerar no [dbdiagram.io](https://dbdiagram.io) a partir do schema em `docs/banco/schema.md`
+- [ ] 🖼️ DER completo — gerar no [dbdiagram.io](https://dbdiagram.io) a partir do schema em `docs/database/schema.md`
 - [ ] 🖼️ Diagrama de arquitetura conceitual (frontend ↔ Supabase)
 - [ ] 🖼️ Wireframes das telas principais (ou prints da aplicação)
 - [ ] 🖼️ Tabela de rotas/endpoints formatada
@@ -64,9 +64,9 @@ npm run test:e2e:report
 ## Cap. 8 — Gestão
 
 - [ ] 🖼️ Gantt retroativo — montar no Excel/Google Sheets ou draw.io
-  - Eixo X: semanas (19/jan → 21/abr 2026)
+  - Eixo X: semanas (19/jan → 21/mai 2026)
   - Eixo Y: sprints/módulos
-  - Dados: ver `docs/sprints/historico-retroativo.md`
+  - Dados: ver `docs/sprints/historico-completo.md`
 
 ## Cap. 9 — Deploy
 
@@ -77,14 +77,14 @@ npm run test:e2e:report
 
 ## Resumo por prioridade
 
-| Prioridade | Asset | Capítulo |
-|---|---|---|
-| 🔴 Alta | DER completo | Cap. 5 |
-| 🔴 Alta | Prints das telas principais | Cap. 6 |
-| 🔴 Alta | Gantt retroativo | Cap. 8 |
-| 🟠 Média | Diagrama de Casos de Uso | Cap. 4 |
-| 🟠 Média | Output de testes | Cap. 7 |
-| 🟠 Média | Diagrama de arquitetura | Cap. 5 |
-| 🟡 Baixa | Pirâmide IaaS/PaaS/SaaS | Cap. 2 |
-| 🟡 Baixa | ISO 25010 | Cap. 2 / 7 |
-| 🟡 Baixa | Diagrama de infra/CI | Cap. 9 |
+| Prioridade | Asset                       | Capítulo   |
+| ---------- | --------------------------- | ---------- |
+| 🔴 Alta    | DER completo                | Cap. 5     |
+| 🔴 Alta    | Prints das telas principais | Cap. 6     |
+| 🔴 Alta    | Gantt retroativo            | Cap. 8     |
+| 🟠 Média   | Diagrama de Casos de Uso    | Cap. 4     |
+| 🟠 Média   | Output de testes            | Cap. 7     |
+| 🟠 Média   | Diagrama de arquitetura     | Cap. 5     |
+| 🟡 Baixa   | Pirâmide IaaS/PaaS/SaaS     | Cap. 2     |
+| 🟡 Baixa   | ISO 25010                   | Cap. 2 / 7 |
+| 🟡 Baixa   | Diagrama de infra/CI        | Cap. 9     |

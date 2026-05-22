@@ -39,10 +39,9 @@ export const phoneRequiredSchema = z
 export const emailSchema = z
   .string()
   .optional()
-  .refine(
-    (v) => !v || REGEX_PATTERNS.email.test(v),
-    { message: validation.emailInvalid }
-  );
+  .refine((v) => !v || REGEX_PATTERNS.email.test(v), {
+    message: validation.emailInvalid,
+  });
 
 /**
  * Schema para email obrigatório
@@ -59,10 +58,9 @@ export const emailRequiredSchema = z
 export const dateSchema = z
   .string()
   .optional()
-  .refine(
-    (v) => !v || (REGEX_PATTERNS.date.test(v) && isValidDateString(v)),
-    { message: validation.dateInvalid }
-  );
+  .refine((v) => !v || (REGEX_PATTERNS.date.test(v) && isValidDateString(v)), {
+    message: validation.dateInvalid,
+  });
 
 /**
  * Schema para data obrigatória
@@ -70,10 +68,9 @@ export const dateSchema = z
 export const dateRequiredSchema = z
   .string()
   .min(1, validation.dateRequired)
-  .refine(
-    (v) => REGEX_PATTERNS.date.test(v) && isValidDateString(v),
-    { message: validation.dateInvalid }
-  );
+  .refine((v) => REGEX_PATTERNS.date.test(v) && isValidDateString(v), {
+    message: validation.dateInvalid,
+  });
 
 /**
  * Schema para CEP (formato: 00000-000)
@@ -84,10 +81,9 @@ const CEP_REGEX = /^\d{5}-\d{3}$/;
 export const cepSchema = z
   .string()
   .optional()
-  .refine(
-    (v) => !v || (v.length === 9 && CEP_REGEX.test(v)),
-    { message: validation.cepInvalid }
-  );
+  .refine((v) => !v || (v.length === 9 && CEP_REGEX.test(v)), {
+    message: validation.cepInvalid,
+  });
 
 /**
  * Schema para CEP obrigatório
@@ -95,10 +91,9 @@ export const cepSchema = z
 export const cepRequiredSchema = z
   .string()
   .min(1, validation.cepRequired)
-  .refine(
-    (v) => v.length === 9 && CEP_REGEX.test(v),
-    { message: validation.cepInvalid }
-  );
+  .refine((v) => v.length === 9 && CEP_REGEX.test(v), {
+    message: validation.cepInvalid,
+  });
 
 /**
  * Schema para valor monetário (formato: 0,00 ou 0.000,00)
@@ -109,10 +104,9 @@ const MONEY_REGEX = /^\d{1,3}(\.\d{3})*(,\d{2})?$/;
 export const moneySchema = z
   .string()
   .optional()
-  .refine(
-    (v) => !v || MONEY_REGEX.test(v),
-    { message: validation.amountInvalid }
-  );
+  .refine((v) => !v || MONEY_REGEX.test(v), {
+    message: validation.amountInvalid,
+  });
 
 /**
  * Schema para valor monetário obrigatório
@@ -120,10 +114,7 @@ export const moneySchema = z
 export const moneyRequiredSchema = z
   .string()
   .min(1, validation.amountRequired)
-  .refine(
-    (v) => MONEY_REGEX.test(v),
-    { message: validation.amountInvalid }
-  );
+  .refine((v) => MONEY_REGEX.test(v), { message: validation.amountInvalid });
 
 /**
  * Schema para nome (mínimo 2 caracteres)
@@ -165,10 +156,7 @@ const REGEX_TIME = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 export const timeSchema = z
   .string()
   .optional()
-  .refine(
-    (v) => !v || REGEX_TIME.test(v),
-    { message: validation.timeInvalid }
-  );
+  .refine((v) => !v || REGEX_TIME.test(v), { message: validation.timeInvalid });
 
 /**
  * Schema para horário obrigatório
@@ -176,10 +164,7 @@ export const timeSchema = z
 export const timeRequiredSchema = z
   .string()
   .min(1, validation.timeRequired)
-  .refine(
-    (v) => REGEX_TIME.test(v),
-    { message: validation.timeInvalid }
-  );
+  .refine((v) => REGEX_TIME.test(v), { message: validation.timeInvalid });
 
 /**
  * Schema para nota (0-10)
@@ -187,24 +172,19 @@ export const timeRequiredSchema = z
 export const gradeSchema = z
   .number({ invalid_type_error: validation.gradeInvalid })
   .min(0, validation.gradeMin)
-  .max(100, validation.gradeMax)
+  .max(10, validation.gradeMax)
   .optional()
   .nullable();
 
 /**
  * Schema para URL
  */
-export const urlSchema = z
-  .string()
-  .url(validation.urlInvalid)
-  .optional();
+export const urlSchema = z.string().url(validation.urlInvalid).optional();
 
 /**
  * Schema para senha (mínimo 6 caracteres)
  */
-export const passwordSchema = z
-  .string()
-  .min(6, validation.passwordMin);
+export const passwordSchema = z.string().min(6, validation.passwordMin);
 
 /**
  * Schema para confirmação de senha

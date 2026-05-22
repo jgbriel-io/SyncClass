@@ -1,6 +1,6 @@
 /**
  * Utilitários centralizados de formatação
- * 
+ *
  * Este arquivo contém todas as funções de formatação usadas no projeto.
  * NÃO duplique estas funções em outros arquivos.
  */
@@ -40,7 +40,8 @@ function parseDateLocal(value: string): Date {
  * @returns String formatada (ex: "31/01/2026")
  */
 export function formatDate(dateString: string | Date): string {
-  const date = typeof dateString === "string" ? parseDateLocal(dateString) : dateString;
+  const date =
+    typeof dateString === "string" ? parseDateLocal(dateString) : dateString;
   return new Intl.DateTimeFormat("pt-BR").format(date);
 }
 
@@ -50,7 +51,8 @@ export function formatDate(dateString: string | Date): string {
  * @returns String formatada (ex: "31/01/2026 às 14:30")
  */
 export function formatDateTime(dateString: string | Date): string {
-  const date = typeof dateString === "string" ? parseDateLocal(dateString) : dateString;
+  const date =
+    typeof dateString === "string" ? parseDateLocal(dateString) : dateString;
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -60,8 +62,6 @@ export function formatDateTime(dateString: string | Date): string {
   }).format(date);
 }
 
-
-
 /**
  * Formata um telefone brasileiro
  * @param phone - String com dígitos do telefone
@@ -69,7 +69,7 @@ export function formatDateTime(dateString: string | Date): string {
  */
 export function formatPhone(phone: string): string {
   const cleaned = phone.replace(/\D/g, "");
-  
+
   if (cleaned.length === 11) {
     // Celular: (XX) 9XXXX-XXXX
     return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
@@ -77,7 +77,7 @@ export function formatPhone(phone: string): string {
     // Fixo: (XX) XXXX-XXXX
     return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
   }
-  
+
   return phone;
 }
 
@@ -98,28 +98,20 @@ export function formatPercentage(value: number, decimals: number = 0): string {
  */
 export function formatShortName(fullName: string): string {
   const parts = fullName.trim().split(" ");
-  
+
   if (parts.length <= 2) {
     return fullName;
   }
-  
+
   const firstName = parts[0];
   const lastName = parts[parts.length - 1];
-  
+
   if (parts.length === 3) {
     return `${firstName} ${parts[1][0]}. ${lastName}`;
   }
-  
+
   return `${firstName} ${lastName}`;
 }
-
-
-/** Converte data no formato BR (DD/MM/YYYY) para ISO (YYYY-MM-DD). */
-export function brDateToIso(value: string): string {
-  const [day, month, year] = value.split("/");
-  return `${year}-${month}-${day}`;
-}
-
 
 /** Converte data no formato BR (DD/MM/YYYY) para ISO (YYYY-MM-DD). */
 export function brDateToIso(value: string): string {

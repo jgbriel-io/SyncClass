@@ -1,96 +1,111 @@
-# Segurança
+# Security
 
-Documentação de autenticação, autorização (RLS), validações e proteções.
+Autenticação, autorização (RLS), validações e proteções.
 
-## Autenticação
+**Para quem:** Devs que precisam entender autenticação, RLS, validações ou trabalhar com segurança.
 
-Supabase Auth com JWT. Roles definidos em `user_roles` e `profiles`.
+## Índice
 
+- [Quando usar](#quando-usar)
+- [Stack](#stack)
+- [Documentação detalhada](#documentação-detalhada)
+- [Proteções adicionais](#proteções-adicionais)
+- [Ver também](#ver-também)
+
+## Quando usar
+
+**Use quando:**
+
+- Implementar login/logout
+- Verificar role do usuário
+- Proteger rotas por role
+- Validar inputs (Zod, triggers)
+- Debugar "permission denied"
+
+**Não use quando:**
+
+- Procurar RLS policies detalhadas → [Database RLS](../database/rls.md)
+- Procurar Edge Functions → [Backend Edge Functions](../backend/edge-functions.md)
+
+## Stack
+
+**Autenticação:**
+
+- Supabase Auth (JWT)
 - Roles: `admin`, `teacher`, `student`
-- Role buscado em `user_roles` → fallback para `profiles.role`
-- Sessões invalidadas automaticamente ao desativar conta (`profiles.active = false`)
-- Verificação periódica de status da conta no frontend a cada 30s
 
-## Autorização (RLS)
+**Autorização:**
 
-Todas as tabelas têm Row Level Security habilitado. Acesso negado por padrão para usuários não autenticados.
+- Row Level Security (RLS) ativo em todas as tabelas
+- Funções helper: `is_admin()`, `is_teacher()`, `is_student()`
 
-### Funções helper
+**Validações:**
 
-Todas com `SECURITY DEFINER` para bypassar o RLS das próprias tabelas que consultam. Sem isso, ocorre recursão infinita e HTTP 500.
+- Frontend: Zod + React Hook Form
+- Banco: Triggers, constraints, funções
 
-```sql
-is_admin()   -- verifica profiles.role = 'admin'
-is_teacher() -- verifica profiles.role = 'teacher'
-is_student() -- verifica profiles.role = 'student'
-```
+**Proteções:**
 
-### Políticas por tabela
+- Rate limiting (10 req/min)
+- Idempotência (previne double-click)
+- Search path (anti-hijacking)
+- SECURITY DEFINER (funções helper)
+- SECURITY INVOKER (views)
 
-#### profiles / user_roles
-- SELECT: próprio registro (`user_id = auth.uid()`) OU `is_admin()`
-- INSERT: qualquer autenticado
-- UPDATE: próprio registro OU `is_admin()`
-- DELETE: `is_admin()`
+## Documentação detalhada
 
-#### teachers
-- SELECT: `is_admin()` OU `is_teacher()`
-- INSERT/UPDATE/DELETE: `is_admin()`
+### [Autenticação e Autorização](./auth-rls.md)
 
-#### students
-- SELECT: professor dono (`profiles.teacher_id = students.teacher_id`) OU aluno dono OU `is_admin()`
-- INSERT/UPDATE/DELETE: professor dono OU `is_admin()`
+Supabase Auth, roles, RLS e sessões.
 
-#### financial_records
-- SELECT: professor do aluno OU aluno dono OU `is_admin()`
-- INSERT/UPDATE: professor do aluno OU `is_admin()`
-- DELETE: `is_admin()`
+**Conteúdo:**
 
-#### activities
-- SELECT: professor do aluno OU aluno dono OU `is_admin()`
-- INSERT/UPDATE: professor do aluno OU `is_admin()`
-- DELETE: professor do aluno OU `is_admin()`
+- Autenticação (Supabase Auth, JWT, login/logout)
+- Roles (admin, teacher, student)
+- Autorização (RLS, funções helper)
+- Sessões (duração, invalidação, verificação periódica)
 
-#### class_logs
-- SELECT/INSERT/UPDATE/DELETE: professor do aluno OU `is_admin()`
+### [Validações](./validations.md)
 
-## Validações no banco
+Validações no banco, frontend e rate limiting.
 
-### financial_records
-Trigger `trigger_validate_financial_logic` (BEFORE INSERT/UPDATE):
-- `amount > 0` obrigatório para todos os status
-- `pago`: amount ≤ 10.000, description obrigatória, paid_at preenchido automaticamente
-- `extornado`: amount ≤ 1.000, description obrigatória
-- `abonado` / `cancelado`: description obrigatória
-- `pendente`: apenas validação de valor positivo
+**Conteúdo:**
 
-### teachers
-- `pix_key` validada pela função `is_valid_pix_key()` (CPF 11 dígitos, email, telefone, UUID ou chave aleatória 32 chars)
-
-### students / teachers
-- `pay_day` CHECK (1-31)
-- `grade` CHECK (0-100) em class_logs e activities
-
-## Rate limiting
-
-- Tabela `rate_limit_tracker` controla requisições por usuário
-- Função `check_rate_limit()` bloqueia após 10 req/min
-- Aplicado nas RPCs críticas: `create_class_package`, `mark_as_paid_idempotent`, `confirm_payment_idempotent`
-
-## Idempotência
-
-- Tabela `idempotency_keys` previne operações duplicadas
-- RPCs financeiras verificam chave antes de executar
-
-## Frontend
-
-- Inputs sanitizados antes de enviar ao banco
-- Mensagens de erro amigáveis via `src/lib/security/errorHandler.ts` (sem expor detalhes técnicos)
-- Sem `data-testid` nos componentes (shadcn/ui padrão)
+- Validações no banco (triggers, constraints, funções)
+- Validações no frontend (Zod + React Hook Form)
+- Rate limiting (10 req/min, tabela rate_limit_tracker)
+- Idempotência (previne double-click, tabela idempotency_keys)
 
 ## Proteções adicionais
 
-- Views com `SECURITY INVOKER` (herdam permissões do usuário, não do owner)
-- `search_path` definido em todas as funções (anti-hijacking)
-- Dados pessoais anonimizáveis (LGPD) via `anonymized_at` em teachers e students
-- Soft delete em profiles (`deleted_at`) preserva dados para auditoria
+**Views com SECURITY INVOKER:**
+
+- Views herdam permissões do usuário, não do owner
+- Previne escalação de privilégios
+
+**Search path definido em todas as funções:**
+
+- `SET search_path = public` em todas as funções
+- Previne search_path hijacking
+
+**Dados pessoais anonimizáveis (LGPD):**
+
+- `anonymized_at` em teachers e students
+- Funções de anonimização preservam integridade referencial
+
+**Soft delete:**
+
+- `deleted_at` em profiles preserva dados para auditoria
+- `status` em students/teachers/activities
+
+**Frontend:**
+
+- Inputs sanitizados antes de enviar ao banco
+- Mensagens de erro amigáveis (sem expor detalhes técnicos)
+- Sem `data-testid` nos componentes (shadcn/ui padrão)
+
+## Ver também
+
+- [Database Overview](../database/overview.md) — Visão geral do banco
+- [Database RLS](../database/rls.md) — Políticas RLS detalhadas
+- [Backend RPCs](../backend/rpcs.md) — RPCs com validações

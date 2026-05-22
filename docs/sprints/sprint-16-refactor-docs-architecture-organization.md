@@ -16,6 +16,7 @@ Documentação técnica do projeto estava desorganizada e difícil de navegar:
 - **Sem padronização:** Cada overview seguia estrutura diferente, sem índice navegável ou seção "Ver também"
 
 **Impacto:**
+
 - Onboarding lento — devs não sabem por onde começar
 - Informação duplicada — mesmos conceitos em múltiplos arquivos
 - Manutenção difícil — atualizar um conceito exige editar vários arquivos
@@ -33,6 +34,7 @@ Documentação técnica do projeto estava desorganizada e difícil de navegar:
 - ⏳ Revisar e padronizar overviews de backend, database, frontend, security
 
 **Fora do escopo:**
+
 - Reescrever conteúdo técnico (apenas reorganizar)
 - Adicionar novos tópicos não documentados
 - Traduzir documentação para inglês
@@ -40,6 +42,7 @@ Documentação técnica do projeto estava desorganizada e difícil de navegar:
 ## Background
 
 ### Stack de Documentação
+
 - Markdown para todos os docs
 - Estrutura hierárquica de pastas
 - Referências cruzadas via links relativos
@@ -47,6 +50,7 @@ Documentação técnica do projeto estava desorganizada e difícil de navegar:
 - Formato `caminho:linha` para referências a código
 
 ### Convenções Existentes
+
 - Sentence case em títulos (não Title Case)
 - Índice navegável no topo de arquivos longos
 - Seção "Ver também" no final
@@ -54,6 +58,7 @@ Documentação técnica do projeto estava desorganizada e difícil de navegar:
 - Exemplos práticos com referências a arquivos reais
 
 ### Estrutura Atual
+
 ```
 docs/
 ├── architecture.md          ← 800 linhas, tudo misturado
@@ -244,76 +249,110 @@ Todos os overviews seguem estrutura:
 - **Teste:** Verificar que cada erro tem sintoma, causa, diagnóstico, solução, prevenção
 - **Demo:** 5 erros documentados com exemplos práticos
 
-### Task 8: Revisar overviews de outros domínios (⏳ Pendente)
+### Task 8: Revisar overviews de outros domínios ✅
 
 - **Objetivo:** Aplicar mesmo padrão em backend, database, frontend, security
 - **Implementação:**
-  - Revisar `backend/overview.md` (Edge Functions, integrações)
-  - Revisar `database/overview.md` (Schema, migrations, RLS)
-  - Revisar `frontend/overview.md` (Componentes, design tokens)
-  - Revisar `security/overview.md` (Auth, RLS, rate limiting)
+  - Quebrar `backend/overview.md` em 5 arquivos (overview, edge-functions, rpcs, integrations, bugs)
+  - Quebrar `frontend/overview.md` em 5 arquivos (overview, components, design-tokens, content, hooks)
+  - Quebrar `database/overview.md` em 4 arquivos (overview, schema, migrations, rls)
+  - Quebrar `security/overview.md` em 3 arquivos (overview, auth-rls, validations)
+- **Arquivos criados:**
+  - `docs/backend/edge-functions.md` (~350 linhas)
+  - `docs/backend/rpcs.md` (~400 linhas)
+  - `docs/backend/integrations.md` (~400 linhas)
+  - `docs/backend/bugs.md` (~500 linhas)
+  - `docs/frontend/components.md` (~500 linhas)
+  - `docs/frontend/design-tokens.md` (~350 linhas)
+  - `docs/frontend/content.md` (~400 linhas)
+  - `docs/frontend/hooks.md` (~600 linhas)
+  - `docs/database/schema.md` (~500 linhas)
+  - `docs/database/migrations.md` (~300 linhas)
+  - `docs/database/rls.md` (~400 linhas)
+  - `docs/security/auth-rls.md` (~300 linhas)
+  - `docs/security/validations.md` (~500 linhas)
 - **Arquivos modificados:**
-  - `docs/backend/overview.md`
-  - `docs/database/overview.md`
-  - `docs/frontend/overview.md`
-  - `docs/security/overview.md`
+  - `docs/backend/overview.md` (orquestrador ~150 linhas)
+  - `docs/frontend/overview.md` (orquestrador ~150 linhas)
+  - `docs/database/overview.md` (orquestrador ~150 linhas)
+  - `docs/security/overview.md` (orquestrador ~150 linhas)
 - **Teste:** Verificar que todos seguem padrão de architecture/overview.md
-- **Demo:** 4 overviews padronizados
+- **Demo:** 4 domínios padronizados com múltiplos arquivos focados
 
 ## Implementation Details
 
 ### Arquivos de Arquitetura
 
-| Arquivo | Linhas | Conteúdo |
-|---------|--------|----------|
-| `overview.md` | ~150 | Orquestrador, índice, métricas |
-| `flows.md` | ~200 | Fluxos de requisição, auth, módulos, rotas |
-| `patterns.md` | ~350 | 6 design patterns (Singleton, Strategy, Template Method, Repository, Factory, Observer) |
-| `decisions.md` | ~400 | 7 ADRs com contexto, decisão, consequências, alternativas |
-| `troubleshooting.md` | ~350 | 5 erros comuns com diagnóstico e solução |
-| `technical-debt.md` | ~300 | 14 itens (6 problemas + 8 refatorações) priorizados |
+| Arquivo              | Linhas | Conteúdo                                                                                |
+| -------------------- | ------ | --------------------------------------------------------------------------------------- |
+| `overview.md`        | ~150   | Orquestrador, índice, métricas                                                          |
+| `flows.md`           | ~200   | Fluxos de requisição, auth, módulos, rotas                                              |
+| `patterns.md`        | ~350   | 6 design patterns (Singleton, Strategy, Template Method, Repository, Factory, Observer) |
+| `decisions.md`       | ~400   | 7 ADRs com contexto, decisão, consequências, alternativas                               |
+| `troubleshooting.md` | ~350   | 5 erros comuns com diagnóstico e solução                                                |
+| `technical-debt.md`  | ~300   | 14 itens (6 problemas + 8 refatorações) priorizados                                     |
 
 ### Sprints Renomeadas
 
-| Antes | Depois | Tipo |
-|-------|--------|------|
-| `sprint-01-fundacao.md` | `sprint-01-mvp-crud-basico-financeiro.md` | MVP |
-| `sprint-02-autenticacao-usuarios.md` | `sprint-02-mvp-auth-roles-profiles.md` | MVP |
-| `sprint-03-qualidade-infra.md` | `sprint-03-mvp-ci-soft-delete-design-tokens.md` | MVP |
-| `sprint-04-features-avancadas.md` | `sprint-04-mvp-dashboard-historico-reset-senha.md` | MVP |
-| `sprint-05-estabilizacao-ux.md` | `sprint-05-mvp-mobile-atividades-pacotes-pix.md` | MVP |
-| `sprint-06-seguranca-correcoes.md` | `sprint-06-mvp-idempotencia-faltas-estrangeiros.md` | MVP |
-| `sprint-07-auditorias-migrations.md` | `sprint-07-mvp-hardening-rls-rate-limit.md` | MVP |
-| `sprint-08-reestruturacao.md` | `sprint-08-refactor-supabase-hooks-separation.md` | Refactor |
-| `sprint-09-restore-tcc.md` | `sprint-09-refactor-split-large-files.md` | Refactor |
-| `sprint-10-correcao-arquitetura.md` | `sprint-10-refactor-remove-duplicate-queries.md` | Refactor |
-| `sprint-11-correcao-componentes.md` | `sprint-11-fix-timezone-error-boundary.md` | Fix |
-| `sprint-12-correcao-duplicacao.md` | `sprint-12-refactor-content-structure-i18n-prep.md` | Refactor |
-| `sprint-13-correcoes-pre-defesa.md` | `sprint-13-refactor-centralize-ui-strings.md` | Refactor |
-| `sprint-14-notificacoes.md` | `sprint-14-refactor-remove-hardcoded-strings.md` | Refactor |
-| `sprint-15-exportacao-pdf.md` | `sprint-15-refactor-final-string-audit.md` | Refactor |
+| Antes                                | Depois                                              | Tipo     |
+| ------------------------------------ | --------------------------------------------------- | -------- |
+| `sprint-01-fundacao.md`              | `sprint-01-mvp-crud-basico-financeiro.md`           | MVP      |
+| `sprint-02-autenticacao-usuarios.md` | `sprint-02-mvp-auth-roles-profiles.md`              | MVP      |
+| `sprint-03-qualidade-infra.md`       | `sprint-03-mvp-ci-soft-delete-design-tokens.md`     | MVP      |
+| `sprint-04-features-avancadas.md`    | `sprint-04-mvp-dashboard-historico-reset-senha.md`  | MVP      |
+| `sprint-05-estabilizacao-ux.md`      | `sprint-05-mvp-mobile-atividades-pacotes-pix.md`    | MVP      |
+| `sprint-06-seguranca-correcoes.md`   | `sprint-06-mvp-idempotencia-faltas-estrangeiros.md` | MVP      |
+| `sprint-07-auditorias-migrations.md` | `sprint-07-mvp-hardening-rls-rate-limit.md`         | MVP      |
+| `sprint-08-reestruturacao.md`        | `sprint-08-refactor-supabase-hooks-separation.md`   | Refactor |
+| `sprint-09-restore-tcc.md`           | `sprint-09-refactor-split-large-files.md`           | Refactor |
+| `sprint-10-correcao-arquitetura.md`  | `sprint-10-refactor-remove-duplicate-queries.md`    | Refactor |
+| `sprint-11-correcao-componentes.md`  | `sprint-11-fix-timezone-error-boundary.md`          | Fix      |
+| `sprint-12-correcao-duplicacao.md`   | `sprint-12-refactor-content-structure-i18n-prep.md` | Refactor |
+| `sprint-13-correcoes-pre-defesa.md`  | `sprint-13-refactor-centralize-ui-strings.md`       | Refactor |
+| `sprint-14-notificacoes.md`          | `sprint-14-refactor-remove-hardcoded-strings.md`    | Refactor |
+| `sprint-15-exportacao-pdf.md`        | `sprint-15-refactor-final-string-audit.md`          | Refactor |
 
 ## Files Created
 
 ```
 docs/
+├── README.md                    ← Atualizado com nova estrutura hierárquica
 ├── architecture/
-│   ├── overview.md          ← Orquestrador (~150 linhas)
-│   ├── flows.md             ← Fluxos de requisição/auth (~200 linhas)
-│   ├── patterns.md          ← 6 design patterns (~350 linhas)
-│   ├── decisions.md         ← 7 ADRs (~400 linhas)
-│   ├── troubleshooting.md   ← 5 erros comuns (~350 linhas)
-│   └── technical-debt.md    ← 14 itens priorizados (~300 linhas)
+│   ├── overview.md              ← Orquestrador (~150 linhas)
+│   ├── flows.md                 ← Fluxos de requisição/auth (~200 linhas)
+│   ├── patterns.md              ← 6 design patterns (~350 linhas)
+│   ├── decisions.md             ← 7 ADRs (~400 linhas)
+│   ├── troubleshooting.md       ← 5 erros comuns (~350 linhas)
+│   └── technical-debt.md        ← 14 itens priorizados (~300 linhas)
 ├── backend/
-│   └── overview.md          ← Edge Functions, integrações
+│   ├── overview.md              ← Orquestrador (~150 linhas)
+│   ├── edge-functions.md        ← 5 functions detalhadas (~350 linhas)
+│   ├── rpcs.md                  ← RPCs, triggers, views (~400 linhas)
+│   ├── integrations.md          ← Storage, rate limiting, idempotência (~400 linhas)
+│   └── bugs.md                  ← 7 bugs (BACK-001 a BACK-007) (~500 linhas)
 ├── database/
-│   └── overview.md          ← Schema, migrations, RLS
-├── frontend/
-│   └── overview.md          ← Componentes, design tokens
+│   ├── overview.md              ← Orquestrador (~150 linhas)
+│   ├── schema.md                ← Tabelas, relacionamentos, 13 bugs (~500 linhas)
+│   ├── migrations.md            ← 21 migrations, sequência, dependências (~300 linhas)
+│   └── rls.md                   ← Funções helper, políticas, troubleshooting (~400 linhas)
 ├── security/
-│   └── overview.md          ← Auth, RLS, rate limiting
+│   ├── overview.md              ← Orquestrador (~150 linhas)
+│   ├── auth-rls.md              ← Autenticação, roles, sessões (~300 linhas)
+│   └── validations.md           ← Validações banco/frontend, rate limiting (~500 linhas)
+├── frontend/
+│   ├── overview.md              ← Orquestrador (~150 linhas)
+│   ├── components.md            ← shadcn/ui, componentes de domínio (~500 linhas)
+│   ├── design-tokens.md         ← Typography, spacing, icons, modalSizes (~350 linhas)
+│   ├── content.md               ← 900+ strings centralizadas (~400 linhas)
+│   └── hooks.md                 ← 42 hooks, TanStack Query, services (~600 linhas)
+├── git/
+│   ├── overview.md              ← Orquestrador (~150 linhas)
+│   ├── workflow.md              ← Feature branch, code review, merge (~400 linhas)
+│   ├── conventions.md           ← Conventional Commits, branches (~500 linhas)
+│   ├── commits-current.txt      ← Histórico de commits (já existia)
+│   └── commits-old-homolog.txt  ← Histórico homolog (já existia)
 ├── archive/
-│   ├── README.md            ← Índice do archive
+│   ├── README.md                ← Índice do archive
 │   ├── requisitos/
 │   │   ├── requisitos-funcionais.md      ← RF01-RF30
 │   │   └── requisitos-nao-funcionais.md  ← RNF01-RNF36
@@ -323,25 +362,59 @@ docs/
 │       ├── historico-desenvolvimento.md   ← Análise de 165 commits
 │       └── validacao-sprints-1-15.md      ← 97.8% validação
 └── sprints/
+    ├── README.md                          ← Atualizado com novos nomes
+    ├── historico-completo.md              ← Atualizado com Sprint 16
     ├── sprint-01-mvp-crud-basico-financeiro.md
     ├── sprint-02-mvp-auth-roles-profiles.md
-    └── ... (20 sprints renomeadas)
+    ├── sprint-03-mvp-ci-soft-delete-design-tokens.md
+    ├── sprint-04-mvp-dashboard-historico-reset-senha.md
+    ├── sprint-05-mvp-mobile-atividades-pacotes-pix.md
+    ├── sprint-06-mvp-idempotencia-faltas-estrangeiros.md
+    ├── sprint-07-mvp-hardening-rls-rate-limit.md
+    ├── sprint-08-refactor-supabase-hooks-separation.md
+    ├── sprint-09-refactor-split-large-files.md
+    ├── sprint-10-refactor-remove-duplicate-queries.md
+    ├── sprint-11-fix-timezone-error-boundary.md
+    ├── sprint-12-refactor-content-structure-i18n-prep.md
+    ├── sprint-13-refactor-centralize-ui-strings.md
+    ├── sprint-14-refactor-remove-hardcoded-strings.md
+    ├── sprint-15-refactor-final-string-audit.md
+    ├── sprint-16-refactor-docs-architecture-organization.md
+    ├── sprint-17-exportacao-pdf-NAO-IMPLEMENTADA.md
+    ├── sprint-18-google-calendar-NAO-IMPLEMENTADA.md
+    ├── sprint-19-pagamento-real-NAO-IMPLEMENTADA.md
+    ├── sprint-20-gamificacao-NAO-IMPLEMENTADA.md
+    └── TEMPLATE.md
+
+tcc/
+└── tcc-8-periodo/
+    └── projeto-pratico/
+        └── historico-de-desenvolvimento-syncclass.md  ← Atualizado com Sprint 16
 ```
+
+**Total de arquivos criados:** 28 novos arquivos  
+**Total de arquivos atualizados:** 5 arquivos  
+**Total de arquivos renomeados:** 20 sprints  
+**Total de arquivos organizados:** 53 arquivos em estrutura hierárquica
 
 ## Files Modified
 
+- `docs/README.md` — atualizado com estrutura hierárquica completa (53 arquivos)
 - `docs/sprints/README.md` — atualizado com novos nomes de sprints
-- `docs/sprints/historico-completo.md` — links atualizados
-- `docs/README.md` — links para nova estrutura (se existir)
+- `docs/sprints/historico-completo.md` — atualizado com Sprint 16
+- `docs/tcc/tcc-8-periodo/projeto-pratico/historico-de-desenvolvimento-syncclass.md` — atualizado com Sprint 16
+- Todos os overviews padronizados (intro, índice, quando usar, ver também)
 
 ## Files Deleted
 
 - `docs/architecture.md` — substituído por `architecture/overview.md` + 5 arquivos
-- `docs/backend.md` — movido para `backend/overview.md`
-- `docs/database.md` — movido para `database/overview.md`
-- `docs/frontend.md` — movido para `frontend/overview.md`
-- `docs/security.md` — movido para `security/overview.md`
+- `docs/backend.md` — substituído por `backend/overview.md` + 4 arquivos
+- `docs/database.md` — substituído por `database/overview.md` + 3 arquivos
+- `docs/frontend.md` — substituído por `frontend/overview.md` + 4 arquivos
+- `docs/security.md` — substituído por `security/overview.md` + 2 arquivos
 - `docs/archive/sprint-23/` — 26 arquivos de auditorias obsoletas deletados
+
+**Total deletado:** 5 arquivos avulsos + 26 arquivos obsoletos = 31 arquivos
 
 ## Testing & Validation
 
@@ -352,43 +425,56 @@ docs/
 - [x] Archive organizado com subpastas
 - [x] ADRs documentam 7 decisões com trade-offs
 - [x] Troubleshooting documenta 5 erros comuns
-- [ ] Overviews de backend, database, frontend, security revisados (⏳ pendente)
+- [x] Overviews de backend, database, frontend, security revisados e quebrados em múltiplos arquivos
 
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 6 arquivos criados em `docs/architecture/`
-- ✅ 5 subpastas de domínio criadas
+- ✅ 5 arquivos criados em `docs/backend/`
+- ✅ 4 arquivos criados em `docs/database/`
+- ✅ 3 arquivos criados em `docs/security/`
+- ✅ 5 arquivos criados em `docs/frontend/`
+- ✅ 3 arquivos criados em `docs/git/`
 - ✅ 6 arquivos criados em `docs/archive/`
+- ✅ 5 subpastas de domínio criadas
 - ✅ 20 sprints renomeadas com prefixos descritivos
-- ✅ 26 arquivos obsoletos deletados (`archive/sprint-23/`)
+- ✅ 31 arquivos obsoletos deletados (5 avulsos + 26 archive/sprint-23/)
 - ✅ 800 linhas de `architecture.md` quebradas em 6 arquivos focados
 - ✅ 7 ADRs documentados
 - ✅ 5 erros comuns documentados com solução
 - ✅ 14 débitos técnicos priorizados
+- ✅ 13 bugs de banco documentados (DB-001 a DB-013)
+- ✅ 7 bugs de backend documentados (BACK-001 a BACK-007)
+- ✅ **Total:** 28 arquivos criados, 5 atualizados, 20 renomeados, 31 deletados
+- ✅ **Estrutura final:** 53 arquivos organizados em hierarquia clara
 
 ### Melhorias Qualitativas
-- ✅ **Navegação facilitada:** Estrutura hierárquica clara com índices
+
+- ✅ **Navegação facilitada:** Estrutura hierárquica clara com índices navegáveis
 - ✅ **Onboarding acelerado:** Devs sabem por onde começar (overview → tópicos específicos)
 - ✅ **Manutenção simplificada:** Cada tópico em arquivo separado, fácil de atualizar
-- ✅ **Busca eficiente:** Prefixos em sprints facilitam busca por tipo
-- ✅ **Consistência:** Todos os overviews seguem mesmo padrão
-- ✅ **Decisões documentadas:** ADRs explicam "por quê" das escolhas técnicas
-- ✅ **Troubleshooting prático:** Erros comuns com diagnóstico e solução
+- ✅ **Busca eficiente:** Prefixos em sprints facilitam busca por tipo (mvp-, refactor-, fix-)
+- ✅ **Consistência:** Todos os overviews seguem mesmo padrão (intro, índice, quando usar, ver também)
+- ✅ **Decisões documentadas:** 7 ADRs explicam "por quê" das escolhas técnicas
+- ✅ **Troubleshooting prático:** 5 erros comuns com diagnóstico e solução
+- ✅ **Bugs documentados:** 13 bugs de banco + 7 bugs de backend identificados e corrigidos
+- ✅ **Workflow Git documentado:** Conventional Commits, feature branch, code review
+- ✅ **Arquitetura clara:** 6 design patterns aplicados, fluxos de requisição/auth documentados
 
 ## Technical Debt
 
 Itens identificados mas não resolvidos nesta sprint:
 
-- [ ] **Revisar overviews de backend, database, frontend, security** — aplicar mesmo padrão de architecture/overview.md (estimativa: 2h)
-- [ ] **Criar diagramas visuais** — fluxos de requisição, arquitetura em camadas (estimativa: 1h)
+- [ ] **Criar diagramas visuais** — fluxos de requisição, arquitetura em camadas usando Mermaid (estimativa: 1h)
 - [ ] **Adicionar métricas de bundle size** — documentar em architecture/overview.md (estimativa: 30min)
-- [ ] **Documentar Edge Functions individualmente** — criar `backend/edge-functions.md` (estimativa: 1h)
-- [ ] **Documentar schema completo** — criar `database/schema.md` com todas as tabelas (estimativa: 2h)
+- [ ] **Criar script de validação de links** — automatizar verificação de links quebrados (estimativa: 1h)
 
 ## Lessons Learned
 
 ### O que funcionou bem
+
 - ✅ **Quebrar arquivo grande em múltiplos focados** — 800 linhas → 6 arquivos de ~200-400 linhas cada facilita navegação
 - ✅ **Padronizar estrutura de overviews** — intro + índice + quando usar + ver também cria consistência
 - ✅ **Prefixos em sprints** — `mvp-`, `refactor-`, `fix-` facilitam busca e categorização
@@ -396,22 +482,22 @@ Itens identificados mas não resolvidos nesta sprint:
 - ✅ **Troubleshooting com exemplos práticos** — código real + diagnóstico + solução é mais útil que teoria
 
 ### O que poderia melhorar
-- ⚠️ **Revisar todos os overviews de uma vez** — deixar backend/database/frontend/security para depois pode gerar inconsistência
+
 - ⚠️ **Não criar diagramas visuais** — fluxos em texto são menos intuitivos que diagramas
-- ⚠️ **Não validar links quebrados** — renomear arquivos pode quebrar links em outros docs
+- ⚠️ **Não validar links quebrados automaticamente** — renomear arquivos pode quebrar links em outros docs
 
 ### Aplicações futuras
-- 💡 **Aplicar padrão de overview em todos os domínios** — backend, database, frontend, security devem seguir mesma estrutura
+
 - 💡 **Criar script de validação de links** — automatizar verificação de links quebrados
 - 💡 **Adicionar diagramas Mermaid** — fluxos visuais são mais intuitivos que texto
 - 💡 **Documentar decisões em ADRs** — sempre que houver escolha técnica não óbvia, criar ADR
+- 💡 **Manter padrão de overviews** — novos domínios devem seguir estrutura (intro, índice, quando usar, ver também)
 
 ## Next Steps
 
-1. **Revisar overviews de backend, database, frontend, security** — aplicar padrão de architecture/overview.md
-2. **Criar diagramas visuais** — fluxos de requisição, arquitetura em camadas usando Mermaid
-3. **Commitar trabalho** — `docs: refactor documentation structure and standardize overviews`
-4. **Atualizar Cap6 do TCC** — referenciar nova estrutura de docs
+1. **Criar diagramas visuais** — fluxos de requisição, arquitetura em camadas usando Mermaid
+2. **Commitar trabalho** — `docs: refactor documentation structure and standardize overviews`
+3. **Atualizar Cap6 do TCC** — referenciar nova estrutura de docs
 
 ## References
 

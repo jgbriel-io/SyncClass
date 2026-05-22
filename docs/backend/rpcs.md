@@ -1,0 +1,409 @@
+# RPCs, Triggers e Views
+
+Operações complexas no banco via RPCs, triggers automáticos e views otimizadas.
+
+## Índice
+
+- [Quando usar](#quando-usar)
+- [RPCs principais](#rpcs-principais)
+- [Triggers ativos](#triggers-ativos)
+- [Views](#views)
+- [Materialized Views](#materialized-views)
+- [Ver também](#ver-também)
+
+## Quando usar
+
+**Use RPC quando:**
+
+- Operação complexa (múltiplas queries, transação atômica)
+- Lógica de negócio no banco (validação, cálculo)
+- Performance crítica (evitar N+1 queries)
+- Idempotência (operações financeiras)
+
+**Use Trigger quando:**
+
+- Ação automática em INSERT/UPDATE/DELETE
+- Validação antes de salvar (BEFORE trigger)
+- Auditoria/log após salvar (AFTER trigger)
+- Atualizar campos derivados (updated_at, totais)
+
+**Use View quando:**
+
+- Query complexa reutilizada em múltiplos lugares
+- Agregação de dados (totais, estatísticas)
+- Simplificar queries do frontend
+- Ocultar colunas sensíveis (LGPD)
+
+## RPCs principais
+
+### create_class_package
+
+**Responsabilidade:** Criar pacote de aulas (múltiplas aulas + cobrança) em transação atômica.
+
+**Arquivo:** `supabase/migrations/14_class_packages.sql`
+
+**Assinatura:**
+
+```sql
+create_class_package(
+  p_teacher_id UUID,
+  p_student_id UUID,
+  p_classes JSONB,      -- array de { class_date, start_at, end_at, title, notes }
+  p_financial JSONB     -- { amount, due_date, payment_method, notes }
+) RETURNS JSONB
+```
+
+**Fluxo:**
+
+1. Valida que todas as aulas são do mesmo professor e aluno
+2. Insere todas as aulas em `class_logs`
+3. Insere cobrança em `financial_records`
+4. Vincula aulas à cobrança via `financial_record_class_logs`
+5. Retorna `{ package_id, class_ids, financial_record_id }`
+
+**Rollback:** Se qualquer passo falha, toda a transação é revertida.
+
+**Chamada:**
+
+```ts
+const { data, error } = await supabase.rpc("create_class_package", {
+  p_teacher_id: teacherId,
+  p_student_id: studentId,
+  p_classes: [
+    {
+      class_date: "2026-05-25",
+      start_at: "2026-05-25T10:00:00Z",
+      end_at: "2026-05-25T11:00:00Z",
+      title: "Aula 1",
+    },
+    {
+      class_date: "2026-05-27",
+      start_at: "2026-05-27T10:00:00Z",
+      end_at: "2026-05-27T11:00:00Z",
+      title: "Aula 2",
+    },
+  ],
+  p_financial: { amount: 100, due_date: "2026-06-05", payment_method: "pix" },
+});
+```
+
+### mark_as_paid_idempotent
+
+**Responsabilidade:** Marcar cobrança como paga (idempotente).
+
+**Arquivo:** `supabase/migrations/06_idempotency.sql`
+
+**Assinatura:**
+
+```sql
+mark_as_paid_idempotent(
+  p_financial_record_id UUID,
+  p_payment_method TEXT,
+  p_idempotency_key TEXT
+) RETURNS JSONB
+```
+
+**Fluxo:**
+
+1. Verifica se `idempotency_key` já existe
+2. Se existe, retorna resultado anterior (idempotente)
+3. Se não existe, atualiza `status='pago'`, `payment_method`, `paid_at=NOW()`
+4. Insere `idempotency_key` com resultado
+5. Retorna `{ success: true, financial_record_id }`
+
+**Chamada:**
+
+```ts
+const idempotencyKey = crypto.randomUUID();
+const { data, error } = await supabase.rpc("mark_as_paid_idempotent", {
+  p_financial_record_id: recordId,
+  p_payment_method: "pix",
+  p_idempotency_key: idempotencyKey,
+});
+```
+
+### confirm_payment_idempotent
+
+**Responsabilidade:** Confirmar pagamento (aprovar comprovante enviado pelo aluno).
+
+**Arquivo:** `supabase/migrations/06_idempotency.sql`
+
+**Assinatura:**
+
+```sql
+confirm_payment_idempotent(
+  p_financial_record_id UUID,
+  p_idempotency_key TEXT
+) RETURNS JSONB
+```
+
+**Fluxo:**
+
+1. Verifica idempotência
+2. Atualiza `status='pago'`, `payment_proof_status='approved'`, `confirmed_by_user_id=auth.uid()`, `paid_at=NOW()`
+3. Retorna `{ success: true }`
+
+### undo_payment_idempotent
+
+**Responsabilidade:** Desfazer pagamento (voltar para pendente).
+
+**Arquivo:** `supabase/migrations/06_idempotency.sql`
+
+**Assinatura:**
+
+```sql
+undo_payment_idempotent(
+  p_financial_record_id UUID,
+  p_idempotency_key TEXT
+) RETURNS JSONB
+```
+
+**Fluxo:**
+
+1. Verifica idempotência
+2. Atualiza `status='pendente'`, `paid_at=NULL`, `confirmed_by_user_id=NULL`
+3. Retorna `{ success: true }`
+
+### update_student_payment_day
+
+**Responsabilidade:** Recalcular `due_date` de todas as cobranças pendentes quando `students.pay_day` muda.
+
+**Arquivo:** `supabase/migrations/08_update_payment_day.sql`
+
+**Assinatura:**
+
+```sql
+update_student_payment_day(
+  p_student_id UUID,
+  p_new_pay_day INTEGER
+) RETURNS VOID
+```
+
+**Fluxo:**
+
+1. Atualiza `students.pay_day`
+2. Recalcula `due_date` de todas as cobranças pendentes do aluno
+3. Mantém mês/ano, muda apenas o dia
+
+**Chamada:**
+
+```ts
+await supabase.rpc("update_student_payment_day", {
+  p_student_id: studentId,
+  p_new_pay_day: 15,
+});
+```
+
+### check_rate_limit
+
+**Responsabilidade:** Verificar rate limit (10 req/min por usuário).
+
+**Arquivo:** `supabase/migrations/07_rate_limiting.sql`
+
+**Assinatura:**
+
+```sql
+check_rate_limit(
+  p_operation TEXT,
+  p_max_requests INTEGER,
+  p_window_minutes INTEGER
+) RETURNS BOOLEAN
+```
+
+**Fluxo:**
+
+1. Conta requisições do usuário na janela de tempo
+2. Se < max_requests, insere novo registro e retorna TRUE
+3. Se >= max_requests, retorna FALSE
+
+**Chamada:**
+
+```ts
+const { data: allowed } = await supabase.rpc("check_rate_limit", {
+  p_operation: "create_student",
+  p_max_requests: 10,
+  p_window_minutes: 1,
+});
+
+if (!allowed) {
+  throw new Error("Rate limit excedido. Aguarde 1 minuto.");
+}
+```
+
+## Triggers ativos
+
+| Tabela              | Trigger                                     | Quando                      | Ação                                                               |
+| ------------------- | ------------------------------------------- | --------------------------- | ------------------------------------------------------------------ |
+| `financial_records` | `trigger_validate_financial_logic`          | BEFORE INSERT/UPDATE        | Valida `amount > 0`, `status IN ('pendente', 'pago', 'cancelado')` |
+| `profiles`          | `trigger_invalidate_sessions_on_deactivate` | AFTER UPDATE (active=false) | Invalida todas as sessões do usuário                               |
+| `teachers`          | `trigger_set_updated_at`                    | BEFORE UPDATE               | Atualiza `updated_at=NOW()`                                        |
+| `students`          | `trigger_set_updated_at`                    | BEFORE UPDATE               | Atualiza `updated_at=NOW()`                                        |
+| `profiles`          | `trigger_set_updated_at`                    | BEFORE UPDATE               | Atualiza `updated_at=NOW()`                                        |
+| `class_logs`        | `trigger_set_updated_at`                    | BEFORE UPDATE               | Atualiza `updated_at=NOW()`                                        |
+| `financial_records` | `trigger_set_updated_at`                    | BEFORE UPDATE               | Atualiza `updated_at=NOW()`                                        |
+| `activities`        | `trigger_set_updated_at`                    | BEFORE UPDATE               | Atualiza `updated_at=NOW()`                                        |
+
+**Padrão:** Todos os triggers `set_updated_at` usam função genérica `update_updated_at_column()`.
+
+## Views
+
+### students_with_stats
+
+**Responsabilidade:** Alunos com total de aulas e valores do mês atual.
+
+**Arquivo:** `supabase/migrations/09_views.sql`
+
+**Colunas:**
+
+- Todas de `students`
+- `total_classes` — total de aulas concluídas
+- `total_amount_this_month` — soma de cobranças do mês atual
+
+**Uso:**
+
+```ts
+const { data } = await supabase.from("students_with_stats").select("*");
+```
+
+### students_active
+
+**Responsabilidade:** Alunos ativos (não deletados, status=ativo).
+
+**Arquivo:** `supabase/migrations/09_views.sql`
+
+**Filtro:** `is_deleted=false AND status='ativo'`
+
+**Uso:**
+
+```ts
+const { data } = await supabase.from("students_active").select("*");
+```
+
+### students_masked
+
+**Responsabilidade:** Dados anonimizados para LGPD (oculta CPF, telefone, endereço).
+
+**Arquivo:** `supabase/migrations/10_lgpd.sql`
+
+**Colunas ocultas:** `cpf`, `phone`, `address`, `city`, `state`, `zip_code`
+
+**Uso:**
+
+```ts
+const { data } = await supabase.from("students_masked").select("*");
+```
+
+### teachers_with_pix_restricted
+
+**Responsabilidade:** Dados PIX visíveis apenas para admin.
+
+**Arquivo:** `supabase/migrations/10_lgpd.sql`
+
+**RLS:** `is_admin()` — apenas admin vê `pix_key`, `pix_key_type`
+
+**Uso:**
+
+```ts
+const { data } = await supabase
+  .from("teachers_with_pix_restricted")
+  .select("*");
+```
+
+### class_logs_with_billing
+
+**Responsabilidade:** Aulas com valores calculados (hourly_rate \* duration).
+
+**Arquivo:** `supabase/migrations/09_views.sql`
+
+**Colunas adicionais:**
+
+- `calculated_amount` — `hourly_rate * (duration_minutes / 60)`
+- `student_name` — join com `students`
+- `teacher_name` — join com `teachers`
+
+**Uso:**
+
+```ts
+const { data } = await supabase.from("class_logs_with_billing").select("*");
+```
+
+### activities_active
+
+**Responsabilidade:** Atividades não deletadas.
+
+**Arquivo:** `supabase/migrations/11_activities.sql`
+
+**Filtro:** `deleted_at IS NULL`
+
+**Security:** `SECURITY INVOKER` — herda permissões do usuário autenticado
+
+**Uso:**
+
+```ts
+const { data } = await supabase.from("activities_active").select("*");
+```
+
+## Materialized Views
+
+**Diferença:** Views normais são queries executadas em tempo real. Materialized views armazenam resultado (snapshot) — mais rápidas mas precisam de refresh manual.
+
+### activities_dashboard
+
+**Responsabilidade:** Estatísticas de atividades (total, pendentes, entregues, corrigidas).
+
+**Arquivo:** `supabase/migrations/11_activities.sql`
+
+**Colunas:**
+
+- `teacher_id`
+- `total_activities`
+- `pending_activities`
+- `delivered_activities`
+- `corrected_activities`
+
+**Refresh:**
+
+```sql
+REFRESH MATERIALIZED VIEW activities_dashboard;
+```
+
+**Uso:**
+
+```ts
+const { data } = await supabase.from("activities_dashboard").select("*");
+```
+
+### financial_dashboard
+
+**Responsabilidade:** Estatísticas financeiras (total, pago, pendente, atrasado).
+
+**Arquivo:** `supabase/migrations/09_views.sql`
+
+**Colunas:**
+
+- `teacher_id`
+- `total_amount`
+- `paid_amount`
+- `pending_amount`
+- `overdue_amount`
+
+**Refresh:**
+
+```sql
+REFRESH MATERIALIZED VIEW financial_dashboard;
+```
+
+**Uso:**
+
+```ts
+const { data } = await supabase.from("financial_dashboard").select("*");
+```
+
+**Nota:** Refresh deve ser feito periodicamente (cron job ou trigger).
+
+## Ver também
+
+- [Backend Overview](./overview.md) — Visão geral do backend
+- [Edge Functions](./edge-functions.md) — Alternativa a RPCs (mais flexível)
+- [Database Overview](../database/overview.md) — Schema, migrations
+- [Security Overview](../security/overview.md) — RLS policies
