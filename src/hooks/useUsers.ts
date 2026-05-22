@@ -119,18 +119,20 @@ export function useUsers() {
       if (teachersError) throw teachersError;
 
       return (profiles || []).map((profile: ProfileRow): CombinedUser => {
-        const roleRow = (roles || []).find((r: UserRoleRow) => r.user_id === profile.user_id);
+        const roleRow = (roles || []).find(
+          (r: UserRoleRow) => r.user_id === profile.user_id
+        );
         const emailFromProfile = profile.email;
         const emailFromRole = roleRow?.email;
         const primaryEmail = emailFromProfile || emailFromRole || "";
 
         // Buscar student e teacher vinculados
-        const student = profile.student_id 
-          ? (students || []).find(s => s.id === profile.student_id) || null
+        const student = profile.student_id
+          ? (students || []).find((s) => s.id === profile.student_id) || null
           : null;
-        
+
         const teacher = profile.teacher_id
-          ? (teachers || []).find(t => t.id === profile.teacher_id) || null
+          ? (teachers || []).find((t) => t.id === profile.teacher_id) || null
           : null;
 
         const combinedUser: CombinedUser = {
@@ -149,13 +151,15 @@ export function useUsers() {
             created_at: profile.created_at,
             updated_at: profile.updated_at,
           },
-          role: roleRow ? {
-            id: roleRow.id,
-            user_id: roleRow.user_id,
-            role: roleRow.role,
-            full_name: roleRow.full_name,
-            email: roleRow.email,
-          } : null,
+          role: roleRow
+            ? {
+                id: roleRow.id,
+                user_id: roleRow.user_id,
+                role: roleRow.role,
+                full_name: roleRow.full_name,
+                email: roleRow.email,
+              }
+            : null,
           student,
           teacher,
         };
@@ -183,7 +187,9 @@ export interface UseUsersPaginatedResult {
   refetch: () => void;
 }
 
-export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersPaginatedResult {
+export function useUsersPaginated(
+  options?: UseUsersPaginatedOptions
+): UseUsersPaginatedResult {
   const [page, setPage] = useState(0);
   const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
   const filters = options?.filters;
@@ -191,7 +197,10 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
   const query = useQuery({
     queryKey: ["users_paginated", page, pageSize, filters],
     queryFn: async () => {
-      let q = supabase.from("profiles").select("*", { count: "exact" }).is("deleted_at", null); // Only show non-deleted profiles
+      let q = supabase
+        .from("profiles")
+        .select("*", { count: "exact" })
+        .is("deleted_at", null); // Only show non-deleted profiles
 
       if (filters?.status === "active") {
         q = q.eq("active", true);
@@ -200,13 +209,20 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
       }
 
       const sortBy = filters?.sortBy ?? "created_desc";
-      const orderCol = sortBy === "name_asc" || sortBy === "name_desc" ? "full_name" : "created_at";
+      const orderCol =
+        sortBy === "name_asc" || sortBy === "name_desc"
+          ? "full_name"
+          : "created_at";
       const ascending = sortBy === "created_asc" || sortBy === "name_asc";
       q = q.order(orderCol, { ascending, nullsFirst: false });
 
       const from = page * pageSize;
       const to = from + pageSize - 1;
-      const { data: profiles, error: profilesError, count } = await q.range(from, to);
+      const {
+        data: profiles,
+        error: profilesError,
+        count,
+      } = await q.range(from, to);
 
       if (profilesError) throw profilesError;
 
@@ -225,11 +241,11 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
 
       // Buscar students e teachers vinculados (incluindo inativos)
       const studentIds = profileRows
-        .map(p => p.student_id)
+        .map((p) => p.student_id)
         .filter((id): id is string => id != null);
-      
+
       const teacherIds = profileRows
-        .map(p => p.teacher_id)
+        .map((p) => p.teacher_id)
         .filter((id): id is string => id != null);
 
       let students: Tables<"students">[] = [];
@@ -241,7 +257,7 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
           .from("students")
           .select("*")
           .in("id", studentIds);
-        
+
         if (studentsError) throw studentsError;
         students = studentsData || [];
       }
@@ -252,24 +268,26 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
           .from("teachers")
           .select("*")
           .in("id", teacherIds);
-        
+
         if (teachersError) throw teachersError;
         teachers = teachersData || [];
       }
 
       const list = profileRows.map((profile): CombinedUser => {
-        const roleRow = (roles || []).find((r: UserRoleRow) => r.user_id === profile.user_id);
+        const roleRow = (roles || []).find(
+          (r: UserRoleRow) => r.user_id === profile.user_id
+        );
         const emailFromProfile = profile.email;
         const emailFromRole = roleRow?.email;
         const primaryEmail = emailFromProfile || emailFromRole || "";
 
         // Buscar student e teacher vinculados
-        const student = profile.student_id 
-          ? students.find(s => s.id === profile.student_id) || null
+        const student = profile.student_id
+          ? students.find((s) => s.id === profile.student_id) || null
           : null;
-        
+
         const teacher = profile.teacher_id
-          ? teachers.find(t => t.id === profile.teacher_id) || null
+          ? teachers.find((t) => t.id === profile.teacher_id) || null
           : null;
 
         return {
@@ -288,13 +306,15 @@ export function useUsersPaginated(options?: UseUsersPaginatedOptions): UseUsersP
             created_at: profile.created_at,
             updated_at: profile.updated_at,
           },
-          role: roleRow ? {
-            id: roleRow.id,
-            user_id: roleRow.user_id,
-            role: roleRow.role,
-            full_name: roleRow.full_name,
-            email: roleRow.email,
-          } : null,
+          role: roleRow
+            ? {
+                id: roleRow.id,
+                user_id: roleRow.user_id,
+                role: roleRow.role,
+                full_name: roleRow.full_name,
+                email: roleRow.email,
+              }
+            : null,
           student,
           teacher,
         };
@@ -337,15 +357,17 @@ export function useCurrentUserProfile(userId: string | undefined) {
       if (!userId) return null;
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, user_id, full_name, email, avatar_url, role, teacher_id, student_id, active")
+        .select(
+          "id, user_id, full_name, email, avatar_url, role, teacher_id, student_id, active"
+        )
         .eq("user_id", userId)
         .maybeSingle();
       if (error) throw error;
-      return data as { 
-        id: string; 
-        user_id: string; 
-        full_name: string | null; 
-        email: string | null; 
+      return data as {
+        id: string;
+        user_id: string;
+        full_name: string | null;
+        email: string | null;
         avatar_url: string | null;
         role: string | null;
         teacher_id: string | null;
@@ -394,6 +416,9 @@ export {
   useCreateAuthUserForTeacher,
   useInviteStudent,
   useInviteTeacher,
+} from "./useUserMutations";
+
+export {
   useUpdateProfileName,
   useUpdateProfileEmail,
-} from "./useUserMutations";
+} from "./useUserProfileMutations";
