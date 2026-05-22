@@ -1,9 +1,9 @@
 # Sprint 19 — Setup E2E com Playwright
 
-**Período:** Planejada  
-**Status:** 🔴 Não Iniciada  
+**Período:** 21/05/2026  
+**Status:** 🔴 Arquivada (spec gerada, implementação adiada)  
 **Tipo:** Test  
-**Prioridade:** 🔴 Alta
+**Prioridade:** 🔴 Alta → 🟡 Baixa (pós-refatorações)
 
 ## Problem Statement
 
@@ -671,3 +671,57 @@ Itens identificados mas não resolvidos nesta sprint:
 - [Sprint 18](./sprint-18-consolidacao-problemas-identificados.md) — Consolidação de problemas
 - [Playwright Docs](https://playwright.dev/docs/intro) — Documentação oficial
 - [Best Practices](https://playwright.dev/docs/best-practices) — Padrões recomendados
+
+---
+
+## Decisão de Arquivamento (22/05/2026)
+
+**Motivo:** Após análise técnica, decidimos **não implementar** E2E com Playwright no momento atual.
+
+### Contexto da Decisão
+
+1. **14 débitos técnicos prioritários** identificados em `docs/architecture/technical-debt.md`:
+   - ARQ-001: God hook (useUpdateStudent — 200+ linhas)
+   - ARQ-002: Agregação no cliente (useFinancialSummary)
+   - ARQ-003: Query keys inconsistentes (17 hooks)
+   - ARQ-004: Invalidações excessivas (8 queries desnecessárias)
+   - ARQ-005: N+1 queries (useFinancialRecords)
+   - ARQ-006: God file (useUserMutations — 600+ linhas)
+   - REFORMA-001 a REFORMA-008 (duplicações, complexidade ciclomática)
+
+2. **Arquitetura em refatoração:** Componentes passaram por mudanças recentes (sprints 10-12). Seletores E2E seriam instáveis e exigiriam manutenção contínua.
+
+3. **Cobertura existente suficiente:**
+   - 287 testes unitários (Vitest) cobrindo lógica de negócio
+   - Testes manuais estruturados validando fluxos críticos
+   - Cap. 7 do TCC já justifica ausência de E2E como decisão técnica deliberada
+
+4. **ROI baixo no curto prazo:**
+   - 18h de setup + manutenção contínua
+   - Prioridades arquiteturais mais urgentes (God hooks, N+1 queries)
+   - Contexto TCC com prazo limitado (~3 meses, 1 dev)
+
+### Próximos Passos Recomendados
+
+**Antes de considerar E2E:**
+
+1. Resolver débitos ARQ-001, ARQ-002, REFORMA-001, REFORMA-003 (Sprint Refatoração 1 — 8h)
+2. Validar estabilidade da arquitetura por 2-4 semanas
+3. Revisar Cap. 7 do TCC para reforçar justificativa técnica
+
+**Pós-TCC (se projeto continuar):**
+
+- Implementar Playwright com arquitetura estável
+- Começar com 2-3 smoke tests (login + CRUD básico) antes dos 8 specs completos
+- Usar spec arquivada como referência (`.kiro/specs/.archived/playwright-e2e-setup/`)
+
+### Spec Arquivada
+
+Spec completa preservada em `.kiro/specs/.archived/playwright-e2e-setup/`:
+
+- `requirements.md` — 15 requisitos, 105 critérios de aceitação
+- `design.md` — 18h de implementação, decisões arquiteturais
+- `tasks.md` — 18 tarefas em 3 checkpoints
+- `ARCHIVED.md` — Contexto da decisão de arquivamento
+
+**Status final:** 🔴 Arquivada (spec gerada, implementação adiada para priorizar refatorações arquiteturais)
