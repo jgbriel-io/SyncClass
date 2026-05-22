@@ -28,7 +28,7 @@
 
 ## Cap. 4 — Requisitos
 
-> **Nota:** Documentação completa em `docs/tcc/cap4-requisitos.md`
+> **Nota:** Documentação completa em `docs/tcc/academico/cap4-requisitos.md`
 
 ### Resumo Quantitativo
 
