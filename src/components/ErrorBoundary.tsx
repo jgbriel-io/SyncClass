@@ -1,6 +1,12 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { common } from "@/content";
 
@@ -20,7 +26,10 @@ export interface ErrorBoundaryFallbackProps {
 }
 
 // Default fallback component
-function DefaultErrorFallback({ error, resetError }: ErrorBoundaryFallbackProps) {
+function DefaultErrorFallback({
+  error,
+  resetError,
+}: ErrorBoundaryFallbackProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="max-w-md w-full">
@@ -63,7 +72,10 @@ function DefaultErrorFallback({ error, resetError }: ErrorBoundaryFallbackProps)
   );
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
@@ -82,7 +94,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to console in development
     if (import.meta.env.DEV) {
-      console.error('ErrorBoundary caught an error:', error, errorInfo);
+      console.error("ErrorBoundary caught an error:", error, errorInfo);
     }
   }
 
@@ -96,7 +108,12 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   render() {
     if (this.state.hasError && this.state.error) {
       const FallbackComponent = this.props.fallback || DefaultErrorFallback;
-      return <FallbackComponent error={this.state.error} resetError={this.resetError} />;
+      return (
+        <FallbackComponent
+          error={this.state.error}
+          resetError={this.resetError}
+        />
+      );
     }
 
     return this.props.children;
@@ -121,4 +138,5 @@ export function withErrorBoundary<P extends object>(
   return WrappedComponent;
 }
 
+export { ErrorBoundary };
 export default ErrorBoundary;
