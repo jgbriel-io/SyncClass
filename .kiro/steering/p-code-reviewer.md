@@ -1,5 +1,6 @@
 ---
-inclusion: always
+inclusion: fileMatch
+fileMatchPattern: "**/*.{tsx,ts}"
 description: Checklist de code review SyncClass — arquitetura, qualidade, segurança, performance, UI/UX e TypeScript
 ---
 
