@@ -5,102 +5,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { CORS_HEADERS, jsonResponse } from "../_shared/utils.ts";
-
-const ROLES = ["admin", "student", "teacher"] as const;
-type Role = (typeof ROLES)[number];
-
-function log(msg: string, data?: Record<string, unknown>) {
-  console.log(`[invite-user] ${msg}`, data ?? "");
-}
-
-// ✅ VULN-009 FIX: crypto.getRandomValues() ao invés de Math.random()
-function randomPassword(length = 12): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*";
-  const array = new Uint8Array(length);
-  crypto.getRandomValues(array);
-  let p = "";
-  for (let i = 0; i < length; i++) p += chars.charAt(array[i] % chars.length);
-  return p;
-}
-
-function friendlyDuplicateError(msg: string): string {
-  if (msg.includes("Telefone já cadastrado na plataforma") || msg.includes("teachers_unique_phone") || msg.includes("students_unique_phone")) return "Telefone já cadastrado na plataforma";
-  if (msg.includes("students_unique_email") || (msg.includes("duplicate key") && msg.toLowerCase().includes("email"))) return "Email já cadastrado";
-  return msg;
-}
-
-function normalizeDigits(val: string | null | undefined): string {
-  if (!val || typeof val !== "string") return "";
-  return val.replace(/\D/g, "");
-}
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const EMAIL_MAX_LENGTH = 255;
-
-function isValidEmailFormat(email: string): boolean {
-  const trimmed = email?.trim() ?? "";
-  if (trimmed.length === 0 || trimmed.length > EMAIL_MAX_LENGTH) return false;
-  return EMAIL_REGEX.test(trimmed);
-}
-
-// Remove empty strings and convert them to null to avoid unique index conflicts
-function cleanInsertData(data: Record<string, unknown>): Record<string, unknown> {
-  const cleaned: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(data)) {
-    if (value === "" || value === undefined) {
-      // Skip empty strings and undefined to let DB handle defaults
-      continue;
-    }
-    cleaned[key] = value;
-  }
-  return cleaned;
-}
-
-// Validação platform-wide: telefone único em students + teachers
-async function validatePhonePlatform(
-  admin: ReturnType<typeof createClient>,
-  data: Record<string, unknown> | undefined
-): Promise<string | null> {
-  if (!data) return null;
-  const phone = normalizeDigits(data.phone as string);
-  
-  // Validar comprimento do telefone (8-15 dígitos para internacional)
-  if (phone && phone.length > 0) {
-    if (phone.length < 8) {
-      return "Telefone deve ter pelo menos 8 dígitos";
-    }
-    if (phone.length > 15) {
-      return "Telefone deve ter no máximo 15 dígitos";
-    }
-  }
-  
-  // Verificar duplicação de telefone (todos os telefones, não só brasileiros)
-  if (phone.length >= 8) {
-    const { data: phoneExists } = await admin.rpc("check_phone_exists_platform", { p_phone_digits: phone });
-    if (phoneExists === true) return "Telefone já cadastrado na plataforma";
-  }
-  
-  return null;
-}
-
-async function rollbackAuthUser(admin: ReturnType<typeof createClient>, userId: string): Promise<void> {
-  try {
-    await admin.auth.admin.deleteUser(userId);
-    log("Rollback: auth user deleted", { userId });
-  } catch (e) {
-    log("Rollback failed to delete auth user", { userId, error: (e as Error).message });
-  }
-}
-
-async function waitForProfile(userId: string, admin: ReturnType<typeof createClient>, maxAttempts = 8): Promise<void> {
-  for (let i = 0; i < maxAttempts; i++) {
-    const { data } = await admin.from("profiles").select("id").eq("user_id", userId).maybeSingle();
-    if (data) return;
-    await new Promise((r) => setTimeout(r, 150 + i * 100));
-  }
-  throw new Error("Perfil não foi criado a tempo. Tente novamente.");
-}
-
+import {
+  ROLES,
+  Role,
+  log,
+  randomPassword,
+  friendlyDuplicateError,
+  isValidEmailFormat,
+  cleanInsertData,
+} from "./helpers.ts";
+import { validatePhonePlatform } from "./validation.ts";
+import { rollbackAuthUser, waitForProfile } from "./auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -119,11 +34,18 @@ serve(async (req) => {
     return jsonResponse({ error: "Configuração do servidor incompleta" }, 500);
   }
 
-  const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization");
+  const authHeader =
+    req.headers.get("Authorization") ?? req.headers.get("authorization");
   const jwt = authHeader?.replace(/^Bearer\s+/i, "").trim();
   if (!jwt) {
     log("No Authorization header");
-    return jsonResponse({ error: "Não autenticado. Envie o header Authorization com o token do usuário logado." }, 401);
+    return jsonResponse(
+      {
+        error:
+          "Não autenticado. Envie o header Authorization com o token do usuário logado.",
+      },
+      401
+    );
   }
 
   const supabaseAuthed = createClient(supabaseUrl, anonKey, {
@@ -131,31 +53,36 @@ serve(async (req) => {
   });
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-  const { data: { user: caller }, error: authError } = await supabaseAuthed.auth.getUser(jwt);
+  const {
+    data: { user: caller },
+    error: authError,
+  } = await supabaseAuthed.auth.getUser(jwt);
   if (authError || !caller) {
     log("Not authenticated", { error: authError?.message, hasJwt: !!jwt });
-    const detail = authError?.message ?? (caller ? null : "Usuário não encontrado");
-    return jsonResponse({
-      error: "Não autenticado",
-      ...(detail && { detail }),
-    }, 401);
+    const detail =
+      authError?.message ?? (caller ? null : "Usuário não encontrado");
+    return jsonResponse(
+      { error: "Não autenticado", ...(detail && { detail }) },
+      401
+    );
   }
 
   // ✅ VULN-008 FIX: Rate limiting - 10 requests por minuto
-  const { data: rateLimitOk, error: rateLimitError } = await supabaseAdmin
-    .rpc("check_rate_limit", {
-      p_operation: "invite_user",
-      p_max_requests: 10,
-      p_window_minutes: 1,
-    });
+  const { data: rateLimitOk, error: rateLimitError } = await supabaseAdmin.rpc(
+    "check_rate_limit",
+    { p_operation: "invite_user", p_max_requests: 10, p_window_minutes: 1 }
+  );
 
   if (rateLimitError) {
     log("Rate limit check error", { error: rateLimitError.message });
   } else if (!rateLimitOk) {
-    return jsonResponse({
-      error: "Muitos convites enviados. Aguarde 1 minuto e tente novamente.",
-      retryAfter: 60,
-    }, 429);
+    return jsonResponse(
+      {
+        error: "Muitos convites enviados. Aguarde 1 minuto e tente novamente.",
+        retryAfter: 60,
+      },
+      429
+    );
   }
 
   const { data: callerRoleRow } = await supabaseAdmin
@@ -173,12 +100,20 @@ serve(async (req) => {
       .select("role, teacher_id")
       .eq("user_id", caller.id)
       .maybeSingle();
-    if (profileRow?.role && ROLES.includes(profileRow.role as Role)) callerRole = profileRow.role as Role;
+    if (profileRow?.role && ROLES.includes(profileRow.role as Role))
+      callerRole = profileRow.role as Role;
   }
 
-  const callerTeacherId = callerRole === "teacher"
-    ? (await supabaseAdmin.from("profiles").select("teacher_id").eq("user_id", caller.id).maybeSingle()).data?.teacher_id as string | null
-    : null;
+  const callerTeacherId =
+    callerRole === "teacher"
+      ? (
+          await supabaseAdmin
+            .from("profiles")
+            .select("teacher_id")
+            .eq("user_id", caller.id)
+            .maybeSingle()
+        ).data?.teacher_id as string | null
+      : null;
 
   interface Body {
     email: string;
@@ -195,13 +130,27 @@ serve(async (req) => {
   let body: Body;
   try {
     body = await req.json();
-    log("Request body received", { email: body.email, role: body.role, hasTeacherData: !!body.teacherData, hasStudentData: !!body.studentData });
+    log("Request body received", {
+      email: body.email,
+      role: body.role,
+      hasTeacherData: !!body.teacherData,
+      hasStudentData: !!body.studentData,
+    });
   } catch (err) {
     log("Failed to parse JSON body", { error: (err as Error).message });
     return jsonResponse({ error: "Corpo JSON inválido" }, 400);
   }
 
-  const { email, full_name, role, teacher_id, teacherId, studentId, teacherData, studentData } = body;
+  const {
+    email,
+    full_name,
+    role,
+    teacher_id,
+    teacherId,
+    studentId,
+    teacherData,
+    studentData,
+  } = body;
   const rawEmail = (email ?? "").trim();
   if (!rawEmail) {
     log("Missing email");
@@ -214,19 +163,35 @@ serve(async (req) => {
   const normalizedEmail = rawEmail.toLowerCase();
 
   if (!full_name || !role || !ROLES.includes(role)) {
-    log("Missing required fields", { full_name, role, roleValid: ROLES.includes(role as Role) });
-    return jsonResponse({ error: "Nome completo e tipo de conta são obrigatórios" }, 400);
+    log("Missing required fields", {
+      full_name,
+      role,
+      roleValid: ROLES.includes(role as Role),
+    });
+    return jsonResponse(
+      { error: "Nome completo e tipo de conta são obrigatórios" },
+      400
+    );
   }
 
   if (callerRole === "teacher") {
     if (role !== "student") {
       log("Teacher tried to invite non-student", { role });
-      return jsonResponse({ error: "Professores só podem convidar alunos" }, 403);
+      return jsonResponse(
+        { error: "Professores só podem convidar alunos" },
+        403
+      );
     }
-    const effectiveTeacherId = teacher_id ?? teacherId ?? (studentData as Record<string, unknown> | undefined)?.teacher_id;
+    const effectiveTeacherId =
+      teacher_id ??
+      teacherId ??
+      (studentData as Record<string, unknown> | undefined)?.teacher_id;
     if (!effectiveTeacherId || effectiveTeacherId !== callerTeacherId) {
       log("Teacher context mismatch", { effectiveTeacherId, callerTeacherId });
-      return jsonResponse({ error: "Aluno deve ser vinculado ao seu perfil de professor" }, 403);
+      return jsonResponse(
+        { error: "Aluno deve ser vinculado ao seu perfil de professor" },
+        403
+      );
     }
   } else if (callerRole !== "admin") {
     log("Caller is not admin or teacher", { callerRole });
@@ -234,7 +199,6 @@ serve(async (req) => {
   }
 
   // CRÍTICO: Usar senha do body se fornecida (frontend já gerou), nunca gerar nova
-  // Se não vier senha, gerar aqui (fallback para chamadas diretas da Edge Function)
   let password = body.password;
   if (!password || password.length < 6) {
     password = randomPassword();
@@ -275,32 +239,37 @@ serve(async (req) => {
   }
 
   if (role === "student" && !studentId) {
-    const err = await validatePhonePlatform(supabaseAdmin, studentData as Record<string, unknown> | undefined);
+    const err = await validatePhonePlatform(
+      supabaseAdmin,
+      studentData as Record<string, unknown> | undefined
+    );
     if (err) return jsonResponse({ error: err }, 400);
   }
   if (role === "teacher" && !teacherId) {
-    const err = await validatePhonePlatform(supabaseAdmin, teacherData as Record<string, unknown> | undefined);
+    const err = await validatePhonePlatform(
+      supabaseAdmin,
+      teacherData as Record<string, unknown> | undefined
+    );
     if (err) return jsonResponse({ error: err }, 400);
   }
 
   log("Creating auth user", { email: normalizedEmail, role });
 
-  // Criar usuário com senha e enviar email de confirmação
-  const { data: authUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-    email: normalizedEmail,
-    password,
-    email_confirm: false, // Não confirmar automaticamente para forçar email
-    user_metadata: { 
-      full_name,
-      temporary_password: password, // Disponível no template
-    },
-  });
+  const { data: authUser, error: createError } =
+    await supabaseAdmin.auth.admin.createUser({
+      email: normalizedEmail,
+      password,
+      email_confirm: false,
+      user_metadata: { full_name, temporary_password: password },
+    });
 
   if (createError) {
     const msg = createError.message ?? "";
-    const friendly = msg.toLowerCase().includes("already") || msg.toLowerCase().includes("already been registered")
-      ? "Email já cadastrado"
-      : msg;
+    const friendly =
+      msg.toLowerCase().includes("already") ||
+      msg.toLowerCase().includes("already been registered")
+        ? "Email já cadastrado"
+        : msg;
     log("Auth createUser failed", { error: createError.message });
     return jsonResponse({ error: friendly }, 400);
   }
@@ -312,43 +281,42 @@ serve(async (req) => {
 
   const userId = authUser.user.id;
 
-  // Enviar email de convite com senha
   try {
     await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail, {
-      data: {
-        full_name,
-        temporary_password: password,
-      },
+      data: { full_name, temporary_password: password },
     });
     log("Invite email sent", { email: normalizedEmail });
   } catch (emailError) {
-    log("Failed to send invite email", { error: (emailError as Error).message });
-    // Não falhar a operação se email não enviar
+    log("Failed to send invite email", {
+      error: (emailError as Error).message,
+    });
   }
 
   try {
     await waitForProfile(userId, supabaseAdmin);
   } catch (err) {
     log("Profile wait failed", { error: (err as Error).message });
-    return jsonResponse({ error: (err as Error).message, userId, permissionsWarning: true }, 500);
+    return jsonResponse(
+      { error: (err as Error).message, userId, permissionsWarning: true },
+      500
+    );
   }
 
   let resolvedStudentId: string | null = studentId ?? null;
   let resolvedTeacherId: string | null = teacherId ?? null;
 
   if (role === "student") {
-    if (studentId) {
-      resolvedStudentId = studentId;
-    } else {
+    if (!studentId) {
       const sd = (studentData ?? {}) as Record<string, unknown>;
-      const tid = (teacher_id ?? teacherId ?? sd.teacher_id) as string | undefined;
-      const rawInsertData: Record<string, unknown> = {
+      const tid = (teacher_id ?? teacherId ?? sd.teacher_id) as
+        | string
+        | undefined;
+      const insertData = cleanInsertData({
         name: full_name,
         email: normalizedEmail,
         teacher_id: tid ?? null,
         ...sd,
-      };
-      const insertData = cleanInsertData(rawInsertData);
+      });
       const { data: student, error: studentErr } = await supabaseAdmin
         .from("students")
         .insert(insertData)
@@ -356,26 +324,27 @@ serve(async (req) => {
         .single();
 
       if (studentErr) {
-        const friendly = friendlyDuplicateError(studentErr.message);
-        log("Student insert failed, rolling back", { error: studentErr.message });
+        log("Student insert failed, rolling back", {
+          error: studentErr.message,
+        });
         await rollbackAuthUser(supabaseAdmin, userId);
-        return jsonResponse({ error: friendly || studentErr.message }, 400);
+        return jsonResponse(
+          { error: friendlyDuplicateError(studentErr.message) || studentErr.message },
+          400
+        );
       }
       resolvedStudentId = student?.id ?? null;
     }
   }
 
   if (role === "teacher") {
-    if (teacherId) {
-      resolvedTeacherId = teacherId;
-    } else {
+    if (!teacherId) {
       const td = (teacherData ?? {}) as Record<string, unknown>;
-      const rawInsertData: Record<string, unknown> = {
+      const insertData = cleanInsertData({
         name: full_name,
         email: normalizedEmail,
         ...td,
-      };
-      const insertData = cleanInsertData(rawInsertData);
+      });
       const { data: teacher, error: teacherErr } = await supabaseAdmin
         .from("teachers")
         .insert(insertData)
@@ -383,31 +352,36 @@ serve(async (req) => {
         .single();
 
       if (teacherErr) {
-        const friendly = friendlyDuplicateError(teacherErr.message);
-        log("Teacher insert failed, rolling back", { error: teacherErr.message });
+        log("Teacher insert failed, rolling back", {
+          error: teacherErr.message,
+        });
         await rollbackAuthUser(supabaseAdmin, userId);
-        return jsonResponse({ error: friendly || teacherErr.message }, 400);
+        return jsonResponse(
+          { error: friendlyDuplicateError(teacherErr.message) || teacherErr.message },
+          400
+        );
       }
       resolvedTeacherId = teacher?.id ?? null;
     }
   }
 
-  const profileUpdate: Record<string, unknown> = {
-    role,
-    full_name,
-    email: normalizedEmail,
-    teacher_id: role === "teacher" ? resolvedTeacherId : null,
-    student_id: role === "student" ? resolvedStudentId : null,
-  };
-
   const { error: profileErr } = await supabaseAdmin
     .from("profiles")
-    .update(profileUpdate)
+    .update({
+      role,
+      full_name,
+      email: normalizedEmail,
+      teacher_id: role === "teacher" ? resolvedTeacherId : null,
+      student_id: role === "student" ? resolvedStudentId : null,
+    })
     .eq("user_id", userId);
 
   if (profileErr) {
     log("Profile update failed", { error: profileErr.message });
-    return jsonResponse({ error: profileErr.message, userId, permissionsWarning: true }, 500);
+    return jsonResponse(
+      { error: profileErr.message, userId, permissionsWarning: true },
+      500
+    );
   }
 
   const { error: rolesErr } = await supabaseAdmin
@@ -417,18 +391,30 @@ serve(async (req) => {
 
   if (rolesErr) {
     log("user_roles update failed", { error: rolesErr.message });
-    return jsonResponse({ error: rolesErr.message, userId, permissionsWarning: true }, 500);
+    return jsonResponse(
+      { error: rolesErr.message, userId, permissionsWarning: true },
+      500
+    );
   }
 
   log("User created successfully", { userId, role });
 
   // ✅ VULN-011 FIX: Não retornar senha no response
-  return jsonResponse({
-    success: true,
-    userId,
-    email: normalizedEmail,
-    temporaryPasswordGenerated: true,
-    createdStudent: role === "student" && resolvedStudentId ? { id: resolvedStudentId } : null,
-    createdTeacher: role === "teacher" && resolvedTeacherId ? { id: resolvedTeacherId } : null,
-  }, 200);
+  return jsonResponse(
+    {
+      success: true,
+      userId,
+      email: normalizedEmail,
+      temporaryPasswordGenerated: true,
+      createdStudent:
+        role === "student" && resolvedStudentId
+          ? { id: resolvedStudentId }
+          : null,
+      createdTeacher:
+        role === "teacher" && resolvedTeacherId
+          ? { id: resolvedTeacherId }
+          : null,
+    },
+    200
+  );
 });
