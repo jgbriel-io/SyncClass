@@ -1,14 +1,23 @@
 import { memo } from "react";
 import { format } from "date-fns";
 import ptBR from "date-fns/locale/pt-BR";
-import { CheckCircle2, XCircle, CalendarClock, AlertCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  CalendarClock,
+  AlertCircle,
+} from "lucide-react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import type { StudentStatementEntry } from "@/hooks/useStudentStatement";
-import { getClassStatusFromDate, getClassStatusWithTime } from "@/lib/utils/classTime";
+import {
+  getClassStatusFromDate,
+  getClassStatusWithTime,
+} from "@/lib/utils/classTime";
 import { cn } from "@/lib/utils";
 import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 import { studentPortal } from "@/content/student-portal";
+import { common } from "@/content";
 
 const BILLING_LABELS: Record<
   NonNullable<StudentStatementEntry["billing_status_consolidated"]>,
@@ -41,9 +50,11 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
   entry,
   isLast = false,
 }: UnifiedStatementCardProps) {
-  const { attendance, grade, feedback, title, class_date, start_at, end_at } = entry;
+  const { attendance, grade, feedback, title, class_date, start_at, end_at } =
+    entry;
   const billingStatus = entry.billing_status_consolidated ?? "not_billed";
-  const hasBilling = entry.financial_record_id != null && entry.billed_amount != null;
+  const hasBilling =
+    entry.financial_record_id != null && entry.billed_amount != null;
   const showGrade = attendance === true && grade != null;
   const classStatus =
     start_at != null || end_at != null
@@ -67,10 +78,11 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
           isConcluida && attendance
             ? "border-green-500/30"
             : isConcluida && attendance === false
-            ? "border-rose-500/30"
-            : classStatus.label === "Agendada" || classStatus.label === "Em andamento"
-            ? "border-blue-500/30"
-            : "border-muted-foreground/30"
+              ? "border-rose-500/30"
+              : classStatus.label === "Agendada" ||
+                  classStatus.label === "Em andamento"
+                ? "border-blue-500/30"
+                : "border-muted-foreground/30"
         )}
       >
         {isConcluida ? (
@@ -79,7 +91,8 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
           ) : (
             <XCircle className="h-4 w-4 text-rose-500" />
           )
-        ) : classStatus.label === "Agendada" || classStatus.label === "Em andamento" ? (
+        ) : classStatus.label === "Agendada" ||
+          classStatus.label === "Em andamento" ? (
           <CalendarClock className="h-4 w-4 text-blue-600" />
         ) : (
           <AlertCircle className="h-4 w-4 text-amber-600" />
@@ -114,9 +127,10 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
                   ? attendance
                     ? "success"
                     : "destructive"
-                  : classStatus.label === "Agendada" || classStatus.label === "Em andamento"
-                  ? "info"
-                  : "warning"
+                  : classStatus.label === "Agendada" ||
+                      classStatus.label === "Em andamento"
+                    ? "info"
+                    : "warning"
               }
               className="text-xs shrink-0"
             >
@@ -134,8 +148,8 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
                 Number(grade) >= 7
                   ? "bg-green-500/10 text-green-700 dark:text-green-400"
                   : Number(grade) >= 5
-                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                  : "bg-rose-500/10 text-rose-700 dark:text-rose-400"
+                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                    : "bg-rose-500/10 text-rose-700 dark:text-rose-400"
               )}
             >
               {Number(grade).toFixed(1)}
