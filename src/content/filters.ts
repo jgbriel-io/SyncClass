@@ -45,6 +45,9 @@ export const filters = {
       sort: "Ordenar",
       sortLabel: "Ordenar",
     },
+    options: {
+      allStudents: "Todos os alunos",
+    },
     status: {
       all: "Todos",
       pending: "Pendente",
