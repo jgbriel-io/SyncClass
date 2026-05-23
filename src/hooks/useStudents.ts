@@ -188,6 +188,82 @@ export function useCreateStudent() {
   });
 }
 
+async function validateStudentPhone(id: string, phone: string): Promise<void> {
+  const { validatePhonePlatform } =
+    await import("@/hooks/validatePhonePlatformService");
+  const { data: currentStudent } = await supabase
+    .from("students")
+    .select("phone")
+    .eq("id", id)
+    .single();
+  if (phone !== currentStudent?.phone) {
+    const err = await validatePhonePlatform(supabase, { phone });
+    if (err) throw new Error(err);
+  }
+}
+
+async function syncStudentProfiles(student: Student): Promise<void> {
+  const fullName = student.name;
+  const normalizedEmail = student.email
+    ? student.email.trim().toLowerCase()
+    : null;
+  const isActive = student.status === "ativo";
+
+  const { data: linkedProfiles, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, user_id, student_id")
+    .eq("student_id", student.id);
+
+  if (profileError) throw profileError;
+
+  let profilesToUpdate = linkedProfiles || [];
+  if (profilesToUpdate.length === 0 && normalizedEmail) {
+    const { data: profilesByEmail } = await supabase
+      .from("profiles")
+      .select("id, user_id, student_id")
+      .eq("email", normalizedEmail)
+      .eq("role", "student");
+    if (profilesByEmail && profilesByEmail.length > 0) {
+      profilesToUpdate = profilesByEmail;
+    }
+  }
+
+  for (const profile of profilesToUpdate) {
+    // CRÍTICO: Sempre manter o student_id, mesmo que já exista
+    const profileUpdate: ProfileUpdate = {
+      role: "student",
+      active: isActive,
+      student_id: student.id,
+    };
+    if (fullName) profileUpdate.full_name = fullName;
+    if (normalizedEmail) profileUpdate.email = normalizedEmail;
+
+    const { error: profileUpdateError } = await supabase.rpc(
+      "update_profile_by_id",
+      {
+        p_id: profile.id,
+        p_role: profileUpdate.role,
+        p_active: profileUpdate.active,
+        p_student_id: profileUpdate.student_id,
+        p_teacher_id: null,
+        p_full_name: profileUpdate.full_name || null,
+        p_email: profileUpdate.email || null,
+      }
+    );
+    if (profileUpdateError) throw profileUpdateError;
+
+    if (profile.user_id) {
+      const { error: roleError } = await supabase.rpc("upsert_user_role_safe", {
+        p_user_id: profile.user_id,
+        p_role: "student",
+        p_full_name: fullName ?? null,
+        p_email: normalizedEmail,
+      });
+      if (roleError) throw roleError;
+    }
+  }
+}
+
 export function useUpdateStudent() {
   const queryClient = useQueryClient();
 
@@ -197,37 +273,16 @@ export function useUpdateStudent() {
         updates as Record<string, unknown>
       ) as StudentUpdate;
 
-      // Validar telefone se foi alterado
       if (safeUpdates.phone) {
-        const { validatePhonePlatform } =
-          await import("@/hooks/validatePhonePlatformService");
-
-        // Buscar dados atuais do aluno para comparar
-        const { data: currentStudent } = await supabase
-          .from("students")
-          .select("phone")
-          .eq("id", id)
-          .single();
-
-        // Só validar se telefone foi realmente alterado
-        const phoneChanged =
-          safeUpdates.phone && safeUpdates.phone !== currentStudent?.phone;
-
-        if (phoneChanged) {
-          const dataToValidate = { phone: safeUpdates.phone };
-          const err = await validatePhonePlatform(supabase, dataToValidate);
-          if (err) throw new Error(err);
-        }
+        await validateStudentPhone(id, safeUpdates.phone);
       }
 
-      // Verifica se pay_day foi alterado
       const payDayChanged =
         "pay_day" in updates && updates.pay_day !== undefined;
       let oldPayDay: number | null = null;
       const newPayDay: number | null = updates.pay_day ?? null;
 
       if (payDayChanged) {
-        // Busca o pay_day antigo
         const { data: currentStudent } = await supabase
           .from("students")
           .select("pay_day")
@@ -243,106 +298,19 @@ export function useUpdateStudent() {
         .select()
         .single();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      // Synchronize profiles, user_roles and active flag for linked users
-      const updatedStudent = data as Student;
-      const fullName = updatedStudent.name;
-      const rawEmail = updatedStudent.email;
-      const normalizedEmail = rawEmail ? rawEmail.trim().toLowerCase() : null;
-      const isActive = updatedStudent.status === "ativo";
+      await syncStudentProfiles(data as Student);
 
-      // Buscar profiles vinculados pelo student_id
-      const { data: linkedProfiles, error: profileError } = await supabase
-        .from("profiles")
-        .select("id, user_id, student_id")
-        .eq("student_id", updatedStudent.id);
-
-      if (profileError) {
-        throw profileError;
-      }
-
-      // Se não encontrou profiles pelo student_id, buscar pelo email (vínculo perdido)
-      let profilesToUpdate = linkedProfiles || [];
-      if (profilesToUpdate.length === 0 && normalizedEmail) {
-        const { data: profilesByEmail } = await supabase
-          .from("profiles")
-          .select("id, user_id, student_id")
-          .eq("email", normalizedEmail)
-          .eq("role", "student");
-
-        if (profilesByEmail && profilesByEmail.length > 0) {
-          profilesToUpdate = profilesByEmail;
-        }
-      }
-
-      if (profilesToUpdate.length > 0) {
-        for (const profile of profilesToUpdate) {
-          // CRÍTICO: Sempre manter o student_id, mesmo que já exista
-          const profileUpdate: ProfileUpdate = {
-            role: "student",
-            active: isActive,
-            student_id: updatedStudent.id,
-          };
-          if (fullName) {
-            profileUpdate.full_name = fullName;
-          }
-          if (normalizedEmail) {
-            profileUpdate.email = normalizedEmail;
-          }
-
-          // Usar RPC para evitar erro de tipo UUID
-          const { data: rpcData, error: profileUpdateError } =
-            await supabase.rpc("update_profile_by_id", {
-              p_id: profile.id,
-              p_role: profileUpdate.role,
-              p_active: profileUpdate.active,
-              p_student_id: profileUpdate.student_id,
-              p_teacher_id: null,
-              p_full_name: profileUpdate.full_name || null,
-              p_email: profileUpdate.email || null,
-            });
-
-          if (profileUpdateError) {
-            throw profileUpdateError;
-          }
-
-          if (profile.user_id) {
-            const { error: roleError } = await supabase.rpc(
-              "upsert_user_role_safe",
-              {
-                p_user_id: profile.user_id,
-                p_role: "student",
-                p_full_name: fullName ?? null,
-                p_email: normalizedEmail,
-              }
-            );
-
-            if (roleError) {
-              throw roleError;
-            }
-          }
-        }
-      }
-
-      // Atualizar vencimentos usando RPC atômica
       if (payDayChanged && oldPayDay !== newPayDay && newPayDay !== null) {
-        // Validar range antes de chamar RPC
         if (newPayDay < 1 || newPayDay > 31) {
           throw new Error("Dia de pagamento deve estar entre 1 e 31");
         }
-
         try {
-          const { data: rpcResult, error: rpcError } = await supabase.rpc(
+          const { error: rpcError } = await supabase.rpc(
             "update_student_payment_day",
-            {
-              p_student_id: id,
-              p_pay_day: newPayDay,
-            }
+            { p_student_id: id, p_pay_day: newPayDay }
           );
-
           if (rpcError) {
             logger.error(rpcError as Error, {
               context: "update_student_payment_day",
@@ -359,7 +327,6 @@ export function useUpdateStudent() {
             studentId: id,
             newPayDay,
           });
-          // Não falha a operação principal se a atualização de cobranças falhar
         }
       }
 
