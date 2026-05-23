@@ -1,7 +1,7 @@
 # Sprint 18 — Consolidação de Problemas Identificados
 
-> **Status:** 🔴 Não Implementada  
-> **Período:** Planejada  
+> **Status:** ✅ Implementada  
+> **Período:** Implementada (2026-05)  
 > **Tipo:** Documentação + Correções Críticas
 
 ## Contexto
@@ -30,54 +30,54 @@ prioriza correções críticas e documenta débito técnico aceito.
 
 ### Tabela Consolidada (46 problemas únicos)
 
-| ID          | Tipo         | Severidade     | Prioridade | Esforço   | Status              | Arquivo                                        |
-| ----------- | ------------ | -------------- | ---------- | --------- | ------------------- | ---------------------------------------------- |
-| **CR-013**  | **Infra**    | **🔴 Crítica** | **1**      | **30min** | **✅ Resolvido**    | Sentry removido do projeto                     |
-| BACK-001    | Bug          | 🔴 Crítica     | 2          | 2h        | 🔴 Pendente         | `supabase/functions/invite-user/`              |
-| **CR-003**  | **Frontend** | **🟡 Alta**    | **3**      | **30min** | **🔴 Pendente**     | `as any` em produção (11x)                     |
-| **CR-007**  | **Backend**  | **🟡 Alta**    | **4**      | **1h**    | **🔴 Pendente**     | `invite-user` muito grande (500L)              |
-| **CR-002**  | **Frontend** | **🟡 Alta**    | **5**      | **5h**    | **🔴 Pendente**     | Componentes >400L (5 arquivos)                 |
-| **CR-011**  | **Testes**   | **🟡 Alta**    | **6**      | **4h**    | **🔴 Pendente**     | Sem testes E2E                                 |
-| DB-001      | Bug          | 🟡 Alta        | 7          | 1h        | 🔴 Pendente         | `students` (soft delete redundante)            |
-| DB-002      | Bug          | 🟡 Alta        | 8          | 15min     | 🔴 Pendente         | `financial_records.status` (índice)            |
-| DB-003      | Bug          | 🟡 Alta        | 9          | 15min     | 🔴 Pendente         | `activities` (índices)                         |
-| DB-004      | Bug          | 🟡 Alta        | 10         | 15min     | 🔴 Pendente         | `teachers` (índices)                           |
-| DB-005      | Bug          | 🟡 Alta        | 11         | 15min     | 🔴 Pendente         | `students.email` (índice)                      |
-| BACK-006    | Bug          | 🟡 Alta        | 12         | 1h        | 🟢 Aceito (feature) | `src/hooks/useUserMutations.ts`                |
-| BACK-002    | Bug          | 🟡 Alta        | 13         | 1h        | 🔴 Pendente         | `src/lib/utils/dateHelpers.ts`                 |
-| BACK-003    | Bug          | 🟡 Alta        | 14         | 1h        | 🔴 Pendente         | `src/lib/utils/financialHelpers.ts`            |
-| BACK-004    | Bug          | 🟡 Alta        | 15         | 2h        | 🔴 Pendente         | `src/lib/utils/classHelpers.ts`                |
-| ARQ-001     | Arquitetura  | 🟡 Alta        | 16         | 3h        | 🟠 Planejado        | `src/hooks/useStudents.ts:187` (CR-001)        |
-| ARQ-002     | Arquitetura  | 🟡 Alta        | 17         | 2h        | 🟠 Planejado        | `src/hooks/useFinancialRecords.ts:245`         |
-| REFORMA-001 | Refatoração  | 🟡 Alta        | 18         | 30min     | 🟠 Planejado        | `src/lib/security/errorHandler.ts`             |
-| REFORMA-003 | Refatoração  | 🟡 Alta        | 19         | 45min     | 🟠 Planejado        | `src/hooks/useClassLogs.ts:89`                 |
-| REFORMA-002 | Refatoração  | 🟡 Alta        | 20         | 1h        | 🟠 Planejado        | `src/hooks/useClassLogs.ts:156`                |
-| **CR-006**  | **Backend**  | **🟡 Média**   | **21**     | **30min** | **🔴 Pendente**     | Duplicação Edge Functions (CORS, jsonResponse) |
-| **CR-009**  | **Database** | **🟡 Média**   | **22**     | **30min** | **🔴 Pendente**     | Sem retenção automática (DB-007, DB-008)       |
-| **CR-010**  | **Testes**   | **🟡 Média**   | **23**     | **15min** | **🔴 Pendente**     | Cobertura desconhecida                         |
-| **CR-012**  | **Testes**   | **🟡 Média**   | **24**     | **2h**    | **🔴 Pendente**     | Sem testes RLS policies                        |
-| **CR-004**  | **Frontend** | **🟡 Média**   | **25**     | **15min** | **🔴 Pendente**     | Cores hardcoded (8x)                           |
-| **CR-005**  | **Frontend** | **🟡 Média**   | **26**     | **10min** | **🔴 Pendente**     | Console.log produção (3x)                      |
-| BACK-005    | Bug          | 🟡 Média       | 27         | 1h        | 🟠 Planejado        | `supabase/migrations/06_idempotency.sql`       |
-| DB-006      | Bug          | 🟡 Média       | 28         | 15min     | 🟠 Planejado        | `audit_logs` (índices)                         |
-| DB-007      | Bug          | 🟡 Média       | 29         | 30min     | 🟠 Planejado        | `idempotency_keys` (expiração) — CR-009        |
-| DB-008      | Bug          | 🟡 Média       | 30         | 30min     | 🟠 Planejado        | `performance_logs` (retenção) — CR-009         |
-| DB-009      | Bug          | 🟡 Média       | 31         | 15min     | 🟠 Planejado        | `financial_records.amount` (constraint)        |
-| DB-010      | Bug          | 🟡 Média       | 32         | 15min     | 🟠 Planejado        | `class_logs.grade` (constraint)                |
-| ARQ-003     | Arquitetura  | 🟡 Média       | 33         | 4h        | 🟠 Planejado        | TanStack Query (múltiplos hooks)               |
-| ARQ-004     | Arquitetura  | 🟡 Média       | 34         | 2h        | 🟠 Planejado        | `src/hooks/useStudents.ts:210`                 |
-| ARQ-005     | Arquitetura  | 🟡 Média       | 35         | 1h        | 🟠 Planejado        | `src/hooks/useFinancialRecords.ts:89`          |
-| REFORMA-004 | Refatoração  | 🟡 Média       | 36         | 30min     | 🟠 Planejado        | `src/hooks/useClassLogs.ts:45`                 |
-| REFORMA-005 | Refatoração  | 🟡 Média       | 37         | 1h        | 🟠 Planejado        | `src/hooks/useClassLogs.ts:289`                |
-| REFORMA-006 | Refatoração  | 🟡 Média       | 38         | 30min     | 🟠 Planejado        | `src/hooks/useClassLogs.ts:334`                |
-| **CR-008**  | **Database** | **🟢 Baixa**   | **39**     | **15min** | **🔴 Pendente**     | SELECT \* em migrations (2x)                   |
-| BACK-007    | Bug          | 🟢 Baixa       | 40         | 30min     | 🟠 Planejado        | `supabase/migrations/10_lgpd.sql`              |
-| DB-011      | Bug          | 🟢 Baixa       | 41         | 15min     | 🟠 Planejado        | `teachers/students.email` (UNIQUE)             |
-| DB-012      | Bug          | 🟢 Baixa       | 42         | 15min     | 🟠 Planejado        | `class_logs` (consistência data)               |
-| DB-013      | Bug          | 🟢 Baixa       | 43         | 15min     | 🟠 Planejado        | `financial_record_class_logs` (índice)         |
-| ARQ-006     | Arquitetura  | 🟢 Baixa       | 44         | 3h        | 🟠 Planejado        | `src/hooks/useUserMutations.ts`                |
-| REFORMA-007 | Refatoração  | 🟢 Baixa       | 45         | 15min     | 🟠 Planejado        | `src/hooks/useFinancialRecords.ts:412`         |
-| REFORMA-008 | Refatoração  | 🟢 Baixa       | 46         | 15min     | 🟠 Planejado        | `src/lib/validation/activitySchemas.ts:23`     |
+| ID          | Tipo         | Severidade     | Prioridade | Esforço   | Status                         | Arquivo                                        |
+| ----------- | ------------ | -------------- | ---------- | --------- | ------------------------------ | ---------------------------------------------- |
+| **CR-013**  | **Infra**    | **🔴 Crítica** | **1**      | **30min** | **✅ Resolvido**               | Sentry removido do projeto                     |
+| BACK-001    | Bug          | 🔴 Crítica     | 2          | 2h        | ✅ Resolvido                   | `supabase/migrations/26_sprint18_fixes.sql`    |
+| **CR-003**  | **Frontend** | **🟡 Alta**    | **3**      | **30min** | **✅ Resolvido**               | `ClassesTableRow.tsx`, `PostClassDialog.tsx`   |
+| **CR-007**  | **Backend**  | **🟡 Alta**    | **4**      | **1h**    | **🟢 Aceito (débito técnico)** | `invite-user` muito grande (500L)              |
+| **CR-002**  | **Frontend** | **🟡 Alta**    | **5**      | **5h**    | **🟢 Aceito (débito técnico)** | Componentes >400L (5 arquivos)                 |
+| **CR-011**  | **Testes**   | **🟡 Alta**    | **6**      | **4h**    | **🟢 Aceito (sem Playwright)** | Sem testes E2E                                 |
+| DB-001      | Bug          | 🟡 Alta        | 7          | 1h        | ✅ Já implementado             | migrations 01 + 22                             |
+| DB-002      | Bug          | 🟡 Alta        | 8          | 15min     | ✅ Já implementado             | migrations 01 + 22                             |
+| DB-003      | Bug          | 🟡 Alta        | 9          | 15min     | ✅ Já implementado             | migrations 01 + 22                             |
+| DB-004      | Bug          | 🟡 Alta        | 10         | 15min     | ✅ Já implementado             | migrations 01 + 22                             |
+| DB-005      | Bug          | 🟡 Alta        | 11         | 15min     | ✅ Já implementado             | migrations 01 + 22                             |
+| BACK-006    | Bug          | 🟡 Alta        | 12         | 1h        | 🟢 Aceito (feature)            | `src/hooks/useUserMutations.ts`                |
+| BACK-002    | Bug          | 🟡 Alta        | 13         | 1h        | ✅ Resolvido                   | `src/hooks/useClassLogs.ts` (toLocalDateStr)   |
+| BACK-003    | Bug          | 🟡 Alta        | 14         | 1h        | ✅ Já seguro                   | `financialHelpers.ts` usa comparação de string |
+| BACK-004    | Bug          | 🟡 Alta        | 15         | 2h        | ✅ Já seguro                   | `classHelpers.ts` usa TIMESTAMPTZ corretamente |
+| ARQ-001     | Arquitetura  | 🟡 Alta        | 16         | 3h        | 🟠 Planejado                   | `src/hooks/useStudents.ts:187` (CR-001)        |
+| ARQ-002     | Arquitetura  | 🟡 Alta        | 17         | 2h        | 🟠 Planejado                   | `src/hooks/useFinancialRecords.ts:245`         |
+| REFORMA-001 | Refatoração  | 🟡 Alta        | 18         | 30min     | 🟠 Planejado                   | `src/lib/security/errorHandler.ts`             |
+| REFORMA-003 | Refatoração  | 🟡 Alta        | 19         | 45min     | 🟠 Planejado                   | `src/hooks/useClassLogs.ts:89`                 |
+| REFORMA-002 | Refatoração  | 🟡 Alta        | 20         | 1h        | 🟠 Planejado                   | `src/hooks/useClassLogs.ts:156`                |
+| **CR-006**  | **Backend**  | **🟡 Média**   | **21**     | **30min** | **✅ Resolvido**               | `supabase/functions/_shared/utils.ts`          |
+| **CR-009**  | **Database** | **🟡 Média**   | **22**     | **30min** | **✅ Já implementado**         | `cleanup_old_audit_logs()` (migration 10)      |
+| **CR-010**  | **Testes**   | **🟡 Média**   | **23**     | **15min** | **✅ Resolvido**               | `vitest.config.ts` — 70% threshold configurado |
+| **CR-012**  | **Testes**   | **🟡 Média**   | **24**     | **2h**    | **🟢 Aceito (débito técnico)** | Sem testes RLS policies (pgTAP)                |
+| **CR-004**  | **Frontend** | **🟡 Média**   | **25**     | **15min** | **🟢 Aceito (N/A)**            | Cores verificadas — já usam tokens semânticos  |
+| **CR-005**  | **Frontend** | **🟡 Média**   | **26**     | **10min** | **🟢 Aceito (N/A)**            | console.logs verificados — todos legítimos     |
+| BACK-005    | Bug          | 🟡 Média       | 27         | 1h        | 🟠 Planejado                   | `supabase/migrations/06_idempotency.sql`       |
+| DB-006      | Bug          | 🟡 Média       | 28         | 15min     | 🟠 Planejado                   | `audit_logs` (índices)                         |
+| DB-007      | Bug          | 🟡 Média       | 29         | 30min     | 🟠 Planejado                   | `idempotency_keys` (expiração) — CR-009        |
+| DB-008      | Bug          | 🟡 Média       | 30         | 30min     | 🟠 Planejado                   | `performance_logs` (retenção) — CR-009         |
+| DB-009      | Bug          | 🟡 Média       | 31         | 15min     | 🟠 Planejado                   | `financial_records.amount` (constraint)        |
+| DB-010      | Bug          | 🟡 Média       | 32         | 15min     | 🟠 Planejado                   | `class_logs.grade` (constraint)                |
+| ARQ-003     | Arquitetura  | 🟡 Média       | 33         | 4h        | 🟠 Planejado                   | TanStack Query (múltiplos hooks)               |
+| ARQ-004     | Arquitetura  | 🟡 Média       | 34         | 2h        | 🟠 Planejado                   | `src/hooks/useStudents.ts:210`                 |
+| ARQ-005     | Arquitetura  | 🟡 Média       | 35         | 1h        | 🟠 Planejado                   | `src/hooks/useFinancialRecords.ts:89`          |
+| REFORMA-004 | Refatoração  | 🟡 Média       | 36         | 30min     | 🟠 Planejado                   | `src/hooks/useClassLogs.ts:45`                 |
+| REFORMA-005 | Refatoração  | 🟡 Média       | 37         | 1h        | 🟠 Planejado                   | `src/hooks/useClassLogs.ts:289`                |
+| REFORMA-006 | Refatoração  | 🟡 Média       | 38         | 30min     | 🟠 Planejado                   | `src/hooks/useClassLogs.ts:334`                |
+| **CR-008**  | **Database** | **🟢 Baixa**   | **39**     | **15min** | **🟢 Aceito (baixa)**          | SELECT \* em migrations — contexto de migração |
+| BACK-007    | Bug          | 🟢 Baixa       | 40         | 30min     | 🟠 Planejado                   | `supabase/migrations/10_lgpd.sql`              |
+| DB-011      | Bug          | 🟢 Baixa       | 41         | 15min     | 🟠 Planejado                   | `teachers/students.email` (UNIQUE)             |
+| DB-012      | Bug          | 🟢 Baixa       | 42         | 15min     | 🟠 Planejado                   | `class_logs` (consistência data)               |
+| DB-013      | Bug          | 🟢 Baixa       | 43         | 15min     | 🟠 Planejado                   | `financial_record_class_logs` (índice)         |
+| ARQ-006     | Arquitetura  | 🟢 Baixa       | 44         | 3h        | 🟠 Planejado                   | `src/hooks/useUserMutations.ts`                |
+| REFORMA-007 | Refatoração  | 🟢 Baixa       | 45         | 15min     | 🟠 Planejado                   | `src/hooks/useFinancialRecords.ts:412`         |
+| REFORMA-008 | Refatoração  | 🟢 Baixa       | 46         | 15min     | 🟠 Planejado                   | `src/lib/validation/activitySchemas.ts:23`     |
 
 **Legenda:**
 
@@ -507,30 +507,30 @@ Correção planejada mas não implementada no MVP.
 **Críticas (Prioridade 1-2):**
 
 - [x] CR-013: Sentry removido do projeto (R08 resolvido)
-- [ ] BACK-001: Constraint UNIQUE em `profiles.email`
+- [x] BACK-001: Constraint UNIQUE em `profiles.email` — `migration 26_sprint18_fixes.sql`
 
 **Altas (Prioridade 3-20):**
 
-- [ ] CR-003: Tipar `FinancialRecordWithProof`
-- [ ] CR-007: Split `invite-user` em módulos
-- [ ] CR-002: Refatorar 5 componentes >400L
-- [ ] BACK-002: Fix timezone em `getDateRangeForPeriod`
-- [ ] BACK-003: Fix timezone em `isOverdue`
-- [ ] BACK-004: Fix timezone em `getClassStatus`
-- [ ] DB-001 a DB-005: Índices faltantes
+- [x] CR-003: `as any` removido — campos `payment_proof_*` tipados em `ClassLogWithStudent`
+- [~] CR-007: Aceito como débito técnico — risco de regressão, pós-MVP
+- [~] CR-002: Aceito como débito técnico — 5h de refatoração, pós-MVP
+- [x] BACK-002: Fix timezone em `useClassLogs.ts` — `toLocalDateStr()` helper
+- [~] BACK-003: Já timezone-safe — `isOverdue` usa comparação de strings ISO
+- [~] BACK-004: Já timezone-safe — `getClassStatus` usa TIMESTAMPTZ nativo
+- [x] DB-001 a DB-005: Já implementados — migrations 01 e 22
 
 **Médias (Prioridade 21-38):**
 
-- [ ] CR-006: Extrair utils compartilhados Edge Functions
-- [ ] CR-009: Política de retenção de logs (pg_cron)
-- [ ] CR-010: Configurar coverage (70% threshold)
-- [ ] CR-012: Testes RLS policies (pgTAP)
-- [ ] CR-004: Substituir cores hardcoded
-- [ ] CR-005: Remover console.log
+- [x] CR-006: `supabase/functions/_shared/utils.ts` — 5 functions refatoradas
+- [x] CR-009: Já implementado — `cleanup_old_audit_logs()` em migration 10
+- [x] CR-010: `vitest.config.ts` — coverage v8 com threshold 70%
+- [~] CR-012: Aceito como débito técnico — pgTAP setup complexo, pós-MVP
+- [~] CR-004: N/A — verificado: arquivos já usam tokens semânticos
+- [~] CR-005: N/A — verificado: console.logs são todos de ErrorBoundary/logger (legítimos)
 
 **Baixas (Prioridade 39-46):**
 
-- [ ] CR-008: Revisar SELECT \* em migrations
+- [~] CR-008: Aceito — SELECT \* em contexto de migration é aceitável
 
 ### Débito Técnico Aceito
 
@@ -582,65 +582,34 @@ Correção planejada mas não implementada no MVP.
 - **Testes automatizados** — Bugs de timezone (BACK-002 a BACK-004) poderiam ter sido detectados com testes
 - **Code review** — Problemas arquiteturais (ARQ-001, ARQ-002) poderiam ter sido evitados com revisão
 
+### Resultados da Implementação
+
+**O que foi feito nesta sprint:**
+
+| Item         | Ação                                                    | Arquivo(s)                                                      |
+| ------------ | ------------------------------------------------------- | --------------------------------------------------------------- |
+| CR-013       | Sentry removido do projeto                              | `logger.ts`, `AuthContext.tsx`, 13 docs                         |
+| BACK-001     | UNIQUE constraint em `profiles.email`                   | `26_sprint18_fixes.sql`                                         |
+| BACK-002     | `toLocalDateStr()` substitui `toISOString()`            | `useClassLogs.ts`                                               |
+| CR-003       | `payment_proof_*` tipados — `as any` removidos          | `useClassLogs.ts`, `ClassesTableRow.tsx`, `PostClassDialog.tsx` |
+| CR-006       | CORS + jsonResponse extraídos para `_shared`            | `_shared/utils.ts` + 5 Edge Functions                           |
+| CR-009       | Já existia via `cleanup_old_audit_logs()`               | migration 10                                                    |
+| CR-010       | Coverage 70% threshold configurado                      | `vitest.config.ts`                                              |
+| DB-001~005   | Já existiam via migrations anteriores                   | migrations 01, 22                                               |
+| BACK-003/004 | Já timezone-safe — verificado, sem alteração necessária | —                                                               |
+
+**Débito técnico aceito (pós-MVP):**
+
+- CR-002: Componentes >400L (5h, risco de regressão)
+- CR-007: Split `invite-user` (risco de regressão)
+- CR-012: Testes RLS com pgTAP (setup complexo)
+- ARQ-001~006: Problemas arquiteturais (planejados)
+- REFORMA-001~008: Refatorações (planejadas)
+
 ### Próximos Passos
 
-**Plano de Execução (7 sprints, 54h):**
-
-1. **Sprint 20:** `fix-critical-lgpd-race-condition` — 2.5h
-   - CR-013: Sentry removido ✅
-   - BACK-001: Race condition invite-user (2h)
-   - E2E validation + reset DB
-
-2. **Sprint 21:** `fix-backend-timezone-bugs` — 4h
-   - BACK-002: getDateRangeForPeriod (1h)
-   - BACK-003: isOverdue (1h)
-   - BACK-004: getClassStatus (2h)
-   - E2E validation + reset DB
-
-3. **Sprint 22:** `fix-database-indices` — 1.25h
-   - DB-001 a DB-005: Índices faltantes (5 × 15min)
-   - E2E validation + reset DB
-
-4. **Sprint 23:** `fix-frontend-hooks-refactor` — 15.5h
-   - CR-002: Refatorar 5 componentes >400L (5h)
-   - CR-003: Tipar FinancialRecordWithProof (30min)
-   - CR-007: Split invite-user (1h)
-   - ARQ-001: God hook useStudents (3h)
-   - ARQ-002: Agregação no cliente (2h)
-   - REFORMA-001: Duplicação sanitizeErrorMessage (30min)
-   - REFORMA-002: God function useUpdateClassLog (1h)
-   - REFORMA-004 a REFORMA-006: Refatorações hooks (2h)
-   - E2E validation + reset DB
-
-5. **Sprint 24:** `fix-architecture-query-optimization` — 10.25h
-   - CR-004: Cores hardcoded (15min)
-   - CR-005: Console.log (10min)
-   - CR-006: Utils Edge Functions (30min)
-   - CR-009: Retenção logs (30min)
-   - CR-010: Coverage config (15min)
-   - ARQ-003: Query keys inconsistentes (4h)
-   - ARQ-004: Invalidações excessivas (2h)
-   - ARQ-005: N+1 queries (1h)
-   - REFORMA-003: Duplicação overlap detection (45min)
-   - E2E validation + reset DB
-
-6. **Sprint 25:** `fix-final-cleanup-tests` — 11.5h
-   - CR-008: SELECT \* em migrations (15min)
-   - CR-012: Testes RLS policies (2h)
-   - ARQ-006: God file useUserMutations (3h)
-   - REFORMA-007, REFORMA-008: Refatorações finais (30min)
-   - BACK-005, BACK-007: Bugs backend médios/baixos (1.5h)
-   - DB-006 a DB-013: Bugs database médios/baixos (4.25h)
-   - E2E validation + reset DB
-
-**Estratégia:**
-
-- Branch por sprint (`fix/sprint-NN-descricao`)
-- Reset DB entre sprints (`supabase db reset`)
-- E2E valida cada sprint (6 runs × 30min = 3h overhead)
-- Docs seguem template completo
-
-**Total:** 51h trabalho + 3h overhead E2E = **54h**
+- **Sprint 19:** LGPD — exportação de dados + Edge Function `export-user-data`
+- **Sprint 20:** Rate limiting — dashboard admin UI
 
 ## Referências
 
