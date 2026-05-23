@@ -1,0 +1,175 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MetricCard - Snapshot > should render metric card with centralized content 1`] = `
+<div>
+  <div
+    class="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow"
+  >
+    <div
+      class="flex items-start justify-between"
+    >
+      <div
+        class="space-y-2"
+      >
+        <p
+          class="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground"
+        >
+          Total de Alunos
+        </p>
+        <p
+          class="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight"
+        >
+          45
+        </p>
+      </div>
+      <div
+        class="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10"
+      >
+        <svg
+          class="lucide lucide-users h-5 w-5 text-primary"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+          />
+          <circle
+            cx="9"
+            cy="7"
+            r="4"
+          />
+          <path
+            d="M22 21v-2a4 4 0 0 0-3-3.87"
+          />
+          <path
+            d="M16 3.13a4 4 0 0 1 0 7.75"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`MetricCard - Snapshot > should render metric card with downward trend 1`] = `
+<div>
+  <div
+    class="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow"
+  >
+    <div
+      class="flex items-start justify-between"
+    >
+      <div
+        class="space-y-2"
+      >
+        <p
+          class="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground"
+        >
+          Cancelamentos
+        </p>
+        <p
+          class="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight"
+        >
+          3
+        </p>
+      </div>
+      <div
+        class="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10"
+      >
+        <svg
+          class="lucide lucide-users h-5 w-5 text-primary"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+          />
+          <circle
+            cx="9"
+            cy="7"
+            r="4"
+          />
+          <path
+            d="M22 21v-2a4 4 0 0 0-3-3.87"
+          />
+          <path
+            d="M16 3.13a4 4 0 0 1 0 7.75"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`MetricCard - Snapshot > should render metric card without trend 1`] = `
+<div>
+  <div
+    class="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow"
+  >
+    <div
+      class="flex items-start justify-between"
+    >
+      <div
+        class="space-y-2"
+      >
+        <p
+          class="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground"
+        >
+          Receita
+        </p>
+        <p
+          class="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight"
+        >
+          15000
+        </p>
+      </div>
+      <div
+        class="h-11 w-11 rounded-xl flex items-center justify-center bg-primary/10"
+      >
+        <svg
+          class="lucide lucide-users h-5 w-5 text-primary"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+          />
+          <circle
+            cx="9"
+            cy="7"
+            r="4"
+          />
+          <path
+            d="M22 21v-2a4 4 0 0 0-3-3.87"
+          />
+          <path
+            d="M16 3.13a4 4 0 0 1 0 7.75"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+`;
