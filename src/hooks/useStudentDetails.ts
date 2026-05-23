@@ -1,6 +1,7 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { QK } from "./queryKeys";
 import { isOverdue } from "@/lib/utils/financialStatus";
 import { Student } from "./useStudents";
 
@@ -48,7 +49,7 @@ export interface StudentDetails extends Student {
 
 export function useStudentDetails(studentId: string | null) {
   return useQuery({
-    queryKey: ["student_details", studentId],
+    queryKey: [QK.STUDENT_DETAILS, studentId],
     queryFn: async (): Promise<StudentDetails | null> => {
       if (!studentId) return null;
 
@@ -66,7 +67,8 @@ export function useStudentDetails(studentId: string | null) {
       // Fetch class logs - buscar teacher name separadamente
       const { data: classLogs, error: classLogsError } = await supabase
         .from("class_logs")
-        .select(`
+        .select(
+          `
           id,
           class_date,
           start_at,
@@ -79,7 +81,8 @@ export function useStudentDetails(studentId: string | null) {
           billed_amount,
           teacher_id,
           created_at
-        `)
+        `
+        )
         .eq("student_id", studentId)
         .order("class_date", { ascending: false });
 
@@ -116,7 +119,9 @@ export function useStudentDetails(studentId: string | null) {
       // Fetch financial records
       const { data: financialRecords, error: financialError } = await supabase
         .from("financial_records")
-        .select("id, amount, due_date, status, description, paid_at, created_at")
+        .select(
+          "id, amount, due_date, status, description, paid_at, created_at"
+        )
         .eq("student_id", studentId)
         .order("due_date", { ascending: false });
 
@@ -124,13 +129,17 @@ export function useStudentDetails(studentId: string | null) {
 
       // Calculate stats
       const totalClasses = classLogs?.length || 0;
-      const presentClasses = classLogs?.filter((log) => log.attendance).length || 0;
-      const gradesWithValue = classLogs?.filter((log) => log.grade !== null) || [];
+      const presentClasses =
+        classLogs?.filter((log) => log.attendance).length || 0;
+      const gradesWithValue =
+        classLogs?.filter((log) => log.grade !== null) || [];
       const averageGrade =
         gradesWithValue.length > 0
-          ? gradesWithValue.reduce((sum, log) => sum + (log.grade || 0), 0) / gradesWithValue.length
+          ? gradesWithValue.reduce((sum, log) => sum + (log.grade || 0), 0) /
+            gradesWithValue.length
           : 0;
-      const attendanceRate = totalClasses > 0 ? (presentClasses / totalClasses) * 100 : 0;
+      const attendanceRate =
+        totalClasses > 0 ? (presentClasses / totalClasses) * 100 : 0;
 
       let totalPaid = 0;
       let totalPending = 0;
@@ -170,7 +179,7 @@ export function useStudentDetails(studentId: string | null) {
 
 export function useStudentsWithStats() {
   return useQuery({
-    queryKey: ["students_with_stats"],
+    queryKey: [QK.STUDENTS_WITH_STATS],
     queryFn: async () => {
       // Fetch all students
       // Use students_masked para mascarar CPF e telefone conforme LGPD
@@ -189,25 +198,35 @@ export function useStudentsWithStats() {
       if (classLogsError) throw classLogsError;
 
       // Fetch all financial records
-      const { data: allFinancialRecords, error: financialError } = await supabase
-        .from("financial_records")
-        .select("student_id, amount, status, due_date");
+      const { data: allFinancialRecords, error: financialError } =
+        await supabase
+          .from("financial_records")
+          .select("student_id, amount, status, due_date");
 
       if (financialError) throw financialError;
 
       // Map stats to each student
       return students.map((student) => {
-        const studentClassLogs = allClassLogs?.filter((log) => log.student_id === student.id) || [];
-        const studentFinancialRecords = allFinancialRecords?.filter((rec) => rec.student_id === student.id) || [];
+        const studentClassLogs =
+          allClassLogs?.filter((log) => log.student_id === student.id) || [];
+        const studentFinancialRecords =
+          allFinancialRecords?.filter((rec) => rec.student_id === student.id) ||
+          [];
 
         const totalClasses = studentClassLogs.length;
-        const presentClasses = studentClassLogs.filter((log) => log.attendance).length;
-        const gradesWithValue = studentClassLogs.filter((log) => log.grade !== null);
+        const presentClasses = studentClassLogs.filter(
+          (log) => log.attendance
+        ).length;
+        const gradesWithValue = studentClassLogs.filter(
+          (log) => log.grade !== null
+        );
         const averageGrade =
           gradesWithValue.length > 0
-            ? gradesWithValue.reduce((sum, log) => sum + (log.grade || 0), 0) / gradesWithValue.length
+            ? gradesWithValue.reduce((sum, log) => sum + (log.grade || 0), 0) /
+              gradesWithValue.length
             : null;
-        const attendanceRate = totalClasses > 0 ? (presentClasses / totalClasses) * 100 : null;
+        const attendanceRate =
+          totalClasses > 0 ? (presentClasses / totalClasses) * 100 : null;
 
         let totalPaid = 0;
         let totalPending = 0;
@@ -280,19 +299,18 @@ export function useStudentsWithStatsPaginated(
   const teacherId = options?.teacherId;
 
   const query = useQuery({
-    queryKey: ["students_with_stats_paginated", page, pageSize, teacherId],
+    queryKey: [QK.STUDENTS_WITH_STATS_PAGINATED, page, pageSize, teacherId],
     queryFn: async () => {
       const from = page * pageSize;
       const to = from + pageSize - 1;
-      let q = supabase
-        .from("students_masked")
-        .select("*", { count: "exact" });
+      let q = supabase.from("students_masked").select("*", { count: "exact" });
 
       if (teacherId) {
         q = q.eq("teacher_id", teacherId);
       }
 
-      q = q.eq("status", "ativo")
+      q = q
+        .eq("status", "ativo")
         .order("name", { ascending: true })
         .range(from, to);
 
@@ -302,11 +320,18 @@ export function useStudentsWithStatsPaginated(
 
       const studentRows = students ?? [];
       const ids = studentRows.map((s: { id: string }) => s.id);
-      if (ids.length === 0) return { list: [] as StudentWithStats[], count: count ?? 0 };
+      if (ids.length === 0)
+        return { list: [] as StudentWithStats[], count: count ?? 0 };
 
       const [classLogsRes, financialRes] = await Promise.all([
-        supabase.from("class_logs").select("student_id, attendance, grade").in("student_id", ids),
-        supabase.from("financial_records").select("student_id, amount, status, due_date").in("student_id", ids),
+        supabase
+          .from("class_logs")
+          .select("student_id, attendance, grade")
+          .in("student_id", ids),
+        supabase
+          .from("financial_records")
+          .select("student_id, amount, status, due_date")
+          .in("student_id", ids),
       ]);
 
       if (classLogsRes.error) throw classLogsRes.error;
@@ -316,37 +341,49 @@ export function useStudentsWithStatsPaginated(
       const allFinancialRecords = financialRes.data ?? [];
 
       const list = studentRows.map((student: Student) => {
-        const studentClassLogs = allClassLogs.filter((log: { student_id: string }) => log.student_id === student.id);
+        const studentClassLogs = allClassLogs.filter(
+          (log: { student_id: string }) => log.student_id === student.id
+        );
         const studentFinancialRecords = allFinancialRecords.filter(
           (rec: { student_id: string }) => rec.student_id === student.id
         );
 
         const totalClasses = studentClassLogs.length;
-        const presentClasses = studentClassLogs.filter((log: { attendance: boolean }) => log.attendance).length;
-        const gradesWithValue = studentClassLogs.filter((log: { grade: number | null }) => log.grade !== null);
+        const presentClasses = studentClassLogs.filter(
+          (log: { attendance: boolean }) => log.attendance
+        ).length;
+        const gradesWithValue = studentClassLogs.filter(
+          (log: { grade: number | null }) => log.grade !== null
+        );
         const averageGrade =
           gradesWithValue.length > 0
-            ? gradesWithValue.reduce((sum: number, log: { grade: number | null }) => sum + (log.grade || 0), 0) /
-              gradesWithValue.length
+            ? gradesWithValue.reduce(
+                (sum: number, log: { grade: number | null }) =>
+                  sum + (log.grade || 0),
+                0
+              ) / gradesWithValue.length
             : null;
-        const attendanceRate = totalClasses > 0 ? (presentClasses / totalClasses) * 100 : null;
+        const attendanceRate =
+          totalClasses > 0 ? (presentClasses / totalClasses) * 100 : null;
 
         let totalPaid = 0;
         let totalPending = 0;
         let totalOverdue = 0;
 
-        studentFinancialRecords.forEach((record: { amount: number; status: string; due_date: string }) => {
-          const amount = Number(record.amount) || 0;
-          if (record.status === "pago") {
-            totalPaid += amount;
-          } else {
-            if (isOverdue(record.due_date)) {
-              totalOverdue += amount;
+        studentFinancialRecords.forEach(
+          (record: { amount: number; status: string; due_date: string }) => {
+            const amount = Number(record.amount) || 0;
+            if (record.status === "pago") {
+              totalPaid += amount;
             } else {
-              totalPending += amount;
+              if (isOverdue(record.due_date)) {
+                totalOverdue += amount;
+              } else {
+                totalPending += amount;
+              }
             }
           }
-        });
+        );
 
         return {
           ...student,

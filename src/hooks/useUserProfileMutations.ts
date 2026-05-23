@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { QK } from "./queryKeys";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
-import { validateAndResizeAvatar, type AvatarValidationError } from "@/lib/utils/avatarUpload";
+import {
+  validateAndResizeAvatar,
+  type AvatarValidationError,
+} from "@/lib/utils/avatarUpload";
 import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
 import { toast } from "sonner";
 import type { Enums } from "@/integrations/supabase/types";
@@ -20,7 +24,8 @@ function getExtensionFromMime(mime: string): string {
 
 function getContentTypeForUpload(file: File, blob: Blob): string {
   const t = blob.type || file.type;
-  if (ALLOWED_AVATAR_TYPES.includes(t as (typeof ALLOWED_AVATAR_TYPES)[number])) return t;
+  if (ALLOWED_AVATAR_TYPES.includes(t as (typeof ALLOWED_AVATAR_TYPES)[number]))
+    return t;
   return "image/jpeg";
 }
 
@@ -28,25 +33,62 @@ export function useUpdateUserRole() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
-      const { data: profile, error: profileFetchError } = await supabase.from("profiles").select("id, full_name, email, student_id, teacher_id, role").eq("user_id", userId).single();
+      const { data: profile, error: profileFetchError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, student_id, teacher_id, role")
+        .eq("user_id", userId)
+        .single();
       if (profileFetchError) throw profileFetchError;
       const fullName = profile.full_name ?? "";
       const normalizedEmail = profile.email?.trim().toLowerCase() ?? null;
-      const { error } = await supabase.rpc("upsert_user_role_safe", { p_user_id: userId, p_role: role, p_full_name: fullName || null, p_email: normalizedEmail });
+      const { error } = await supabase.rpc("upsert_user_role_safe", {
+        p_user_id: userId,
+        p_role: role,
+        p_full_name: fullName || null,
+        p_email: normalizedEmail,
+      });
       if (error) throw error;
-      const { error: profileError } = await supabase.from("profiles").update({ role }).eq("user_id", userId);
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ role })
+        .eq("user_id", userId);
       if (profileError) throw new Error("Erro ao atualizar role do perfil");
       if (role === "student" && !profile.student_id && normalizedEmail) {
-        const { data: student, error: studentError } = await supabase.from("students").insert({ name: fullName || normalizedEmail, email: normalizedEmail }).select("id").single();
-        if (studentError) throw new Error(getDuplicateErrorMessage(studentError) || studentError.message);
-        if (student?.id) await supabase.from("profiles").update({ student_id: student.id }).eq("user_id", userId);
+        const { data: student, error: studentError } = await supabase
+          .from("students")
+          .insert({ name: fullName || normalizedEmail, email: normalizedEmail })
+          .select("id")
+          .single();
+        if (studentError)
+          throw new Error(
+            getDuplicateErrorMessage(studentError) || studentError.message
+          );
+        if (student?.id)
+          await supabase
+            .from("profiles")
+            .update({ student_id: student.id })
+            .eq("user_id", userId);
       } else if (role === "teacher" && !profile.teacher_id && normalizedEmail) {
-        const { data: teacher, error: teacherError } = await supabase.from("teachers").insert({ name: fullName || normalizedEmail, email: normalizedEmail }).select("id").single();
-        if (teacherError) throw new Error(getDuplicateErrorMessage(teacherError) || teacherError.message);
-        if (teacher?.id) await supabase.from("profiles").update({ teacher_id: teacher.id }).eq("user_id", userId);
+        const { data: teacher, error: teacherError } = await supabase
+          .from("teachers")
+          .insert({ name: fullName || normalizedEmail, email: normalizedEmail })
+          .select("id")
+          .single();
+        if (teacherError)
+          throw new Error(
+            getDuplicateErrorMessage(teacherError) || teacherError.message
+          );
+        if (teacher?.id)
+          await supabase
+            .from("profiles")
+            .update({ teacher_id: teacher.id })
+            .eq("user_id", userId);
       }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["users"] }); toast.success("Usuário atualizado com sucesso!"); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
+      toast.success("Usuário atualizado com sucesso!");
+    },
     onError: (error: Error) => toast.error(sanitizeErrorMessage(error)),
   });
 }
@@ -54,59 +96,127 @@ export function useUpdateUserRole() {
 export function useUpdateUserProfile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ userId, fullName }: { userId: string; fullName: string }) => {
-      const { error } = await supabase.from("profiles").update({ full_name: fullName }).eq("user_id", userId);
+    mutationFn: async ({
+      userId,
+      fullName,
+    }: {
+      userId: string;
+      fullName: string;
+    }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: fullName })
+        .eq("user_id", userId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES, "all"] });
     },
-    onError: () => toast.error("Não foi possível atualizar o perfil. Por favor, tente novamente."),
+    onError: () =>
+      toast.error(
+        "Não foi possível atualizar o perfil. Por favor, tente novamente."
+      ),
   });
 }
 
 export function useUpdateMyProfile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ userId, avatar_url }: { userId: string; avatar_url?: string | null }) => {
-      const { error } = await supabase.from("profiles").update({ avatar_url: avatar_url ?? null }).eq("user_id", userId);
+    mutationFn: async ({
+      userId,
+      avatar_url,
+    }: {
+      userId: string;
+      avatar_url?: string | null;
+    }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: avatar_url ?? null })
+        .eq("user_id", userId);
       if (error) throw error;
     },
     onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: ["current_user_profile", userId] });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.CURRENT_USER_PROFILE, userId],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       toast.success("Foto de perfil atualizada.");
     },
-    onError: (err: Error) => toast.error(err?.message?.trim() ? String(err.message) : "Não foi possível atualizar a foto. Por favor, tente novamente."),
+    onError: (err: Error) =>
+      toast.error(
+        err?.message?.trim()
+          ? String(err.message)
+          : "Não foi possível atualizar a foto. Por favor, tente novamente."
+      ),
   });
 }
 
 export function useUploadAvatar() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ userId, file }: { userId: string; file: File }): Promise<void> => {
-      const rateLimitResult = checkRateLimit("uploadAvatar", RATE_LIMIT_CONFIGS.UPLOAD);
-      if (!rateLimitResult.allowed) throw new Error(`Muitos uploads. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`);
-      const blob = await validateAndResizeAvatar(file).catch((err: AvatarValidationError) => { toast.error(err.message); throw err; });
+    mutationFn: async ({
+      userId,
+      file,
+    }: {
+      userId: string;
+      file: File;
+    }): Promise<void> => {
+      const rateLimitResult = checkRateLimit(
+        "uploadAvatar",
+        RATE_LIMIT_CONFIGS.UPLOAD
+      );
+      if (!rateLimitResult.allowed)
+        throw new Error(
+          `Muitos uploads. Aguarde ${rateLimitResult.retryAfter} segundo(s) antes de tentar novamente.`
+        );
+      const blob = await validateAndResizeAvatar(file).catch(
+        (err: AvatarValidationError) => {
+          toast.error(err.message);
+          throw err;
+        }
+      );
       const contentType = getContentTypeForUpload(file, blob);
       const ext = getExtensionFromMime(contentType);
       const path = `${userId}/avatar.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("avatars").upload(path, new File([blob], `avatar.${ext}`, { type: contentType }), { upsert: true, contentType });
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(
+          path,
+          new File([blob], `avatar.${ext}`, { type: contentType }),
+          { upsert: true, contentType }
+        );
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-      const { error: updateError } = await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", userId);
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(path);
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: urlData.publicUrl })
+        .eq("user_id", userId);
       if (updateError) throw updateError;
     },
     onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: ["current_user_profile", userId] });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.CURRENT_USER_PROFILE, userId],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       toast.success("Foto de perfil atualizada.");
     },
     onError: (err: Error) => {
-      if (err && typeof err === "object" && "code" in err && (err as AvatarValidationError).code) return;
-      toast.error(err?.message?.trim() ? String(err.message) : "Não foi possível enviar a foto. Por favor, tente novamente.");
+      if (
+        err &&
+        typeof err === "object" &&
+        "code" in err &&
+        (err as AvatarValidationError).code
+      )
+        return;
+      toast.error(
+        err?.message?.trim()
+          ? String(err.message)
+          : "Não foi possível enviar a foto. Por favor, tente novamente."
+      );
     },
   });
 }
@@ -117,7 +227,13 @@ export function useUploadAvatar() {
 export function useUpdateProfileName() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ userId, fullName }: { userId: string; fullName: string }) => {
+    mutationFn: async ({
+      userId,
+      fullName,
+    }: {
+      userId: string;
+      fullName: string;
+    }) => {
       const trimmed = fullName.trim();
       await supabase.auth.updateUser({ data: { full_name: trimmed } });
       const { error } = await supabase
@@ -127,13 +243,17 @@ export function useUpdateProfileName() {
       if (error) throw error;
     },
     onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: ["current_user_profile", userId] });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.CURRENT_USER_PROFILE, userId],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
       toast.success("Nome atualizado com sucesso!");
     },
     onError: (err: Error) => {
-      toast.error(err?.message?.trim() ? String(err.message) : "Erro ao atualizar nome.");
+      toast.error(
+        err?.message?.trim() ? String(err.message) : "Erro ao atualizar nome."
+      );
     },
   });
 }
@@ -152,7 +272,9 @@ export function useUpdateProfileEmail() {
       toast.success("Email atualizado! Confirme no link enviado.");
     },
     onError: (err: Error) => {
-      toast.error(err?.message?.trim() ? String(err.message) : "Erro ao atualizar email.");
+      toast.error(
+        err?.message?.trim() ? String(err.message) : "Erro ao atualizar email."
+      );
     },
   });
 }
@@ -161,17 +283,31 @@ export function useDeleteUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (userId: string) => {
-      const { data: currentProfile, error: fetchError } = await supabase.from("profiles").select("student_id, teacher_id").eq("user_id", userId).single();
+      const { data: currentProfile, error: fetchError } = await supabase
+        .from("profiles")
+        .select("student_id, teacher_id")
+        .eq("user_id", userId)
+        .single();
       if (fetchError) throw fetchError;
-      const { error } = await supabase.from("profiles").update({ active: false, student_id: currentProfile.student_id, teacher_id: currentProfile.teacher_id }).eq("user_id", userId);
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          active: false,
+          student_id: currentProfile.student_id,
+          teacher_id: currentProfile.teacher_id,
+        })
+        .eq("user_id", userId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES, "all"] });
     },
-    onError: () => toast.error("Não foi possível excluir o usuário. Por favor, tente novamente."),
+    onError: () =>
+      toast.error(
+        "Não foi possível excluir o usuário. Por favor, tente novamente."
+      ),
   });
 }
 
@@ -179,14 +315,27 @@ export function useHardDeleteUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (userId: string) => {
-      const { data, error } = await supabase.functions.invoke("admin-delete-user", { body: { userId } });
+      const { data, error } = await supabase.functions.invoke(
+        "admin-delete-user",
+        { body: { userId } }
+      );
       if (error) throw error;
       const msg = (data as { error?: string } | null)?.error;
       if (msg) throw new Error(msg);
     },
     onSuccess: () => {
-      ["users", "profiles", ["profiles", "all"], "students", "students_paginated", "teachers", "teachers_paginated"].forEach((key) =>
-        queryClient.invalidateQueries({ queryKey: Array.isArray(key) ? key : [key] })
+      [
+        QK.USERS,
+        QK.PROFILES,
+        [QK.PROFILES, "all"],
+        QK.STUDENTS,
+        QK.STUDENTS_PAGINATED,
+        QK.TEACHERS,
+        QK.TEACHERS_PAGINATED,
+      ].forEach((key) =>
+        queryClient.invalidateQueries({
+          queryKey: Array.isArray(key) ? key : [key],
+        })
       );
     },
     onError: () => {},

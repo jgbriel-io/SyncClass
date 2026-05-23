@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { QK } from "./queryKeys";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
 import {
   Tables,
@@ -17,7 +18,7 @@ export function useStudentsByTeacher() {
   // e o admin veja todos os alunos.
   // Use students_masked para mascarar CPF e telefone conforme LGPD
   return useQuery({
-    queryKey: ["students", "by-teacher"],
+    queryKey: [QK.STUDENTS, "by-teacher"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students_masked")
@@ -50,7 +51,7 @@ export function useCreateStudentForTeacher() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students", "by-teacher"] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS, "by-teacher"] });
       toast.success("Aluno cadastrado com sucesso!");
     },
     onError: (error: unknown) => {

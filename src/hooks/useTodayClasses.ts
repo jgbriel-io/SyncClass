@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { QK } from "./queryKeys";
 import { format } from "date-fns";
 import ptBR from "date-fns/locale/pt-BR";
 import { getClassStatusWithTime } from "@/lib/utils/classTime";
@@ -16,9 +17,12 @@ export interface TodayClassItem {
   sortKey: number; // para ordenação (timestamp ou 999999 se sem horário)
 }
 
-export function getTodayClassStatus(
-  item: { class_date: string; attendance: boolean | null; start_at: string | null; end_at: string | null }
-): { label: string; variant: "success" | "info" | "warning" } {
+export function getTodayClassStatus(item: {
+  class_date: string;
+  attendance: boolean | null;
+  start_at: string | null;
+  end_at: string | null;
+}): { label: string; variant: "success" | "info" | "warning" } {
   return getClassStatusWithTime(item);
 }
 
@@ -43,16 +47,16 @@ function getSortKey(startAt: string | null): number {
   return new Date(startAt).getTime();
 }
 
-
 export function useTodayClasses(teacherId?: string | null) {
   return useQuery({
-    queryKey: ["today_classes", teacherId],
+    queryKey: [QK.TODAY_CLASSES, teacherId],
     queryFn: async (): Promise<TodayClassesData> => {
       const today = format(new Date(), "yyyy-MM-dd");
 
       let query = supabase
         .from("class_logs")
-        .select(`
+        .select(
+          `
           id,
           title,
           class_date,
@@ -63,7 +67,8 @@ export function useTodayClasses(teacherId?: string | null) {
           students (
             name
           )
-        `)
+        `
+        )
         .eq("class_date", today)
         .order("start_at", { ascending: true, nullsFirst: false });
 

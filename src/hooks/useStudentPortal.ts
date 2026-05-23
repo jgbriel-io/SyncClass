@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { QK } from "./queryKeys";
 import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -55,7 +56,7 @@ export function useStudentProfile() {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["student_profile", user?.id],
+    queryKey: [QK.STUDENT_PROFILE, user?.id],
     queryFn: async () => {
       // First get the student_id from profiles
       const { data: profile, error: profileError } = await supabase
@@ -88,7 +89,7 @@ export function useStudentClassLogs() {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["student_class_logs_v2", user?.id],
+    queryKey: [QK.STUDENT_CLASS_LOGS_V2, user?.id],
     queryFn: async () => {
       // First get the student_id from profiles
       const { data: profile, error: profileError } = await supabase
@@ -122,7 +123,8 @@ export function useStudentClassLogs() {
       // Class logs - buscar teacher name separadamente para evitar erro de join com view
       const { data, error } = await supabase
         .from("class_logs")
-        .select(`
+        .select(
+          `
           id,
           class_date,
           start_at,
@@ -135,7 +137,8 @@ export function useStudentClassLogs() {
           billed_amount,
           observations,
           teacher_id
-        `)
+        `
+        )
         .eq("student_id", profile.student_id)
         .order("class_date", { ascending: false })
         .order("start_at", { ascending: false, nullsFirst: false });
@@ -150,7 +153,7 @@ export function useStudentClassLogs() {
           .select("name")
           .eq("id", data[0].teacher_id)
           .single();
-        
+
         if (teacherData) {
           teacherName = teacherData.name;
         }
@@ -158,9 +161,12 @@ export function useStudentClassLogs() {
 
       // Buscar financial_records separadamente para cada class_log
       const classLogIds = (data || []).map((log) => log.id);
-      const financialRecordsMap = new Map<string, { status: string; due_date: string }>();
+      const financialRecordsMap = new Map<
+        string,
+        { status: string; due_date: string }
+      >();
       const packageClassLogIds = new Set<string>();
-      
+
       if (classLogIds.length > 0) {
         // Buscar cobranças diretas (class_log_id preenchido)
         const { data: financialData } = await supabase
@@ -168,7 +174,7 @@ export function useStudentClassLogs() {
           .select("id, class_log_id, status, due_date")
           .in("class_log_id", classLogIds)
           .eq("student_id", profile.student_id);
-        
+
         if (financialData) {
           financialData.forEach((fr) => {
             if (fr.class_log_id) {
@@ -183,36 +189,44 @@ export function useStudentClassLogs() {
         // Buscar cobranças de pacote (via tabela de relacionamento)
         const { data: packageLinks } = await supabase
           .from("financial_record_class_logs")
-          .select(`
+          .select(
+            `
             class_log_id,
             financial_records!inner(id, status, due_date)
-          `)
+          `
+          )
           .in("class_log_id", classLogIds);
 
         if (packageLinks) {
-          packageLinks.forEach((link: { class_log_id: string; financial_records: { status: string; due_date: string } }) => {
-            if (link.class_log_id && link.financial_records) {
-              packageClassLogIds.add(link.class_log_id);
-              // Se já não tem cobrança direta, adiciona a do pacote
-              if (!financialRecordsMap.has(link.class_log_id)) {
-                financialRecordsMap.set(link.class_log_id, {
-                  status: link.financial_records.status,
-                  due_date: link.financial_records.due_date,
-                });
+          packageLinks.forEach(
+            (link: {
+              class_log_id: string;
+              financial_records: { status: string; due_date: string };
+            }) => {
+              if (link.class_log_id && link.financial_records) {
+                packageClassLogIds.add(link.class_log_id);
+                // Se já não tem cobrança direta, adiciona a do pacote
+                if (!financialRecordsMap.has(link.class_log_id)) {
+                  financialRecordsMap.set(link.class_log_id, {
+                    status: link.financial_records.status,
+                    due_date: link.financial_records.due_date,
+                  });
+                }
               }
             }
-          });
+          );
         }
       }
 
       const mappedLogs = (data || []).map((log: Record<string, unknown>) => {
         const logTeacherName = teacherName ?? studentTeacherName;
         const logTeacherId = log.teacher_id ?? student?.teacher_id;
-        
+
         // Buscar financial_record do map
-        const financialRecord = financialRecordsMap.get(log.id as string) ?? null;
+        const financialRecord =
+          financialRecordsMap.get(log.id as string) ?? null;
         const isPackage = packageClassLogIds.has(log.id as string);
-        
+
         return {
           id: log.id,
           class_date: log.class_date,
@@ -243,7 +257,7 @@ export function useStudentFinancialRecords() {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["student_financial_records", user?.id],
+    queryKey: [QK.STUDENT_FINANCIAL_RECORDS, user?.id],
     queryFn: async () => {
       // First get the student_id from profiles
       const { data: profile, error: profileError } = await supabase
@@ -258,7 +272,9 @@ export function useStudentFinancialRecords() {
       // Then get the financial records for this student
       const { data, error } = await supabase
         .from("financial_records")
-        .select("id, amount, due_date, description, status, paid_at, payment_proof_status, payment_proof_url, payment_proof_filename, payment_proof_uploaded_at")
+        .select(
+          "id, amount, due_date, description, status, paid_at, payment_proof_status, payment_proof_url, payment_proof_filename, payment_proof_uploaded_at"
+        )
         .eq("student_id", profile.student_id)
         .order("due_date", { ascending: false });
 
@@ -315,9 +331,9 @@ export function useStudentStats() {
 
 export function useLastClass() {
   const { data: classLogs = [] } = useStudentClassLogs();
-  
+
   if (classLogs.length === 0) return null;
-  
+
   // Get the most recent class with attendance
   const lastClass = classLogs.find((log) => log.attendance);
   return lastClass || classLogs[0];

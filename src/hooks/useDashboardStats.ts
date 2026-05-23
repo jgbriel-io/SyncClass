@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { QK } from "./queryKeys";
 import { supabase } from "@/integrations/supabase/client";
 import startOfMonth from "date-fns/startOfMonth";
 import endOfMonth from "date-fns/endOfMonth";
@@ -38,7 +39,7 @@ export interface MonthlyChartData {
 
 export function useDashboardStats() {
   return useQuery({
-    queryKey: ["dashboard_stats"],
+    queryKey: [QK.DASHBOARD_STATS],
     queryFn: async () => {
       const now = new Date();
       const monthStart = startOfMonth(now);
@@ -53,12 +54,15 @@ export function useDashboardStats() {
 
       if (studentsError) throw studentsError;
 
-      const activeStudents = students?.filter((s) => s.status === "ativo").length || 0;
-      const inactiveStudents = students?.filter((s) => s.status === "inativo").length || 0;
-      const newStudentsThisMonth = students?.filter((s) => {
-        const createdAt = new Date(s.created_at || "");
-        return createdAt >= monthStart && createdAt <= monthEnd;
-      }).length || 0;
+      const activeStudents =
+        students?.filter((s) => s.status === "ativo").length || 0;
+      const inactiveStudents =
+        students?.filter((s) => s.status === "inativo").length || 0;
+      const newStudentsThisMonth =
+        students?.filter((s) => {
+          const createdAt = new Date(s.created_at || "");
+          return createdAt >= monthStart && createdAt <= monthEnd;
+        }).length || 0;
 
       // Get overdue payments count
       const today = format(now, "yyyy-MM-dd");
@@ -94,7 +98,7 @@ export function useDashboardStats() {
 
 export function useUpcomingPayments() {
   return useQuery({
-    queryKey: ["upcoming_payments"],
+    queryKey: [QK.UPCOMING_PAYMENTS],
     queryFn: async () => {
       const today = new Date();
       const nextWeek = new Date(today);
@@ -102,14 +106,16 @@ export function useUpcomingPayments() {
 
       const { data, error } = await supabase
         .from("financial_records")
-        .select(`
+        .select(
+          `
           id,
           amount,
           due_date,
           students (
             name
           )
-        `)
+        `
+        )
         .neq("status", "pago")
         .gte("due_date", format(today, "yyyy-MM-dd"))
         .lte("due_date", format(nextWeek, "yyyy-MM-dd"))
@@ -130,7 +136,7 @@ export function useUpcomingPayments() {
 
 export function useBirthdaysThisMonth() {
   return useQuery({
-    queryKey: ["birthdays_this_month"],
+    queryKey: [QK.BIRTHDAYS_THIS_MONTH],
     queryFn: async () => {
       const now = new Date();
       const currentMonth = now.getMonth() + 1; // 1-12
@@ -149,7 +155,8 @@ export function useBirthdaysThisMonth() {
       const birthdays = (data || [])
         .filter((student) => {
           if (!student.birth_date) return false;
-          const birthMonth = new Date(student.birth_date + "T00:00:00").getMonth() + 1;
+          const birthMonth =
+            new Date(student.birth_date + "T00:00:00").getMonth() + 1;
           return birthMonth === currentMonth;
         })
         .map((student) => ({
@@ -171,10 +178,13 @@ export function useBirthdaysThisMonth() {
 
 export function useNewStudentsByMonth(monthsBack: 1 | 3 | 6 | 12 = 6) {
   return useQuery({
-    queryKey: ["new_students_and_classes_by_month", monthsBack],
+    queryKey: [QK.NEW_STUDENTS_AND_CLASSES_BY_MONTH, monthsBack],
     queryFn: async () => {
       const [studentsRes, classesRes, teachersRes] = await Promise.all([
-        supabase.from("students_masked").select("created_at").order("created_at", { ascending: true }),
+        supabase
+          .from("students_masked")
+          .select("created_at")
+          .order("created_at", { ascending: true }),
         supabase.from("class_logs").select("class_date"),
         supabase.from("teachers").select("created_at"),
       ]);

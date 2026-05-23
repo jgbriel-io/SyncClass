@@ -15,6 +15,9 @@ export const QK = {
   STUDENT_FINANCIAL_RECORDS: "student_financial_records",
   STUDENT_PROFILE: "student_profile",
 
+  // Student portal
+  STUDENT_CLASS_LOGS_V2: "student_class_logs_v2",
+
   // Teachers
   TEACHERS: "teachers",
   TEACHERS_PAGINATED: "teachers_paginated",
@@ -53,6 +56,13 @@ export const QK = {
   DASHBOARD_STATS: "dashboard_stats",
   BIRTHDAYS_THIS_MONTH: "birthdays_this_month",
   NEW_STUDENTS_AND_CLASSES_BY_MONTH: "new_students_and_classes_by_month",
+
+  // Teacher dashboard
+  TEACHER_DASHBOARD_STATS: "teacher-dashboard-stats",
+  TEACHER_UPCOMING_PAYMENTS: "teacher-upcoming-payments",
+  TEACHER_BIRTHDAYS: "teacher-birthdays",
+  TEACHER_NEW_STUDENTS_AND_CLASSES_BY_MONTH:
+    "teacher-new-students-and-classes-by-month",
 } as const;
 
 export type QueryKey = (typeof QK)[keyof typeof QK];

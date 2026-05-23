@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { QK } from "./queryKeys";
 import { toast } from "sonner";
 
 interface SubmitPaymentProofParams {
@@ -20,9 +21,14 @@ export function useSubmitPaymentProof() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ financialRecordId, file }: SubmitPaymentProofParams) => {
+    mutationFn: async ({
+      financialRecordId,
+      file,
+    }: SubmitPaymentProofParams) => {
       // 1. Buscar student_id do usuário logado
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
       const { data: profile } = await supabase
@@ -36,7 +42,7 @@ export function useSubmitPaymentProof() {
       // 2. Upload do arquivo para storage
       const fileExt = file.name.split(".").pop();
       const fileName = `${profile.student_id}/${financialRecordId}_${Date.now()}.${fileExt}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from("payment-proofs")
         .upload(fileName, file, {
@@ -47,9 +53,9 @@ export function useSubmitPaymentProof() {
       if (uploadError) throw uploadError;
 
       // 3. Obter URL pública do arquivo
-      const { data: { publicUrl } } = supabase.storage
-        .from("payment-proofs")
-        .getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("payment-proofs").getPublicUrl(fileName);
 
       // 4. Chamar RPC para registrar comprovante
       const { data, error } = await supabase.rpc("submit_payment_proof", {
@@ -62,8 +68,10 @@ export function useSubmitPaymentProof() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["student_financial_records"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.STUDENT_FINANCIAL_RECORDS],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
       toast.success("Comprovante enviado! Aguarde a confirmação do professor.");
     },
     onError: (error: Error) => {
@@ -79,7 +87,11 @@ export function useReviewPaymentProof() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ financialRecordId, approved, rejectionReason }: ReviewPaymentProofParams) => {
+    mutationFn: async ({
+      financialRecordId,
+      approved,
+      rejectionReason,
+    }: ReviewPaymentProofParams) => {
       const { data, error } = await supabase.rpc("review_payment_proof", {
         p_financial_record_id: financialRecordId,
         p_approved: approved,
@@ -90,9 +102,11 @@ export function useReviewPaymentProof() {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
-      queryClient.invalidateQueries({ queryKey: ["student_financial_records"] });
-      
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.STUDENT_FINANCIAL_RECORDS],
+      });
+
       if (variables.approved) {
         toast.success("Pagamento confirmado com sucesso!");
       } else {
@@ -112,7 +126,7 @@ export async function getPaymentProofUrl(proofUrl: string): Promise<string> {
   // Extrair o path do arquivo da URL pública
   const urlParts = proofUrl.split("/payment-proofs/");
   if (urlParts.length < 2) throw new Error("URL inválida");
-  
+
   const filePath = urlParts[1];
 
   const { data, error } = await supabase.storage

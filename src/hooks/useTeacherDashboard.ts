@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { QK } from "./queryKeys";
 import { format } from "date-fns";
 import startOfMonth from "date-fns/startOfMonth";
 import endOfMonth from "date-fns/endOfMonth";
@@ -49,7 +50,7 @@ interface FinancialRecordWithStudent {
 
 export function useTeacherDashboardStats(teacherId: string | null) {
   return useQuery({
-    queryKey: ["teacher-dashboard-stats", teacherId],
+    queryKey: [QK.TEACHER_DASHBOARD_STATS, teacherId],
     queryFn: async (): Promise<TeacherDashboardStats> => {
       if (!teacherId) {
         return {
@@ -66,12 +67,13 @@ export function useTeacherDashboardStats(teacherId: string | null) {
         .select("*", { count: "exact", head: true })
         .eq("status", "ativo")
         .eq("teacher_id", teacherId);
-      
+
       // First, get all student ids for this teacher (excluindo deletados)
-      const { data: teacherStudents, error: teacherStudentsError } = await supabase
-        .from("students_active")
-        .select("id")
-        .eq("teacher_id", teacherId);
+      const { data: teacherStudents, error: teacherStudentsError } =
+        await supabase
+          .from("students_active")
+          .select("id")
+          .eq("teacher_id", teacherId);
 
       if (teacherStudentsError) {
         throw teacherStudentsError;
@@ -129,22 +131,28 @@ export function useTeacherDashboardStats(teacherId: string | null) {
 
 export function useTeacherUpcomingPayments(teacherId: string | null) {
   return useQuery({
-    queryKey: ["teacher-upcoming-payments", teacherId],
+    queryKey: [QK.TEACHER_UPCOMING_PAYMENTS, teacherId],
     queryFn: async (): Promise<UpcomingPayment[]> => {
       if (!teacherId) return [];
 
       const today = new Date();
-      const startDate = startOfWeek(today, { weekStartsOn: 0 }).toISOString().split("T")[0];
-      const endDate = endOfWeek(addDays(today, 7), { weekStartsOn: 0 }).toISOString().split("T")[0];
+      const startDate = startOfWeek(today, { weekStartsOn: 0 })
+        .toISOString()
+        .split("T")[0];
+      const endDate = endOfWeek(addDays(today, 7), { weekStartsOn: 0 })
+        .toISOString()
+        .split("T")[0];
 
       const { data, error } = await supabase
         .from("financial_records")
-        .select(`
+        .select(
+          `
           id,
           due_date,
           amount,
           students!inner(id, name, teacher_id)
-        `)
+        `
+        )
         .eq("status", "pendente")
         .gte("due_date", startDate)
         .lte("due_date", endDate)
@@ -166,7 +174,7 @@ export function useTeacherUpcomingPayments(teacherId: string | null) {
 
 export function useTeacherBirthdaysThisMonth(teacherId: string | null) {
   return useQuery({
-    queryKey: ["teacher-birthdays", teacherId],
+    queryKey: [QK.TEACHER_BIRTHDAYS, teacherId],
     queryFn: async (): Promise<Birthday[]> => {
       if (!teacherId) return [];
 
@@ -194,9 +202,16 @@ export function useTeacherBirthdaysThisMonth(teacherId: string | null) {
   });
 }
 
-export function useTeacherNewStudentsByMonth(teacherId: string | null, monthsBack: 1 | 3 | 6 | 12 = 6) {
+export function useTeacherNewStudentsByMonth(
+  teacherId: string | null,
+  monthsBack: 1 | 3 | 6 | 12 = 6
+) {
   return useQuery({
-    queryKey: ["teacher-new-students-and-classes-by-month", teacherId, monthsBack],
+    queryKey: [
+      QK.TEACHER_NEW_STUDENTS_AND_CLASSES_BY_MONTH,
+      teacherId,
+      monthsBack,
+    ],
     queryFn: async (): Promise<MonthData[]> => {
       if (!teacherId) return [];
 
@@ -241,7 +256,9 @@ export function useTeacherNewStudentsByMonth(teacherId: string | null, monthsBac
             return created && created >= dayStartStr && created <= dayEndStr;
           }).length;
 
-          const classesCount = (classesRes.data || []).filter((c) => c.class_date === dayDateStr).length;
+          const classesCount = (classesRes.data || []).filter(
+            (c) => c.class_date === dayDateStr
+          ).length;
 
           return {
             month: format(dayDate, "d"),

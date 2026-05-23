@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 import { logger } from "@/lib/logger";
 import { sanitizeStudentUpdateForEdit } from "@/lib/utils/sanitizeStudentUpdate";
+import { QK } from "./queryKeys";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -47,7 +48,7 @@ interface PostgresError {
 
 export function useStudents() {
   return useQuery({
-    queryKey: ["students"],
+    queryKey: [QK.STUDENTS],
     queryFn: async () => {
       // IMPORTANTE: Buscar de students_masked (não students_active_masked)
       // para incluir alunos inativos e manter vínculos visíveis
@@ -87,7 +88,7 @@ export function useStudentsPaginated(
   const filters = options?.filters;
 
   const query = useQuery({
-    queryKey: ["students_paginated", page, pageSize, filters],
+    queryKey: [QK.STUDENTS_PAGINATED, page, pageSize, filters],
     queryFn: async () => {
       // Usar students_with_stats para ter estatísticas calculadas
       let q = supabase
@@ -175,8 +176,8 @@ export function useCreateStudent() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
       toast.success("Aluno cadastrado com sucesso!");
     },
     onError: (error: unknown) => {
@@ -365,13 +366,13 @@ export function useUpdateStudent() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
-      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
       toast.success("Aluno atualizado com sucesso!");
     },
     onError: (error: unknown) => {
@@ -411,11 +412,11 @@ export function useSoftDeleteStudent() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
       toast.success("Aluno arquivado e dados anonimizados (LGPD)");
     },
     onError: (error: unknown) => {
@@ -536,13 +537,13 @@ export function useHardDeleteStudent() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles", "all"] });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles_linked_ids"] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES, "all"] });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES_LINKED_IDS] });
       toast.success("Aluno excluído definitivamente.");
     },
     onError: (error: unknown) => {
@@ -588,9 +589,9 @@ export function useRestoreStudent() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
       toast.success("Aluno restaurado com sucesso!");
     },
     onError: (error: unknown) => {
@@ -648,16 +649,16 @@ export function useUpdateStudentPaymentDay() {
     },
     onSuccess: (data) => {
       // Invalidar todas as queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["student_details"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
       queryClient.invalidateQueries({
-        queryKey: ["financial_records_by_student_ids"],
+        queryKey: [QK.FINANCIAL_RECORDS_BY_STUDENT_IDS],
       });
-      queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
-      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
-      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_SUMMARY] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
 
       toast.success(data.message || "Dia de pagamento atualizado com sucesso!");
     },
@@ -674,7 +675,7 @@ export function useTeacherPixKeyByStudent(
   studentId: string | undefined | null
 ) {
   return useQuery({
-    queryKey: ["teacher-pix-key", studentId],
+    queryKey: [QK.TEACHER_PIX_KEY, studentId],
     queryFn: async () => {
       if (!studentId) return null;
 

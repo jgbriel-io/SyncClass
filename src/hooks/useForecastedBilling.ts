@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { QK } from "./queryKeys";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { isOverdue } from "@/lib/utils/financialStatus";
 
@@ -28,7 +29,7 @@ export interface ForecastedBilling {
  */
 export function useForecastedBilling(teacherId?: string | null) {
   return useQuery({
-    queryKey: ["forecasted_billing", teacherId],
+    queryKey: [QK.FORECASTED_BILLING, teacherId],
     queryFn: async (): Promise<ForecastedBilling> => {
       const now = new Date();
       const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
@@ -72,7 +73,9 @@ export function useForecastedBilling(teacherId?: string | null) {
       });
 
       const receivedPercentage =
-        totalForecast > 0 ? Math.round((receivedThisMonth / totalForecast) * 100) : 0;
+        totalForecast > 0
+          ? Math.round((receivedThisMonth / totalForecast) * 100)
+          : 0;
 
       return {
         totalForecast,

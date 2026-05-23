@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { QK } from "./queryKeys";
 
 export type BillingStatusConsolidated =
   | "not_billed"
@@ -32,7 +33,7 @@ export interface StudentStatementEntry {
 
 export function useStudentStatement(studentId: string | null) {
   return useQuery({
-    queryKey: ["student_statement", studentId],
+    queryKey: [QK.STUDENT_STATEMENT, studentId],
     queryFn: async (): Promise<StudentStatementEntry[]> => {
       if (!studentId) return [];
 

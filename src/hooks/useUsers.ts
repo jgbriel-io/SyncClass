@@ -1,5 +1,6 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
+import { QK } from "./queryKeys";
 import React from "react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,7 @@ export interface UsersStats {
 
 export function useUsersStats() {
   return useQuery({
-    queryKey: ["users_stats"],
+    queryKey: [QK.USERS_STATS],
     queryFn: async (): Promise<UsersStats> => {
       const { data, error } = await supabase
         .from("profiles")
@@ -89,7 +90,7 @@ export type UserWithProfile = CombinedUser;
 // Fetch all users with their profiles and roles
 export function useUsers() {
   return useQuery({
-    queryKey: ["users"],
+    queryKey: [QK.USERS],
     queryFn: async (): Promise<CombinedUser[]> => {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
@@ -195,7 +196,7 @@ export function useUsersPaginated(
   const filters = options?.filters;
 
   const query = useQuery({
-    queryKey: ["users_paginated", page, pageSize, filters],
+    queryKey: [QK.USERS_PAGINATED, page, pageSize, filters],
     queryFn: async () => {
       let q = supabase
         .from("profiles")
@@ -352,7 +353,7 @@ export function useUsersPaginated(
 /** Perfil do usuário logado (para avatar, nome, configurações). */
 export function useCurrentUserProfile(userId: string | undefined) {
   return useQuery({
-    queryKey: ["current_user_profile", userId],
+    queryKey: [QK.CURRENT_USER_PROFILE, userId],
     queryFn: async () => {
       if (!userId) return null;
       const { data, error } = await supabase
@@ -382,7 +383,7 @@ export function useCurrentUserProfile(userId: string | undefined) {
 /** IDs de alunos e professores já vinculados a algum perfil (para dropdown "vincular") */
 export function useLinkedProfileIds() {
   return useQuery({
-    queryKey: ["profiles_linked_ids"],
+    queryKey: [QK.PROFILES_LINKED_IDS],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
