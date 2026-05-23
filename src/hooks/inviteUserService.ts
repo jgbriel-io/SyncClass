@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseSignupClient } from "@/integrations/supabase/signup-client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
-import { validatePhonePlatform } from "@/lib/validate-phone-platform";
+import { validatePhonePlatform } from "@/hooks/validatePhonePlatformService";
 import { isValidEmailFormat } from "@/lib/utils/patterns";
 import { common } from "@/content";
 import type { TablesInsert } from "@/integrations/supabase/types";
@@ -56,8 +56,12 @@ export function isEdgeFunctionNetworkError(err: unknown): boolean {
 }
 
 /** Obtém o body da resposta da Edge Function quando ela retorna 4xx/5xx (vem em error.context). */
-async function getFunctionResponseBody(err: unknown): Promise<InviteResponseBody | null> {
-  const e = err as { context?: { json?: () => Promise<InviteResponseBody>; body?: unknown } };
+async function getFunctionResponseBody(
+  err: unknown
+): Promise<InviteResponseBody | null> {
+  const e = err as {
+    context?: { json?: () => Promise<InviteResponseBody>; body?: unknown };
+  };
   if (e?.context?.json) {
     try {
       return await e.context.json();
@@ -141,7 +145,9 @@ export function validateEmailForInvite(email: string): void {
 }
 
 /** Chama a Edge Function invite-user. Faz fallback para createUserLegacy em erros de rede. */
-export async function invokeInviteUser(body: InviteUserBody): Promise<InviteUserResult> {
+export async function invokeInviteUser(
+  body: InviteUserBody
+): Promise<InviteUserResult> {
   validateEmailForInvite(body.email);
   const {
     data: { session },
@@ -170,9 +176,12 @@ export async function invokeInviteUser(body: InviteUserBody): Promise<InviteUser
     if (parsed?.error) throw new Error(parsed.error);
     if (error) {
       const errorBody = await getFunctionResponseBody(error);
-      const partial = errorBody ? inviteResultFromBody(errorBody, body.email) : null;
+      const partial = errorBody
+        ? inviteResultFromBody(errorBody, body.email)
+        : null;
       if (partial) return partial;
-      const msg = errorBody?.error ?? (error as Error).message ?? "Erro ao criar usuário";
+      const msg =
+        errorBody?.error ?? (error as Error).message ?? "Erro ao criar usuário";
       throw new Error(msg);
     }
     throw new Error("Resposta inválida da função");
@@ -189,7 +198,9 @@ export async function invokeInviteUser(body: InviteUserBody): Promise<InviteUser
  * Fallback quando Edge Function indisponível (não deployada, rede, etc.).
  * Ordem igual à Edge Function: auth primeiro; só depois insert em teachers/students.
  */
-export async function createUserLegacy(body: InviteUserBody): Promise<InviteUserResult> {
+export async function createUserLegacy(
+  body: InviteUserBody
+): Promise<InviteUserResult> {
   validateEmailForInvite(body.email);
   const fullName = body.full_name;
   const normalizedEmail = body.email.trim().toLowerCase();
@@ -279,7 +290,9 @@ export async function createUserLegacy(body: InviteUserBody): Promise<InviteUser
         resolvedStudentId = s.id;
       }
     } else {
-      throw new Error("studentId ou studentData é obrigatório para role student");
+      throw new Error(
+        "studentId ou studentData é obrigatório para role student"
+      );
     }
   } else if (body.role === "teacher") {
     if (body.teacherId) {
@@ -303,7 +316,9 @@ export async function createUserLegacy(body: InviteUserBody): Promise<InviteUser
         resolvedTeacherId = t.id;
       }
     } else {
-      throw new Error("teacherId ou teacherData é obrigatório para role teacher");
+      throw new Error(
+        "teacherId ou teacherData é obrigatório para role teacher"
+      );
     }
   }
 

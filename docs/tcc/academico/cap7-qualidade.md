@@ -74,8 +74,7 @@ conforme apresentado na Tabela 7.2.
 
 ## 7.3 Ausência de Testes E2E e Justificativa
 
-Testes E2E automatizados com Playwright não foram implementados
-no escopo do MVP. A decisão foi técnica e deliberada,
+Testes E2E automatizados não foram implementados no escopo do MVP. A decisão foi técnica e deliberada,
 baseada em três fatores principais.
 
 Primeiro, a prioridade do desenvolvimento foi a cobertura de lógica de negócio
@@ -95,8 +94,6 @@ não comportava a infraestrutura de CI/CD adicional necessária
 para testes E2E confiáveis.
 
 Os fluxos críticos foram validados por testes manuais estruturados (Seção 7.4).
-A implementação de E2E com Playwright está planejada como trabalho futuro
-(Seção 10.4), após a estabilização dos componentes.
 
 ## 7.4 Testes Manuais
 

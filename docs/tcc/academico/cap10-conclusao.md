@@ -107,7 +107,6 @@ A Tabela 10.2 apresenta melhorias planejadas para evolução da plataforma.
 
 | Melhoria                                | Justificativa                                                  |
 | --------------------------------------- | -------------------------------------------------------------- |
-| Testes E2E com Playwright               | Cobertura de fluxos críticos não cobertos por unitários        |
 | Deploy automatizado (CD)                | Reduzir fricção de releases                                    |
 | Testes de carga                         | Validar RNF06 (< 2s) com dados reais                           |
 | Auditoria WCAG AA                       | Acessibilidade completa                                        |

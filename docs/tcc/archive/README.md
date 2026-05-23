@@ -12,12 +12,14 @@ Este diretório contém **documentação histórica e de referência técnica** 
 - **Referência para manutenção** com mapeamento completo Requisitos → Código
 
 **Quando usar:**
+
 - Precisa de detalhes técnicos completos (arquivos, migrations, testes) de um requisito
 - Quer entender a evolução histórica do projeto (commits, fases, decisões)
 - Precisa validar que a metodologia ágil foi aplicada corretamente
 - Busca referência técnica para manutenção ou extensão do sistema
 
 **Quando NÃO usar:**
+
 - Leitura do TCC → use `docs/tcc/` (resumo acadêmico)
 - Entender arquitetura atual → use `docs/architecture.md`
 - Consultar sprints → use `docs/sprints/` (documentação oficial)
@@ -50,11 +52,13 @@ docs/archive/
 ## Requisitos
 
 ### requisitos-funcionais.md
+
 **Status:** ✅ Consolidado no Cap4 (seções 4.2.1 e 4.2.2)
 
 Detalha **todos os 30 requisitos funcionais** (RF01-RF30) implementados:
 
 **RF01-RF20 (Principais):**
+
 - CRUD de alunos, professores, aulas, atividades
 - Gestão financeira (cobranças, pagamentos, PIX)
 - Dashboard e métricas
@@ -63,6 +67,7 @@ Detalha **todos os 30 requisitos funcionais** (RF01-RF30) implementados:
 - Anonimização LGPD
 
 **RF21-RF30 (Adicionais):**
+
 - Soft delete e restauração
 - Hard delete com validação
 - Gestão de faltas
@@ -79,23 +84,29 @@ Detalha **todos os 30 requisitos funcionais** (RF01-RF30) implementados:
 ---
 
 ### requisitos-nao-funcionais-adicionais.md
+
 **Status:** ✅ Consolidado no Cap4 (seções 4.3.2 a 4.3.6)
 
 Lista os **26 requisitos não funcionais adicionais** (RNF11-RNF36) implementados:
 
 **Segurança (RNF11-RNF16):**
+
 - Sanitização XSS, validação de email, encriptação PIX, search path security, invalidação de sessões, SECURITY DEFINER
 
 **Performance (RNF17-RNF21):**
+
 - Índices compostos, materialized views, paginação, code splitting, query optimization
 
 **Usabilidade (RNF22-RNF27):**
+
 - Design tokens, skeletons, empty states, formatters, toasts, dialogs
 
 **Rastreabilidade (RNF28-RNF32):**
+
 - Audit logs, performance logs, histórico, rastreamento de confirmação, logs estruturados
 
 **Manutenção (RNF33-RNF36):**
+
 - Cleanup automático, migrations versionadas, Edge Functions
 
 **Uso:** Referência histórica. Cap4 é a fonte oficial.
@@ -105,9 +116,11 @@ Lista os **26 requisitos não funcionais adicionais** (RNF11-RNF36) implementado
 ## Regras de Negócio
 
 ### regras-de-negocio.md
+
 **Status:** ✅ Ativo (referência completa)
 
 Documenta **59 regras de negócio** extraídas do código, organizadas por módulo:
+
 1. Usuários e Autenticação (RN-001 a RN-006)
 2. Professores (RN-007 a RN-011)
 3. Alunos (RN-012 a RN-016)
@@ -122,6 +135,7 @@ Documenta **59 regras de negócio** extraídas do código, organizadas por módu
 **Uso:** Referência completa de regras de negócio. Cap4 tem 55 regras principais (resumo).
 
 **Diferença vs Cap4:**
+
 - Cap4: 55 regras principais (resumo para TCC)
 - Archive: 59 regras completas (referência técnica)
 
@@ -130,9 +144,11 @@ Documenta **59 regras de negócio** extraídas do código, organizadas por módu
 ## Gestão de Projeto
 
 ### historico-desenvolvimento.md
+
 **Status:** ✅ Ativo (referência histórica)
 
 Análise dos **165 commits originais** da branch `old-homolog` (jan-fev 2026):
+
 - Evolução do projeto em 4 fases
 - Estatísticas por tipo de commit (feat, fix, docs, etc)
 - Features implementadas vs não implementadas
@@ -142,6 +158,7 @@ Análise dos **165 commits originais** da branch `old-homolog` (jan-fev 2026):
 **Uso:** Referência histórica do desenvolvimento. Útil para Cap8 (Gestão de Projeto).
 
 **Métricas:**
+
 - 165 commits (19 jan - 18 fev 2026)
 - 70% seguem Conventional Commits
 - 74 features implementadas
@@ -150,9 +167,11 @@ Análise dos **165 commits originais** da branch `old-homolog` (jan-fev 2026):
 ---
 
 ### validacao-sprints-1-15.md
+
 **Status:** ✅ Ativo (prova de metodologia)
 
 Validação das **sprints 1-15** contra commits reais e trabalho executado:
+
 - Taxa de validação: **97.8%** (45 de 46 features com evidência nas sprints 1-6)
 - Distribuição de commits por sprint (1-6)
 - Mapeamento: features documentadas → commits reais
@@ -168,13 +187,13 @@ Validação das **sprints 1-15** contra commits reais e trabalho executado:
 
 ## Relação com Documentação Oficial
 
-| Documento Archive | Documento Oficial | Relação | Diferença |
-|-------------------|-------------------|---------|-----------|
-| `requisitos-funcionais.md` | `docs/tcc/cap4-requisitos.md` (4.2) | Detalhamento técnico | Archive: evidências completas (arquivos, migrations, testes). Cap4: resumo acadêmico |
-| `requisitos-nao-funcionais.md` | `docs/tcc/cap4-requisitos.md` (4.3) | Detalhamento técnico | Archive: implementação detalhada. Cap4: resumo acadêmico |
-| `regras-de-negocio.md` | `docs/tcc/cap4-requisitos.md` (4.4) | Referência completa | Archive: 59 regras com fontes. Cap4: 59 regras resumidas |
-| `historico-desenvolvimento.md` | `docs/tcc/cap8-gestao.md` | Referência histórica | Archive: análise completa de 165 commits. Cap8: resumo de gestão |
-| `validacao-sprints-1-15.md` | `docs/tcc/cap8-gestao.md` | Prova de metodologia | Archive: validação detalhada com critérios. Cap8: resumo de metodologia |
+| Documento Archive              | Documento Oficial                   | Relação              | Diferença                                                                            |
+| ------------------------------ | ----------------------------------- | -------------------- | ------------------------------------------------------------------------------------ |
+| `requisitos-funcionais.md`     | `docs/tcc/cap4-requisitos.md` (4.2) | Detalhamento técnico | Archive: evidências completas (arquivos, migrations, testes). Cap4: resumo acadêmico |
+| `requisitos-nao-funcionais.md` | `docs/tcc/cap4-requisitos.md` (4.3) | Detalhamento técnico | Archive: implementação detalhada. Cap4: resumo acadêmico                             |
+| `regras-de-negocio.md`         | `docs/tcc/cap4-requisitos.md` (4.4) | Referência completa  | Archive: 59 regras com fontes. Cap4: 59 regras resumidas                             |
+| `historico-desenvolvimento.md` | `docs/tcc/cap8-gestao.md`           | Referência histórica | Archive: análise completa de 165 commits. Cap8: resumo de gestão                     |
+| `validacao-sprints-1-15.md`    | `docs/tcc/cap8-gestao.md`           | Prova de metodologia | Archive: validação detalhada com critérios. Cap8: resumo de metodologia              |
 
 **Princípio:** Archive é **referência técnica completa**. Docs oficiais são **resumo acadêmico/executivo**.
 
@@ -183,16 +202,19 @@ Validação das **sprints 1-15** contra commits reais e trabalho executado:
 ## Quando Usar Este Archive
 
 ### Use os arquivos de Requisitos quando:
+
 - Precisar de detalhes técnicos completos de RF21-RF30 ou RNF11-RNF36
 - Quiser ver evidências de implementação (arquivos, migrations, testes)
 - Precisar rastrear um requisito específico até o código
 
 ### Use Regras de Negócio quando:
+
 - Precisar da lista completa de 59 regras (Cap4 tem 55)
 - Quiser ver mapeamento Requisitos → Regras → Código
 - Precisar de referência técnica detalhada
 
 ### Use Gestão de Projeto quando:
+
 - Precisar de contexto histórico do desenvolvimento
 - Quiser validar metodologia ágil aplicada
 - Precisar de métricas de commits e features
@@ -203,11 +225,13 @@ Validação das **sprints 1-15** contra commits reais e trabalho executado:
 ## Arquivos Removidos
 
 ### analise-cobertura-requisitos.md
+
 **Removido em:** 2026-05-20  
 **Razão:** Consolidado em `requisitos-funcionais-adicionais.md` e `requisitos-nao-funcionais-adicionais.md`  
 **Status:** Missão cumprida — Cap4 já atualizado com RF21-RF30 e RNF11-RNF36
 
 ### Pasta sprint-23/
+
 **Removida em:** 2026-05-20  
 **Razão:** Trabalho intermediário já consolidado nas Sprints 12-15 oficiais  
 **Conteúdo:** 26 arquivos de auditoria e validação da centralização de strings  
@@ -220,6 +244,7 @@ Validação das **sprints 1-15** contra commits reais e trabalho executado:
 Este archive deve ser mantido como **referência histórica**. Não adicionar novos arquivos sem justificativa clara.
 
 **Critérios para adicionar ao archive:**
+
 - ✅ Documentação histórica valiosa
 - ✅ Referência técnica completa
 - ✅ Prova de metodologia ou decisões

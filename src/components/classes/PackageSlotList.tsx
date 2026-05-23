@@ -7,11 +7,7 @@ import { PackageFixedScheduleConfig } from "./PackageFixedScheduleConfig";
 import { PackageSlotListView } from "./PackageSlotListView";
 import { Label } from "@/components/ui/label";
 import { classes as classesContent } from "@/content";
-
-export type Slot = { class_date: string; start_time: string; end_time: string };
-export type ScheduleMode = "fixed" | "dynamic";
-
-export const emptySlot: Slot = { class_date: "", start_time: "", end_time: "" };
+import type { Slot, ScheduleMode } from "./packageSlotTypes";
 
 function isDateTodayOrFuture(brDate: string): boolean {
   if (!brDate || !REGEX_PATTERNS.date.test(brDate)) return false;

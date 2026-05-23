@@ -56,7 +56,6 @@ Em tarefas de produto e UX, a IA não substituiu o julgamento humano. O ganho m�
 
 | **Melhoria**                            | **Justificativa**                                              |
 | --------------------------------------- | -------------------------------------------------------------- |
-| Testes E2E com Playwright               | Cobertura de fluxos críticos não cobertos por unitários        |
 | Deploy automatizado (CD)                | Reduzir fricção de releases                                    |
 | Testes de carga                         | Validar RNF06 (< 2s) com dados reais                           |
 | Auditoria WCAG AA                       | Acessibilidade completa                                        |

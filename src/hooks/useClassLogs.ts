@@ -1,23 +1,31 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import React, { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
-import { toast } from "sonner";
 import {
-  enrichWithPackageFinancial,
-  validateNoOverlap,
-  fetchClassLogs,
-  fetchClassLogsByStudentIds,
-  fetchPendingEvaluationClassLogs,
-  fetchAvailableClassLogsForStudent,
-  fetchClassLogsSummary,
-  createClassLogFn,
-  deleteClassLogFn,
-} from "./classLogsService";
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+} from "@/integrations/supabase/types";
+import { toast } from "sonner";
+import { getClassStatusWithTime } from "@/lib/utils/classTime";
+import { QK } from "./queryKeys";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-export type ClassLogsStatusFilter = "all" | "agendada" | "avaliacao_pendente" | "concluida";
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export type ClassLogsStatusFilter =
+  | "all"
+  | "agendada"
+  | "avaliacao_pendente"
+  | "concluida";
 
 export type ClassLogsFilters = {
   teacherId?: string;
@@ -41,7 +49,14 @@ export interface ClassLogWithStudent extends ClassLog {
   } | null;
   financial_records: Array<{
     id: string;
-    status: "pendente" | "pago" | "atrasado" | "abonado" | "extornado" | "cancelado" | null;
+    status:
+      | "pendente"
+      | "pago"
+      | "atrasado"
+      | "abonado"
+      | "extornado"
+      | "cancelado"
+      | null;
     amount: number;
     due_date: string;
     description?: string | null;
@@ -49,7 +64,14 @@ export interface ClassLogWithStudent extends ClassLog {
   financial_record_class_logs?: Array<{
     financial_records: {
       id: string;
-      status: "pendente" | "pago" | "atrasado" | "abonado" | "extornado" | "cancelado" | null;
+      status:
+        | "pendente"
+        | "pago"
+        | "atrasado"
+        | "abonado"
+        | "extornado"
+        | "cancelado"
+        | null;
       amount: number;
       due_date: string;
       description?: string | null;
@@ -88,13 +110,331 @@ export interface UseClassLogsResult {
   refetch: () => void;
 }
 
-export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions): UseClassLogsResult {
+export type UpdateClassLogPayload = ClassLogUpdate & {
+  id: string;
+  financialRecordId?: string;
+  dueDate?: string;
+  amount?: number;
+};
+
+export interface CreateClassLogPackageItem {
+  classLog: ClassLogInsert;
+}
+
+export interface PackageFinancialData {
+  amount: number;
+  due_date: string;
+  description: string;
+  payment_method: string | null;
+}
+
+export interface CreateClassLogPackagePayload {
+  items: CreateClassLogPackageItem[];
+  packageFinancial?: PackageFinancialData | null;
+}
+
+// ---------------------------------------------------------------------------
+// Pure helpers
+// ---------------------------------------------------------------------------
+
+function getDateRangeForPeriod(period: "week" | "month" | "3months"): {
+  from: string;
+  to: string;
+} {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const y = today.getFullYear();
+  const m = today.getMonth();
+  const d = today.getDate();
+  let from: Date;
+  let to: Date;
+  if (period === "week") {
+    const start = new Date(y, m, d);
+    start.setDate(start.getDate() - start.getDay());
+    from = start;
+    to = new Date(start);
+    to.setDate(to.getDate() + 6);
+  } else if (period === "month") {
+    from = new Date(y, m, 1);
+    to = new Date(y, m + 1, 0);
+  } else {
+    from = new Date(y, m - 3, d);
+    to = new Date(y, m, d);
+  }
+  return {
+    from: from.toISOString().split("T")[0],
+    to: to.toISOString().split("T")[0],
+  };
+}
+
+function validateNoOverlap(items: Array<{ classLog: ClassLogInsert }>): void {
+  if (items.length <= 1) return;
+  const byDate = new Map<string, Array<{ classLog: ClassLogInsert }>>();
+  items.forEach((item) => {
+    const date = item.classLog.class_date;
+    if (!byDate.has(date)) byDate.set(date, []);
+    byDate.get(date)!.push(item);
+  });
+  byDate.forEach((dayItems, date) => {
+    if (dayItems.length <= 1) return;
+    const sorted = dayItems.sort((a, b) =>
+      (a.classLog.start_at || "").localeCompare(b.classLog.start_at || "")
+    );
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const current = sorted[i].classLog;
+      const next = sorted[i + 1].classLog;
+      if ((current.end_at || "") > (next.start_at || "")) {
+        const [yr, mo, dy] = date.split("-");
+        throw new Error(
+          `Aulas se sobrepõem no dia ${dy}/${mo}/${yr}: ${current.start_at}-${current.end_at} e ${next.start_at}-${next.end_at}`
+        );
+      }
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Query functions
+// ---------------------------------------------------------------------------
+
+const CLASS_LOG_SELECT = `
+  *,
+  students ( name, teacher_id ),
+  teachers ( name ),
+  financial_records (
+    id, status, amount, due_date,
+    payment_proof_url, payment_proof_filename, payment_proof_status
+  ),
+  financial_record_class_logs (
+    financial_record_id,
+    financial_records (
+      id, status, amount, due_date,
+      payment_proof_url, payment_proof_filename, payment_proof_status
+    )
+  )
+`;
+
+async function enrichWithPackageFinancial(
+  list: ClassLogWithStudent[]
+): Promise<ClassLogWithStudent[]> {
+  const withoutFinancial = list.filter(
+    (log) => !log.financial_records || log.financial_records.length === 0
+  );
+  if (withoutFinancial.length === 0) return list;
+  const logIds = withoutFinancial.map((l) => l.id);
+  const { data: links } = await supabase
+    .from("financial_record_class_logs")
+    .select("class_log_id, financial_record_id")
+    .in("class_log_id", logIds);
+  if (!links?.length) return list;
+  const frIds = [...new Set(links.map((r) => r.financial_record_id))];
+  const { data: frs } = await supabase
+    .from("financial_records")
+    .select(
+      "id, status, amount, due_date, description, payment_proof_url, payment_proof_filename, payment_proof_status"
+    )
+    .in("id", frIds);
+  const frMap = new Map((frs ?? []).map((fr) => [fr.id, fr]));
+  const logToFr = new Map(
+    links.map((r) => [r.class_log_id, r.financial_record_id])
+  );
+  withoutFinancial.forEach((log) => {
+    const frId = logToFr.get(log.id);
+    const fr = frId ? frMap.get(frId) : null;
+    if (fr) {
+      log.financial_records = [fr];
+      log.financial_record_via_package = true;
+    }
+  });
+  return list;
+}
+
+async function fetchClassLogs(
+  teacherId: string | undefined,
+  page: number,
+  pageSize: number,
+  filters: ClassLogsFilters | undefined
+): Promise<{ list: ClassLogWithStudent[]; count: number }> {
+  let q = supabase
+    .from("class_logs")
+    .select(CLASS_LOG_SELECT, { count: "exact" })
+    .order("class_date", { ascending: false });
+
+  const effectiveTeacherId =
+    teacherId ??
+    (filters?.teacherId !== "all" ? filters?.teacherId : undefined);
+
+  if (effectiveTeacherId) {
+    const { data: teacherStudentIds } = await supabase
+      .from("students")
+      .select("id")
+      .eq("teacher_id", effectiveTeacherId);
+    if (teacherStudentIds && teacherStudentIds.length > 0) {
+      q = q.in(
+        "student_id",
+        teacherStudentIds.map((s) => s.id)
+      );
+    } else {
+      return { list: [], count: 0 };
+    }
+  }
+
+  if (filters?.studentId && filters.studentId !== "all")
+    q = q.eq("student_id", filters.studentId);
+  if (filters?.period && filters.period !== "all") {
+    const { from, to } = getDateRangeForPeriod(filters.period);
+    q = q.gte("class_date", from).lte("class_date", to);
+  }
+
+  const from = page * pageSize;
+  const { data, error, count } = await q.range(from, from + pageSize - 1);
+  if (error) throw error;
+  const list = (data ?? []) as ClassLogWithStudent[];
+  await enrichWithPackageFinancial(list);
+  return { list, count: count ?? 0 };
+}
+
+async function fetchClassLogsByStudentIds(
+  studentIds: string[]
+): Promise<ClassLogWithStudent[]> {
+  const { data, error } = await supabase
+    .from("class_logs")
+    .select(
+      `*, students ( name, teacher_id ), teachers ( name ), financial_records ( id, status, amount, due_date, payment_proof_url, payment_proof_filename, payment_proof_status )`
+    )
+    .in("student_id", studentIds)
+    .order("class_date", { ascending: false });
+  if (error) throw error;
+  return enrichWithPackageFinancial((data ?? []) as ClassLogWithStudent[]);
+}
+
+async function fetchPendingEvaluationClassLogs(): Promise<
+  ClassLogWithStudent[]
+> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split("T")[0];
+  const { data, error } = await supabase
+    .from("class_logs")
+    .select(
+      `*, students ( name, teacher_id ), teachers ( name ), financial_records ( id, status, amount, due_date, payment_proof_url, payment_proof_filename, payment_proof_status )`
+    )
+    .is("attendance", null)
+    .lte("class_date", todayStr)
+    .order("class_date", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  const list = (data ?? []) as ClassLogWithStudent[];
+  const enriched = await enrichWithPackageFinancial(list);
+  return enriched.filter(
+    (log) => getClassStatusWithTime(log).label === "Pendente"
+  );
+}
+
+async function fetchAvailableClassLogsForStudent(studentId: string) {
+  const { data: classLogs, error: classLogsError } = await supabase
+    .from("class_logs")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("class_date", { ascending: false });
+  if (classLogsError) throw classLogsError;
+
+  const { data: financialRecords, error: financialError } = await supabase
+    .from("financial_records")
+    .select("class_log_id")
+    .eq("student_id", studentId)
+    .not("class_log_id", "is", null);
+  if (financialError) throw financialError;
+
+  const usedClassLogIds = new Set(
+    financialRecords?.map((r) => r.class_log_id).filter(Boolean) || []
+  );
+
+  const { data: packageLinks } = await supabase
+    .from("financial_record_class_logs")
+    .select("class_log_id")
+    .in("class_log_id", classLogs?.map((l) => l.id) ?? []);
+  packageLinks?.forEach((r) => usedClassLogIds.add(r.class_log_id));
+
+  return classLogs?.filter((log) => !usedClassLogIds.has(log.id)) || [];
+}
+
+async function fetchClassLogsSummary(teacherId?: string | null) {
+  let query = supabase.from("class_logs").select("attendance, grade");
+  if (teacherId) {
+    const { data: teacherStudentIds } = await supabase
+      .from("students")
+      .select("id")
+      .eq("teacher_id", teacherId);
+    if (teacherStudentIds && teacherStudentIds.length > 0) {
+      query = query.in(
+        "student_id",
+        teacherStudentIds.map((s) => s.id)
+      );
+    } else {
+      return {
+        totalClasses: 0,
+        totalPresent: 0,
+        totalAbsent: 0,
+        averageGrade: 0,
+        gradesCount: 0,
+        gradesSum: 0,
+      };
+    }
+  }
+  const { data, error } = await query;
+  if (error) throw error;
+  const summary = {
+    totalClasses: data.length,
+    totalPresent: 0,
+    totalAbsent: 0,
+    averageGrade: 0,
+    gradesCount: 0,
+    gradesSum: 0,
+  };
+  data.forEach((log) => {
+    if (log.attendance) summary.totalPresent++;
+    else summary.totalAbsent++;
+    if (log.grade !== null) {
+      summary.gradesSum += Number(log.grade);
+      summary.gradesCount++;
+    }
+  });
+  if (summary.gradesCount > 0)
+    summary.averageGrade = summary.gradesSum / summary.gradesCount;
+  return summary;
+}
+
+async function createClassLogFn(log: ClassLogInsert) {
+  const { data, error } = await supabase
+    .from("class_logs")
+    .insert(log)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteClassLogFn(id: string) {
+  await supabase.from("financial_records").delete().eq("class_log_id", id);
+  const { error } = await supabase.from("class_logs").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------------
+// Hooks
+// ---------------------------------------------------------------------------
+
+export function useClassLogs(
+  teacherId?: string,
+  options?: UseClassLogsOptions
+): UseClassLogsResult {
   const [page, setPage] = useState(0);
   const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
   const filters = options?.filters;
 
   const query = useQuery({
-    queryKey: ["class_logs", teacherId, page, pageSize, filters],
+    queryKey: [QK.CLASS_LOGS, teacherId, page, pageSize, filters],
     queryFn: () => fetchClassLogs(teacherId, page, pageSize, filters),
     placeholderData: keepPreviousData,
   });
@@ -103,7 +443,6 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
   const totalCount = query.data?.count ?? 0;
   const hasMore = totalCount > (page + 1) * pageSize;
 
-  // Reset para página 1 quando a página atual fica vazia mas há dados disponíveis
   React.useEffect(() => {
     if (!query.isLoading && list.length === 0 && totalCount > 0 && page > 0) {
       setPage(0);
@@ -123,28 +462,28 @@ export function useClassLogs(teacherId?: string, options?: UseClassLogsOptions):
   };
 }
 
-/** Busca aulas por lista de student_ids (ex.: para enriquecer lista paginada de alunos) */
 export function useClassLogsByStudentIds(studentIds: string[]) {
   return useQuery({
-    queryKey: ["class_logs_by_student_ids", studentIds],
+    queryKey: [QK.CLASS_LOGS_BY_STUDENT_IDS, studentIds],
     queryFn: () => fetchClassLogsByStudentIds(studentIds),
     enabled: studentIds.length > 0,
   });
 }
 
-/** Aulas em aberto para avaliação (attendance/grade não preenchidos, data já passou). Usado no sino de notificações. Não filtra por teacher_id: RLS já restringe ao professor (só vê aulas dos seus alunos); filtrar por teacher_id excluiria aulas com teacher_id nulo. */
+/** Aulas em aberto para avaliação. RLS já restringe ao professor; filtrar por teacher_id excluiria aulas com teacher_id nulo. */
 export function usePendingEvaluationClassLogs(teacherId?: string | null) {
   return useQuery({
-    queryKey: ["class_logs_pending_evaluation", teacherId],
+    queryKey: [QK.CLASS_LOGS_PENDING_EVALUATION, teacherId],
     queryFn: fetchPendingEvaluationClassLogs,
   });
 }
 
-// Buscar aulas de um aluno específico que ainda não têm cobrança vinculada
-// Opcionalmente pode filtrar por professor (para telas de admin)
-export function useAvailableClassLogsForStudent(studentId: string | null, teacherId?: string) {
+export function useAvailableClassLogsForStudent(
+  studentId: string | null,
+  teacherId?: string
+) {
   return useQuery({
-    queryKey: ["available_class_logs", studentId, teacherId],
+    queryKey: [QK.AVAILABLE_CLASS_LOGS, studentId, teacherId],
     queryFn: () => fetchAvailableClassLogsForStudent(studentId!),
     enabled: !!studentId,
   });
@@ -152,7 +491,7 @@ export function useAvailableClassLogsForStudent(studentId: string | null, teache
 
 export function useClassLogsSummary(teacherId?: string | null) {
   return useQuery({
-    queryKey: ["class_logs_summary", teacherId],
+    queryKey: [QK.CLASS_LOGS_SUMMARY, teacherId],
     queryFn: () => fetchClassLogsSummary(teacherId),
   });
 }
@@ -162,8 +501,8 @@ export function useCreateClassLog() {
   return useMutation({
     mutationFn: createClassLogFn,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
-      queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
+      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS] });
+      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS_SUMMARY] });
       toast.success("Aula registrada com sucesso!");
     },
     onError: (error) => {
@@ -191,30 +530,28 @@ export function useCreateClassLogWithFinancial() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ classLog, createFinancial, financialData }: ClassLogWithFinancialData) => {
-      // Validação de sobreposição agora é feita no banco via trigger
-      // Permite cobrança para aulas agendadas (futuras): professor pode deixar em aberto
-      // antes da aula; presença e feedback são marcados depois.
-
-      // Primeiro cria a aula
+    mutationFn: async ({
+      classLog,
+      createFinancial,
+      financialData,
+    }: ClassLogWithFinancialData) => {
       const { data: createdLog, error: logError } = await supabase
         .from("class_logs")
         .insert(classLog)
         .select()
         .single();
 
-      if (logError) {
-        throw logError;
-      }
+      if (logError) throw logError;
 
-      // Se deve criar cobrança, cria vinculada à aula.
-      // financialData.amount = classLog.billed_amount ?? (hourly_rate * duration_minutes/60) — calculado no frontend.
       if (createFinancial && financialData) {
         const [y, m, d] = (classLog.class_date || "").split("-");
         const defaultDescription =
-          y && m && d ? `Aula do dia ${d}/${m}/${y}` : `Aula do dia ${classLog.class_date || ""}`;
+          y && m && d
+            ? `Aula do dia ${d}/${m}/${y}`
+            : `Aula do dia ${classLog.class_date || ""}`;
         const description =
-          (typeof financialData.description === "string" && financialData.description.trim())
+          typeof financialData.description === "string" &&
+          financialData.description.trim()
             ? financialData.description.trim()
             : defaultDescription;
 
@@ -231,8 +568,9 @@ export function useCreateClassLogWithFinancial() {
           });
 
         if (financialError) {
-          // Se falhar ao criar cobrança, ainda retorna a aula criada
-          toast.error("Aula criada com sucesso, mas não foi possível criar a cobrança.");
+          toast.error(
+            "Aula criada com sucesso, mas não foi possível criar a cobrança."
+          );
           return createdLog;
         }
       }
@@ -240,13 +578,15 @@ export function useCreateClassLogWithFinancial() {
       return createdLog;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
-      queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
-      queryClient.invalidateQueries({ queryKey: ["student_details"] });
-      queryClient.invalidateQueries({ queryKey: ["available_class_logs"] });
-      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
+      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS] });
+      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS_SUMMARY] });
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.FINANCIAL_RECORDS_BY_STUDENT_IDS],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
+      queryClient.invalidateQueries({ queryKey: [QK.AVAILABLE_CLASS_LOGS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
 
       if (variables.createFinancial) {
         toast.success("Aula e cobrança registradas com sucesso!");
@@ -275,19 +615,17 @@ export function useCreateClassLogWithFinancial() {
   });
 }
 
-export type UpdateClassLogPayload = ClassLogUpdate & {
-  id: string;
-  financialRecordId?: string;
-  dueDate?: string;
-  amount?: number;
-};
-
 export function useUpdateClassLog() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, financialRecordId, dueDate, amount, ...updates }: UpdateClassLogPayload) => {
-      // Verificar se esta aula faz parte de um pacote ANTES de atualizar
+    mutationFn: async ({
+      id,
+      financialRecordId,
+      dueDate,
+      amount,
+      ...updates
+    }: UpdateClassLogPayload) => {
       const { data: packageLink, error: linkError } = await supabase
         .from("financial_record_class_logs")
         .select("financial_record_id")
@@ -298,7 +636,6 @@ export function useUpdateClassLog() {
 
       const isPackage = !!packageLink?.financial_record_id;
 
-      // Validação de sobreposição agora é feita no banco via trigger
       const { data, error } = await supabase
         .from("class_logs")
         .update(updates)
@@ -306,17 +643,13 @@ export function useUpdateClassLog() {
         .select()
         .single();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (financialRecordId) {
         const financialUpdate: { due_date?: string; amount?: number } = {};
         if (dueDate) financialUpdate.due_date = dueDate;
-        
-        // Se faz parte de um pacote e a duração mudou, recalcular o valor total
+
         if (isPackage && updates.duration_minutes !== undefined) {
-          // Buscar todas as aulas do mesmo pacote (APÓS o update)
           const { data: packageLinks, error: linksError } = await supabase
             .from("financial_record_class_logs")
             .select("class_log_id")
@@ -324,9 +657,8 @@ export function useUpdateClassLog() {
 
           if (linksError) throw linksError;
 
-          const classLogIds = packageLinks?.map(l => l.class_log_id) || [];
+          const classLogIds = packageLinks?.map((l) => l.class_log_id) || [];
 
-          // Buscar as aulas e somar as horas (agora com a duração atualizada)
           const { data: packageClasses, error: classesError } = await supabase
             .from("class_logs")
             .select("duration_minutes, student_id")
@@ -335,7 +667,6 @@ export function useUpdateClassLog() {
           if (classesError) throw classesError;
 
           if (packageClasses && packageClasses.length > 0) {
-            // Buscar o valor/hora do aluno
             const studentId = packageClasses[0].student_id;
             const { data: student, error: studentError } = await supabase
               .from("students")
@@ -345,38 +676,42 @@ export function useUpdateClassLog() {
 
             if (studentError) throw studentError;
 
-            // Calcular o novo valor total do pacote (converter minutos para horas)
-            const totalMinutes = packageClasses.reduce((sum, cls) => sum + (cls.duration_minutes || 0), 0);
+            const totalMinutes = packageClasses.reduce(
+              (sum, cls) => sum + (cls.duration_minutes || 0),
+              0
+            );
             const totalHours = totalMinutes / 60;
             const hourlyRate = student?.hourly_rate || 0;
             financialUpdate.amount = totalHours * hourlyRate;
 
-            // Atualizar a cobrança do pacote
             const { error: updateError } = await supabase
               .from("financial_records")
               .update(financialUpdate)
               .eq("id", packageLink.financial_record_id);
 
             if (updateError) {
-              toast.error("Aula atualizada com sucesso, mas não foi possível atualizar a cobrança do pacote.");
+              toast.error(
+                "Aula atualizada com sucesso, mas não foi possível atualizar a cobrança do pacote."
+              );
             }
-            
+
             return data;
           }
         }
-        
-        // Se não é pacote ou não mudou duração, atualizar normalmente
+
         if (amount != null && amount > 0) {
           financialUpdate.amount = amount;
         }
-        
+
         if (Object.keys(financialUpdate).length > 0) {
           const { error: financialError } = await supabase
             .from("financial_records")
             .update(financialUpdate)
             .eq("id", financialRecordId);
           if (financialError) {
-            toast.error("Aula atualizada com sucesso, mas não foi possível atualizar a cobrança.");
+            toast.error(
+              "Aula atualizada com sucesso, mas não foi possível atualizar a cobrança."
+            );
           }
         }
       }
@@ -384,13 +719,17 @@ export function useUpdateClassLog() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
-      queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
-      queryClient.invalidateQueries({ queryKey: ["class_logs_pending_evaluation"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
-      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
-      queryClient.invalidateQueries({ queryKey: ["student_details"] });
+      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS] });
+      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS_SUMMARY] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.CLASS_LOGS_PENDING_EVALUATION],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.FINANCIAL_RECORDS_BY_STUDENT_IDS],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
       toast.success("Registro atualizado com sucesso!");
     },
     onError: (error) => {
@@ -414,27 +753,8 @@ export function useUpdateClassLog() {
   });
 }
 
-/** Payload para criar um pacote de aulas em lote */
-export interface CreateClassLogPackageItem {
-  classLog: ClassLogInsert;
-}
-
-/** Cobrança única do pacote (uma linha no financeiro; aulas vinculadas via financial_record_class_logs) */
-export interface PackageFinancialData {
-  amount: number;
-  due_date: string;
-  description: string;
-  payment_method: string | null;
-}
-
-export interface CreateClassLogPackagePayload {
-  items: CreateClassLogPackageItem[];
-  packageFinancial?: PackageFinancialData | null;
-}
-
 export function useCreateClassLogPackage() {
   const queryClient = useQueryClient();
-  // Gerar chave de idempotência FORA do mutationFn para garantir idempotência em retries
   const idempotencyKeyRef = useRef<string | null>(null);
 
   return useMutation({
@@ -442,16 +762,13 @@ export function useCreateClassLogPackage() {
       const { items, packageFinancial } = payload;
       if (items.length === 0) throw new Error("Nenhuma aula no pacote.");
 
-      // Validar sobreposição client-side ANTES de enviar ao banco
       validateNoOverlap(items);
 
-      // Usar chave existente ou gerar nova apenas na primeira tentativa
       if (!idempotencyKeyRef.current) {
         idempotencyKeyRef.current = crypto.randomUUID();
       }
       const idempotencyKey = idempotencyKeyRef.current;
 
-      // Converter para formato do RPC
       const classLogs = items.map((item) => ({
         student_id: item.classLog.student_id,
         teacher_id: item.classLog.teacher_id || null,
@@ -467,12 +784,18 @@ export function useCreateClassLogPackage() {
         ? {
             amount: packageFinancial.amount,
             due_date: packageFinancial.due_date,
-            description: packageFinancial.description?.trim() || `Pacote mensal - ${items.length} aulas`,
+            description:
+              packageFinancial.description?.trim() ||
+              `Pacote mensal - ${items.length} aulas`,
             payment_method: packageFinancial.payment_method || null,
           }
-        : { amount: 0, due_date: null, description: null, payment_method: null };
+        : {
+            amount: 0,
+            due_date: null,
+            description: null,
+            payment_method: null,
+          };
 
-      // Chamar RPC create_class_package (validação no banco via hooks)
       const { data, error } = await supabase.rpc("create_class_package", {
         p_class_logs: classLogs,
         p_financial_data: financialData,
@@ -483,28 +806,31 @@ export function useCreateClassLogPackage() {
       return data;
     },
     onSuccess: (data, variables) => {
-      // Limpar chave após sucesso para permitir nova operação
       idempotencyKeyRef.current = null;
-      
-      // Invalidar todas as queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
-      queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
-      queryClient.invalidateQueries({ queryKey: ["class_logs_pending_evaluation"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
-      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["student_details"] });
-      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
-      queryClient.invalidateQueries({ queryKey: ["available_class_logs"] });
-      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
-      
-      // Usar mensagem do RPC
-      toast.success(data.message || `${variables.items.length} aula(s) registrada(s) com sucesso!`);
+
+      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS] });
+      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS_SUMMARY] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.CLASS_LOGS_PENDING_EVALUATION],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.FINANCIAL_RECORDS_BY_STUDENT_IDS],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
+      queryClient.invalidateQueries({ queryKey: [QK.AVAILABLE_CLASS_LOGS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
+
+      toast.success(
+        data.message ||
+          `${variables.items.length} aula(s) registrada(s) com sucesso!`
+      );
     },
     onError: (error) => {
-      // Limpar chave após erro para permitir nova tentativa com nova chave
       idempotencyKeyRef.current = null;
-      
+
       const err = error as Error & { details?: string; code?: string };
       const msg = err?.message || "";
       const details = err?.details ? ` (${err.details})` : "";
@@ -514,7 +840,11 @@ export function useCreateClassLogPackage() {
         msg.includes("overlap") ||
         msg.includes("Duas aulas") ||
         msg.includes("agendada em");
-      const displayMsg = isOverlap ? msg : msg ? `${msg}${details}` : "Não foi possível cadastrar o pacote de aulas. Por favor, tente novamente.";
+      const displayMsg = isOverlap
+        ? msg
+        : msg
+          ? `${msg}${details}`
+          : "Não foi possível cadastrar o pacote de aulas. Por favor, tente novamente.";
       toast.error(displayMsg);
     },
   });
@@ -525,20 +855,25 @@ export function useDeleteClassLog() {
   return useMutation({
     mutationFn: deleteClassLogFn,
     onSuccess: () => {
-      // Invalidar todas as queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ["class_logs"] });
-      queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
-      queryClient.invalidateQueries({ queryKey: ["class_logs_pending_evaluation"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
-      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["student_details"] });
-      queryClient.invalidateQueries({ queryKey: ["student_balance"] });
-      queryClient.invalidateQueries({ queryKey: ["student_statement"] });
+      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS] });
+      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS_SUMMARY] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.CLASS_LOGS_PENDING_EVALUATION],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.FINANCIAL_RECORDS_BY_STUDENT_IDS],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
       toast.success("Registro removido com sucesso!");
     },
     onError: () => {
-      toast.error("Não foi possível remover o registro. Por favor, tente novamente.");
+      toast.error(
+        "Não foi possível remover o registro. Por favor, tente novamente."
+      );
     },
   });
 }

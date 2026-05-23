@@ -86,7 +86,6 @@ projeto, não apenas para geração de código.
 | Data fetching    | TanStack Query                     | 5.83.0                  |
 | Formulários      | React Hook Form + Zod              | 7.61.1 / 3.25.76        |
 | Testes unitários | Vitest + Testing Library           | 3.2.4                   |
-| Testes E2E       | Playwright                         | 1.59.1                  |
 | CI/CD            | GitHub Actions                     | —                       |
 | Monitoramento    | Sentry                             | 10.38.0                 |
 | IA               | Claude (Anthropic), GitHub Copilot | —                       |

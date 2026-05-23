@@ -1,6 +1,6 @@
 # Contexto do Projeto — SyncClass
 
-**Última Atualização:** 21/05/2026
+**Última Atualização:** 23/05/2026
 
 ## O que é
 
@@ -115,7 +115,7 @@ Plataforma web unificada que:
 
 - Docker (frontend containerizado)
 - GitHub Actions (CI/CD)
-- Sentry (monitoramento de erros)
+- Vitest (testes unitários)
 
 ### Desenvolvimento
 
@@ -190,14 +190,14 @@ Components → Hooks → Supabase SDK → PostgreSQL
 - **Período:** Janeiro–Maio 2026 (~4 meses)
 - **Desenvolvedor:** 1 (solo)
 - **Commits:** ~218
-- **Sprints:** 16 implementadas
+- **Sprints:** 20 documentadas (19 implementadas + 1 em andamento)
 
 ### Implementação
 
 - **Requisitos Funcionais:** 30/35 (85%)
 - **Requisitos Não Funcionais:** 36/36 (100%)
 - **Regras de Negócio:** 59/59 (100%)
-- **Migrations:** 21
+- **Migrations:** 25
 - **Edge Functions:** 5
 - **Testes:** 161 (32 unitários + 129 design tokens)
 - **RLS Policies:** 40+
@@ -235,7 +235,6 @@ Components → Hooks → Supabase SDK → PostgreSQL
 
 ### Trabalhos Futuros
 
-- Testes E2E com Playwright
 - Deploy automatizado (CD)
 - Testes de carga
 - Auditoria WCAG AA

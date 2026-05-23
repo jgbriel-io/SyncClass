@@ -27,7 +27,7 @@ Plataforma SaaS para gestão de professores autônomos de inglês. Projeto de TC
 - Lucide React 0.462 — ícones
 - Sonner 1.7 — toasts
 - Sentry 10.38 — monitoring
-- Testes: Vitest (unitários) — **sem Playwright/E2E ainda**
+- Testes: Vitest (unitários)
 - Deploy: TBD (Lovable/Vercel/Netlify)
 
 Variáveis obrigatórias: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`

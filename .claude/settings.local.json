@@ -5,7 +5,17 @@
       "Bash(Select-Object FullName)",
       "mcp__plugin_context-mode_context-mode__ctx_index",
       "mcp__plugin_context-mode_context-mode__ctx_search",
-      "mcp__plugin_context-mode_context-mode__ctx_fetch_and_index"
+      "mcp__plugin_context-mode_context-mode__ctx_fetch_and_index",
+      "Bash(powershell -Command \"Get-ChildItem src -Recurse -Include '*.ts', '*.tsx' | Measure-Object | Select-Object -ExpandProperty Count\")",
+      "Bash(powershell -Command ' *)",
+      "Bash(claude mcp *)",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__generate_typescript_types",
+      "Bash(grep -v \"^$\")"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": ["supabase"]
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,12 +14,8 @@ import { Loader2 } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { usePackageClassesForm } from "@/hooks/usePackageClassesForm";
-import {
-  PackageSlotList,
-  type Slot,
-  type ScheduleMode,
-  emptySlot,
-} from "./PackageSlotList";
+import { PackageSlotList } from "./PackageSlotList";
+import { emptySlot, type Slot, type ScheduleMode } from "./packageSlotTypes";
 import { PackageFinancialSection } from "./PackageFinancialSection";
 import { classes as classesContent, common } from "@/content";
 
@@ -76,7 +72,7 @@ export function PackageClassesDialog({
     onClose: () => onOpenChange(false),
   });
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setStudentId("");
     setSelectedTeacherId(teacherId ?? "");
     setSlots([{ ...emptySlot }]);
@@ -89,11 +85,11 @@ export function PackageClassesDialog({
     setFixedStartTime("");
     setFixedEndTime("");
     setTeacherError(null);
-  };
+  }, [teacherId]);
 
   useEffect(() => {
     if (!open) resetForm();
-  }, [open, teacherId]);
+  }, [open, resetForm]);
 
   useEffect(() => {
     if (open) {
@@ -101,7 +97,7 @@ export function PackageClassesDialog({
       setStudentId(initialStudentId ?? "");
       setSelectedTeacherId(teacherId ?? "");
     }
-  }, [open, initialStudentId, teacherId]);
+  }, [open, initialStudentId, teacherId, resetForm]);
 
   return (
     <BaseDialog

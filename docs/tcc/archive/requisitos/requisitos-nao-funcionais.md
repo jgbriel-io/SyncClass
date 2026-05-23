@@ -20,6 +20,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 1-7
 
 **Implementação:**
+
 - RLS habilitado em todas as tabelas
 - 40+ policies implementadas
 - Professor só acessa seus próprios alunos
@@ -27,9 +28,11 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 - Policies por operação: SELECT, INSERT, UPDATE, DELETE
 
 **Arquivos:**
+
 - `supabase/migrations/04_rls_and_permissions.sql`
 
 **Policies Principais:**
+
 - `students_select_policy`: professor vê apenas seus alunos
 - `class_logs_select_policy`: professor vê apenas suas aulas
 - `financial_records_select_policy`: professor vê apenas suas cobranças
@@ -48,6 +51,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 1
 
 **Implementação:**
+
 - Supabase Auth configurado
 - Tokens JWT com expiração de 1 hora
 - Refresh tokens com expiração de 30 dias
@@ -55,6 +59,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 - Proteção de rotas via `ProtectedRoute`
 
 **Arquivos:**
+
 - `src/integrations/supabase/client.ts`
 - `src/contexts/AuthContext.tsx`
 - `src/components/auth/ProtectedRoute.tsx`
@@ -72,6 +77,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 3, 7
 
 **Implementação:**
+
 - Soft delete em todas as tabelas críticas
 - Funções de anonimização: `anonymize_teacher_data()`, `anonymize_student_data()`
 - Cleanup automático de dados antigos (90+ dias)
@@ -79,6 +85,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 - Direito ao esquecimento implementado
 
 **Arquivos:**
+
 - `supabase/migrations/02_logic_and_views.sql` (funções de anonimização)
 - `supabase/migrations/05_cpf_removal_and_country.sql` (soft delete)
 - `supabase/functions/cleanup-old-records/index.ts`
@@ -96,6 +103,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 6
 
 **Implementação:**
+
 - Tabela `idempotency_keys` para rastrear operações
 - RPCs idempotentes: `mark_as_paid_idempotent`, `confirm_payment_idempotent`, `undo_payment_idempotent`
 - Chave de idempotência gerada no frontend (UUID)
@@ -103,6 +111,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 - TTL de 24h para chaves
 
 **Arquivos:**
+
 - `supabase/migrations/01_structure.sql` (tabela `idempotency_keys`)
 - `supabase/migrations/03_rpcs_and_triggers.sql` (RPCs idempotentes)
 - `src/hooks/useFinancialRecords.ts`
@@ -120,6 +129,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 7
 
 **Implementação:**
+
 - Tabela `rate_limit_tracker` registra requisições
 - Função `check_rate_limit(operation, max_requests, window_minutes)`
 - Padrão: 10 req/min para operações sensíveis
@@ -127,6 +137,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 - Limpeza automática de registros antigos
 
 **Arquivos:**
+
 - `supabase/migrations/07_add_rate_limiting.sql`
 - `supabase/functions/admin-delete-user/index.ts` (uso)
 
@@ -143,6 +154,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 3, 5
 
 **Implementação:**
+
 - Índices compostos em queries frequentes
 - Paginação obrigatória (`.range()`)
 - Materialized views para dashboards
@@ -150,6 +162,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 - Lazy loading de componentes
 
 **Arquivos:**
+
 - `supabase/migrations/01_structure.sql` (índices)
 - `supabase/migrations/15_create_materialized_views.sql`
 - Todos os hooks com paginação
@@ -167,6 +180,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 3
 
 **Implementação:**
+
 - `vite-plugin-pwa` configurado
 - Manifest.json com ícones (72x72 até 512x512)
 - Service Worker para cache
@@ -174,6 +188,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 - Instalável em Android/iOS/Desktop
 
 **Arquivos:**
+
 - `vite.config.ts` (plugin PWA)
 - `public/manifest.json`
 - `public/sw.js`
@@ -192,6 +207,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 5
 
 **Implementação:**
+
 - Mobile-first design
 - Breakpoints: sm (640px), md (768px), lg (1024px), xl (1280px)
 - Scroll horizontal em tabelas grandes
@@ -199,6 +215,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 - Touch-friendly (botões ≥44px)
 
 **Arquivos:**
+
 - `tailwind.config.ts` (breakpoints)
 - Todos os componentes com classes responsivas
 
@@ -215,6 +232,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 7
 
 **Implementação:**
+
 - Tabela `audit_logs` (INSERT only, imutável)
 - Triggers automáticos em tabelas críticas
 - Registra: user_id, action_type, table_name, old_data, new_data, timestamp
@@ -222,6 +240,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 - Queries otimizadas com índices
 
 **Arquivos:**
+
 - `supabase/migrations/01_structure.sql` (tabela `audit_logs`)
 - Triggers em: students, teachers, financial_records, activities
 
@@ -238,6 +257,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 3
 
 **Implementação:**
+
 - Sentry SDK integrado
 - Captura de erros não tratados
 - Source maps para stack traces
@@ -245,6 +265,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 - Breadcrumbs de navegação
 
 **Arquivos:**
+
 - `src/lib/sentry.ts`
 - `src/main.tsx` (inicialização)
 
@@ -263,12 +284,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 5
 
 **Implementação:**
+
 - DOMPurify em todos os inputs de texto livre
 - Sanitização em `errorHandler.ts`
 - Previne injeção de scripts maliciosos
 - Aplicado em: feedback de aulas, correção de atividades, observações
 
 **Arquivos:**
+
 - `src/lib/security/errorHandler.ts`
 - Componentes com texto livre
 
@@ -285,12 +308,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 4
 
 **Implementação:**
+
 - Whitelist de provedores reais (Gmail, Outlook, Yahoo, etc)
 - Função `is_valid_email()` no banco
 - Rejeita emails de domínios inexistentes
 - Previne spam e contas fake
 
 **Arquivos:**
+
 - `supabase/migrations/12_consistency_improvements.sql`
 
 **Testes:** ⚠️ Via migration (testar função com emails válidos/inválidos)
@@ -306,12 +331,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 7
 
 **Implementação:**
+
 - PIX keys armazenadas em texto plano (necessário para QR Code)
 - View `teachers_with_pix_restricted` oculta PIX de não-admins
 - RLS garante isolamento
 - Apenas admin vê PIX keys de todos os professores
 
 **Arquivos:**
+
 - `supabase/migrations/13_encrypt_pix_keys.sql`
 
 **Testes:** ⚠️ Via migration (verificar view e RLS)
@@ -327,12 +354,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 7
 
 **Implementação:**
+
 - `SET search_path = public, pg_temp` em todas as funções
 - Previne search_path hijacking
 - Aplicado em: RPCs, triggers, views
 - Auditoria de todas as funções
 
 **Arquivos:**
+
 - `supabase/migrations/09_fix_search_path_security.sql`
 
 **Testes:** ⚠️ Via migration (verificar search_path em funções)
@@ -348,12 +377,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 7
 
 **Implementação:**
+
 - Trigger ao desativar conta (`profiles.active = false`)
 - Trigger ao deletar usuário
 - Limpa tokens JWT do Supabase Auth
 - Força logout em todos os dispositivos
 
 **Arquivos:**
+
 - `supabase/migrations/14_invalidate_sessions_on_deactivate.sql`
 
 **Testes:** ⚠️ Via migration (executar trigger e verificar sessões)
@@ -369,12 +400,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 7
 
 **Implementação:**
+
 - `is_admin()` com SECURITY DEFINER
 - Previne recursão infinita com RLS
 - Sem isso: HTTP 500 em queries admin
 - Aplicado apenas em funções críticas
 
 **Arquivos:**
+
 - `supabase/migrations/21_fix_critical_bugs.sql`
 
 **Testes:** ⚠️ Via migration (testar queries admin)
@@ -392,6 +425,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 3
 
 **Implementação:**
+
 - Índices em todas as FKs usadas em WHERE/JOIN
 - Índices compostos para queries frequentes
 - Exemplos:
@@ -400,6 +434,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
   - `idx_activities_student_status` (student_id, status)
 
 **Arquivos:**
+
 - `supabase/migrations/01_structure.sql`
 
 **Testes:** — N/A (medição de performance)
@@ -415,12 +450,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 7
 
 **Implementação:**
+
 - `activities_dashboard`: métricas de atividades
 - `financial_dashboard`: métricas financeiras
 - Refresh periódico via cron
 - Reduz carga em queries complexas
 
 **Arquivos:**
+
 - `supabase/migrations/15_create_materialized_views.sql`
 
 **Testes:** — N/A (medição de performance)
@@ -436,12 +473,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 5
 
 **Implementação:**
+
 - `.range(start, end)` em todas as listagens
 - Padrão: 10 itens por página
 - Previne queries pesadas
 - Aplicado em: alunos, professores, aulas, cobranças, atividades
 
 **Arquivos:**
+
 - Todos os hooks com listagens
 
 **Testes:** ✅ Unitários
@@ -457,12 +496,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 1
 
 **Implementação:**
+
 - Lazy loading por rota
 - Componentes pesados carregados sob demanda
 - Reduz bundle inicial
 - Melhora First Contentful Paint
 
 **Arquivos:**
+
 - `src/App.tsx` (lazy imports)
 
 **Testes:** — N/A (medição de bundle size)
@@ -478,12 +519,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** Contínuo
 
 **Implementação:**
+
 - Select apenas colunas necessárias
 - Evita `SELECT *`
 - Reduz tráfego de rede
 - Padrão em todos os hooks
 
 **Arquivos:**
+
 - Todos os hooks
 
 **Testes:** ✅ Unitários
@@ -501,12 +544,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 5
 
 **Implementação:**
+
 - Sistema completo com 129 testes
 - Funções: `typography()`, `stack()`, `iconSize()`, `modalSizes()`
 - Cores semânticas: `text-destructive`, `bg-primary`
 - Spacing na escala de 4px
 
 **Arquivos:**
+
 - `src/lib/design-tokens/typography.ts`
 - `src/lib/design-tokens/spacing.ts`
 - `src/lib/design-tokens/icon-sizes.ts`
@@ -525,12 +570,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 3
 
 **Implementação:**
+
 - Loading states em todas as páginas
 - Skeletons para: tabelas, cards, forms
 - Melhora percepção de performance
 - Reduz frustração do usuário
 
 **Arquivos:**
+
 - `src/components/ui/skeleton.tsx`
 - `*Skeleton.tsx` em cada módulo
 
@@ -547,12 +594,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 3
 
 **Implementação:**
+
 - Mensagens personalizadas por módulo
 - CTAs contextuais
 - Ilustrações SVG
 - Exemplos: "Nenhum aluno cadastrado", "Nenhuma cobrança pendente"
 
 **Arquivos:**
+
 - `src/components/ui/empty-state.tsx`
 - Componentes de listagem
 
@@ -569,12 +618,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 3
 
 **Implementação:**
+
 - Currency: `formatCurrency(1000)` → "R$ 1.000,00"
 - Date: `formatDate('2026-05-20')` → "20/05/2026"
 - Phone: `formatPhone('11999999999')` → "(11) 99999-9999"
 - CPF: `formatCPF('12345678900')` → "123.456.789-00"
 
 **Arquivos:**
+
 - `src/lib/utils/formatters.ts`
 - `src/lib/utils/format-phone.ts`
 
@@ -591,12 +642,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 2
 
 **Implementação:**
+
 - Sonner integrado
 - Tipos: success, error, info, warning
 - Posição: bottom-right
 - Auto-dismiss em 3s
 
 **Arquivos:**
+
 - `src/components/ui/toast.tsx`
 - `src/components/ui/use-toast.ts`
 
@@ -613,12 +666,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 2
 
 **Implementação:**
+
 - Modal system consistente
 - Tamanhos: SM, MD, LG, XL
 - Animações suaves
 - Acessibilidade (ESC para fechar, focus trap)
 
 **Arquivos:**
+
 - `src/components/ui/dialog.tsx`
 - `src/lib/design-tokens/modal-sizes.ts`
 
@@ -637,12 +692,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 7
 
 **Implementação:**
+
 - Triggers em todas as tabelas críticas
 - Registra: user_id, action_type, table_name, old_data, new_data
 - Tabela `audit_logs` (INSERT only, imutável)
 - Retenção: 1 ano
 
 **Arquivos:**
+
 - `supabase/migrations/01_structure.sql` (tabela)
 - Triggers em tabelas críticas
 
@@ -659,12 +716,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 7
 
 **Implementação:**
+
 - Tabela `performance_logs`
 - Registra queries lentas (>2s)
 - Análise de gargalos
 - Alertas automáticos (futuro)
 
 **Arquivos:**
+
 - `supabase/migrations/01_structure.sql`
 
 **Testes:** — N/A
@@ -680,12 +739,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 4
 
 **Implementação:**
+
 - Timeline de transações financeiras
 - Histórico de aulas
 - Histórico de atividades
 - Filtros por período
 
 **Arquivos:**
+
 - `src/components/financial/Timeline.tsx`
 - `src/pages/student/StudentHistory.tsx`
 
@@ -702,12 +763,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 1
 
 **Implementação:**
+
 - Campo `confirmed_by_user_id` em financial_records
 - Registra quem confirmou pagamento
 - Auditoria de operações financeiras
 - Previne fraudes
 
 **Arquivos:**
+
 - `supabase/migrations/01_structure.sql`
 
 **Testes:** ✅ Unitários
@@ -723,12 +786,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** Contínuo
 
 **Implementação:**
+
 - Logs em formato JSON
 - Campos: timestamp, level, message, context
 - Integração com Sentry
 - Análise via ferramentas externas
 
 **Arquivos:**
+
 - `src/lib/sentry.ts`
 
 **Testes:** — N/A
@@ -746,12 +811,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 9
 
 **Implementação:**
+
 - Edge function `cleanup-old-records`
 - Remove registros soft-deleted há 90+ dias
 - Execução via cron (semanal)
 - Logs de auditoria
 
 **Arquivos:**
+
 - `supabase/functions/cleanup-old-records/index.ts`
 
 **Testes:** ⚠️ Manual
@@ -767,12 +834,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 9
 
 **Implementação:**
+
 - Edge function `cleanup-storage`
 - Remove arquivos órfãos (sem referência no banco)
 - Execução via cron (semanal)
 - Libera espaço em disco
 
 **Arquivos:**
+
 - `supabase/functions/cleanup-storage/index.ts`
 
 **Testes:** ⚠️ Manual
@@ -788,12 +857,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 1-9
 
 **Implementação:**
+
 - 23 migrations aplicadas
 - Nomenclatura: `NN_description.sql`
 - Rastreabilidade via `supabase_migrations` table
 - Rollback manual (sem down migrations)
 
 **Arquivos:**
+
 - `supabase/migrations/` (23 arquivos)
 
 **Testes:** — N/A
@@ -809,6 +880,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 **Sprint:** 3-9
 
 **Implementação:**
+
 - 5 functions implementadas:
   1. `invite-user` — Convite de usuários
   2. `reset-password` — Reset de senha
@@ -820,6 +892,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 - Rate limiting
 
 **Arquivos:**
+
 - `supabase/functions/*/index.ts`
 
 **Testes:** ⚠️ Manual
@@ -830,77 +903,77 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 
 ### Por Categoria
 
-| Categoria | Requisitos | IDs |
-|-----------|-----------|-----|
-| Segurança | 8 | RNF01, RNF02, RNF05, RNF11-RNF16 |
-| Performance | 6 | RNF06, RNF17-RNF21 |
-| Usabilidade | 7 | RNF07, RNF08, RNF22-RNF27 |
-| Rastreabilidade | 5 | RNF09, RNF28-RNF31 |
-| Observabilidade | 3 | RNF10, RNF29, RNF32 |
-| Legal | 1 | RNF03 |
-| Confiabilidade | 1 | RNF04 |
-| Manutenção | 4 | RNF33-RNF35 |
-| Arquitetura | 1 | RNF36 |
+| Categoria       | Requisitos | IDs                              |
+| --------------- | ---------- | -------------------------------- |
+| Segurança       | 8          | RNF01, RNF02, RNF05, RNF11-RNF16 |
+| Performance     | 6          | RNF06, RNF17-RNF21               |
+| Usabilidade     | 7          | RNF07, RNF08, RNF22-RNF27        |
+| Rastreabilidade | 5          | RNF09, RNF28-RNF31               |
+| Observabilidade | 3          | RNF10, RNF29, RNF32              |
+| Legal           | 1          | RNF03                            |
+| Confiabilidade  | 1          | RNF04                            |
+| Manutenção      | 4          | RNF33-RNF35                      |
+| Arquitetura     | 1          | RNF36                            |
 
 ### Por Prioridade
 
 | Prioridade | Quantidade |
-|------------|-----------|
-| Alta | 16 |
-| Média | 17 |
-| Baixa | 3 |
+| ---------- | ---------- |
+| Alta       | 16         |
+| Média      | 17         |
+| Baixa      | 3          |
 
 ### Por Status de Teste
 
-| Status | Quantidade |
-|--------|-----------|
-| ✅ Unitários | 15 |
-| ⚠️ Manual | 10 |
-| ⚠️ Via migration | 8 |
-| — N/A | 3 |
+| Status           | Quantidade |
+| ---------------- | ---------- |
+| ✅ Unitários     | 15         |
+| ⚠️ Manual        | 10         |
+| ⚠️ Via migration | 8          |
+| — N/A            | 3          |
 
 ---
 
 ## Mapeamento: Requisitos → Código
 
-| Requisito | Arquivo Principal | Migration | Teste |
-|-----------|-------------------|-----------|-------|
-| RNF01 | — | `04_rls_and_permissions.sql` | ✅ |
-| RNF02 | `AuthContext.tsx` | — | ✅ |
-| RNF03 | — | `02_logic_and_views.sql` | ⚠️ Via migration |
-| RNF04 | `useFinancialRecords.ts` | `03_rpcs_and_triggers.sql` | ✅ |
-| RNF05 | — | `07_add_rate_limiting.sql` | ✅ |
-| RNF06 | Todos os hooks | `01_structure.sql` | — N/A |
-| RNF07 | `vite.config.ts` | — | ⚠️ Manual |
-| RNF08 | Todos os componentes | — | ⚠️ Manual |
-| RNF09 | — | `01_structure.sql` | ⚠️ Via migration |
-| RNF10 | `sentry.ts` | — | — N/A |
-| RNF11 | `errorHandler.ts` | — | ✅ |
-| RNF12 | — | `12_consistency_improvements.sql` | ⚠️ Via migration |
-| RNF13 | — | `13_encrypt_pix_keys.sql` | ⚠️ Via migration |
-| RNF14 | — | `09_fix_search_path_security.sql` | ⚠️ Via migration |
-| RNF15 | — | `14_invalidate_sessions.sql` | ⚠️ Via migration |
-| RNF16 | — | `21_fix_critical_bugs.sql` | ⚠️ Via migration |
-| RNF17 | — | `01_structure.sql` | — N/A |
-| RNF18 | — | `15_create_materialized_views.sql` | — N/A |
-| RNF19 | Todos os hooks | — | ✅ |
-| RNF20 | `App.tsx` | — | — N/A |
-| RNF21 | Todos os hooks | — | ✅ |
-| RNF22 | `design-tokens/` | — | ✅ (129 testes) |
-| RNF23 | `*Skeleton.tsx` | — | ✅ |
-| RNF24 | `EmptyState.tsx` | — | ✅ |
-| RNF25 | `formatters.ts` | — | ✅ |
-| RNF26 | `toast.tsx` | — | ✅ |
-| RNF27 | `dialog.tsx` | — | ✅ |
-| RNF28 | — | `01_structure.sql` | ⚠️ Via migration |
-| RNF29 | — | `01_structure.sql` | — N/A |
-| RNF30 | `Timeline.tsx` | — | ✅ |
-| RNF31 | — | `01_structure.sql` | ✅ |
-| RNF32 | `sentry.ts` | — | — N/A |
-| RNF33 | `cleanup-old-records/` | — | ⚠️ Manual |
-| RNF34 | `cleanup-storage/` | — | ⚠️ Manual |
-| RNF35 | — | `supabase/migrations/` | — N/A |
-| RNF36 | `supabase/functions/` | — | ⚠️ Manual |
+| Requisito | Arquivo Principal        | Migration                          | Teste            |
+| --------- | ------------------------ | ---------------------------------- | ---------------- |
+| RNF01     | —                        | `04_rls_and_permissions.sql`       | ✅               |
+| RNF02     | `AuthContext.tsx`        | —                                  | ✅               |
+| RNF03     | —                        | `02_logic_and_views.sql`           | ⚠️ Via migration |
+| RNF04     | `useFinancialRecords.ts` | `03_rpcs_and_triggers.sql`         | ✅               |
+| RNF05     | —                        | `07_add_rate_limiting.sql`         | ✅               |
+| RNF06     | Todos os hooks           | `01_structure.sql`                 | — N/A            |
+| RNF07     | `vite.config.ts`         | —                                  | ⚠️ Manual        |
+| RNF08     | Todos os componentes     | —                                  | ⚠️ Manual        |
+| RNF09     | —                        | `01_structure.sql`                 | ⚠️ Via migration |
+| RNF10     | `sentry.ts`              | —                                  | — N/A            |
+| RNF11     | `errorHandler.ts`        | —                                  | ✅               |
+| RNF12     | —                        | `12_consistency_improvements.sql`  | ⚠️ Via migration |
+| RNF13     | —                        | `13_encrypt_pix_keys.sql`          | ⚠️ Via migration |
+| RNF14     | —                        | `09_fix_search_path_security.sql`  | ⚠️ Via migration |
+| RNF15     | —                        | `14_invalidate_sessions.sql`       | ⚠️ Via migration |
+| RNF16     | —                        | `21_fix_critical_bugs.sql`         | ⚠️ Via migration |
+| RNF17     | —                        | `01_structure.sql`                 | — N/A            |
+| RNF18     | —                        | `15_create_materialized_views.sql` | — N/A            |
+| RNF19     | Todos os hooks           | —                                  | ✅               |
+| RNF20     | `App.tsx`                | —                                  | — N/A            |
+| RNF21     | Todos os hooks           | —                                  | ✅               |
+| RNF22     | `design-tokens/`         | —                                  | ✅ (129 testes)  |
+| RNF23     | `*Skeleton.tsx`          | —                                  | ✅               |
+| RNF24     | `EmptyState.tsx`         | —                                  | ✅               |
+| RNF25     | `formatters.ts`          | —                                  | ✅               |
+| RNF26     | `toast.tsx`              | —                                  | ✅               |
+| RNF27     | `dialog.tsx`             | —                                  | ✅               |
+| RNF28     | —                        | `01_structure.sql`                 | ⚠️ Via migration |
+| RNF29     | —                        | `01_structure.sql`                 | — N/A            |
+| RNF30     | `Timeline.tsx`           | —                                  | ✅               |
+| RNF31     | —                        | `01_structure.sql`                 | ✅               |
+| RNF32     | `sentry.ts`              | —                                  | — N/A            |
+| RNF33     | `cleanup-old-records/`   | —                                  | ⚠️ Manual        |
+| RNF34     | `cleanup-storage/`       | —                                  | ⚠️ Manual        |
+| RNF35     | —                        | `supabase/migrations/`             | — N/A            |
+| RNF36     | `supabase/functions/`    | —                                  | ⚠️ Manual        |
 
 ---
 

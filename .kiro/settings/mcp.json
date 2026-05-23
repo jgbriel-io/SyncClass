@@ -13,7 +13,11 @@
     "supabase": {
       "url": "https://mcp.supabase.com/mcp?project_ref=yxwtxewwszoovqrjrrfb",
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [
+        "list_tables",
+        "execute_sql",
+        "apply_migration"
+      ]
     }
   }
 }

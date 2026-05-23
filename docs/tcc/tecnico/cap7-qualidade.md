@@ -63,13 +63,13 @@ Os 8 arquivos adicionados após a sprint de refatoração de componentes (sprint
 
 ## 7.3 Ausência de Testes E2E e Justificativa
 
-Testes E2E automatizados com Playwright não foram implementados no escopo do MVP. A decisão foi técnica e deliberada:
+Testes E2E automatizados não foram implementados no escopo do MVP. A decisão foi técnica e deliberada:
 
 - A prioridade do desenvolvimento foi a cobertura de lógica de negócio via testes unitários, onde o custo de manutenção é menor e o retorno imediato é maior.
 - A arquitetura de componentes passou por refatorações até as sprints 10–12, tornando a escrita de seletores E2E estáveis prematura.
 - O prazo de desenvolvimento (~3 meses, um desenvolvedor) não comportava a infraestrutura de CI/CD adicional necessária para testes E2E confiáveis.
 
-Os fluxos críticos foram validados por testes manuais estruturados (Seção 7.4). A implementação de E2E com Playwright está planejada como trabalho futuro (Seção 10.4), após a estabilização dos componentes.
+Os fluxos críticos foram validados por testes manuais estruturados (Seção 7.4).
 
 ## 7.4 Testes Manuais
 

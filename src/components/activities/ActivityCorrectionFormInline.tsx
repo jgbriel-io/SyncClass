@@ -8,12 +8,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { useAddActivityCorrection, uploadActivityFile, type ActivityWithRelations } from "@/hooks/useActivities";
+import {
+  useAddActivityCorrection,
+  uploadActivityFile,
+  type ActivityWithRelations,
+} from "@/hooks/useActivities";
 import { activities as activitiesContent, common } from "@/content";
 
 const correctionSchema = z
   .object({
-    feedback: z.string().transform((s) => s.trim()).pipe(z.string().min(1, activitiesContent.validation.feedbackRequired)),
+    feedback: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().min(1, activitiesContent.validation.feedbackRequired)),
     grade: z.string().min(1, activitiesContent.validation.gradeRequired),
     correctionFile: z.any().optional(),
   })
@@ -35,10 +42,20 @@ interface ActivityCorrectionFormInlineProps {
   onCancel?: () => void;
 }
 
-export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: ActivityCorrectionFormInlineProps) {
+export function ActivityCorrectionFormInline({
+  activity,
+  onSuccess,
+  onCancel,
+}: ActivityCorrectionFormInlineProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const addCorrection = useAddActivityCorrection();
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CorrectionFormData>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<CorrectionFormData>({
     resolver: zodResolver(correctionSchema),
     defaultValues: { feedback: "", grade: "" },
   });
@@ -47,13 +64,21 @@ export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: 
     let correctionFileUrl: string | undefined;
     let correctionFileName: string | undefined;
     const file = data.correctionFile;
-    if (file != null && typeof file === "object" && "name" in file && typeof (file as { name: string }).name === "string") {
+    if (
+      file != null &&
+      typeof file === "object" &&
+      "name" in file &&
+      typeof (file as { name: string }).name === "string"
+    ) {
       const { url } = await uploadActivityFile(file as File);
       correctionFileUrl = url;
       correctionFileName = (file as File).name;
     }
     const gradeValue = data.grade?.trim()
-      ? Math.min(100, Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0))
+      ? Math.min(
+          100,
+          Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0)
+        )
       : null;
     await addCorrection.mutateAsync({
       activityId: activity.id,
@@ -62,7 +87,6 @@ export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: 
       correctionFileUrl,
       correctionFileName,
     });
-    toast.success(activitiesContent.correctionDialog.toasts.success);
     reset();
     setSelectedFile(null);
     onSuccess();
@@ -81,13 +105,21 @@ export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: 
   return (
     <form
       onSubmit={handleSubmit(handleCorrectionSubmit, (err) =>
-        toast.error(err.feedback?.message ?? err.grade?.message ?? common.errors.validation)
+        toast.error(
+          err.feedback?.message ??
+            err.grade?.message ??
+            common.errors.validation
+        )
       )}
       className="space-y-4 border-t pt-4 mt-4"
     >
-      <p className="text-sm font-medium">{activitiesContent.correctionDialog.title}</p>
+      <p className="text-sm font-medium">
+        {activitiesContent.correctionDialog.title}
+      </p>
       <div className="space-y-2">
-        <Label htmlFor={`feedback-${activity.id}`}>{activitiesContent.correctionDialog.feedbackLabel}</Label>
+        <Label htmlFor={`feedback-${activity.id}`}>
+          {activitiesContent.correctionDialog.feedbackLabel}
+        </Label>
         <Textarea
           id={`feedback-${activity.id}`}
           placeholder={activitiesContent.correctionDialog.feedbackPlaceholder}
@@ -96,10 +128,14 @@ export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: 
           disabled={isPending}
           className="resize-none"
         />
-        {errors.feedback && <p className="text-sm text-destructive">{errors.feedback.message}</p>}
+        {errors.feedback && (
+          <p className="text-sm text-destructive">{errors.feedback.message}</p>
+        )}
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`grade-${activity.id}`}>{activitiesContent.correctionDialog.gradeLabel}</Label>
+        <Label htmlFor={`grade-${activity.id}`}>
+          {activitiesContent.correctionDialog.gradeLabel}
+        </Label>
         <Input
           id={`grade-${activity.id}`}
           type="text"
@@ -107,10 +143,14 @@ export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: 
           {...register("grade")}
           disabled={isPending}
         />
-        {errors.grade && <p className="text-sm text-destructive">{errors.grade.message}</p>}
+        {errors.grade && (
+          <p className="text-sm text-destructive">{errors.grade.message}</p>
+        )}
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`correctionFile-${activity.id}`}>{activitiesContent.correctionDialog.correctionFileLabel}</Label>
+        <Label htmlFor={`correctionFile-${activity.id}`}>
+          {activitiesContent.correctionDialog.correctionFileLabel}
+        </Label>
         <div className="flex items-center gap-2">
           <Input
             id={`correctionFile-${activity.id}`}
@@ -121,21 +161,43 @@ export function ActivityCorrectionFormInline({ activity, onSuccess, onCancel }: 
             className="cursor-pointer text-sm"
           />
           {selectedFile && (
-            <span className="text-xs text-muted-foreground truncate max-w-[140px]">{selectedFile.name}</span>
+            <span className="text-xs text-muted-foreground truncate max-w-[140px]">
+              {selectedFile.name}
+            </span>
           )}
         </div>
       </div>
       <div className="flex gap-2">
         {onCancel && (
-          <Button type="button" variant="outline" className="flex-1" disabled={isPending} onClick={onCancel}>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            disabled={isPending}
+            onClick={onCancel}
+          >
             {common.actions.cancel}
           </Button>
         )}
-        <Button type="submit" disabled={isPending} className={onCancel ? "flex-1 border-none bg-success-action text-white hover:bg-success-action/90" : "w-full border-none bg-success-action text-white hover:bg-success-action/90"}>
+        <Button
+          type="submit"
+          disabled={isPending}
+          className={
+            onCancel
+              ? "flex-1 border-none bg-success-action text-white hover:bg-success-action/90"
+              : "w-full border-none bg-success-action text-white hover:bg-success-action/90"
+          }
+        >
           {isPending ? (
-            <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{activitiesContent.correctionDialog.submitting}</>
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              {activitiesContent.correctionDialog.submitting}
+            </>
           ) : (
-            <><Upload className="h-4 w-4 mr-2" />{activitiesContent.correctionDialog.submitButton}</>
+            <>
+              <Upload className="h-4 w-4 mr-2" />
+              {activitiesContent.correctionDialog.submitButton}
+            </>
           )}
         </Button>
       </div>

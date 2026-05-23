@@ -1,7 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
-import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import {
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+} from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
 export type Student = Tables<"students">;
@@ -15,7 +19,7 @@ export function useStudentsByTeacher() {
   return useQuery({
     queryKey: ["students", "by-teacher"],
     queryFn: async () => {
-      const { data, error} = await supabase
+      const { data, error } = await supabase
         .from("students_masked")
         .select("*")
         .order("created_at", { ascending: false });
@@ -29,10 +33,12 @@ export function useCreateStudentForTeacher() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (student: Omit<StudentInsert, "teacher_id">) => {
-      const { validatePhonePlatform } = await import("@/lib/validate-phone-platform");
+      const { validatePhonePlatform } =
+        await import("@/hooks/validatePhonePlatformService");
       const err = await validatePhonePlatform(supabase, student);
       if (err) throw new Error(err);
-      const { data: teacherId, error: teacherError } = await supabase.rpc("get_my_teacher_id");
+      const { data: teacherId, error: teacherError } =
+        await supabase.rpc("get_my_teacher_id");
       if (teacherError) throw teacherError;
 
       const { data, error } = await supabase
@@ -48,8 +54,13 @@ export function useCreateStudentForTeacher() {
       toast.success("Aluno cadastrado com sucesso!");
     },
     onError: (error: unknown) => {
-      const friendly = getDuplicateErrorMessage(error as { code?: string; message?: string });
-      toast.error(friendly || "Não foi possível cadastrar o aluno. Por favor, tente novamente.");
+      const friendly = getDuplicateErrorMessage(
+        error as { code?: string; message?: string }
+      );
+      toast.error(
+        friendly ||
+          "Não foi possível cadastrar o aluno. Por favor, tente novamente."
+      );
     },
   });
 }

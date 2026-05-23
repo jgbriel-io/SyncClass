@@ -68,9 +68,6 @@ coverage/
 .nyc_output/
 *.lcov
 test-results/
-playwright-report/
-playwright/.cache/
-.playwright/
 
 # ============================================
 # SUPABASE LOCAL
@@ -93,7 +90,6 @@ docker-compose.yml
 # ============================================
 postcss.config.js
 eslint.config.js
-playwright.config.ts
 components.json
 .vscode/
 .github/

@@ -20,12 +20,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 1-2
 
 **Implementação:**
+
 - Formulário completo com validação Zod
 - Campos: nome, email, telefone, endereço, país, pay_day, hourly_rate
 - Soft delete (flag `is_deleted`)
 - Filtros: status (ativo/inativo), busca por nome/email
 
 **Arquivos:**
+
 - `src/pages/teacher/TeacherStudents.tsx`
 - `src/components/students/StudentFormDialog.tsx`
 - `src/components/students/StudentsTableRow.tsx`
@@ -46,12 +48,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 1-2
 
 **Implementação:**
+
 - Formulário completo com validação Zod
 - Campos: nome, email, telefone, endereço, país, hourly_rate, pix_key, status
 - Soft delete (timestamp `deleted_at`)
 - Apenas admin pode criar/editar/deletar
 
 **Arquivos:**
+
 - `src/pages/admin/Teachers.tsx`
 - `src/components/teachers/TeacherFormDialog.tsx`
 - `src/components/teachers/TeachersTableRow.tsx`
@@ -72,12 +76,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 1
 
 **Implementação:**
+
 - Formulário com data, horário início/fim, aluno
 - Validação: horário fim > horário início
 - Prevenção de conflitos (professor não pode ter 2 aulas no mesmo horário)
 - Campo `attended` para registrar presença/falta
 
 **Arquivos:**
+
 - `src/pages/teacher/TeacherClasses.tsx`
 - `src/components/classes/ClassFormDialog.tsx`
 - `src/components/classes/ClassesTableRow.tsx`
@@ -100,12 +106,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 5
 
 **Implementação:**
+
 - Formulário para criar múltiplas aulas de uma vez
 - Gera 1 cobrança vinculada a todas as aulas do pacote
 - Tabela `financial_record_class_logs` faz vínculo N:N
 - RPC `create_class_package` garante atomicidade
 
 **Arquivos:**
+
 - `src/components/classes/ClassPackageDialog.tsx`
 - `src/hooks/useClassPackage.ts`
 
@@ -124,11 +132,13 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 1
 
 **Implementação:**
+
 - Dialog de avaliação após registrar aula
 - Campos opcionais: rating (1-5), feedback (texto), observations (texto)
 - Sanitização XSS em campos de texto
 
 **Arquivos:**
+
 - `src/components/classes/ClassEvaluationDialog.tsx`
 - `src/hooks/useClassLogs.ts`
 
@@ -147,12 +157,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 1
 
 **Implementação:**
+
 - Cobrança individual: 1 aula → 1 cobrança
 - Cobrança por pacote: N aulas → 1 cobrança
 - Cálculo automático: valor = hourly_rate × duração
 - Vencimento baseado em `pay_day` do aluno
 
 **Arquivos:**
+
 - `src/components/financial/FinancialRecordFormDialog.tsx`
 - `src/hooks/useFinancialRecords.ts`
 
@@ -171,12 +183,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 1
 
 **Implementação:**
+
 - Status: `pendente`, `pago`, `cancelado`, `abonado`, `extornado`
 - Transições de status auditadas
 - Apenas professor/admin pode alterar status
 - Campo `paid_at` registra timestamp de pagamento
 
 **Arquivos:**
+
 - `src/components/financial/FinancialStatusBadge.tsx`
 - `src/hooks/useFinancialRecords.ts`
 
@@ -195,12 +209,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 4
 
 **Implementação:**
+
 - Upload de imagem/PDF
 - Storage bucket `payment-proofs`
 - Status do comprovante: `pending`, `approved`, `rejected`
 - Aluno pode reenviar se rejeitado
 
 **Arquivos:**
+
 - `src/components/financial/PaymentProofUpload.tsx`
 - `src/hooks/usePaymentProof.ts`
 
@@ -221,12 +237,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 4
 
 **Implementação:**
+
 - Professor visualiza comprovante
 - Pode aprovar ou rejeitar
 - Rejeição exige motivo (`payment_proof_rejection_reason`)
 - Aprovação muda status da cobrança para `pago`
 
 **Arquivos:**
+
 - `src/components/financial/PaymentProofReview.tsx`
 - `src/hooks/usePaymentProof.ts`
 
@@ -245,12 +263,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 5
 
 **Implementação:**
+
 - Aluno gera QR Code PIX para pagamento
 - QR Code contém: chave PIX do professor, valor, descrição
 - Gerado no frontend (biblioteca `qrcode.react`)
 - Não processa pagamento real (apenas QR Code)
 
 **Arquivos:**
+
 - `src/components/financial/QRCodePix.tsx`
 - `src/hooks/useQRCodePix.ts`
 
@@ -269,12 +289,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 5
 
 **Implementação:**
+
 - Formulário: título, descrição, prazo, aluno
 - Status inicial: `pendente`
 - Professor pode anexar arquivo de referência
 - Notificação ao aluno (futuro)
 
 **Arquivos:**
+
 - `src/pages/teacher/TeacherActivities.tsx`
 - `src/components/activities/ActivityFormDialog.tsx`
 - `src/hooks/useActivities.ts`
@@ -294,12 +316,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 5
 
 **Implementação:**
+
 - Aluno faz upload de arquivo
 - Storage bucket `activity-submissions`
 - Status muda para `entregue`
 - Campo `delivery_date` registra timestamp
 
 **Arquivos:**
+
 - `src/pages/student/StudentActivities.tsx`
 - `src/components/activities/ActivitySubmissionDialog.tsx`
 - `src/hooks/useActivities.ts`
@@ -321,12 +345,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 5
 
 **Implementação:**
+
 - Professor corrige atividade entregue
 - Campos: nota (0-100), feedback (texto)
 - Status muda para `corrigida`
 - Aluno visualiza correção
 
 **Arquivos:**
+
 - `src/components/activities/ActivityCorrectionDialog.tsx`
 - `src/hooks/useActivities.ts`
 
@@ -345,12 +371,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 4
 
 **Implementação:**
+
 - Cards: total de alunos, aulas do mês, cobranças pendentes, aniversariantes
 - Gráfico de crescimento de alunos
 - Filtros por período
 - Atualização em tempo real (Supabase realtime)
 
 **Arquivos:**
+
 - `src/pages/teacher/TeacherHome.tsx`
 - `src/components/dashboard/MetricCard.tsx`
 - `src/components/dashboard/GrowthChart.tsx`
@@ -371,12 +399,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 4
 
 **Implementação:**
+
 - Dashboard admin com métricas globais
 - Lista de todos os professores
 - Métricas por professor
 - Filtros e busca
 
 **Arquivos:**
+
 - `src/pages/admin/Dashboard.tsx`
 - `src/components/admin/AdminMetrics.tsx`
 - `src/hooks/useAdminMetrics.ts`
@@ -396,12 +426,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 2
 
 **Implementação:**
+
 - CRUD de usuários (admin only)
 - Atribuição de roles
 - Ativação/desativação de contas
 - Vinculação com aluno ou professor
 
 **Arquivos:**
+
 - `src/pages/admin/Users.tsx`
 - `src/components/users/UserFormDialog.tsx`
 - `src/hooks/useUsers.ts`
@@ -421,12 +453,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 3
 
 **Implementação:**
+
 - Admin convida novo usuário
 - Edge function envia email com link de ativação
 - Usuário define senha no primeiro acesso
 - Email template customizável
 
 **Arquivos:**
+
 - `supabase/functions/invite-user/index.ts`
 - `src/hooks/useInviteUser.ts`
 
@@ -445,12 +479,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 4
 
 **Implementação:**
+
 - Self-service: usuário solicita reset via email
 - Admin: pode resetar senha de qualquer usuário
 - Professor: pode resetar senha de aluno vinculado
 - Edge function `reset-password`
 
 **Arquivos:**
+
 - `supabase/functions/reset-password/index.ts`
 - `src/components/auth/ChangePasswordDialog.tsx`
 - `src/hooks/useResetPassword.ts`
@@ -472,6 +508,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 3
 
 **Implementação:**
+
 - Dashboard do aluno
 - Histórico de aulas
 - Cobranças pendentes e pagas
@@ -480,6 +517,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - Geração de QR Code PIX
 
 **Arquivos:**
+
 - `src/pages/student/StudentHome.tsx`
 - `src/pages/student/StudentFinancial.tsx`
 - `src/pages/student/StudentActivities.tsx`
@@ -500,12 +538,14 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 7
 
 **Implementação:**
+
 - Funções: `anonymize_teacher_data()`, `anonymize_student_data()`
 - Remove dados pessoais: nome, email, telefone, endereço
 - Preserva IDs para integridade referencial
 - Campo `anonymized_at` marca data de anonimização
 
 **Arquivos:**
+
 - `supabase/migrations/02_logic_and_views.sql` (funções)
 - `supabase/migrations/05_cpf_removal_and_country.sql` (atualização)
 
@@ -526,6 +566,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 3
 
 **Implementação:**
+
 - Alunos: flag `is_deleted` (boolean)
 - Professores: timestamp `deleted_at`
 - Hook `useRestoreStudent()` para restauração
@@ -533,6 +574,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - Filtros: mostrar/ocultar deletados
 
 **Arquivos:**
+
 - `src/hooks/useStudents.ts` (soft delete + restore)
 - `src/hooks/useTeachers.ts` (soft delete + restore)
 - `src/components/students/RestoreStudentButton.tsx`
@@ -552,6 +594,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 4
 
 **Implementação:**
+
 - Edge function `admin-delete-user`
 - Validações: usuário inativo, sem dados vinculados críticos
 - Rate limiting: 20 req/min
@@ -559,6 +602,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - Logs de auditoria
 
 **Arquivos:**
+
 - `supabase/functions/admin-delete-user/index.ts`
 - `src/hooks/useDeleteUser.ts`
 
@@ -577,6 +621,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 6
 
 **Implementação:**
+
 - Campo `attended` (boolean) em `class_logs`
 - `attended = false` → falta registrada
 - Contabilização em métricas do dashboard
@@ -584,6 +629,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - Relatório de frequência
 
 **Arquivos:**
+
 - `src/pages/teacher/TeacherClasses.tsx`
 - `src/components/classes/AttendanceToggle.tsx`
 - `src/hooks/useClassLogs.ts`
@@ -603,6 +649,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 6
 
 **Implementação:**
+
 - Campo `country` obrigatório (default: 'BR')
 - CPF não obrigatório (removido constraint)
 - Telefone aceita formatos internacionais
@@ -610,6 +657,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - Formatação de telefone por país
 
 **Arquivos:**
+
 - `supabase/migrations/05_cpf_removal_and_country.sql`
 - `src/lib/utils/format-phone.ts`
 - `src/components/students/StudentFormDialog.tsx`
@@ -629,6 +677,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 4
 
 **Implementação:**
+
 - Storage bucket `avatars`
 - Upload via componente `AvatarUpload`
 - Resize automático (200x200px)
@@ -636,6 +685,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - Crop de imagem antes de upload
 
 **Arquivos:**
+
 - `src/components/users/AvatarUpload.tsx`
 - `src/hooks/useAvatarUpload.ts`
 
@@ -654,6 +704,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 4
 
 **Implementação:**
+
 - View `StudentHistory` (aulas + pagamentos)
 - Timeline de transações financeiras
 - Filtros por período
@@ -661,6 +712,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - Exportação (futuro)
 
 **Arquivos:**
+
 - `src/pages/student/StudentHistory.tsx`
 - `src/components/financial/Timeline.tsx`
 - `src/hooks/useStudentHistory.ts`
@@ -680,6 +732,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 1
 
 **Implementação:**
+
 - Integração com API IBGE
 - Preenchimento automático: rua, bairro, cidade, estado
 - Fallback para input manual se API falhar
@@ -687,6 +740,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - Debounce de 500ms
 
 **Arquivos:**
+
 - `src/hooks/useCepLookup.ts`
 - `src/components/students/AddressFields.tsx`
 
@@ -705,6 +759,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 4
 
 **Implementação:**
+
 - Componente Timeline visual
 - Ordenação cronológica reversa
 - Ícones por tipo de transação
@@ -712,6 +767,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - Animações suaves
 
 **Arquivos:**
+
 - `src/components/financial/Timeline.tsx`
 - `src/pages/student/StudentFinancial.tsx`
 - `src/hooks/useFinancialTimeline.ts`
@@ -731,6 +787,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 7
 
 **Implementação:**
+
 - Trigger ao desativar conta (`profiles.active = false`)
 - Trigger ao deletar usuário
 - Limpa tokens JWT do Supabase Auth
@@ -738,6 +795,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - Função `invalidate_user_sessions()`
 
 **Arquivos:**
+
 - `supabase/migrations/14_invalidate_sessions_on_deactivate.sql`
 - `supabase/functions/admin-delete-user/index.ts`
 
@@ -756,6 +814,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 **Sprint:** 9
 
 **Implementação:**
+
 - Edge function `cleanup-old-records` (registros soft-deleted há 90+ dias)
 - Edge function `cleanup-storage` (arquivos órfãos)
 - Execução via cron (semanal)
@@ -763,6 +822,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - Notificação ao admin (futuro)
 
 **Arquivos:**
+
 - `supabase/functions/cleanup-old-records/index.ts`
 - `supabase/functions/cleanup-storage/index.ts`
 
@@ -776,86 +836,86 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 
 ### Por Módulo
 
-| Módulo | Requisitos | IDs |
-|--------|-----------|-----|
-| Alunos | 5 | RF01, RF24, RF27, RF21 (parcial), RF26 (parcial) |
-| Professores | 1 | RF02 |
-| Aulas | 4 | RF03, RF04, RF05, RF23 |
-| Financeiro | 6 | RF06, RF07, RF08, RF09, RF10, RF28 |
-| Atividades | 3 | RF11, RF12, RF13 |
-| Dashboard | 2 | RF14, RF15 |
-| Admin | 2 | RF16, RF22 |
-| Auth | 3 | RF17, RF18, RF29 |
-| Aluno | 2 | RF19, RF26 |
-| LGPD | 2 | RF20, RF30 |
-| Usuários | 1 | RF25 |
-| Gestão | 1 | RF21 |
+| Módulo      | Requisitos | IDs                                              |
+| ----------- | ---------- | ------------------------------------------------ |
+| Alunos      | 5          | RF01, RF24, RF27, RF21 (parcial), RF26 (parcial) |
+| Professores | 1          | RF02                                             |
+| Aulas       | 4          | RF03, RF04, RF05, RF23                           |
+| Financeiro  | 6          | RF06, RF07, RF08, RF09, RF10, RF28               |
+| Atividades  | 3          | RF11, RF12, RF13                                 |
+| Dashboard   | 2          | RF14, RF15                                       |
+| Admin       | 2          | RF16, RF22                                       |
+| Auth        | 3          | RF17, RF18, RF29                                 |
+| Aluno       | 2          | RF19, RF26                                       |
+| LGPD        | 2          | RF20, RF30                                       |
+| Usuários    | 1          | RF25                                             |
+| Gestão      | 1          | RF21                                             |
 
 ### Por Prioridade
 
 | Prioridade | Quantidade |
-|------------|-----------|
-| Alta | 18 |
-| Média | 10 |
-| Baixa | 2 |
+| ---------- | ---------- |
+| Alta       | 18         |
+| Média      | 10         |
+| Baixa      | 2          |
 
 ### Por Sprint
 
-| Sprint | Requisitos |
-|--------|-----------|
-| Sprint 1 | RF01, RF03, RF05, RF06, RF07, RF27 |
-| Sprint 2 | RF01, RF02, RF16 |
-| Sprint 3 | RF17, RF19, RF21 |
+| Sprint   | Requisitos                                     |
+| -------- | ---------------------------------------------- |
+| Sprint 1 | RF01, RF03, RF05, RF06, RF07, RF27             |
+| Sprint 2 | RF01, RF02, RF16                               |
+| Sprint 3 | RF17, RF19, RF21                               |
 | Sprint 4 | RF08, RF09, RF14, RF18, RF22, RF25, RF26, RF28 |
-| Sprint 5 | RF04, RF10, RF11, RF12, RF13 |
-| Sprint 6 | RF23, RF24 |
-| Sprint 7 | RF20, RF29 |
-| Sprint 9 | RF30 |
+| Sprint 5 | RF04, RF10, RF11, RF12, RF13                   |
+| Sprint 6 | RF23, RF24                                     |
+| Sprint 7 | RF20, RF29                                     |
+| Sprint 9 | RF30                                           |
 
 ### Por Status de Teste
 
-| Status | Quantidade |
-|--------|-----------|
-| ✅ Unitários | 20 |
-| ⚠️ Manual | 8 |
-| ⚠️ Via migration | 2 |
+| Status           | Quantidade |
+| ---------------- | ---------- |
+| ✅ Unitários     | 20         |
+| ⚠️ Manual        | 8          |
+| ⚠️ Via migration | 2          |
 
 ---
 
 ## Mapeamento: Requisitos → Código
 
-| Requisito | Arquivo Principal | Migration | Teste |
-|-----------|-------------------|-----------|-------|
-| RF01 | `TeacherStudents.tsx` | `01_structure.sql` | ✅ |
-| RF02 | `Teachers.tsx` | `01_structure.sql` | ✅ |
-| RF03 | `TeacherClasses.tsx` | `01_structure.sql` | ✅ |
-| RF04 | `ClassPackageDialog.tsx` | `03_rpcs_and_triggers.sql` | ✅ |
-| RF05 | `ClassEvaluationDialog.tsx` | `01_structure.sql` | ✅ |
-| RF06 | `FinancialRecordFormDialog.tsx` | `01_structure.sql` | ✅ |
-| RF07 | `FinancialStatusBadge.tsx` | `01_structure.sql` | ✅ |
-| RF08 | `PaymentProofUpload.tsx` | `01_structure.sql` | ⚠️ Manual |
-| RF09 | `PaymentProofReview.tsx` | `16_fix_payment_proof_rejection.sql` | ⚠️ Manual |
-| RF10 | `QRCodePix.tsx` | — | ⚠️ Manual |
-| RF11 | `TeacherActivities.tsx` | `01_structure.sql` | ✅ |
-| RF12 | `StudentActivities.tsx` | `01_structure.sql` | ⚠️ Manual |
-| RF13 | `ActivityCorrectionDialog.tsx` | `10_security_improvements.sql` | ✅ |
-| RF14 | `TeacherHome.tsx` | `15_create_materialized_views.sql` | ✅ |
-| RF15 | `Dashboard.tsx` (admin) | — | ✅ |
-| RF16 | `Users.tsx` | `01_structure.sql` | ✅ |
-| RF17 | `invite-user/index.ts` | — | ⚠️ Manual |
-| RF18 | `reset-password/index.ts` | — | ⚠️ Manual |
-| RF19 | `student/*.tsx` | — | ✅ |
-| RF20 | — | `02_logic_and_views.sql` | ⚠️ Via migration |
-| RF21 | `useStudents.ts`, `useTeachers.ts` | `05_cpf_removal.sql` | ✅ |
-| RF22 | `admin-delete-user/index.ts` | — | ⚠️ Manual |
-| RF23 | `TeacherClasses.tsx` | `01_structure.sql` | ✅ |
-| RF24 | `format-phone.ts` | `05_cpf_removal.sql` | ✅ |
-| RF25 | `AvatarUpload.tsx` | `04_rls_and_permissions.sql` | ⚠️ Manual |
-| RF26 | `StudentHistory.tsx` | — | ✅ |
-| RF27 | `useCepLookup.ts` | — | ⚠️ Manual |
-| RF28 | `Timeline.tsx` | — | ✅ |
-| RF29 | — | `14_invalidate_sessions.sql` | ⚠️ Via migration |
-| RF30 | `cleanup-*/index.ts` | — | ⚠️ Manual |
+| Requisito | Arquivo Principal                  | Migration                            | Teste            |
+| --------- | ---------------------------------- | ------------------------------------ | ---------------- |
+| RF01      | `TeacherStudents.tsx`              | `01_structure.sql`                   | ✅               |
+| RF02      | `Teachers.tsx`                     | `01_structure.sql`                   | ✅               |
+| RF03      | `TeacherClasses.tsx`               | `01_structure.sql`                   | ✅               |
+| RF04      | `ClassPackageDialog.tsx`           | `03_rpcs_and_triggers.sql`           | ✅               |
+| RF05      | `ClassEvaluationDialog.tsx`        | `01_structure.sql`                   | ✅               |
+| RF06      | `FinancialRecordFormDialog.tsx`    | `01_structure.sql`                   | ✅               |
+| RF07      | `FinancialStatusBadge.tsx`         | `01_structure.sql`                   | ✅               |
+| RF08      | `PaymentProofUpload.tsx`           | `01_structure.sql`                   | ⚠️ Manual        |
+| RF09      | `PaymentProofReview.tsx`           | `16_fix_payment_proof_rejection.sql` | ⚠️ Manual        |
+| RF10      | `QRCodePix.tsx`                    | —                                    | ⚠️ Manual        |
+| RF11      | `TeacherActivities.tsx`            | `01_structure.sql`                   | ✅               |
+| RF12      | `StudentActivities.tsx`            | `01_structure.sql`                   | ⚠️ Manual        |
+| RF13      | `ActivityCorrectionDialog.tsx`     | `10_security_improvements.sql`       | ✅               |
+| RF14      | `TeacherHome.tsx`                  | `15_create_materialized_views.sql`   | ✅               |
+| RF15      | `Dashboard.tsx` (admin)            | —                                    | ✅               |
+| RF16      | `Users.tsx`                        | `01_structure.sql`                   | ✅               |
+| RF17      | `invite-user/index.ts`             | —                                    | ⚠️ Manual        |
+| RF18      | `reset-password/index.ts`          | —                                    | ⚠️ Manual        |
+| RF19      | `student/*.tsx`                    | —                                    | ✅               |
+| RF20      | —                                  | `02_logic_and_views.sql`             | ⚠️ Via migration |
+| RF21      | `useStudents.ts`, `useTeachers.ts` | `05_cpf_removal.sql`                 | ✅               |
+| RF22      | `admin-delete-user/index.ts`       | —                                    | ⚠️ Manual        |
+| RF23      | `TeacherClasses.tsx`               | `01_structure.sql`                   | ✅               |
+| RF24      | `format-phone.ts`                  | `05_cpf_removal.sql`                 | ✅               |
+| RF25      | `AvatarUpload.tsx`                 | `04_rls_and_permissions.sql`         | ⚠️ Manual        |
+| RF26      | `StudentHistory.tsx`               | —                                    | ✅               |
+| RF27      | `useCepLookup.ts`                  | —                                    | ⚠️ Manual        |
+| RF28      | `Timeline.tsx`                     | —                                    | ✅               |
+| RF29      | —                                  | `14_invalidate_sessions.sql`         | ⚠️ Via migration |
+| RF30      | `cleanup-*/index.ts`               | —                                    | ⚠️ Manual        |
 
 ---
 

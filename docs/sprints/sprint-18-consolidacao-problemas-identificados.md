@@ -483,7 +483,7 @@ type FinancialRecordWithProof = Tables<"financial_records"> & {
 **Severidade:** 🟡 Alta  
 **Impacto:** Fluxos críticos não testados end-to-end
 
-**Fix:** Configurar Playwright para fluxos críticos (login, CRUD alunos, aulas, pagamentos).
+**Fix:** Aumentar cobertura com testes unitários para fluxos críticos.
 
 **Esforço:** 4h (setup + 4 fluxos)
 
@@ -541,7 +541,6 @@ Correção planejada mas não implementada no MVP.
 - [ ] CR-003: Tipar `FinancialRecordWithProof`
 - [ ] CR-007: Split `invite-user` em módulos
 - [ ] CR-002: Refatorar 5 componentes >400L
-- [ ] CR-011: Setup Playwright + 4 fluxos E2E
 - [ ] BACK-002: Fix timezone em `getDateRangeForPeriod`
 - [ ] BACK-003: Fix timezone em `isOverdue`
 - [ ] BACK-004: Fix timezone em `getClassStatus`
@@ -614,27 +613,22 @@ Correção planejada mas não implementada no MVP.
 
 **Plano de Execução (7 sprints, 54h):**
 
-1. **Sprint 19:** `test-e2e-playwright-setup` — 8h
-   - Setup Playwright + CI
-   - 8 fluxos E2E completos (login, CRUD aluno, aulas, pagamentos, reset senha, atividades, admin, student)
-   - Baseline para validação de todas as correções
-
-2. **Sprint 20:** `fix-critical-lgpd-race-condition` — 2.5h
+1. **Sprint 20:** `fix-critical-lgpd-race-condition` — 2.5h
    - CR-013: Sentry LGPD fix (30min)
    - BACK-001: Race condition invite-user (2h)
    - E2E validation + reset DB
 
-3. **Sprint 21:** `fix-backend-timezone-bugs` — 4h
+2. **Sprint 21:** `fix-backend-timezone-bugs` — 4h
    - BACK-002: getDateRangeForPeriod (1h)
    - BACK-003: isOverdue (1h)
    - BACK-004: getClassStatus (2h)
    - E2E validation + reset DB
 
-4. **Sprint 22:** `fix-database-indices` — 1.25h
+3. **Sprint 22:** `fix-database-indices` — 1.25h
    - DB-001 a DB-005: Índices faltantes (5 × 15min)
    - E2E validation + reset DB
 
-5. **Sprint 23:** `fix-frontend-hooks-refactor` — 15.5h
+4. **Sprint 23:** `fix-frontend-hooks-refactor` — 15.5h
    - CR-002: Refatorar 5 componentes >400L (5h)
    - CR-003: Tipar FinancialRecordWithProof (30min)
    - CR-007: Split invite-user (1h)
@@ -645,7 +639,7 @@ Correção planejada mas não implementada no MVP.
    - REFORMA-004 a REFORMA-006: Refatorações hooks (2h)
    - E2E validation + reset DB
 
-6. **Sprint 24:** `fix-architecture-query-optimization` — 10.25h
+5. **Sprint 24:** `fix-architecture-query-optimization` — 10.25h
    - CR-004: Cores hardcoded (15min)
    - CR-005: Console.log (10min)
    - CR-006: Utils Edge Functions (30min)
@@ -657,7 +651,7 @@ Correção planejada mas não implementada no MVP.
    - REFORMA-003: Duplicação overlap detection (45min)
    - E2E validation + reset DB
 
-7. **Sprint 25:** `fix-final-cleanup-tests` — 11.5h
+6. **Sprint 25:** `fix-final-cleanup-tests` — 11.5h
    - CR-008: SELECT \* em migrations (15min)
    - CR-012: Testes RLS policies (2h)
    - ARQ-006: God file useUserMutations (3h)

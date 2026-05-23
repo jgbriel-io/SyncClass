@@ -1,8 +1,17 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDuplicateErrorMessage } from "@/lib/duplicate-error";
-import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import type {
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+} from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 import { logger } from "@/lib/logger";
@@ -13,13 +22,20 @@ const DEFAULT_PAGE_SIZE = 10;
 export type StudentsListFilters = {
   teacherId?: string;
   status?: "all" | "ativo" | "inativo";
-  sortBy?: "name_asc" | "name_desc" | "created_desc" | "last_payment_asc" | "last_payment_desc";
+  sortBy?:
+    | "name_asc"
+    | "name_desc"
+    | "created_desc"
+    | "last_payment_asc"
+    | "last_payment_desc";
   /** Busca por nome ou e-mail (ilike no backend); dígitos (CPF/telefone) continuam no filtro client-side */
   search?: string;
 };
 
 export type Student = Tables<"students_active_masked">;
-export type StudentWithStats = Tables<"students_with_stats"> & { anonymized_at?: string | null };
+export type StudentWithStats = Tables<"students_with_stats"> & {
+  anonymized_at?: string | null;
+};
 export type StudentInsert = TablesInsert<"students">;
 export type StudentUpdate = TablesUpdate<"students">;
 type ProfileUpdate = TablesUpdate<"profiles">;
@@ -38,7 +54,7 @@ export function useStudents() {
       const { data, error } = await supabase
         .from("students_masked")
         .select("*")
-        .order("created_at", { ascending: false});
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as Student[];
@@ -63,7 +79,9 @@ export interface UseStudentsPaginatedResult {
   refetch: () => void;
 }
 
-export function useStudentsPaginated(options?: UseStudentsPaginatedOptions): UseStudentsPaginatedResult {
+export function useStudentsPaginated(
+  options?: UseStudentsPaginatedOptions
+): UseStudentsPaginatedResult {
   const [page, setPage] = useState(0);
   const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
   const filters = options?.filters;
@@ -85,15 +103,21 @@ export function useStudentsPaginated(options?: UseStudentsPaginatedOptions): Use
 
       const searchTerm = filters?.search?.trim().replace(/,/g, " ");
       if (searchTerm) {
-        const escaped = searchTerm.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+        const escaped = searchTerm
+          .replace(/\\/g, "\\\\")
+          .replace(/%/g, "\\%")
+          .replace(/_/g, "\\_");
         const pattern = `%${escaped}%`;
         q = q.or(`name.ilike.${pattern},email.ilike.${pattern}`);
       }
 
       const sortBy = filters?.sortBy ?? "name_asc";
-      const orderCol = sortBy === "name_asc" || sortBy === "name_desc" ? "name" : "created_at";
+      const orderCol =
+        sortBy === "name_asc" || sortBy === "name_desc" ? "name" : "created_at";
       const ascending = sortBy === "name_asc";
-      q = q.order(orderCol, { ascending: orderCol === "name" ? ascending : false });
+      q = q.order(orderCol, {
+        ascending: orderCol === "name" ? ascending : false,
+      });
 
       const from = page * pageSize;
       const to = from + pageSize - 1;
@@ -134,7 +158,8 @@ export function useCreateStudent() {
 
   return useMutation({
     mutationFn: async (student: StudentInsert) => {
-      const { validatePhonePlatform } = await import("@/lib/validate-phone-platform");
+      const { validatePhonePlatform } =
+        await import("@/hooks/validatePhonePlatformService");
       const err = await validatePhonePlatform(supabase, student);
       if (err) throw new Error(err);
       const { data, error } = await supabase
@@ -157,7 +182,7 @@ export function useCreateStudent() {
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
       toast.error(userMessage);
-      logError(error as Error, { context: 'create_student' });
+      logError(error as Error, { context: "create_student" });
     },
   });
 }
@@ -167,34 +192,39 @@ export function useUpdateStudent() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: StudentUpdate & { id: string }) => {
-      const safeUpdates = sanitizeStudentUpdateForEdit(updates as Record<string, unknown>) as StudentUpdate;
-      
+      const safeUpdates = sanitizeStudentUpdateForEdit(
+        updates as Record<string, unknown>
+      ) as StudentUpdate;
+
       // Validar telefone se foi alterado
       if (safeUpdates.phone) {
-        const { validatePhonePlatform } = await import("@/lib/validate-phone-platform");
-        
+        const { validatePhonePlatform } =
+          await import("@/hooks/validatePhonePlatformService");
+
         // Buscar dados atuais do aluno para comparar
         const { data: currentStudent } = await supabase
           .from("students")
           .select("phone")
           .eq("id", id)
           .single();
-        
+
         // Só validar se telefone foi realmente alterado
-        const phoneChanged = safeUpdates.phone && safeUpdates.phone !== currentStudent?.phone;
-        
+        const phoneChanged =
+          safeUpdates.phone && safeUpdates.phone !== currentStudent?.phone;
+
         if (phoneChanged) {
           const dataToValidate = { phone: safeUpdates.phone };
           const err = await validatePhonePlatform(supabase, dataToValidate);
           if (err) throw new Error(err);
         }
       }
-      
+
       // Verifica se pay_day foi alterado
-      const payDayChanged = 'pay_day' in updates && updates.pay_day !== undefined;
+      const payDayChanged =
+        "pay_day" in updates && updates.pay_day !== undefined;
       let oldPayDay: number | null = null;
       const newPayDay: number | null = updates.pay_day ?? null;
-      
+
       if (payDayChanged) {
         // Busca o pay_day antigo
         const { data: currentStudent } = await supabase
@@ -204,7 +234,7 @@ export function useUpdateStudent() {
           .single();
         oldPayDay = currentStudent?.pay_day ?? null;
       }
-      
+
       const { data, error } = await supabase
         .from("students")
         .update(safeUpdates)
@@ -241,7 +271,7 @@ export function useUpdateStudent() {
           .select("id, user_id, student_id")
           .eq("email", normalizedEmail)
           .eq("role", "student");
-        
+
         if (profilesByEmail && profilesByEmail.length > 0) {
           profilesToUpdate = profilesByEmail;
         }
@@ -263,45 +293,49 @@ export function useUpdateStudent() {
           }
 
           // Usar RPC para evitar erro de tipo UUID
-          const { data: rpcData, error: profileUpdateError } = await supabase.rpc('update_profile_by_id', {
-            p_id: profile.id,
-            p_role: profileUpdate.role,
-            p_active: profileUpdate.active,
-            p_student_id: profileUpdate.student_id,
-            p_teacher_id: null,
-            p_full_name: profileUpdate.full_name || null,
-            p_email: profileUpdate.email || null
-          });
+          const { data: rpcData, error: profileUpdateError } =
+            await supabase.rpc("update_profile_by_id", {
+              p_id: profile.id,
+              p_role: profileUpdate.role,
+              p_active: profileUpdate.active,
+              p_student_id: profileUpdate.student_id,
+              p_teacher_id: null,
+              p_full_name: profileUpdate.full_name || null,
+              p_email: profileUpdate.email || null,
+            });
 
           if (profileUpdateError) {
             throw profileUpdateError;
           }
 
           if (profile.user_id) {
-            const { error: roleError } = await supabase.rpc("upsert_user_role_safe", {
-              p_user_id: profile.user_id,
-              p_role: "student",
-              p_full_name: fullName ?? null,
-              p_email: normalizedEmail,
-            });
-            
+            const { error: roleError } = await supabase.rpc(
+              "upsert_user_role_safe",
+              {
+                p_user_id: profile.user_id,
+                p_role: "student",
+                p_full_name: fullName ?? null,
+                p_email: normalizedEmail,
+              }
+            );
+
             if (roleError) {
               throw roleError;
             }
           }
         }
       }
-      
+
       // Atualizar vencimentos usando RPC atômica
       if (payDayChanged && oldPayDay !== newPayDay && newPayDay !== null) {
         // Validar range antes de chamar RPC
         if (newPayDay < 1 || newPayDay > 31) {
           throw new Error("Dia de pagamento deve estar entre 1 e 31");
         }
-        
+
         try {
           const { data: rpcResult, error: rpcError } = await supabase.rpc(
-            'update_student_payment_day',
+            "update_student_payment_day",
             {
               p_student_id: id,
               p_pay_day: newPayDay,
@@ -309,18 +343,20 @@ export function useUpdateStudent() {
           );
 
           if (rpcError) {
-            logger.error(rpcError as Error, { 
-              context: 'update_student_payment_day',
+            logger.error(rpcError as Error, {
+              context: "update_student_payment_day",
               studentId: id,
-              newPayDay 
+              newPayDay,
             });
-            toast.warning('Aluno atualizado, mas não foi possível atualizar os vencimentos das cobranças.');
+            toast.warning(
+              "Aluno atualizado, mas não foi possível atualizar os vencimentos das cobranças."
+            );
           }
         } catch (error) {
-          logger.error(error as Error, { 
-            context: 'update_student_payment_day_catch',
+          logger.error(error as Error, {
+            context: "update_student_payment_day_catch",
             studentId: id,
-            newPayDay 
+            newPayDay,
           });
           // Não falha a operação principal se a atualização de cobranças falhar
         }
@@ -341,7 +377,7 @@ export function useUpdateStudent() {
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
       toast.error(userMessage);
-      logError(error as Error, { context: 'update_student' });
+      logError(error as Error, { context: "update_student" });
     },
   });
 }
@@ -376,14 +412,16 @@ export function useSoftDeleteStudent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["users_paginated"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success("Aluno arquivado com sucesso!");
+      toast.success("Aluno arquivado e dados anonimizados (LGPD)");
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
       toast.error(userMessage);
-      logError(error as Error, { context: 'soft_delete_student' });
+      logError(error as Error, { context: "soft_delete_student" });
     },
   });
 }
@@ -401,7 +439,13 @@ export function useHardDeleteStudent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, force = false }: { id: string; force?: boolean }) => {
+    mutationFn: async ({
+      id,
+      force = false,
+    }: {
+      id: string;
+      force?: boolean;
+    }) => {
       // 1) Verificar se há aulas futuras agendadas (a menos que force = true)
       if (!force) {
         const today = new Date().toISOString().split("T")[0];
@@ -410,21 +454,33 @@ export function useHardDeleteStudent() {
           .select("id, class_date, start_at, teachers(name)")
           .eq("student_id", id)
           .gte("class_date", today)
-          .order("class_date", { ascending: true});
+          .order("class_date", { ascending: true });
 
         if (futureError) throw futureError;
 
         if (futureClasses && futureClasses.length > 0) {
           // Formatar lista de aulas para mostrar no erro
-          const classList = futureClasses.slice(0, 5).map((c: { class_date: string; start_at: string | null; teachers: { name: string } | null }) => {
-            const [y, m, d] = c.class_date.split("-");
-            const date = `${d}/${m}/${y}`;
-            const time = c.start_at || "";
-            const teacher = c.teachers?.name || "Professor desconhecido";
-            return `${date} ${time} - ${teacher}`;
-          }).join("\n");
+          const classList = futureClasses
+            .slice(0, 5)
+            .map(
+              (c: {
+                class_date: string;
+                start_at: string | null;
+                teachers: { name: string } | null;
+              }) => {
+                const [y, m, d] = c.class_date.split("-");
+                const date = `${d}/${m}/${y}`;
+                const time = c.start_at || "";
+                const teacher = c.teachers?.name || "Professor desconhecido";
+                return `${date} ${time} - ${teacher}`;
+              }
+            )
+            .join("\n");
 
-          const remaining = futureClasses.length > 5 ? `\n... e mais ${futureClasses.length - 5} aula(s)` : "";
+          const remaining =
+            futureClasses.length > 5
+              ? `\n... e mais ${futureClasses.length - 5} aula(s)`
+              : "";
 
           throw new Error(
             `Este aluno tem ${futureClasses.length} aula(s) agendada(s):\n\n${classList}${remaining}\n\nTodas as aulas e cobranças serão perdidas permanentemente. Tem certeza?`
@@ -440,10 +496,7 @@ export function useHardDeleteStudent() {
         .maybeSingle();
 
       // 3) Delete the student record (CASCADE removes class_logs + financial_records)
-      const { error } = await supabase
-        .from("students")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("students").delete().eq("id", id);
 
       if (error) throw error;
 
@@ -453,25 +506,32 @@ export function useHardDeleteStudent() {
         // Limpar email para permitir reutilização em novos cadastros
         const { error: profileError } = await supabase
           .from("profiles")
-          .update({ 
+          .update({
             deleted_at: new Date().toISOString(),
             active: false,
             student_id: null, // Remove link
-            email: null // Limpar email para permitir reutilização
+            email: null, // Limpar email para permitir reutilização
           })
           .eq("user_id", linkedProfile.user_id);
 
         if (profileError) {
-          toast.warning("Aluno removido. O perfil de usuário não pôde ser marcado como deletado.");
+          toast.warning(
+            "Aluno removido. O perfil de usuário não pôde ser marcado como deletado."
+          );
         }
 
         // Delete auth account
-        const { data, error: fnError } = await supabase.functions.invoke("admin-delete-user", {
-          body: { userId: linkedProfile.user_id },
-        });
+        const { data, error: fnError } = await supabase.functions.invoke(
+          "admin-delete-user",
+          {
+            body: { userId: linkedProfile.user_id },
+          }
+        );
         const msg = (data as { error?: string } | null)?.error;
         if (fnError || msg) {
-          toast.warning("Aluno removido. A conta de acesso vinculada não pôde ser excluída — remova manualmente se necessário.");
+          toast.warning(
+            "Aluno removido. A conta de acesso vinculada não pôde ser excluída — remova manualmente se necessário."
+          );
         }
       }
     },
@@ -488,7 +548,7 @@ export function useHardDeleteStudent() {
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
       toast.error(userMessage);
-      logError(error as Error, { context: 'hard_delete_student' });
+      logError(error as Error, { context: "hard_delete_student" });
     },
   });
 }
@@ -503,12 +563,18 @@ export function useRestoreStudent() {
   return useMutation({
     mutationFn: async (id: string) => {
       // Call Supabase function for restore
-      const { error } = await supabase.rpc("restore_student", {
+      const { data, error } = await supabase.rpc("restore_student", {
         p_student_id: id,
       });
 
       if (error) {
         throw error;
+      }
+
+      // Verificar se retornou erro de anonimização
+      const result = data as { success?: boolean; message?: string } | null;
+      if (result && !result.success) {
+        throw new Error(result.message || "Erro ao restaurar aluno");
       }
 
       // Also mark linked profiles as active
@@ -530,7 +596,7 @@ export function useRestoreStudent() {
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
       toast.error(userMessage);
-      logError(error as Error, { context: 'restore_student' });
+      logError(error as Error, { context: "restore_student" });
     },
   });
 }
@@ -546,7 +612,13 @@ export function useUpdateStudentPaymentDay() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ studentId, newPayDay }: { studentId: string; newPayDay: number }) => {
+    mutationFn: async ({
+      studentId,
+      newPayDay,
+    }: {
+      studentId: string;
+      newPayDay: number;
+    }) => {
       if (newPayDay < 1 || newPayDay > 31) {
         throw new Error("Dia de pagamento deve estar entre 1 e 31");
       }
@@ -580,44 +652,48 @@ export function useUpdateStudentPaymentDay() {
       queryClient.invalidateQueries({ queryKey: ["students_paginated"] });
       queryClient.invalidateQueries({ queryKey: ["student_details"] });
       queryClient.invalidateQueries({ queryKey: ["financial_records"] });
-      queryClient.invalidateQueries({ queryKey: ["financial_records_by_student_ids"] });
+      queryClient.invalidateQueries({
+        queryKey: ["financial_records_by_student_ids"],
+      });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["student_balance"] });
       queryClient.invalidateQueries({ queryKey: ["student_statement"] });
-      
+
       toast.success(data.message || "Dia de pagamento atualizado com sucesso!");
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
       toast.error(userMessage);
-      logError(error as Error, { context: 'update_student_payment_day' });
+      logError(error as Error, { context: "update_student_payment_day" });
     },
   });
 }
 
 /** Hook para buscar chave PIX do professor de um aluno */
-export function useTeacherPixKeyByStudent(studentId: string | undefined | null) {
+export function useTeacherPixKeyByStudent(
+  studentId: string | undefined | null
+) {
   return useQuery({
     queryKey: ["teacher-pix-key", studentId],
     queryFn: async () => {
       if (!studentId) return null;
-      
+
       const { data: student, error: studentError } = await supabase
         .from("students")
         .select("teacher_id")
         .eq("id", studentId)
         .maybeSingle();
-      
+
       if (studentError || !student?.teacher_id) return null;
-      
+
       const { data: teacher, error: teacherError } = await supabase
         .from("teachers")
         .select("pix_key")
         .eq("id", student.teacher_id)
         .maybeSingle();
-      
+
       if (teacherError || !teacher?.pix_key) return null;
-      
+
       return teacher.pix_key;
     },
     enabled: !!studentId,

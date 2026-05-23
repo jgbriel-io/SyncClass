@@ -1,4 +1,9 @@
 ﻿# ============================================
+# SECRETS / LOCAL CONFIG
+# ============================================
+.mcp.json
+
+# ============================================
 # DEPENDENCIES
 # ============================================
 node_modules/
@@ -135,9 +140,6 @@ coverage/
 *.lcov
 
 test-results/
-playwright-report/
-playwright/.cache/
-.playwright/
 
 # ============================================
 # OS FILES
@@ -158,3 +160,18 @@ desktop.ini
 # ============================================
 .kiro/cache/
 .kiro/logs/
+.kiro/skills/
+.kiro/settings/mcp.json
+
+# ============================================
+# AGENT SKILLS (auto-gerado por npx skills add)
+# ============================================
+.agents/
+.claude/skills/
+
+# ============================================
+# TOOLING CACHE
+# ============================================
+*.tsbuildinfo
+.eslintcache
+.vite/
