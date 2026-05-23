@@ -16,8 +16,7 @@ import {
 } from "@/lib/utils/classTime";
 import { cn } from "@/lib/utils";
 import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
-import { studentPortal } from "@/content/student-portal";
-import { common } from "@/content";
+import { studentPortal, common } from "@/content";
 
 const BILLING_LABELS: Record<
   NonNullable<StudentStatementEntry["billing_status_consolidated"]>,
