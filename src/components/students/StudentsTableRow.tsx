@@ -1,5 +1,4 @@
 import { common, students as studentsContent } from "@/content";
-import { common } from "@/content";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { AvatarCircle } from "@/components/ui/avatar-circle";
@@ -10,7 +9,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2, Eye, KeyRound, Check } from "lucide-react";
+import {
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Eye,
+  KeyRound,
+  Check,
+} from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Student } from "@/hooks/useStudents";
@@ -21,7 +27,6 @@ import {
   getXLColumnClasses,
 } from "@/lib/design-tokens/table-columns";
 import { COL } from "./StudentsTableRow.constants";
-import { students as studentsContent, common } from "@/content";
 
 interface StudentsTableRowProps {
   student: Student;
@@ -31,7 +36,10 @@ interface StudentsTableRowProps {
   monthlyTotal: number | null;
   lastClassDateRaw: string | null;
   daysWithoutClass: number | null;
-  financialStatus: { label: string; variant: "default" | "success" | "warning" | "destructive" } | null;
+  financialStatus: {
+    label: string;
+    variant: "default" | "success" | "warning" | "destructive";
+  } | null;
   onViewDetail: (studentId: string) => void;
   onEdit: (student: Student) => void;
   onResetPassword: (student: Student) => void;
@@ -62,9 +70,13 @@ export function StudentsTableRow({
   return (
     <tr className="group hover:bg-muted/30 transition-colors">
       {/* Status Badge */}
-      <td className={CELL_BASE} style={{ width: '1%' }}>
-        <StatusBadge variant={student.status === "ativo" ? "success" : "default"}>
-          {student.status === "ativo" ? studentsContent.table.statusActive : studentsContent.table.statusInactive}
+      <td className={CELL_BASE} style={{ width: "1%" }}>
+        <StatusBadge
+          variant={student.status === "ativo" ? "success" : "default"}
+        >
+          {student.status === "ativo"
+            ? studentsContent.table.statusActive
+            : studentsContent.table.statusInactive}
         </StatusBadge>
       </td>
 
@@ -76,9 +88,14 @@ export function StudentsTableRow({
         <div className="flex items-center gap-4 overflow-hidden">
           <AvatarCircle name={student.name} />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium truncate" title={student.name}>{student.name}</p>
+            <p className="text-xs font-medium truncate" title={student.name}>
+              {student.name}
+            </p>
             {lastUpdatedAt && (
-              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={`${studentsContent.table.editedAt} ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}>
+              <p
+                className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate"
+                title={`${studentsContent.table.editedAt} ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
+              >
                 {`${studentsContent.table.editedAt} ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
               </p>
             )}
@@ -87,52 +104,135 @@ export function StudentsTableRow({
       </td>
 
       {showTeacherColumn && (
-        <td className={CELL_BASE} style={{ width: COL.PROFESSOR, minWidth: COL.PROFESSOR }}>
-          <span className="text-muted-foreground truncate block" title={teacherName}>{teacherName}</span>
+        <td
+          className={CELL_BASE}
+          style={{ width: COL.PROFESSOR, minWidth: COL.PROFESSOR }}
+        >
+          <span
+            className="text-muted-foreground truncate block"
+            title={teacherName}
+          >
+            {teacherName}
+          </span>
         </td>
       )}
 
-      <td className={CELL_BASE} style={{ width: COL.VALOR_HORA, minWidth: COL.VALOR_HORA }}>
-        <NumericCell value={hourlyRate} format="currency" className="text-muted-foreground" />
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.VALOR_HORA, minWidth: COL.VALOR_HORA }}
+      >
+        <NumericCell
+          value={hourlyRate}
+          format="currency"
+          className="text-muted-foreground"
+        />
       </td>
 
-      <td className={CELL_BASE} style={{ width: COL.AULAS_SEMANA, minWidth: COL.AULAS_SEMANA }}>
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.AULAS_SEMANA, minWidth: COL.AULAS_SEMANA }}
+      >
         <NumericCell value={totalClasses} className="text-muted-foreground" />
       </td>
 
-      <td className={CELL_BASE} style={{ width: COL.TOTAL_MENSAL, minWidth: COL.TOTAL_MENSAL }}>
-        <NumericCell value={monthlyTotal} format="currency" className="text-muted-foreground" />
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.TOTAL_MENSAL, minWidth: COL.TOTAL_MENSAL }}
+      >
+        <NumericCell
+          value={monthlyTotal}
+          format="currency"
+          className="text-muted-foreground"
+        />
       </td>
 
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.DIA_PAGTO, minWidth: COL.DIA_PAGTO }}>
-        <span className="text-muted-foreground truncate block" title={String(student.pay_day ?? "—")}>{student.pay_day ?? "—"}</span>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.DIA_PAGTO, minWidth: COL.DIA_PAGTO }}
+      >
+        <span
+          className="text-muted-foreground truncate block"
+          title={String(student.pay_day ?? "—")}
+        >
+          {student.pay_day ?? "—"}
+        </span>
       </td>
 
-      <td className={CELL_BASE} style={{ width: COL.FINANCEIRO, minWidth: COL.FINANCEIRO }}>
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.FINANCEIRO, minWidth: COL.FINANCEIRO }}
+      >
         {financialStatus ? (
-          <StatusBadge variant={financialStatus.variant}>{financialStatus.label}</StatusBadge>
+          <StatusBadge variant={financialStatus.variant}>
+            {financialStatus.label}
+          </StatusBadge>
         ) : (
-          <span className="text-muted-foreground truncate block" title={studentsContent.table.noCharges}>{studentsContent.table.noCharges}</span>
+          <span
+            className="text-muted-foreground truncate block"
+            title={studentsContent.table.noCharges}
+          >
+            {studentsContent.table.noCharges}
+          </span>
         )}
       </td>
 
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.ULTIMA_AULA, minWidth: COL.ULTIMA_AULA }}>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.ULTIMA_AULA, minWidth: COL.ULTIMA_AULA }}
+      >
         <div className="space-y-0.5">
-          <span className="text-muted-foreground block truncate" title={lastClassDateRaw ? format(new Date(lastClassDateRaw + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "—"}>{lastClassDateRaw ? format(new Date(lastClassDateRaw + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "—"}</span>
+          <span
+            className="text-muted-foreground block truncate"
+            title={
+              lastClassDateRaw
+                ? format(
+                    new Date(lastClassDateRaw + "T00:00:00"),
+                    "dd/MM/yyyy",
+                    { locale: ptBR }
+                  )
+                : "—"
+            }
+          >
+            {lastClassDateRaw
+              ? format(new Date(lastClassDateRaw + "T00:00:00"), "dd/MM/yyyy", {
+                  locale: ptBR,
+                })
+              : "—"}
+          </span>
           {daysWithoutClass !== null && (
-            <span className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground block truncate" title={studentsContent.table.daysWithoutClass(daysWithoutClass)}>{studentsContent.table.daysWithoutClass(daysWithoutClass)}</span>
+            <span
+              className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground block truncate"
+              title={studentsContent.table.daysWithoutClass(daysWithoutClass)}
+            >
+              {studentsContent.table.daysWithoutClass(daysWithoutClass)}
+            </span>
           )}
         </div>
       </td>
 
-      <td className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.ACOES, minWidth: COL.ACOES }}
+      >
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(student.id)} title={common.buttons.viewDetails} aria-label={common.aria.moreOptions}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onViewDetail(student.id)}
+            title={common.buttons.viewDetails}
+            aria-label={common.aria.moreOptions}
+          >
             <Eye className="h-4 w-4" aria-hidden="true" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={common.aria.moreOptions}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                aria-label={common.aria.moreOptions}
+              >
                 <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
@@ -145,12 +245,31 @@ export function StudentsTableRow({
                 <KeyRound className="h-4 w-4 mr-2" aria-hidden="true" />
                 {studentsContent.resetPasswordDialog.title}
               </DropdownMenuItem>
-              <DropdownMenuItem className={student.status === "ativo" ? "text-destructive focus:text-destructive" : "focus:text-primary"} onClick={() => onArchive(student)}>
-                {student.status === "ativo" && <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />}
-                {student.status === "ativo" ? studentsContent.archiveDialog.confirmArchive : (<><Check className="h-4 w-4 mr-2" aria-hidden="true" />{studentsContent.archiveDialog.confirmReactivate}</>)}
+              <DropdownMenuItem
+                className={
+                  student.status === "ativo"
+                    ? "text-destructive focus:text-destructive"
+                    : "focus:text-primary"
+                }
+                onClick={() => onArchive(student)}
+              >
+                {student.status === "ativo" && (
+                  <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                )}
+                {student.status === "ativo" ? (
+                  studentsContent.archiveDialog.confirmArchive
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-2" aria-hidden="true" />
+                    {studentsContent.archiveDialog.confirmReactivate}
+                  </>
+                )}
               </DropdownMenuItem>
               {showHardDelete && student.status === "inativo" && (
-                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onHardDelete(student)}>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => onHardDelete(student)}
+                >
                   <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
                   {studentsContent.deleteDialog.confirmButton}
                 </DropdownMenuItem>
