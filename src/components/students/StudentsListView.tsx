@@ -17,17 +17,29 @@ import {
   StudentInsert,
 } from "@/hooks/useStudents";
 import { useStudentFormSubmit } from "@/hooks/useStudentFormSubmit";
-import { students as studentsContent } from "@/content";
+import { students as studentsContent, common } from "@/content";
 import { useStudentsStats } from "@/hooks/useStudentsStats";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentsTableSkeleton } from "@/components/ui/table-skeleton";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { StudentsTableRow } from "@/components/students/StudentsTableRow";
-import { COL as STUD_COL, TABLE_MIN_W as STUD_TABLE_MIN_W } from "@/components/students/StudentsTableRow.constants";
+import {
+  COL as STUD_COL,
+  TABLE_MIN_W as STUD_TABLE_MIN_W,
+} from "@/components/students/StudentsTableRow.constants";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { Teacher } from "@/hooks/useTeachers";
 import { StudentPasswordDialog } from "@/components/students/StudentPasswordDialog";
-import { StudentArchiveDialog, StudentHardDeleteDialog } from "@/components/students/StudentDeleteDialog";
+import {
+  StudentArchiveDialog,
+  StudentHardDeleteDialog,
+} from "@/components/students/StudentDeleteDialog";
 import { StudentResetPasswordDialog } from "@/components/students/StudentResetPasswordDialog";
 import { getStudentRowData } from "@/components/students/StudentsListView.helpers";
 
@@ -72,11 +84,15 @@ export function StudentsListView({
 
   // Dialog states
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
-  const [studentToArchive, setStudentToArchive] = useState<Student | null>(null);
+  const [studentToArchive, setStudentToArchive] = useState<Student | null>(
+    null
+  );
   const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
-  const [studentToHardDelete, setStudentToHardDelete] = useState<Student | null>(null);
+  const [studentToHardDelete, setStudentToHardDelete] =
+    useState<Student | null>(null);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
-  const [studentToResetPassword, setStudentToResetPassword] = useState<Student | null>(null);
+  const [studentToResetPassword, setStudentToResetPassword] =
+    useState<Student | null>(null);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
 
@@ -116,14 +132,15 @@ export function StudentsListView({
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [page]);
 
-  const { submit: handleCreateOrUpdate, isPending: isSubmitting } = useStudentFormSubmit({
-    selectedStudent,
-    autoTeacherId,
-    onSuccess: () => {
-      setIsFormOpen(false);
-      setSelectedStudent(null);
-    },
-  });
+  const { submit: handleCreateOrUpdate, isPending: isSubmitting } =
+    useStudentFormSubmit({
+      selectedStudent,
+      autoTeacherId,
+      onSuccess: () => {
+        setIsFormOpen(false);
+        setSelectedStudent(null);
+      },
+    });
 
   const teacherMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -139,7 +156,8 @@ export function StudentsListView({
     let result = students.filter((student) => {
       if (filters.filterPreset === "aniversariantes") {
         if (!student.birth_date) return false;
-        const birthMonth = new Date(student.birth_date + "T00:00:00").getMonth() + 1;
+        const birthMonth =
+          new Date(student.birth_date + "T00:00:00").getMonth() + 1;
         if (birthMonth !== currentMonth) return false;
       }
 
@@ -163,8 +181,6 @@ export function StudentsListView({
 
     return result;
   }, [students, filters, currentMonth]);
-
-
 
   return (
     <div className="space-y-6">
@@ -198,7 +214,11 @@ export function StudentsListView({
           setPage(0);
         }}
         onReset={() => {
-          setFilters({ ...defaultStudentsFilters, status: "ativo", teacherId: "all" });
+          setFilters({
+            ...defaultStudentsFilters,
+            status: "ativo",
+            teacherId: "all",
+          });
           setPage(0);
         }}
         teachers={teachers}
@@ -215,41 +235,87 @@ export function StudentsListView({
 
       {/* Tabela */}
       {!error && (
-        <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
+        <div
+          className="rounded-lg border bg-card shadow-card overflow-hidden"
+          ref={listTopRef}
+        >
           <div className="overflow-x-auto">
             <Table style={{ minWidth: TABLE_MIN_W }}>
               <TableHeader>
                 <TableRow className="border-b bg-muted/50">
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: "1%" }}>
+                  <TableHead
+                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                    style={{ width: "1%" }}
+                  >
                     {common.labels.status}
                   </TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: COL.ALUNO, minWidth: COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>
+                  <TableHead
+                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
+                    style={{
+                      width: COL.ALUNO,
+                      minWidth: COL.ALUNO,
+                      boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)",
+                    }}
+                  >
                     {studentsContent.view.title}
                   </TableHead>
                   {showTeacherColumn && (
-                    <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.PROFESSOR, minWidth: COL.PROFESSOR }}>
+                    <TableHead
+                      className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                      style={{ width: COL.PROFESSOR, minWidth: COL.PROFESSOR }}
+                    >
                       {common.labels.teacher}
                     </TableHead>
                   )}
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.VALOR_HORA, minWidth: COL.VALOR_HORA }}>
+                  <TableHead
+                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                    style={{ width: COL.VALOR_HORA, minWidth: COL.VALOR_HORA }}
+                  >
                     {studentsContent.table.colHourlyRate}
                   </TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.AULAS_SEMANA, minWidth: COL.AULAS_SEMANA }}>
+                  <TableHead
+                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                    style={{
+                      width: COL.AULAS_SEMANA,
+                      minWidth: COL.AULAS_SEMANA,
+                    }}
+                  >
                     {studentsContent.table.colClasses}
                   </TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.TOTAL_MENSAL, minWidth: COL.TOTAL_MENSAL }}>
+                  <TableHead
+                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                    style={{
+                      width: COL.TOTAL_MENSAL,
+                      minWidth: COL.TOTAL_MENSAL,
+                    }}
+                  >
                     {studentsContent.table.colMonthlyTotal}
                   </TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.DIA_PAGTO, minWidth: COL.DIA_PAGTO }}>
+                  <TableHead
+                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                    style={{ width: COL.DIA_PAGTO, minWidth: COL.DIA_PAGTO }}
+                  >
                     {studentsContent.table.colPaymentDay}
                   </TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.FINANCEIRO, minWidth: COL.FINANCEIRO }}>
+                  <TableHead
+                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                    style={{ width: COL.FINANCEIRO, minWidth: COL.FINANCEIRO }}
+                  >
                     {studentsContent.table.colFinancial}
                   </TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.ULTIMA_AULA, minWidth: COL.ULTIMA_AULA }}>
+                  <TableHead
+                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                    style={{
+                      width: COL.ULTIMA_AULA,
+                      minWidth: COL.ULTIMA_AULA,
+                    }}
+                  >
                     Última aula
                   </TableHead>
-                  <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
+                  <TableHead
+                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                    style={{ width: COL.ACOES, minWidth: COL.ACOES }}
+                  >
                     {common.labels.actions}
                   </TableHead>
                 </TableRow>
