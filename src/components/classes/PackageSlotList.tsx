@@ -11,6 +11,8 @@ import { classes as classesContent } from "@/content";
 export type Slot = { class_date: string; start_time: string; end_time: string };
 export type ScheduleMode = "fixed" | "dynamic";
 
+export const emptySlot: Slot = { class_date: "", start_time: "", end_time: "" };
+
 function isDateTodayOrFuture(brDate: string): boolean {
   if (!brDate || !REGEX_PATTERNS.date.test(brDate)) return false;
   const [day, month, year] = brDate.split("/").map(Number);
@@ -43,7 +45,11 @@ function generateSlotsForMonth(
       const mm = String(month).padStart(2, "0");
       const classDateBr = `${dd}/${mm}/${year}`;
       if (isDateTodayOrFuture(classDateBr)) {
-        slots.push({ class_date: classDateBr, start_time: startTime, end_time: endTime });
+        slots.push({
+          class_date: classDateBr,
+          start_time: startTime,
+          end_time: endTime,
+        });
       }
     }
   }
@@ -83,7 +89,8 @@ export function PackageSlotList({
   onFixedStartTimeChange,
   onFixedEndTimeChange,
 }: PackageSlotListProps) {
-  const addSlot = () => onSlotsChange([...slots, { class_date: "", start_time: "", end_time: "" }]);
+  const addSlot = () =>
+    onSlotsChange([...slots, { class_date: "", start_time: "", end_time: "" }]);
 
   const removeSlot = (index: number) => {
     if (slots.length <= 1) return;
@@ -91,7 +98,9 @@ export function PackageSlotList({
   };
 
   const updateSlot = (index: number, field: keyof Slot, value: string) => {
-    onSlotsChange(slots.map((s, i) => (i === index ? { ...s, [field]: value } : s)));
+    onSlotsChange(
+      slots.map((s, i) => (i === index ? { ...s, [field]: value } : s))
+    );
   };
 
   const handleGenerate = () => {
@@ -103,7 +112,10 @@ export function PackageSlotList({
       toast.error(classesContent.packageDialog.toasts.selectWeekday);
       return;
     }
-    if (!REGEX_PATTERNS.time.test(fixedStartTime) || !REGEX_PATTERNS.time.test(fixedEndTime)) {
+    if (
+      !REGEX_PATTERNS.time.test(fixedStartTime) ||
+      !REGEX_PATTERNS.time.test(fixedEndTime)
+    ) {
       toast.error(classesContent.packageDialog.toasts.invalidTime);
       return;
     }
@@ -113,17 +125,39 @@ export function PackageSlotList({
       toast.error(classesContent.packageDialog.toasts.endTimeBeforeStart);
       return;
     }
-    const generated = generateSlotsForMonth(fixedYear, fixedMonth, fixedWeekdays, fixedStartTime, fixedEndTime);
+    const generated = generateSlotsForMonth(
+      fixedYear,
+      fixedMonth,
+      fixedWeekdays,
+      fixedStartTime,
+      fixedEndTime
+    );
     if (generated.length === 0) {
       toast.error(classesContent.packageDialog.toasts.noDatesFound);
       return;
     }
     onSlotsChange(generated);
     const MONTH_NAMES = [
-      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+      "Janeiro",
+      "Fevereiro",
+      "Março",
+      "Abril",
+      "Maio",
+      "Junho",
+      "Julho",
+      "Agosto",
+      "Setembro",
+      "Outubro",
+      "Novembro",
+      "Dezembro",
     ];
-    toast.success(classesContent.packageDialog.toasts.generated(generated.length, MONTH_NAMES[fixedMonth - 1], fixedYear));
+    toast.success(
+      classesContent.packageDialog.toasts.generated(
+        generated.length,
+        MONTH_NAMES[fixedMonth - 1],
+        fixedYear
+      )
+    );
   };
 
   return (

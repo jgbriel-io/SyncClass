@@ -14,7 +14,12 @@ import { Loader2 } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { usePackageClassesForm } from "@/hooks/usePackageClassesForm";
-import { PackageSlotList, type Slot, type ScheduleMode } from "./PackageSlotList";
+import {
+  PackageSlotList,
+  type Slot,
+  type ScheduleMode,
+  emptySlot,
+} from "./PackageSlotList";
 import { PackageFinancialSection } from "./PackageFinancialSection";
 import { classes as classesContent, common } from "@/content";
 
@@ -120,7 +125,9 @@ export function PackageClassesDialog({
               disabled={loadingTeachers}
             >
               <SelectTrigger>
-                <SelectValue placeholder={classesContent.packageDialog.teacherPlaceholder} />
+                <SelectValue
+                  placeholder={classesContent.packageDialog.teacherPlaceholder}
+                />
               </SelectTrigger>
               <SelectContent>
                 {teachers.map((t: Teacher) => (
@@ -130,16 +137,24 @@ export function PackageClassesDialog({
                 ))}
               </SelectContent>
             </Select>
-            {teacherError && <p className="text-sm text-destructive">{teacherError}</p>}
+            {teacherError && (
+              <p className="text-sm text-destructive">{teacherError}</p>
+            )}
           </div>
         )}
 
         {/* Aluno */}
         <div className="space-y-2">
           <Label>{classesContent.packageDialog.studentLabel}</Label>
-          <Select value={studentId} onValueChange={setStudentId} disabled={loadingStudents}>
+          <Select
+            value={studentId}
+            onValueChange={setStudentId}
+            disabled={loadingStudents}
+          >
             <SelectTrigger>
-              <SelectValue placeholder={classesContent.packageDialog.studentPlaceholder} />
+              <SelectValue
+                placeholder={classesContent.packageDialog.studentPlaceholder}
+              />
             </SelectTrigger>
             <SelectContent>
               {activeStudents.map((s) => (
@@ -158,7 +173,10 @@ export function PackageClassesDialog({
             checked={semCobranca}
             onCheckedChange={(c) => setSemCobranca(!!c)}
           />
-          <Label htmlFor="pkg-semCobranca" className="cursor-pointer font-normal">
+          <Label
+            htmlFor="pkg-semCobranca"
+            className="cursor-pointer font-normal"
+          >
             {classesContent.packageDialog.noCharge}
           </Label>
         </div>
