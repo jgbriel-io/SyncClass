@@ -26,7 +26,9 @@ function formatClassDateAndTime(log: {
   start_at?: string | null;
   end_at?: string | null;
 }): { date: string; timeRange: string | null } {
-  const date = format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+  const date = format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", {
+    locale: ptBR,
+  });
   if (log.start_at && log.end_at) {
     const start = format(new Date(log.start_at), "HH:mm", { locale: ptBR });
     const end = format(new Date(log.end_at), "HH:mm", { locale: ptBR });
@@ -43,7 +45,9 @@ function formatDuration(minutes: number | null | undefined): string {
   return m > 0 ? `${h}h ${m}min` : `${h}h`;
 }
 
-function getPaymentStatusVariant(status: string | null): "success" | "warning" | "destructive" {
+function getPaymentStatusVariant(
+  status: string | null
+): "success" | "warning" | "destructive" {
   switch (status) {
     case "pago":
       return "success";
@@ -71,30 +75,43 @@ function getPaymentStatusLabel(status: string | null): string {
   }
 }
 
-function getClassLogDisplayTitle(log: { 
-  title?: string | null; 
+function getClassLogDisplayTitle(log: {
+  title?: string | null;
   class_date?: string;
   financial_record_via_package?: boolean;
 }): string {
   const rawTitle = log.title?.trim();
   const isPackage = log.financial_record_via_package;
-  
+
   // Se tem título customizado
   if (rawTitle) {
-    return isPackage ? `${rawTitle} (${classesContent.packageDialog.title})` : rawTitle;
+    return isPackage
+      ? `${rawTitle} (${classesContent.packageDialog.title})`
+      : rawTitle;
   }
-  
+
   // Fallback: "Aula - data"
-  const d = log.class_date ? format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "";
-  const fallbackTitle = d ? `${classesContent.view.title} - ${d}` : classesContent.view.title;
-  return isPackage ? `${fallbackTitle} (${classesContent.packageDialog.title})` : fallbackTitle;
+  const d = log.class_date
+    ? format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", {
+        locale: ptBR,
+      })
+    : "";
+  const fallbackTitle = d
+    ? `${classesContent.view.title} - ${d}`
+    : classesContent.view.title;
+  return isPackage
+    ? `${fallbackTitle} (${classesContent.packageDialog.title})`
+    : fallbackTitle;
 }
 
 interface ClassesTableRowProps {
   log: ClassLogWithStudent;
   showTeacherColumn: boolean;
   teacherName: string;
-  statusBadge: { label: string; variant: "success" | "warning" | "destructive" | "default" };
+  statusBadge: {
+    label: string;
+    variant: "success" | "warning" | "destructive" | "default";
+  };
   onViewDetail: (log: ClassLogWithStudent) => void;
   onEdit: (log: ClassLogWithStudent) => void;
   onDelete: (log: ClassLogWithStudent) => void;
@@ -117,29 +134,32 @@ export function ClassesTableRow({
   const { date, timeRange } = formatClassDateAndTime(log);
   const displayTitle = getClassLogDisplayTitle(log);
 
-  const hasDirectFinancial = log.financial_records && log.financial_records.length > 0;
-  const packageFinancial = log.financial_record_class_logs?.[0]?.financial_records;
-  
+  const hasDirectFinancial =
+    log.financial_records && log.financial_records.length > 0;
+  const packageFinancial =
+    log.financial_record_class_logs?.[0]?.financial_records;
+
   const financialStatus = hasDirectFinancial
     ? getFinancialActualStatus({
         status: log.financial_records[0].status,
         due_date: log.financial_records[0].due_date,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        payment_proof_status: (log.financial_records[0] as any).payment_proof_status,
+        payment_proof_status: log.financial_records[0].payment_proof_status,
       })
     : packageFinancial
-    ? getFinancialActualStatus({
-        status: packageFinancial.status,
-        due_date: packageFinancial.due_date,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        payment_proof_status: (packageFinancial as any).payment_proof_status,
-      })
-    : null;
+      ? getFinancialActualStatus({
+          status: packageFinancial.status,
+          due_date: packageFinancial.due_date,
+          payment_proof_status: packageFinancial.payment_proof_status,
+        })
+      : null;
 
   return (
     <tr className="group hover:bg-muted/30 transition-colors">
       {/* Status */}
-      <td className="px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>
+      <td
+        className="px-2 py-2 align-middle whitespace-nowrap"
+        style={{ width: "1%" }}
+      >
         <StatusBadge variant={statusBadge.variant}>
           {statusBadge.label}
         </StatusBadge>
@@ -164,7 +184,10 @@ export function ClassesTableRow({
               {log.students?.name || common.errors.studentNotFound}
             </p>
             {lastUpdatedAt && (
-              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}>
+              <p
+                className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate"
+                title={`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
+              >
                 {`Editado em ${format(new Date(lastUpdatedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
               </p>
             )}
@@ -173,49 +196,81 @@ export function ClassesTableRow({
       </td>
 
       {/* Informações / Título - L */}
-      <td className={CELL_BASE} style={{ width: COL.INFORMACOES, minWidth: COL.INFORMACOES }}>
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.INFORMACOES, minWidth: COL.INFORMACOES }}
+      >
         {showTeacherColumn ? (
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-medium text-foreground whitespace-normal line-clamp-2" title={displayTitle}>
+            <span
+              className="text-xs font-medium text-foreground whitespace-normal line-clamp-2"
+              title={displayTitle}
+            >
               {displayTitle}
             </span>
-            <span className="text-xs text-muted-foreground whitespace-nowrap truncate" title={teacherName}>
+            <span
+              className="text-xs text-muted-foreground whitespace-nowrap truncate"
+              title={teacherName}
+            >
               {teacherName}
             </span>
           </div>
         ) : (
-          <span className="text-xs font-medium text-foreground whitespace-normal line-clamp-2" title={displayTitle}>
+          <span
+            className="text-xs font-medium text-foreground whitespace-normal line-clamp-2"
+            title={displayTitle}
+          >
             {displayTitle}
           </span>
         )}
       </td>
 
       {/* Data - M */}
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.DATA, minWidth: COL.DATA }}>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.DATA, minWidth: COL.DATA }}
+      >
         <div className="flex flex-col gap-0.5 text-muted-foreground">
-          <span className="truncate" title={date}>{date}</span>
-          {timeRange && <span className="truncate" title={timeRange}>{timeRange}</span>}
+          <span className="truncate" title={date}>
+            {date}
+          </span>
+          {timeRange && (
+            <span className="truncate" title={timeRange}>
+              {timeRange}
+            </span>
+          )}
         </div>
       </td>
 
       {/* Duração - S */}
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.DURACAO, minWidth: COL.DURACAO }}>
-        <span className="text-muted-foreground truncate block" title={formatDuration(log.duration_minutes)}>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.DURACAO, minWidth: COL.DURACAO }}
+      >
+        <span
+          className="text-muted-foreground truncate block"
+          title={formatDuration(log.duration_minutes)}
+        >
           {formatDuration(log.duration_minutes)}
         </span>
       </td>
 
       {/* Nota - M */}
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.NOTA, minWidth: COL.NOTA }}>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.NOTA, minWidth: COL.NOTA }}
+      >
         <span
           className={`font-medium truncate block ${
             log.attendance === false ? "text-destructive" : ""
           }`}
-          title={log.grade != null
-            ? Number(log.grade).toFixed(1)
-            : log.attendance === false
-              ? classesContent.tableRow.noAttendance
-              : "—"}
+          title={
+            log.grade != null
+              ? Number(log.grade).toFixed(1)
+              : log.attendance === false
+                ? classesContent.tableRow.noAttendance
+                : "—"
+          }
         >
           {log.grade != null
             ? Number(log.grade).toFixed(1)
@@ -226,7 +281,10 @@ export function ClassesTableRow({
       </td>
 
       {/* Financeiro - M */}
-      <td className={CELL_BASE} style={{ width: COL.FINANCEIRO, minWidth: COL.FINANCEIRO }}>
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.FINANCEIRO, minWidth: COL.FINANCEIRO }}
+      >
         {hasDirectFinancial || packageFinancial ? (
           <StatusBadge variant={getPaymentStatusVariant(financialStatus)}>
             {getPaymentStatusLabel(financialStatus)}
@@ -239,7 +297,10 @@ export function ClassesTableRow({
       </td>
 
       {/* Botão de avaliar - S */}
-      <td className={CELL_BASE} style={{ width: COL.AVALIAR, minWidth: COL.AVALIAR }}>
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.AVALIAR, minWidth: COL.AVALIAR }}
+      >
         <div className="flex items-center justify-end">
           <Button
             size="sm"
@@ -252,11 +313,13 @@ export function ClassesTableRow({
             }`}
             disabled={isEvaluationBlocked && log.attendance == null}
             onClick={() => onEvaluate(log)}
-            title={isEvaluationBlocked && log.attendance == null
-              ? classesContent.tableRow.evaluate
-              : log.attendance != null
-                ? classesContent.tableRow.update
-                : classesContent.tableRow.evaluate}
+            title={
+              isEvaluationBlocked && log.attendance == null
+                ? classesContent.tableRow.evaluate
+                : log.attendance != null
+                  ? classesContent.tableRow.update
+                  : classesContent.tableRow.evaluate
+            }
           >
             {isEvaluationBlocked && log.attendance == null
               ? classesContent.tableRow.evaluate
@@ -268,7 +331,10 @@ export function ClassesTableRow({
       </td>
 
       {/* Ações - XS */}
-      <td className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.ACOES, minWidth: COL.ACOES }}
+      >
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"

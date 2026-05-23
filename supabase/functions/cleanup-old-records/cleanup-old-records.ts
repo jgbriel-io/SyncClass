@@ -1,53 +1,9 @@
 // Edge Function: cleanup-old-records
 // Limpeza automática de registros antigos (audit_logs, idempotency_keys)
-// Sprint 1 - Task 1.3: Adicionado retry e integração com Sentry
-// Sprint 4 - Task 4.3: Integração com Sentry para alertas
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-// Sentry SDK para Deno (opcional - apenas se SENTRY_DSN estiver configurado)
-// import * as Sentry from "https://deno.land/x/sentry/index.mjs";
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-// Configuração do Sentry (opcional)
-const SENTRY_DSN = Deno.env.get("SENTRY_DSN");
-const SENTRY_ENABLED = !!SENTRY_DSN;
-
-// Inicializar Sentry se configurado
-// if (SENTRY_ENABLED) {
-//   Sentry.init({
-//     dsn: SENTRY_DSN,
-//     environment: Deno.env.get("ENVIRONMENT") || "production",
-//     tracesSampleRate: 1.0,
-//   });
-// }
-
-/**
- * Envia erro para Sentry (se configurado)
- */
-function captureException(error: Error, context: Record<string, unknown> = {}) {
-  if (!SENTRY_ENABLED) {
-    log("Sentry not configured, skipping error capture");
-    return;
-  }
-  
-  // TODO: Descomentar quando Sentry SDK estiver instalado
-  // Sentry.captureException(error, {
-  //   tags: {
-  //     function: "cleanup-old-records",
-  //     ...context,
-  //   },
-  //   level: "error",
-  // });
-  
-  log("Error captured (Sentry disabled)", { error: error.message, context });
-}
+import { CORS_HEADERS, jsonResponse } from "../_shared/utils.ts";
 
 interface CleanupStats {
   audit_logs_deleted: boolean;
@@ -57,13 +13,6 @@ interface CleanupStats {
 
 function log(msg: string, data?: Record<string, unknown>) {
   console.log(`[cleanup-old-records] ${msg}`, data ?? "");
-}
-
-function jsonResponse(data: Record<string, unknown>, status: number) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-  });
 }
 
 /**
@@ -95,18 +44,10 @@ async function executeWithRetry<T>(
     }
   }
   
-  // Todas as tentativas falharam - enviar alerta crítico
   log(`${context} - All ${maxRetries} attempts failed - CRITICAL`, {
     error: lastError?.message,
   });
-  
-  // Capturar erro no Sentry
-  captureException(lastError!, {
-    operation: context,
-    critical: true,
-    maxRetries,
-  });
-  
+
   throw lastError;
 }
 

@@ -60,6 +60,9 @@ export interface ClassLogWithStudent extends ClassLog {
     amount: number;
     due_date: string;
     description?: string | null;
+    payment_proof_url?: string | null;
+    payment_proof_filename?: string | null;
+    payment_proof_status?: string | null;
   }>;
   financial_record_class_logs?: Array<{
     financial_records: {
@@ -75,6 +78,9 @@ export interface ClassLogWithStudent extends ClassLog {
       amount: number;
       due_date: string;
       description?: string | null;
+      payment_proof_url?: string | null;
+      payment_proof_filename?: string | null;
+      payment_proof_status?: string | null;
     };
   }>;
   /** true quando a cobrança foi vinculada via pacote (financial_record_class_logs) */
@@ -137,6 +143,13 @@ export interface CreateClassLogPackagePayload {
 // Pure helpers
 // ---------------------------------------------------------------------------
 
+function toLocalDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 function getDateRangeForPeriod(period: "week" | "month" | "3months"): {
   from: string;
   to: string;
@@ -162,8 +175,8 @@ function getDateRangeForPeriod(period: "week" | "month" | "3months"): {
     to = new Date(y, m, d);
   }
   return {
-    from: from.toISOString().split("T")[0],
-    to: to.toISOString().split("T")[0],
+    from: toLocalDateStr(from),
+    to: toLocalDateStr(to),
   };
 }
 
@@ -313,7 +326,7 @@ async function fetchPendingEvaluationClassLogs(): Promise<
 > {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split("T")[0];
+  const todayStr = toLocalDateStr(today);
   const { data, error } = await supabase
     .from("class_logs")
     .select(

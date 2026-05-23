@@ -13,7 +13,10 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { useUpdateClassLog } from "@/hooks/useClassLogs";
-import { useMarkAsPaid, useUpdateFinancialStatus } from "@/hooks/useFinancialRecords";
+import {
+  useMarkAsPaid,
+  useUpdateFinancialStatus,
+} from "@/hooks/useFinancialRecords";
 import { logger } from "@/lib/logger";
 import { PostClassAbsenceSection } from "./PostClassAbsenceSection";
 import { PostClassPaymentSection } from "./PostClassPaymentSection";
@@ -28,7 +31,10 @@ function createPostClassSchema(requirePaymentConfirmation: boolean) {
     .object({
       attendance: z.boolean(),
       grade: z.string().optional(),
-      feedback: z.string().min(1, "Informe o feedback").max(500, "Máximo 500 caracteres"),
+      feedback: z
+        .string()
+        .min(1, "Informe o feedback")
+        .max(500, "Máximo 500 caracteres"),
       chargeAbsence: z.boolean().optional(),
       confirmPayment: z.boolean().optional(),
       refundPayment: z.boolean().optional(),
@@ -51,7 +57,10 @@ function createPostClassSchema(requirePaymentConfirmation: boolean) {
         if (!data.attendance) return true; // Se faltou, não exige confirmação de pagamento
         return data.confirmPayment === true;
       },
-      { message: "Marque a opção para confirmar pagamento", path: ["confirmPayment"] }
+      {
+        message: "Marque a opção para confirmar pagamento",
+        path: ["confirmPayment"],
+      }
     );
 }
 
@@ -71,7 +80,7 @@ export function PostClassDialog({
   onSuccess,
 }: PostClassDialogProps) {
   const updateClassLog = useUpdateClassLog();
-  
+
   // Hooks com toasts desabilitados (vamos mostrar um toast único no final)
   const markAsPaid = useMarkAsPaid();
   const updateFinancialStatus = useUpdateFinancialStatus();
@@ -89,28 +98,32 @@ export function PostClassDialog({
       }
     }
     // Se não tem direto, tenta via pacote
-    if (classLog?.financial_record_class_logs && classLog.financial_record_class_logs.length > 0) {
-      const packageFinancial = classLog.financial_record_class_logs[0]?.financial_records;
+    if (
+      classLog?.financial_record_class_logs &&
+      classLog.financial_record_class_logs.length > 0
+    ) {
+      const packageFinancial =
+        classLog.financial_record_class_logs[0]?.financial_records;
       if (packageFinancial?.id) {
         return packageFinancial;
       }
     }
     return null;
   })();
-  
+
   const hasFinancialRecord = !!financialRecord?.id;
   const isPaymentAlreadyPaid = financialRecord?.status === "pago";
-  const requirePaymentConfirmation = !!(classLog && hasFinancialRecord && !isPaymentAlreadyPaid);
-  
-  // Verificar se tem comprovante anexado
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const hasPaymentProof = !!(financialRecord as any)?.payment_proof_url;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const paymentProofUrl = (financialRecord as any)?.payment_proof_url;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const paymentProofFilename = (financialRecord as any)?.payment_proof_filename || "Comprovante";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const paymentProofStatus = (financialRecord as any)?.payment_proof_status;
+  const requirePaymentConfirmation = !!(
+    classLog &&
+    hasFinancialRecord &&
+    !isPaymentAlreadyPaid
+  );
+
+  const hasPaymentProof = !!financialRecord?.payment_proof_url;
+  const paymentProofUrl = financialRecord?.payment_proof_url;
+  const paymentProofFilename =
+    financialRecord?.payment_proof_filename || "Comprovante";
+  const paymentProofStatus = financialRecord?.payment_proof_status;
 
   const postClassSchema = useMemo(
     () => createPostClassSchema(requirePaymentConfirmation),
@@ -159,7 +172,10 @@ export function PostClassDialog({
 
     const attendanceValue = data.attendance;
     const gradeValue = data.grade?.trim()
-      ? Math.min(100, Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0))
+      ? Math.min(
+          100,
+          Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0)
+        )
       : null;
     const feedbackValue = data.feedback?.trim() || null;
 
@@ -167,7 +183,7 @@ export function PostClassDialog({
       // Suprimir toasts automáticos temporariamente
       const originalToastSuccess = toast.success;
       const toastQueue: string[] = [];
-      
+
       // Interceptar toasts durante as operações
       toast.success = (message: string) => {
         toastQueue.push(message);
@@ -190,9 +206,9 @@ export function PostClassDialog({
           if (isPaymentAlreadyPaid) {
             // Se já estava pago e marcou para extornar
             if (data.refundPayment) {
-              await updateFinancialStatus.mutateAsync({ 
-                id: financialRecord.id, 
-                status: "extornado" 
+              await updateFinancialStatus.mutateAsync({
+                id: financialRecord.id,
+                status: "extornado",
               });
               successMessage = "Falta registrada e pagamento extornado";
             } else {
@@ -201,9 +217,9 @@ export function PostClassDialog({
             }
           } else {
             // Não estava pago, marca como abonado
-            await updateFinancialStatus.mutateAsync({ 
-              id: financialRecord.id, 
-              status: "abonado" 
+            await updateFinancialStatus.mutateAsync({
+              id: financialRecord.id,
+              status: "abonado",
             });
             successMessage = "Falta registrada e cobrança abonada";
           }
@@ -215,9 +231,14 @@ export function PostClassDialog({
             successMessage = "Falta registrada, cobrança mantida como pendente";
           }
         }
-      } 
+      }
       // Lógica de pagamento quando o aluno COMPARECEU
-      else if (attendanceValue && hasFinancialRecord && data.confirmPayment && financialRecord?.id) {
+      else if (
+        attendanceValue &&
+        hasFinancialRecord &&
+        data.confirmPayment &&
+        financialRecord?.id
+      ) {
         await markAsPaid.mutateAsync(financialRecord.id);
         successMessage = "Avaliação e pagamento registrados com sucesso";
       } else if (attendanceValue) {
@@ -231,13 +252,13 @@ export function PostClassDialog({
       // Restaurar toast original e mostrar apenas uma mensagem
       toast.success = originalToastSuccess;
       toast.success(successMessage);
-      
+
       onSuccess();
       onOpenChange(false);
     } catch (error) {
       // Restaurar toast original em caso de erro
       toast.success = originalToastSuccess;
-      logger.error(error as Error, { context: 'post_class_evaluation' });
+      logger.error(error as Error, { context: "post_class_evaluation" });
       toast.error(classesContent.postClassDialog.toasts.evaluationError);
     }
   };
@@ -267,117 +288,133 @@ export function PostClassDialog({
         {studentName} — {classDateFormatted}
       </p>
       <form onSubmit={handleSubmit(handleFormSubmit)} className={STACK.DEFAULT}>
-          <div className={STACK.TIGHT}>
-            <Label>{classesContent.postClassDialog.attendanceLabel}</Label>
-            <div className={`flex ${GAP.LOOSE}`}>
-              <label className={`flex items-center ${GAP.TIGHT} cursor-pointer`}>
-                <input
-                  type="radio"
-                  checked={attendance === true}
-                  onChange={() => setValue("attendance", true)}
-                  className="rounded-full"
-                />
-                <span>{classesContent.postClassDialog.attended}</span>
-              </label>
-              <label className={`flex items-center ${GAP.TIGHT} cursor-pointer`}>
-                <input
-                  type="radio"
-                  checked={attendance === false}
-                  onChange={() => setValue("attendance", false)}
-                  className="rounded-full"
-                />
-                <span>{classesContent.postClassDialog.absent}</span>
-              </label>
-            </div>
-          </div>
-
-          {attendance && (
-            <div className={STACK.TIGHT}>
-              <Label htmlFor="grade">{classesContent.postClassDialog.gradeLabel}</Label>
-              <Input
-                id="grade"
-                type="text"
-                inputMode="numeric"
-                placeholder={common.placeholders.gradeHint}
-                {...register("grade")}
-                onKeyDown={(e) => {
-                  // Permitir: backspace, delete, tab, escape, enter, ponto, vírgula
-                  if (
-                    e.key === "Backspace" ||
-                    e.key === "Delete" ||
-                    e.key === "Tab" ||
-                    e.key === "Escape" ||
-                    e.key === "Enter" ||
-                    e.key === "." ||
-                    e.key === "," ||
-                    e.key === "ArrowLeft" ||
-                    e.key === "ArrowRight"
-                  ) {
-                    return;
-                  }
-                  // Bloquear se não for número
-                  if (!/[0-9]/.test(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
+        <div className={STACK.TIGHT}>
+          <Label>{classesContent.postClassDialog.attendanceLabel}</Label>
+          <div className={`flex ${GAP.LOOSE}`}>
+            <label className={`flex items-center ${GAP.TIGHT} cursor-pointer`}>
+              <input
+                type="radio"
+                checked={attendance === true}
+                onChange={() => setValue("attendance", true)}
+                className="rounded-full"
               />
-              {errors.grade && (
-                <p className={`${TYPOGRAPHY.BODY} text-destructive`}>{errors.grade.message}</p>
-              )}
-            </div>
-          )}
+              <span>{classesContent.postClassDialog.attended}</span>
+            </label>
+            <label className={`flex items-center ${GAP.TIGHT} cursor-pointer`}>
+              <input
+                type="radio"
+                checked={attendance === false}
+                onChange={() => setValue("attendance", false)}
+                className="rounded-full"
+              />
+              <span>{classesContent.postClassDialog.absent}</span>
+            </label>
+          </div>
+        </div>
 
-          {!attendance && hasFinancialRecord && (
-            <PostClassAbsenceSection
-              chargeAbsence={chargeAbsence}
-              refundPayment={refundPayment}
-              isPaymentAlreadyPaid={isPaymentAlreadyPaid}
-              onChargeAbsenceChange={(checked) => setValue("chargeAbsence", checked)}
-              onRefundPaymentChange={(checked) => setValue("refundPayment", checked)}
-            />
-          )}
-
+        {attendance && (
           <div className={STACK.TIGHT}>
-            <Label htmlFor="feedback">{classesContent.postClassDialog.feedbackLabel}</Label>
-            <Textarea
-              id="feedback"
-              placeholder={common.placeholders.classNotesHint}
-              rows={3}
-              {...register("feedback")}
+            <Label htmlFor="grade">
+              {classesContent.postClassDialog.gradeLabel}
+            </Label>
+            <Input
+              id="grade"
+              type="text"
+              inputMode="numeric"
+              placeholder={common.placeholders.gradeHint}
+              {...register("grade")}
+              onKeyDown={(e) => {
+                // Permitir: backspace, delete, tab, escape, enter, ponto, vírgula
+                if (
+                  e.key === "Backspace" ||
+                  e.key === "Delete" ||
+                  e.key === "Tab" ||
+                  e.key === "Escape" ||
+                  e.key === "Enter" ||
+                  e.key === "." ||
+                  e.key === "," ||
+                  e.key === "ArrowLeft" ||
+                  e.key === "ArrowRight"
+                ) {
+                  return;
+                }
+                // Bloquear se não for número
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
             />
-            {errors.feedback && (
-              <p className={`${TYPOGRAPHY.BODY} text-destructive`}>{errors.feedback.message}</p>
+            {errors.grade && (
+              <p className={`${TYPOGRAPHY.BODY} text-destructive`}>
+                {errors.grade.message}
+              </p>
             )}
           </div>
+        )}
 
-          {attendance && hasFinancialRecord && (
-            <PostClassPaymentSection
-              confirmPayment={confirmPayment}
-              isPaymentAlreadyPaid={isPaymentAlreadyPaid}
-              hasPaymentProof={hasPaymentProof}
-              paymentProofUrl={paymentProofUrl}
-              paymentProofFilename={paymentProofFilename}
-              paymentProofStatus={paymentProofStatus}
-              onConfirmPaymentChange={(checked) => setValue("confirmPayment", checked)}
-              errorMessage={errors.confirmPayment?.message}
-            />
+        {!attendance && hasFinancialRecord && (
+          <PostClassAbsenceSection
+            chargeAbsence={chargeAbsence}
+            refundPayment={refundPayment}
+            isPaymentAlreadyPaid={isPaymentAlreadyPaid}
+            onChargeAbsenceChange={(checked) =>
+              setValue("chargeAbsence", checked)
+            }
+            onRefundPaymentChange={(checked) =>
+              setValue("refundPayment", checked)
+            }
+          />
+        )}
+
+        <div className={STACK.TIGHT}>
+          <Label htmlFor="feedback">
+            {classesContent.postClassDialog.feedbackLabel}
+          </Label>
+          <Textarea
+            id="feedback"
+            placeholder={common.placeholders.classNotesHint}
+            rows={3}
+            {...register("feedback")}
+          />
+          {errors.feedback && (
+            <p className={`${TYPOGRAPHY.BODY} text-destructive`}>
+              {errors.feedback.message}
+            </p>
           )}
+        </div>
 
-          <div className={`flex justify-end ${GAP.TIGHT} pt-2`}>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-            >
-              {classesContent.postClassDialog.cancel}
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending && <Loader2 className={`mr-2 ${ICON_SIZES.SM} animate-spin`} />}
-              {classesContent.postClassDialog.save}
-            </Button>
-          </div>
-        </form>
+        {attendance && hasFinancialRecord && (
+          <PostClassPaymentSection
+            confirmPayment={confirmPayment}
+            isPaymentAlreadyPaid={isPaymentAlreadyPaid}
+            hasPaymentProof={hasPaymentProof}
+            paymentProofUrl={paymentProofUrl}
+            paymentProofFilename={paymentProofFilename}
+            paymentProofStatus={paymentProofStatus}
+            onConfirmPaymentChange={(checked) =>
+              setValue("confirmPayment", checked)
+            }
+            errorMessage={errors.confirmPayment?.message}
+          />
+        )}
+
+        <div className={`flex justify-end ${GAP.TIGHT} pt-2`}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
+            {classesContent.postClassDialog.cancel}
+          </Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending && (
+              <Loader2 className={`mr-2 ${ICON_SIZES.SM} animate-spin`} />
+            )}
+            {classesContent.postClassDialog.save}
+          </Button>
+        </div>
+      </form>
     </BaseDialog>
   );
 }
