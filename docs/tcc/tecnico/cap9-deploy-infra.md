@@ -118,7 +118,7 @@ schedule (semanal)
 | Autorização   | RLS no PostgreSQL (40+ policies)            |
 | Rate limiting | `check_rate_limit()` no banco (10 req/min)  |
 | Secrets       | Variáveis de ambiente — nunca no código     |
-| Monitoramento | Sentry para erros de frontend               |
+| Monitoramento | `logger.ts` + `audit_logs` no banco         |
 | Auditoria     | Tabela `audit_logs` para operações críticas |
 
 ## 9.7 Fluxo de Deploy

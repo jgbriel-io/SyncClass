@@ -82,7 +82,7 @@
 | RNF07  | PWA instalável (_offline-ready_)                      | Usabilidade     | Baixa          | 3          |
 | RNF08  | Interface responsiva (_mobile-first_)                 | Usabilidade     | Alta           | 5          |
 | RNF09  | Logs de auditoria para todas as operações críticas    | Rastreabilidade | Média          | 7          |
-| RNF10  | Monitoramento de erros em produção (Sentry)           | Observabilidade | Média          | 3          |
+| RNF10  | Logging de erros via `logger.ts` (dev) + `audit_logs` | Observabilidade | Média          | 3          |
 
 ### 4.3.2 Segurança Avançada (Implementados)
 

@@ -92,9 +92,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userId: currentUser?.id,
       });
 
-      // Clear user context in Sentry
-      logger.clearUser();
-
       // Use signOut from the client for complete cleanup
       await supabase.auth.signOut();
 
@@ -142,17 +139,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isMounted) {
             setRole(userRole);
             setIsLoading(false);
-
-            // Set user context in Sentry for better error tracking
-            logger.setUser({
-              id: session.user.id,
-              email: session.user.email,
-              role: userRole || undefined,
-            });
-
-            logger.addBreadcrumb("User authenticated", "auth", {
-              role: userRole || "unknown",
-            });
           }
         }, 0);
       } else {
@@ -221,13 +207,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isMounted) {
             setRole(userRole);
             setIsLoading(false);
-
-            // Set user context in Sentry
-            logger.setUser({
-              id: session.user.id,
-              email: session.user.email,
-              role: userRole || undefined,
-            });
           }
         });
       } else {
@@ -300,9 +279,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    logger.addBreadcrumb("User signed out", "auth", { userId: user?.id });
-    logger.clearUser();
-
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);

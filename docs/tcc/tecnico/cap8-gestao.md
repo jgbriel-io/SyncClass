@@ -127,7 +127,7 @@ Isso permitiu que um único desenvolvedor entregasse em 4 meses o que normalment
 | R05    | Dependência de serviço externo (Supabase)      | Baixa     | Alto        | Risco aceito para MVP                            | 🔵 Aceito                          |
 | R06    | Complexidade crescente do codebase             | Alta      | Médio       | Auditorias de clean code, sprints 10–12          | 🔄 Em andamento                    |
 | R07    | Bugs de timezone em produção                   | Alta      | Médio       | Documentados, correção planejada                 | ⚠️ Pendente                        |
-| R08    | Dados sensíveis no Sentry (LGPD)               | Alta      | Alto        | Correção planejada (`sendDefaultPii: false`)     | ⚠️ Pendente                        |
+| R08    | Monitoramento de erros em produção             | Baixa     | Baixo       | Sentry removido — `logger.ts` cobre dev          | ✅ Resolvido                       |
 
 ## 8.6 Ferramentas de Gestão
 

@@ -72,7 +72,6 @@ A IA foi utilizada como ferramenta de desenvolvimento em todas as fases do proje
 | Formulários      | React Hook Form + Zod              | 7.61.1 / 3.25.76        |
 | Testes unitários | Vitest + Testing Library           | 3.2.4                   |
 | CI/CD            | GitHub Actions                     | —                       |
-| Monitoramento    | Sentry                             | 10.38.0                 |
 | IA               | Claude (Anthropic), GitHub Copilot | —                       |
 
 > 🖼️ **Figura:** Tabela de ferramentas formatada para impressão

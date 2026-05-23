@@ -22,13 +22,4 @@ export const logger = {
       console.debug(message, context);
     }
   },
-
-  // no-ops: mantêm chamadas de contexto de auth sem Sentry
-  setUser: (_user: { id: string; email?: string; role?: string }) => {},
-  clearUser: () => {},
-  addBreadcrumb: (
-    _message: string,
-    _category?: string,
-    _data?: Record<string, unknown>
-  ) => {},
 };

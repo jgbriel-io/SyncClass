@@ -225,7 +225,7 @@ A branch atual (main/master) foi **resetada** e contém apenas 10 commits, repre
 
 ### Médio Prazo
 
-1. **Monitoring:** Sentry + analytics
+1. **Monitoring:** Serviço de logging externo (trabalho futuro)
 2. **Feature flags:** Rollout gradual de features
 3. **A/B testing:** Validar UX decisions
 4. **Accessibility audit:** WCAG 2.1 AA

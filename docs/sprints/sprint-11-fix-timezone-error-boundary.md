@@ -12,12 +12,14 @@
 Após Sprint 10, o código estava limpo mas com 2 bugs críticos identificados em produção:
 
 **Bug 1: Timezone Incorreto**
+
 - Datas salvas em UTC mas exibidas em horário local sem conversão
 - Exemplo: aula às 14h BRT salva como 17h UTC, exibida como 17h (errado)
 - Impacto: confusão de horários, aulas marcadas no horário errado
 - Severidade: 🔴 Crítica (afeta funcionalidade principal)
 
 **Bug 2: Sem Error Boundary**
+
 - Erros não capturados quebram aplicação inteira (tela branca)
 - Usuário não sabe o que aconteceu
 - Sem logging de erros
@@ -25,6 +27,7 @@ Após Sprint 10, o código estava limpo mas com 2 bugs críticos identificados e
 - Severidade: 🔴 Crítica (aplicação quebra completamente)
 
 **Contexto:**
+
 - Supabase armazena datas em UTC (padrão)
 - Frontend precisa converter UTC → horário local para exibição
 - Frontend precisa converter horário local → UTC para salvar
@@ -33,12 +36,14 @@ Após Sprint 10, o código estava limpo mas com 2 bugs críticos identificados e
 ## Requirements
 
 ### Fix de Timezone
+
 - Converter UTC → BRT ao exibir datas
 - Converter BRT → UTC ao salvar datas
 - Usar biblioteca `date-fns-tz` para conversões
 - Aplicar em: aulas, cobranças, atividades, histórico
 
 ### Error Boundary
+
 - Capturar erros não tratados
 - Exibir UI amigável em vez de tela branca
 - Botão "Recarregar" para tentar novamente
@@ -46,6 +51,7 @@ Após Sprint 10, o código estava limpo mas com 2 bugs críticos identificados e
 - Não quebrar aplicação inteira
 
 ### Critérios de Conclusão
+
 - ✅ Datas exibidas corretamente em BRT
 - ✅ Datas salvas corretamente em UTC
 - ✅ Error boundary captura erros
@@ -54,6 +60,7 @@ Após Sprint 10, o código estava limpo mas com 2 bugs críticos identificados e
 ## Background
 
 **Timezone no Supabase:**
+
 ```sql
 -- Supabase armazena em UTC
 CREATE TABLE class_logs (
@@ -64,33 +71,35 @@ CREATE TABLE class_logs (
 ```
 
 **Conversão correta:**
+
 ```ts
-import { format, parseISO } from 'date-fns';
-import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { format, parseISO } from "date-fns";
+import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 
 // Exibir (UTC → BRT)
-const utcDate = parseISO('2026-04-21T17:00:00Z'); // UTC
-const brtDate = utcToZonedTime(utcDate, 'America/Sao_Paulo'); // BRT
-const formatted = format(brtDate, 'dd/MM/yyyy HH:mm'); // "21/04/2026 14:00"
+const utcDate = parseISO("2026-04-21T17:00:00Z"); // UTC
+const brtDate = utcToZonedTime(utcDate, "America/Sao_Paulo"); // BRT
+const formatted = format(brtDate, "dd/MM/yyyy HH:mm"); // "21/04/2026 14:00"
 
 // Salvar (BRT → UTC)
-const localDate = new Date('2026-04-21T14:00:00'); // BRT
-const utcDate = zonedTimeToUtc(localDate, 'America/Sao_Paulo'); // UTC
+const localDate = new Date("2026-04-21T14:00:00"); // BRT
+const utcDate = zonedTimeToUtc(localDate, "America/Sao_Paulo"); // UTC
 ```
 
 **Error Boundary:**
+
 ```tsx
 class ErrorBoundary extends React.Component {
   state = { hasError: false };
-  
+
   static getDerivedStateFromError(error) {
     return { hasError: true };
   }
-  
+
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught:', error, errorInfo);
+    console.error("Error caught:", error, errorInfo);
   }
-  
+
   render() {
     if (this.state.hasError) {
       return <ErrorFallback onReset={() => window.location.reload()} />;
@@ -106,16 +115,16 @@ class ErrorBoundary extends React.Component {
 
 ```ts
 // src/lib/utils/timezone.ts
-export const TIMEZONE = 'America/Sao_Paulo';
+export const TIMEZONE = "America/Sao_Paulo";
 
 export const formatDateBRT = (utcDate: string | Date) => {
-  const date = typeof utcDate === 'string' ? parseISO(utcDate) : utcDate;
+  const date = typeof utcDate === "string" ? parseISO(utcDate) : utcDate;
   const brtDate = utcToZonedTime(date, TIMEZONE);
-  return format(brtDate, 'dd/MM/yyyy HH:mm');
+  return format(brtDate, "dd/MM/yyyy HH:mm");
 };
 
 export const convertToBRT = (utcDate: string | Date) => {
-  const date = typeof utcDate === 'string' ? parseISO(utcDate) : utcDate;
+  const date = typeof utcDate === "string" ? parseISO(utcDate) : utcDate;
   return utcToZonedTime(date, TIMEZONE);
 };
 
@@ -130,21 +139,21 @@ export const convertToUTC = (localDate: Date) => {
 // src/components/ErrorBoundary.tsx
 export const ErrorBoundary = ({ children }) => {
   const [hasError, setHasError] = useState(false);
-  
+
   useEffect(() => {
     const handleError = (error) => {
-      console.error('Error caught:', error);
+      console.error("Error caught:", error);
       setHasError(true);
     };
-    
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
+
+    window.addEventListener("error", handleError);
+    return () => window.removeEventListener("error", handleError);
   }, []);
-  
+
   if (hasError) {
     return <ErrorFallback onReset={() => window.location.reload()} />;
   }
-  
+
   return children;
 };
 ```
@@ -313,16 +322,16 @@ export const ErrorBoundary = ({ children }) => {
 
 ### Utilitários Criados
 
-| Utilitário | Responsabilidade | Arquivo |
-|------------|------------------|---------|
+| Utilitário    | Responsabilidade       | Arquivo                     |
+| ------------- | ---------------------- | --------------------------- |
 | `timezone.ts` | Conversões de timezone | `src/lib/utils/timezone.ts` |
 
 ### Componentes Criados
 
-| Componente | Responsabilidade | Arquivo |
-|------------|------------------|---------|
+| Componente      | Responsabilidade            | Arquivo                            |
+| --------------- | --------------------------- | ---------------------------------- |
 | `ErrorBoundary` | Capturar erros não tratados | `src/components/ErrorBoundary.tsx` |
-| `ErrorFallback` | UI amigável para erros | `src/components/ErrorFallback.tsx` |
+| `ErrorFallback` | UI amigável para erros      | `src/components/ErrorFallback.tsx` |
 
 ## Files Created
 
@@ -372,6 +381,7 @@ src/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 1 biblioteca adicionada (`date-fns-tz`)
 - ✅ 3 utilitários de timezone criados
 - ✅ 2 componentes de error boundary criados
@@ -380,6 +390,7 @@ src/
 - ✅ 2 bugs críticos corrigidos
 
 ### Melhorias Qualitativas
+
 - ✅ Horários corretos (bug crítico resolvido)
 - ✅ Aplicação não quebra completamente (UX melhorada)
 - ✅ UI amigável em caso de erro
@@ -398,18 +409,18 @@ src/
 ### O que poderia melhorar ⚠️
 
 - **Timezone hardcoded:** `TIMEZONE = 'America/Sao_Paulo'` hardcoded. Ideal seria detectar timezone do navegador (`Intl.DateTimeFormat().resolvedOptions().timeZone`) ou configuração por usuário.
-- **Logging apenas no console:** `console.error` funciona em dev, mas produção precisa de serviço de logging (Sentry foi removido). Erros em produção não são rastreados.
+- **Logging apenas no console:** `console.error` funciona em dev, mas produção não rastreia erros automaticamente. Serviço de logging externo não está no escopo do projeto.
 - **Sem retry automático:** ErrorBoundary exige clique manual em "Recarregar". Retry automático com backoff exponencial seria melhor para erros transitórios (rede instável).
 
 ### Aplicações futuras 💡
 
 - **Timezone por usuário:** Adicionar campo `timezone` em `profiles`, usar `user.timezone` em vez de constante. Permite professores em fusos diferentes.
-- **Logging estruturado:** Integrar serviço de logging (Sentry, LogRocket, Datadog) para rastrear erros em produção. Incluir contexto: userId, route, browser, timestamp.
+- **Logging estruturado:** Integrar serviço de logging (LogRocket, Datadog ou similar) para rastrear erros em produção. Incluir contexto: userId, route, browser, timestamp.
 - **Retry automático:** ErrorBoundary com retry automático (3 tentativas com backoff 1s, 2s, 4s). Apenas erros persistentes mostram ErrorFallback.
 
 ## Technical Debt
 
-- [ ] Logging de erros apenas no console — adicionar serviço de logging depois (Sentry removido)
+- [ ] Logging de erros apenas no console — serviço de logging externo planejado para trabalho futuro
 - [ ] Timezone hardcoded (`America/Sao_Paulo`) — adicionar configuração por usuário depois
 
 ## Next Steps

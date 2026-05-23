@@ -87,7 +87,6 @@ projeto, não apenas para geração de código.
 | Formulários      | React Hook Form + Zod              | 7.61.1 / 3.25.76        |
 | Testes unitários | Vitest + Testing Library           | 3.2.4                   |
 | CI/CD            | GitHub Actions                     | —                       |
-| Monitoramento    | Sentry                             | 10.38.0                 |
 | IA               | Claude (Anthropic), GitHub Copilot | —                       |
 
 > 🖼️ **Figura:** Tabela de ferramentas formatada para impressão

@@ -1,4 +1,4 @@
-# Sprint 20 — LGPD Anonymization + Server-Side Rate Limiting
+# Sprint 19 — LGPD Anonymization + Server-Side Rate Limiting
 
 **Período:** 22/05/2026 – 23/05/2026  
 **Status:** ✅ Concluída  
@@ -400,9 +400,8 @@ Itens identificados mas não resolvidos nesta sprint:
 
 ## Next Steps
 
-1. **Sprint 21:** Correções arquiteturais — God hooks (ARQ-001: `useUpdateStudent`, ARQ-006: `useUserMutations`), query keys inconsistentes (ARQ-003)
-2. **Sprint 22:** Performance — N+1 queries (ARQ-005: `useFinancialRecords`), agregação no cliente (ARQ-002)
-3. **Sprint 21:** Exportação de dados LGPD (portabilidade — LGPD Art. 18, V), dashboard de rate limits (admin)
+1. **Sprint 20:** Exportação de dados LGPD (portabilidade — LGPD Art. 18, V), dashboard de rate limits (admin)
+2. **Trabalho futuro:** Correções arquiteturais — God hooks, query keys inconsistentes, N+1 queries
 
 ## References
 

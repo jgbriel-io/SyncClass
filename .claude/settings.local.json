@@ -13,7 +13,10 @@
       "mcp__supabase__execute_sql",
       "mcp__supabase__apply_migration",
       "mcp__supabase__generate_typescript_types",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Skill(plan)",
+      "Bash(grep -v \"//.*console\\\\.\")",
+      "Bash(grep -rn \"hardcoded\\\\|#[0-9a-fA-F]\\\\{3,6\\\\}\\\\|color:\\\\s*[\\\\\"']#\\\\|bg-\\\\[#\\\\|text-\\\\[#\" src/components/ --include=\"*.tsx\")"
     ]
   },
   "enableAllProjectMcpServers": true,

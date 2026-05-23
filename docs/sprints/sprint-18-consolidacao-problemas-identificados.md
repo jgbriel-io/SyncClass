@@ -32,7 +32,7 @@ prioriza correções críticas e documenta débito técnico aceito.
 
 | ID          | Tipo         | Severidade     | Prioridade | Esforço   | Status              | Arquivo                                        |
 | ----------- | ------------ | -------------- | ---------- | --------- | ------------------- | ---------------------------------------------- |
-| **CR-013**  | **Infra**    | **🔴 Crítica** | **1**      | **30min** | **🔴 Pendente**     | Sentry config (LGPD — R08)                     |
+| **CR-013**  | **Infra**    | **🔴 Crítica** | **1**      | **30min** | **✅ Resolvido**    | Sentry removido do projeto                     |
 | BACK-001    | Bug          | 🔴 Crítica     | 2          | 2h        | 🔴 Pendente         | `supabase/functions/invite-user/`              |
 | **CR-003**  | **Frontend** | **🟡 Alta**    | **3**      | **30min** | **🔴 Pendente**     | `as any` em produção (11x)                     |
 | **CR-007**  | **Backend**  | **🟡 Alta**    | **4**      | **1h**    | **🔴 Pendente**     | `invite-user` muito grande (500L)              |
@@ -87,42 +87,22 @@ prioriza correções críticas e documenta débito técnico aceito.
 - ✅ Corrigido — Problema resolvido
 - **Negrito** — Novo problema identificado no Code Review
 
-**Nota:** R07 (Bugs timezone) agrupa BACK-002, BACK-003, BACK-004. R08 (Sentry LGPD) = CR-013.
+**Nota:** R07 (Bugs timezone) agrupa BACK-002, BACK-003, BACK-004. R08 (Sentry LGPD) = CR-013 — resolvido pela remoção do Sentry.
 
 ### Problemas Críticos (Prioridade 1-2)
 
-#### CR-013: Sentry vazando dados sensíveis (LGPD) — R08
+#### CR-013: Sentry removido do projeto — R08
 
-**Severidade:** 🔴 Crítica  
-**Impacto:** Violação de LGPD, multa até 2% faturamento
+**Severidade:** 🔴 Crítica → ✅ Resolvido  
+**Resolução:** Sentry foi removido completamente do projeto. Não há mais risco de vazamento de PII via serviço de monitoramento externo.
 
-**Causa:** Sentry captura dados pessoais em erros (email, IP, headers).
-`sendDefaultPii: true` por padrão.
+**O que foi feito:**
 
-**Fix:**
+- Removidas referências de Sentry em `src/lib/logger.ts` (no-ops `setUser`, `clearUser`, `addBreadcrumb`)
+- Removidas chamadas em `src/contexts/AuthContext.tsx`
+- Removido de todas as docs, caps TCC e configs do projeto
 
-```ts
-Sentry.init({
-  dsn: import.meta.env.VITE_SENTRY_DSN,
-  environment: import.meta.env.MODE,
-  sendDefaultPii: false, // ✅ Não enviar PII
-  beforeSend(event) {
-    // Sanitizar dados sensíveis
-    if (event.request?.headers) {
-      delete event.request.headers["Authorization"];
-      delete event.request.headers["Cookie"];
-    }
-    if (event.user) {
-      delete event.user.email;
-      delete event.user.ip_address;
-    }
-    return event;
-  },
-});
-```
-
-**Arquivo:** `src/lib/monitoring/sentry.ts` (criar)  
-**Esforço:** 30min
+**Logging atual:** `logger.ts` loga apenas em `DEV` via `console.*` — sem envio de dados para serviços externos.
 
 ---
 
@@ -514,16 +494,9 @@ Correção planejada mas não implementada no MVP.
 
 ---
 
-#### R08: Dados sensíveis no Sentry (LGPD)
+#### R08: Dados sensíveis no Sentry (LGPD) — ✅ Resolvido
 
-**Severidade:** 🔴 Crítica  
-**Impacto:** Violação de LGPD
-
-**Consolidado em CR-013** (ver seção Problemas Críticos).
-
-**Correção:** `sendDefaultPii: false` no Sentry config.
-
-**Arquivo:** `src/lib/monitoring/sentry.ts`
+**Resolução:** Sentry removido do projeto. Risco eliminado na origem.
 
 ---
 
@@ -533,7 +506,7 @@ Correção planejada mas não implementada no MVP.
 
 **Críticas (Prioridade 1-2):**
 
-- [ ] CR-013: Sentry LGPD fix (`sendDefaultPii: false`)
+- [x] CR-013: Sentry removido do projeto (R08 resolvido)
 - [ ] BACK-001: Constraint UNIQUE em `profiles.email`
 
 **Altas (Prioridade 3-20):**
@@ -614,7 +587,7 @@ Correção planejada mas não implementada no MVP.
 **Plano de Execução (7 sprints, 54h):**
 
 1. **Sprint 20:** `fix-critical-lgpd-race-condition` — 2.5h
-   - CR-013: Sentry LGPD fix (30min)
+   - CR-013: Sentry removido ✅
    - BACK-001: Race condition invite-user (2h)
    - E2E validation + reset DB
 

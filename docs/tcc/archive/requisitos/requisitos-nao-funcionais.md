@@ -248,9 +248,9 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 
 ---
 
-### RNF10: Monitoramento com Sentry
+### RNF10: Logging de Erros
 
-**Descrição:** Monitoramento de erros em produção (Sentry)
+**Descrição:** Logging de erros em desenvolvimento via `logger.ts`
 
 **Categoria:** Observabilidade  
 **Prioridade:** Média  
@@ -258,18 +258,15 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 
 **Implementação:**
 
-- Sentry SDK integrado
-- Captura de erros não tratados
-- Source maps para stack traces
-- Contexto de usuário (user_id, role)
-- Breadcrumbs de navegação
+- `src/lib/logger.ts` — loga apenas em `DEV` via `console.*`
+- `audit_logs` no banco — operações críticas rastreadas
+- Sentry removido do projeto (serviço externo fora do escopo)
 
 **Arquivos:**
 
-- `src/lib/sentry.ts`
-- `src/main.tsx` (inicialização)
+- `src/lib/logger.ts`
 
-**Testes:** — N/A (monitoramento em produção)
+**Testes:** — N/A
 
 ---
 
@@ -789,12 +786,11 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 
 - Logs em formato JSON
 - Campos: timestamp, level, message, context
-- Integração com Sentry
 - Análise via ferramentas externas
 
 **Arquivos:**
 
-- `src/lib/sentry.ts`
+- `src/lib/logger.ts`
 
 **Testes:** — N/A
 
@@ -947,7 +943,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 | RNF07     | `vite.config.ts`         | —                                  | ⚠️ Manual        |
 | RNF08     | Todos os componentes     | —                                  | ⚠️ Manual        |
 | RNF09     | —                        | `01_structure.sql`                 | ⚠️ Via migration |
-| RNF10     | `sentry.ts`              | —                                  | — N/A            |
+| RNF10     | `logger.ts`              | —                                  | — N/A            |
 | RNF11     | `errorHandler.ts`        | —                                  | ✅               |
 | RNF12     | —                        | `12_consistency_improvements.sql`  | ⚠️ Via migration |
 | RNF13     | —                        | `13_encrypt_pix_keys.sql`          | ⚠️ Via migration |
@@ -969,7 +965,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 | RNF29     | —                        | `01_structure.sql`                 | — N/A            |
 | RNF30     | `Timeline.tsx`           | —                                  | ✅               |
 | RNF31     | —                        | `01_structure.sql`                 | ✅               |
-| RNF32     | `sentry.ts`              | —                                  | — N/A            |
+| RNF32     | `logger.ts`              | —                                  | — N/A            |
 | RNF33     | `cleanup-old-records/`   | —                                  | ⚠️ Manual        |
 | RNF34     | `cleanup-storage/`       | —                                  | ⚠️ Manual        |
 | RNF35     | —                        | `supabase/migrations/`             | — N/A            |

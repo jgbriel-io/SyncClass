@@ -26,7 +26,6 @@ Plataforma SaaS para gestão de professores autônomos de inglês. Projeto de TC
 - React Hook Form + Zod — formulários e validação
 - Lucide React 0.462 — ícones
 - Sonner 1.7 — toasts
-- Sentry 10.38 — monitoring
 - Testes: Vitest (unitários)
 - Deploy: TBD (Lovable/Vercel/Netlify)
 
