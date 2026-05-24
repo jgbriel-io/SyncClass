@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
 import { logger } from "@/lib/logger";
 import { useOptimisticMutation } from "@/hooks/useOptimisticMutation";
-import { isOverdue } from "@/lib/utils/financialStatus";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
 import { QK } from "./queryKeys";
 
@@ -213,44 +212,21 @@ async function fetchFinancialRecords(
 }
 
 async function fetchFinancialSummary(teacherId?: string | null) {
-  const { data, error } = await supabase
-    .from("financial_records")
-    .select("amount, status, due_date, students(teacher_id)");
+  const { data, error } = await supabase.rpc("get_financial_summary", {
+    p_teacher_id: teacherId ?? undefined,
+  });
   if (error) throw error;
 
-  let records = (data || []) as Array<{
-    amount: number;
-    status: string;
-    due_date: string;
-    students?: { teacher_id?: string };
-  }>;
-  if (teacherId)
-    records = records.filter((r) => r.students?.teacher_id === teacherId);
-
-  const summary = {
-    totalPending: 0,
-    totalPaid: 0,
-    totalOverdue: 0,
-    totalReceivable: 0,
-    countPending: 0,
-    countPaid: 0,
-    countOverdue: 0,
+  const row = (data as typeof data)?.[0];
+  return {
+    totalPaid: Number(row?.total_paid) || 0,
+    totalPending: Number(row?.total_pending) || 0,
+    totalOverdue: Number(row?.total_overdue) || 0,
+    totalReceivable: Number(row?.total_receivable) || 0,
+    countPaid: Number(row?.count_paid) || 0,
+    countPending: Number(row?.count_pending) || 0,
+    countOverdue: Number(row?.count_overdue) || 0,
   };
-  records.forEach((record) => {
-    const amount = Number(record.amount) || 0;
-    if (record.status === "pago") {
-      summary.totalPaid += amount;
-      summary.countPaid++;
-    } else if (isOverdue(record.due_date)) {
-      summary.totalOverdue += amount;
-      summary.countOverdue++;
-    } else {
-      summary.totalPending += amount;
-      summary.countPending++;
-    }
-  });
-  summary.totalReceivable = summary.totalPending + summary.totalOverdue;
-  return summary;
 }
 
 // ---------------------------------------------------------------------------

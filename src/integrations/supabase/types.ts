@@ -1580,6 +1580,18 @@ export type Database = {
           title: string;
         }[];
       };
+      get_financial_summary: {
+        Args: { p_teacher_id?: string };
+        Returns: {
+          total_paid: number;
+          total_pending: number;
+          total_overdue: number;
+          total_receivable: number;
+          count_paid: number;
+          count_pending: number;
+          count_overdue: number;
+        }[];
+      };
       get_rate_limit_info: {
         Args: { p_operation: string; p_window_minutes?: number };
         Returns: {
