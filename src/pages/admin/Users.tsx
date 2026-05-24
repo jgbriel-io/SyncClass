@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,9 +34,17 @@ import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { UsersTableSkeleton } from "@/components/ui/table-skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import { UsersTableRow } from "@/components/users/UsersTableRow";
-import { COL as USER_COL, TABLE_MIN_W as USER_TABLE_MIN_W } from "@/components/users/UsersTableRow.constants";
+import {
+  COL as USER_COL,
+  TABLE_MIN_W as USER_TABLE_MIN_W,
+} from "@/components/users/UsersTableRow.constants";
 import { UserDetailSheet } from "@/components/admin/UserDetailSheet";
 import { common } from "@/content";
+import { useUsersFilter } from "@/hooks/useUsersFilter";
+import {
+  getRoleVariant,
+  getRoleLabel,
+} from "@/components/users/userRoleHelpers";
 
 export default function UsersPage() {
   const [filters, setFilters] = useState<UsersFiltersState>({
@@ -47,11 +55,16 @@ export default function UsersPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [forceHardDelete, setForceHardDelete] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(
+    null
+  );
   const [generatedPassword, setGeneratedPassword] = useState<string>("");
-  const [passwordDialogSource, setPasswordDialogSource] = useState<"create" | "reset" | null>(null);
+  const [passwordDialogSource, setPasswordDialogSource] = useState<
+    "create" | "reset" | null
+  >(null);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
-  const [userToResetPassword, setUserToResetPassword] = useState<UserWithProfile | null>(null);
+  const [userToResetPassword, setUserToResetPassword] =
+    useState<UserWithProfile | null>(null);
 
   // Detail sheet state
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
@@ -82,66 +95,7 @@ export default function UsersPage() {
   const updateStudent = useUpdateStudent();
   const updateTeacher = useUpdateTeacher();
 
-  const filteredUsers = useMemo(() => {
-    let result = users.filter((user) => {
-      const name = user.profile?.full_name || "";
-      const email = user.email || "";
-      const searchLower = filters.search.toLowerCase().trim();
-      const matchesSearch =
-        !searchLower ||
-        name.toLowerCase().includes(searchLower) ||
-        email.toLowerCase().includes(searchLower);
-      if (!matchesSearch) return false;
-
-      const storedRole = (user.role?.role ?? user.profile?.role) as string | null;
-      const linkedStudent = user.profile?.student_id;
-      const linkedTeacher = user.profile?.teacher_id;
-      const role =
-        storedRole === "admin"
-          ? "admin"
-          : storedRole === "teacher"
-          ? "teacher"
-          : storedRole === "student"
-          ? "student"
-          : linkedTeacher
-          ? "teacher"
-          : linkedStudent
-          ? "student"
-          : storedRole;
-
-      const matchesRole =
-        filters.role === "all" ||
-        (filters.role === "admin" && role === "admin") ||
-        (filters.role === "teacher" && role === "teacher") ||
-        (filters.role === "student" && role === "student");
-      if (!matchesRole) return false;
-
-      const isActive = user.profile?.active ?? true;
-      const matchesStatus =
-        filters.status === "all" ||
-        (filters.status === "active" && isActive) ||
-        (filters.status === "inactive" && !isActive);
-      if (!matchesStatus) return false;
-
-      return true;
-    });
-
-    const sortBy = filters.sortBy;
-    result = [...result].sort((a, b) => {
-      const nameA = (a.profile?.full_name || a.email || "").toLowerCase();
-      const nameB = (b.profile?.full_name || b.email || "").toLowerCase();
-      const createdA = new Date(a.profile?.created_at || a.created_at || 0).getTime();
-      const createdB = new Date(b.profile?.created_at || b.created_at || 0).getTime();
-
-      if (sortBy === "created_desc") return createdB - createdA;
-      if (sortBy === "created_asc") return createdA - createdB;
-      if (sortBy === "name_asc") return nameA.localeCompare(nameB);
-      if (sortBy === "name_desc") return nameB.localeCompare(nameA);
-      return 0;
-    });
-
-    return result;
-  }, [users, filters]);
+  const filteredUsers = useUsersFilter(users, filters);
 
   const handleCreateOrUpdate = (data: {
     email: string;
@@ -200,7 +154,9 @@ export default function UsersPage() {
               | "instagram"
               | "passante"
               | "outro",
-            status: (data.studentData?.status || "ativo") as "ativo" | "inativo",
+            status: (data.studentData?.status || "ativo") as
+              | "ativo"
+              | "inativo",
           },
           teacherData: data.teacherData,
         },
@@ -215,24 +171,6 @@ export default function UsersPage() {
           },
         }
       );
-    }
-  };
-
-  const getRoleVariant = (role: string | null) => {
-    switch (role) {
-      case "admin": return "destructive";
-      case "student": return "success";
-      case "teacher": return "info";
-      default: return "warning";
-    }
-  };
-
-  const getRoleLabel = (role: string | null) => {
-    switch (role) {
-      case "admin": return "Administrador";
-      case "student": return "Aluno";
-      case "teacher": return "Professor";
-      default: return "Sem privilégio";
     }
   };
 
@@ -262,10 +200,30 @@ export default function UsersPage() {
       {/* Cards informativos */}
       {usersStats && (
         <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
-          <StatCard title="Total de usuários" value={usersStats.total} icon={Users} variant="primary" />
-          <StatCard title="Usuários ativos" value={usersStats.active} icon={UserCheck} variant="success" />
-          <StatCard title="Usuários inativos" value={usersStats.inactive} icon={UserX} variant="muted" />
-          <StatCard title="Novos este mês" value={usersStats.newThisMonth} icon={TrendingUp} variant="primaryHighlight" />
+          <StatCard
+            title="Total de usuários"
+            value={usersStats.total}
+            icon={Users}
+            variant="primary"
+          />
+          <StatCard
+            title="Usuários ativos"
+            value={usersStats.active}
+            icon={UserCheck}
+            variant="success"
+          />
+          <StatCard
+            title="Usuários inativos"
+            value={usersStats.inactive}
+            icon={UserX}
+            variant="muted"
+          />
+          <StatCard
+            title="Novos este mês"
+            value={usersStats.newThisMonth}
+            icon={TrendingUp}
+            variant="primaryHighlight"
+          />
         </div>
       )}
 
@@ -285,33 +243,76 @@ export default function UsersPage() {
       {/* Error state */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-          <p className="text-destructive">Erro ao carregar usuários. Tente novamente.</p>
+          <p className="text-destructive">
+            Erro ao carregar usuários. Tente novamente.
+          </p>
         </div>
       )}
 
       {/* Table */}
-      <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
+      <div
+        className="rounded-lg border bg-card shadow-card overflow-hidden"
+        ref={listTopRef}
+      >
         <div className="overflow-x-auto">
           <Table style={{ minWidth: USER_TABLE_MIN_W }}>
             <TableHeader>
               <TableRow className="border-b bg-muted/50">
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: "1%" }}>
+                <TableHead
+                  className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                  style={{ width: "1%" }}
+                >
                   Status
                 </TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted" style={{ width: USER_COL.USUARIO, minWidth: USER_COL.USUARIO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}>
+                <TableHead
+                  className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
+                  style={{
+                    width: USER_COL.USUARIO,
+                    minWidth: USER_COL.USUARIO,
+                    boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)",
+                  }}
+                >
                   Usuário
                 </TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.PRIVILEGIO, minWidth: USER_COL.PRIVILEGIO }}>
+                <TableHead
+                  className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                  style={{
+                    width: USER_COL.PRIVILEGIO,
+                    minWidth: USER_COL.PRIVILEGIO,
+                  }}
+                >
                   Privilégio
                 </TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: USER_COL.VINCULO, minWidth: USER_COL.VINCULO }}>
+                <TableHead
+                  className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell"
+                  style={{
+                    width: USER_COL.VINCULO,
+                    minWidth: USER_COL.VINCULO,
+                  }}
+                >
                   Vínculo
                 </TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: USER_COL.CADASTRO, minWidth: USER_COL.CADASTRO }}>
+                <TableHead
+                  className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell"
+                  style={{
+                    width: USER_COL.CADASTRO,
+                    minWidth: USER_COL.CADASTRO,
+                  }}
+                >
                   Cadastro
                 </TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.PLACEHOLDER, minWidth: USER_COL.PLACEHOLDER }} aria-label="Placeholder" />
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: USER_COL.ACOES, minWidth: USER_COL.ACOES }}>
+                <TableHead
+                  className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                  style={{
+                    width: USER_COL.PLACEHOLDER,
+                    minWidth: USER_COL.PLACEHOLDER,
+                  }}
+                  aria-label="Placeholder"
+                />
+                <TableHead
+                  className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                  style={{ width: USER_COL.ACOES, minWidth: USER_COL.ACOES }}
+                >
                   Ações
                 </TableHead>
               </TableRow>
@@ -341,13 +342,17 @@ export default function UsersPage() {
                     onReactivateStudent={(studentId) => {
                       updateStudent.mutate(
                         { id: studentId, status: "ativo" },
-                        { onSuccess: () => toast.success(common.toasts.success) }
+                        {
+                          onSuccess: () => toast.success(common.toasts.success),
+                        }
                       );
                     }}
                     onReactivateTeacher={(teacherId) => {
                       updateTeacher.mutate(
                         { id: teacherId, status: "ativo" },
-                        { onSuccess: () => toast.success(common.toasts.success) }
+                        {
+                          onSuccess: () => toast.success(common.toasts.success),
+                        }
                       );
                     }}
                     onDelete={(u) => {
@@ -371,7 +376,11 @@ export default function UsersPage() {
         {!isLoading && filteredUsers.length === 0 && (
           <EmptyState
             icon={User}
-            title={users.length === 0 ? "Nenhum usuário cadastrado" : "Nenhum resultado"}
+            title={
+              users.length === 0
+                ? "Nenhum usuário cadastrado"
+                : "Nenhum resultado"
+            }
             message={
               users.length === 0
                 ? "Clique no botão 'Novo Usuário' para adicionar o primeiro"
@@ -398,7 +407,11 @@ export default function UsersPage() {
         }}
         user={selectedUser}
         onSubmit={handleCreateOrUpdate}
-        isLoading={createUser.isPending || updateRole.isPending || updateProfile.isPending}
+        isLoading={
+          createUser.isPending ||
+          updateRole.isPending ||
+          updateProfile.isPending
+        }
       />
 
       {/* Generated Password Dialog */}
