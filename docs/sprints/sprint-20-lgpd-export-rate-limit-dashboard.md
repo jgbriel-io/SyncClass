@@ -1,7 +1,7 @@
 # Sprint 21 — LGPD Data Export + Rate Limit Dashboard
 
-**Período:** 23/05/2026  
-**Status:** 🟡 Em andamento  
+**Período:** 23/05/2026 – 25/05/2026  
+**Status:** ✅ Concluída  
 **Tipo:** Feature + Compliance  
 **Prioridade:** 🟡 Média
 
@@ -286,7 +286,24 @@ src/
 
 ## Results & Impact
 
-> _A preencher após implementação._
+| Entregável                       | Arquivo                                                | Status |
+| -------------------------------- | ------------------------------------------------------ | ------ |
+| Edge Function export-user-data   | `supabase/functions/export-user-data/index.ts`         | ✅     |
+| Migration get_rate_limit_summary | `supabase/migrations/28_rate_limit_summary_rpc.sql`    | ✅     |
+| Hook useRateLimitDashboard       | `src/hooks/useRateLimitDashboard.ts`                   | ✅     |
+| Página /admin/rate-limits        | `src/pages/admin/RateLimitDashboardPage.tsx`           | ✅     |
+| Rota admin + nav link Shield     | `src/App.tsx`, `src/components/layout/AdminLayout.tsx` | ✅     |
+| Botão "Exportar meus dados"      | `src/components/layout/SettingsPerfilTab.tsx`          | ✅     |
+| QK.RATE_LIMIT_DASHBOARD          | `src/hooks/queryKeys.ts`                               | ✅     |
+| Typedef get_rate_limit_summary   | `src/integrations/supabase/types.ts`                   | ✅     |
+
+**Desvios em relação ao spec:**
+
+- Export button adicionado em `SettingsPerfilTab` (acessível por todos os roles) em vez de páginas individuais student/teacher — escopo mais amplo, sem regressão
+- RPC usa `max_per_user` em vez de `near_limit_count` — equivalente funcional com mais granularidade
+- Audit log de export não implementado — tech debt aceito
+
+**Teste:** 287/287 passando, type-check limpo, commit `7d4079b`.
 
 ## Technical Debt
 
@@ -297,7 +314,8 @@ src/
 
 ## Lessons Learned
 
-> _A preencher após implementação._
+- `supabase/functions/**/` no `.gitignore` ignora diretórios novos de Edge Functions — usar `git add -f` para novas functions
+- `supabase.functions.invoke` retorna dados já parsed; `Content-Disposition` no header da Edge Function não é suficiente para trigger de download automático — precisa criar Blob + anchor no cliente
 
 ## Next Steps
 
