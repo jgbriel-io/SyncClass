@@ -1,7 +1,7 @@
 # Sprint 16 — Refactor: Docs Architecture Organization
 
 **Período:** 21 mai 2026  
-**Status:** 🚧 Em andamento  
+**Status:** ✅ Concluída  
 **Tipo:** Refactor  
 **Prioridade:** 🟡 Média
 
@@ -31,7 +31,7 @@ Documentação técnica do projeto estava desorganizada e difícil de navegar:
 - ✅ Renomear sprints com prefixos descritivos (`sprint-01-mvp-crud-basico-financeiro.md`)
 - ✅ Criar ADRs documentando decisões arquiteturais
 - ✅ Criar guia de troubleshooting com erros comuns
-- ⏳ Revisar e padronizar overviews de backend, database, frontend, security
+- ✅ Revisar e padronizar overviews de backend, database, frontend, security
 
 **Fora do escopo:**
 
