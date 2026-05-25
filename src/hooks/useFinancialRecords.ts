@@ -13,7 +13,7 @@ import {
   TablesUpdate,
 } from "@/integrations/supabase/types";
 import { toast } from "sonner";
-import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
+import { sanitizeErrorMessage } from "@/lib/security/errorHandler";
 import { logger } from "@/lib/logger";
 import { useOptimisticMutation } from "@/hooks/useOptimisticMutation";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";

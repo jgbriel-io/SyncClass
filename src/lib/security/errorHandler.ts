@@ -1,79 +1,123 @@
-/**
- * Error Handler - Sanitização de mensagens de erro
- * Previne exposição de estrutura do banco de dados (VULN-017)
- *
- * @module security/errorHandler
- */
+const ERROR_MESSAGES: Record<string, string> = {
+  duplicate: "Este registro já existe no sistema",
+  foreign_key: "Não é possível realizar esta operação devido a dependências",
+  not_null: "Todos os campos obrigatórios devem ser preenchidos",
+  check_violation: "Os dados fornecidos não atendem aos requisitos",
+  unique_violation: "Este valor já está em uso",
+  grade_range: "A nota deve estar entre 0 e 100",
+  invalid_credentials: "Email ou senha incorretos",
+  email_not_confirmed: "Confirme seu email antes de fazer login",
+  user_not_found: "Usuário não encontrado",
+  session_expired: "Sua sessão expirou. Faça login novamente",
+  permission_denied: "Você não tem permissão para realizar esta ação",
+  unauthorized: "Acesso não autorizado",
+  network: "Erro de conexão. Verifique sua internet e tente novamente",
+  timeout: "A operação demorou muito. Tente novamente",
+  validation: "Os dados fornecidos são inválidos",
+  file_too_large: "O arquivo é muito grande",
+  invalid_file_type: "Tipo de arquivo não permitido",
+  default: "Ocorreu um erro. Tente novamente",
+};
 
-/**
- * Sanitiza mensagens de erro técnicas para mensagens amigáveis
- * Remove informações sensíveis sobre estrutura do banco
- */
-export function sanitizeErrorMessage(error: Error | unknown): string {
-  if (!error) return "Erro desconhecido";
-
-  const message = (error as Error).message?.toLowerCase() || "";
-
-  // Erros de duplicação (unique constraints)
+function detectErrorType(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("grade_range") || m.includes("nota deve estar"))
+    return "grade_range";
   if (
-    message.includes("duplicate key") ||
-    message.includes("unique constraint")
-  ) {
-    if (message.includes("email")) return "Este email já está cadastrado";
-    if (message.includes("phone")) return "Este telefone já está cadastrado";
-    if (message.includes("pix")) return "Esta chave PIX já está em uso";
-    return "Registro duplicado. Verifique os dados";
-  }
-
-  // Erros de chave estrangeira (foreign key)
-  if (message.includes("foreign key") || message.includes("violates")) {
-    return "Operação inválida. Verifique os dados e tente novamente";
-  }
-
-  // Erros de permissão
+    m.includes("duplicate") ||
+    m.includes("already exists") ||
+    m.includes("já cadastrado")
+  )
+    return "duplicate";
+  if (m.includes("foreign key") || m.includes("violates foreign key"))
+    return "foreign_key";
+  if (m.includes("not null") || m.includes("null value")) return "not_null";
+  if (m.includes("check constraint") || m.includes("check violation"))
+    return "check_violation";
+  if (m.includes("unique constraint") || m.includes("unique violation"))
+    return "unique_violation";
+  if (m.includes("invalid credentials") || m.includes("invalid login"))
+    return "invalid_credentials";
+  if (m.includes("email not confirmed")) return "email_not_confirmed";
+  if (m.includes("user not found")) return "user_not_found";
+  if (m.includes("session") && m.includes("expired")) return "session_expired";
   if (
-    message.includes("permission denied") ||
-    message.includes("insufficient_privilege") ||
-    message.includes("policy")
-  ) {
-    return "Você não tem permissão para realizar esta ação";
-  }
-
-  // Erros de validação de dados
+    m.includes("permission denied") ||
+    m.includes("insufficient privileges") ||
+    m.includes("row-level security")
+  )
+    return "permission_denied";
+  if (m.includes("unauthorized") || m.includes("not authorized"))
+    return "unauthorized";
   if (
-    message.includes("invalid input syntax") ||
-    message.includes("check constraint") ||
-    message.includes("violates check")
-  ) {
-    if (message.includes("email")) return "Email inválido";
-    if (message.includes("phone")) return "Telefone inválido";
-    if (message.includes("name")) return "Nome inválido";
-    if (message.includes("grade")) return "Nota deve estar entre 0 e 100";
-    if (message.includes("amount")) return "Valor inválido";
-    if (message.includes("pix")) return "Chave PIX inválida";
-    return "Dados inválidos. Verifique o formulário";
+    m.includes("network") ||
+    m.includes("fetch failed") ||
+    m.includes("connection")
+  )
+    return "network";
+  if (m.includes("timeout") || m.includes("timed out")) return "timeout";
+  if (m.includes("validation") || m.includes("invalid")) return "validation";
+  if (m.includes("file") && m.includes("large")) return "file_too_large";
+  if (m.includes("file type") || m.includes("invalid type"))
+    return "invalid_file_type";
+  return "default";
+}
+
+export function sanitizeErrorMessage(error: unknown): string {
+  if (!error) return ERROR_MESSAGES.default;
+
+  if (typeof error === "string") {
+    const lowerError = error.toLowerCase();
+    const hasTechnicalDetails =
+      lowerError.includes("table") ||
+      lowerError.includes("column") ||
+      lowerError.includes("constraint") ||
+      lowerError.includes("relation") ||
+      lowerError.includes("pg_") ||
+      lowerError.includes("sql") ||
+      lowerError.includes("stack trace") ||
+      lowerError.includes("at ") ||
+      lowerError.includes("error:");
+    if (!hasTechnicalDetails && error.length < 200) return error;
   }
 
-  // Erros de conexão/timeout
-  if (
-    message.includes("network") ||
-    message.includes("timeout") ||
-    message.includes("connection")
+  let message = "";
+  if (error instanceof Error) {
+    message = error.message;
+  } else if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
   ) {
-    return "Erro de conexão. Verifique sua internet";
+    message = String((error as { message: unknown }).message);
+  } else {
+    message = String(error);
   }
 
-  // Erros de autenticação
-  if (
-    message.includes("invalid credentials") ||
-    message.includes("authentication") ||
-    message.includes("unauthorized")
-  ) {
-    return "Credenciais inválidas";
-  }
+  return ERROR_MESSAGES[detectErrorType(message)] ?? ERROR_MESSAGES.default;
+}
 
-  // Erro genérico para outros casos
-  return "Erro ao processar solicitação. Tente novamente";
+export function isNetworkError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  const m = message.toLowerCase();
+  return (
+    m.includes("network") ||
+    m.includes("fetch failed") ||
+    m.includes("connection") ||
+    m.includes("timeout") ||
+    m.includes("load failed")
+  );
+}
+
+export function isPermissionError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  const m = message.toLowerCase();
+  return (
+    m.includes("permission") ||
+    m.includes("unauthorized") ||
+    m.includes("forbidden") ||
+    m.includes("not authorized")
+  );
 }
 
 export function logError(
@@ -85,16 +129,9 @@ export function logError(
   }
 }
 
-/**
- * Handler padrão para erros de mutation
- * Usa sanitização + logging
- */
 export function createErrorHandler(context: string) {
   return (error: Error | unknown) => {
-    // Log completo (não visível ao usuário)
     logError(error, { context });
-
-    // Retorna mensagem sanitizada
     return sanitizeErrorMessage(error);
   };
 }

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
+import { sanitizeErrorMessage } from "@/lib/security/errorHandler";
 import { QK } from "./queryKeys";
 import { toast } from "sonner";
 import type { TablesInsert } from "@/integrations/supabase/types";

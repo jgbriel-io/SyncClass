@@ -12,7 +12,12 @@ import {
   TablesUpdate,
 } from "@/integrations/supabase/types";
 import { toast } from "sonner";
-import { getClassStatusWithTime } from "@/lib/utils/classTime";
+import {
+  getClassStatusWithTime,
+  isClassOverlapError,
+  CLASS_OVERLAP_MESSAGE,
+  validateNoOverlap,
+} from "@/lib/utils/classTime";
 import { QK } from "./queryKeys";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -178,32 +183,6 @@ function getDateRangeForPeriod(period: "week" | "month" | "3months"): {
     from: toLocalDateStr(from),
     to: toLocalDateStr(to),
   };
-}
-
-function validateNoOverlap(items: Array<{ classLog: ClassLogInsert }>): void {
-  if (items.length <= 1) return;
-  const byDate = new Map<string, Array<{ classLog: ClassLogInsert }>>();
-  items.forEach((item) => {
-    const date = item.classLog.class_date;
-    if (!byDate.has(date)) byDate.set(date, []);
-    byDate.get(date)!.push(item);
-  });
-  byDate.forEach((dayItems, date) => {
-    if (dayItems.length <= 1) return;
-    const sorted = dayItems.sort((a, b) =>
-      (a.classLog.start_at || "").localeCompare(b.classLog.start_at || "")
-    );
-    for (let i = 0; i < sorted.length - 1; i++) {
-      const current = sorted[i].classLog;
-      const next = sorted[i + 1].classLog;
-      if ((current.end_at || "") > (next.start_at || "")) {
-        const [yr, mo, dy] = date.split("-");
-        throw new Error(
-          `Aulas se sobrepõem no dia ${dy}/${mo}/${yr}: ${current.start_at}-${current.end_at} e ${next.start_at}-${next.end_at}`
-        );
-      }
-    }
-  });
 }
 
 // ---------------------------------------------------------------------------
@@ -519,20 +498,9 @@ export function useCreateClassLog() {
       toast.success("Aula registrada com sucesso!");
     },
     onError: (error) => {
-      const msg = (error as Error)?.message || "";
-      const code = (error as { code?: string })?.code;
-      const isOverlap =
-        code === "23P01" ||
-        msg.includes("neste horário") ||
-        msg.includes("sobreposição") ||
-        msg.includes("overlap") ||
-        msg.includes("class_logs_no_overlap") ||
-        msg.includes("exclusion constraint") ||
-        msg.includes("conflicting key") ||
-        msg.includes("agendada em");
       toast.error(
-        isOverlap
-          ? "Já existe outra aula neste horário para este professor. Escolha outro intervalo."
+        isClassOverlapError(error)
+          ? CLASS_OVERLAP_MESSAGE
           : "Erro ao registrar aula. Tente novamente."
       );
     },
@@ -608,20 +576,9 @@ export function useCreateClassLogWithFinancial() {
       }
     },
     onError: (error) => {
-      const msg = (error as Error)?.message || "";
-      const code = (error as { code?: string })?.code;
-      const isOverlap =
-        code === "23P01" ||
-        msg.includes("neste horário") ||
-        msg.includes("sobreposição") ||
-        msg.includes("overlap") ||
-        msg.includes("class_logs_no_overlap") ||
-        msg.includes("exclusion constraint") ||
-        msg.includes("conflicting key") ||
-        msg.includes("agendada em");
       toast.error(
-        isOverlap
-          ? "Já existe outra aula neste horário para este professor. Escolha outro intervalo."
+        isClassOverlapError(error)
+          ? CLASS_OVERLAP_MESSAGE
           : "Erro ao registrar aula. Tente novamente."
       );
     },
@@ -746,20 +703,9 @@ export function useUpdateClassLog() {
       toast.success("Registro atualizado com sucesso!");
     },
     onError: (error) => {
-      const msg = (error as Error)?.message || "";
-      const code = (error as { code?: string })?.code;
-      const isOverlap =
-        code === "23P01" ||
-        msg.includes("neste horário") ||
-        msg.includes("sobreposição") ||
-        msg.includes("overlap") ||
-        msg.includes("class_logs_no_overlap") ||
-        msg.includes("exclusion constraint") ||
-        msg.includes("conflicting key") ||
-        msg.includes("agendada em");
       toast.error(
-        isOverlap
-          ? "Já existe outra aula neste horário para este professor. Escolha outro intervalo."
+        isClassOverlapError(error)
+          ? CLASS_OVERLAP_MESSAGE
           : "Erro ao atualizar registro. Tente novamente."
       );
     },
@@ -844,16 +790,10 @@ export function useCreateClassLogPackage() {
     onError: (error) => {
       idempotencyKeyRef.current = null;
 
-      const err = error as Error & { details?: string; code?: string };
+      const err = error as Error & { details?: string };
       const msg = err?.message || "";
       const details = err?.details ? ` (${err.details})` : "";
-      const isOverlap =
-        msg.includes("neste horário") ||
-        msg.includes("sobrepõem") ||
-        msg.includes("overlap") ||
-        msg.includes("Duas aulas") ||
-        msg.includes("agendada em");
-      const displayMsg = isOverlap
+      const displayMsg = isClassOverlapError(error)
         ? msg
         : msg
           ? `${msg}${details}`

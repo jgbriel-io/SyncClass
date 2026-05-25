@@ -6,7 +6,7 @@ import {
   validateAndResizeAvatar,
   type AvatarValidationError,
 } from "@/lib/utils/avatarUpload";
-import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
+import { sanitizeErrorMessage } from "@/lib/security/errorHandler";
 import { toast } from "sonner";
 import type { Enums } from "@/integrations/supabase/types";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";

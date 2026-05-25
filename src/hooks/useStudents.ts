@@ -332,14 +332,16 @@ export function useUpdateStudent() {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
-      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
+      if ("pay_day" in variables && variables.pay_day !== undefined) {
+        queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
+        queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
+      }
       toast.success("Aluno atualizado com sucesso!");
     },
     onError: (error: unknown) => {

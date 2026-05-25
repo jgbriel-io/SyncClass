@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QK } from "./queryKeys";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/integrations/supabase/env";
-import { sanitizeErrorMessage } from "@/lib/utils/errorMessages";
+import { sanitizeErrorMessage } from "@/lib/security/errorHandler";
 import { toast } from "sonner";
 import type { Enums, TablesInsert } from "@/integrations/supabase/types";
 import { logger } from "@/lib/logger";
