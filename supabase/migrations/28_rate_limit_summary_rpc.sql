@@ -19,7 +19,7 @@ AS $$
     COUNT(DISTINCT rlt.user_id)::bigint    AS unique_users,
     MAX(rlt.request_count)::integer        AS max_per_user,
     MIN(rlt.window_start)                  AS window_start
-  FROM public.rate_limit_tracker rlt
+  FROM public.rate_limits rlt
   WHERE rlt.window_start >= NOW() - (p_window_hours || ' hours')::interval
   GROUP BY rlt.operation
   ORDER BY total_requests DESC;
