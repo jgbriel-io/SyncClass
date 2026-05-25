@@ -1600,6 +1600,16 @@ export type Database = {
           window_start: string;
         }[];
       };
+      get_rate_limit_summary: {
+        Args: { p_window_hours?: number };
+        Returns: {
+          operation: string;
+          total_requests: number;
+          unique_users: number;
+          max_per_user: number;
+          window_start: string;
+        }[];
+      };
       get_student_balance: {
         Args: { p_student_id: string };
         Returns: {

@@ -3,12 +3,17 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Upload, Trash2, Wallet } from "lucide-react";
+import { Loader2, Upload, Trash2, Wallet, Download } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { getAvatarLetter } from "@/lib/utils/patterns";
 import { AVATAR_MAX_SIZE_BYTES, AVATAR_MAX_PX } from "@/lib/utils/avatarUpload";
 import { useUploadAvatar, useUpdateMyProfile } from "@/hooks/useUsers";
 import { useTeacherPixKey, useUpdatePixKey } from "@/hooks/useTeachers";
-import { useUpdateProfileName, useUpdateProfileEmail } from "@/hooks/useUserProfileMutations";
+import {
+  useUpdateProfileName,
+  useUpdateProfileEmail,
+} from "@/hooks/useUserProfileMutations";
 import { layout } from "@/content";
 
 const MAX_MB = AVATAR_MAX_SIZE_BYTES / (1024 * 1024);
@@ -23,7 +28,14 @@ interface SettingsPerfilTabProps {
   isTeacher: boolean;
 }
 
-export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teacherId, isTeacher }: SettingsPerfilTabProps) {
+export function SettingsPerfilTab({
+  userId,
+  displayName,
+  email,
+  avatarUrl,
+  teacherId,
+  isTeacher,
+}: SettingsPerfilTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAvatar = useUploadAvatar();
   const updateAvatar = useUpdateMyProfile();
@@ -35,6 +47,7 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
   const [editingEmail, setEditingEmail] = useState(false);
   const [newName, setNewName] = useState(displayName);
   const [newEmail, setNewEmail] = useState(email);
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data: pixKeyData } = useTeacherPixKey(teacherId ?? undefined);
   const [pixKey, setPixKey] = useState("");
@@ -45,7 +58,12 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
     if (pixKeyData) setPixKey(pixKeyData);
   }, [pixKeyData]);
 
-  const isPending = uploadAvatar.isPending || updateAvatar.isPending || updateProfileName.isPending || updateProfileEmail.isPending || updatePixKey.isPending;
+  const isPending =
+    uploadAvatar.isPending ||
+    updateAvatar.isPending ||
+    updateProfileName.isPending ||
+    updateProfileEmail.isPending ||
+    updatePixKey.isPending;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -83,25 +101,101 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
     );
   };
 
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        return;
+      }
+      const res = await supabase.functions.invoke("export-user-data", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error) {
+        const msg = (res.error as { message?: string })?.message ?? "";
+        if (msg.includes("429") || msg.toLowerCase().includes("rate limit")) {
+          toast.error("Limite atingido. Tente novamente em 1 hora.");
+        } else {
+          toast.error("Erro ao exportar dados. Tente novamente.");
+        }
+        return;
+      }
+      const json = JSON.stringify(res.data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `syncclass-export-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Dados exportados com sucesso!");
+    } catch (_e) {
+      toast.error("Erro ao exportar dados. Tente novamente.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-4 pt-4">
       {/* Avatar */}
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
         <Avatar className="h-20 w-20">
           <AvatarImage src={avatarUrl || undefined} alt="" />
-          <AvatarFallback className="text-xl">{getAvatarLetter(displayName)}</AvatarFallback>
+          <AvatarFallback className="text-xl">
+            {getAvatarLetter(displayName)}
+          </AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-2 w-full sm:w-auto">
           <Label>{s.avatarLabel}</Label>
-          <p className="text-xs text-muted-foreground">Máx. {MAX_MB} MB, até {AVATAR_MAX_PX}×{AVATAR_MAX_PX} px. JPEG, PNG ou WebP.</p>
+          <p className="text-xs text-muted-foreground">
+            Máx. {MAX_MB} MB, até {AVATAR_MAX_PX}×{AVATAR_MAX_PX} px. JPEG, PNG
+            ou WebP.
+          </p>
           <div className="flex flex-wrap gap-2">
-            <Input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileChange} />
-            <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isPending}>
-              {uploadAvatar.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />{s.uploading}</> : <><Upload className="h-4 w-4" />{s.uploadButton}</>}
+            <Input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isPending}
+            >
+              {uploadAvatar.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {s.uploading}
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4" />
+                  {s.uploadButton}
+                </>
+              )}
             </Button>
             {avatarUrl && (
-              <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => updateAvatar.mutate({ userId, avatar_url: null })} disabled={isPending}>
-                <Trash2 className="h-4 w-4" />{s.removeButton}
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="text-destructive hover:text-destructive"
+                onClick={() =>
+                  updateAvatar.mutate({ userId, avatar_url: null })
+                }
+                disabled={isPending}
+              >
+                <Trash2 className="h-4 w-4" />
+                {s.removeButton}
               </Button>
             )}
           </div>
@@ -112,14 +206,46 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
       <div className="space-y-2">
         <Label htmlFor="settings-name">{s.nameLabel}</Label>
         <div className="flex gap-2">
-          <Input id="settings-name" value={editingName ? newName : displayName} onChange={(e) => setNewName(e.target.value)} readOnly={!editingName} className={editingName ? "" : "bg-muted/50"} />
+          <Input
+            id="settings-name"
+            value={editingName ? newName : displayName}
+            onChange={(e) => setNewName(e.target.value)}
+            readOnly={!editingName}
+            className={editingName ? "" : "bg-muted/50"}
+          />
           {editingName ? (
             <>
-              <Button size="sm" onClick={handleUpdateName} disabled={isPending || !newName.trim()}>{updateProfileName.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
-              <Button size="sm" variant="ghost" onClick={() => { setEditingName(false); setNewName(displayName); }} disabled={isPending}>{s.cancelButton}</Button>
+              <Button
+                size="sm"
+                onClick={handleUpdateName}
+                disabled={isPending || !newName.trim()}
+              >
+                {updateProfileName.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  s.saveButton
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setEditingName(false);
+                  setNewName(displayName);
+                }}
+                disabled={isPending}
+              >
+                {s.cancelButton}
+              </Button>
             </>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => setEditingName(true)}>{s.editButton}</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEditingName(true)}
+            >
+              {s.editButton}
+            </Button>
           )}
         </div>
       </div>
@@ -128,37 +254,138 @@ export function SettingsPerfilTab({ userId, displayName, email, avatarUrl, teach
       <div className="space-y-2">
         <Label htmlFor="settings-email">{s.emailLabel}</Label>
         <div className="flex gap-2">
-          <Input id="settings-email" type="email" value={editingEmail ? newEmail : email} onChange={(e) => setNewEmail(e.target.value)} readOnly={!editingEmail} className={editingEmail ? "" : "bg-muted/50"} />
+          <Input
+            id="settings-email"
+            type="email"
+            value={editingEmail ? newEmail : email}
+            onChange={(e) => setNewEmail(e.target.value)}
+            readOnly={!editingEmail}
+            className={editingEmail ? "" : "bg-muted/50"}
+          />
           {editingEmail ? (
             <>
-              <Button size="sm" onClick={handleUpdateEmail} disabled={isPending || !newEmail.trim()}>{updateProfileEmail.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
-              <Button size="sm" variant="ghost" onClick={() => { setEditingEmail(false); setNewEmail(email); }} disabled={isPending}>{s.cancelButton}</Button>
+              <Button
+                size="sm"
+                onClick={handleUpdateEmail}
+                disabled={isPending || !newEmail.trim()}
+              >
+                {updateProfileEmail.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  s.saveButton
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setEditingEmail(false);
+                  setNewEmail(email);
+                }}
+                disabled={isPending}
+              >
+                {s.cancelButton}
+              </Button>
             </>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => setEditingEmail(true)}>{s.editButton}</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEditingEmail(true)}
+            >
+              {s.editButton}
+            </Button>
           )}
         </div>
-        {editingEmail && <p className="text-xs text-amber-600 dark:text-amber-400">{s.emailConfirmHint}</p>}
+        {editingEmail && (
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            {s.emailConfirmHint}
+          </p>
+        )}
       </div>
 
       {/* PIX */}
       {isTeacher && (
         <div className="space-y-2">
-          <Label htmlFor="settings-pix-key" className="flex items-center gap-2"><Wallet className="h-4 w-4" />{s.pixKeyLabel}</Label>
+          <Label htmlFor="settings-pix-key" className="flex items-center gap-2">
+            <Wallet className="h-4 w-4" />
+            {s.pixKeyLabel}
+          </Label>
           <div className="flex gap-2">
-            <Input id="settings-pix-key" value={pixKey} onChange={(e) => setPixKey(e.target.value)} readOnly={!editingPixKey} placeholder={s.pixKeyPlaceholder} className={editingPixKey ? "" : "bg-muted/50"} />
+            <Input
+              id="settings-pix-key"
+              value={pixKey}
+              onChange={(e) => setPixKey(e.target.value)}
+              readOnly={!editingPixKey}
+              placeholder={s.pixKeyPlaceholder}
+              className={editingPixKey ? "" : "bg-muted/50"}
+            />
             {editingPixKey ? (
               <>
-                <Button size="sm" onClick={handleUpdatePixKey} disabled={isPending}>{updatePixKey.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : s.saveButton}</Button>
-                <Button size="sm" variant="ghost" onClick={() => setEditingPixKey(false)} disabled={isPending}>{s.cancelButton}</Button>
+                <Button
+                  size="sm"
+                  onClick={handleUpdatePixKey}
+                  disabled={isPending}
+                >
+                  {updatePixKey.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    s.saveButton
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setEditingPixKey(false)}
+                  disabled={isPending}
+                >
+                  {s.cancelButton}
+                </Button>
               </>
             ) : (
-              <Button size="sm" variant="outline" onClick={() => setEditingPixKey(true)}>{s.editButton}</Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setEditingPixKey(true)}
+              >
+                {s.editButton}
+              </Button>
             )}
           </div>
           <p className="text-xs text-muted-foreground">{s.pixKeyHint}</p>
         </div>
       )}
+
+      {/* Exportar dados (LGPD) */}
+      <div className="space-y-2 border-t pt-4">
+        <Label className="flex items-center gap-2">
+          <Download className="h-4 w-4" />
+          Exportar meus dados
+        </Label>
+        <p className="text-xs text-muted-foreground">
+          Baixe uma cópia dos seus dados em formato JSON (LGPD, art. 18, inc.
+          V). Limite: 3 exportações por hora.
+        </p>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={handleExportData}
+          disabled={isExporting || isPending}
+        >
+          {isExporting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Exportando...
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4" />
+              Exportar meus dados
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

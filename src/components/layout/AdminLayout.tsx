@@ -1,5 +1,10 @@
 ﻿import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -20,6 +25,7 @@ import {
   Bell,
   Settings,
   FileText,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
@@ -53,6 +59,7 @@ const navigation = [
   { name: "Financeiro", href: "/admin/financial", icon: CreditCard },
   { name: "Professores", href: "/admin/teachers", icon: Users },
   { name: "Usuários", href: "/admin/users", icon: Link2 },
+  { name: "Rate Limits", href: "/admin/rate-limits", icon: Shield },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
@@ -76,7 +83,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
   }, [location.pathname, searchParams]);
   const { data: profile } = useCurrentUserProfile(user?.id);
-  const { data: pendingClasses = [], isLoading: loadingNotifications } = usePendingEvaluationClassLogs();
+  const { data: pendingClasses = [], isLoading: loadingNotifications } =
+    usePendingEvaluationClassLogs();
 
   useEffect(() => {
     const path = location.pathname;
@@ -85,12 +93,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
       queryClient.invalidateQueries({ queryKey: ["upcoming_payments"] });
       queryClient.invalidateQueries({ queryKey: ["birthdays_this_month"] });
-      queryClient.invalidateQueries({ queryKey: ["new_students_and_classes_by_month"] });
+      queryClient.invalidateQueries({
+        queryKey: ["new_students_and_classes_by_month"],
+      });
       queryClient.invalidateQueries({ queryKey: ["today_classes"] });
     } else if (path.startsWith("/admin/students")) {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["students_with_stats"] });
-      queryClient.invalidateQueries({ queryKey: ["class_logs_by_student_ids"] });
+      queryClient.invalidateQueries({
+        queryKey: ["class_logs_by_student_ids"],
+      });
     } else if (path.startsWith("/admin/classes")) {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
@@ -119,7 +131,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   const userInitial = user?.email?.charAt(0).toUpperCase() || "A";
-  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Admin";
+  const userName =
+    user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Admin";
 
   return (
     <div className="min-h-screen bg-background">
@@ -136,25 +149,31 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
           sidebarCollapsed ? "w-[72px]" : "w-64",
-          mobileOpen ? "translate-x-0" : "-translate-x-full laptop:translate-x-0"
+          mobileOpen
+            ? "translate-x-0"
+            : "-translate-x-full laptop:translate-x-0"
         )}
       >
         {/* Logo */}
-        <div className={cn(
-          "flex h-16 items-center border-b border-sidebar-border",
-          sidebarCollapsed ? "justify-center px-2" : "justify-between px-4"
-        )}>
+        <div
+          className={cn(
+            "flex h-16 items-center border-b border-sidebar-border",
+            sidebarCollapsed ? "justify-center px-2" : "justify-between px-4"
+          )}
+        >
           <Link to="/admin" className="flex items-center gap-4">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 flex items-center justify-center shadow-lg">
-              <span className="text-sidebar-primary-foreground font-bold text-base">{layout.logo.initial}</span>
+              <span className="text-sidebar-primary-foreground font-bold text-base">
+                {layout.logo.initial}
+              </span>
             </div>
             {!sidebarCollapsed && (
-            <span className="text-base font-semibold text-sidebar-foreground tracking-tight">
+              <span className="text-base font-semibold text-sidebar-foreground tracking-tight">
                 {common.app.name}
               </span>
             )}
           </Link>
-          
+
           {/* Mobile close */}
           <button
             onClick={() => setMobileOpen(false)}
@@ -182,7 +201,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                   )}
                 >
-                  <item.icon className={cn("h-5 w-5 shrink-0", isActive && "drop-shadow-sm")} />
+                  <item.icon
+                    className={cn(
+                      "h-5 w-5 shrink-0",
+                      isActive && "drop-shadow-sm"
+                    )}
+                  />
                   {!sidebarCollapsed && <span>{item.name}</span>}
                 </Link>
               );
@@ -200,7 +224,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               sidebarCollapsed && "justify-center px-2"
             )}
           >
-            <ChevronLeft className={cn("h-5 w-5 transition-transform duration-300", sidebarCollapsed && "rotate-180")} />
+            <ChevronLeft
+              className={cn(
+                "h-5 w-5 transition-transform duration-300",
+                sidebarCollapsed && "rotate-180"
+              )}
+            />
             {!sidebarCollapsed && <span>{layout.sidebar.collapse}</span>}
           </button>
 
@@ -218,16 +247,21 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             ) : (
               <LogOut className="h-5 w-5" />
             )}
-            {!sidebarCollapsed && (isLoggingOut ? layout.sidebar.loggingOut : layout.sidebar.logout)}
+            {!sidebarCollapsed &&
+              (isLoggingOut
+                ? layout.sidebar.loggingOut
+                : layout.sidebar.logout)}
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <div className={cn(
-        "flex flex-col min-h-screen transition-all duration-300 ease-in-out",
-        sidebarCollapsed ? "laptop:pl-[72px]" : "laptop:pl-64"
-      )}>
+      <div
+        className={cn(
+          "flex flex-col min-h-screen transition-all duration-300 ease-in-out",
+          sidebarCollapsed ? "laptop:pl-[72px]" : "laptop:pl-64"
+        )}
+      >
         {/* Top bar */}
         <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 tablet:px-5 laptop:px-6 desktop:px-8">
           {/* Left: menu + search */}
@@ -240,7 +274,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             >
               <Menu className="h-6 w-6" />
             </button>
-            <form onSubmit={handleSearchSubmit} className="hidden tablet:block w-full max-w-sm">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="hidden tablet:block w-full max-w-sm"
+            >
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <Input
@@ -268,7 +305,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 >
                   <Bell className="h-5 w-5 text-muted-foreground" />
                   {pendingClasses.length > 0 && (
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" aria-hidden />
+                    <span
+                      className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive"
+                      aria-hidden
+                    />
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -294,9 +334,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             to="/admin/classes?status=avaliacao_pendente"
                             className="block rounded-md px-2 py-2 text-sm hover:bg-muted focus:bg-muted focus:outline-none"
                           >
-                            <span className="font-medium text-foreground">{layout.topbar.notificationPending}</span>
+                            <span className="font-medium text-foreground">
+                              {layout.topbar.notificationPending}
+                            </span>
                             <p className="mt-0.5 truncate text-muted-foreground">
-                              {(log.students as { name?: string } | null)?.name ?? "Aluno"} · {log.class_date && format(new Date(log.class_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
+                              {(log.students as { name?: string } | null)
+                                ?.name ?? "Aluno"}{" "}
+                              ·{" "}
+                              {log.class_date &&
+                                format(
+                                  new Date(log.class_date + "T12:00:00"),
+                                  "dd/MM/yyyy",
+                                  { locale: ptBR }
+                                )}
                             </p>
                           </Link>
                         </li>
@@ -312,7 +362,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2 px-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
+                    <AvatarImage
+                      src={profile?.avatar_url ?? undefined}
+                      alt=""
+                    />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-sm font-medium">
                       {userInitial}
                     </AvatarFallback>
@@ -325,12 +378,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>{layout.topbar.myAccount}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2" onClick={() => setSettingsOpen(true)}>
+                <DropdownMenuItem
+                  className="gap-2"
+                  onClick={() => setSettingsOpen(true)}
+                >
                   <Settings className="h-4 w-4" />
                   {layout.topbar.settings}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={handleLogout}
                   disabled={isLoggingOut}
                   className="gap-2 text-destructive focus:text-destructive"
@@ -340,7 +396,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   ) : (
                     <LogOut className="h-4 w-4" />
                   )}
-                  {isLoggingOut ? layout.sidebar.loggingOut : layout.sidebar.logout}
+                  {isLoggingOut
+                    ? layout.sidebar.loggingOut
+                    : layout.sidebar.logout}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -348,8 +406,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </header>
 
         {/* Page content - flex-1 faz crescer para empurrar o footer para baixo */}
-        <main className="flex-1 p-4 tablet:p-5 laptop:p-6 desktop:p-8 animate-fade-in">{children}</main>
-        
+        <main className="flex-1 p-4 tablet:p-5 laptop:p-6 desktop:p-8 animate-fade-in">
+          {children}
+        </main>
+
         {/* Footer - sempre no bottom */}
         <Footer />
       </div>

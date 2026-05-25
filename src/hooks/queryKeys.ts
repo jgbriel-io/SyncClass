@@ -63,6 +63,9 @@ export const QK = {
   TEACHER_BIRTHDAYS: "teacher-birthdays",
   TEACHER_NEW_STUDENTS_AND_CLASSES_BY_MONTH:
     "teacher-new-students-and-classes-by-month",
+
+  // Admin - Rate limit dashboard
+  RATE_LIMIT_DASHBOARD: "rate_limit_dashboard",
 } as const;
 
 export type QueryKey = (typeof QK)[keyof typeof QK];

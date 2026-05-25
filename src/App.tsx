@@ -2,7 +2,11 @@ import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthRedirect } from "@/components/auth/AuthRedirect";
@@ -31,21 +35,34 @@ const FinancialPage = lazy(() => import("./pages/admin/Financial"));
 const ClassesPage = lazy(() => import("./pages/admin/Classes"));
 const AdminTeachersPage = lazy(() => import("./pages/admin/Teachers"));
 const AdminActivitiesPage = lazy(() => import("./pages/admin/Activities"));
+const RateLimitDashboardPage = lazy(
+  () => import("./pages/admin/RateLimitDashboardPage")
+);
 
 // Lazy loading - páginas de professor
 const TeacherHome = lazy(() => import("./pages/teacher/TeacherHome"));
-const TeacherStudentsPage = lazy(() => import("./pages/teacher/TeacherStudents"));
-const TeacherFinancialPage = lazy(() => import("./pages/teacher/TeacherFinancial"));
-const TeacherOverviewPage = lazy(() => import("./pages/teacher/TeacherOverview"));
+const TeacherStudentsPage = lazy(
+  () => import("./pages/teacher/TeacherStudents")
+);
+const TeacherFinancialPage = lazy(
+  () => import("./pages/teacher/TeacherFinancial")
+);
+const TeacherOverviewPage = lazy(
+  () => import("./pages/teacher/TeacherOverview")
+);
 const TeacherClassesPage = lazy(() => import("./pages/teacher/TeacherClasses"));
-const TeacherActivitiesPage = lazy(() => import("./pages/teacher/TeacherActivities"));
+const TeacherActivitiesPage = lazy(
+  () => import("./pages/teacher/TeacherActivities")
+);
 
 // Lazy loading - páginas de estudante
 const StudentHome = lazy(() => import("./pages/student/StudentHome"));
 const StudentHistory = lazy(() => import("./pages/student/StudentHistory"));
 const StudentFinancial = lazy(() => import("./pages/student/StudentFinancial"));
 const StudentCheckout = lazy(() => import("./pages/student/StudentCheckout"));
-const StudentActivitiesPage = lazy(() => import("./pages/student/StudentActivities"));
+const StudentActivitiesPage = lazy(
+  () => import("./pages/student/StudentActivities")
+);
 const StudentPanel = lazy(() => import("./pages/StudentPanel"));
 
 // Lazy loading - outras páginas
@@ -80,17 +97,17 @@ function AppContent() {
   useEffect(() => {
     const monitorStorage = () => {
       const stats = checkStorageQuota();
-      
+
       if (stats.shouldClear) {
         // Limpar cache mantendo apenas auth
-        const authKeys = Object.keys(localStorage).filter(key => 
-          key.startsWith('sb-') || key.includes('auth')
+        const authKeys = Object.keys(localStorage).filter(
+          (key) => key.startsWith("sb-") || key.includes("auth")
         );
-        
+
         clearStorageExcept(authKeys);
         queryClient.clear();
-        
-        toast.info('Cache limpo automaticamente para liberar espaço', {
+
+        toast.info("Cache limpo automaticamente para liberar espaço", {
           description: `Uso anterior: ${stats.usedMB}MB / 5MB`,
         });
       }
@@ -98,10 +115,10 @@ function AppContent() {
 
     // Verificar imediatamente
     monitorStorage();
-    
+
     // Verificar a cada 1 minuto
     const interval = setInterval(monitorStorage, 60000);
-    
+
     return () => clearInterval(interval);
   }, [queryClient]);
 
@@ -135,7 +152,7 @@ function AppContent() {
             }
           />
           <Route path="/redefinir-senha" element={<ResetPassword />} />
-          
+
           {/* Policies - Página pública */}
           <Route path="/policies" element={<Policies />} />
 
@@ -149,6 +166,7 @@ function AppContent() {
             <Route path="activities" element={<AdminActivitiesPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="teachers" element={<AdminTeachersPage />} />
+            <Route path="rate-limits" element={<RateLimitDashboardPage />} />
             <Route path="policies" element={<Policies />} />
           </Route>
 
@@ -174,7 +192,10 @@ function AppContent() {
             <Route index element={<StudentHome />} />
             <Route path="history" element={<StudentHistory />} />
             <Route path="financial" element={<StudentFinancial />} />
-            <Route path="financial/checkout/:recordId" element={<StudentCheckout />} />
+            <Route
+              path="financial/checkout/:recordId"
+              element={<StudentCheckout />}
+            />
             <Route path="activities" element={<StudentActivitiesPage />} />
             <Route path="policies" element={<Policies />} />
           </Route>
@@ -185,8 +206,8 @@ function AppContent() {
       </Suspense>
 
       {/* Modal de troca de senha obrigatória */}
-      <ChangePasswordDialog 
-        open={mustChangePassword} 
+      <ChangePasswordDialog
+        open={mustChangePassword}
         onSuccess={onPasswordChanged}
       />
     </>
