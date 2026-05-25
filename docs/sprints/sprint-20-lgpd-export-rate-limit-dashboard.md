@@ -1,4 +1,4 @@
-# Sprint 21 — LGPD Data Export + Rate Limit Dashboard
+# Sprint 20 — LGPD Data Export + Rate Limit Dashboard
 
 **Período:** 23/05/2026 – 25/05/2026  
 **Status:** ✅ Concluída  
@@ -319,8 +319,8 @@ src/
 
 ## Next Steps
 
-1. **Sprint 22:** Correções arquiteturais — God hooks (ARQ-001: `useUpdateStudent`, ARQ-006: `useUserMutations`)
-2. **Sprint 23:** Performance — N+1 queries (ARQ-005: `useFinancialRecords`), query keys inconsistentes (ARQ-003)
+1. **Sprint 21:** Tech Debt Backlog — God hooks, race conditions, N+1 queries ([sprint-21](./sprint-21-tech-debt-backlog.md))
+2. **Sprint 22:** Frontend Quality — Code review fixes, validação, state management ([sprint-22](./sprint-22-frontend-quality-fixes.md))
 
 ## References
 

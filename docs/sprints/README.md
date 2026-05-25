@@ -45,13 +45,20 @@ Sprints documentam desenvolvimento incremental do SyncClass. Cada sprint = conju
 | Sprint 17 | 21 mai 2026        | Refactor: TCC Documentation Review           | ✅ Implementada | [sprint-17](./sprint-17-refactor-tcc-documentation-review.md)       |
 | Sprint 18 | 22 mai 2026        | Consolidação & Code Review                   | ✅ Implementada | [sprint-18](./sprint-18-consolidacao-problemas-identificados.md)    |
 | Sprint 19 | 22–23 mai 2026     | Security: LGPD Anonymization + Rate Limiting | ✅ Implementada | [sprint-19](./sprint-19-lgpd-rate-limiting.md)                      |
-| Sprint 20 | 23 mai 2026        | Feature: LGPD Export + Rate Limit Dashboard  | 🟡 Em andamento | [sprint-20](./sprint-20-lgpd-export-rate-limit-dashboard.md)        |
+| Sprint 20 | 23–25 mai 2026     | Feature: LGPD Export + Rate Limit Dashboard  | ✅ Implementada | [sprint-20](./sprint-20-lgpd-export-rate-limit-dashboard.md)        |
+| Sprint 21 | 24 mai 2026        | Refactor: Tech Debt Backlog (pós-MVP)        | ✅ Implementada | [sprint-21](./sprint-21-tech-debt-backlog.md)                       |
+| Sprint 22 | 25 mai 2026        | Fix: Frontend Quality (code review)          | ⬜ Planejada    | [sprint-22](./sprint-22-frontend-quality-fixes.md)                  |
+| Sprint 23 | 25 mai 2026        | Fix: Backend Quality (code review)           | ⬜ Planejada    | [sprint-23](./sprint-23-backend-quality-fixes.md)                   |
+| Sprint 24 | 25 mai 2026        | Security: RLS Full Audit                     | ⬜ Planejada    | [sprint-24](./sprint-24-rls-audit.md)                               |
+| Sprint 25 | 25 mai 2026        | DB: Database Structural Analysis             | ⬜ Planejada    | [sprint-25](./sprint-25-database-analysis.md)                       |
+| Sprint 26 | 25 mai 2026        | Security: Full Security Audit                | ⬜ Planejada    | [sprint-26](./sprint-26-security-audit.md)                          |
+| Sprint 27 | 25 mai 2026        | Security: Supabase Advisors + npm audit      | ⬜ Planejada    | [sprint-27](./sprint-27-supabase-advisors.md)                       |
 
 **Resumo:**
 
-- **Implementadas:** 19 sprints (1–19)
-- **Em andamento:** 1 sprint (20)
-- **Total:** 20 sprints documentadas
+- **Implementadas:** 21 sprints (1–21)
+- **Planejadas:** 6 sprints (22–27)
+- **Total:** 27 sprints documentadas
 
 ---
 

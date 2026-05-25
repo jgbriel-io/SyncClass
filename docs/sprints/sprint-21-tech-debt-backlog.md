@@ -1,4 +1,4 @@
-# Sprint 22 — Tech Debt Backlog (pós-MVP)
+# Sprint 21 — Tech Debt Backlog (pós-MVP)
 
 **Período:** 24/05/2026  
 **Status:** ✅ Concluída  
