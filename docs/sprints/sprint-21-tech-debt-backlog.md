@@ -1,7 +1,7 @@
 # Sprint 22 — Tech Debt Backlog (pós-MVP)
 
-**Período:** A definir  
-**Status:** 🔴 Não Iniciada  
+**Período:** 24/05/2026  
+**Status:** ✅ Concluída  
 **Tipo:** Refatoração + Performance
 
 ## Contexto

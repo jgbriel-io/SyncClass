@@ -191,7 +191,7 @@ function getDateRangeForPeriod(period: "week" | "month" | "3months"): {
 
 const CLASS_LOG_SELECT = `
   *,
-  students ( name, teacher_id ),
+  students!inner ( name, teacher_id ),
   teachers ( name ),
   financial_records (
     id, status, amount, due_date,
@@ -257,18 +257,7 @@ async function fetchClassLogs(
     (filters?.teacherId !== "all" ? filters?.teacherId : undefined);
 
   if (effectiveTeacherId) {
-    const { data: teacherStudentIds } = await supabase
-      .from("students")
-      .select("id")
-      .eq("teacher_id", effectiveTeacherId);
-    if (teacherStudentIds && teacherStudentIds.length > 0) {
-      q = q.in(
-        "student_id",
-        teacherStudentIds.map((s) => s.id)
-      );
-    } else {
-      return { list: [], count: 0 };
-    }
+    q = q.eq("students.teacher_id", effectiveTeacherId);
   }
 
   if (filters?.studentId && filters.studentId !== "all")
@@ -324,77 +313,120 @@ async function fetchPendingEvaluationClassLogs(): Promise<
 }
 
 async function fetchAvailableClassLogsForStudent(studentId: string) {
-  const { data: classLogs, error: classLogsError } = await supabase
-    .from("class_logs")
-    .select("*")
-    .eq("student_id", studentId)
-    .order("class_date", { ascending: false });
+  const [
+    { data: classLogs, error: classLogsError },
+    { data: financialRecords, error: financialError },
+  ] = await Promise.all([
+    supabase
+      .from("class_logs")
+      .select("*")
+      .eq("student_id", studentId)
+      .order("class_date", { ascending: false }),
+    supabase
+      .from("financial_records")
+      .select("class_log_id")
+      .eq("student_id", studentId)
+      .not("class_log_id", "is", null),
+  ]);
   if (classLogsError) throw classLogsError;
-
-  const { data: financialRecords, error: financialError } = await supabase
-    .from("financial_records")
-    .select("class_log_id")
-    .eq("student_id", studentId)
-    .not("class_log_id", "is", null);
   if (financialError) throw financialError;
 
   const usedClassLogIds = new Set(
     financialRecords?.map((r) => r.class_log_id).filter(Boolean) || []
   );
 
-  const { data: packageLinks } = await supabase
+  const { data: packageLinks, error: packageLinksError } = await supabase
     .from("financial_record_class_logs")
     .select("class_log_id")
     .in("class_log_id", classLogs?.map((l) => l.id) ?? []);
+  if (packageLinksError) throw packageLinksError;
   packageLinks?.forEach((r) => usedClassLogIds.add(r.class_log_id));
 
   return classLogs?.filter((log) => !usedClassLogIds.has(log.id)) || [];
 }
 
 async function fetchClassLogsSummary(teacherId?: string | null) {
-  let query = supabase.from("class_logs").select("attendance, grade");
-  if (teacherId) {
-    const { data: teacherStudentIds } = await supabase
-      .from("students")
-      .select("id")
-      .eq("teacher_id", teacherId);
-    if (teacherStudentIds && teacherStudentIds.length > 0) {
-      query = query.in(
-        "student_id",
-        teacherStudentIds.map((s) => s.id)
-      );
-    } else {
-      return {
-        totalClasses: 0,
-        totalPresent: 0,
-        totalAbsent: 0,
-        averageGrade: 0,
-        gradesCount: 0,
-        gradesSum: 0,
-      };
-    }
-  }
-  const { data, error } = await query;
-  if (error) throw error;
-  const summary = {
-    totalClasses: data.length,
-    totalPresent: 0,
-    totalAbsent: 0,
-    averageGrade: 0,
-    gradesCount: 0,
-    gradesSum: 0,
-  };
-  data.forEach((log) => {
-    if (log.attendance) summary.totalPresent++;
-    else summary.totalAbsent++;
-    if (log.grade !== null) {
-      summary.gradesSum += Number(log.grade);
-      summary.gradesCount++;
-    }
+  const { data, error } = await supabase.rpc("get_class_logs_summary", {
+    p_teacher_id: teacherId ?? null,
   });
-  if (summary.gradesCount > 0)
-    summary.averageGrade = summary.gradesSum / summary.gradesCount;
-  return summary;
+  if (error) throw error;
+  const row = data as {
+    totalClasses: number;
+    totalPresent: number;
+    totalAbsent: number;
+    gradesCount: number;
+    gradesSum: number;
+    averageGrade: number;
+  } | null;
+  return {
+    totalClasses: Number(row?.totalClasses) || 0,
+    totalPresent: Number(row?.totalPresent) || 0,
+    totalAbsent: Number(row?.totalAbsent) || 0,
+    averageGrade: Number(row?.averageGrade) || 0,
+    gradesCount: Number(row?.gradesCount) || 0,
+    gradesSum: Number(row?.gradesSum) || 0,
+  };
+}
+
+async function recalculateAndUpdatePackageFinancial(
+  packageFinancialRecordId: string,
+  dueDate?: string
+): Promise<void> {
+  const { data: packageLinks, error: linksError } = await supabase
+    .from("financial_record_class_logs")
+    .select("class_log_id")
+    .eq("financial_record_id", packageFinancialRecordId);
+  if (linksError) throw linksError;
+
+  const classLogIds = packageLinks?.map((l) => l.class_log_id) || [];
+  const { data: packageClasses, error: classesError } = await supabase
+    .from("class_logs")
+    .select("duration_minutes, student_id")
+    .in("id", classLogIds);
+  if (classesError) throw classesError;
+
+  if (!packageClasses?.length) return;
+
+  const { data: student, error: studentError } = await supabase
+    .from("students")
+    .select("hourly_rate")
+    .eq("id", packageClasses[0].student_id)
+    .single();
+  if (studentError) throw studentError;
+
+  const totalMinutes = packageClasses.reduce(
+    (sum, cls) => sum + (cls.duration_minutes || 0),
+    0
+  );
+  if (student?.hourly_rate == null) return;
+  const newAmount = (totalMinutes / 60) * student.hourly_rate;
+
+  const updatePayload: { amount: number; due_date?: string } = {
+    amount: newAmount,
+  };
+  if (dueDate !== undefined) updatePayload.due_date = dueDate;
+
+  const { error: updateError } = await supabase
+    .from("financial_records")
+    .update(updatePayload)
+    .eq("id", packageFinancialRecordId);
+  if (updateError) throw updateError;
+}
+
+async function applyFinancialRecordUpdate(
+  financialRecordId: string,
+  dueDate?: string,
+  amount?: number
+): Promise<void> {
+  const update: { due_date?: string; amount?: number } = {};
+  if (dueDate !== undefined) update.due_date = dueDate;
+  if (amount != null && amount > 0) update.amount = amount;
+  if (!Object.keys(update).length) return;
+  const { error } = await supabase
+    .from("financial_records")
+    .update(update)
+    .eq("id", financialRecordId);
+  if (error) throw error;
 }
 
 async function createClassLogFn(log: ClassLogInsert) {
@@ -601,10 +633,7 @@ export function useUpdateClassLog() {
         .select("financial_record_id")
         .eq("class_log_id", id)
         .maybeSingle();
-
       if (linkError) throw linkError;
-
-      const isPackage = !!packageLink?.financial_record_id;
 
       const { data, error } = await supabase
         .from("class_logs")
@@ -612,77 +641,19 @@ export function useUpdateClassLog() {
         .eq("id", id)
         .select()
         .single();
-
       if (error) throw error;
 
       if (financialRecordId) {
-        const financialUpdate: { due_date?: string; amount?: number } = {};
-        if (dueDate) financialUpdate.due_date = dueDate;
-
-        if (isPackage && updates.duration_minutes !== undefined) {
-          const { data: packageLinks, error: linksError } = await supabase
-            .from("financial_record_class_logs")
-            .select("class_log_id")
-            .eq("financial_record_id", packageLink.financial_record_id);
-
-          if (linksError) throw linksError;
-
-          const classLogIds = packageLinks?.map((l) => l.class_log_id) || [];
-
-          const { data: packageClasses, error: classesError } = await supabase
-            .from("class_logs")
-            .select("duration_minutes, student_id")
-            .in("id", classLogIds);
-
-          if (classesError) throw classesError;
-
-          if (packageClasses && packageClasses.length > 0) {
-            const studentId = packageClasses[0].student_id;
-            const { data: student, error: studentError } = await supabase
-              .from("students")
-              .select("hourly_rate")
-              .eq("id", studentId)
-              .single();
-
-            if (studentError) throw studentError;
-
-            const totalMinutes = packageClasses.reduce(
-              (sum, cls) => sum + (cls.duration_minutes || 0),
-              0
-            );
-            const totalHours = totalMinutes / 60;
-            const hourlyRate = student?.hourly_rate || 0;
-            financialUpdate.amount = totalHours * hourlyRate;
-
-            const { error: updateError } = await supabase
-              .from("financial_records")
-              .update(financialUpdate)
-              .eq("id", packageLink.financial_record_id);
-
-            if (updateError) {
-              toast.error(
-                "Aula atualizada com sucesso, mas não foi possível atualizar a cobrança do pacote."
-              );
-            }
-
-            return data;
-          }
-        }
-
-        if (amount != null && amount > 0) {
-          financialUpdate.amount = amount;
-        }
-
-        if (Object.keys(financialUpdate).length > 0) {
-          const { error: financialError } = await supabase
-            .from("financial_records")
-            .update(financialUpdate)
-            .eq("id", financialRecordId);
-          if (financialError) {
-            toast.error(
-              "Aula atualizada com sucesso, mas não foi possível atualizar a cobrança."
-            );
-          }
+        if (
+          packageLink?.financial_record_id &&
+          updates.duration_minutes !== undefined
+        ) {
+          await recalculateAndUpdatePackageFinancial(
+            packageLink.financial_record_id,
+            dueDate
+          );
+        } else {
+          await applyFinancialRecordUpdate(financialRecordId, dueDate, amount);
         }
       }
 

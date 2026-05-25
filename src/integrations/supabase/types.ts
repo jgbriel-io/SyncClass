@@ -1580,6 +1580,10 @@ export type Database = {
           title: string;
         }[];
       };
+      get_class_logs_summary: {
+        Args: { p_teacher_id?: string | null };
+        Returns: Json;
+      };
       get_financial_summary: {
         Args: { p_teacher_id?: string };
         Returns: {

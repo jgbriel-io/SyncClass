@@ -126,6 +126,7 @@ async function fetchFinancialRecords(
       `*,
       students!inner ( name, teacher_id ),
       class_logs ( id, class_date, attendance, grade, feedback, title ),
+      confirmed_by:profiles!financial_records_confirmed_by_user_id_fkey ( full_name ),
       payment_proof_status, payment_proof_url, payment_proof_filename,
       payment_proof_uploaded_at, payment_proof_rejection_reason`,
       { count: "exact" }
@@ -144,37 +145,15 @@ async function fetchFinancialRecords(
 
   let list = (data ?? []) as FinancialRecordWithRelations[];
 
-  const confirmedByUserIds = Array.from(
-    new Set(
-      list
-        .filter((r) => r.confirmed_by_user_id)
-        .map((r) => r.confirmed_by_user_id!)
-    )
-  );
-  if (confirmedByUserIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, full_name")
-      .in("user_id", confirmedByUserIds);
-    if (profiles) {
-      const profileMap = new Map(profiles.map((p) => [p.user_id, p.full_name]));
-      list = list.map((record) => ({
-        ...record,
-        confirmed_by: record.confirmed_by_user_id
-          ? { full_name: profileMap.get(record.confirmed_by_user_id) || "" }
-          : null,
-      }));
-    }
-  }
-
   const packageRecordIds = list
     .filter((r) => r.class_log_id === null)
     .map((r) => r.id);
   if (packageRecordIds.length > 0) {
-    const { data: packageLinks } = await supabase
+    const { data: packageLinks, error: packageLinksError } = await supabase
       .from("financial_record_class_logs")
       .select(`financial_record_id, class_logs ( id, class_date, title )`)
       .in("financial_record_id", packageRecordIds);
+    if (packageLinksError) throw packageLinksError;
     if (packageLinks) {
       const packageClassesMap = new Map<
         string,
@@ -213,7 +192,7 @@ async function fetchFinancialRecords(
 
 async function fetchFinancialSummary(teacherId?: string | null) {
   const { data, error } = await supabase.rpc("get_financial_summary", {
-    p_teacher_id: teacherId ?? undefined,
+    p_teacher_id: teacherId ?? null,
   });
   if (error) throw error;
 
