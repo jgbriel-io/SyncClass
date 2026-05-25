@@ -99,7 +99,7 @@ export const cepRequiredSchema = z
  * Schema para valor monetário (formato: 0,00 ou 0.000,00)
  * Aceita vazio ou valor válido
  */
-const MONEY_REGEX = /^\d{1,3}(\.\d{3})*(,\d{2})?$/;
+const MONEY_REGEX = /^(\d{1,3}(\.\d{3})*|\d+)(,\d{2})?$/;
 
 export const moneySchema = z
   .string()
