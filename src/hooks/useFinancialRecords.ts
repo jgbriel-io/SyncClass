@@ -126,7 +126,7 @@ async function fetchFinancialRecords(
       `*,
       students!inner ( name, teacher_id ),
       class_logs ( id, class_date, attendance, grade, feedback, title ),
-      confirmed_by:profiles!financial_records_confirmed_by_user_id_fkey ( full_name ),
+      confirmed_by:profiles!financial_records_confirmed_by_profiles_fkey ( full_name ),
       payment_proof_status, payment_proof_url, payment_proof_filename,
       payment_proof_uploaded_at, payment_proof_rejection_reason`,
       { count: "exact" }
