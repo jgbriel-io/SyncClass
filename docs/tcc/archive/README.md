@@ -21,7 +21,7 @@ Este diretório contém **documentação histórica e de referência técnica** 
 **Quando NÃO usar:**
 
 - Leitura do TCC → use `docs/tcc/` (resumo acadêmico)
-- Entender arquitetura atual → use `docs/architecture.md`
+- Entender arquitetura atual → use `docs/architecture/overview.md`
 - Consultar sprints → use `docs/sprints/` (documentação oficial)
 
 ---
@@ -35,7 +35,7 @@ Este diretório está organizado por categoria de documentação:
 ## Estrutura
 
 ```
-docs/archive/
+docs/tcc/archive/
 ├── README.md                              ← Este arquivo
 ├── requisitos/
 │   ├── requisitos-funcionais.md          ← RF01-RF30 (todos os 30 requisitos)
@@ -83,7 +83,7 @@ Detalha **todos os 30 requisitos funcionais** (RF01-RF30) implementados:
 
 ---
 
-### requisitos-nao-funcionais-adicionais.md
+### requisitos-nao-funcionais.md
 
 **Status:** ✅ Consolidado no Cap4 (seções 4.3.2 a 4.3.6)
 
@@ -132,12 +132,12 @@ Documenta **59 regras de negócio** extraídas do código, organizadas por módu
 9. Performance e Rate Limiting (RN-048 a RN-052)
 10. Validação Frontend (RN-053 a RN-055)
 
-**Uso:** Referência completa de regras de negócio. Cap4 tem 55 regras principais (resumo).
+**Uso:** Referência completa de regras de negócio. Cap4 tem 59 regras (resumo).
 
 **Diferença vs Cap4:**
 
-- Cap4: 55 regras principais (resumo para TCC)
-- Archive: 59 regras completas (referência técnica)
+- Cap4: 59 regras (resumo para TCC)
+- Archive: 59 regras completas (referência técnica com fontes)
 
 ---
 
@@ -256,6 +256,6 @@ Este archive deve ser mantido como **referência histórica**. Não adicionar no
 ## Referências
 
 - **Documentação Oficial:** `docs/tcc/` (Cap1-Cap10)
-- **Sprints:** `docs/sprints/` (Sprint 1-22)
+- **Sprints:** `docs/sprints/` (Sprint 1-27)
 - **Código:** `src/`, `supabase/`
-- **Arquitetura:** `docs/architecture.md`, `docs/database.md`
+- **Arquitetura:** `docs/architecture/overview.md`, `docs/database/overview.md`

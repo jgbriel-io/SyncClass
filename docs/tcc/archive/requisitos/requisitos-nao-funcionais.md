@@ -854,14 +854,14 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 
 **Implementação:**
 
-- 23 migrations aplicadas
+- 43 migrations aplicadas
 - Nomenclatura: `NN_description.sql`
 - Rastreabilidade via `supabase_migrations` table
 - Rollback manual (sem down migrations)
 
 **Arquivos:**
 
-- `supabase/migrations/` (23 arquivos)
+- `supabase/migrations/` (43 arquivos)
 
 **Testes:** — N/A
 
@@ -877,12 +877,13 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 
 **Implementação:**
 
-- 5 functions implementadas:
+- 6 functions implementadas:
   1. `invite-user` — Convite de usuários
   2. `reset-password` — Reset de senha
   3. `admin-delete-user` — Hard delete
   4. `cleanup-old-records` — Limpeza de registros
   5. `cleanup-storage` — Limpeza de storage
+  6. `export-user-data` — Exportação de dados (LGPD)
 - Deno/TypeScript
 - Execução assíncrona
 - Rate limiting
