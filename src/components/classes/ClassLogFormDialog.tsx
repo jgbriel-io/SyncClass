@@ -175,13 +175,16 @@ export function ClassLogFormDialog({
 
   // Auto-fill valor quando duração muda
   useEffect(() => {
-    if (calculatedFromDuration != null) {
-      setValue(
-        "financial_amount",
-        calculatedFromDuration.toFixed(2).replace(".", ",")
-      );
+    if (
+      hourlyRate != null &&
+      hourlyRate > 0 &&
+      effectiveDurationMinutes != null &&
+      effectiveDurationMinutes > 0
+    ) {
+      const calc = hourlyRate * (effectiveDurationMinutes / 60);
+      setValue("financial_amount", calc.toFixed(2).replace(".", ","));
     }
-  }, [calculatedFromDuration, setValue]);
+  }, [effectiveDurationMinutes, hourlyRate, setValue]);
 
   const handleFormSubmit = (data: ClassLogFormData) => {
     if (enableTeacherSelection && !selectedTeacherId) {

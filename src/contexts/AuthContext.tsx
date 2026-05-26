@@ -203,7 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         handleUnhandledRejection
       );
     };
-  }, []);
+  }, [navigate]);
 
   // FE-003: Realtime subscription to detect account deactivation/deletion
   useEffect(() => {

@@ -1,6 +1,6 @@
 /**
  * Design Tokens - Sistema de Design da English School Platform
- * 
+ *
  * Centraliza todos os tokens de design para garantir consistência
  * visual e facilitar manutenção.
  */
@@ -18,7 +18,7 @@ export {
   getSheetSizePx,
   type DialogSize,
   type SheetSize,
-} from './modal-sizes';
+} from "./modal-sizes";
 
 // Tamanhos de Colunas de Tabela
 export {
@@ -31,7 +31,7 @@ export {
   getColumnStyle,
   getXLColumnClasses,
   calculateTableMinWidth,
-} from './table-columns';
+} from "./table-columns";
 
 // Typography (Hierarquia Tipográfica)
 export {
@@ -46,7 +46,7 @@ export {
   type TypographyVariant,
   type FontWeight,
   type TextColor,
-} from './typography';
+} from "./typography";
 
 // Spacing (Espaçamento e Ritmo Visual)
 export {
@@ -73,7 +73,7 @@ export {
   type PaddingYSize,
   type MarginTopSize,
   type MarginBottomSize,
-} from './spacing';
+} from "./spacing";
 
 // Icon Sizes (Tamanhos de Ícones)
 export {
@@ -82,14 +82,6 @@ export {
   iconSize,
   getIconSizePx,
   type IconSize,
-} from './icon-sizes';
+} from "./icon-sizes";
 
 // ============================================================================
-// ROADMAP - Próximos Tokens a Implementar
-// ============================================================================
-
-/**
- * TODO: Component Size Tokens
- * - Tamanhos de botões, inputs, selects
- * - Arquivo: component-sizes.ts
- */
