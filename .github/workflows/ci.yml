@@ -36,9 +36,16 @@ jobs:
 
       - name: Run tests
         run: npm run test
+        env:
+          TZ: America/Sao_Paulo
+          VITE_SUPABASE_URL: https://fake-project.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: fake-anon-key-for-ci-tests
 
       - name: Build project
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://fake-project.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: fake-anon-key-for-ci-tests
 
       - name: Check build size
         run: |
