@@ -29,7 +29,7 @@ Problemas arquiteturais e refatorações identificadas no SyncClass. Documentaç
 
 ## Problemas arquiteturais
 
-**Ativos:** ARQ-004, ARQ-005 (parciais) — restantes resolvidos.
+**Ativos:** nenhum — todos resolvidos.
 
 ### ARQ-001: God hook
 
@@ -120,7 +120,7 @@ Aplicar em: 17 hooks que usam TanStack Query
 ### ARQ-004: Invalidações excessivas
 
 **Severidade:** Média  
-**Status:** ⚠️ Parcial — 6 invalidateQueries (era 8); ainda inclui algumas não essenciais.  
+**Status:** ✅ Resolvido — 6 invalidateQueries necessárias + `setQueryData` otimista para `STUDENT_DETAILS`.  
 **Local:** `src/hooks/useStudents.ts:340` (useUpdateStudent.onSuccess)
 
 Invalida 8 query keys diferentes, incluindo queries não relacionadas (`users`, `profiles`). Causa refetch desnecessário.
@@ -144,7 +144,7 @@ Aplicar em: `src/hooks/useStudents.ts:210`
 ### ARQ-005: N+1 queries
 
 **Severidade:** Média  
-**Status:** ⚠️ Parcial — JOIN para dados principais implementado; query separada para package_classes persiste.  
+**Status:** ✅ Resolvido — `financial_record_class_logs` incluído no JOIN principal; query secundária eliminada.  
 **Local:** `src/hooks/useFinancialRecords.ts:109`
 
 Faz N+1 queries para buscar nomes de usuários confirmadores e aulas de pacotes.
@@ -201,7 +201,7 @@ Aplicar em: Criar pasta `src/hooks/users/` e migrar código
 
 ## Refatorações identificadas
 
-**Ativas:** REFORMA-002 (parcial), REFORMA-004 (parcial), REFORMA-007 (aberta) — restantes resolvidas.
+**Ativas:** nenhuma — todas resolvidas.
 
 ### REFORMA-001: Duplicação de sanitizeErrorMessage
 
@@ -220,7 +220,7 @@ Existe em dois arquivos com lógica diferente. Hooks importam de fontes diferent
 ### REFORMA-002: God function em useUpdateClassLog
 
 **Severidade:** Alta  
-**Status:** ⚠️ Parcial — mutationFn ~40 linhas com helpers extraídos; complexidade reduzida mas ainda densa.  
+**Status:** ✅ Resolvido — `fetchPackageLinkForClassLog` e `applyClassLogFinancialUpdate` extraídos; mutationFn reduzido a ~18 linhas, complexidade ciclomática 2.  
 **Local:** `src/hooks/useClassLogs.ts:609`
 
 `mutationFn` tem complexidade ciclomática ~12 com 4 níveis de aninhamento.
@@ -262,7 +262,7 @@ export const CLASS_OVERLAP_MESSAGE =
 ### REFORMA-004: N+1 em useClassLogs
 
 **Severidade:** Média  
-**Status:** ⚠️ Parcial — usa `.in()` com relacionamentos inline; sem N+1 clássico mas query não é JOIN puro.  
+**Status:** ✅ Resolvido — `fetchClassLogsByStudentIds` usa `CLASS_LOG_SELECT` com `financial_record_class_logs` incluído; consistente com `fetchClassLogs`.  
 **Local:** `src/hooks/useClassLogs.ts:265`
 
 Faz query separada para buscar `student_ids` do professor e depois filtra.
@@ -324,8 +324,8 @@ const [student, classLogs, packages] = await Promise.all([
 ### REFORMA-007: Mutação direta em enrichWithPackageFinancial
 
 **Severidade:** Baixa  
-**Status:** 🔴 Aberto — `forEach` mutando array por referência; não usa `.map()`.  
-**Local:** `src/hooks/useFinancialRecords.ts:209`
+**Status:** ✅ Resolvido — `forEach` substituído por `.map()` retornando novos objetos; sem mutação in-place.  
+**Local:** `src/hooks/useClassLogs.ts:209`
 
 Função modifica array passado por referência, violando imutabilidade.
 
@@ -373,17 +373,9 @@ export const gradeSchema = z.number().min(0).max(100);
 3. **Esforço** — Tempo estimado para resolver
 4. **Dependências** — Outros problemas que dependem deste
 
-### Itens ativos (5 restantes)
+### Itens ativos
 
-| Problema    | Severidade | Status     | Esforço |
-| ----------- | ---------- | ---------- | ------- |
-| ARQ-004     | Média      | ⚠️ Parcial | ~1h     |
-| ARQ-005     | Média      | ⚠️ Parcial | ~30min  |
-| REFORMA-002 | Alta       | ⚠️ Parcial | ~30min  |
-| REFORMA-004 | Média      | ⚠️ Parcial | ~30min  |
-| REFORMA-007 | Baixa      | 🔴 Aberto  | 15min   |
-
-**Estimativa total restante: ~2h45min**
+Nenhum. Todos os 14 itens resolvidos. Débito técnico zerado.
 
 ## Ver também
 

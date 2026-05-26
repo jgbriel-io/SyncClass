@@ -337,7 +337,12 @@ export function useUpdateStudent() {
 
       return data;
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(
+        [QK.STUDENT_DETAILS, variables.id],
+        (old: Record<string, unknown> | null | undefined) =>
+          old ? { ...old, ...data } : old
+      );
       queryClient.invalidateQueries({ queryKey: [QK.STUDENTS], exact: false });
       queryClient.invalidateQueries({
         queryKey: [QK.STUDENTS_PAGINATED],

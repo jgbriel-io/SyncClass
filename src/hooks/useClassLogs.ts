@@ -209,8 +209,8 @@ const CLASS_LOG_SELECT = `
 function enrichWithPackageFinancial(
   list: ClassLogWithStudent[]
 ): ClassLogWithStudent[] {
-  list.forEach((log) => {
-    if (log.financial_records && log.financial_records.length > 0) return;
+  return list.map((log) => {
+    if (log.financial_records && log.financial_records.length > 0) return log;
     const packageLinks = (log as Record<string, unknown>)
       .financial_record_class_logs as Array<{
       financial_record_id: string;
@@ -218,14 +218,17 @@ function enrichWithPackageFinancial(
         | ClassLogWithStudent["financial_records"][number]
         | null;
     }> | null;
-    if (!packageLinks?.length) return;
+    if (!packageLinks?.length) return log;
     const fr = packageLinks[0]?.financial_records;
     if (fr) {
-      log.financial_records = [fr];
-      log.financial_record_via_package = true;
+      return {
+        ...log,
+        financial_records: [fr],
+        financial_record_via_package: true,
+      };
     }
+    return log;
   });
-  return list;
 }
 
 async function fetchClassLogs(
@@ -257,8 +260,9 @@ async function fetchClassLogs(
   const from = page * pageSize;
   const { data, error, count } = await q.range(from, from + pageSize - 1);
   if (error) throw error;
-  const list = (data ?? []) as ClassLogWithStudent[];
-  enrichWithPackageFinancial(list);
+  const list = enrichWithPackageFinancial(
+    (data ?? []) as ClassLogWithStudent[]
+  );
   return { list, count: count ?? 0 };
 }
 
@@ -267,9 +271,7 @@ async function fetchClassLogsByStudentIds(
 ): Promise<ClassLogWithStudent[]> {
   const { data, error } = await supabase
     .from("class_logs")
-    .select(
-      `*, students ( name, teacher_id ), teachers ( name ), financial_records ( id, status, amount, due_date, payment_proof_url, payment_proof_filename, payment_proof_status )`
-    )
+    .select(CLASS_LOG_SELECT)
     .in("student_id", studentIds)
     .order("class_date", { ascending: false });
   if (error) throw error;
@@ -606,6 +608,35 @@ export function useCreateClassLogWithFinancial() {
   });
 }
 
+async function fetchPackageLinkForClassLog(
+  classLogId: string
+): Promise<{ financial_record_id: string } | null> {
+  const { data, error } = await supabase
+    .from("financial_record_class_logs")
+    .select("financial_record_id")
+    .eq("class_log_id", classLogId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function applyClassLogFinancialUpdate(
+  financialRecordId: string,
+  packageLink: { financial_record_id: string } | null,
+  dueDate: string | undefined,
+  amount: number | undefined,
+  durationMinutesChanged: boolean
+): Promise<void> {
+  if (packageLink?.financial_record_id && durationMinutesChanged) {
+    await recalculateAndUpdatePackageFinancial(
+      packageLink.financial_record_id,
+      dueDate
+    );
+  } else {
+    await applyFinancialRecordUpdate(financialRecordId, dueDate, amount);
+  }
+}
+
 export function useUpdateClassLog() {
   const queryClient = useQueryClient();
 
@@ -617,12 +648,7 @@ export function useUpdateClassLog() {
       amount,
       ...updates
     }: UpdateClassLogPayload) => {
-      const { data: packageLink, error: linkError } = await supabase
-        .from("financial_record_class_logs")
-        .select("financial_record_id")
-        .eq("class_log_id", id)
-        .maybeSingle();
-      if (linkError) throw linkError;
+      const packageLink = await fetchPackageLinkForClassLog(id);
 
       const { data, error } = await supabase
         .from("class_logs")
@@ -633,17 +659,13 @@ export function useUpdateClassLog() {
       if (error) throw error;
 
       if (financialRecordId) {
-        if (
-          packageLink?.financial_record_id &&
+        await applyClassLogFinancialUpdate(
+          financialRecordId,
+          packageLink,
+          dueDate,
+          amount,
           updates.duration_minutes !== undefined
-        ) {
-          await recalculateAndUpdatePackageFinancial(
-            packageLink.financial_record_id,
-            dueDate
-          );
-        } else {
-          await applyFinancialRecordUpdate(financialRecordId, dueDate, amount);
-        }
+        );
       }
 
       return data;

@@ -128,6 +128,7 @@ async function fetchFinancialRecords(
       students!inner ( name, teacher_id ),
       class_logs ( id, class_date, attendance, grade, feedback, title ),
       confirmed_by:profiles!financial_records_confirmed_by_profiles_fkey ( full_name, deleted_at ),
+      financial_record_class_logs ( class_logs ( id, class_date, title ) ),
       payment_proof_status, payment_proof_url, payment_proof_filename,
       payment_proof_uploaded_at, payment_proof_rejection_reason`,
       { count: "exact" }
@@ -144,49 +145,32 @@ async function fetchFinancialRecords(
   const { data, error, count } = await q.range(from, from + pageSize - 1);
   if (error) throw error;
 
-  let list = (data ?? []) as FinancialRecordWithRelations[];
-
-  const packageRecordIds = list
-    .filter((r) => r.class_log_id === null)
-    .map((r) => r.id);
-  if (packageRecordIds.length > 0) {
-    const { data: packageLinks, error: packageLinksError } = await supabase
-      .from("financial_record_class_logs")
-      .select(`financial_record_id, class_logs ( id, class_date, title )`)
-      .in("financial_record_id", packageRecordIds);
-    if (packageLinksError) throw packageLinksError;
-    if (packageLinks) {
-      const packageClassesMap = new Map<
-        string,
-        Array<{ id: string; class_date: string; title?: string | null }>
-      >();
-      packageLinks.forEach(
-        (link: {
-          financial_record_id: string;
-          class_logs: {
-            id: string;
-            class_date: string;
-            title: string | null;
-          } | null;
-        }) => {
-          if (link.class_logs) {
-            const existing =
-              packageClassesMap.get(link.financial_record_id) || [];
-            existing.push({
-              id: link.class_logs.id,
-              class_date: link.class_logs.class_date,
-              title: link.class_logs.title,
-            });
-            packageClassesMap.set(link.financial_record_id, existing);
-          }
+  const list = ((data ?? []) as FinancialRecordWithRelations[]).map(
+    (record) => {
+      const packageLinks = (
+        record as unknown as {
+          financial_record_class_logs: Array<{
+            class_logs: {
+              id: string;
+              class_date: string;
+              title: string | null;
+            } | null;
+          }> | null;
         }
-      );
-      list = list.map((record) => ({
-        ...record,
-        package_classes: packageClassesMap.get(record.id) || undefined,
-      }));
+      ).financial_record_class_logs;
+      if (!packageLinks?.length) return record;
+      const packageClasses = packageLinks
+        .filter((l) => l.class_logs)
+        .map((l) => ({
+          id: l.class_logs!.id,
+          class_date: l.class_logs!.class_date,
+          title: l.class_logs!.title,
+        }));
+      return packageClasses.length
+        ? { ...record, package_classes: packageClasses }
+        : record;
     }
-  }
+  );
 
   return { list, count: count ?? 0 };
 }
