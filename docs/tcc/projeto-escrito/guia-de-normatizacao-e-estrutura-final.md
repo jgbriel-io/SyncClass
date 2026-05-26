@@ -45,7 +45,7 @@ A estrutura completa do **SyncClass** deve ser organizada da seguinte forma:
 | **6**  | **Desenvolvimento**         | Stack (React/Vite/Supabase), Estrutura de Pastas e Módulos.           |
 | **7**  | **Qualidade e Testes**      | Vitest, Testes Manuais e Validação ISO 25010.                         |
 | **8**  | **Gestão do Projeto**       | Cronograma, Sprints e Impacto da IA na Produtividade.                 |
-| **9**  | **Deploy e Infraestrutura** | Docker, CI/CD (GitHub Actions) e Edge Functions.                      |
+| **9**  | **Deploy e Infraestrutura** | Cloudflare Pages, CI/CD (GitHub Actions) e Edge Functions.            |
 | **10** | **Conclusão**               | Validação das Hipóteses e Trabalhos Futuros.                          |
 
 ---

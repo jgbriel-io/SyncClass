@@ -13,11 +13,9 @@
 ```bash
 # Testes unitários
 npm run test
-
-# Relatório E2E
-npm run test:e2e
-npm run test:e2e:report
 ```
+
+> **Nota:** Testes E2E não foram implementados no escopo do MVP.
 
 ---
 
@@ -64,13 +62,13 @@ npm run test:e2e:report
 ## Cap. 8 — Gestão
 
 - [ ] 🖼️ Gantt retroativo — montar no Excel/Google Sheets ou draw.io
-  - Eixo X: semanas (19/jan → 21/mai 2026)
+  - Eixo X: semanas (19/jan → 26/mai 2026)
   - Eixo Y: sprints/módulos
   - Dados: ver `docs/sprints/historico-completo.md`
 
 ## Cap. 9 — Deploy
 
-- [ ] 🖼️ Diagrama de infraestrutura (VPS + Docker + Supabase)
+- [ ] 🖼️ Diagrama de infraestrutura (Cloudflare Pages + GitHub Actions + Supabase)
 - [ ] 🖼️ Diagrama do pipeline CI/CD (GitHub Actions)
 
 ---
