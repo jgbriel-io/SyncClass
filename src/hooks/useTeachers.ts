@@ -78,6 +78,7 @@ export function useTeachers() {
   return useQuery({
     queryKey: [QK.TEACHERS],
     queryFn: fetchTeachers,
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -251,7 +252,7 @@ export function useSoftDeleteTeacher() {
 
       const { error: profilesError } = await supabase
         .from("profiles")
-        .update({ active: false, teacher_id: id })
+        .update({ active: false })
         .eq("teacher_id", id);
 
       if (profilesError) throw profilesError;

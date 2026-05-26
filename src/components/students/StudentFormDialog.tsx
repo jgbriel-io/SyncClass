@@ -217,7 +217,7 @@ export function StudentFormDialog({
 
   const handleFormSubmit = (data: StudentFormData) => {
     if (!student && !selectedTeacherId) {
-      setTeacherError("Selecione um professor");
+      setTeacherError(studentsContent.validation.teacherRequired);
       return;
     }
     setTeacherError(null);
@@ -369,6 +369,14 @@ export function StudentFormDialog({
               max={31}
               placeholder={common.placeholders.payDay}
               {...register("pay_day")}
+              onChange={(e) => {
+                const v = parseInt(e.target.value);
+                setValue(
+                  "pay_day",
+                  isNaN(v) ? "" : String(Math.min(31, Math.max(1, v))),
+                  { shouldValidate: true }
+                );
+              }}
               disabled={isLoading}
             />
           </div>

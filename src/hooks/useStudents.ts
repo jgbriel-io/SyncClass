@@ -60,6 +60,7 @@ export function useStudents() {
       if (error) throw error;
       return data as Student[];
     },
+    staleTime: 60_000,
   });
 }
 
@@ -176,8 +177,11 @@ export function useCreateStudent() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: [QK.STUDENTS_PAGINATED],
+        exact: false,
+      });
       toast.success("Aluno cadastrado com sucesso!");
     },
     onError: (error: unknown) => {
@@ -222,7 +226,8 @@ async function syncStudentProfiles(student: Student): Promise<void> {
       .from("profiles")
       .select("id, user_id, student_id")
       .eq("email", normalizedEmail)
-      .eq("role", "student");
+      .eq("role", "student")
+      .limit(1);
     if (profilesByEmail && profilesByEmail.length > 0) {
       profilesToUpdate = profilesByEmail;
     }
@@ -333,11 +338,17 @@ export function useUpdateStudent() {
       return data;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
-      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
-      queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
-      queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: [QK.STUDENTS_PAGINATED],
+        exact: false,
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: [QK.USERS_PAGINATED],
+        exact: false,
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES], exact: false });
       if ("pay_day" in variables && variables.pay_day !== undefined) {
         queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
         queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
@@ -381,11 +392,17 @@ export function useSoftDeleteStudent() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
-      queryClient.invalidateQueries({ queryKey: [QK.USERS] });
-      queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
-      queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: [QK.STUDENTS_PAGINATED],
+        exact: false,
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.USERS], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: [QK.USERS_PAGINATED],
+        exact: false,
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.PROFILES], exact: false });
       toast.success("Aluno arquivado e dados anonimizados (LGPD)");
     },
     onError: (error: unknown) => {

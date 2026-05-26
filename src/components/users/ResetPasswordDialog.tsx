@@ -121,13 +121,21 @@ export function ResetPasswordDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); else onOpenChange(true); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) handleClose();
+        else onOpenChange(true);
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{usersContent.resetPasswordDialog.title}</DialogTitle>
           {user && (
             <DialogDescription>
-              {usersContent.resetPasswordDialog.description(user.profile?.full_name ?? user.email ?? "")}
+              {usersContent.resetPasswordDialog.description(
+                user.profile?.full_name ?? user.email ?? ""
+              )}
             </DialogDescription>
           )}
         </DialogHeader>
@@ -147,10 +155,13 @@ export function ResetPasswordDialog({
             </div>
             <div className="space-y-4 py-2">
               <div className="space-y-2">
-                <Label htmlFor="reset-password-new">{usersContent.resetPasswordDialog.newPasswordLabel}</Label>
+                <Label htmlFor="reset-password-new">
+                  {usersContent.resetPasswordDialog.newPasswordLabel}
+                </Label>
                 <Input
                   id="reset-password-new"
                   type="password"
+                  autoComplete="new-password"
                   placeholder={common.placeholders.password}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -159,10 +170,13 @@ export function ResetPasswordDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reset-password-confirm">{usersContent.resetPasswordDialog.confirmPasswordLabel}</Label>
+                <Label htmlFor="reset-password-confirm">
+                  {usersContent.resetPasswordDialog.confirmPasswordLabel}
+                </Label>
                 <Input
                   id="reset-password-confirm"
                   type="password"
+                  autoComplete="new-password"
                   placeholder={common.placeholders.password}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

@@ -1,7 +1,7 @@
 # Sprint 25 — Database Structural Analysis
 
 **Período:** 25/05/2026  
-**Status:** ⬜ Planejada  
+**Status:** ✅ Concluída — 9/9 itens implementados  
 **Tipo:** Banco de Dados + Performance
 
 ## Contexto
@@ -19,6 +19,7 @@ performance de queries comuns.
 
 **Severidade:** 🔴 Crítica  
 **Esforço:** 20min  
+**Implementado:** ✅ migration 36_sprint25_db_schema_fixes.sql — CHECK amount >= 0  
 **Arquivo:** `supabase/migrations/22_dba_fixes.sql:84`
 
 **Problema:** Migration 22 adicionou `CHECK (amount > 0)` em `financial_records`.
@@ -43,6 +44,7 @@ Valor negativo continua sendo rejeitado.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 30min  
+**Implementado:** ✅ migration 38_sprint_remaining_fixes.sql — NOT NULL condicional (DO block verifica NULLs existentes)  
 **Arquivo:** `supabase/migrations/01_structure.sql:84`
 
 **Problema:** `teacher_id` em `students` é nullable. FK com `ON DELETE SET NULL`
@@ -72,6 +74,7 @@ Nenhum aluno fica sem `teacher_id`.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 15min  
+**Implementado:** ✅ migration 36_sprint25_db_schema_fixes.sql  
 **Arquivo:** `supabase/migrations/01_structure.sql:133`
 
 **Problema:** `duration_minutes` pode ser 0, negativo ou muito grande — sem
@@ -95,6 +98,7 @@ constraint. NULL ainda permitido (aulas sem horário definido).
 
 **Severidade:** 🟡 Média  
 **Esforço:** 10min  
+**Implementado:** ✅ migration 36_sprint25_db_schema_fixes.sql  
 **Arquivo:** `supabase/migrations/01_structure.sql:136`
 
 **Problema:** `billed_amount` (valor cobrado por aula individual) pode ser negativo.
@@ -116,6 +120,7 @@ ALTER TABLE public.class_logs
 
 **Severidade:** 🟡 Média  
 **Esforço:** 15min  
+**Implementado:** ✅ migration 36_sprint25_db_schema_fixes.sql  
 **Arquivo:** `supabase/migrations/01_structure.sql:57,79`
 
 **Problema:** `hourly_rate` em `students` e `teachers` sem CHECK — pode ser
@@ -142,6 +147,7 @@ ALTER TABLE public.teachers
 
 **Severidade:** 🟡 Média  
 **Esforço:** 20min  
+**Implementado:** ✅ useFinancialRecords.ts + FinancialPaymentHistoryDialog.tsx — mostra "Usuário removido"  
 **Arquivo:** `supabase/migrations/31_confirmed_by_profiles_fk.sql:6`
 
 **Problema:** FK `financial_records.confirmed_by_user_id → profiles.user_id`
@@ -172,6 +178,7 @@ de `confirmed_by`:
 
 **Severidade:** 🟡 Média  
 **Esforço:** 15min  
+**Implementado:** ✅ migration 38_sprint_remaining_fixes.sql — CHECK atualizado para exigir start_at+end_at quando class_date definido  
 **Arquivo:** `supabase/migrations/22_dba_fixes.sql:127`
 
 **Problema:** Constraint `CHECK (start_at IS NULL OR start_at::date = class_date)`
@@ -197,6 +204,7 @@ rejeitado. INSERT com ambos null aceito.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 15min  
+**Implementado:** ✅ migration 36_sprint25_db_schema_fixes.sql — índice partial WHERE teacher_id IS NOT NULL  
 **Arquivo:** `supabase/migrations/01_structure.sql:318`
 
 **Problema:** `idx_class_logs_teacher_id` indexa todas as linhas incluindo
@@ -221,6 +229,7 @@ Explain analyze mostra índice usado em queries de listagem por professor.
 
 **Severidade:** 🔵 Info  
 **Esforço:** 10min  
+**Implementado:** ✅ migration 36_sprint25_db_schema_fixes.sql — índice partial WHERE status = 'pendente'  
 **Arquivo:** `supabase/migrations/01_structure.sql:327`
 
 **Problema:** Índice em `due_date` existe mas não é partial para o padrão

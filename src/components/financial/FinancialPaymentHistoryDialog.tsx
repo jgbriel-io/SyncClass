@@ -52,7 +52,11 @@ export function FinancialPaymentHistoryDialog({
   const handleRejectProof = () => {
     if (!r) return;
     reviewPaymentProof.mutate(
-      { financialRecordId: r.id, approved: false, rejectionReason: "Comprovante inválido" },
+      {
+        financialRecordId: r.id,
+        approved: false,
+        rejectionReason: financial.paymentHistoryDialog.rejectionReason,
+      },
       { onSuccess: onClose }
     );
   };
@@ -72,7 +76,9 @@ export function FinancialPaymentHistoryDialog({
     <Dialog open={!!record} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-base">{financial.paymentHistoryDialog.title}</DialogTitle>
+          <DialogTitle className="text-base">
+            {financial.paymentHistoryDialog.title}
+          </DialogTitle>
         </DialogHeader>
 
         {r && (
@@ -83,7 +89,9 @@ export function FinancialPaymentHistoryDialog({
 
             {r.description && (
               <div className="rounded-lg border bg-muted/50 p-3">
-                <p className="text-xs font-medium text-muted-foreground mb-1">{financial.paymentHistoryDialog.descriptionLabel}</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">
+                  {financial.paymentHistoryDialog.descriptionLabel}
+                </p>
                 <p className="text-sm text-foreground break-words overflow-wrap-anywhere">
                   {r.description}
                 </p>
@@ -99,7 +107,8 @@ export function FinancialPaymentHistoryDialog({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0 overflow-hidden">
                     <p className="text-sm font-medium break-words overflow-wrap-anywhere">
-                      {r.payment_proof_filename || financial.paymentHistoryDialog.proofFilenameDefault}
+                      {r.payment_proof_filename ||
+                        financial.paymentHistoryDialog.proofFilenameDefault}
                     </p>
                     <p className="text-xs text-muted-foreground break-words">
                       {financial.paymentHistoryDialog.sentAt}{" "}
@@ -114,7 +123,9 @@ export function FinancialPaymentHistoryDialog({
                     )}
                     {r.payment_proof_status === "rejected" && (
                       <p className="text-xs text-destructive font-medium mt-1 break-words overflow-wrap-anywhere">
-                        {financial.paymentHistoryDialog.proofRejected} {r.payment_proof_rejection_reason || common.labels.noReason}
+                        {financial.paymentHistoryDialog.proofRejected}{" "}
+                        {r.payment_proof_rejection_reason ||
+                          common.labels.noReason}
                       </p>
                     )}
                   </div>
@@ -158,26 +169,38 @@ export function FinancialPaymentHistoryDialog({
                 {currentUserProfile?.role === "admin" ? (
                   <>
                     <p className="font-medium text-foreground break-words overflow-wrap-anywhere">
-                      {financial.paymentHistoryDialog.confirmedBy} {r.confirmed_by.full_name}
+                      {r.confirmed_by.deleted_at
+                        ? financial.paymentHistoryDialog.confirmedByRemoved
+                        : `${financial.paymentHistoryDialog.confirmedBy} ${r.confirmed_by.full_name}`}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5 break-words">
-                      {r.updated_at ? formatDateTime(r.updated_at) : financial.paymentHistoryDialog.dateUnavailable}
+                      {r.updated_at
+                        ? formatDateTime(r.updated_at)
+                        : financial.paymentHistoryDialog.dateUnavailable}
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="font-medium text-foreground break-words">{financial.paymentHistoryDialog.paymentConfirmed}</p>
+                    <p className="font-medium text-foreground break-words">
+                      {financial.paymentHistoryDialog.paymentConfirmed}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-0.5 break-words">
-                      {r.updated_at ? formatDateTime(r.updated_at) : financial.paymentHistoryDialog.dateUnavailable}
+                      {r.updated_at
+                        ? formatDateTime(r.updated_at)
+                        : financial.paymentHistoryDialog.dateUnavailable}
                     </p>
                   </>
                 )}
               </div>
             ) : r.status === "pago" ? (
               <div className="rounded-lg border bg-success/10 border-success/20 p-3 text-sm">
-                <p className="font-medium text-foreground break-words">{financial.paymentHistoryDialog.paymentConfirmed}</p>
+                <p className="font-medium text-foreground break-words">
+                  {financial.paymentHistoryDialog.paymentConfirmed}
+                </p>
                 <p className="text-xs text-muted-foreground mt-0.5 break-words">
-                  {r.updated_at ? formatDateTime(r.updated_at) : financial.paymentHistoryDialog.dateUnavailable}
+                  {r.updated_at
+                    ? formatDateTime(r.updated_at)
+                    : financial.paymentHistoryDialog.dateUnavailable}
                 </p>
               </div>
             ) : (
@@ -185,12 +208,13 @@ export function FinancialPaymentHistoryDialog({
                 <p className="text-sm text-muted-foreground break-words">
                   {financial.paymentHistoryDialog.noPayment}
                 </p>
-                {(!r.payment_proof_url || r.payment_proof_status === "rejected") && (
+                {(!r.payment_proof_url ||
+                  r.payment_proof_status === "rejected") && (
                   <Button
                     className="w-full bg-success text-white hover:bg-success/90"
                     onClick={() => {
                       onClose();
-                      onConfirmPayment(record!);
+                      onConfirmPayment(r as FinancialRecordWithRelations);
                     }}
                   >
                     {financial.paymentHistoryDialog.confirmPaymentButton}

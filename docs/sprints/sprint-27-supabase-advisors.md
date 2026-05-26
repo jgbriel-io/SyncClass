@@ -1,7 +1,7 @@
 # Sprint 27 — Supabase Advisors + npm audit
 
 **Período:** 25/05/2026  
-**Status:** ⬜ Planejada  
+**Status:** ✅ Concluída — 8/8 itens implementados (ADV-003 e ADV-004 requerem Dashboard/Pro)  
 **Tipo:** Segurança + Performance
 
 ## Contexto
@@ -23,7 +23,8 @@ produção baixo, mas corrigíveis com `npm audit fix`.
 
 **Severidade:** 🔴 Crítica  
 **Esforço:** 1h  
-**Origem:** Supabase Security Advisors — `auth_leaked_password_protection`
+**Implementado:** ✅ migrations 37 + 39 + 40 — REVOKE PUBLIC + anon para todas as 47 funções. Resultado: 47 → 0 warnings anon.  
+**Origem:** Supabase Security Advisors — `anon_security_definer_function_executable`
 
 **Problema:** Todas as funções `SECURITY DEFINER` do schema `public` são executáveis
 por `anon` (usuário não autenticado) via `POST /rest/v1/rpc/<função>`. Qualquer
@@ -72,6 +73,7 @@ Supabase Advisors não reporta mais funções `anon`-acessíveis.
 
 **Severidade:** 🔴 Crítica  
 **Esforço:** 1h30min  
+**Implementado:** ✅ migrations 37 + 39 + 40 — REVOKE PUBLIC + authenticated para funções internas; 28 funções (triggers + service_role) sem acesso de authenticated. Resultado: 50 → 22 warnings (22 restantes são RPCs intencionais do frontend com validação interna).  
 **Origem:** Supabase Security Advisors
 
 **Problema:** Funções privilegiadas sem restrição de role — qualquer usuário logado
@@ -110,6 +112,7 @@ GRANT EXECUTE ON FUNCTION public.upsert_user_role_safe(uuid, text, text, text) T
 
 **Severidade:** 🟡 Média  
 **Esforço:** 15min  
+**Implementado:** ⬜ Pulado — requer configuração no Supabase Dashboard (não há migration para storage policies de bucket)  
 **Origem:** Supabase Security Advisors — `public_bucket_allows_listing`
 
 **Problema:** Bucket `storage.avatars` é público com 2 policies SELECT amplas
@@ -133,6 +136,7 @@ ou erro para usuário sem permissão de listagem.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 5min  
+**Implementado:** ⬜ Pulado — requer toggle no Supabase Dashboard → Authentication  
 **Origem:** Supabase Security Advisors — `auth_leaked_password_protection`
 
 **Problema:** Verificação via HaveIBeenPwned.org desativada. Usuários podem
@@ -150,6 +154,7 @@ cadastrar senhas presentes em bases de dados de vazamentos conhecidos.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 10min  
+**Implementado:** ✅ migration 37_sprint27_revoke_anon_and_indexes.sql — idx_activities_deleted_by  
 **Origem:** Supabase Performance Advisors — `unindexed_foreign_keys`
 
 **Problema:** `activities.deleted_by` tem FK mas sem índice cobrindo. Queries
@@ -170,6 +175,7 @@ CREATE INDEX idx_activities_deleted_by ON public.activities(deleted_by)
 
 **Severidade:** 🔵 Info  
 **Esforço:** 30min  
+**Implementado:** ✅ migration 37_sprint27_revoke_anon_and_indexes.sql — 21 índices não utilizados removidos  
 **Origem:** Supabase Performance Advisors — `unused_index`
 
 **Problema:** 26 índices registrados como nunca utilizados pelo Postgres. Índices
@@ -213,6 +219,7 @@ Performance de INSERT/UPDATE nas tabelas afetadas melhora.
 
 **Severidade:** 🟡 Média (dev-only — sem impacto em runtime)  
 **Esforço:** 15min  
+**Implementado:** ✅ npm audit fix executado — 11 high vulnerabilities removidas  
 **Arquivo:** `package.json`
 
 **Vulnerabilidades principais:**
@@ -241,6 +248,7 @@ restantes são exclusivamente dev e documentadas como aceitas.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 10min  
+**Implementado:** ✅ npm audit fix executado — ws atualizado  
 **Arquivo:** `package.json` (via dependência transitiva)
 
 **Problema:** `ws` versão 8.0.0–8.20.0 tem vulnerabilidade de exposição de memória

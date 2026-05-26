@@ -33,7 +33,9 @@ export function TeacherResetPasswordDialog({
 }: TeacherResetPasswordDialogProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { data: userId, isLoading: lookingUpUser } = useTeacherUserId(teacher?.id);
+  const { data: userId, isLoading: lookingUpUser } = useTeacherUserId(
+    teacher?.id
+  );
   const adminResetPassword = useResetPassword();
 
   const isPending = adminResetPassword.isPending || lookingUpUser;
@@ -94,10 +96,13 @@ export function TeacherResetPasswordDialog({
           <>
             <div className="space-y-4 py-2">
               <div className="space-y-2">
-                <Label htmlFor="reset-pw-teacher-new">{teachersContent.resetPasswordDialog.newPasswordLabel}</Label>
+                <Label htmlFor="reset-pw-teacher-new">
+                  {teachersContent.resetPasswordDialog.newPasswordLabel}
+                </Label>
                 <Input
                   id="reset-pw-teacher-new"
                   type="password"
+                  autoComplete="new-password"
                   placeholder={common.placeholders.password}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -106,10 +111,13 @@ export function TeacherResetPasswordDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reset-pw-teacher-confirm">{teachersContent.resetPasswordDialog.confirmPasswordLabel}</Label>
+                <Label htmlFor="reset-pw-teacher-confirm">
+                  {teachersContent.resetPasswordDialog.confirmPasswordLabel}
+                </Label>
                 <Input
                   id="reset-pw-teacher-confirm"
                   type="password"
+                  autoComplete="new-password"
                   placeholder={common.placeholders.password}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -122,9 +130,11 @@ export function TeacherResetPasswordDialog({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+                  const chars =
+                    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
                   let p = "";
-                  for (let i = 0; i < 10; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
+                  for (let i = 0; i < 10; i++)
+                    p += chars.charAt(Math.floor(Math.random() * chars.length));
                   setNewPassword(p);
                   setConfirmPassword(p);
                 }}
@@ -134,11 +144,19 @@ export function TeacherResetPasswordDialog({
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={handleClose} disabled={isPending}>
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                disabled={isPending}
+              >
                 {common.actions.cancel}
               </Button>
               <Button
-                disabled={isPending || newPassword.length < 6 || newPassword !== confirmPassword}
+                disabled={
+                  isPending ||
+                  newPassword.length < 6 ||
+                  newPassword !== confirmPassword
+                }
                 onClick={handleSubmit}
               >
                 {isPending ? (

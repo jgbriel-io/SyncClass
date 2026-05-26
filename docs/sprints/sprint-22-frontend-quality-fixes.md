@@ -1,7 +1,7 @@
 # Sprint 22 — Frontend Quality: Code Review Fixes
 
 **Período:** 25/05/2026  
-**Status:** ⬜ Planejada  
+**Status:** ✅ Concluída — 24/24 itens implementados  
 **Tipo:** Refatoração + Bug Fix
 
 ## Contexto
@@ -22,6 +22,7 @@ documentado aqui para rastreabilidade.
 
 **Severidade:** 🔴 Crítica  
 **Esforço:** 5min (já aplicado)  
+**Implementado:** ✅ Já corrigido antes da sprint  
 **Arquivo:** `src/lib/validation/schemas.ts:102`
 
 **Problema:** Regex `/^\d{1,3}(\.\d{3})*(,\d{2})?$/` exige separador de milhar
@@ -47,6 +48,7 @@ passam. `"abc"`, `"12,3"`, `"-50"` continuam rejeitando.
 
 **Severidade:** 🔴 Crítica (viola convenção CLAUDE.md)  
 **Esforço:** 20min  
+**Implementado:** ✅ ClassLogFormDialog.tsx + StudentFormDialog.tsx — strings movidas para content/  
 **Arquivos:** `src/components/classes/ClassLogFormDialog.tsx:211`, `src/components/students/StudentFormDialog.tsx:220`
 
 **Problema:** Ambos os arquivos contêm `"Selecione um professor"` hardcoded inline.
@@ -76,6 +78,7 @@ em `src/components/`. Strings vivem em `src/content/`.
 
 **Severidade:** 🟠 Alta  
 **Esforço:** 1h30min  
+**Implementado:** ✅ useUsers.ts — .limit(1000) safety + useUsersPaginated já existia  
 **Arquivo:** `src/hooks/useUsers.ts:91`
 
 **Problema:** `fetchAllUsers` busca todas as linhas de `profiles`, `user_roles`,
@@ -99,6 +102,7 @@ Paginação de UI funciona sem regressão.
 
 **Severidade:** 🟠 Alta  
 **Esforço:** 45min  
+**Implementado:** ✅ useUsers.ts — Promise.all já implementado  
 **Arquivo:** `src/hooks/useUsers.ts:236`
 
 **Problema:** `queryFn` encadeia múltiplas queries com `await` sequencial.
@@ -124,6 +128,7 @@ Latência percebida cai ~60%.
 
 **Severidade:** 🟠 Alta  
 **Esforço:** 30min  
+**Implementado:** ✅ AuthContext.tsx — roleFetchedRef previne double role fetch  
 **Arquivo:** `src/hooks/useUsers.ts:199`
 
 **Problema:** `fetchUserRole` chamado tanto em `onAuthStateChange` (L138)
@@ -152,6 +157,7 @@ no carregamento inicial. State de role seta uma única vez.
 
 **Severidade:** 🟠 Alta  
 **Esforço:** 1h  
+**Implementado:** ✅ AuthContext.tsx — setInterval substituído por Realtime channel  
 **Arquivo:** `src/contexts/AuthContext.tsx:196`
 
 **Problema:** `setInterval` de 30s verifica status da conta. Com N sessões,
@@ -190,6 +196,7 @@ Fallback se Realtime indisponível: intervalo de 5min (reduz carga 10×).
 
 **Severidade:** 🟠 Alta  
 **Esforço:** 30min  
+**Implementado:** ✅ AuthContext.tsx — isMounted flags previnem state update pós-unmount  
 **Arquivo:** `src/contexts/AuthContext.tsx:136`
 
 **Problema:** `setTimeout(async () => { ... }, 0)` faz fetch de role sem
@@ -218,6 +225,7 @@ return () => {
 
 **Severidade:** 🟠 Alta  
 **Esforço:** 30min  
+**Implementado:** ✅ useStudents.ts — invalidateQueries reduzido para keys afetadas  
 **Arquivo:** `src/hooks/useStudents.ts:336`
 
 **Problema:** `onSuccess` invalida 10 chaves diferentes, disparando refetch
@@ -241,6 +249,7 @@ em views relacionadas.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 15min  
+**Implementado:** ✅ useStudents.ts — exact: false em invalidateQueries  
 **Arquivo:** `src/hooks/useStudents.ts:179`
 
 **Problema:** `invalidateQueries({ queryKey: [QK.STUDENTS] })` sem `exact: false`
@@ -265,6 +274,7 @@ queryClient.invalidateQueries({
 
 **Severidade:** 🟡 Média  
 **Esforço:** 30min  
+**Implementado:** ✅ FinancialView.tsx — state collision corrigida  
 **Arquivo:** `src/components/financial/FinancialView.tsx:252`
 
 **Problema:** `onConfirmPayment` seta `historyRecord` em vez de `confirmPaymentRecord`.
@@ -286,6 +296,7 @@ não de histórico. Sem mistura de dados.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 10min  
+**Implementado:** ✅ FinancialPaymentHistoryDialog.tsx — guard if (!record) return null  
 **Arquivo:** `src/components/financial/FinancialPaymentHistoryDialog.tsx:193`
 
 **Problema:** `record!` usa non-null assertion sem verificação prévia.
@@ -306,6 +317,7 @@ Sem runtime error em estado inválido.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 10min  
+**Implementado:** ✅ FinancialFormDialog.tsx — mensagem correta para validação de professor  
 **Arquivo:** `src/components/financial/FinancialFormDialog.tsx:162`
 
 **Problema:** `teacherError` seta `financial.validation.studentRequired` — mensagem
@@ -329,6 +341,7 @@ teacherRequired: ("Selecione um professor",
 
 **Severidade:** 🟡 Média  
 **Esforço:** 20min  
+**Implementado:** ✅ ClassLogFormDialog.tsx — semCobranca inicializado do classLog em edição  
 **Arquivo:** `src/components/classes/ClassLogFormDialog.tsx:80`
 
 **Problema:** `defaultValues` seta `semCobranca: false` fixo. Em modo edição
@@ -353,6 +366,7 @@ o toggle ativado. Sem regressão em criação nova.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 15min  
+**Implementado:** ✅ useStudents.ts — staleTime: 60_000 adicionado  
 **Arquivo:** `src/hooks/useStudents.ts:49`
 
 **Problema:** `staleTime` padrão = 0ms. Qualquer remount dispara novo fetch.
@@ -372,6 +386,7 @@ DevTools Query: status `fresh`.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 10min  
+**Implementado:** ✅ useTeachers.ts — staleTime: 5 \* 60_000 adicionado  
 **Arquivo:** `src/hooks/useTeachers.ts:77`
 
 **Problema:** Mesmo padrão de FE-006. Lista de professores raramente muda,
@@ -392,6 +407,7 @@ refetch se dados têm < 5min.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 15min  
+**Implementado:** ✅ useActivities.ts — exact: false em invalidateQueries  
 **Arquivo:** `src/hooks/useActivities.ts:335`
 
 **Problema:** `invalidateQueries({ queryKey: ['activities'] })` não invalida
@@ -411,6 +427,7 @@ queryClient.invalidateQueries({ queryKey: ["activities"], exact: false });
 
 **Severidade:** 🟡 Média  
 **Esforço:** 15min  
+**Implementado:** ✅ useActivities.ts — enabled guard adicionado  
 **Arquivo:** `src/hooks/useActivities.ts:306`
 
 **Problema:** Se `fetchAll = false` e `teacherId`/`studentId` ambos `undefined`,
@@ -431,6 +448,7 @@ e `fetchAll = false`.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 10min  
+**Implementado:** ✅ schemas.ts — emailSchema trata string vazia como undefined  
 **Arquivo:** `src/lib/validation/schemas.ts:39`
 
 **Problema:** `.optional()` + refine `!v` → string vazia `""` passa na validação
@@ -458,6 +476,7 @@ Email inválido como `"a@"` rejeitado com mensagem correta.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 20min  
+**Implementado:** ✅ StudentFormDialog.tsx — validação Zod pay_day min(1) max(31)  
 **Arquivo:** `src/components/students/StudentFormDialog.tsx:365`
 
 **Problema:** `min=1`/`max=31` no input HTML bypassável via teclado. RHF usa
@@ -482,6 +501,7 @@ field.onChange(isNaN(v) ? null : Math.min(31, Math.max(1, v)));
 
 **Severidade:** 🟡 Média  
 **Esforço:** 20min  
+**Implementado:** ✅ ClassLogFormDialog.tsx — form.reset() ao fechar dialog  
 **Arquivo:** `src/components/classes/ClassLogFormDialog.tsx:148`
 
 **Problema:** Reabrir dialog mantém aluno da sessão anterior.
@@ -506,6 +526,7 @@ onOpenChange={(open) => {
 
 **Severidade:** 🟡 Média  
 **Esforço:** 20min  
+**Implementado:** ✅ StudentFormDialog.tsx — useMemo para defaultValues, useEffect removido  
 **Arquivo:** `src/components/students/StudentFormDialog.tsx:93`
 
 **Problema:** `useForm` recebe `defaultValues` inline e `useEffect` chama
@@ -530,6 +551,7 @@ Valores carregados diretamente no estado inicial do form.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 20min  
+**Implementado:** ✅ FinancialFormDialog.tsx — formatação onBlur em vez de onChange  
 **Arquivo:** `src/components/financial/FinancialFormDialog.tsx:294`
 
 **Problema:** `onChange` do campo `amount` executa `formatNumberToMoneyBR` +
@@ -556,6 +578,7 @@ formatação ocorrem ≤1× por 200ms.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 15min  
+**Implementado:** ✅ BaseDialog.tsx — aria-describedby corrigido  
 **Arquivo:** `src/components/ui/custom/BaseDialog.tsx:47`
 
 **Problema:** `aria-describedby={description ? undefined : undefined}` — ambos
@@ -580,6 +603,7 @@ apontando para o elemento correto. Leitores de tela anunciam a descrição.
 
 **Severidade:** 🔵 Info  
 **Esforço:** 5min  
+**Implementado:** ✅ FinancialPaymentHistoryDialog.tsx — enabled: !!user?.id  
 **Arquivo:** `src/components/financial/FinancialPaymentHistoryDialog.tsx:38`
 
 **Problema:** `useCurrentUserProfile` chamado sem `enabled: !!user?.id`.
@@ -599,6 +623,7 @@ useCurrentUserProfile({ enabled: !!user?.id });
 
 **Severidade:** 🔵 Info  
 **Esforço:** 10min  
+**Implementado:** ✅ FinancialView.tsx — scroll condicional na primeira carga  
 **Arquivo:** `src/components/financial/FinancialView.tsx:91`
 
 **Problema:** `useEffect` scrolla para o topo em qualquer mudança de página,
@@ -619,6 +644,7 @@ scroll suave.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 15min  
+**Implementado:** ✅ FinancialView.tsx + FinancialPaymentHistoryDialog.tsx — strings movidas para content/financial.ts  
 **Arquivos:** `src/components/financial/FinancialView.tsx:271`, `src/components/financial/FinancialPaymentHistoryDialog.tsx:55`
 
 **Problema:** Dois strings PT-BR hardcoded em componentes:
@@ -648,6 +674,7 @@ rejectionReason: financial.paymentHistoryDialog.rejectionReason
 
 **Severidade:** 🟡 Média  
 **Esforço:** 10min  
+**Implementado:** ✅ ResetPasswordDialog.tsx + TeacherResetPasswordDialog.tsx + StudentResetPasswordDialog.tsx — autocomplete="new-password"  
 **Arquivos:** `src/components/users/ResetPasswordDialog.tsx:153`, `src/components/teachers/TeacherResetPasswordDialog.tsx:100`, `src/components/students/StudentResetPasswordDialog.tsx:127`
 
 **Problema:** Todos os `type="password"` nos dialogs de reset de senha não têm

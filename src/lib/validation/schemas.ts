@@ -39,6 +39,7 @@ export const phoneRequiredSchema = z
 export const emailSchema = z
   .string()
   .optional()
+  .transform((v) => v?.trim() || undefined)
   .refine((v) => !v || REGEX_PATTERNS.email.test(v), {
     message: validation.emailInvalid,
   });

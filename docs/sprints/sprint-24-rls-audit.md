@@ -1,7 +1,7 @@
 # Sprint 24 — RLS Full Audit
 
 **Período:** 25/05/2026  
-**Status:** ⬜ Planejada  
+**Status:** ✅ Concluída — 6/6 itens implementados  
 **Tipo:** Segurança
 
 ## Contexto
@@ -28,6 +28,7 @@ para rastreabilidade.
 
 **Severidade:** 🟠 Alta  
 **Esforço:** 20min  
+**Implementado:** ✅ Já corrigido em migration 23_security_rls_fixes.sql (financial_records_update_policy)  
 **Arquivo:** `supabase/migrations/04_rls_and_permissions.sql:271`
 
 **Problema:** Policy de UPDATE em `financial_records` checa apenas se o usuário
@@ -60,6 +61,7 @@ com usuário teacher em teste.
 
 **Severidade:** 🟠 Alta  
 **Esforço:** 20min  
+**Implementado:** ✅ Já corrigido em migration 23_security_rls_fixes.sql (class_logs_insert_policy)  
 **Arquivo:** `supabase/migrations/04_rls_and_permissions.sql:220`
 
 **Problema:** Policy de INSERT em `class_logs` verifica `teacher_id = get_teacher_id()`
@@ -91,6 +93,7 @@ retorna erro RLS, mesmo que `teacher_id` seja válido.
 
 **Severidade:** 🟠 Alta  
 **Esforço:** 25min  
+**Implementado:** ✅ migration 35_sprint24_rls_audit_fixes.sql  
 **Arquivo:** `supabase/migrations/04_rls_and_permissions.sql:311`
 
 **Problema:** Tabela de junção `financial_record_class_logs` tem policy de INSERT
@@ -129,6 +132,7 @@ retorna erro RLS. INSERT com IDs próprios funciona normalmente.
 
 **Severidade:** 🔵 Info  
 **Esforço:** 10min  
+**Implementado:** ✅ migration 35_sprint24_rls_audit_fixes.sql  
 **Arquivo:** `supabase/migrations/07_add_rate_limiting.sql:30`
 
 **Problema:** Policies de `rate_limits` usam `user_id = auth.uid()` sem cast
@@ -151,6 +155,7 @@ Grep por `auth.uid()` sem cast retorna 0 hits em policies de `rate_limits`.
 
 **Severidade:** 🔵 Info  
 **Esforço:** 10min  
+**Implementado:** ✅ migration 38_sprint_remaining_fixes.sql — FOR ALL teacher policy substituída por 4 policies explícitas  
 **Arquivo:** `supabase/migrations/04_rls_and_permissions.sql:144`
 
 **Problema:** "Admins can manage all students" usa `FOR ALL` que cobre
@@ -170,6 +175,7 @@ ou exclusivamente `FOR ALL` sem duplicatas.
 
 **Severidade:** 🔵 Info  
 **Esforço:** 10min  
+**Implementado:** ✅ migration 35_sprint24_rls_audit_fixes.sql — WITH CHECK adicionado  
 **Arquivo:** `supabase/migrations/17_fix_rls_policies_uuid_cast.sql:62`
 
 **Problema:** Policy de UPDATE em `user_roles` tem `USING` (restringe quais linhas

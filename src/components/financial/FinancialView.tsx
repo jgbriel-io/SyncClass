@@ -37,7 +37,10 @@ import {
 } from "@/components/ui/table";
 import { useForecastedBilling } from "@/hooks/useForecastedBilling";
 import { FinancialTableRow } from "@/components/financial/FinancialTableRow";
-import { COL as FIN_COL, TABLE_MIN_W as FIN_TABLE_MIN_W } from "@/components/financial/FinancialTableRow.constants";
+import {
+  COL as FIN_COL,
+  TABLE_MIN_W as FIN_TABLE_MIN_W,
+} from "@/components/financial/FinancialTableRow.constants";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { financial as financialContent } from "@/content";
 
@@ -56,16 +59,24 @@ export function FinancialView({
   enableTeacherSelection = true,
   autoTeacherId = null,
 }: FinancialViewProps) {
-  const [filters, setFilters] = useState<FinancialFiltersState>(defaultFinancialFilters);
+  const [filters, setFilters] = useState<FinancialFiltersState>(
+    defaultFinancialFilters
+  );
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [confirmPaymentRecord, setConfirmPaymentRecord] = useState<FinancialRecordWithRelations | null>(null);
-  const [recordToEdit, setRecordToEdit] = useState<FinancialRecordWithRelations | null>(null);
-  const [recordToUndo, setRecordToUndo] = useState<FinancialRecordWithRelations | null>(null);
+  const [confirmPaymentRecord, setConfirmPaymentRecord] =
+    useState<FinancialRecordWithRelations | null>(null);
+  const [recordToEdit, setRecordToEdit] =
+    useState<FinancialRecordWithRelations | null>(null);
+  const [recordToUndo, setRecordToUndo] =
+    useState<FinancialRecordWithRelations | null>(null);
   const [undoDialogOpen, setUndoDialogOpen] = useState(false);
-  const [recordToDelete, setRecordToDelete] = useState<FinancialRecordWithRelations | null>(null);
+  const [recordToDelete, setRecordToDelete] =
+    useState<FinancialRecordWithRelations | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [historyRecord, setHistoryRecord] = useState<FinancialRecordWithRelations | null>(null);
+  const [historyRecord, setHistoryRecord] =
+    useState<FinancialRecordWithRelations | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
+  const isFirstScrollRef = useRef(true);
   const { data: forecastedBilling } = useForecastedBilling(autoTeacherId);
 
   const {
@@ -89,6 +100,10 @@ export function FinancialView({
   const { data: summary } = useFinancialSummary(autoTeacherId);
 
   useEffect(() => {
+    if (isFirstScrollRef.current) {
+      isFirstScrollRef.current = false;
+      return;
+    }
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [page]);
   const { data: teachers = [] } = useTeachers();
@@ -109,9 +124,12 @@ export function FinancialView({
       // Apenas busca por texto (não está no banco - CPF/telefone com dígitos)
       const searchLower = filters.search.toLowerCase().trim();
       const studentName = record.students?.name || "";
-      const studentEmail = (record.students as { email?: string | null })?.email || "";
-      const studentCpf = (record.students as { cpf?: string | null })?.cpf || "";
-      const studentPhone = (record.students as { phone?: string | null })?.phone || "";
+      const studentEmail =
+        (record.students as { email?: string | null })?.email || "";
+      const studentCpf =
+        (record.students as { cpf?: string | null })?.cpf || "";
+      const studentPhone =
+        (record.students as { phone?: string | null })?.phone || "";
       const searchDigits = searchLower.replace(/\D/g, "");
       const matchesSearch =
         !searchLower ||
@@ -180,8 +198,12 @@ export function FinancialView({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">{title}</h1>
-          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">{subtitle}</p>
+          <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">
+            {title}
+          </h1>
+          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground mt-1">
+            {subtitle}
+          </p>
         </div>
       </div>
 
@@ -203,7 +225,7 @@ export function FinancialView({
         students={activeStudents}
       />
 
-        {/* Error state */}
+      {/* Error state */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <p className="text-destructive">
@@ -212,82 +234,126 @@ export function FinancialView({
         </div>
       )}
 
-        {/* Table */}
-        <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
-          <Table style={{ minWidth: FIN_TABLE_MIN_W }}>
-            <TableHeader>
-              <TableRow>
-                <TableHead
-                  className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
-                  style={{ width: FIN_COL.ALUNO, minWidth: FIN_COL.ALUNO, boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" }}
-                >
-                  {financialContent.view.colStudent}
-                </TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.AULA, minWidth: FIN_COL.AULA }}>{financialContent.view.colClass}</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.VALOR, minWidth: FIN_COL.VALOR }}>{financialContent.view.colAmount}</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell" style={{ width: FIN_COL.METODO, minWidth: FIN_COL.METODO }}>{financialContent.view.colMethod}</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell" style={{ width: FIN_COL.VENCIMENTO, minWidth: FIN_COL.VENCIMENTO }}>{financialContent.view.colDueDate}</TableHead>
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.STATUS, minWidth: FIN_COL.STATUS }}>{financialContent.view.colStatus}</TableHead>
-                <TableHead className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }} aria-label={common.aria.evaluate} />
-                <TableHead className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap" style={{ width: FIN_COL.ACOES, minWidth: FIN_COL.ACOES }}>{financialContent.table.colActions}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="divide-y divide-border/40">
-              {isLoading ? (
-                <FinancialTableSkeleton rows={8} />
-              ) : (
-                filteredRecords.map((record) => (
-                  <FinancialTableRow
-                    key={record.id}
-                    record={record}
-                    showTeacherColumn={showTeacherColumn}
-                    teacherMap={teacherMap}
-                    isUndoing={undoPayment.isPending}
-                    onViewHistory={setHistoryRecord}
-                    onEdit={(record) => {
-                      setRecordToEdit(record);
-                      setIsFormOpen(true);
-                    }}
-                    onConfirmPayment={(record) => {
-                      setHistoryRecord(record);
-                    }}
-                    onUndoPayment={(record) => {
-                      setRecordToUndo(record);
-                      setUndoDialogOpen(true);
-                    }}
-                    onDelete={(record) => {
-                      setRecordToDelete(record);
-                      setDeleteDialogOpen(true);
-                    }}
-                  />
-                ))
-              )}
-            </TableBody>
-          </Table>
-          {!isLoading && filteredRecords.length === 0 && (
-            <div className="border-t">
-              {records.length === 0 ? (
-                <EmptyFinancialState
-                  message="As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças."
+      {/* Table */}
+      <div
+        className="rounded-lg border bg-card shadow-card overflow-hidden"
+        ref={listTopRef}
+      >
+        <Table style={{ minWidth: FIN_TABLE_MIN_W }}>
+          <TableHeader>
+            <TableRow>
+              <TableHead
+                className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
+                style={{
+                  width: FIN_COL.ALUNO,
+                  minWidth: FIN_COL.ALUNO,
+                  boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)",
+                }}
+              >
+                {financialContent.view.colStudent}
+              </TableHead>
+              <TableHead
+                className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell"
+                style={{ width: FIN_COL.AULA, minWidth: FIN_COL.AULA }}
+              >
+                {financialContent.view.colClass}
+              </TableHead>
+              <TableHead
+                className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                style={{ width: FIN_COL.VALOR, minWidth: FIN_COL.VALOR }}
+              >
+                {financialContent.view.colAmount}
+              </TableHead>
+              <TableHead
+                className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden lg:table-cell"
+                style={{ width: FIN_COL.METODO, minWidth: FIN_COL.METODO }}
+              >
+                {financialContent.view.colMethod}
+              </TableHead>
+              <TableHead
+                className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden md:table-cell"
+                style={{
+                  width: FIN_COL.VENCIMENTO,
+                  minWidth: FIN_COL.VENCIMENTO,
+                }}
+              >
+                {financialContent.view.colDueDate}
+              </TableHead>
+              <TableHead
+                className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                style={{ width: FIN_COL.STATUS, minWidth: FIN_COL.STATUS }}
+              >
+                {financialContent.view.colStatus}
+              </TableHead>
+              <TableHead
+                className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }}
+                aria-label={common.aria.evaluate}
+              />
+              <TableHead
+                className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                style={{ width: FIN_COL.ACOES, minWidth: FIN_COL.ACOES }}
+              >
+                {financialContent.table.colActions}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/40">
+            {isLoading ? (
+              <FinancialTableSkeleton rows={8} />
+            ) : (
+              filteredRecords.map((record) => (
+                <FinancialTableRow
+                  key={record.id}
+                  record={record}
+                  showTeacherColumn={showTeacherColumn}
+                  teacherMap={teacherMap}
+                  isUndoing={undoPayment.isPending}
+                  onViewHistory={setHistoryRecord}
+                  onEdit={(record) => {
+                    setRecordToEdit(record);
+                    setIsFormOpen(true);
+                  }}
+                  onConfirmPayment={(record) => {
+                    setConfirmPaymentRecord(record);
+                  }}
+                  onUndoPayment={(record) => {
+                    setRecordToUndo(record);
+                    setUndoDialogOpen(true);
+                  }}
+                  onDelete={(record) => {
+                    setRecordToDelete(record);
+                    setDeleteDialogOpen(true);
+                  }}
                 />
-              ) : (
-                <EmptyState
-                  icon={Search}
-                  title={common.table.noResults}
-                  message="Ajuste os filtros acima ou limpe a busca"
-                />
-              )}
-            </div>
-          )}
-          <TablePaginationBar
-            page={page}
-            pageSize={10}
-            totalCount={totalCount}
-            hasMore={!!hasMore}
-            isFetching={isFetching}
-            onPageChange={setPage}
-          />
-        </div>
+              ))
+            )}
+          </TableBody>
+        </Table>
+        {!isLoading && filteredRecords.length === 0 && (
+          <div className="border-t">
+            {records.length === 0 ? (
+              <EmptyFinancialState
+                message={financialContent.emptyState.chargeCreationHint}
+              />
+            ) : (
+              <EmptyState
+                icon={Search}
+                title={common.table.noResults}
+                message={financialContent.emptyState.filterEmptyMessage}
+              />
+            )}
+          </div>
+        )}
+        <TablePaginationBar
+          page={page}
+          pageSize={10}
+          totalCount={totalCount}
+          hasMore={!!hasMore}
+          isFetching={isFetching}
+          onPageChange={setPage}
+        />
+      </div>
 
       {/* Create Form Dialog */}
       <FinancialFormDialog

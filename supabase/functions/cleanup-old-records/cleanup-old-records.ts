@@ -72,13 +72,14 @@ serve(async (req) => {
   const cronSecret = req.headers.get("X-Cron-Secret");
   const expectedCronSecret = Deno.env.get("CRON_SECRET");
 
-  if (cronSecret !== expectedCronSecret && !authHeader?.includes(serviceRoleKey)) {
+  const cronSecretValid = expectedCronSecret != null && cronSecret === expectedCronSecret;
+  if (!cronSecretValid) {
     log("Unauthorized access attempt");
     return jsonResponse({ error: "Não autorizado" }, 401);
   }
 
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-  
+
   const stats: CleanupStats = {
     audit_logs_deleted: false,
     idempotency_keys_deleted: false,

@@ -41,7 +41,8 @@ export function useSubmitPaymentProof() {
 
       // 2. Upload do arquivo para storage
       const fileExt = file.name.split(".").pop();
-      const fileName = `${profile.student_id}/${financialRecordId}_${Date.now()}.${fileExt}`;
+      const safeRecordId = financialRecordId.replace(/[^a-zA-Z0-9-]/g, "");
+      const fileName = `${profile.student_id}/${safeRecordId}_${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("payment-proofs")
@@ -124,10 +125,17 @@ export function useReviewPaymentProof() {
  */
 export async function getPaymentProofUrl(proofUrl: string): Promise<string> {
   // Extrair o path do arquivo da URL pública
-  const urlParts = proofUrl.split("/payment-proofs/");
-  if (urlParts.length < 2) throw new Error("URL inválida");
-
-  const filePath = urlParts[1];
+  let filePath: string;
+  try {
+    const urlObj = new URL(proofUrl);
+    const pathSegments = urlObj.pathname.split("/payment-proofs/");
+    if (pathSegments.length < 2 || !pathSegments[pathSegments.length - 1]) {
+      throw new Error("URL inválida");
+    }
+    filePath = pathSegments[pathSegments.length - 1];
+  } catch {
+    throw new Error("URL inválida");
+  }
 
   const { data, error } = await supabase.storage
     .from("payment-proofs")

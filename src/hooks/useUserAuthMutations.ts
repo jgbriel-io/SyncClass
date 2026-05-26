@@ -1,4 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { QK } from "./queryKeys";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/integrations/supabase/env";
@@ -7,7 +8,6 @@ import { toast } from "sonner";
 import type { Enums, TablesInsert } from "@/integrations/supabase/types";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   generateRandomPassword,
   invokeInviteUser,
@@ -155,6 +155,7 @@ export function useResetPassword() {
 }
 
 export function useResetOwnPassword() {
+  const navigate = useNavigate();
   return useMutation({
     mutationFn: async ({
       currentPassword,
@@ -217,7 +218,7 @@ export function useResetOwnPassword() {
         Object.keys(sessionStorage)
           .filter((k) => k.startsWith("sb-"))
           .forEach((k) => sessionStorage.removeItem(k));
-        window.location.replace("/login");
+        navigate("/login", { replace: true });
       }, 1500);
     },
     onError: (error: Error) => toast.error(sanitizeErrorMessage(error)),

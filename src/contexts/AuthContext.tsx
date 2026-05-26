@@ -2,9 +2,11 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
@@ -30,11 +32,13 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<UserRole>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const roleFetchedRef = useRef(false);
 
   const fetchUserRole = async (userId: string): Promise<UserRole> => {
     try {
@@ -95,17 +99,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Use signOut from the client for complete cleanup
       await supabase.auth.signOut();
 
-      // Additional cleanup: remove all sb-* keys from localStorage
-      Object.keys(localStorage)
-        .filter((key) => key.startsWith("sb-"))
-        .forEach((key) => localStorage.removeItem(key));
+      // Additional cleanup: remove all sb-* keys from storage
+      [localStorage, sessionStorage].forEach((store) =>
+        Object.keys(store)
+          .filter((k) => k.startsWith("sb-"))
+          .forEach((k) => store.removeItem(k))
+      );
 
       setUser(null);
       setSession(null);
       setRole(null);
       setIsLoading(false);
 
-      window.location.href = "/login";
+      navigate("/login", { replace: true });
     };
 
     // Set up auth state listener FIRST
@@ -135,6 +141,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         setTimeout(async () => {
           if (!isMounted) return;
+          // Skip if getSession() already fetched role (FE-011: no double fetch)
+          if (roleFetchedRef.current) {
+            roleFetchedRef.current = false;
+            return;
+          }
           const userRole = await fetchUserRole(session.user.id);
           if (isMounted) {
             setRole(userRole);
@@ -164,37 +175,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener("unhandledrejection", handleUnhandledRejection);
 
-    // Verificar status da conta periodicamente
-    const checkAccountStatus = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.user) return;
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("deleted_at, active")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-
-      if (
-        profileData &&
-        (profileData.deleted_at || profileData.active === false)
-      ) {
-        logger.warn("Account deleted or inactive, logging out", {
-          userId: session.user.id,
-        });
-        await supabase.auth.signOut();
-        window.location.href = "/login";
-      }
-    };
-
-    // Verificar imediatamente ao carregar
-    checkAccountStatus();
-
-    // Verificar a cada 30 segundos
-    const accountCheckInterval = setInterval(checkAccountStatus, 30000);
-
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!isMounted) return;
@@ -205,6 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         fetchUserRole(session.user.id).then((userRole) => {
           if (isMounted) {
+            roleFetchedRef.current = true; // Signal onAuthStateChange to skip (FE-011)
             setRole(userRole);
             setIsLoading(false);
           }
@@ -221,9 +202,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         "unhandledrejection",
         handleUnhandledRejection
       );
-      clearInterval(accountCheckInterval);
     };
   }, []);
+
+  // FE-003: Realtime subscription to detect account deactivation/deletion
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`profile-status-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `user_id=eq.${user.id}`,
+        },
+        async (payload) => {
+          const updated = payload.new as {
+            deleted_at?: string | null;
+            active?: boolean;
+          };
+          if (updated?.deleted_at || updated?.active === false) {
+            logger.warn("Account deactivated via Realtime, logging out", {
+              userId: user.id,
+            });
+            await supabase.auth.signOut();
+            navigate("/login", { replace: true });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, navigate]);
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({

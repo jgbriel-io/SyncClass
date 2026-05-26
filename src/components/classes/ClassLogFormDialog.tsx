@@ -77,7 +77,7 @@ export function ClassLogFormDialog({
     formState: { errors },
   } = useForm<ClassLogFormData>({
     resolver: zodResolver(createClassLogSchema(isEditing)),
-    defaultValues: { semCobranca: false },
+    defaultValues: { semCobranca: classLog?.sem_cobranca ?? false },
   });
 
   const classDate = watch("class_date");
@@ -147,6 +147,10 @@ export function ClassLogFormDialog({
       );
       setValue("start_time", extractTimeFromIso(classLog.start_at));
       setValue("end_time", extractTimeFromIso(classLog.end_at));
+      setValue(
+        "semCobranca",
+        (classLog as { sem_cobranca?: boolean | null }).sem_cobranca ?? false
+      );
 
       const hasDirectFinancial =
         classLog.financial_records?.length > 0 && classLog.financial_records[0];
@@ -208,7 +212,7 @@ export function ClassLogFormDialog({
 
   const handleFormSubmit = (data: ClassLogFormData) => {
     if (enableTeacherSelection && !selectedTeacherId) {
-      setTeacherError("Selecione um professor");
+      setTeacherError(classesContent.validation.teacherRequired);
       return;
     }
 

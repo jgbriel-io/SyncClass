@@ -189,10 +189,22 @@ serve(async (req) => {
       
       if (isUserNotFound) {
         console.log("User already deleted from Auth, cleaning up database records");
-        // Usuário já foi deletado do Auth, mas pode ter registros no banco
-        // Remove profile e user_roles manualmente se existirem
-        await supabaseAdmin.from("profiles").delete().eq("user_id", userIdToDelete);
-        await supabaseAdmin.from("user_roles").delete().eq("user_id", userIdToDelete);
+        const { error: profileCleanupError } = await supabaseAdmin
+          .from("profiles")
+          .delete()
+          .eq("user_id", userIdToDelete);
+        if (profileCleanupError) {
+          console.error("Profile cleanup failed:", profileCleanupError.message);
+          return jsonResponse({ error: "Profile cleanup failed" }, 500);
+        }
+        const { error: roleCleanupError } = await supabaseAdmin
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userIdToDelete);
+        if (roleCleanupError) {
+          console.error("Role cleanup failed:", roleCleanupError.message);
+          return jsonResponse({ error: "Role cleanup failed" }, 500);
+        }
         return jsonResponse({ success: true }, 200);
       }
       

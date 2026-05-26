@@ -206,33 +206,20 @@ const CLASS_LOG_SELECT = `
   )
 `;
 
-async function enrichWithPackageFinancial(
+function enrichWithPackageFinancial(
   list: ClassLogWithStudent[]
-): Promise<ClassLogWithStudent[]> {
-  const withoutFinancial = list.filter(
-    (log) => !log.financial_records || log.financial_records.length === 0
-  );
-  if (withoutFinancial.length === 0) return list;
-  const logIds = withoutFinancial.map((l) => l.id);
-  const { data: links } = await supabase
-    .from("financial_record_class_logs")
-    .select("class_log_id, financial_record_id")
-    .in("class_log_id", logIds);
-  if (!links?.length) return list;
-  const frIds = [...new Set(links.map((r) => r.financial_record_id))];
-  const { data: frs } = await supabase
-    .from("financial_records")
-    .select(
-      "id, status, amount, due_date, description, payment_proof_url, payment_proof_filename, payment_proof_status"
-    )
-    .in("id", frIds);
-  const frMap = new Map((frs ?? []).map((fr) => [fr.id, fr]));
-  const logToFr = new Map(
-    links.map((r) => [r.class_log_id, r.financial_record_id])
-  );
-  withoutFinancial.forEach((log) => {
-    const frId = logToFr.get(log.id);
-    const fr = frId ? frMap.get(frId) : null;
+): ClassLogWithStudent[] {
+  list.forEach((log) => {
+    if (log.financial_records && log.financial_records.length > 0) return;
+    const packageLinks = (log as Record<string, unknown>)
+      .financial_record_class_logs as Array<{
+      financial_record_id: string;
+      financial_records:
+        | ClassLogWithStudent["financial_records"][number]
+        | null;
+    }> | null;
+    if (!packageLinks?.length) return;
+    const fr = packageLinks[0]?.financial_records;
     if (fr) {
       log.financial_records = [fr];
       log.financial_record_via_package = true;
@@ -271,7 +258,7 @@ async function fetchClassLogs(
   const { data, error, count } = await q.range(from, from + pageSize - 1);
   if (error) throw error;
   const list = (data ?? []) as ClassLogWithStudent[];
-  await enrichWithPackageFinancial(list);
+  enrichWithPackageFinancial(list);
   return { list, count: count ?? 0 };
 }
 
@@ -306,7 +293,7 @@ async function fetchPendingEvaluationClassLogs(): Promise<
     .limit(50);
   if (error) throw error;
   const list = (data ?? []) as ClassLogWithStudent[];
-  const enriched = await enrichWithPackageFinancial(list);
+  const enriched = enrichWithPackageFinancial(list);
   return enriched.filter(
     (log) => getClassStatusWithTime(log).label === "Pendente"
   );
@@ -354,6 +341,7 @@ async function fetchClassLogsSummary(teacherId?: string | null) {
     totalClasses: number;
     totalPresent: number;
     totalAbsent: number;
+    totalPending: number;
     gradesCount: number;
     gradesSum: number;
     averageGrade: number;
@@ -362,6 +350,7 @@ async function fetchClassLogsSummary(teacherId?: string | null) {
     totalClasses: Number(row?.totalClasses) || 0,
     totalPresent: Number(row?.totalPresent) || 0,
     totalAbsent: Number(row?.totalAbsent) || 0,
+    totalPending: Number(row?.totalPending) || 0,
     averageGrade: Number(row?.averageGrade) || 0,
     gradesCount: Number(row?.gradesCount) || 0,
     gradesSum: Number(row?.gradesSum) || 0,
@@ -725,6 +714,18 @@ export function useCreateClassLogPackage() {
             description: null,
             payment_method: null,
           };
+
+      if (packageFinancial) {
+        if (packageFinancial.amount == null || packageFinancial.amount < 0) {
+          throw new Error("Valor do pacote inválido");
+        }
+        if (
+          !packageFinancial.due_date ||
+          !/^\d{4}-\d{2}-\d{2}$/.test(packageFinancial.due_date)
+        ) {
+          throw new Error("Data de vencimento inválida");
+        }
+      }
 
       const { data, error } = await supabase.rpc("create_class_package", {
         p_class_logs: classLogs,

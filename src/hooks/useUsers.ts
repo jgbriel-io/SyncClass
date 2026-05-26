@@ -92,31 +92,26 @@ export function useUsers() {
   return useQuery({
     queryKey: [QK.USERS],
     queryFn: async (): Promise<CombinedUser[]> => {
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("*")
-        .is("deleted_at", null) // Only show non-deleted profiles
-        .order("created_at", { ascending: false });
+      const [
+        { data: profiles, error: profilesError },
+        { data: roles, error: rolesError },
+        { data: students, error: studentsError },
+        { data: teachers, error: teachersError },
+      ] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("*")
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+          .limit(1000),
+        supabase.from("user_roles").select("*").limit(1000),
+        supabase.from("students").select("*").limit(1000),
+        supabase.from("teachers").select("*").limit(1000),
+      ]);
 
       if (profilesError) throw profilesError;
-
-      const { data: roles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("*");
-
       if (rolesError) throw rolesError;
-
-      // Buscar todos os students e teachers de uma vez
-      const { data: students, error: studentsError } = await supabase
-        .from("students")
-        .select("*");
-
       if (studentsError) throw studentsError;
-
-      const { data: teachers, error: teachersError } = await supabase
-        .from("teachers")
-        .select("*");
-
       if (teachersError) throw teachersError;
 
       return (profiles || []).map((profile: ProfileRow): CombinedUser => {
@@ -354,6 +349,7 @@ export function useUsersPaginated(
 export function useCurrentUserProfile(userId: string | undefined) {
   return useQuery({
     queryKey: [QK.CURRENT_USER_PROFILE, userId],
+    enabled: !!userId,
     queryFn: async () => {
       if (!userId) return null;
       const { data, error } = await supabase

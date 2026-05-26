@@ -20,10 +20,24 @@ import { Loader2, CalendarIcon } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useAvailableClassLogsForStudent } from "@/hooks/useClassLogs";
-import { FinancialRecordInsert, FinancialRecord, FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  FinancialRecordInsert,
+  FinancialRecord,
+  FinancialRecordWithRelations,
+} from "@/hooks/useFinancialRecords";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { brDateStringToDate, isValidDateString, parseMoneyToNumber, formatNumberToMoneyBR, REGEX_PATTERNS } from "@/lib/utils/patterns";
+import {
+  brDateStringToDate,
+  isValidDateString,
+  parseMoneyToNumber,
+  formatNumberToMoneyBR,
+  REGEX_PATTERNS,
+} from "@/lib/utils/patterns";
 import { cn } from "@/lib/utils";
 import { FinancialClassLogField } from "./FinancialClassLogField";
 import { common, financial } from "@/content";
@@ -35,10 +49,13 @@ function createFinancialSchema(requireClassLog: boolean) {
       ? z.string().min(1, financial.validation.classLogRequired)
       : z.string().optional(),
     amount: z.string().min(1, financial.validation.amountRequired),
-    due_date: z.string()
+    due_date: z
+      .string()
       .min(1, financial.validation.dueDateRequired)
       .regex(REGEX_PATTERNS.date, financial.validation.dueDateFormat)
-      .refine(isValidDateString, { message: financial.validation.dueDateInvalid }),
+      .refine(isValidDateString, {
+        message: financial.validation.dueDateInvalid,
+      }),
     payment_method: z.string().optional(),
     description: z.string().optional(),
   });
@@ -56,7 +73,9 @@ interface FinancialFormDialogProps {
 }
 
 function formatClassLogDate(dateString: string): string {
-  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", {
+    locale: ptBR,
+  });
 }
 
 export function FinancialFormDialog({
@@ -73,13 +92,14 @@ export function FinancialFormDialog({
   const [teacherError, setTeacherError] = useState<string | null>(null);
   const { data: students = [], isLoading: loadingStudents } = useStudents();
   const { data: teachers = [], isLoading: loadingTeachers } = useTeachers();
-  const { data: availableClassLogs = [], isLoading: loadingClassLogs } = useAvailableClassLogsForStudent(
-    selectedStudentId || null,
-    enableTeacherSelection ? (selectedTeacherId || undefined) : undefined
-  );
+  const { data: availableClassLogs = [], isLoading: loadingClassLogs } =
+    useAvailableClassLogsForStudent(
+      selectedStudentId || null,
+      enableTeacherSelection ? selectedTeacherId || undefined : undefined
+    );
 
   const requireClassLog = !initialData;
-  
+
   // Ao editar, a aula atual não aparece em availableClassLogs (já tem cobrança); incluir para exibição
   const currentClassLog =
     initialData && "class_logs" in initialData && initialData.class_logs
@@ -91,16 +111,21 @@ export function FinancialFormDialog({
           title: initialData.class_logs.title,
         }
       : null;
-  
+
   // Para cobranças de pacote, pegar a primeira aula do pacote
-  const packageClasses = initialData && "package_classes" in initialData ? initialData.package_classes : null;
-  const isPackage = !initialData?.class_log_id && packageClasses && packageClasses.length > 0;
-  
+  const packageClasses =
+    initialData && "package_classes" in initialData
+      ? initialData.package_classes
+      : null;
+  const isPackage =
+    !initialData?.class_log_id && packageClasses && packageClasses.length > 0;
+
   const classLogOptions =
-    currentClassLog && !availableClassLogs.some((a) => a.id === currentClassLog.id)
+    currentClassLog &&
+    !availableClassLogs.some((a) => a.id === currentClassLog.id)
       ? [currentClassLog, ...availableClassLogs]
       : availableClassLogs;
-  
+
   const {
     register,
     handleSubmit,
@@ -135,16 +160,18 @@ export function FinancialFormDialog({
     if (open && initialData) {
       setSelectedStudentId(initialData.student_id || "");
       setSelectedClassLogId(initialData.class_log_id || "");
-      
+
       // Garantir que o amount seja formatado corretamente com separador de milhar
       const amountValue = initialData.amount ? Number(initialData.amount) : 0;
       const formattedAmount = formatNumberToMoneyBR(amountValue);
-      
+
       reset({
         student_id: initialData.student_id || "",
         class_log_id: initialData.class_log_id || "",
         amount: formattedAmount,
-        due_date: initialData.due_date ? format(new Date(initialData.due_date + "T00:00:00"), "dd/MM/yyyy") : "",
+        due_date: initialData.due_date
+          ? format(new Date(initialData.due_date + "T00:00:00"), "dd/MM/yyyy")
+          : "",
         description: initialData.description || "",
         payment_method: initialData.payment_method || "",
       });
@@ -160,16 +187,18 @@ export function FinancialFormDialog({
   const handleFormSubmit = (data: FinancialFormData) => {
     // Para admin, professor é obrigatório
     if (enableTeacherSelection && !selectedTeacherId) {
-      setTeacherError(financial.validation.studentRequired);
+      setTeacherError(financial.validation.teacherRequired);
       return;
     }
 
     const amount = parseMoneyToNumber(data.amount);
-    
+
     onSubmit({
       student_id: data.student_id,
       // Preservar class_log_id original ao editar
-      class_log_id: initialData ? (initialData.class_log_id || null) : (data.class_log_id || null),
+      class_log_id: initialData
+        ? initialData.class_log_id || null
+        : data.class_log_id || null,
       amount: amount,
       due_date: brDateToIso(data.due_date),
       payment_method: data.payment_method || null,
@@ -195,213 +224,247 @@ export function FinancialFormDialog({
     <BaseDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={initialData ? financial.formDialog.titleEdit : financial.formDialog.titleNew}
+      title={
+        initialData
+          ? financial.formDialog.titleEdit
+          : financial.formDialog.titleNew
+      }
       size="SM"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          {/* Teacher Select - only when enabled (admin) */}
-          {enableTeacherSelection && (
-            <div className="space-y-2">
-              <Label>{financial.formDialog.teacherLabel}</Label>
-              {initialData && selectedTeacherId ? (
-                <>
-                  <Input
-                    value={teachers.find(t => t.id === selectedTeacherId)?.name || common.labels.teacherNotFound}
-                    disabled
-                    readOnly
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {financial.formDialog.teacherLinked}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <Select
-                    value={selectedTeacherId}
-                    onValueChange={(value) => {
-                      setSelectedTeacherId(value);
-                      setTeacherError(null);
-                    }}
-                    disabled={loadingTeachers}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={financial.formDialog.teacherPlaceholder} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teachers.map((teacher) => (
-                        <SelectItem key={teacher.id} value={teacher.id}>
-                          {teacher.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {teacherError && (
-                    <p className="text-sm text-destructive">{teacherError}</p>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Student Select */}
+        {/* Teacher Select - only when enabled (admin) */}
+        {enableTeacherSelection && (
           <div className="space-y-2">
-            <Label>{financial.formDialog.studentLabel}</Label>
-            <Select
-              value={selectedStudentId}
-              onValueChange={handleStudentChange}
-              disabled={loadingStudents || !!initialData}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={financial.formDialog.studentPlaceholder} />
-              </SelectTrigger>
-              <SelectContent>
-                {activeStudents.map((student) => (
-                  <SelectItem key={student.id} value={student.id}>
-                    {student.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <input type="hidden" {...register("student_id")} />
-            {errors.student_id && (
-              <p className="text-sm text-destructive">{errors.student_id.message}</p>
-            )}
-          </div>
-
-          {/* Class Log Select */}
-          <FinancialClassLogField
-            isEditMode={!!initialData}
-            isPackage={isPackage}
-            selectedClassLogId={selectedClassLogId}
-            classLogOptions={classLogOptions}
-            currentClassLog={currentClassLog}
-            packageClasses={packageClasses}
-            selectedStudentId={selectedStudentId}
-            loadingClassLogs={loadingClassLogs}
-            requireClassLog={requireClassLog}
-            onClassLogChange={handleClassLogChange}
-            errorMessage={errors.class_log_id?.message}
-          />
-
-          {/* Amount */}
-          <div className="space-y-2">
-            <Label htmlFor="amount">{financial.formDialog.amountLabel}</Label>
-            <Input
-              id="amount"
-              type="text"
-              placeholder={financial.formDialog.amountPlaceholder}
-              {...register("amount")}
-              onChange={(e) => {
-                const value = e.target.value;
-                const numericValue = parseMoneyToNumber(value);
-                if (!isNaN(numericValue)) {
-                  const formatted = formatNumberToMoneyBR(numericValue);
-                  setValue("amount", formatted);
-                }
-              }}
-            />
-            {errors.amount && (
-              <p className="text-sm text-destructive">{errors.amount.message}</p>
-            )}
-          </div>
-
-          {/* Due Date */}
-          <div className="space-y-2">
-            <Label htmlFor="due_date">{financial.formDialog.dueDateLabel}</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="due_date"
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal h-10",
-                    !dueDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dueDate || financial.formDialog.selectDate}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={brDateStringToDate(dueDate || "") ?? undefined}
-                  onSelect={(date) => {
-                    if (date) {
-                      setValue("due_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
-                    }
-                  }}
-                  locale={ptBR}
-                  initialFocus
+            <Label>{financial.formDialog.teacherLabel}</Label>
+            {initialData && selectedTeacherId ? (
+              <>
+                <Input
+                  value={
+                    teachers.find((t) => t.id === selectedTeacherId)?.name ||
+                    common.labels.teacherNotFound
+                  }
+                  disabled
+                  readOnly
                 />
-              </PopoverContent>
-            </Popover>
-            {errors.due_date && (
-              <p className="text-sm text-destructive">{errors.due_date.message}</p>
+                <p className="text-xs text-muted-foreground">
+                  {financial.formDialog.teacherLinked}
+                </p>
+              </>
+            ) : (
+              <>
+                <Select
+                  value={selectedTeacherId}
+                  onValueChange={(value) => {
+                    setSelectedTeacherId(value);
+                    setTeacherError(null);
+                  }}
+                  disabled={loadingTeachers}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={financial.formDialog.teacherPlaceholder}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {teacherError && (
+                  <p className="text-sm text-destructive">{teacherError}</p>
+                )}
+              </>
             )}
           </div>
+        )}
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">{financial.formDialog.descriptionLabel}</Label>
-            <Textarea
-              id="description"
-              placeholder={financial.formDialog.descriptionPlaceholder}
-              rows={2}
-              {...register("description")}
-            />
-          </div>
+        {/* Student Select */}
+        <div className="space-y-2">
+          <Label>{financial.formDialog.studentLabel}</Label>
+          <Select
+            value={selectedStudentId}
+            onValueChange={handleStudentChange}
+            disabled={loadingStudents || !!initialData}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={financial.formDialog.studentPlaceholder}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {activeStudents.map((student) => (
+                <SelectItem key={student.id} value={student.id}>
+                  {student.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <input type="hidden" {...register("student_id")} />
+          {errors.student_id && (
+            <p className="text-sm text-destructive">
+              {errors.student_id.message}
+            </p>
+          )}
+        </div>
 
-          {/* Payment Method */}
-          <div className="space-y-2">
-            <Label htmlFor="payment_method">{financial.formDialog.paymentMethodLabel}</Label>
-            <Select
-              value={watch("payment_method") || undefined}
-              onValueChange={(value) => setValue("payment_method", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={financial.formDialog.paymentMethodPlaceholder} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pix">{financial.formDialog.pix}</SelectItem>
-                <SelectItem value="cartao">{financial.formDialog.card}</SelectItem>
-                <SelectItem value="dinheiro">{financial.formDialog.cash}</SelectItem>
-                <SelectItem value="transferencia">{financial.formDialog.transfer}</SelectItem>
-                <SelectItem value="outro">{financial.formDialog.other}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Class Log Select */}
+        <FinancialClassLogField
+          isEditMode={!!initialData}
+          isPackage={isPackage}
+          selectedClassLogId={selectedClassLogId}
+          classLogOptions={classLogOptions}
+          currentClassLog={currentClassLog}
+          packageClasses={packageClasses}
+          selectedStudentId={selectedStudentId}
+          loadingClassLogs={loadingClassLogs}
+          requireClassLog={requireClassLog}
+          onClassLogChange={handleClassLogChange}
+          errorMessage={errors.class_log_id?.message}
+        />
 
-          {/* Actions */}
-          <div className="flex justify-end gap-4 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              {financial.formDialog.cancel}
-            </Button>
-            <Button
-              type="submit"
-              disabled={
-                isLoading ||
-                (requireClassLog && (!selectedClassLogId || classLogOptions.length === 0))
+        {/* Amount */}
+        <div className="space-y-2">
+          <Label htmlFor="amount">{financial.formDialog.amountLabel}</Label>
+          <Input
+            id="amount"
+            type="text"
+            placeholder={financial.formDialog.amountPlaceholder}
+            {...register("amount")}
+            onChange={(e) => {
+              const value = e.target.value;
+              const numericValue = parseMoneyToNumber(value);
+              if (!isNaN(numericValue)) {
+                const formatted = formatNumberToMoneyBR(numericValue);
+                setValue("amount", formatted);
               }
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {financial.formDialog.submitting}
-                </>
-              ) : initialData ? (
-                financial.formDialog.saveChanges
-              ) : (
-                financial.formDialog.create
-              )}
-            </Button>
-          </div>
-        </form>
+            }}
+          />
+          {errors.amount && (
+            <p className="text-sm text-destructive">{errors.amount.message}</p>
+          )}
+        </div>
+
+        {/* Due Date */}
+        <div className="space-y-2">
+          <Label htmlFor="due_date">{financial.formDialog.dueDateLabel}</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="due_date"
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal h-10",
+                  !dueDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dueDate || financial.formDialog.selectDate}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={brDateStringToDate(dueDate || "") ?? undefined}
+                onSelect={(date) => {
+                  if (date) {
+                    setValue(
+                      "due_date",
+                      format(date, "dd/MM/yyyy", { locale: ptBR }),
+                      { shouldValidate: true }
+                    );
+                  }
+                }}
+                locale={ptBR}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          {errors.due_date && (
+            <p className="text-sm text-destructive">
+              {errors.due_date.message}
+            </p>
+          )}
+        </div>
+
+        {/* Description */}
+        <div className="space-y-2">
+          <Label htmlFor="description">
+            {financial.formDialog.descriptionLabel}
+          </Label>
+          <Textarea
+            id="description"
+            placeholder={financial.formDialog.descriptionPlaceholder}
+            rows={2}
+            {...register("description")}
+          />
+        </div>
+
+        {/* Payment Method */}
+        <div className="space-y-2">
+          <Label htmlFor="payment_method">
+            {financial.formDialog.paymentMethodLabel}
+          </Label>
+          <Select
+            value={watch("payment_method") || undefined}
+            onValueChange={(value) => setValue("payment_method", value)}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={financial.formDialog.paymentMethodPlaceholder}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pix">{financial.formDialog.pix}</SelectItem>
+              <SelectItem value="cartao">
+                {financial.formDialog.card}
+              </SelectItem>
+              <SelectItem value="dinheiro">
+                {financial.formDialog.cash}
+              </SelectItem>
+              <SelectItem value="transferencia">
+                {financial.formDialog.transfer}
+              </SelectItem>
+              <SelectItem value="outro">
+                {financial.formDialog.other}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-4 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            {financial.formDialog.cancel}
+          </Button>
+          <Button
+            type="submit"
+            disabled={
+              isLoading ||
+              (requireClassLog &&
+                (!selectedClassLogId || classLogOptions.length === 0))
+            }
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {financial.formDialog.submitting}
+              </>
+            ) : initialData ? (
+              financial.formDialog.saveChanges
+            ) : (
+              financial.formDialog.create
+            )}
+          </Button>
+        </div>
+      </form>
     </BaseDialog>
   );
 }

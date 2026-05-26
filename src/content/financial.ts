@@ -73,7 +73,8 @@ export const financial = {
     classLoading: "Carregando aulas...",
     classNone: "Nenhuma aula disponível",
     classSelect: "Selecione uma aula",
-    classNoneWithCharge: "Nenhuma aula disponível (todas já têm cobrança ou não há aulas cadastradas). Registre uma aula na aba Aulas primeiro.",
+    classNoneWithCharge:
+      "Nenhuma aula disponível (todas já têm cobrança ou não há aulas cadastradas). Registre uma aula na aba Aulas primeiro.",
     amountLabel: "Valor (R$) *",
     amountPlaceholder: "1.450,00",
     dueDateLabel: "Data de Vencimento *",
@@ -151,6 +152,7 @@ export const financial = {
   paymentHistoryDialog: {
     title: "Histórico de pagamento",
     noHistory: "Nenhum histórico disponível.",
+    rejectionReason: "Comprovante inválido",
     descriptionLabel: "Descrição",
     proofLabel: "Comprovante de Pagamento",
     sentAt: "Enviado em",
@@ -161,6 +163,7 @@ export const financial = {
     approve: "Aprovar",
     reject: "Rejeitar",
     confirmedBy: "Confirmado por",
+    confirmedByRemoved: "Confirmado por (usuário removido)",
     paymentConfirmed: "Pagamento confirmado",
     dateUnavailable: "Data não disponível",
     noPayment: "Nenhum pagamento registrado para esta cobrança.",
@@ -206,6 +209,9 @@ export const financial = {
     title: "Nenhuma cobrança encontrada",
     description: "Crie a primeira cobrança para um aluno.",
     actionLabel: "Nova cobrança",
+    chargeCreationHint:
+      "As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças.",
+    filterEmptyMessage: "Ajuste os filtros acima ou limpe a busca",
   },
 
   validation: {

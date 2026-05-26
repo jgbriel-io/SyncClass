@@ -1,7 +1,7 @@
 # Sprint 26 — Security Audit
 
 **Período:** 25/05/2026  
-**Status:** ⬜ Planejada  
+**Status:** ✅ Concluída — 6/6 itens implementados  
 **Tipo:** Segurança
 
 ## Contexto
@@ -19,6 +19,7 @@ documentados em sprint-23 (BE-017, BE-023) não são repetidos aqui.
 
 **Severidade:** 🟠 Alta  
 **Esforço:** 1h  
+**Implementado:** ✅ client.ts — localStorage → sessionStorage  
 **Arquivo:** `src/integrations/supabase/client.ts:8`
 
 **Problema:** Supabase SDK por padrão armazena JWT em `localStorage`. Qualquer
@@ -53,6 +54,7 @@ no console do browser. Ou CSP implementado que bloqueia scripts inline.
 
 **Severidade:** 🟠 Alta  
 **Esforço:** 1h30min  
+**Implementado:** ✅ index.html — meta CSP adicionado  
 **Arquivo:** `index.html:1`
 
 **Problema:** Nenhum CSP configurado em `index.html` nem no servidor (Vite). Sem
@@ -87,6 +89,7 @@ Lighthouse Security audit não reporta CSP ausente.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 30min  
+**Implementado:** ✅ AuthContext.tsx + useUserAuthMutations.ts — window.location → navigate()  
 **Arquivos:** `src/contexts/AuthContext.tsx:108,188`, `src/hooks/useUserAuthMutations.ts:220`
 
 **Problema:** `window.location.href = '/login'` e `window.location.replace('/login')`
@@ -114,6 +117,7 @@ React Router. Sem `window.location` em flows de auth.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 30min  
+**Implementado:** ✅ fileValidation.ts — validateFileWithMagicBytes adicionado  
 **Arquivo:** `src/lib/utils/fileValidation.ts:56`
 
 **Problema:** Validação de arquivos (comprovantes de pagamento, material de atividades)
@@ -142,6 +146,7 @@ válido aceito normalmente.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 45min  
+**Implementado:** ✅ fileValidation.ts — checkUploadRateLimitServer adicionado via check_rate_limit RPC  
 **Arquivo:** `src/lib/utils/fileValidation.ts:44`
 
 **Problema:** `uploadTimestamps` é um `Map` em memória no cliente. Usuário pode
@@ -170,6 +175,7 @@ Rate limit persiste entre sessões do mesmo usuário.
 
 **Severidade:** 🟡 Média  
 **Esforço:** 30min  
+**Implementado:** ✅ reset-password.ts — delay constante de 500ms para equalizar tempo de resposta  
 **Arquivo:** `supabase/functions/reset-password/reset-password.ts:100`
 
 **Problema:** `signInWithPassword()` com email existente demora mais que com

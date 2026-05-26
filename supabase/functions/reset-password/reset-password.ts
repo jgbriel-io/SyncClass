@@ -95,11 +95,17 @@ serve(async (req) => {
       return jsonResponse({ error: "A nova senha deve ter pelo menos 6 caracteres." }, 400);
     }
 
-    // Verificar senha atual via sign-in
+    // Verificar senha atual via sign-in (with constant-time response to prevent email enumeration)
+    const minResponseMs = 500;
+    const signInStart = Date.now();
     const { error: signInError } = await supabaseAdmin.auth.signInWithPassword({
       email: user.email!,
       password: currentPassword,
     });
+    const elapsed = Date.now() - signInStart;
+    if (elapsed < minResponseMs) {
+      await new Promise((r) => setTimeout(r, minResponseMs - elapsed));
+    }
 
     if (signInError) {
       return jsonResponse({ error: "Senha atual incorreta." }, 403);

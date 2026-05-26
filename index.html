@@ -3,35 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <!-- ⚡ P0-4: Previne zoom automático em inputs mobile -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <!-- Security: Content Security Policy -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' data: blob: https://*.supabase.co; font-src 'self'; frame-ancestors 'none';"
+    />
+
     <!-- SEO: Block Search Engine Indexing (Private Platform) -->
     <meta name="robots" content="noindex, nofollow" />
     <meta name="googlebot" content="noindex, nofollow" />
-    
+
     <!-- App Identity -->
     <title>English School Platform</title>
-    <meta name="description" content="Official learning platform for English School students and teachers" />
+    <meta
+      name="description"
+      content="Official learning platform for English School students and teachers"
+    />
     <meta name="author" content="English School Platform" />
 
     <!-- Open Graph -->
     <meta property="og:title" content="English School Platform" />
-    <meta property="og:description" content="Official learning platform for English School students and teachers" />
+    <meta
+      property="og:description"
+      content="Official learning platform for English School students and teachers"
+    />
     <meta property="og:type" content="website" />
-    
+
     <!-- PWA Meta Tags (P0-3) -->
     <meta name="theme-color" content="#3b82f6" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="EduPlatform" />
-    
+
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-    
+
     <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
   </head>

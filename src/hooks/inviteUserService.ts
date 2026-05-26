@@ -351,6 +351,11 @@ export async function createUserLegacy(
       p_email: normalizedEmail,
     });
     if (!profileErr && !rolesErr) roleOk = true;
+    else if (profileErr && rolesErr) {
+      throw new Error(
+        `Usuário criado mas sem role atribuída: ${rolesErr.message}`
+      );
+    }
   }
 
   return {

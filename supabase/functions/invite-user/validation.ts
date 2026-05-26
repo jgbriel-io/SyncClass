@@ -6,7 +6,7 @@ export async function validatePhonePlatform(
   data: Record<string, unknown> | undefined
 ): Promise<string | null> {
   if (!data) return null;
-  const phone = normalizeDigits(data.phone as string);
+  const phone = normalizeDigits(data.phone != null ? String(data.phone) : "");
 
   if (phone && phone.length > 0) {
     if (phone.length < 8) return "Telefone deve ter pelo menos 8 dígitos";

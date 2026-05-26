@@ -109,7 +109,9 @@ export function StudentResetPasswordDialog({
         {student && (
           <>
             <div className="rounded-lg border bg-muted/50 p-3 space-y-2 mb-4">
-              <p className="text-xs font-medium text-muted-foreground">{auth.resetPassword.requirements.title}</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                {auth.resetPassword.requirements.title}
+              </p>
               <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                 <li>{auth.resetPassword.requirements.minLength}</li>
                 <li>{auth.resetPassword.requirements.uppercase}</li>
@@ -121,10 +123,13 @@ export function StudentResetPasswordDialog({
 
             <div className="space-y-4 py-2">
               <div className="space-y-2">
-                <Label htmlFor="reset-password-new">{studentsContent.resetPasswordDialog.newPasswordLabel}</Label>
+                <Label htmlFor="reset-password-new">
+                  {studentsContent.resetPasswordDialog.newPasswordLabel}
+                </Label>
                 <Input
                   id="reset-password-new"
                   type="password"
+                  autoComplete="new-password"
                   placeholder={common.placeholders.password}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -133,10 +138,13 @@ export function StudentResetPasswordDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reset-password-confirm">{studentsContent.resetPasswordDialog.confirmPasswordLabel}</Label>
+                <Label htmlFor="reset-password-confirm">
+                  {studentsContent.resetPasswordDialog.confirmPasswordLabel}
+                </Label>
                 <Input
                   id="reset-password-confirm"
                   type="password"
+                  autoComplete="new-password"
                   placeholder={common.placeholders.password}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

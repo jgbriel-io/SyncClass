@@ -85,7 +85,8 @@ export const students = {
 
   resetPasswordDialog: {
     title: "Redefinir senha do aluno",
-    description: (name: string) => `Nova senha para ${name}. Mínimo 6 caracteres.`,
+    description: (name: string) =>
+      `Nova senha para ${name}. Mínimo 6 caracteres.`,
     newPasswordLabel: "Nova senha",
     confirmPasswordLabel: "Confirmar senha",
     generateButton: "Gerar senha",
@@ -137,10 +138,12 @@ export const students = {
     title: "Nenhum aluno encontrado",
     description: "Cadastre o primeiro aluno para começar.",
     actionLabel: "Novo aluno",
-    toastCreated: "Aluno cadastrado! Um email com a senha foi enviado para o aluno.",
+    toastCreated:
+      "Aluno cadastrado! Um email com a senha foi enviado para o aluno.",
   },
 
   validation: {
+    teacherRequired: "Selecione um professor",
     nameMin: "Nome deve ter pelo menos 2 caracteres",
     emailInvalid: "Email inválido",
     phoneRequired: "Telefone é obrigatório",
@@ -160,7 +163,8 @@ export const students = {
     statusInactive: "Inativo",
     editedAt: "Editado em",
     noCharges: "Sem cobranças",
-    daysWithoutClass: (days: number) => `${days} dia${days === 1 ? "" : "s"} sem aula`,
+    daysWithoutClass: (days: number) =>
+      `${days} dia${days === 1 ? "" : "s"} sem aula`,
     colHourlyRate: "Valor/hora",
     colClasses: "Aulas",
     colMonthlyTotal: "Total mensal",

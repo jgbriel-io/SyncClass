@@ -116,7 +116,8 @@ function validateMagicBytes(bytes: Uint8Array, mimeType: string): boolean {
       bytes[2] === 0x4e &&
       bytes[3] === 0x47
     );
-  if (mimeType === "image/webp")
+  if (mimeType === "image/webp") {
+    if (bytes.length < 12) return false;
     return (
       bytes[0] === 0x52 &&
       bytes[1] === 0x49 &&
@@ -127,6 +128,7 @@ function validateMagicBytes(bytes: Uint8Array, mimeType: string): boolean {
       bytes[10] === 0x42 &&
       bytes[11] === 0x50
     );
+  }
   if (mimeType === "application/msword")
     return (
       bytes[0] === 0xd0 &&
@@ -333,7 +335,10 @@ export function useCreateActivity() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QK.ACTIVITIES] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.ACTIVITIES],
+        exact: false,
+      });
       toast.success("Atividade enviada com sucesso!");
     },
     onError: (error) => {
@@ -359,7 +364,10 @@ export function useUpdateActivity() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QK.ACTIVITIES] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.ACTIVITIES],
+        exact: false,
+      });
       toast.success("Atividade atualizada com sucesso!");
     },
     onError: (error) => {

@@ -5,7 +5,7 @@ import {
   useQueryClient,
   keepPreviousData,
 } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Tables,
@@ -57,6 +57,7 @@ export interface FinancialRecordWithRelations extends FinancialRecord {
   } | null;
   confirmed_by?: {
     full_name: string;
+    deleted_at: string | null;
   } | null;
   /** Aulas vinculadas quando é uma cobrança de pacote (class_log_id = null) */
   package_classes?: Array<{
@@ -126,7 +127,7 @@ async function fetchFinancialRecords(
       `*,
       students!inner ( name, teacher_id ),
       class_logs ( id, class_date, attendance, grade, feedback, title ),
-      confirmed_by:profiles!financial_records_confirmed_by_profiles_fkey ( full_name ),
+      confirmed_by:profiles!financial_records_confirmed_by_profiles_fkey ( full_name, deleted_at ),
       payment_proof_status, payment_proof_url, payment_proof_filename,
       payment_proof_uploaded_at, payment_proof_rejection_reason`,
       { count: "exact" }
@@ -334,8 +335,19 @@ export function useFinancialSummary(teacherId?: string | null) {
 
 export function useCreateFinancialRecord() {
   const queryClient = useQueryClient();
+  const mutationInFlight = useRef(false);
   return useMutation({
-    mutationFn: createFinancialRecordFn,
+    mutationFn: async (
+      record: Parameters<typeof createFinancialRecordFn>[0]
+    ) => {
+      if (mutationInFlight.current) throw new Error("Operação em andamento");
+      mutationInFlight.current = true;
+      try {
+        return await createFinancialRecordFn(record);
+      } finally {
+        mutationInFlight.current = false;
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
       queryClient.invalidateQueries({
@@ -362,26 +374,27 @@ export function useMarkAsPaid() {
   return useOptimisticMutation<FinancialRecord, string>({
     mutationFn: async (id: string) => {
       const idempotencyKey = idempotencyKeyRef.current;
+      try {
+        const { data, error } = await supabase.rpc("mark_as_paid_idempotent", {
+          p_record_id: id,
+          p_payment_method: null,
+          p_idempotency_key: idempotencyKey,
+        });
 
-      const { data, error } = await supabase.rpc("mark_as_paid_idempotent", {
-        p_record_id: id,
-        p_payment_method: null,
-        p_idempotency_key: idempotencyKey,
-      });
+        if (error) throw error;
 
-      if (error) throw error;
+        const { data: record, error: fetchError } = await supabase
+          .from("financial_records")
+          .select()
+          .eq("id", id)
+          .single();
 
-      const { data: record, error: fetchError } = await supabase
-        .from("financial_records")
-        .select()
-        .eq("id", id)
-        .single();
+        if (fetchError) throw fetchError;
 
-      if (fetchError) throw fetchError;
-
-      idempotencyKeyRef.current = crypto.randomUUID();
-
-      return record;
+        return record;
+      } finally {
+        idempotencyKeyRef.current = crypto.randomUUID();
+      }
     },
     queryKey: [QK.FINANCIAL_RECORDS],
     optimisticUpdate: (
@@ -413,21 +426,25 @@ export function useConfirmPayment() {
   return useMutation({
     mutationFn: async (id: string) => {
       const idempotencyKey = idempotencyKeyRef.current;
+      try {
+        const { data, error } = await supabase.rpc(
+          "confirm_payment_idempotent",
+          {
+            p_record_id: id,
+            p_idempotency_key: idempotencyKey,
+          }
+        );
 
-      const { data, error } = await supabase.rpc("confirm_payment_idempotent", {
-        p_record_id: id,
-        p_idempotency_key: idempotencyKey,
-      });
+        if (error) throw error;
 
-      if (error) throw error;
+        if (data && !data.success) {
+          throw new Error(data.error || "Erro ao confirmar pagamento");
+        }
 
-      if (data && !data.success) {
-        throw new Error(data.error || "Erro ao confirmar pagamento");
+        return data;
+      } finally {
+        idempotencyKeyRef.current = crypto.randomUUID();
       }
-
-      idempotencyKeyRef.current = crypto.randomUUID();
-
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
