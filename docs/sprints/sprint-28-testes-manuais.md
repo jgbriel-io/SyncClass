@@ -205,7 +205,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 ### Sessão e Auth
 
 - [ ] Logout → sessão encerrada, redirect para `/login`
-- [ ] Trocar senha (dialog) → nova senha funciona no próximo login
+- [ ] Trocar senha in-app (ChangePasswordDialog, dentro da sessão) → nova senha funciona no próximo login
+- [ ] Trocar senha com senha atual errada → erro exibido
 - [ ] Sessão expirada → redirect automático para `/login`
 
 ### LGPD
@@ -234,24 +235,49 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [ ] `/teacher/*` — tablet 768px
 - [ ] Tabelas com scroll horizontal em mobile
 
+### Integrações e Validações
+
+- [ ] **CEP API** — criar aluno, digitar CEP válido → endereço auto-preenchido
+- [ ] **CEP inválido** → campo sem preenchimento automático, sem crash
+- [ ] **Email whitelist** — convidar usuário com domínio bloqueado (ex: `@tempmail.com`) → erro exibido
+- [ ] **PIX key masking** — chave PIX do professor exibida mascarada (não em texto claro)
+- [ ] **Idempotência** — tentar criar cobrança duplicada → sistema não duplica
+- [ ] **Real-time** — professor cria aula em aba A → lista em aba B atualiza sem refresh
+
+### Rotas Alias e Edge Cases
+
+- [ ] `/students` (alias de StudentShell) → carrega corretamente
+- [ ] `/teachers` (alias de TeacherShell) → carrega corretamente
+- [ ] Rota inexistente (ex: `/xyzabc`) → página 404 exibida
+
+### Volume de Dados
+
+- [ ] Lista com 20+ alunos → paginação funciona
+- [ ] Lista com 50+ aulas → paginação funciona, sem degradação visível
+- [ ] Financeiro com 30+ cobranças → filtros e paginação funcionam
+
 ---
 
 ## Resumo de Itens
 
-| Módulo         | Itens   |
-| -------------- | ------- |
-| Auth / Público | 11      |
-| Admin          | 30      |
-| Professor      | 28      |
-| Aluno          | 13      |
-| Cross-cutting  | 18      |
-| **Total**      | **100** |
+| Módulo                     | Itens   |
+| -------------------------- | ------- |
+| Auth / Público             | 11      |
+| Admin                      | 30      |
+| Professor                  | 28      |
+| Aluno                      | 13      |
+| Cross-cutting (original)   | 18      |
+| Sessão e Auth (adicionais) | 2       |
+| Integrações e Validações   | 6       |
+| Rotas Alias e Edge Cases   | 3       |
+| Volume de Dados            | 3       |
+| **Total**                  | **114** |
 
 ---
 
 ## Critério de Conclusão
 
-Sprint concluída quando todos os 100 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
+Sprint concluída quando todos os 114 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
 
 **Bugs encontrados:** documentar abaixo com `[BUG-XXX]` + rota + descrição + severidade.
 
