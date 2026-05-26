@@ -199,6 +199,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [ ] Professor A não consegue ver alunos do Professor B (testar via URL direta)
 - [ ] Aluno A não consegue ver financeiro do Aluno B (`/student/financial/checkout/:idDoAlunoB`)
 - [ ] Teacher não acessa rotas `/admin/*` → redireciona ou 403
+- [ ] Teacher não acessa rotas `/student/*` → redireciona ou 403
+- [ ] Student não acessa rotas `/admin/*` → redireciona ou 403
 - [ ] Student não acessa rotas `/teacher/*` → redireciona ou 403
 - [ ] Admin acessa `/teacher/*` e `/student/*` — verificar se bloqueado ou permitido
 
@@ -266,18 +268,18 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 | Admin                      | 30      |
 | Professor                  | 28      |
 | Aluno                      | 13      |
-| Cross-cutting (original)   | 18      |
+| Cross-cutting (original)   | 20      |
 | Sessão e Auth (adicionais) | 2       |
 | Integrações e Validações   | 6       |
 | Rotas Alias e Edge Cases   | 3       |
 | Volume de Dados            | 3       |
-| **Total**                  | **114** |
+| **Total**                  | **116** |
 
 ---
 
 ## Critério de Conclusão
 
-Sprint concluída quando todos os 114 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
+Sprint concluída quando todos os 116 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
 
 **Bugs encontrados:** documentar abaixo com `[BUG-XXX]` + rota + descrição + severidade.
 
