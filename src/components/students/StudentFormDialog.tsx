@@ -6,13 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BaseDialog } from "@/components/ui/custom/BaseDialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { Student, StudentInsert } from "@/hooks/useStudents";
 import {
@@ -27,6 +20,8 @@ import { GAP, STACK } from "@/lib/design-tokens/spacing";
 import { ICON_SIZES } from "@/lib/design-tokens/icon-sizes";
 import { StudentLocationSection } from "./StudentLocationSection";
 import { StudentContactSection } from "./StudentContactSection";
+import { StudentTeacherField } from "./StudentTeacherField";
+import { StudentAdditionalFields } from "./StudentAdditionalFields";
 import { students as studentsContent, common } from "@/content";
 import {
   studentSchema,
@@ -266,35 +261,18 @@ export function StudentFormDialog({
         <div className={`grid ${GAP.DEFAULT} sm:grid-cols-2`}>
           {/* Professor (só ao criar) */}
           {!student && (
-            <div className={`sm:col-span-2 ${STACK.TIGHT}`}>
-              <Label htmlFor="teacher">
-                {studentsContent.formDialog.teacherLabel}
-              </Label>
-              <Select
-                value={selectedTeacherId}
-                onValueChange={(value) => {
-                  setSelectedTeacherId(value);
-                  setTeacherError(null);
-                }}
-                disabled={isLoading || loadingTeachers || !!autoTeacherId}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={common.placeholders.selectTeacher}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeTeachers.map((teacher) => (
-                    <SelectItem key={teacher.id} value={teacher.id}>
-                      {teacher.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {teacherError && (
-                <p className="text-sm text-destructive">{teacherError}</p>
-              )}
-            </div>
+            <StudentTeacherField
+              isLoading={isLoading}
+              loadingTeachers={loadingTeachers}
+              autoTeacherId={autoTeacherId}
+              activeTeachers={activeTeachers}
+              selectedTeacherId={selectedTeacherId}
+              teacherError={teacherError}
+              onTeacherChange={(value) => {
+                setSelectedTeacherId(value);
+                setTeacherError(null);
+              }}
+            />
           )}
 
           {/* Nome */}
@@ -343,83 +321,17 @@ export function StudentFormDialog({
             isBrazilSelected={isBrazilSelected}
           />
 
-          {/* Valor por hora */}
-          <div className={STACK.TIGHT}>
-            <Label htmlFor="hourly_rate_valor">
-              {studentsContent.formDialog.hourlyRateLabel}
-            </Label>
-            <Input
-              id="hourly_rate_valor"
-              type="text"
-              placeholder={common.placeholders.gradeHint}
-              {...register("hourly_rate")}
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Dia de pagamento */}
-          <div className={STACK.TIGHT}>
-            <Label htmlFor="pay_day">
-              {studentsContent.formDialog.payDayLabel}
-            </Label>
-            <Input
-              id="pay_day"
-              type="number"
-              min={1}
-              max={31}
-              placeholder={common.placeholders.payDay}
-              {...register("pay_day")}
-              onChange={(e) => {
-                const v = parseInt(e.target.value);
-                setValue(
-                  "pay_day",
-                  isNaN(v) ? "" : String(Math.min(31, Math.max(1, v))),
-                  { shouldValidate: true }
-                );
-              }}
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Origem */}
-          <div className={STACK.TIGHT}>
-            <Label>{studentsContent.formDialog.originLabel}</Label>
-            <Select
-              value={selectedOrigin}
-              onValueChange={(value) => {
-                const origin = value as StudentOrigin;
-                setSelectedOrigin(origin);
-                setValue("origin", origin, { shouldValidate: true });
-              }}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={common.placeholders.select} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="indicacao">
-                  {studentsContent.originOptions.indicacao}
-                </SelectItem>
-                <SelectItem value="google">
-                  {studentsContent.originOptions.google}
-                </SelectItem>
-                <SelectItem value="instagram">
-                  {studentsContent.originOptions.instagram}
-                </SelectItem>
-                <SelectItem value="passante">
-                  {studentsContent.originOptions.passante}
-                </SelectItem>
-                <SelectItem value="outro">
-                  {studentsContent.originOptions.outro}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.origin && (
-              <p className="text-sm text-destructive">
-                {errors.origin.message}
-              </p>
-            )}
-          </div>
+          <StudentAdditionalFields
+            register={register}
+            setValue={setValue}
+            errors={errors}
+            isLoading={isLoading}
+            selectedOrigin={selectedOrigin}
+            onOriginChange={(origin) => {
+              setSelectedOrigin(origin);
+              setValue("origin", origin, { shouldValidate: true });
+            }}
+          />
         </div>
 
         <div className={`flex justify-end ${GAP.DEFAULT} pt-4`}>

@@ -11,13 +11,14 @@ import {
   ClassLogWithStudent,
   ClassLogWithFinancialData,
 } from "@/hooks/useClassLogs";
-import { parseMoneyToNumber, REGEX_PATTERNS } from "@/lib/utils/patterns";
+import { parseMoneyToNumber } from "@/lib/utils/patterns";
 import {
   brDateToIso,
   buildTimestamptzFromDateAndTime as buildTimestamptz,
 } from "@/lib/utils/classFormHelpers";
 import { ClassLogStudentSection } from "./ClassLogStudentSection";
 import { ClassLogFinancialSection } from "./ClassLogFinancialSection";
+import { useClassLogCalculations } from "./useClassLogCalculations";
 import { classes as classesContent, common } from "@/content";
 import {
   isoDateToBr,
@@ -90,41 +91,13 @@ export function ClassLogFormDialog({
   );
   const hourlyRate = selectedStudent?.hourly_rate ?? null;
 
-  const effectiveDurationMinutes = (() => {
-    if (
-      startTime &&
-      endTime &&
-      classDate &&
-      REGEX_PATTERNS.date.test(classDate)
-    ) {
-      const iso = brDateToIso(classDate);
-      const [y, m, d] = iso.split("-").map(Number);
-      const [sh, sm] = startTime.split(":").map(Number);
-      const [eh, em] = endTime.split(":").map(Number);
-      const startMs = new Date(y, m - 1, d, sh, sm, 0).getTime();
-      const endMs = new Date(y, m - 1, d, eh, em, 0).getTime();
-      if (endMs > startMs) return Math.round((endMs - startMs) / (60 * 1000));
-    }
-    return null;
-  })();
-
-  const calculatedFromDuration = (() => {
-    if (
-      hourlyRate != null &&
-      hourlyRate > 0 &&
-      effectiveDurationMinutes != null &&
-      effectiveDurationMinutes > 0
-    ) {
-      return hourlyRate * (effectiveDurationMinutes / 60);
-    }
-    return null;
-  })();
-
-  const computedAmount = (() => {
-    const manual = financialAmount ? parseMoneyToNumber(financialAmount) : null;
-    if (manual != null && !isNaN(manual) && manual > 0) return manual;
-    return calculatedFromDuration;
-  })();
+  const { effectiveDurationMinutes, computedAmount } = useClassLogCalculations({
+    classDate,
+    startTime,
+    endTime,
+    hourlyRate,
+    financialAmount,
+  });
 
   // Preencher formulário ao editar
   useEffect(() => {

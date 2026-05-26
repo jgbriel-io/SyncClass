@@ -16,14 +16,7 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Upload, CalendarIcon } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { REGEX_PATTERNS } from "@/lib/utils/patterns";
+import { Loader2, Upload } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
 import {
   dueDateAndTimeToIso,
@@ -42,6 +35,7 @@ import {
 } from "@/hooks/useActivities";
 import { toast } from "sonner";
 import { ActivityFileSourceField } from "./ActivityFileSourceField";
+import { ActivityDueDateSection } from "./ActivityDueDateSection";
 import { activities as activitiesContent, common } from "@/content";
 
 interface SendActivityDialogProps {
@@ -318,73 +312,13 @@ export function SendActivityDialog({
         </div>
 
         {/* Prazo de entrega (data e hora) */}
-        <div className="space-y-2">
-          <Label>{activitiesContent.sendDialog.dueDateLabel}</Label>
-          <p className="text-xs text-muted-foreground">
-            {activitiesContent.sendDialog.dueDateHint}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="due_date"
-                  variant="outline"
-                  className="w-full sm:flex-1 justify-start text-left font-normal"
-                  disabled={isPending}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dueDate || activitiesContent.sendDialog.dueDatePlaceholder}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={
-                    dueDate && REGEX_PATTERNS.date.test(dueDate)
-                      ? (() => {
-                          const [d, m, y] = dueDate.split("/");
-                          return new Date(
-                            parseInt(y, 10),
-                            parseInt(m, 10) - 1,
-                            parseInt(d, 10)
-                          );
-                        })()
-                      : undefined
-                  }
-                  onSelect={(date) => {
-                    if (date)
-                      setValue(
-                        "due_date",
-                        format(date, "dd/MM/yyyy", { locale: ptBR }),
-                        { shouldValidate: true }
-                      );
-                  }}
-                  locale={ptBR}
-                  disabled={(date) =>
-                    date < new Date(new Date().setHours(0, 0, 0, 0))
-                  }
-                />
-              </PopoverContent>
-            </Popover>
-            <Input
-              id="due_time"
-              type="time"
-              {...register("due_time")}
-              disabled={isPending}
-              className="w-full sm:w-[120px]"
-            />
-          </div>
-          {errors.due_date && (
-            <p className="text-sm text-destructive">
-              {errors.due_date.message}
-            </p>
-          )}
-          {errors.due_time && (
-            <p className="text-sm text-destructive">
-              {errors.due_time.message}
-            </p>
-          )}
-        </div>
+        <ActivityDueDateSection
+          register={register}
+          setValue={setValue}
+          errors={errors}
+          isPending={isPending}
+          dueDate={dueDate}
+        />
 
         {/* Descrição */}
         <div className="space-y-2">

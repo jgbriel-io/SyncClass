@@ -7,21 +7,8 @@ import { useTeachersPageStats } from "@/hooks/useTeachersPageStats";
 import { defaultTeachersFilters } from "@/components/filters/filterDefaults";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Search,
-  Plus,
-  Users,
-  UserCheck,
-  UserX,
-  TrendingUp,
-} from "lucide-react";
+import { Table, TableBody } from "@/components/ui/table";
+import { Search, Plus } from "lucide-react";
 import { TeacherFormDialog } from "@/components/teachers/TeacherFormDialog";
 import { TeacherPasswordDialog } from "@/components/teachers/TeacherPasswordDialog";
 import { TeacherStatusDialog } from "@/components/teachers/TeacherStatusDialog";
@@ -49,12 +36,10 @@ import {
 import { toast } from "sonner";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { TeachersTableSkeleton } from "@/components/ui/table-skeleton";
-import { StatCard } from "@/components/ui/stat-card";
 import { TeachersTableRow } from "@/components/teachers/TeachersTableRow";
-import {
-  COL as TEACH_COL,
-  TABLE_MIN_W as TEACH_TABLE_MIN_W,
-} from "@/components/teachers/TeachersTableRow.constants";
+import { TABLE_MIN_W as TEACH_TABLE_MIN_W } from "@/components/teachers/TeachersTableRow.constants";
+import { TeachersTableHeader } from "@/components/teachers/TeachersTableHeader";
+import { TeachersStatsCards } from "@/components/teachers/TeachersStatsCards";
 import { TeacherDetailSheet } from "@/components/admin/TeacherDetailSheet";
 
 export default function TeachersPage() {
@@ -203,32 +188,12 @@ export default function TeachersPage() {
         </div>
 
         {/* Cards informativos */}
-        <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
-          <StatCard
-            title="Total de professores"
-            value={teachersStats.total}
-            icon={Users}
-            variant="primary"
-          />
-          <StatCard
-            title="Professores ativos"
-            value={teachersStats.ativos}
-            icon={UserCheck}
-            variant="success"
-          />
-          <StatCard
-            title="Professores inativos"
-            value={teachersStats.inativos}
-            icon={UserX}
-            variant="muted"
-          />
-          <StatCard
-            title="Novos este mês"
-            value={teachersStats.novos}
-            icon={TrendingUp}
-            variant="primaryHighlight"
-          />
-        </div>
+        <TeachersStatsCards
+          total={teachersStats.total}
+          ativos={teachersStats.ativos}
+          inativos={teachersStats.inativos}
+          novos={teachersStats.novos}
+        />
 
         {/* Filtros */}
         <TeachersFilters
@@ -265,88 +230,7 @@ export default function TeachersPage() {
           >
             <div className="overflow-x-auto">
               <Table style={{ minWidth: TEACH_TABLE_MIN_W }}>
-                <TableHeader>
-                  <TableRow className="border-b bg-muted/50">
-                    <TableHead
-                      className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
-                      style={{ width: "1%" }}
-                    >
-                      Status
-                    </TableHead>
-                    <TableHead
-                      className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
-                      style={{
-                        width: TEACH_COL.NOME,
-                        minWidth: TEACH_COL.NOME,
-                        boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                      Nome
-                    </TableHead>
-                    <TableHead
-                      className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
-                      style={{
-                        width: TEACH_COL.EMAIL,
-                        minWidth: TEACH_COL.EMAIL,
-                      }}
-                    >
-                      Email
-                    </TableHead>
-                    <TableHead
-                      className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
-                      style={{
-                        width: TEACH_COL.TELEFONE,
-                        minWidth: TEACH_COL.TELEFONE,
-                      }}
-                    >
-                      Telefone
-                    </TableHead>
-                    <TableHead
-                      className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
-                      style={{
-                        width: TEACH_COL.TOTAL_ALUNOS,
-                        minWidth: TEACH_COL.TOTAL_ALUNOS,
-                      }}
-                    >
-                      Total Alunos
-                    </TableHead>
-                    <TableHead
-                      className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
-                      style={{
-                        width: TEACH_COL.TOTAL_AULAS,
-                        minWidth: TEACH_COL.TOTAL_AULAS,
-                      }}
-                    >
-                      Total Aulas
-                    </TableHead>
-                    <TableHead
-                      className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
-                      style={{
-                        width: TEACH_COL.VALOR_RECEBIDO,
-                        minWidth: TEACH_COL.VALOR_RECEBIDO,
-                      }}
-                    >
-                      Valor Recebido
-                    </TableHead>
-                    <TableHead
-                      className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
-                      style={{
-                        width: TEACH_COL.PLACEHOLDER,
-                        minWidth: TEACH_COL.PLACEHOLDER,
-                      }}
-                      aria-label="Placeholder"
-                    />
-                    <TableHead
-                      className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
-                      style={{
-                        width: TEACH_COL.ACOES,
-                        minWidth: TEACH_COL.ACOES,
-                      }}
-                    >
-                      Ações
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
+                <TeachersTableHeader />
                 <TableBody className="divide-y divide-border/40">
                   {isLoading ? (
                     <TeachersTableSkeleton rows={10} />
