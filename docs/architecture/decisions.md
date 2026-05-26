@@ -16,12 +16,14 @@ ADRs (Architecture Decision Records) documentando escolhas técnicas, trade-offs
 ## Quando usar este documento
 
 **Use quando:**
+
 - Questionar decisões técnicas do projeto
 - Avaliar mudanças arquiteturais (migração, refatoração)
 - Onboarding — entender o "por quê" das escolhas
 - Documentar novas decisões arquiteturais
 
 **Não use quando:**
+
 - Procurar como implementar algo → `docs/architecture/patterns.md`
 - Procurar fluxos de requisição → `docs/architecture/flows.md`
 - Procurar problemas conhecidos → `docs/architecture/technical-debt.md`
@@ -45,6 +47,7 @@ Projeto de TCC com prazo de ~3 meses para MVP completo. Necessário backend com 
 Usar Supabase como BaaS (Backend-as-a-Service) em vez de backend tradicional.
 
 **Componentes usados:**
+
 - PostgreSQL 15 (banco gerenciado)
 - PostgREST (API REST automática)
 - GoTrue (autenticação JWT)
@@ -55,6 +58,7 @@ Usar Supabase como BaaS (Backend-as-a-Service) em vez de backend tradicional.
 ### Consequências
 
 **Positivas:**
+
 - ✅ Redução de ~70% do tempo de backend (validado em Sprint 8)
 - ✅ RLS (Row Level Security) nativo — segurança no banco
 - ✅ API REST gerada automaticamente — zero boilerplate
@@ -63,6 +67,7 @@ Usar Supabase como BaaS (Backend-as-a-Service) em vez de backend tradicional.
 - ✅ CLI poderoso — desenvolvimento local + deploy
 
 **Negativas:**
+
 - ❌ Vendor lock-in — migrar para outro BaaS é custoso
 - ❌ Curva de aprendizado de RLS — políticas complexas
 - ❌ Debugging difícil — erros de RLS são genéricos ("new row violates policy")
@@ -70,6 +75,7 @@ Usar Supabase como BaaS (Backend-as-a-Service) em vez de backend tradicional.
 - ❌ Cold start em Edge Functions (~500ms primeira requisição)
 
 **Riscos aceitos:**
+
 - Dependência de serviço terceiro (mitigado: self-hosting possível)
 - Custo crescente com escala (mitigado: tier gratuito até 500MB + 2GB bandwidth)
 
@@ -78,6 +84,7 @@ Usar Supabase como BaaS (Backend-as-a-Service) em vez de backend tradicional.
 #### 1. Node.js + Express + PostgreSQL
 
 **Por que rejeitada:**
+
 - Tempo estimado: +40h para implementar auth, migrations, API REST
 - Complexidade de deploy (servidor próprio, CI/CD, monitoramento)
 - Fora do escopo do TCC (foco é gestão, não infraestrutura)
@@ -85,6 +92,7 @@ Usar Supabase como BaaS (Backend-as-a-Service) em vez de backend tradicional.
 #### 2. Firebase
 
 **Por que rejeitada:**
+
 - NoSQL (Firestore) — projeto precisa de relações complexas (alunos ↔ aulas ↔ cobranças)
 - Queries limitadas — sem JOIN, agregações complexas
 - Vendor lock-in maior que Supabase (sem self-hosting)
@@ -92,6 +100,7 @@ Usar Supabase como BaaS (Backend-as-a-Service) em vez de backend tradicional.
 #### 3. Hasura + PostgreSQL
 
 **Por que rejeitada:**
+
 - GraphQL — curva de aprendizado maior que REST
 - Configuração mais complexa (Docker, migrations manuais)
 - Menos documentação/comunidade que Supabase
@@ -99,6 +108,7 @@ Usar Supabase como BaaS (Backend-as-a-Service) em vez de backend tradicional.
 #### 4. Appwrite
 
 **Por que rejeitada:**
+
 - Comunidade menor — menos recursos/tutoriais
 - Self-hosted apenas — sem tier gratuito gerenciado
 - Funcionalidades menos maduras (real-time, storage)
@@ -106,8 +116,9 @@ Usar Supabase como BaaS (Backend-as-a-Service) em vez de backend tradicional.
 ### Validação
 
 **Métricas coletadas (Sprint 8):**
+
 - Tempo de desenvolvimento backend: ~12h (vs ~42h estimado para Node.js)
-- Linhas de código backend: 23 migrations SQL + 5 Edge Functions (~800 linhas)
+- Linhas de código backend: 43 migrations SQL + 6 Edge Functions
 - Linhas de código evitadas: ~3.500 (auth, API REST, WebSocket)
 
 **Conclusão:** Hipótese H2 validada — Supabase reduziu 71% do esforço de backend.
@@ -129,13 +140,16 @@ Frontend precisa buscar dados do Supabase, cachear, invalidar e sincronizar entr
 Usar TanStack Query (React Query v5) para data fetching e cache.
 
 **Padrão adotado:**
+
 ```ts
 export const useStudents = (teacherId: string) => {
   return useQuery({
-    queryKey: ['students', teacherId],
+    queryKey: ["students", teacherId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('students').select('*').eq('teacher_id', teacherId);
+        .from("students")
+        .select("*")
+        .eq("teacher_id", teacherId);
       if (error) throw error;
       return data;
     },
@@ -147,6 +161,7 @@ export const useStudents = (teacherId: string) => {
 ### Consequências
 
 **Positivas:**
+
 - ✅ Cache automático — reduz requisições desnecessárias
 - ✅ Invalidação granular — `queryClient.invalidateQueries(['students'])`
 - ✅ Loading/error states — `isLoading`, `isError`, `error`
@@ -155,11 +170,13 @@ export const useStudents = (teacherId: string) => {
 - ✅ Optimistic updates — `onMutate` + rollback automático
 
 **Negativas:**
+
 - ❌ Curva de aprendizado — query keys, staleTime, cacheTime
 - ❌ Boilerplate em mutations — `onSuccess`, `onError`, `invalidateQueries`
 - ❌ Debugging de invalidações — difícil rastrear quem invalidou o quê
 
 **Riscos aceitos:**
+
 - Query keys inconsistentes (mitigado: centralizar em `queryKeys.ts` — pendente ARQ-003)
 
 ### Alternativas consideradas
@@ -167,6 +184,7 @@ export const useStudents = (teacherId: string) => {
 #### 1. Redux + RTK Query
 
 **Por que rejeitada:**
+
 - Boilerplate excessivo (slices, reducers, actions)
 - Overkill para projeto sem estado global complexo
 - Curva de aprendizado maior
@@ -174,18 +192,21 @@ export const useStudents = (teacherId: string) => {
 #### 2. Zustand + SWR
 
 **Por que rejeitada:**
+
 - SWR menos maduro que TanStack Query (menos features)
 - Zustand para estado global — não necessário (apenas AuthContext)
 
 #### 3. Apollo Client
 
 **Por que rejeitada:**
+
 - GraphQL — Supabase usa REST (PostgREST)
 - Overhead de configuração (schema, codegen)
 
 #### 4. useEffect + useState
 
 **Por que rejeitada:**
+
 - Sem cache — requisições duplicadas
 - Sem loading/error states padronizados
 - Sem invalidação automática
@@ -194,7 +215,8 @@ export const useStudents = (teacherId: string) => {
 ### Validação
 
 **Métricas:**
-- 42 hooks customizados usando TanStack Query
+
+- 45 hooks customizados usando TanStack Query
 - Cache hit rate: ~65% (estimado via DevTools)
 - Redução de requisições: ~40% vs useEffect puro
 
@@ -215,8 +237,9 @@ Projeto precisa de roteamento client-side com proteção por role (admin/teacher
 Usar React Router v6 com Vite para SPA (Single Page Application).
 
 **Padrão adotado:**
+
 ```tsx
-<Route path="/teacher" element={<ProtectedRoute allowedRoles={['teacher']} />}>
+<Route path="/teacher" element={<ProtectedRoute allowedRoles={["teacher"]} />}>
   <Route index element={<TeacherHome />} />
   <Route path="students" element={<TeacherStudents />} />
 </Route>
@@ -225,17 +248,20 @@ Usar React Router v6 com Vite para SPA (Single Page Application).
 ### Consequências
 
 **Positivas:**
+
 - ✅ Simplicidade — sem complexidade de SSR
 - ✅ Deploy fácil — arquivos estáticos (Vercel, Netlify, S3)
 - ✅ HMR rápido — Vite <100ms
 - ✅ Sem servidor Node.js — reduz custo e complexidade
 
 **Negativas:**
+
 - ❌ Sem SEO — não é problema (app privado, não indexável)
 - ❌ Sem SSR — tempo de carregamento inicial maior (~2s)
 - ❌ Sem API routes — Edge Functions do Supabase suprem
 
 **Riscos aceitos:**
+
 - Performance inicial (mitigado: code splitting, lazy loading)
 
 ### Alternativas consideradas
@@ -243,6 +269,7 @@ Usar React Router v6 com Vite para SPA (Single Page Application).
 #### 1. Next.js
 
 **Por que rejeitada:**
+
 - SSR desnecessário — app privado (login obrigatório)
 - Complexidade de deploy (servidor Node.js ou Vercel)
 - Overhead de configuração (API routes, getServerSideProps)
@@ -251,6 +278,7 @@ Usar React Router v6 com Vite para SPA (Single Page Application).
 #### 2. Remix
 
 **Por que rejeitada:**
+
 - Curva de aprendizado maior (loaders, actions)
 - Comunidade menor que Next.js
 - SSR desnecessário
@@ -258,6 +286,7 @@ Usar React Router v6 com Vite para SPA (Single Page Application).
 #### 3. Vue Router + Vue.js
 
 **Por que rejeitada:**
+
 - Ecossistema React mais maduro (shadcn/ui, TanStack Query)
 - Experiência prévia com React
 
@@ -280,6 +309,7 @@ Usar shadcn/ui (Radix UI + Tailwind CSS) com componentes copiados para `src/comp
 ### Consequências
 
 **Positivas:**
+
 - ✅ Controle total — código no projeto, não em node_modules
 - ✅ Customização fácil — editar diretamente sem override complexo
 - ✅ Bundle size menor — apenas componentes usados
@@ -287,10 +317,12 @@ Usar shadcn/ui (Radix UI + Tailwind CSS) com componentes copiados para `src/comp
 - ✅ Sem breaking changes — componentes versionados no projeto
 
 **Negativas:**
+
 - ❌ Sem updates automáticos — precisa copiar manualmente
 - ❌ Manutenção manual — bugs do Radix exigem fix local
 
 **Riscos aceitos:**
+
 - Desatualização de componentes (mitigado: shadcn CLI para atualizar)
 
 ### Alternativas consideradas
@@ -298,6 +330,7 @@ Usar shadcn/ui (Radix UI + Tailwind CSS) com componentes copiados para `src/comp
 #### 1. Material-UI
 
 **Por que rejeitada:**
+
 - Bundle size grande (~500KB gzipped)
 - Estilo opinado (Material Design) — difícil customizar
 - Overhead de tema (ThemeProvider, createTheme)
@@ -305,6 +338,7 @@ Usar shadcn/ui (Radix UI + Tailwind CSS) com componentes copiados para `src/comp
 #### 2. Ant Design
 
 **Por que rejeitada:**
+
 - Estilo chinês — não alinha com design brasileiro
 - Bundle size grande
 - Customização complexa (less variables)
@@ -312,6 +346,7 @@ Usar shadcn/ui (Radix UI + Tailwind CSS) com componentes copiados para `src/comp
 #### 3. Chakra UI
 
 **Por que rejeitada:**
+
 - Runtime CSS-in-JS — performance pior que Tailwind
 - Bundle size maior que shadcn/ui
 
@@ -332,6 +367,7 @@ Projeto tem ~30 formulários (criar/editar aluno, cobrança, aula, atividade). A
 Formulários são Dialogs (modals) abertos sobre a listagem, não rotas separadas.
 
 **Padrão adotado:**
+
 ```tsx
 <StudentFormDialog
   open={isOpen}
@@ -344,17 +380,20 @@ Formulários são Dialogs (modals) abertos sobre a listagem, não rotas separada
 ### Consequências
 
 **Positivas:**
+
 - ✅ Contexto preservado — usuário vê listagem ao fundo
 - ✅ Menos navegação — não precisa voltar após salvar
 - ✅ Estado simples — `useState(false)` em vez de router state
 - ✅ UX melhor — feedback imediato (toast + listagem atualiza)
 
 **Negativas:**
+
 - ❌ Sem deep linking — não dá pra compartilhar URL de "editar aluno X"
 - ❌ Histórico do navegador — voltar não fecha modal
 - ❌ Acessibilidade — precisa gerenciar foco manualmente
 
 **Riscos aceitos:**
+
 - Deep linking desnecessário (app privado, não compartilhável)
 
 ### Alternativas consideradas
@@ -362,6 +401,7 @@ Formulários são Dialogs (modals) abertos sobre a listagem, não rotas separada
 #### 1. Rotas separadas
 
 **Por que rejeitada:**
+
 - Navegação excessiva (listagem → form → listagem)
 - Estado perdido (filtros, paginação, scroll)
 - Mais código (rotas, navegação, estado no router)
@@ -369,6 +409,7 @@ Formulários são Dialogs (modals) abertos sobre a listagem, não rotas separada
 #### 2. Sheets laterais
 
 **Por que rejeitada:**
+
 - Ocupa muito espaço — ruim em mobile
 - Menos familiar que modals
 
@@ -389,6 +430,7 @@ Projeto usa Tailwind CSS, mas classes cruas (`text-lg`, `gap-4`) são inconsiste
 Criar design tokens customizados em `src/lib/design-tokens/` com funções helper.
 
 **Padrão adotado:**
+
 ```ts
 import { typography } from '@/lib/design-tokens/typography';
 import { stack } from '@/lib/design-tokens/spacing';
@@ -402,16 +444,19 @@ import { iconSize } from '@/lib/design-tokens/icon-sizes';
 ### Consequências
 
 **Positivas:**
+
 - ✅ Consistência — 1 fonte de verdade para tamanhos
 - ✅ Manutenção fácil — mudar `H1` atualiza todo o app
 - ✅ Testável — 129 testes unitários validam tokens
 - ✅ Type-safe — TypeScript valida tokens válidos
 
 **Negativas:**
+
 - ❌ Verbosidade — `typography('H1')` vs `text-4xl`
 - ❌ Curva de aprendizado — devs precisam conhecer tokens
 
 **Riscos aceitos:**
+
 - Adoção gradual (mitigado: linter customizado — pendente)
 
 ### Alternativas consideradas
@@ -419,12 +464,14 @@ import { iconSize } from '@/lib/design-tokens/icon-sizes';
 #### 1. Tailwind puro
 
 **Por que rejeitada:**
+
 - Inconsistência — cada dev escolhe tamanho diferente
 - Difícil refatorar — buscar/substituir `text-lg` é frágil
 
 #### 2. CSS-in-JS (styled-components)
 
 **Por que rejeitada:**
+
 - Runtime overhead — Tailwind é compile-time
 - Bundle size maior
 
@@ -445,6 +492,7 @@ Projeto tem 860+ strings hardcoded em componentes. Necessário centralizar para 
 Centralizar strings em `src/content/{dominio}.ts` com estrutura hierárquica.
 
 **Padrão adotado:**
+
 ```ts
 // src/content/students.ts
 export const students = {
@@ -473,16 +521,19 @@ import { students } from '@/content';
 ### Consequências
 
 **Positivas:**
+
 - ✅ Preparado para i18n — trocar `students.ts` por `students.en.ts`
 - ✅ Consistência — mesma mensagem em todo o app
 - ✅ Manutenção fácil — mudar texto em 1 lugar
 - ✅ Validação — script detecta strings hardcoded (`npm run validate:strings`)
 
 **Negativas:**
+
 - ❌ Verbosidade — `students.form.name.label` vs `"Nome"`
 - ❌ Refatoração massiva — 860+ strings migradas em 4 sprints
 
 **Riscos aceitos:**
+
 - Adoção gradual (mitigado: linter bloqueia novas strings hardcoded)
 
 ### Alternativas consideradas
@@ -490,12 +541,14 @@ import { students } from '@/content';
 #### 1. i18next
 
 **Por que rejeitada:**
+
 - Overhead desnecessário — app ainda não tem inglês
 - Complexidade de configuração (namespaces, lazy loading)
 
 #### 2. Manter hardcoded
 
 **Por que rejeitada:**
+
 - Internacionalização futura seria impossível
 - Inconsistência de mensagens
 

@@ -28,29 +28,51 @@ Histórico de migrations, sequência de aplicação e dependências.
 
 Localizadas em `supabase/migrations/`, aplicar em ordem sequencial.
 
-| #   | Arquivo                           | O que faz                                                                                                                                     |
-| --- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| 01  | structure                         | Tabelas base, tipos customizados, extensões, índices                                                                                          |
-| 02  | logic_and_views                   | Views, triggers de updated_at, funções de anonimização LGPD                                                                                   |
-| 03  | rpcs_and_triggers                 | RPCs: create_class_package, mark_as_paid, confirm_payment, undo_payment                                                                       |
-| 04  | rls_and_permissions               | RLS habilitado em todas as tabelas, funções helper, 40+ policies                                                                              |
-| 05  | cpf_removal_and_country           | Remove CPF, adiciona coluna country, soft delete em profiles                                                                                  |
-| 06  | fix_anonymization_functions       | Corrige funções de anonimização após remoção do CPF                                                                                           |
-| 07  | add_rate_limiting                 | Tabela rate_limit_tracker, função check_rate_limit() (10 req/min)                                                                             |
-| 08  | add_must_change_password          | Campo must_change_password em profiles                                                                                                        |
-| 09  | fix_search_path_security          | SET search_path em todas as funções (anti search_path hijacking)                                                                              |
-| 10  | security_improvements             | Constraint grade 0-100, soft delete em activities, pgcrypto                                                                                   |
-| 11  | fix_views_security_invoker        | Views com SECURITY INVOKER, funções de limpeza de storage                                                                                     |
-| 12  | consistency_improvements          | Validação de email (is_valid_email), índices para soft delete                                                                                 |
-| 13  | encrypt_pix_keys                  | View teachers_with_pix_restricted, função is_valid_pix_key()                                                                                  |
-| 14  | invalidate_sessions_on_deactivate | Trigger invalida sessões ao desativar conta                                                                                                   |
-| 15  | create_materialized_views         | Materialized views: activities_dashboard, financial_dashboard                                                                                 |
-| 16  | fix_payment_proof_rejection       | Fix: aluno pode reenviar comprovante após rejeição                                                                                            |
-| 17  | fix_rls_policies_uuid_cast        | Cast ::uuid explícito em policies de profiles e user_roles                                                                                    |
-| 18  | fix_production_uuid_and_triggers  | Consolida: funções helper + trigger + RLS com cast correto                                                                                    |
-| 19  | disable_sessions_trigger_temp     | Desabilita trigger de sessões (corrigido em 18, pode ser revertido)                                                                           |
-| 20  | confirm_all_users                 | Confirma email de todos os usuários (usar apenas em dev/homolog)                                                                              |
-| 21  | fix_critical_bugs                 | 4 fixes críticos: is_admin() SECURITY DEFINER, validate_financial_logic() CASE+ELSE, vincula profiles com teachers/students, sincroniza roles |
+| #   | Arquivo                                    | O que faz                                                                                                                                     |
+| --- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 01  | structure                                  | Tabelas base, tipos customizados, extensões, índices                                                                                          |
+| 02  | logic_and_views                            | Views, triggers de updated_at, funções de anonimização LGPD                                                                                   |
+| 03  | rpcs_and_triggers                          | RPCs: create_class_package, mark_as_paid, confirm_payment, undo_payment                                                                       |
+| 04  | rls_and_permissions                        | RLS habilitado em todas as tabelas, funções helper, 40+ policies                                                                              |
+| 05  | cpf_removal_and_country                    | Remove CPF, adiciona coluna country, soft delete em profiles                                                                                  |
+| 06  | fix_anonymization_functions                | Corrige funções de anonimização após remoção do CPF                                                                                           |
+| 07  | add_rate_limiting                          | Tabela rate_limit_tracker, função check_rate_limit() (10 req/min)                                                                             |
+| 08  | add_must_change_password                   | Campo must_change_password em profiles                                                                                                        |
+| 09  | fix_search_path_security                   | SET search_path em todas as funções (anti search_path hijacking)                                                                              |
+| 10  | security_improvements                      | Constraint grade 0-100, soft delete em activities, pgcrypto                                                                                   |
+| 11  | fix_views_security_invoker                 | Views com SECURITY INVOKER, funções de limpeza de storage                                                                                     |
+| 12  | consistency_improvements                   | Validação de email (is_valid_email), índices para soft delete                                                                                 |
+| 13  | encrypt_pix_keys                           | View teachers_with_pix_restricted, função is_valid_pix_key()                                                                                  |
+| 14  | invalidate_sessions_on_deactivate          | Trigger invalida sessões ao desativar conta                                                                                                   |
+| 15  | create_materialized_views                  | Materialized views: activities_dashboard, financial_dashboard                                                                                 |
+| 16  | fix_payment_proof_rejection                | Fix: aluno pode reenviar comprovante após rejeição                                                                                            |
+| 17  | fix_rls_policies_uuid_cast                 | Cast ::uuid explícito em policies de profiles e user_roles                                                                                    |
+| 18  | fix_production_uuid_and_triggers           | Consolida: funções helper + trigger + RLS com cast correto                                                                                    |
+| 19  | disable_sessions_trigger_temp              | Desabilita trigger de sessões (corrigido em 18, pode ser revertido)                                                                           |
+| 20  | confirm_all_users                          | Confirma email de todos os usuários (usar apenas em dev/homolog)                                                                              |
+| 21  | fix_critical_bugs                          | 4 fixes críticos: is_admin() SECURITY DEFINER, validate_financial_logic() CASE+ELSE, vincula profiles com teachers/students, sincroniza roles |
+| 22  | dba_fixes                                  | Correções de banco: triggers, funções, constraints identificadas em auditoria DBA                                                             |
+| 23  | security_rls_fixes                         | Correções de segurança e RLS após auditoria (Sprint 16–17)                                                                                    |
+| 24  | incorporate_fixes                          | Incorpora fixes adicionais das auditorias de segurança                                                                                        |
+| 25  | drop_dead_functions                        | Remove funções SQL obsoletas e não utilizadas                                                                                                 |
+| 26  | sprint18_fixes                             | Correções gerais da Sprint 18 (RLS, triggers, constraints)                                                                                    |
+| 27  | financial_summary_rpc                      | RPC `get_financial_summary` — resumo financeiro consolidado por professor                                                                     |
+| 28  | rate_limit_summary_rpc                     | RPC `get_rate_limit_summary` — monitoramento de rate limits                                                                                   |
+| 29  | class_logs_summary_rpc                     | RPC `get_class_logs_summary` — resumo de aulas com estatísticas de presença                                                                   |
+| 30  | fix_create_class_package_idempotency_race  | Fix: race condition em `create_class_package` com idempotency_keys                                                                            |
+| 31  | confirmed_by_profiles_fk                   | FK `confirmed_by` → `profiles(id)` em financial_records                                                                                       |
+| 32  | fix_rls_ownership_policies                 | Corrige políticas RLS de ownership (teacher vê apenas seus dados)                                                                             |
+| 33  | fix_class_logs_summary_attendance          | Fix: contagem de presença no RPC `get_class_logs_summary`                                                                                     |
+| 34  | fix_class_package_variable_name            | Fix: nome de variável interno em `create_class_package`                                                                                       |
+| 35  | sprint24_rls_audit_fixes                   | Correções de RLS da auditoria Sprint 24 (políticas ausentes ou incorretas)                                                                    |
+| 36  | sprint25_db_schema_fixes                   | Correções de schema da Sprint 25 (tipos, constraints, defaults)                                                                               |
+| 37  | sprint27_revoke_anon_and_indexes           | Revoga permissões da role `anon` em tabelas protegidas; adiciona índices compostos                                                            |
+| 38  | sprint_remaining_fixes                     | Correções remanescentes das sprints (fixes menores pós-auditoria)                                                                             |
+| 39  | fix_security_definer_grants                | Garante GRANT correto em funções com SECURITY DEFINER                                                                                         |
+| 40  | fix_explicit_role_grants                   | Grants explícitos por role (authenticated, anon) em funções e views                                                                           |
+| 41  | fix_avatars_bucket_listing_policy          | Corrige política de listagem do bucket `avatars` no Storage                                                                                   |
+| 42  | fix_students_rls_duplicate_policies        | Remove políticas RLS duplicadas na tabela `students`                                                                                          |
+| 43  | fix_students_rls_merge_admin_into_policies | Unifica policies de admin com as policies gerais em `students` (simplifica RLS)                                                               |
 
 ## Dependências críticas
 

@@ -113,7 +113,7 @@ Plataforma web unificada que:
 
 ### Infraestrutura
 
-- Docker (frontend containerizado)
+- Cloudflare Pages (CDN global, deploy via GitHub Actions)
 - GitHub Actions (CI/CD)
 - Vitest (testes unitários)
 
@@ -146,8 +146,7 @@ Components → Hooks → Supabase SDK → PostgreSQL
 ```
 
 - **Components:** apenas UI
-- **Hooks:** TanStack Query + mutations
-- **Services:** lógica de domínio
+- **Hooks:** TanStack Query + mutations + lógica de domínio
 - **Supabase SDK:** chamadas ao banco
 
 ### Segurança
@@ -189,24 +188,24 @@ Components → Hooks → Supabase SDK → PostgreSQL
 
 - **Período:** Janeiro–Maio 2026 (~4 meses)
 - **Desenvolvedor:** 1 (solo)
-- **Commits:** ~218
-- **Sprints:** 20 documentadas (19 implementadas + 1 em andamento)
+- **Commits:** 54
+- **Sprints:** 27 documentadas
 
 ### Implementação
 
 - **Requisitos Funcionais:** 30/35 (85%)
 - **Requisitos Não Funcionais:** 36/36 (100%)
 - **Regras de Negócio:** 59/59 (100%)
-- **Migrations:** 25
-- **Edge Functions:** 5
-- **Testes:** 161 (32 unitários + 129 design tokens)
+- **Migrations:** 43
+- **Edge Functions:** 6
+- **Testes:** 26 arquivos de teste unitários + 129 design tokens
 - **RLS Policies:** 40+
 
 ### Documentação
 
 - **Arquivos de docs:** 53
 - **Capítulos TCC:** 10
-- **Sprints documentadas:** 16
+- **Sprints documentadas:** 27
 - **Strings UI centralizadas:** 900+
 
 ## Contexto Acadêmico

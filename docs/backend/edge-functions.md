@@ -9,6 +9,7 @@ Edge Functions Deno/TS para operações server-side. Rodam em runtime isolado co
 - [invite-user](#invite-user)
 - [admin-delete-user](#admin-delete-user)
 - [reset-password](#reset-password)
+- [export-user-data](#export-user-data)
 - [cleanup-old-records](#cleanup-old-records)
 - [cleanup-storage](#cleanup-storage)
 - [Deploy](#deploy)
@@ -42,10 +43,13 @@ supabase/functions/
 ├── reset-password/
 │   ├── index.ts
 │   └── reset-password.ts
+├── export-user-data/
+│   └── index.ts
 ├── cleanup-old-records/
 │   └── index.ts
-└── cleanup-storage/
-    └── index.ts
+├── cleanup-storage/
+│   └── index.ts
+└── _shared/                  ← utilitários compartilhados
 ```
 
 **Padrão:** Entry point `index.ts` importa implementação de arquivo separado (facilita testes).
@@ -163,6 +167,40 @@ const { data, error } = await supabase.functions.invoke("reset-password", {
 - Admin reseta senha de qualquer usuário
 - Professor reseta senha de aluno vinculado
 - Usuário reseta própria senha (self-service)
+
+## export-user-data
+
+**Responsabilidade:** Exportação de todos os dados pessoais do usuário (conformidade LGPD).
+
+**Arquivo:** `supabase/functions/export-user-data/index.ts`
+
+**Fluxo:**
+
+1. Valida identidade do solicitante (self ou admin)
+2. Busca dados via service_role: profile, alunos, aulas, cobranças, atividades
+3. Retorna JSON estruturado com todos os dados do usuário
+
+**Rate limiting:** Limitado por autenticação Supabase Auth.
+
+**Chamada:**
+
+```ts
+const { data, error } = await supabase.functions.invoke("export-user-data");
+```
+
+**Response:**
+
+```ts
+{
+  profile: { ... },
+  student: { ... },
+  class_logs: [...],
+  financial_records: [...],
+  activities: [...],
+}
+```
+
+**Uso:** Portal do aluno — botão "Exportar meus dados" (LGPD Art. 18, IV).
 
 ## cleanup-old-records
 

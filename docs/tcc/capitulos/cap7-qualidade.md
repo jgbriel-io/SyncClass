@@ -14,9 +14,15 @@ e testes manuais estruturados de fluxos críticos.
 Testes E2E automatizados foram identificados como trabalho futuro
 após a estabilização da arquitetura de componentes (Seção 10.4).
 
-A pirâmide de testes do projeto possui base sólida em testes unitários,
-camada intermediária de testes manuais estruturados
-e ausência de testes E2E automatizados no escopo do MVP.
+```
+        /\
+       /E2E \       ← não implementado (trabalho futuro)
+      /──────\
+     /Manual  \     ← 4 fluxos críticos validados
+    /────────────\
+   / Unitários   \  ← 26 arquivos Vitest
+  /────────────────\
+```
 
 > 🖼️ **Figura:** Pirâmide de testes do projeto
 

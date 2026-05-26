@@ -71,7 +71,7 @@ src/
 │   ├── admin/        # 7 páginas (Dashboard, Students, Teachers, Financial, Classes, Activities, Users)
 │   ├── teacher/      # 6 páginas (Home, Students, Financial, Classes, Activities, Overview)
 │   └── student/      # 4 páginas (Home, Financial, Activities, History)
-├── hooks/            # TanStack Query + services (42 hooks)
+├── hooks/            # TanStack Query + services (45 hooks)
 ├── contexts/         # AuthContext (único context global)
 ├── content/          # 17 arquivos, 900+ strings centralizadas
 ├── integrations/supabase/  # client, env, types, signup-client

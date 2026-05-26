@@ -1,6 +1,6 @@
 # Hooks e Services
 
-TanStack Query, mutations e services. 42 hooks customizados.
+TanStack Query, mutations e services. 45 hooks customizados.
 
 ## Índice
 

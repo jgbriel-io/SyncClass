@@ -1,7 +1,9 @@
-> **Status:** ✅ Completo — adicionar diagrama de casos de uso
 > **Última Atualização:** 21/05/2026
 
-**Resumo:** Este capítulo detalha os 35 requisitos funcionais (30 implementados), 36 requisitos não funcionais (100% implementados), 59 regras de negócio, casos de uso principais e matriz de rastreabilidade. Documenta o escopo completo do MVP e requisitos futuros planejados.
+**Resumo:** Este capítulo detalha os 35 requisitos funcionais (30
+implementados), 36 requisitos não funcionais (100% implementados), 59 regras de
+negócio, casos de uso principais e matriz de rastreabilidade.
+Documenta-se o escopo completo do MVP e requisitos futuros planejados.
 
 ## 4.1 Público-Alvo
 
@@ -38,7 +40,9 @@
 | RF19   | Portal do aluno (histórico de aulas, financeiro, atividades)                | Aluno       | Alta           | 3          |
 | RF20   | Anonimização de dados pessoais (LGPD)                                       | LGPD        | Alta           | 7          |
 
-> **Nota sobre RF18:** Implementado inicialmente com troca obrigatória no primeiro acesso (Sprint 7), mas removido em Sprint 8 para simplificar onboarding. Mantido apenas reset self-service e por admin.
+> **Nota sobre RF18:** Implementado inicialmente com troca obrigatória no
+> primeiro acesso (Sprint 7), mas removido em Sprint 8 para simplificar
+> onboarding. Mantido apenas reset self-service e por admin.
 
 ### 4.2.2 Requisitos Adicionais (Implementados)
 
@@ -139,7 +143,10 @@
 
 ## 4.4 Regras de Negócio
 
-As regras de negócio definem as políticas, restrições e validações que governam o comportamento do sistema. Estas regras são implementadas através de constraints no banco de dados, validações no frontend e lógica em RPCs.
+As regras de negócio definem as políticas, restrições e validações que governam
+o comportamento do sistema.
+Estas regras são implementadas através de constraints no banco de dados,
+validações no frontend e lógica em RPCs.
 
 ### 4.4.1 Usuários e Autenticação
 
@@ -255,9 +262,8 @@ As regras de negócio definem as políticas, restrições e validações que gov
 | RN-058 | Confirmação de ações destrutivas        | Dialogs de confirmação em CRUDs |
 | RN-059 | Responsividade mobile-first             | Breakpoints Tailwind            |
 
-> **Nota:** Documentação completa de todas as 59 regras de negócio disponível em `docs/archive/regras-de-negocio/regras-de-negocio.md`
-
----
+> **Nota:** Documentação completa de todas as 59 regras de negócio disponível em
+> `docs/archive/regras-de-negocio/regras-de-negocio.md`
 
 ## 4.5 Casos de Uso
 
@@ -356,8 +362,6 @@ As regras de negócio definem as políticas, restrições e validações que gov
 
 **Regras de Negócio:** RN-031, RN-032, RN-033, RN-034
 
----
-
 ## 4.6 Matriz de Rastreabilidade
 
 ### Requisitos → Implementação
@@ -385,19 +389,9 @@ As regras de negócio definem as políticas, restrições e validações que gov
 **Legenda:**
 
 - ✅ Testado (testes unitários automatizados)
-- ⚠️ Manual - Validado manualmente (Edge Functions, QR Code)
-- ⚠️ Via migration - Testado através de migrations SQL
-- — N/A - Não aplicável (infraestrutura, não requer teste unitário)
-
-**Cobertura de Testes:**
-
-- **RNF01 (RLS):** Testado em `errorMessages.test.ts` (sanitização de erros RLS)
-- **RNF05 (Rate Limit):** Testado em `rateLimit.test.ts` (145 linhas, 12 casos)
-- **RNF11 (Error Handler):** Testado em `errorMessages.test.ts`
-- **RF10, RF17:** Validados manualmente durante desenvolvimento
-- **RF20, RF29:** Validados via execução de migrations
-
----
+- ⚠️ Manual — Validado manualmente (Edge Functions, QR Code)
+- ⚠️ Via migration — Testado através de migrations SQL
+- — N/A — Não aplicável (infraestrutura, não requer teste unitário)
 
 ## 4.7 Resumo Quantitativo
 
@@ -420,34 +414,14 @@ As regras de negócio definem as políticas, restrições e validações que gov
 
 ### Regras de Negócio
 
-- **Usuários e Auth (RN-001 a RN-006):** 6 regras
-- **Professores (RN-007 a RN-011):** 5 regras
-- **Alunos (RN-012 a RN-016):** 5 regras
-- **Aulas (RN-017 a RN-022):** 6 regras
-- **Financeiro (RN-023 a RN-030):** 8 regras
-- **Atividades (RN-031 a RN-035):** 5 regras
-- **Segurança (RN-036 a RN-042):** 7 regras
-- **LGPD (RN-043 a RN-047):** 5 regras
-- **Performance (RN-048 a RN-051):** 4 regras
-- **Validação Frontend (RN-052 a RN-055):** 4 regras
-- **UI/UX (RN-056 a RN-059):** 4 regras
 - **Total:** 59 regras implementadas
 
 ### Cobertura Geral
 
 - **Requisitos documentados:** 66 (35 RF + 31 RNF)
 - **Requisitos implementados:** 66 (30 RF + 36 RNF)
-- **Regras de negócio:** 55 principais (59 completas)
 - **Taxa de implementação:** 100% dos requisitos documentados
 - **Cobertura de testes:** ~75% (testes unitários automatizados)
-  - 32 testes unitários Vitest
-  - 129 testes design tokens
-  - 12 testes rate limiting
-  - Validação manual: Edge Functions, QR Code
-  - Validação via migrations: RLS, anonimização, triggers
-- **Migrations aplicadas:** 23
-- **Edge Functions:** 5
-- **RLS Policies:** 40+
 
 ---
 
@@ -462,10 +436,18 @@ As regras de negócio definem as políticas, restrições e validações que gov
 
 ## Referências cruzadas
 
-- **Requisitos Detalhados:** Ver [docs/archive/requisitos/](../archive/requisitos/) para RF01-RF30 e RNF01-RNF36 expandidos
-- **Regras de Negócio:** Ver [docs/archive/regras-de-negocio/regras-de-negocio.md](../archive/regras-de-negocio/regras-de-negocio.md) para todas as 59 regras
-- **Implementação:** Ver [Cap. 6 — Desenvolvimento](./cap6-desenvolvimento.md) para detalhes técnicos da implementação
-- **Arquitetura:** Ver [docs/architecture/overview.md](../architecture/overview.md) para como requisitos foram implementados
-- **Database:** Ver [docs/database/schema.md](../database/schema.md) para constraints e validações de RNs
-- **Security:** Ver [docs/security/overview.md](../security/overview.md) para implementação de RNF01-RNF16
-- **Testes:** Ver [Cap. 7 — Qualidade e Testes](./cap7-qualidade.md) para cobertura de testes dos requisitos
+- **Requisitos Detalhados:** Ver [docs/archive/requisitos/](../archive/requisitos/)
+  para RF01-RF30 e RNF01-RNF36 expandidos
+- **Regras de Negócio:** Ver
+  [docs/archive/regras-de-negocio/regras-de-negocio.md](../archive/regras-de-negocio/regras-de-negocio.md)
+  para todas as 59 regras
+- **Implementação:** Ver [Cap. 6 — Desenvolvimento](./cap6-desenvolvimento.md)
+  para detalhes técnicos da implementação
+- **Arquitetura:** Ver [docs/architecture/overview.md](../architecture/overview.md)
+  para como requisitos foram implementados
+- **Database:** Ver [docs/database/schema.md](../database/schema.md) para
+  constraints e validações de RNs
+- **Security:** Ver [docs/security/overview.md](../security/overview.md) para
+  implementação de RNF01-RNF16
+- **Testes:** Ver [Cap. 7 — Qualidade e Testes](./cap7-qualidade.md) para
+  cobertura de testes dos requisitos

@@ -71,7 +71,7 @@ com período, duração e entregas principais.
 | Reestruturação             | 10–11 mar 2026     | 2 dias   | Novo repo, renomeação, steering files                           |
 | Refatorações Arquiteturais | 11 mar–21 abr 2026 | ~40 dias | Separação hooks, split arquivos, query builders, timezone fix   |
 | Centralização de Strings   | 21 abr–20 mai 2026 | ~30 dias | Estrutura content, substituição strings, auditoria final        |
-| Restore & TCC              | 21 abr 2026        | 1 dia    | Restore codebase, migrations 24-25, organização docs            |
+| Qualidade Final & TCC      | 21–26 mai 2026     | 6 dias   | Segurança OWASP, RLS audit, Supabase advisors, conclusão        |
 
 O desenvolvimento ativo totalizou aproximadamente 4 meses
 (janeiro a maio de 2026).
@@ -110,13 +110,13 @@ A Tabela 8.3 apresenta métricas quantitativas do projeto.
 
 | Métrica                     | Valor       |
 | --------------------------- | ----------- |
-| Commits em ~4 meses         | ~276        |
-| Arquivos no projeto         | 391         |
-| Linhas de código            | ~46.400     |
-| Migrations SQL              | 25          |
+| Commits (repo atual)        | 54          |
+| Arquivos no projeto (src)   | ~358        |
+| Linhas de código            | ~50.467     |
+| Migrations SQL              | 43          |
 | Arquivos de teste unitários | 26 (Vitest) |
-| Query builders criados      | 22          |
-| Strings UI centralizadas    | ~470        |
+| Hooks customizados          | 45          |
+| Arquivos de content (UI)    | 17          |
 | Desenvolvedores             | 1           |
 
 ### 8.4.2 O que a IA Acelerou
@@ -183,8 +183,8 @@ com probabilidade, impacto, mitigação e status.
 | R03 | Performance degradada com crescimento de dados | Média | Alto    | Índices compostos, materialized views, paginação | ✅ Mitigado (migration 22)         |
 | R04 | Violação de LGPD                               | Baixa | Crítico | Soft delete, anonimização, sem CPF obrigatório   | ✅ Mitigado                        |
 | R05 | Dependência de serviço externo (Supabase)      | Baixa | Alto    | Risco aceito para MVP                            | 🔵 Aceito                          |
-| R06 | Complexidade crescente do codebase             | Alta  | Médio   | Auditorias de clean code, sprints 10–12          | 🔄 Em andamento                    |
-| R07 | Bugs de timezone em produção                   | Alta  | Médio   | Documentados, correção planejada                 | ⚠️ Pendente                        |
+| R06 | Complexidade crescente do codebase             | Alta  | Médio   | Auditorias de clean code, sprints 10–12          | ✅ Resolvido (sprints 18–27)       |
+| R07 | Bugs de timezone em produção                   | Alta  | Médio   | Documentados, Sprint 11 corrigiu                 | ✅ Resolvido                       |
 | R08 | Monitoramento de erros em produção             | Baixa | Baixo   | Sentry removido — `logger.ts` cobre dev          | ✅ Resolvido                       |
 
 ## 8.6 Ferramentas de Gestão
@@ -213,9 +213,7 @@ para gestão do projeto.
 ## Referências cruzadas
 
 - **Sprints:** Ver [docs/sprints/README.md](../sprints/README.md)
-  para histórico completo de 16 sprints implementadas
-- **Histórico:** Ver [docs/sprints/historico-completo.md](../sprints/historico-completo.md)
-  para cronograma detalhado
+  para histórico completo de 27 sprints implementadas
 - **Git:** Ver [docs/git/overview.md](../git/overview.md)
   para workflow e convenções de commit
 - **Metodologia:** Ver [Cap. 3 — Metodologia](./cap3-metodologia.md)

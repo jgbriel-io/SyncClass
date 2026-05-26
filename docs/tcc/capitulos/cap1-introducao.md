@@ -1,5 +1,3 @@
-> **Status:** 🟡 Versão Acadêmica
->
 > **Última Atualização:** 21/05/2026
 
 **Resumo:** Este capítulo apresenta o contexto do SyncClass, uma plataforma
@@ -115,4 +113,4 @@ suporte a múltiplos níveis de acesso (_roles_).
 - **Git:** Ver [docs/git/overview.md](../git/overview.md) para workflow e
   convenções de commit
 - **Sprints:** Ver [docs/sprints/README.md](../sprints/README.md) para histórico
-  completo de desenvolvimento (16 sprints implementadas)
+  completo de desenvolvimento (27 sprints implementadas)

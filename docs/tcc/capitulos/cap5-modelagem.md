@@ -1,5 +1,3 @@
-> **Status:** 🟡 Versão Acadêmica
->
 > **Última Atualização:** 21/05/2026
 
 **Resumo:** Este capítulo apresenta as decisões arquiteturais (monolito modular,
@@ -142,6 +140,7 @@ do alcance do cliente:
 | `invite-user`         | Cria usuário no auth com service_role + rollback atômico |
 | `reset-password`      | Altera senha de outro usuário                            |
 | `admin-delete-user`   | Deleta usuário do auth                                   |
+| `export-user-data`    | Exporta dados pessoais via service_role (LGPD)           |
 | `cleanup-storage`     | Acessa todos os buckets sem restrição                    |
 | `cleanup-old-records` | Deleta registros de qualquer usuário                     |
 

@@ -19,7 +19,7 @@ status de atingimento e evidências.
 
 | Objetivo Específico                 | Status      | Evidência                              |
 | ----------------------------------- | ----------- | -------------------------------------- |
-| Modelar e implementar banco com RLS | ✅ Atingido | 25 migrations, 40+ policies RLS        |
+| Modelar e implementar banco com RLS | ✅ Atingido | 43 migrations, 40+ policies RLS        |
 | Interface responsiva para 3 perfis  | ✅ Atingido | AdminShell, TeacherShell, StudentShell |
 | Módulo financeiro com comprovantes  | ✅ Atingido | RF06–RF10 implementados                |
 | Módulo de atividades com arquivos   | ✅ Atingido | RF11–RF13 implementados                |
@@ -38,8 +38,7 @@ utilizando ferramentas modernas e IA.
 A hipótese H1 foi confirmada.
 O projeto foi desenvolvido por um único desenvolvedor
 em aproximadamente 4 meses (janeiro a maio de 2026),
-com aproximadamente 276 commits, 391 arquivos
-e aproximadamente 46.400 linhas de código.
+com 54 commits, ~358 arquivos e ~50.467 linhas de código.
 O período inclui:
 
 - Janeiro a fevereiro (Sprints 1 a 7):
@@ -47,8 +46,8 @@ O período inclui:
 - Março a abril (Sprints 8 a 11):
   Refatorações arquiteturais (separação hooks, split arquivos,
   query builders, timezone fix)
-- Maio (Sprints 12 a 15):
-  Centralização de strings UI (preparação i18n)
+- Maio (Sprints 12 a 27):
+  Centralização de strings, segurança, qualidade e auditoria final
 
 **H2:** O uso de BaaS (Supabase) reduz significativamente
 o tempo de desenvolvimento de backend.
@@ -105,17 +104,17 @@ A Tabela 10.2 apresenta melhorias planejadas para evolução da plataforma.
 
 **Tabela 10.2 — Trabalhos futuros**
 
-| Melhoria                                | Justificativa                                                  |
-| --------------------------------------- | -------------------------------------------------------------- |
-| Deploy automatizado (CD)                | Reduzir fricção de releases                                    |
-| Testes de carga                         | Validar RNF06 (< 2s) com dados reais                           |
-| Auditoria WCAG AA                       | Acessibilidade completa                                        |
-| App mobile nativo                       | Melhor experiência para alunos                                 |
-| Integração com Google Calendar          | Sincronização de agenda (Sprint 18 planejada)                  |
-| Relatórios exportáveis (PDF)            | Necessidade identificada por professores (Sprint 17 planejada) |
-| Sistema de notificações                 | Email, push, in-app (Sprint 16 planejada)                      |
-| Gateway de pagamento real               | Stripe/Mercado Pago (Sprint 19 planejada)                      |
-| Multi-tenancy com planos (Freemium/Pro) | Viabilidade comercial do SaaS                                  |
+| Melhoria                                | Justificativa                            |
+| --------------------------------------- | ---------------------------------------- |
+| Deploy automatizado (CD)                | Reduzir fricção de releases              |
+| Testes de carga                         | Validar RNF06 (< 2s) com dados reais     |
+| Auditoria WCAG AA                       | Acessibilidade completa                  |
+| App mobile nativo                       | Melhor experiência para alunos           |
+| Integração com Google Calendar          | Sincronização de agenda                  |
+| Relatórios exportáveis (PDF)            | Necessidade identificada por professores |
+| Sistema de notificações                 | Email, push, in-app                      |
+| Gateway de pagamento real               | Stripe/Mercado Pago                      |
+| Multi-tenancy com planos (Freemium/Pro) | Viabilidade comercial do SaaS            |
 
 ## 10.5 Considerações Finais
 
@@ -151,6 +150,6 @@ o julgamento humano ainda define o que vale a pena executar.
 - **Qualidade:** Ver [Cap. 7 — Qualidade e Testes](./cap7-qualidade.md)
   para justificativa de ausência de E2E
 - **Sprints:** Ver [docs/sprints/README.md](../sprints/README.md)
-  para histórico completo de 16 sprints implementadas
+  para histórico completo de 27 sprints implementadas
 - **Trabalhos Futuros:** Ver sprints não implementadas em [docs/sprints/](../sprints/)
   (notificações, PDF, calendar, pagamento, gamificação)

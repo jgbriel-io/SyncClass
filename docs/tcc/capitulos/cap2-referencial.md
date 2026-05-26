@@ -1,5 +1,3 @@
-> **Status:** 🟡 Versão Acadêmica
->
 > **Última Atualização:** 21/05/2026
 
 **Resumo:** Este capítulo apresenta os fundamentos teóricos que embasam o

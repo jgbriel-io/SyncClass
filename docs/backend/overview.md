@@ -76,13 +76,14 @@ Supabase BaaS
 
 ### [Edge Functions](./edge-functions.md)
 
-5 functions Deno/TS para operações server-side.
+6 functions Deno/TS para operações server-side.
 
 **Conteúdo:**
 
 - `invite-user` — criação atômica de usuário com rollback
 - `admin-delete-user` — deleção com invalidação de sessões
 - `reset-password` — reset via service_role
+- `export-user-data` — exportação de dados pessoais (LGPD)
 - `cleanup-old-records` — limpeza periódica de logs
 - `cleanup-storage` — limpeza de arquivos órfãos
 

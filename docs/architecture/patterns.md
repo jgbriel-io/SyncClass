@@ -76,7 +76,8 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 **Arquivos:**
 
 - `src/hooks/useOptimisticMutation.ts:12`
-- `src/hooks/useRetryMutation.ts:18`
+
+> `useRetryMutation` é padrão conceitual — não implementado como hook separado.
 
 ```ts
 // Strategy 1: Optimistic (feedback instantâneo)
