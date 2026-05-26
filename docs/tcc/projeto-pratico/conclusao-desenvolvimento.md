@@ -26,7 +26,7 @@ CI/CD              → GitHub Actions → Cloudflare Pages
 
 | Métrica                    | Valor                              |
 | -------------------------- | ---------------------------------- |
-| Commits                    | 53                                 |
+| Commits                    | 60                                 |
 | Arquivos TypeScript        | 357                                |
 | Linhas de código (src)     | ~50.467                            |
 | Migrations SQL             | 43                                 |
@@ -140,7 +140,7 @@ A infraestrutura atual suporta as seguintes extensões sem mudança de arquitetu
 
 ### Internacionalização (i18n)
 
-- **Pronto:** 100% das strings UI em `src/content/` (170+ strings centralizadas, Sprint 12–15)
+- **Pronto:** 100% das strings UI em `src/content/` (860+ strings centralizadas, Sprint 12–15)
 - **Próximo passo:** Substituir objeto `content` por `i18next` — mudança de 1 arquivo por domínio
 
 ### Multi-tenant / Franquia

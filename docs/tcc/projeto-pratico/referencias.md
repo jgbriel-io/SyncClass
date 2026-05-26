@@ -28,7 +28,7 @@
 
 ## Cap. 4 — Requisitos
 
-> **Nota:** Documentação completa em `docs/tcc/academico/cap4-requisitos.md`
+> **Nota:** Documentação completa em `docs/tcc/capitulos/cap4-requisitos.md`
 
 ### Resumo Quantitativo
 
@@ -36,14 +36,14 @@
   - RF01-RF20: Principais (100% implementados)
   - RF21-RF30: Adicionais (100% implementados)
   - RF31-RF35: Futuros (planejados para sprints 14-18)
-- **Requisitos Não Funcionais:** 35 (100% implementados)
+- **Requisitos Não Funcionais:** 36 (100% implementados)
   - RNF01-RNF09: Principais
   - RNF10-RNF15: Segurança avançada
   - RNF16-RNF20: Performance
   - RNF21-RNF26: Usabilidade
   - RNF27-RNF31: Rastreabilidade
   - RNF32-RNF35: Manutenção
-- **Regras de Negócio:** 55 principais (59 completas)
+- **Regras de Negócio:** 59
 - **Casos de Uso:** 26
 - **Taxa de Implementação:** 100% dos requisitos documentados
 
@@ -164,7 +164,7 @@
 
 ### Regras de Negócio
 
-> **Nota:** Documentação completa em `docs/REGRAS_DE_NEGOCIO.md` (59 regras)
+> **Nota:** Documentação completa em `docs/tcc/archive/regras-de-negocio/regras-de-negocio.md` (59 regras)
 
 **Resumo por Categoria:**
 
@@ -178,8 +178,8 @@
 | Atividades              | 5          | RN-031 a RN-035 |
 | Segurança e Permissões  | 7          | RN-036 a RN-042 |
 | LGPD e Privacidade      | 5          | RN-043 a RN-047 |
-| Performance             | 4          | RN-048 a RN-051 |
-| Validação Frontend      | 4          | RN-052 a RN-055 |
+| Performance             | 5          | RN-048 a RN-052 |
+| Validação Frontend      | 7          | RN-053 a RN-059 |
 
 **Exemplos de Regras Principais:**
 
@@ -230,6 +230,7 @@
 | `admin-delete-user`   | Exclusão de usuário pelo admin        |
 | `cleanup-storage`     | Limpeza de arquivos órfãos no storage |
 | `cleanup-old-records` | Limpeza de registros antigos          |
+| `export-user-data`    | Exportação de dados do usuário (LGPD) |
 
 ---
 
@@ -239,7 +240,7 @@
 
 ```
 src/
-├── components/        # 126 componentes
+├── components/        # ~184 componentes
 │   ├── ui/            # shadcn/ui + componentes base customizados
 │   ├── students/      # Componentes do domínio alunos
 │   ├── classes/       # Componentes do domínio aulas
@@ -249,7 +250,7 @@ src/
 │   ├── layout/        # Shells por role (AdminShell, TeacherShell, StudentShell)
 │   ├── filters/       # Componentes de filtro por módulo
 │   └── auth/          # AuthRedirect, ProtectedRoute, ChangePasswordDialog
-├── hooks/             # 23 hooks (TanStack Query + mutations)
+├── hooks/             # 45 hooks (TanStack Query + mutations)
 ├── pages/             # Páginas por role (admin/, teacher/, student/)
 ├── contexts/          # AuthContext
 ├── integrations/
@@ -260,20 +261,20 @@ src/
     ├── validation/    # schemas Zod
     └── security/      # errorHandler
 supabase/
-├── migrations/        # 23 migrations SQL
-└── functions/         # 5 Edge Functions (Deno/TypeScript)
+├── migrations/        # 43 migrations SQL
+└── functions/         # 6 Edge Functions (Deno/TypeScript)
 ```
 
 ### Números do Projeto
 
 | Métrica            | Valor   |
 | ------------------ | ------- |
-| Total de arquivos  | 391     |
-| Linhas de código   | ~46.400 |
-| Componentes React  | 126     |
-| Hooks customizados | 23      |
-| Migrations SQL     | 25      |
-| Edge Functions     | 5       |
+| Total de arquivos  | ~358    |
+| Linhas de código   | ~50.467 |
+| Componentes React  | ~184    |
+| Hooks customizados | 45      |
+| Migrations SQL     | 43      |
+| Edge Functions     | 6       |
 
 ---
 
@@ -283,17 +284,15 @@ supabase/
 
 | Tipo                 | Quantidade  | Ferramenta               | Detalhes                   |
 | -------------------- | ----------- | ------------------------ | -------------------------- |
-| Testes unitários     | 18 arquivos | Vitest + Testing Library | 32 testes principais       |
+| Testes unitários     | 26 arquivos | Vitest + Testing Library | 287 testes (26 suites)     |
 | Testes design tokens | 129 testes  | Vitest                   | typography, spacing, icons |
-| Testes rate limiting | 12 casos    | Vitest                   | 145 linhas                 |
 
-**Cobertura Total:** ~75% dos requisitos com testes automatizados
+**Cobertura Total:** 287 testes passando, 26 suites
 
 **Detalhamento:**
 
-- **32 testes Vitest:** hooks, services, utils, validação
-- **129 testes design tokens:** cobertura completa do sistema de design
-- **12 testes rate limiting:** validação de segurança
+- **287 testes Vitest:** hooks, services, utils, validação, design tokens
+- **129 testes design tokens:** incluídos nos 287 acima
 
 **Nota:** Testes E2E não foram implementados no escopo do MVP. Validação de fluxos críticos foi feita manualmente.
 

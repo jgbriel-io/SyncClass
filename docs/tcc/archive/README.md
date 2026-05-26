@@ -130,7 +130,7 @@ Documenta **59 regras de negócio** extraídas do código, organizadas por módu
 7. Segurança e Permissões (RN-036 a RN-042)
 8. LGPD e Privacidade (RN-043 a RN-047)
 9. Performance e Rate Limiting (RN-048 a RN-052)
-10. Validação Frontend (RN-053 a RN-055)
+10. Validação Frontend (RN-053 a RN-059)
 
 **Uso:** Referência completa de regras de negócio. Cap4 tem 59 regras (resumo).
 

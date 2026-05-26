@@ -183,10 +183,10 @@ tags:
 | Métrica                          | Valor Estimado |
 | :------------------------------- | :------------- |
 | **Total de Commits**             | ~218           |
-| **Sprints Implementadas**        | 16             |
-| **Migrations de Banco**          | 23             |
+| **Sprints Implementadas**        | 27             |
+| **Migrations de Banco**          | 43             |
 | **Bugs de Auditoria Corrigidos** | 36             |
-| **Testes Automatizados**         | 161            |
+| **Testes Automatizados**         | 287            |
 | **Políticas de Segurança (RLS)** | 40+            |
 | **Arquivos de Documentação**     | 50+            |
 | **Strings UI Centralizadas**     | 900+           |
@@ -195,6 +195,6 @@ tags:
 
 ## Assets Necessários
 
-- [ ] 🖼️ **Figura:** Diagrama de evolução das Migrations (01 a 23).
+- [ ] 🖼️ **Figura:** Diagrama de evolução das Migrations (01 a 43).
 - [ ] 🖼️ **Figura:** Print do log de execução do GitHub Actions.
 - [ ] 🖼️ **Figura:** Tabela comparativa de bugs identificados vs. corrigidos.
