@@ -128,16 +128,8 @@ Problemas arquiteturais e refatorações identificadas com priorização e estim
 
 **Resumo:**
 
-- 6 problemas arquiteturais (~13h de trabalho)
-- 8 refatorações (~7h de trabalho)
-- Total: 14 itens, ~20h estimadas
-
-**Principais:**
-
-- God hooks com 200+ linhas
-- Agregação no cliente sem paginação
-- Query keys inconsistentes
-- Duplicação de código
+- 14 itens identificados (6 arquiteturais + 8 refatorações)
+- **Todos resolvidos** — débito técnico zerado
 
 ### [Troubleshooting](./troubleshooting.md)
 

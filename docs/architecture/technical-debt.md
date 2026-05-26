@@ -221,7 +221,7 @@ Existe em dois arquivos com lógica diferente. Hooks importam de fontes diferent
 
 **Severidade:** Alta  
 **Status:** ✅ Resolvido — `fetchPackageLinkForClassLog` e `applyClassLogFinancialUpdate` extraídos; mutationFn reduzido a ~18 linhas, complexidade ciclomática 2.  
-**Local:** `src/hooks/useClassLogs.ts:609`
+**Local:** `src/hooks/useClassLogs.ts:640`
 
 `mutationFn` tem complexidade ciclomática ~12 com 4 níveis de aninhamento.
 
