@@ -28,24 +28,24 @@ Workflow, convenções de commit, branches e histórico.
 
 ## Stack
 
-**Modelo:** Feature branch + squash merge
+**Modelo:** Commits diretos em `main` (projeto solo)
 
 **Branches principais:**
 
-- `main` — produção (sempre estável)
+- `main` — produção (sempre estável, branch única ativa)
 - `homolog` — homologação (deprecated, migrado para `main`)
 
 **Proteções:**
 
-- `main` protegida (não aceita push direto)
-- Require PR approval (1 aprovação mínima)
-- Require status checks (CI deve passar)
+- Push direto em `main` permitido (sem PR obrigatório — projeto solo)
+- CI via GitHub Actions roda em cada push (lint, type-check, testes, build)
+- Deploy automático para Cloudflare Pages após CI passar
 
 **Convenções:**
 
 - Conventional Commits obrigatório
-- Branches com prefixo de tipo (`feat/`, `fix/`, `refactor/`)
-- Squash merge (1 commit por feature)
+- Branches com prefixo de tipo (`feat/`, `fix/`, `refactor/`) quando isolamento necessário
+- Commits atômicos e descritivos a cada mudança significativa
 
 ## Documentação detalhada
 
@@ -72,11 +72,6 @@ Conventional Commits, nomenclatura de branches e boas práticas.
 - Anti-patterns (commits genéricos, gigantes, código comentado, console.log, TODO)
 
 ## Histórico
-
-**Arquivos:**
-
-- `commits-current.txt` — commits da branch `main` atual
-- `commits-old-homolog.txt` — commits da branch `homolog` (deprecated)
 
 **Gerar histórico:**
 

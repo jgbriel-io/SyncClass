@@ -2,6 +2,8 @@
 
 Feature branch, code review e merge strategy.
 
+> **Nota:** Este projeto usa commits diretos em `main` (desenvolvimento solo). O fluxo de feature branch abaixo documenta boas práticas para contexto de equipe.
+
 ## Índice
 
 - [Quando usar](#quando-usar)
