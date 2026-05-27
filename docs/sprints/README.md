@@ -53,12 +53,13 @@ Sprints documentam desenvolvimento incremental do SyncClass. Cada sprint = conju
 | Sprint 25 | 25 mai 2026        | DB: Database Structural Analysis             | ✅ Implementada | [sprint-25](./sprint-25-database-analysis.md)                       |
 | Sprint 26 | 25 mai 2026        | Security: Full Security Audit                | ✅ Implementada | [sprint-26](./sprint-26-security-audit.md)                          |
 | Sprint 27 | 25 mai 2026        | Security: Supabase Advisors + npm audit      | ✅ Implementada | [sprint-27](./sprint-27-supabase-advisors.md)                       |
+| Sprint 28 | 26 mai 2026        | QA: Testes Manuais — 116 itens, 20 rotas     | 🔴 Pendente     | [sprint-28](./sprint-28-testes-manuais.md)                          |
 
 **Resumo:**
 
 - **Implementadas:** 27 sprints (1–27) — desenvolvimento encerrado
-- **Planejadas:** 0
-- **Total:** 27 sprints documentadas
+- **Em andamento:** Sprint 28 (QA manual)
+- **Total:** 28 sprints documentadas
 
 ---
 

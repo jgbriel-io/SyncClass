@@ -41,7 +41,7 @@ Banco de dados — schema, migrations, RLS.
 
 - [overview.md](./database/overview.md) — visão geral do banco
 - [schema.md](./database/schema.md) — tabelas, relacionamentos, bugs
-- [migrations.md](./database/migrations.md) — 21 migrations aplicadas
+- [migrations.md](./database/migrations.md) — 43 migrations aplicadas
 - [rls.md](./database/rls.md) — funções helper, políticas, troubleshooting
 
 ### [security/](./security/)
@@ -59,7 +59,7 @@ Frontend — componentes, hooks, design tokens.
 - [overview.md](./frontend/overview.md) — visão geral do frontend
 - [components.md](./frontend/components.md) — shadcn/ui, componentes de domínio
 - [design-tokens.md](./frontend/design-tokens.md) — typography, spacing, icons
-- [content.md](./frontend/content.md) — 900+ strings centralizadas
+- [content.md](./frontend/content.md) — 860+ strings centralizadas
 - [hooks.md](./frontend/hooks.md) — 42 hooks, TanStack Query, services
 
 ### [git/](./git/)
@@ -72,13 +72,15 @@ Git e workflow — branches, commits, convenções.
 
 ### [sprints/](./sprints/)
 
-Desenvolvimento — 16 sprints implementadas.
+Desenvolvimento — 27 sprints implementadas + 1 QA em andamento.
 
 - [README.md](./sprints/README.md) — índice de sprints
 - [historico-completo.md](./sprints/historico-completo.md) — linha do tempo
 - Sprint 01-07 — MVP (CRUD, auth, dashboard, mobile, segurança)
-- Sprint 08-15 — Refactor (hooks, strings, docs)
-- Sprint 16-17 — Docs organization
+- Sprint 08-17 — Refactor (hooks, strings, docs)
+- Sprint 18-20 — Segurança e LGPD
+- Sprint 21-27 — Qualidade final (code review, RLS, security audit)
+- Sprint 28 — QA manual (116 itens, 20 rotas)
 
 ### [tcc/](./tcc/)
 
@@ -87,14 +89,14 @@ TCC — capítulos do trabalho acadêmico.
 - [README.md](./tcc/README.md) — índice de capítulos
 - Cap 1-10 — Introdução, Referencial, Metodologia, Requisitos, Modelagem, Desenvolvimento, Qualidade, Gestão, Deploy, Conclusão
 
-### [archive/](./archive/)
+### [tcc/archive/](./tcc/archive/)
 
 Archive — requisitos, regras de negócio, gestão de projeto (referência histórica).
 
-- [README.md](./archive/README.md) — índice do archive
-- [requisitos/](./archive/requisitos/) — RF01-RF30, RNF01-RNF36
-- [regras-de-negocio/](./archive/regras-de-negocio/) — RN01-RN59
-- [gestao-projeto/](./archive/gestao-projeto/) — histórico, validação de sprints
+- [README.md](./tcc/archive/README.md) — índice do archive
+- [requisitos/](./tcc/archive/requisitos/) — RF01-RF30, RNF01-RNF36
+- [regras-de-negocio/](./tcc/archive/regras-de-negocio/) — RN01-RN59
+- [gestao-projeto/](./tcc/archive/gestao-projeto/) — histórico, validação de sprints
 
 ## Status
 
@@ -107,10 +109,10 @@ Archive — requisitos, regras de negócio, gestão de projeto (referência hist
 | Security     | 3        | ✅     |
 | Frontend     | 5        | ✅     |
 | Git          | 3        | ✅     |
-| Sprints      | 21       | ✅     |
+| Sprints      | 33       | ✅     |
 | TCC          | 10       | ✅     |
 | Archive      | 6        | ✅     |
-| **Total**    | **54**   | **✅** |
+| **Total**    | **66**   | **✅** |
 
 ## Guia rápido
 
@@ -128,7 +130,7 @@ npm run dev          # dev server (localhost:5173)
 npm run lint         # ESLint
 npm run type-check   # TypeScript
 npm run check        # lint + type-check
-npm run test         # Vitest (32 testes)
+npm run test         # Vitest (287 testes)
 npm run build        # build produção
 ```
 
@@ -139,25 +141,25 @@ src/
 ├── components/      # UI por domínio (40+ shadcn/ui + domínio)
 ├── hooks/           # 42 hooks (TanStack Query + services)
 ├── pages/           # rotas por role (admin, teacher, student)
-├── content/         # 900+ strings centralizadas (17 arquivos)
+├── content/         # 860+ strings centralizadas
 ├── lib/             # utils, design tokens, validação, security
 └── integrations/    # Supabase client
 
 supabase/
-├── migrations/      # 21 SQL migrations
-└── functions/       # 5 Edge Functions (Deno/TS)
+├── migrations/      # 43 SQL migrations
+└── functions/       # Edge Functions (Deno/TS)
 
 docs/
 ├── project/         # 1 arquivo (overview)
-├── architecture/    # 6 arquivos (overview, flows, patterns, decisions, troubleshooting, debt)
-├── backend/         # 5 arquivos (overview, edge-functions, rpcs, integrations, bugs)
-├── database/        # 4 arquivos (overview, schema, migrations, rls)
-├── security/        # 3 arquivos (overview, auth-rls, validations)
-├── frontend/        # 5 arquivos (overview, components, design-tokens, content, hooks)
-├── git/             # 3 arquivos (overview, workflow, conventions)
-├── sprints/         # 21 sprints (16 implementadas, 5 não implementadas)
-├── tcc/             # 10 capítulos
-└── archive/         # requisitos, regras, gestão
+├── architecture/    # 6 arquivos
+├── backend/         # 5 arquivos
+├── database/        # 4 arquivos
+├── security/        # 3 arquivos
+├── frontend/        # 5 arquivos
+├── git/             # 3 arquivos
+├── sprints/         # 28 sprints (27 implementadas + 1 QA + 5 não implementadas)
+├── tcc/             # 10 capítulos + archive
+└── tcc/archive/     # requisitos, regras, gestão (referência histórica)
 ```
 
 ### Roles
@@ -168,16 +170,14 @@ docs/
 
 ### Métricas
 
-- **Commits:** ~218
-- **Sprints:** 16 implementadas
-- **Migrations:** 21
-- **Edge Functions:** 5
-- **Hooks:** 42
-- **Componentes:** 40+ shadcn/ui + domínio
-- **Strings UI:** 900+ centralizadas
-- **Testes:** 161 (32 unitários + 129 design tokens)
-- **RLS Policies:** 40+
-- **Arquivos de Docs:** 54
+- **Commits:** 60
+- **Sprints:** 27 implementadas
+- **Migrations:** 43
+- **Arquivos TypeScript:** 357
+- **Linhas de código (src):** ~50.467
+- **Strings UI:** 860+ centralizadas
+- **Testes:** 287 (26 suites)
+- **RLS Policies:** 43+
 
 ## Convenções
 
@@ -191,4 +191,4 @@ docs/
 
 - [Contexto do Projeto](./project/overview.md) — comece aqui
 - [Histórico completo](./sprints/historico-completo.md)
-- [Assets pendentes](./tcc/assets-pendentes.md)
+- [Assets pendentes](./tcc/projeto-escrito/assets-pendentes.md)
