@@ -88,6 +88,12 @@ MVP funcional entregue em ~30 dias úteis (19/jan → 18/fev).
 | Sprint 26 | 25 mai  | Security Audit (OWASP Top 10, JWT, CSP)    | 6/6 ✅   |
 | Sprint 27 | 25 mai  | Supabase Advisors + npm audit              | 8/8 ✅   |
 
+### Fase 5 — QA Manual (Sprint 28)
+
+| Sprint    | Período | Foco                                          | Items       |
+| --------- | ------- | --------------------------------------------- | ----------- |
+| Sprint 28 | 26 mai  | Testes manuais — 20 rotas, 116 itens, 5 roles | 🔴 Pendente |
+
 ---
 
 ## Features Fora do Escopo (Documentadas, Não Implementadas)
@@ -108,7 +114,7 @@ Mantidas como sprints `NAO-IMPLEMENTADA` por decisão de escopo, não por limita
 
 | Hipótese                                                           | Evidência                                                                                                                          | Status      |
 | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **H1** SaaS funcional solo em ~3 meses com IA como aceleradora     | 53 commits, 357 arquivos, ~50k linhas, 1 desenvolvedor, 18 semanas                                                                 | ✅ Validada |
+| **H1** SaaS funcional solo em ~3 meses com IA como aceleradora     | 60 commits, 357 arquivos, ~50k linhas, 1 desenvolvedor, 18 semanas                                                                 | ✅ Validada |
 | **H2** Supabase reduz ≥60% do esforço backend vs stack tradicional | 43 migrations SQL gerenciam auth, RLS, RPCs, triggers — equivalente a ~80 endpoints REST + middleware de auth em stack tradicional | ✅ Validada |
 | **H3** Plataforma unificada reduz tarefas manuais do professor     | Portal único: alunos, aulas, cobranças, atividades, relatórios                                                                     | ✅ Validada |
 
@@ -167,10 +173,30 @@ A infraestrutura atual suporta as seguintes extensões sem mudança de arquitetu
 
 ---
 
+## Limpeza Final (26/05/2026)
+
+Após encerramento do desenvolvimento, realizada varredura de lixo no repositório:
+
+| Item removido                        | Motivo                                       |
+| ------------------------------------ | -------------------------------------------- |
+| `lovable-tagger` (dep + vite.config) | Ferramenta da plataforma Lovable.dev         |
+| `sharp` (dep)                        | Dependência órfã — zero uso no código        |
+| 11 componentes shadcn/ui sem uso     | Stubs gerados no scaffold, nunca usados      |
+| 11 deps associadas (Radix, vaul...)  | Removidas junto com os componentes           |
+| `.agents/` (desrastreado do git)     | Skills do Claude Code, não código do projeto |
+| `.kiroignore`                        | Config do Kiro IDE                           |
+
+Build continua passando após limpeza: 287/287 testes, lint e type-check limpos.
+
+---
+
 ## Conclusão
 
 O desenvolvimento do SyncClass está **encerrado** como artefato de TCC.
 
 O produto cobre o ciclo completo de gestão de professores autônomos de inglês: cadastro de alunos, registro de aulas, controle financeiro, envio de atividades e portal do aluno. A arquitetura está documentada, testada, auditada em segurança e pronta para evolução.
 
-O próximo passo do projeto é a **escrita dos capítulos 2–10 do TCC**, utilizando as sprints, commits e métricas acima como evidência para as hipóteses H1, H2 e H3.
+**Pendências restantes:**
+
+- Sprint 28 — QA manual (116 itens em 20 rotas)
+- Capítulos 2–10 do TCC — rascunhos existem em `docs/tcc/capitulos/`, precisam de revisão ABNT e versão Word final
