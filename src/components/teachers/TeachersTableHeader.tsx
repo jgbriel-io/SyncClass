@@ -12,7 +12,7 @@ export function TeachersTableHeader() {
           Status
         </TableHead>
         <TableHead
-          className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
+          className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap tablet:sticky tablet:left-0 z-30 bg-muted"
           style={{
             width: TEACH_COL.NOME,
             minWidth: TEACH_COL.NOME,

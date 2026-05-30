@@ -5,14 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import {
-  User,
-  Mail,
-  Calendar,
-  Shield,
-  Link2,
-  FileText,
-} from "lucide-react";
+import { User, Mail, Calendar, Shield, Link2, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useUsersPaginated } from "@/hooks/useUsers";
@@ -48,7 +41,10 @@ export function UserDetailSheet({
   open,
   onOpenChange,
 }: UserDetailSheetProps) {
-  const { data: users = [] } = useUsersPaginated({ pageSize: 1000, filters: { status: "all" } });
+  const { data: users = [] } = useUsersPaginated({
+    pageSize: 1000,
+    filters: { status: "all" },
+  });
   const { data: students = [] } = useStudents();
   const { data: teachers = [] } = useTeachers();
 
@@ -58,22 +54,24 @@ export function UserDetailSheet({
   );
 
   const linkedStudent = useMemo(
-    () => user?.profile?.student_id
-      ? students.find((s) => s.id === user.profile?.student_id)
-      : null,
+    () =>
+      user?.profile?.student_id
+        ? students.find((s) => s.id === user.profile?.student_id)
+        : null,
     [user, students]
   );
 
   const linkedTeacher = useMemo(
-    () => user?.profile?.teacher_id
-      ? teachers.find((t) => t.id === user.profile.teacher_id)
-      : null,
+    () =>
+      user?.profile?.teacher_id
+        ? teachers.find((t) => t.id === user.profile.teacher_id)
+        : null,
     [user, teachers]
   );
 
   const storedRole = useMemo(() => {
     if (!user) return null;
-    return (user.role?.role ?? user.profile?.role) as string | null ?? null;
+    return ((user.role ?? user.profile?.role) as string | null) ?? null;
   }, [user]);
 
   const role = useMemo(() => {
@@ -124,32 +122,56 @@ export function UserDetailSheet({
           <Skeleton className="h-20 w-full" />
         </div>
       ) : (
-        <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
+        <Tabs
+          defaultValue="info"
+          className="flex-1 flex flex-col overflow-hidden"
+        >
           <TabsList className="mx-6 mt-4 grid w-full grid-cols-2">
-            <TabsTrigger value="info">{usersContent.detailSheet.tabInfo}</TabsTrigger>
-            <TabsTrigger value="links">{usersContent.detailSheet.tabLinks}</TabsTrigger>
+            <TabsTrigger value="info">
+              {usersContent.detailSheet.tabInfo}
+            </TabsTrigger>
+            <TabsTrigger value="links">
+              {usersContent.detailSheet.tabLinks}
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab: Informações */}
-          <TabsContent value="info" className="flex-1 overflow-auto m-0 px-6 py-4">
+          <TabsContent
+            value="info"
+            className="flex-1 overflow-auto m-0 px-6 py-4"
+          >
             <Card className="p-4 space-y-3">
               <h3 className="font-semibold text-sm flex items-center gap-2">
                 <User className="h-4 w-4" />
                 {usersContent.detailSheet.accountDataSection}
               </h3>
               <div className="grid gap-4 text-sm">
-                <DetailSection icon={Mail} label={common.labels.email} value={user.email || "—"} inline />
+                <DetailSection
+                  icon={Mail}
+                  label={common.labels.email}
+                  value={user.email || "—"}
+                  inline
+                />
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{usersContent.detailSheet.privilegeLabel}:</span>
-                  <StatusBadge variant={getRoleVariant(role)} className="text-xs">
+                  <span className="text-muted-foreground">
+                    {usersContent.detailSheet.privilegeLabel}:
+                  </span>
+                  <StatusBadge
+                    variant={getRoleVariant(role)}
+                    className="text-xs"
+                  >
                     {getRoleLabel(role)}
                   </StatusBadge>
                 </div>
                 <DetailSection
                   icon={FileText}
                   label={usersContent.detailSheet.statusLabel}
-                  value={isActive ? usersContent.detailSheet.accountActive : usersContent.detailSheet.accountArchived}
+                  value={
+                    isActive
+                      ? usersContent.detailSheet.accountActive
+                      : usersContent.detailSheet.accountArchived
+                  }
                   inline
                 />
                 <DetailSection
@@ -157,7 +179,9 @@ export function UserDetailSheet({
                   label={usersContent.detailSheet.createdAtLabel}
                   value={
                     user.created_at
-                      ? format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })
+                      ? format(new Date(user.created_at), "dd/MM/yyyy", {
+                          locale: ptBR,
+                        })
                       : "—"
                   }
                   inline
@@ -179,7 +203,10 @@ export function UserDetailSheet({
           </TabsContent>
 
           {/* Tab: Vínculos */}
-          <TabsContent value="links" className="flex-1 overflow-auto m-0 px-6 py-4">
+          <TabsContent
+            value="links"
+            className="flex-1 overflow-auto m-0 px-6 py-4"
+          >
             <Card className="p-4">
               <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
                 <Link2 className="h-4 w-4" />
@@ -196,18 +223,31 @@ export function UserDetailSheet({
                     <div className="p-3 rounded-lg border bg-muted/30">
                       <div className="flex items-center gap-2 mb-2">
                         <User className="h-4 w-4 text-success" />
-                        <span className="text-sm font-medium">{usersContent.detailSheet.linkedStudentLabel}</span>
+                        <span className="text-sm font-medium">
+                          {usersContent.detailSheet.linkedStudentLabel}
+                        </span>
                       </div>
                       <div className="space-y-1 text-sm">
                         <p className="font-medium">{linkedStudent.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {linkedStudent.email || formatPhoneDisplay(linkedStudent.phone, linkedStudent.country) || "—"}
+                          {linkedStudent.email ||
+                            formatPhoneDisplay(
+                              linkedStudent.phone,
+                              linkedStudent.country
+                            ) ||
+                            "—"}
                         </p>
                         <StatusBadge
-                          variant={linkedStudent.status === "ativo" ? "success" : "default"}
+                          variant={
+                            linkedStudent.status === "ativo"
+                              ? "success"
+                              : "default"
+                          }
                           className="text-xs mt-2"
                         >
-                          {linkedStudent.status === "ativo" ? common.labels.active : common.labels.inactive}
+                          {linkedStudent.status === "ativo"
+                            ? common.labels.active
+                            : common.labels.inactive}
                         </StatusBadge>
                       </div>
                     </div>
@@ -217,18 +257,28 @@ export function UserDetailSheet({
                     <div className="p-3 rounded-lg border bg-muted/30">
                       <div className="flex items-center gap-2 mb-2">
                         <Shield className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-medium">{usersContent.detailSheet.linkedTeacherLabel}</span>
+                        <span className="text-sm font-medium">
+                          {usersContent.detailSheet.linkedTeacherLabel}
+                        </span>
                       </div>
                       <div className="space-y-1 text-sm">
                         <p className="font-medium">{linkedTeacher.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {linkedTeacher.email || formatPhoneDisplay(linkedTeacher.phone, "Brasil") || "—"}
+                          {linkedTeacher.email ||
+                            formatPhoneDisplay(linkedTeacher.phone, "Brasil") ||
+                            "—"}
                         </p>
                         <StatusBadge
-                          variant={linkedTeacher.status === "ativo" ? "success" : "default"}
+                          variant={
+                            linkedTeacher.status === "ativo"
+                              ? "success"
+                              : "default"
+                          }
                           className="text-xs mt-2"
                         >
-                          {linkedTeacher.status === "ativo" ? common.labels.active : common.labels.inactive}
+                          {linkedTeacher.status === "ativo"
+                            ? common.labels.active
+                            : common.labels.inactive}
                         </StatusBadge>
                       </div>
                     </div>

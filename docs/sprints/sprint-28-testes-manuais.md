@@ -273,7 +273,46 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 | Integrações e Validações   | 6       |
 | Rotas Alias e Edge Cases   | 3       |
 | Volume de Dados            | 3       |
-| **Total**                  | **116** |
+| Sprint 28 — Dashboard      | 12      |
+| Sprint 28 — user_roles     | 7       |
+| **Total**                  | **135** |
+
+---
+
+## 6. Sprint 28 — Ajustes Implementados
+
+### Dashboard — Responsividade Mobile
+
+- [ ] Mobile (≤425px): abas Resumo / Agenda / Gráfico exibidas
+- [ ] Aba Resumo: cards em 2 colunas com valor + % na mesma linha
+- [ ] Aba Agenda: hoje, pagamentos, aniversários listados
+- [ ] Aba Gráfico: gráfico renderiza ao clicar na aba (sem crash)
+- [ ] Tablet (768px+): layout completo sem abas (scroll único)
+- [ ] Ações Rápidas: itens alinhados à esquerda, 1 coluna em ≤425px
+- [ ] Footer mobile: 3 linhas legíveis (links / crédito / copyright+LGPD)
+
+### Dashboard — Ações Rápidas abrem dialogs
+
+- [ ] "Cadastrar Aluno" → navega para `/students` e abre dialog de cadastro
+- [ ] "Registrar Aula" → navega para `/classes` e abre dialog de registro
+- [ ] "Cadastrar Professor" (admin) → navega para `/admin/teachers` e abre dialog
+- [ ] "Cadastrar Usuário" (admin) → navega para `/admin/users` e abre dialog
+- [ ] URL limpa após abertura (`?action=create` removido da barra)
+
+### Esqueci Senha
+
+- [ ] Após enviar email: apenas 1 link "Voltar ao Login" (fora do card, em texto)
+- [ ] Botão dentro do card não existe mais
+
+### Unificação `user_roles` → `profiles.role`
+
+- [ ] Login como **admin** → role carrega corretamente (`profiles.role`)
+- [ ] Login como **teacher** → role carrega corretamente
+- [ ] Login como **student** → role carrega corretamente
+- [ ] Criar novo usuário → `profiles.role` preenchido (trigger `handle_new_user`)
+- [ ] Admin: alterar role de usuário → `upsert_user_role_safe` atualiza `profiles.role`
+- [ ] Tela `/admin/users` → role de cada usuário exibido corretamente
+- [ ] Editar role no dialog de usuário → role salvo e exibido sem refresh manual
 
 ---
 

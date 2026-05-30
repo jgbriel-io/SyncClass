@@ -52,7 +52,9 @@ interface UsersTableRowProps {
   onDelete: (user: UserWithProfile) => void;
   onHardDelete: (user: UserWithProfile) => void;
   getRoleLabel: (role: string | null) => string;
-  getRoleVariant: (role: string | null) => "default" | "success" | "warning" | "destructive" | "info";
+  getRoleVariant: (
+    role: string | null
+  ) => "default" | "success" | "warning" | "destructive" | "info";
 }
 
 export function UsersTableRow({
@@ -76,18 +78,20 @@ export function UsersTableRow({
     ? teachers.find((t) => t.id === user.profile.teacher_id)
     : null;
 
-  const storedRole = (user.role?.role ?? user.profile?.role) as string | null ?? null;
-  const role = storedRole === "admin"
-    ? "admin"
-    : storedRole === "teacher"
-    ? "teacher"
-    : storedRole === "student"
-    ? "student"
-    : linkedTeacher
-    ? "teacher"
-    : linkedStudent
-    ? "student"
-    : storedRole;
+  const storedRole =
+    ((user.role ?? user.profile?.role) as string | null) ?? null;
+  const role =
+    storedRole === "admin"
+      ? "admin"
+      : storedRole === "teacher"
+        ? "teacher"
+        : storedRole === "student"
+          ? "student"
+          : linkedTeacher
+            ? "teacher"
+            : linkedStudent
+              ? "student"
+              : storedRole;
 
   const displayName = (user.profile?.full_name || "").trim() || "(sem nome)";
   const avatarLetter = getAvatarLetter(displayName);
@@ -98,7 +102,10 @@ export function UsersTableRow({
   return (
     <tr className="group hover:bg-muted/30 transition-colors">
       {/* Status Badge */}
-      <td className="px-2 py-2 align-middle whitespace-nowrap" style={{ width: '1%' }}>
+      <td
+        className="px-2 py-2 align-middle whitespace-nowrap"
+        style={{ width: "1%" }}
+      >
         <StatusBadge variant={isActive ? "success" : "default"}>
           {isActive ? users.table.statusActive : users.table.statusInactive}
         </StatusBadge>
@@ -128,7 +135,10 @@ export function UsersTableRow({
               {displayName}
             </p>
             {subtitle && (
-              <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate" title={subtitle}>
+              <p
+                className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate"
+                title={subtitle}
+              >
                 {subtitle}
               </p>
             )}
@@ -142,7 +152,10 @@ export function UsersTableRow({
       </td>
 
       {/* Privilégio */}
-      <td className={CELL_BASE} style={{ width: COL.PRIVILEGIO, minWidth: COL.PRIVILEGIO }}>
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.PRIVILEGIO, minWidth: COL.PRIVILEGIO }}
+      >
         <div className="flex flex-col gap-1 items-start">
           <StatusBadge variant={getRoleVariant(role)} className="justify-start">
             {getRoleLabel(role)}
@@ -156,25 +169,43 @@ export function UsersTableRow({
       </td>
 
       {/* Vínculo */}
-      <td className={`${CELL_BASE} hidden lg:table-cell`} style={{ width: COL.VINCULO, minWidth: COL.VINCULO }}>
+      <td
+        className={`${CELL_BASE} hidden lg:table-cell`}
+        style={{ width: COL.VINCULO, minWidth: COL.VINCULO }}
+      >
         {linkedStudent || linkedTeacher || role === "admin" ? (
           <div className="flex flex-col gap-1">
             {linkedStudent && (
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs truncate" title={users.table.linkedStudent(linkedStudent.name)}>{users.table.linkedStudent(linkedStudent.name)}</span>
+                <span
+                  className="text-xs truncate"
+                  title={users.table.linkedStudent(linkedStudent.name)}
+                >
+                  {users.table.linkedStudent(linkedStudent.name)}
+                </span>
               </div>
             )}
             {linkedTeacher && (
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs truncate" title={users.table.linkedTeacher(linkedTeacher.name)}>{users.table.linkedTeacher(linkedTeacher.name)}</span>
+                <span
+                  className="text-xs truncate"
+                  title={users.table.linkedTeacher(linkedTeacher.name)}
+                >
+                  {users.table.linkedTeacher(linkedTeacher.name)}
+                </span>
               </div>
             )}
             {role === "admin" && !linkedStudent && !linkedTeacher && (
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs truncate" title={users.table.linkedAdmin(displayName)}>{users.table.linkedAdmin(displayName)}</span>
+                <span
+                  className="text-xs truncate"
+                  title={users.table.linkedAdmin(displayName)}
+                >
+                  {users.table.linkedAdmin(displayName)}
+                </span>
               </div>
             )}
           </div>
@@ -184,7 +215,10 @@ export function UsersTableRow({
       </td>
 
       {/* Cadastro */}
-      <td className={`${CELL_BASE} hidden md:table-cell`} style={{ width: COL.CADASTRO, minWidth: COL.CADASTRO }}>
+      <td
+        className={`${CELL_BASE} hidden md:table-cell`}
+        style={{ width: COL.CADASTRO, minWidth: COL.CADASTRO }}
+      >
         <div className="flex flex-col text-xs text-muted-foreground">
           <span className="truncate">
             {user.created_at
@@ -200,14 +234,26 @@ export function UsersTableRow({
       </td>
 
       {/* Placeholder - S (coluna vazia) */}
-      <td className={CELL_BASE} style={{ width: COL.PLACEHOLDER, minWidth: COL.PLACEHOLDER }}>
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.PLACEHOLDER, minWidth: COL.PLACEHOLDER }}
+      >
         {/* Espaço reservado */}
       </td>
 
       {/* Ações */}
-      <td className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.ACOES, minWidth: COL.ACOES }}
+      >
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetail(user.id)} title={common.tooltips.viewDetails}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onViewDetail(user.id)}
+            title={common.tooltips.viewDetails}
+          >
             <Eye className="h-4 w-4" />
           </Button>
           <DropdownMenu>
@@ -251,8 +297,8 @@ export function UsersTableRow({
                   onClick={() => onHardDelete(user)}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  {!user.profile?.student_id && !user.profile?.teacher_id 
-                    ? "Excluir arquivo morto" 
+                  {!user.profile?.student_id && !user.profile?.teacher_id
+                    ? "Excluir arquivo morto"
                     : common.actions.delete + " definitivamente"}
                 </DropdownMenuItem>
               )}

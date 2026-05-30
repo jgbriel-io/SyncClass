@@ -16,9 +16,24 @@ import {
 } from "@/components/ui/collapsible";
 import { common, filters as filtersContent } from "@/content";
 
-export type FinancialPeriodPreset = "all" | "today" | "this_week" | "this_month";
-export type FinancialStatusFilter = "all" | "pendente" | "pago" | "atrasado" | "validando";
-export type FinancialSortBy = "due_desc" | "due_asc" | "amount_desc" | "amount_asc" | "created_desc" | "created_asc";
+export type FinancialPeriodPreset =
+  | "all"
+  | "today"
+  | "this_week"
+  | "this_month";
+export type FinancialStatusFilter =
+  | "all"
+  | "pendente"
+  | "pago"
+  | "atrasado"
+  | "validando";
+export type FinancialSortBy =
+  | "due_desc"
+  | "due_asc"
+  | "amount_desc"
+  | "amount_asc"
+  | "created_desc"
+  | "created_asc";
 
 export interface FinancialFiltersState {
   search: string;
@@ -42,7 +57,12 @@ interface FinancialFiltersProps {
   students?: Student[];
 }
 
-export function FinancialFilters({ filters, onChange, onReset, students = [] }: FinancialFiltersProps) {
+export function FinancialFilters({
+  filters,
+  onChange,
+  onReset,
+  students = [],
+}: FinancialFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const hasActiveFilters =
@@ -57,7 +77,9 @@ export function FinancialFilters({ filters, onChange, onReset, students = [] }: 
       <div className="flex flex-col md:flex-row gap-4 flex-wrap">
         {/* Busca */}
         <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
-          <span className="text-xs font-medium text-muted-foreground">{filtersContent.financial.labels.searchLabel}</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {filtersContent.financial.labels.searchLabel}
+          </span>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -70,30 +92,46 @@ export function FinancialFilters({ filters, onChange, onReset, students = [] }: 
         </div>
 
         {/* Filtros Básicos + Botões */}
-        <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-2 tablet:flex-row tablet:flex-wrap tablet:items-end">
           {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">{filtersContent.financial.labels.statusLabel}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {filtersContent.financial.labels.statusLabel}
+            </span>
             <Select
               value={filters.status}
-              onValueChange={(v) => onChange({ ...filters, status: v as FinancialStatusFilter })}
+              onValueChange={(v) =>
+                onChange({ ...filters, status: v as FinancialStatusFilter })
+              }
             >
               <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder={common.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{filtersContent.financial.status.all}</SelectItem>
-                <SelectItem value="pendente">{filtersContent.financial.status.pending}</SelectItem>
-                <SelectItem value="pago">{filtersContent.financial.status.paid}</SelectItem>
-                <SelectItem value="atrasado">{filtersContent.financial.status.overdue}</SelectItem>
-                <SelectItem value="validando">{filtersContent.financial.status.validating}</SelectItem>
+                <SelectItem value="all">
+                  {filtersContent.financial.status.all}
+                </SelectItem>
+                <SelectItem value="pendente">
+                  {filtersContent.financial.status.pending}
+                </SelectItem>
+                <SelectItem value="pago">
+                  {filtersContent.financial.status.paid}
+                </SelectItem>
+                <SelectItem value="atrasado">
+                  {filtersContent.financial.status.overdue}
+                </SelectItem>
+                <SelectItem value="validando">
+                  {filtersContent.financial.status.validating}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Período */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">{filtersContent.financial.labels.periodLabel}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {filtersContent.financial.labels.periodLabel}
+            </span>
             <Select
               value={filters.periodPreset}
               onValueChange={(v) => {
@@ -111,20 +149,37 @@ export function FinancialFilters({ filters, onChange, onReset, students = [] }: 
                   dateFrom = start.toISOString().split("T")[0];
                   dateTo = end.toISOString().split("T")[0];
                 } else if (preset === "this_month") {
-                  dateFrom = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
-                  dateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
+                  dateFrom = new Date(now.getFullYear(), now.getMonth(), 1)
+                    .toISOString()
+                    .split("T")[0];
+                  dateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+                    .toISOString()
+                    .split("T")[0];
                 }
-                onChange({ ...filters, periodPreset: preset, dateFrom, dateTo });
+                onChange({
+                  ...filters,
+                  periodPreset: preset,
+                  dateFrom,
+                  dateTo,
+                });
               }}
             >
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder={common.placeholders.period} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{filtersContent.financial.period.all}</SelectItem>
-                <SelectItem value="today">{filtersContent.financial.period.today}</SelectItem>
-                <SelectItem value="this_week">{filtersContent.financial.period.thisWeek}</SelectItem>
-                <SelectItem value="this_month">{filtersContent.financial.period.thisMonth}</SelectItem>
+                <SelectItem value="all">
+                  {filtersContent.financial.period.all}
+                </SelectItem>
+                <SelectItem value="today">
+                  {filtersContent.financial.period.today}
+                </SelectItem>
+                <SelectItem value="this_week">
+                  {filtersContent.financial.period.thisWeek}
+                </SelectItem>
+                <SelectItem value="this_month">
+                  {filtersContent.financial.period.thisMonth}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -144,7 +199,12 @@ export function FinancialFilters({ filters, onChange, onReset, students = [] }: 
 
           {/* Botão Limpar */}
           {hasActiveFilters && onReset && (
-            <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="h-10"
+            >
               <X className="h-4 w-4 mr-1" />
               {filtersContent.buttons.clear}
             </Button>
@@ -155,10 +215,12 @@ export function FinancialFilters({ filters, onChange, onReset, students = [] }: 
       {/* Linha 2: Filtros Avançados (expansível) */}
       <CollapsibleContent>
         <div className="rounded-lg border bg-muted/30 p-4">
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col gap-3 tablet:flex-row tablet:flex-wrap">
             {/* Aluno */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">{filtersContent.financial.labels.studentLabel}</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                {filtersContent.financial.labels.studentLabel}
+              </span>
               <Select
                 value={filters.studentId}
                 onValueChange={(v) => onChange({ ...filters, studentId: v })}
@@ -181,21 +243,37 @@ export function FinancialFilters({ filters, onChange, onReset, students = [] }: 
 
             {/* Ordenar */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">{filtersContent.financial.labels.sortLabel}</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                {filtersContent.financial.labels.sortLabel}
+              </span>
               <Select
                 value={filters.sortBy}
-                onValueChange={(v) => onChange({ ...filters, sortBy: v as FinancialSortBy })}
+                onValueChange={(v) =>
+                  onChange({ ...filters, sortBy: v as FinancialSortBy })
+                }
               >
                 <SelectTrigger className="w-[220px] pl-3 text-left">
                   <SelectValue placeholder={common.placeholders.sortBy} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="due_asc">{filtersContent.financial.sort.dueAsc}</SelectItem>
-                  <SelectItem value="due_desc">{filtersContent.financial.sort.dueDesc}</SelectItem>
-                  <SelectItem value="amount_desc">{filtersContent.financial.sort.amountDesc}</SelectItem>
-                  <SelectItem value="amount_asc">{filtersContent.financial.sort.amountAsc}</SelectItem>
-                  <SelectItem value="created_desc">{filtersContent.financial.sort.createdDesc}</SelectItem>
-                  <SelectItem value="created_asc">{filtersContent.financial.sort.createdAsc}</SelectItem>
+                  <SelectItem value="due_asc">
+                    {filtersContent.financial.sort.dueAsc}
+                  </SelectItem>
+                  <SelectItem value="due_desc">
+                    {filtersContent.financial.sort.dueDesc}
+                  </SelectItem>
+                  <SelectItem value="amount_desc">
+                    {filtersContent.financial.sort.amountDesc}
+                  </SelectItem>
+                  <SelectItem value="amount_asc">
+                    {filtersContent.financial.sort.amountAsc}
+                  </SelectItem>
+                  <SelectItem value="created_desc">
+                    {filtersContent.financial.sort.createdDesc}
+                  </SelectItem>
+                  <SelectItem value="created_asc">
+                    {filtersContent.financial.sort.createdAsc}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

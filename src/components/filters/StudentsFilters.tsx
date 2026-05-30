@@ -18,7 +18,11 @@ import {
 } from "@/components/ui/collapsible";
 
 export type StudentStatusFilter = "all" | "ativo" | "inativo";
-export type StudentSortBy = "name_asc" | "name_desc" | "last_payment_desc" | "last_payment_asc";
+export type StudentSortBy =
+  | "name_asc"
+  | "name_desc"
+  | "last_payment_desc"
+  | "last_payment_asc";
 export type StudentFilterPreset = "all" | "aniversariantes";
 
 export interface StudentsFiltersState {
@@ -56,7 +60,7 @@ export function StudentsFilters({
 }: StudentsFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(filters.search);
-  
+
   // Debounce de 300ms para evitar queries excessivas
   const debouncedSearch = useDebouncedValue(localSearch, 300);
 
@@ -85,7 +89,9 @@ export function StudentsFilters({
       <div className="flex flex-col md:flex-row gap-4 flex-wrap">
         {/* Busca */}
         <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
-          <span className="text-xs font-medium text-muted-foreground">{filtersContent.students.labels.search}</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {filtersContent.students.labels.search}
+          </span>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -98,38 +104,58 @@ export function StudentsFilters({
         </div>
 
         {/* Filtros Básicos + Botões */}
-        <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-2 tablet:flex-row tablet:flex-wrap tablet:items-end">
           {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">{filtersContent.students.labels.status}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {filtersContent.students.labels.status}
+            </span>
             <Select
               value={filters.status}
-              onValueChange={(v) => onChange({ ...filters, status: v as StudentStatusFilter })}
+              onValueChange={(v) =>
+                onChange({ ...filters, status: v as StudentStatusFilter })
+              }
             >
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder={common.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{filtersContent.students.status.all}</SelectItem>
-                <SelectItem value="ativo">{filtersContent.students.status.active}</SelectItem>
-                <SelectItem value="inativo">{filtersContent.students.status.inactive}</SelectItem>
+                <SelectItem value="all">
+                  {filtersContent.students.status.all}
+                </SelectItem>
+                <SelectItem value="ativo">
+                  {filtersContent.students.status.active}
+                </SelectItem>
+                <SelectItem value="inativo">
+                  {filtersContent.students.status.inactive}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Filtros adicionais */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">{filtersContent.students.labels.additionalFilters}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {filtersContent.students.labels.additionalFilters}
+            </span>
             <Select
               value={filters.filterPreset}
-              onValueChange={(v) => onChange({ ...filters, filterPreset: v as StudentFilterPreset })}
+              onValueChange={(v) =>
+                onChange({ ...filters, filterPreset: v as StudentFilterPreset })
+              }
             >
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder={common.placeholders.additionalFilters} />
+                <SelectValue
+                  placeholder={common.placeholders.additionalFilters}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{filtersContent.students.additionalFilters.all}</SelectItem>
-                <SelectItem value="aniversariantes">{filtersContent.students.additionalFilters.birthdays}</SelectItem>
+                <SelectItem value="all">
+                  {filtersContent.students.additionalFilters.all}
+                </SelectItem>
+                <SelectItem value="aniversariantes">
+                  {filtersContent.students.additionalFilters.birthdays}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -149,7 +175,12 @@ export function StudentsFilters({
 
           {/* Botão Limpar */}
           {hasActiveFilters && onReset && (
-            <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="h-10"
+            >
               <X className="h-4 w-4 mr-1" />
               {filtersContent.buttons.clear}
             </Button>
@@ -160,17 +191,21 @@ export function StudentsFilters({
       {/* Linha 2: Filtros Avançados (expansível) */}
       <CollapsibleContent>
         <div className="rounded-lg border bg-muted/30 p-4">
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col gap-3 tablet:flex-row tablet:flex-wrap">
             {/* Professor */}
             {showTeacherFilter && !autoTeacherId && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">{filtersContent.students.labels.teacher}</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {filtersContent.students.labels.teacher}
+                </span>
                 <Select
                   value={filters.teacherId}
                   onValueChange={(v) => onChange({ ...filters, teacherId: v })}
                 >
                   <SelectTrigger className="w-[200px] pl-3 text-left">
-                    <SelectValue placeholder={common.placeholders.teacherResponsible} />
+                    <SelectValue
+                      placeholder={common.placeholders.teacherResponsible}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" className="pl-6">
@@ -188,19 +223,31 @@ export function StudentsFilters({
 
             {/* Ordenar */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">{filtersContent.students.labels.sort}</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                {filtersContent.students.labels.sort}
+              </span>
               <Select
                 value={filters.sortBy}
-                onValueChange={(v) => onChange({ ...filters, sortBy: v as StudentSortBy })}
+                onValueChange={(v) =>
+                  onChange({ ...filters, sortBy: v as StudentSortBy })
+                }
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder={common.placeholders.sortBy} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="name_asc">{filtersContent.students.sort.nameAsc}</SelectItem>
-                  <SelectItem value="name_desc">{filtersContent.students.sort.nameDesc}</SelectItem>
-                  <SelectItem value="last_payment_desc">{filtersContent.students.sort.lastPaymentDesc}</SelectItem>
-                  <SelectItem value="last_payment_asc">{filtersContent.students.sort.lastPaymentAsc}</SelectItem>
+                  <SelectItem value="name_asc">
+                    {filtersContent.students.sort.nameAsc}
+                  </SelectItem>
+                  <SelectItem value="name_desc">
+                    {filtersContent.students.sort.nameDesc}
+                  </SelectItem>
+                  <SelectItem value="last_payment_desc">
+                    {filtersContent.students.sort.lastPaymentDesc}
+                  </SelectItem>
+                  <SelectItem value="last_payment_asc">
+                    {filtersContent.students.sort.lastPaymentAsc}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

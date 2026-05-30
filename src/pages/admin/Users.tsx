@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody } from "@/components/ui/table";
@@ -45,6 +46,21 @@ export default function UsersPage() {
   });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setSelectedUser(null);
+      setIsFormOpen(true);
+      setSearchParams(
+        (prev) => {
+          prev.delete("action");
+          return prev;
+        },
+        { replace: true }
+      );
+    }
+  }, [searchParams, setSearchParams]);
   const [forceHardDelete, setForceHardDelete] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(

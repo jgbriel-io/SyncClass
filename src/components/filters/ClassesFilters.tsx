@@ -16,7 +16,12 @@ import {
 } from "@/components/ui/collapsible";
 import { common, classes as classesContent } from "@/content";
 
-export type ClassStatusFilter = "all" | "em_aberto" | "agendada" | "avaliacao_pendente" | "concluida";
+export type ClassStatusFilter =
+  | "all"
+  | "em_aberto"
+  | "agendada"
+  | "avaliacao_pendente"
+  | "concluida";
 export type ClassPeriodFilter = "all" | "week" | "month" | "3months";
 export type ClassTypeFilter = "all" | "pacote" | "individual";
 export type ClassSortFilter = "recent" | "oldest";
@@ -73,7 +78,9 @@ export function ClassesFilters({
       <div className="flex flex-col md:flex-row gap-4 flex-wrap">
         {/* Busca */}
         <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
-          <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.searchLabel}</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {classesContent.filters.searchLabel}
+          </span>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -86,30 +93,46 @@ export function ClassesFilters({
         </div>
 
         {/* Filtros Básicos + Botões */}
-        <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-2 tablet:flex-row tablet:flex-wrap tablet:items-end">
           {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.statusLabel}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {classesContent.filters.statusLabel}
+            </span>
             <Select
               value={filters.status}
-              onValueChange={(v) => onChange({ ...filters, status: v as ClassStatusFilter })}
+              onValueChange={(v) =>
+                onChange({ ...filters, status: v as ClassStatusFilter })
+              }
             >
               <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder={common.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="em_aberto">{classesContent.filters.statusOpen}</SelectItem>
-                <SelectItem value="all">{classesContent.filters.statusAll}</SelectItem>
-                <SelectItem value="agendada">{classesContent.filters.statusScheduled}</SelectItem>
-                <SelectItem value="pendente">{classesContent.filters.statusPending}</SelectItem>
-                <SelectItem value="concluida">{classesContent.filters.statusDone}</SelectItem>
+                <SelectItem value="em_aberto">
+                  {classesContent.filters.statusOpen}
+                </SelectItem>
+                <SelectItem value="all">
+                  {classesContent.filters.statusAll}
+                </SelectItem>
+                <SelectItem value="agendada">
+                  {classesContent.filters.statusScheduled}
+                </SelectItem>
+                <SelectItem value="pendente">
+                  {classesContent.filters.statusPending}
+                </SelectItem>
+                <SelectItem value="concluida">
+                  {classesContent.filters.statusDone}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Aluno */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.studentLabel}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {classesContent.filters.studentLabel}
+            </span>
             <Select
               value={filters.studentId}
               onValueChange={(v) => onChange({ ...filters, studentId: v })}
@@ -132,17 +155,25 @@ export function ClassesFilters({
 
           {/* Ordenação */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.sortLabel}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {classesContent.filters.sortLabel}
+            </span>
             <Select
               value={filters.sort}
-              onValueChange={(v) => onChange({ ...filters, sort: v as ClassSortFilter })}
+              onValueChange={(v) =>
+                onChange({ ...filters, sort: v as ClassSortFilter })
+              }
             >
               <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder={common.placeholders.sorting} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recent">{classesContent.filters.sortRecent}</SelectItem>
-                <SelectItem value="oldest">{classesContent.filters.sortOldest}</SelectItem>
+                <SelectItem value="recent">
+                  {classesContent.filters.sortRecent}
+                </SelectItem>
+                <SelectItem value="oldest">
+                  {classesContent.filters.sortOldest}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -162,7 +193,12 @@ export function ClassesFilters({
 
           {/* Botão Limpar */}
           {hasActiveFilters && onReset && (
-            <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="h-10"
+            >
               <X className="h-4 w-4 mr-1" />
               {classesContent.filters.clear}
             </Button>
@@ -173,17 +209,21 @@ export function ClassesFilters({
       {/* Linha 2: Filtros Avançados (expansível) */}
       <CollapsibleContent>
         <div className="rounded-lg border bg-muted/30 p-4">
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col gap-3 tablet:flex-row tablet:flex-wrap">
             {/* Professor */}
             {showTeacherFilter && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.teacherLabel}</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {classesContent.filters.teacherLabel}
+                </span>
                 <Select
                   value={filters.teacherId}
                   onValueChange={(v) => onChange({ ...filters, teacherId: v })}
                 >
                   <SelectTrigger className="w-[200px] pl-3 text-left">
-                    <SelectValue placeholder={common.placeholders.teacherResponsible} />
+                    <SelectValue
+                      placeholder={common.placeholders.teacherResponsible}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" className="pl-6">
@@ -201,37 +241,59 @@ export function ClassesFilters({
 
             {/* Tipo */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.typeLabel}</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                {classesContent.filters.typeLabel}
+              </span>
               <Select
                 value={filters.classType}
-                onValueChange={(v) => onChange({ ...filters, classType: v as ClassTypeFilter })}
+                onValueChange={(v) =>
+                  onChange({ ...filters, classType: v as ClassTypeFilter })
+                }
               >
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder={common.placeholders.type} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{classesContent.filters.typeAll}</SelectItem>
-                  <SelectItem value="pacote">{classesContent.filters.typePackage}</SelectItem>
-                  <SelectItem value="individual">{classesContent.filters.typeIndividual}</SelectItem>
+                  <SelectItem value="all">
+                    {classesContent.filters.typeAll}
+                  </SelectItem>
+                  <SelectItem value="pacote">
+                    {classesContent.filters.typePackage}
+                  </SelectItem>
+                  <SelectItem value="individual">
+                    {classesContent.filters.typeIndividual}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Período */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">{classesContent.filters.periodLabel}</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                {classesContent.filters.periodLabel}
+              </span>
               <Select
                 value={filters.period}
-                onValueChange={(v) => onChange({ ...filters, period: v as ClassPeriodFilter })}
+                onValueChange={(v) =>
+                  onChange({ ...filters, period: v as ClassPeriodFilter })
+                }
               >
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder={common.placeholders.period} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{classesContent.filters.periodAll}</SelectItem>
-                  <SelectItem value="week">{classesContent.filters.periodWeek}</SelectItem>
-                  <SelectItem value="month">{classesContent.filters.periodMonth}</SelectItem>
-                  <SelectItem value="3months">{classesContent.filters.period3Months}</SelectItem>
+                  <SelectItem value="all">
+                    {classesContent.filters.periodAll}
+                  </SelectItem>
+                  <SelectItem value="week">
+                    {classesContent.filters.periodWeek}
+                  </SelectItem>
+                  <SelectItem value="month">
+                    {classesContent.filters.periodMonth}
+                  </SelectItem>
+                  <SelectItem value="3months">
+                    {classesContent.filters.period3Months}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -1,4 +1,10 @@
 export const dashboard = {
+  mobileTabs: {
+    resumo: "Resumo",
+    agenda: "Agenda",
+    grafico: "Gráfico",
+  },
+
   view: {
     title: "Dashboard",
     quickActionsTitle: "Ações Rápidas",

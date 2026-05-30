@@ -39,7 +39,7 @@ export function useCreateStudentForTeacher() {
       const err = await validatePhonePlatform(supabase, student);
       if (err) throw new Error(err);
       const { data: teacherId, error: teacherError } =
-        await supabase.rpc("get_my_teacher_id");
+        await supabase.rpc("get_teacher_id");
       if (teacherError) throw teacherError;
 
       const { data, error } = await supabase

@@ -73,7 +73,9 @@ export function OverviewFilters({
       <div className="flex flex-col md:flex-row gap-4 flex-wrap">
         {/* Busca */}
         <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
-          <span className="text-xs font-medium text-muted-foreground">{filtersContent.overview.labels.search}</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {filtersContent.overview.labels.search}
+          </span>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -86,10 +88,12 @@ export function OverviewFilters({
         </div>
 
         {/* Filtros Básicos + Botões */}
-        <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-2 tablet:flex-row tablet:flex-wrap tablet:items-end">
           {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">{filtersContent.overview.labels.status}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {filtersContent.overview.labels.status}
+            </span>
             <Select
               value={filters.status}
               onValueChange={(v) => onChange({ ...filters, status: v })}
@@ -98,28 +102,46 @@ export function OverviewFilters({
                 <SelectValue placeholder={common.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="pl-6">{filtersContent.overview.status.all}</SelectItem>
-                <SelectItem value="ativo" className="pl-6">{filtersContent.overview.status.active}</SelectItem>
-                <SelectItem value="inativo" className="pl-6">{filtersContent.overview.status.inactive}</SelectItem>
+                <SelectItem value="all" className="pl-6">
+                  {filtersContent.overview.status.all}
+                </SelectItem>
+                <SelectItem value="ativo" className="pl-6">
+                  {filtersContent.overview.status.active}
+                </SelectItem>
+                <SelectItem value="inativo" className="pl-6">
+                  {filtersContent.overview.status.inactive}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Período */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">{filtersContent.overview.labels.period}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {filtersContent.overview.labels.period}
+            </span>
             <Select
               value={filters.period}
-              onValueChange={(v) => onChange({ ...filters, period: v as OverviewPeriodFilter })}
+              onValueChange={(v) =>
+                onChange({ ...filters, period: v as OverviewPeriodFilter })
+              }
             >
               <SelectTrigger className="w-[150px] pl-3 text-left">
                 <SelectValue placeholder={common.placeholders.period} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="pl-6">{filtersContent.overview.period.all}</SelectItem>
-                <SelectItem value="7" className="pl-6">{filtersContent.overview.period.last7Days}</SelectItem>
-                <SelectItem value="30" className="pl-6">{filtersContent.overview.period.last30Days}</SelectItem>
-                <SelectItem value="90" className="pl-6">{filtersContent.overview.period.last90Days}</SelectItem>
+                <SelectItem value="all" className="pl-6">
+                  {filtersContent.overview.period.all}
+                </SelectItem>
+                <SelectItem value="7" className="pl-6">
+                  {filtersContent.overview.period.last7Days}
+                </SelectItem>
+                <SelectItem value="30" className="pl-6">
+                  {filtersContent.overview.period.last30Days}
+                </SelectItem>
+                <SelectItem value="90" className="pl-6">
+                  {filtersContent.overview.period.last90Days}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -139,7 +161,12 @@ export function OverviewFilters({
 
           {/* Botão Limpar */}
           {hasActiveFilters && onReset && (
-            <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="h-10"
+            >
               <X className="h-4 w-4 mr-1" />
               {filtersContent.buttons.clear}
             </Button>
@@ -150,17 +177,21 @@ export function OverviewFilters({
       {/* Linha 2: Filtros Avançados (expansível) */}
       <CollapsibleContent>
         <div className="rounded-lg border bg-muted/30 p-4">
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col gap-3 tablet:flex-row tablet:flex-wrap">
             {/* Professor */}
             {showTeacherFilter && teachers.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">{filtersContent.overview.labels.teacher}</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {filtersContent.overview.labels.teacher}
+                </span>
                 <Select
                   value={filters.teacherId}
                   onValueChange={(v) => onChange({ ...filters, teacherId: v })}
                 >
                   <SelectTrigger className="w-[200px] pl-3 text-left">
-                    <SelectValue placeholder={common.placeholders.teacherResponsible} />
+                    <SelectValue
+                      placeholder={common.placeholders.teacherResponsible}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" className="pl-6">
@@ -179,7 +210,9 @@ export function OverviewFilters({
             {/* Aluno */}
             {students.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">{filtersContent.overview.labels.student}</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {filtersContent.overview.labels.student}
+                </span>
                 <Select
                   value={filters.studentId}
                   onValueChange={(v) => onChange({ ...filters, studentId: v })}
@@ -203,19 +236,31 @@ export function OverviewFilters({
 
             {/* Ordenar */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">{filtersContent.overview.labels.sort}</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                {filtersContent.overview.labels.sort}
+              </span>
               <Select
                 value={filters.sortBy}
-                onValueChange={(v) => onChange({ ...filters, sortBy: v as OverviewSortBy })}
+                onValueChange={(v) =>
+                  onChange({ ...filters, sortBy: v as OverviewSortBy })
+                }
               >
                 <SelectTrigger className="w-[240px] pl-3 text-left">
                   <SelectValue placeholder={common.placeholders.sortBy} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="recent" className="pl-6">{filtersContent.overview.sort.recent}</SelectItem>
-                  <SelectItem value="oldest" className="pl-6">{filtersContent.overview.sort.oldest}</SelectItem>
-                  <SelectItem value="name_asc" className="pl-6">{filtersContent.overview.sort.nameAsc}</SelectItem>
-                  <SelectItem value="name_desc" className="pl-6">{filtersContent.overview.sort.nameDesc}</SelectItem>
+                  <SelectItem value="recent" className="pl-6">
+                    {filtersContent.overview.sort.recent}
+                  </SelectItem>
+                  <SelectItem value="oldest" className="pl-6">
+                    {filtersContent.overview.sort.oldest}
+                  </SelectItem>
+                  <SelectItem value="name_asc" className="pl-6">
+                    {filtersContent.overview.sort.nameAsc}
+                  </SelectItem>
+                  <SelectItem value="name_desc" className="pl-6">
+                    {filtersContent.overview.sort.nameDesc}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

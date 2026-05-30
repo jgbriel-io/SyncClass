@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   TeachersFilters,
   type TeachersFiltersState,
@@ -49,6 +50,21 @@ export default function TeachersPage() {
   });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setSelectedTeacher(null);
+      setIsFormOpen(true);
+      setSearchParams(
+        (prev) => {
+          prev.delete("action");
+          return prev;
+        },
+        { replace: true }
+      );
+    }
+  }, [searchParams, setSearchParams]);
 
   // Dialog states
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);

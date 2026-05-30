@@ -55,7 +55,9 @@ export function TeachersFilters({
       <div className="flex flex-col md:flex-row gap-4 flex-wrap">
         {/* Busca */}
         <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
-          <span className="text-xs font-medium text-muted-foreground">{filtersContent.teachers.labels.search}</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {filtersContent.teachers.labels.search}
+          </span>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -68,21 +70,31 @@ export function TeachersFilters({
         </div>
 
         {/* Filtros Básicos + Botões */}
-        <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-2 tablet:flex-row tablet:flex-wrap tablet:items-end">
           {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">{filtersContent.teachers.labels.status}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {filtersContent.teachers.labels.status}
+            </span>
             <Select
               value={filters.status}
-              onValueChange={(v) => onChange({ ...filters, status: v as TeacherStatusFilter })}
+              onValueChange={(v) =>
+                onChange({ ...filters, status: v as TeacherStatusFilter })
+              }
             >
               <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder={common.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{filtersContent.teachers.status.all}</SelectItem>
-                <SelectItem value="ativo">{filtersContent.teachers.status.active}</SelectItem>
-                <SelectItem value="inativo">{filtersContent.teachers.status.inactive}</SelectItem>
+                <SelectItem value="all">
+                  {filtersContent.teachers.status.all}
+                </SelectItem>
+                <SelectItem value="ativo">
+                  {filtersContent.teachers.status.active}
+                </SelectItem>
+                <SelectItem value="inativo">
+                  {filtersContent.teachers.status.inactive}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -102,7 +114,12 @@ export function TeachersFilters({
 
           {/* Botão Limpar */}
           {hasActiveFilters && onReset && (
-            <Button variant="ghost" size="sm" onClick={onReset} className="h-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="h-10"
+            >
               <X className="h-4 w-4 mr-1" />
               {filtersContent.buttons.clear}
             </Button>
@@ -113,20 +130,28 @@ export function TeachersFilters({
       {/* Linha 2: Filtros Avançados (expansível) */}
       <CollapsibleContent>
         <div className="rounded-lg border bg-muted/30 p-4">
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col gap-3 tablet:flex-row tablet:flex-wrap">
             {/* Ordenar */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">{filtersContent.teachers.labels.sort}</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                {filtersContent.teachers.labels.sort}
+              </span>
               <Select
                 value={filters.sortBy}
-                onValueChange={(v) => onChange({ ...filters, sortBy: v as TeacherSortBy })}
+                onValueChange={(v) =>
+                  onChange({ ...filters, sortBy: v as TeacherSortBy })
+                }
               >
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder={common.placeholders.sortBy} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="name_asc">{filtersContent.teachers.sort.nameAsc}</SelectItem>
-                  <SelectItem value="name_desc">{filtersContent.teachers.sort.nameDesc}</SelectItem>
+                  <SelectItem value="name_asc">
+                    {filtersContent.teachers.sort.nameAsc}
+                  </SelectItem>
+                  <SelectItem value="name_desc">
+                    {filtersContent.teachers.sort.nameDesc}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -134,16 +159,22 @@ export function TeachersFilters({
             {/* Especialidade */}
             {specializations.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">{filtersContent.teachers.labels.specialization}</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {filtersContent.teachers.labels.specialization}
+                </span>
                 <Select
                   value={filters.specialization}
-                  onValueChange={(v) => onChange({ ...filters, specialization: v })}
+                  onValueChange={(v) =>
+                    onChange({ ...filters, specialization: v })
+                  }
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder={common.placeholders.specialty} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{filtersContent.teachers.options.allSpecializations}</SelectItem>
+                    <SelectItem value="all">
+                      {filtersContent.teachers.options.allSpecializations}
+                    </SelectItem>
                     {specializations.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
