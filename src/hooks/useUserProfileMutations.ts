@@ -41,13 +41,6 @@ export function useUpdateUserRole() {
       if (profileFetchError) throw profileFetchError;
       const fullName = profile.full_name ?? "";
       const normalizedEmail = profile.email?.trim().toLowerCase() ?? null;
-      const { error } = await supabase.rpc("upsert_user_role_safe", {
-        p_user_id: userId,
-        p_role: role,
-        p_full_name: fullName || null,
-        p_email: normalizedEmail,
-      });
-      if (error) throw error;
       const { error: profileError } = await supabase
         .from("profiles")
         .update({ role })

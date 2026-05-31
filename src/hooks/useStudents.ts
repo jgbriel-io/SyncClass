@@ -253,22 +253,12 @@ async function syncStudentProfiles(student: Student): Promise<void> {
         p_role: profileUpdate.role,
         p_active: profileUpdate.active,
         p_student_id: profileUpdate.student_id,
-        p_teacher_id: null,
+        p_teacher_id: student.teacher_id ?? null,
         p_full_name: profileUpdate.full_name || null,
         p_email: profileUpdate.email || null,
       }
     );
     if (profileUpdateError) throw profileUpdateError;
-
-    if (profile.user_id) {
-      const { error: roleError } = await supabase.rpc("upsert_user_role_safe", {
-        p_user_id: profile.user_id,
-        p_role: "student",
-        p_full_name: fullName ?? null,
-        p_email: normalizedEmail,
-      });
-      if (roleError) throw roleError;
-    }
   }
 }
 

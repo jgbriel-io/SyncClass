@@ -23,24 +23,11 @@ export function useLinkUserToStudent() {
       userId: string;
       studentId: string;
     }) => {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("full_name, email")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (profileError) throw profileError;
       const { error: profileUpdateError } = await supabase
         .from("profiles")
         .update({ student_id: studentId, role: "student" })
         .eq("user_id", userId);
       if (profileUpdateError) throw profileUpdateError;
-      const { error: roleError } = await supabase.rpc("upsert_user_role_safe", {
-        p_user_id: userId,
-        p_role: "student",
-        p_full_name: profile?.full_name ?? null,
-        p_email: profile?.email ?? null,
-      });
-      if (roleError) throw roleError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
@@ -64,24 +51,11 @@ export function useLinkUserToTeacher() {
       userId: string;
       teacherId: string;
     }) => {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("full_name, email")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (profileError) throw profileError;
       const { error: profileUpdateError } = await supabase
         .from("profiles")
         .update({ teacher_id: teacherId, role: "teacher" })
         .eq("user_id", userId);
       if (profileUpdateError) throw profileUpdateError;
-      const { error: roleError } = await supabase.rpc("upsert_user_role_safe", {
-        p_user_id: userId,
-        p_role: "teacher",
-        p_full_name: profile?.full_name ?? null,
-        p_email: profile?.email ?? null,
-      });
-      if (roleError) throw roleError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
