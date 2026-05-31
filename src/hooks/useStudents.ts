@@ -498,7 +498,16 @@ export function useHardDeleteStudent() {
         .maybeSingle();
 
       // 3) Anonymize student data (LGPD) — keeps row so class_logs/activities/financial_records remain linked
-      const anonymizedName = `Aluno ${id.slice(0, 8)}`;
+      const hex = id.replace(/-/g, "");
+      let segment = hex.slice(0, 8);
+      for (let i = 0; i <= hex.length - 8; i++) {
+        const s = hex.slice(i, i + 8);
+        if (/[a-f]/.test(s) && /[0-9]/.test(s)) {
+          segment = s;
+          break;
+        }
+      }
+      const anonymizedName = `Aluno ${segment}`;
       const { error: anonError } = await supabase
         .from("students")
         .update({

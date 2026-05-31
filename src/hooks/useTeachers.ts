@@ -210,16 +210,18 @@ export function useUpdateTeacher() {
           if (profileUpdateError) throw profileUpdateError;
 
           if (profile.user_id) {
-            const { error: roleError } = await supabase.rpc(
-              "upsert_user_role_safe",
-              {
+            if (fullName) {
+              await supabase.rpc("admin_update_auth_display_name", {
                 p_user_id: profile.user_id,
-                p_role: "teacher",
-                p_full_name: fullName ?? null,
+                p_full_name: fullName,
+              });
+            }
+            if (normalizedEmail) {
+              await supabase.rpc("admin_update_auth_email", {
+                p_user_id: profile.user_id,
                 p_email: normalizedEmail,
-              }
-            );
-            if (roleError) throw roleError;
+              });
+            }
           }
         }
       }
@@ -407,7 +409,16 @@ export function useHardDeleteTeacher() {
         .eq("teacher_id", id)
         .maybeSingle();
 
-      const anonymizedName = `Professor ${id.slice(0, 8)}`;
+      const hex = id.replace(/-/g, "");
+      let segment = hex.slice(0, 8);
+      for (let i = 0; i <= hex.length - 8; i++) {
+        const s = hex.slice(i, i + 8);
+        if (/[a-f]/.test(s) && /[0-9]/.test(s)) {
+          segment = s;
+          break;
+        }
+      }
+      const anonymizedName = `Professor ${segment}`;
       const { error } = await supabase
         .from("teachers")
         .update({

@@ -213,40 +213,41 @@ export function SettingsPerfilTab({
             readOnly={!editingName}
             className={editingName ? "" : "bg-muted/50"}
           />
-          {editingName ? (
-            <>
+          {!isTeacher &&
+            (editingName ? (
+              <>
+                <Button
+                  size="sm"
+                  onClick={handleUpdateName}
+                  disabled={isPending || !newName.trim()}
+                >
+                  {updateProfileName.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    s.saveButton
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setEditingName(false);
+                    setNewName(displayName);
+                  }}
+                  disabled={isPending}
+                >
+                  {s.cancelButton}
+                </Button>
+              </>
+            ) : (
               <Button
                 size="sm"
-                onClick={handleUpdateName}
-                disabled={isPending || !newName.trim()}
+                variant="outline"
+                onClick={() => setEditingName(true)}
               >
-                {updateProfileName.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  s.saveButton
-                )}
+                {s.editButton}
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setEditingName(false);
-                  setNewName(displayName);
-                }}
-                disabled={isPending}
-              >
-                {s.cancelButton}
-              </Button>
-            </>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setEditingName(true)}
-            >
-              {s.editButton}
-            </Button>
-          )}
+            ))}
         </div>
       </div>
 
@@ -262,40 +263,41 @@ export function SettingsPerfilTab({
             readOnly={!editingEmail}
             className={editingEmail ? "" : "bg-muted/50"}
           />
-          {editingEmail ? (
-            <>
+          {!isTeacher &&
+            (editingEmail ? (
+              <>
+                <Button
+                  size="sm"
+                  onClick={handleUpdateEmail}
+                  disabled={isPending || !newEmail.trim()}
+                >
+                  {updateProfileEmail.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    s.saveButton
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setEditingEmail(false);
+                    setNewEmail(email);
+                  }}
+                  disabled={isPending}
+                >
+                  {s.cancelButton}
+                </Button>
+              </>
+            ) : (
               <Button
                 size="sm"
-                onClick={handleUpdateEmail}
-                disabled={isPending || !newEmail.trim()}
+                variant="outline"
+                onClick={() => setEditingEmail(true)}
               >
-                {updateProfileEmail.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  s.saveButton
-                )}
+                {s.editButton}
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setEditingEmail(false);
-                  setNewEmail(email);
-                }}
-                disabled={isPending}
-              >
-                {s.cancelButton}
-              </Button>
-            </>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setEditingEmail(true)}
-            >
-              {s.editButton}
-            </Button>
-          )}
+            ))}
         </div>
         {editingEmail && (
           <p className="text-xs text-amber-600 dark:text-amber-400">
