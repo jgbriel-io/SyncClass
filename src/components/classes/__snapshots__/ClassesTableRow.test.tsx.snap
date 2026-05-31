@@ -140,7 +140,6 @@ exports[`ClassesTableRow - Snapshot > should render class row with centralized c
           >
             <button
               class="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-md px-3 h-8 w-[7rem] shrink-0 border-none text-xs bg-warning text-white font-semibold hover:bg-warning/90 shadow"
-              title="Atualizar"
             >
               Atualizar
             </button>
@@ -354,7 +353,6 @@ exports[`ClassesTableRow - Snapshot > should render class row without teacher co
           >
             <button
               class="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-md px-3 h-8 w-[7rem] shrink-0 border-none text-xs bg-warning text-white font-semibold hover:bg-warning/90 shadow"
-              title="Atualizar"
             >
               Atualizar
             </button>

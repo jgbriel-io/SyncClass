@@ -13,6 +13,7 @@ import type {
   TablesUpdate,
 } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { students as studentsContent } from "@/content";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 import { logger } from "@/lib/logger";
 import { sanitizeStudentUpdateForEdit } from "@/lib/utils/sanitizeStudentUpdate";
@@ -22,7 +23,7 @@ const DEFAULT_PAGE_SIZE = 10;
 
 export type StudentsListFilters = {
   teacherId?: string;
-  status?: "all" | "ativo" | "inativo";
+  status?: "all" | "ativo" | "inativo" | "anonimizados";
   sortBy?:
     | "name_asc"
     | "name_desc"
@@ -92,16 +93,16 @@ export function useStudentsPaginated(
   const query = useQuery({
     queryKey: [QK.STUDENTS_PAGINATED, page, pageSize, filters],
     queryFn: async () => {
-      // Usar students_with_stats para ter estatísticas calculadas
+      const isAnonymizedFilter = filters?.status === "anonimizados";
       let q = supabase
         .from("students_with_stats")
         .select("*", { count: "exact" })
-        .eq("is_deleted", false);
+        .eq("is_deleted", isAnonymizedFilter);
 
       if (filters?.teacherId && filters.teacherId !== "all") {
         q = q.eq("teacher_id", filters.teacherId);
       }
-      if (filters?.status && filters.status !== "all") {
+      if (!isAnonymizedFilter && filters?.status && filters.status !== "all") {
         q = q.eq("status", filters.status);
       }
 
@@ -529,7 +530,7 @@ export function useHardDeleteStudent() {
 
         if (profileError) {
           toast.warning(
-            "Aluno removido. O perfil de usuário não pôde ser marcado como deletado."
+            studentsContent.deleteDialog.toasts.warnProfileNotDeleted
           );
         }
 
@@ -542,7 +543,7 @@ export function useHardDeleteStudent() {
         const msg = (data as { error?: string } | null)?.error;
         if (fnError || msg) {
           toast.warning(
-            "Aluno removido. A conta de acesso vinculada não pôde ser excluída — remova manualmente se necessário."
+            studentsContent.deleteDialog.toasts.warnAccountNotDeleted
           );
         }
       }

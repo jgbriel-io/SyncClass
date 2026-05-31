@@ -37,7 +37,7 @@ Problemas arquiteturais e refatorações identificadas no SyncClass. Documentaç
 **Status:** ✅ Resolvido — useUpdateStudent delega para RPC + helpers; sem god hook.  
 **Local:** `src/hooks/useStudents.ts:272` (useUpdateStudent)
 
-Hook tem 200+ linhas com lógica de negócio complexa misturada com data fetching. Sincroniza profiles, user_roles, valida telefone, atualiza pay_day via RPC, tudo em uma única função `mutationFn`.
+Hook tem 200+ linhas com lógica de negócio complexa misturada com data fetching. Sincroniza profiles, valida telefone, atualiza pay_day via RPC, tudo em uma única função `mutationFn`. (user_roles removida na migration 45 — referências históricas removidas)
 
 **Impacto:** Dificulta manutenção, testes e reutilização. Viola Single Responsibility Principle.
 

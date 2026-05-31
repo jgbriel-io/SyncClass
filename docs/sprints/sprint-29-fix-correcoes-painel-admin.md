@@ -253,6 +253,10 @@ Testes manuais da Sprint 28 revelaram bugs críticos concentrados no painel admi
 - [x] Seletor de professor pré-preenchido ao reabrir edição de aluno via `/users`
 - [x] Editar aluno via professor → propaga nome para admin/users e auth.users
 - [x] Professor logado vê alunos vinculados corretamente (RLS is_teacher() corrigido)
+- [x] Cards de estatísticas na aba Students mostram contagem correta (sem anonimizados)
+- [x] Filtro "Anonimizados" aparece apenas para admin, não para professor
+- [x] Alunos anonimizados exibem badge vermelho + sem ações (só detalhes)
+- [x] Botão "Novo Aluno" oculto quando filtro anonimizados ativo
 
 ---
 
@@ -373,6 +377,72 @@ Testes manuais da Sprint 28 revelaram bugs críticos concentrados no painel admi
 - `src/components/teachers/TeacherStatusDialog.tsx` — refatorado
 - `src/components/teachers/TeacherHardDeleteDialog.tsx` — refatorado
 - `src/components/users/DeleteUserDialog.tsx` — refatorado + BUG-013
+
+---
+
+---
+
+### BUG-018 — `useStudentsStats` contabilizava alunos anonimizados como inativos
+
+**Rota:** `/admin/students` → cards de estatísticas
+**Sintoma:** Card "Inativos" exibia 11 alunos quando não havia nenhum inativo real — contagem incluía alunos anonimizados (`is_deleted = true`).
+**Root cause:** `useStudentsStats` consultava `students` sem filtro `is_deleted = false`.
+**Severidade:** 🟡 Média (dado incorreto no card de métricas)
+**Correção:** Adicionado `.eq("is_deleted", false)` na query de `useStudentsStats`.
+**Arquivos:**
+
+- `src/hooks/useStudentsStats.ts`
+
+---
+
+## Feature — Filtro "Anonimizados" na aba `/admin/students`
+
+**Contexto:** Alunos que passaram por hard delete têm `is_deleted = true` com dados pessoais zerados, mas histórico (aulas, cobranças, atividades) preservado. Não apareciam em nenhuma view — admin não tinha forma de auditar registros anonimizados.
+
+**Comportamento:**
+
+- Opção "Anonimizados" adicionada ao select de status em `/admin/students`
+- Exclusivo do admin (`showAnonymizedFilter={true}` via prop — professor não vê a opção)
+- Quando ativo: query usa `is_deleted = true` em vez de `false`; filtro de status não aplicado
+- Rows mostram badge "Anonimizado" (vermelho) em vez de Ativo/Inativo
+- Dropdown de ações removido — apenas botão de detalhes disponível
+- Botão "Novo Aluno" oculto enquanto filtro anonimizados está ativo
+
+**Arquivos:**
+
+- `src/hooks/useStudents.ts` — `StudentsListFilters.status` + lógica `is_deleted` flip em `useStudentsPaginated`
+- `src/components/filters/StudentsFilters.tsx` — tipo `StudentStatusFilter` + prop `showAnonymizedFilter` + SelectItem
+- `src/components/students/StudentsTableRow.tsx` — prop `isAnonymized`: badge + sem dropdown
+- `src/components/students/StudentsListView.tsx` — prop `showAnonymizedFilter`; repassa; oculta "Novo Aluno"
+- `src/pages/admin/Students.tsx` — `showAnonymizedFilter={true}`
+
+---
+
+---
+
+## Refactor — Correções pós code review
+
+**Contexto:** Code review identificou 6 problemas nos arquivos modificados da sprint.
+
+**Correções:**
+
+1. **Strings hardcoded** — `"Anonimizado"`, `"Anonimizados"` e 2 toast warnings do hard delete estavam hardcoded em componente e hook. Movidos para `src/content/students.ts` (`table.statusAnonymized`, `table.filterAnonymized`, `deleteDialog.toasts.warnProfileNotDeleted`, `deleteDialog.toasts.warnAccountNotDeleted`).
+
+2. **`DeleteUserDialog` comentário enganoso** — `isTeacherActive = true; // teachers have no status field here` contradiz o `updateTeacher.mutate({ status: "ativo" })` na linha 141. Comentário reescrito para explicar que `linkedTeacher` só carrega `{id, name}` e a checagem de status é delegada ao domain hook.
+
+3. **`useUsers.ts` teachers sem filtro `is_deleted`** — query de teachers para a coluna Vínculo não filtrava `is_deleted = false`, fazendo professores anonimizados aparecerem no vínculo. Adicionado `.eq("is_deleted", false)`.
+
+4. **`ConfirmHardDeleteDialog` título sempre vermelho** — prop `titleClassName` adicionada (default `"text-destructive"`). Callers que usam o componente para confirmações não-destrutivas (ex: step de aulas agendadas) podem sobrescrever.
+
+**Arquivos:**
+
+- `src/content/students.ts` — 4 novas strings
+- `src/hooks/useStudents.ts` — import content + usa strings do content
+- `src/components/filters/StudentsFilters.tsx` — import content + usa string
+- `src/components/students/StudentsTableRow.tsx` — usa string do content
+- `src/components/users/DeleteUserDialog.tsx` — comentário corrigido
+- `src/hooks/useUsers.ts` — `.eq("is_deleted", false)` na query de teachers
+- `src/components/ui/ConfirmHardDeleteDialog.tsx` — prop `titleClassName`
 
 ---
 

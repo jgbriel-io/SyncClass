@@ -58,6 +58,7 @@ interface StudentsListViewProps {
   initialSearch?: string;
   initialFilterPreset?: StudentFilterPreset;
   showHardDelete?: boolean;
+  showAnonymizedFilter?: boolean;
 }
 
 export function StudentsListView({
@@ -71,6 +72,7 @@ export function StudentsListView({
   initialSearch = "",
   initialFilterPreset = "all",
   showHardDelete = false,
+  showAnonymizedFilter = false,
 }: StudentsListViewProps) {
   const [filters, setFilters] = useState<StudentsFiltersState>({
     ...defaultStudentsFilters,
@@ -210,16 +212,18 @@ export function StudentsListView({
           </h1>
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </div>
-        <Button
-          onClick={() => {
-            setSelectedStudent(null);
-            setIsFormOpen(true);
-            onNewStudentClick?.();
-          }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          {studentsContent.view.newButton}
-        </Button>
+        {filters.status !== "anonimizados" && (
+          <Button
+            onClick={() => {
+              setSelectedStudent(null);
+              setIsFormOpen(true);
+              onNewStudentClick?.();
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {studentsContent.view.newButton}
+          </Button>
+        )}
       </div>
 
       {studentsStats && <StudentsStatCards stats={studentsStats} />}
@@ -241,6 +245,7 @@ export function StudentsListView({
         teachers={teachers}
         showTeacherFilter={showTeacherFilter}
         autoTeacherId={autoTeacherId}
+        showAnonymizedFilter={showAnonymizedFilter}
       />
 
       {error && (
@@ -373,6 +378,7 @@ export function StudentsListView({
                           setHardDeleteDialogOpen(true);
                         }}
                         showHardDelete={showHardDelete}
+                        isAnonymized={filters.status === "anonimizados"}
                       />
                     );
                   })

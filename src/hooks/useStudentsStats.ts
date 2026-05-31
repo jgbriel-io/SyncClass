@@ -23,7 +23,10 @@ export function useStudentsStats(teacherId?: string | null) {
       const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
       const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
 
-      let query = supabase.from("students").select("id, status, created_at");
+      let query = supabase
+        .from("students")
+        .select("id, status, created_at")
+        .eq("is_deleted", false);
 
       if (teacherId) {
         query = query.eq("teacher_id", teacherId);

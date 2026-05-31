@@ -69,7 +69,7 @@ export function DeleteUserDialog({
           })()
         : null;
     const isStudentActive = linkedStudent?.status === "ativo";
-    const isTeacherActive = true; // teachers have no status field here; handled by domain hook
+    const isTeacherActive = linkedTeacher !== null; // linkedTeacher object only has id+name; status check delegated to useDeleteTeacher/useUpdateTeacher
     const userIsInactive = !(user?.profile?.active ?? true);
     const hasNoLinks = !user?.profile?.student_id && !user?.profile?.teacher_id;
     const isHardDelete = forceHardDelete || (userIsInactive && hasNoLinks);

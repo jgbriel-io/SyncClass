@@ -99,14 +99,14 @@ Usados como base por `StudentDeleteDialog`, `TeacherStatusDialog`, `TeacherHardD
 
 **Localização:** `src/components/students/`
 
-| Componente                | Responsabilidade                  |
-| ------------------------- | --------------------------------- |
-| `StudentFormDialog.tsx`   | Form criar/editar aluno (Dialog)  |
-| `StudentDetailSheet.tsx`  | Detalhes do aluno (Sheet lateral) |
-| `StudentDeleteDialog.tsx` | Confirmação de exclusão           |
-| `StudentCard.tsx`         | Card de aluno (mobile)            |
-| `StudentsListView.tsx`    | Lista de alunos (tabela)          |
-| `StudentsTableRow.tsx`    | Linha da tabela de alunos         |
+| Componente                | Responsabilidade                                                                               |
+| ------------------------- | ---------------------------------------------------------------------------------------------- |
+| `StudentFormDialog.tsx`   | Form criar/editar aluno (Dialog)                                                               |
+| `StudentDetailSheet.tsx`  | Detalhes do aluno (Sheet lateral)                                                              |
+| `StudentDeleteDialog.tsx` | Confirmação de exclusão                                                                        |
+| `StudentCard.tsx`         | Card de aluno (mobile)                                                                         |
+| `StudentsListView.tsx`    | Lista de alunos (tabela); props: `showHardDelete`, `showAnonymizedFilter`, `showTeacherFilter` |
+| `StudentsTableRow.tsx`    | Linha da tabela; prop `isAnonymized`: exibe badge vermelho + oculta dropdown de ações          |
 
 ### Financial
 

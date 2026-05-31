@@ -203,7 +203,6 @@
 | `teachers`                    | Professores                           | id, name, email, phone, hourly_rate, pix_key, status, anonymized_at                                            |
 | `students`                    | Alunos                                | id, name, email, phone, pay_day, hourly_rate, status, teacher_id, birth_date, origin, anonymized_at            |
 | `profiles`                    | Usuários do sistema                   | id, user_id, full_name, role, student_id, teacher_id, active, deleted_at                                       |
-| `user_roles`                  | Controle de acesso                    | id, user_id, role, email                                                                                       |
 | `class_logs`                  | Registro de aulas                     | id, student_id, teacher_id, class_date, start_at, end_at, duration_minutes, attendance, title, grade, feedback |
 | `financial_records`           | Cobranças                             | id, student_id, class_log_id, amount, due_date, status, paid_at, payment_proof_url, payment_proof_status       |
 | `financial_record_class_logs` | Relação N:N aulas-cobranças (pacotes) | financial_record_id, class_log_id                                                                              |

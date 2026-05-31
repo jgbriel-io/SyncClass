@@ -46,6 +46,7 @@ interface StudentsTableRowProps {
   onArchive: (student: Student) => void;
   onHardDelete: (student: Student) => void;
   showHardDelete?: boolean;
+  isAnonymized?: boolean;
 }
 
 export function StudentsTableRow({
@@ -63,6 +64,7 @@ export function StudentsTableRow({
   onArchive,
   onHardDelete,
   showHardDelete = true,
+  isAnonymized = false,
 }: StudentsTableRowProps) {
   const lastUpdatedAt = student.updated_at;
   const hourlyRate = student.hourly_rate;
@@ -71,13 +73,19 @@ export function StudentsTableRow({
     <tr className="group hover:bg-muted/30 transition-colors">
       {/* Status Badge */}
       <td className={CELL_BASE} style={{ width: "1%" }}>
-        <StatusBadge
-          variant={student.status === "ativo" ? "success" : "default"}
-        >
-          {student.status === "ativo"
-            ? studentsContent.table.statusActive
-            : studentsContent.table.statusInactive}
-        </StatusBadge>
+        {isAnonymized ? (
+          <StatusBadge variant="destructive">
+            {studentsContent.table.statusAnonymized}
+          </StatusBadge>
+        ) : (
+          <StatusBadge
+            variant={student.status === "ativo" ? "success" : "default"}
+          >
+            {student.status === "ativo"
+              ? studentsContent.table.statusActive
+              : studentsContent.table.statusInactive}
+          </StatusBadge>
+        )}
       </td>
 
       {/* Aluno — sticky XL */}
@@ -225,57 +233,59 @@ export function StudentsTableRow({
           >
             <Eye className="h-4 w-4" aria-hidden="true" />
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                aria-label={common.aria.moreOptions}
-              >
-                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(student)}>
-                <Pencil className="h-4 w-4 mr-2" aria-hidden="true" />
-                {common.actions.edit}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onResetPassword(student)}>
-                <KeyRound className="h-4 w-4 mr-2" aria-hidden="true" />
-                {studentsContent.resetPasswordDialog.title}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className={
-                  student.status === "ativo"
-                    ? "text-destructive focus:text-destructive"
-                    : "focus:text-primary"
-                }
-                onClick={() => onArchive(student)}
-              >
-                {student.status === "ativo" && (
-                  <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
-                )}
-                {student.status === "ativo" ? (
-                  studentsContent.archiveDialog.confirmArchive
-                ) : (
-                  <>
-                    <Check className="h-4 w-4 mr-2" aria-hidden="true" />
-                    {studentsContent.archiveDialog.confirmReactivate}
-                  </>
-                )}
-              </DropdownMenuItem>
-              {showHardDelete && student.status === "inativo" && (
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => onHardDelete(student)}
+          {!isAnonymized && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  aria-label={common.aria.moreOptions}
                 >
-                  <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
-                  {studentsContent.deleteDialog.confirmButton}
+                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(student)}>
+                  <Pencil className="h-4 w-4 mr-2" aria-hidden="true" />
+                  {common.actions.edit}
                 </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem onClick={() => onResetPassword(student)}>
+                  <KeyRound className="h-4 w-4 mr-2" aria-hidden="true" />
+                  {studentsContent.resetPasswordDialog.title}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className={
+                    student.status === "ativo"
+                      ? "text-destructive focus:text-destructive"
+                      : "focus:text-primary"
+                  }
+                  onClick={() => onArchive(student)}
+                >
+                  {student.status === "ativo" && (
+                    <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                  )}
+                  {student.status === "ativo" ? (
+                    studentsContent.archiveDialog.confirmArchive
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4 mr-2" aria-hidden="true" />
+                      {studentsContent.archiveDialog.confirmReactivate}
+                    </>
+                  )}
+                </DropdownMenuItem>
+                {showHardDelete && student.status === "inativo" && (
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => onHardDelete(student)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                    {studentsContent.deleteDialog.confirmButton}
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </td>
     </tr>

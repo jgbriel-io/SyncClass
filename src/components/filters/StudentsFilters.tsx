@@ -16,8 +16,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { students as studentsContent } from "@/content";
 
-export type StudentStatusFilter = "all" | "ativo" | "inativo";
+export type StudentStatusFilter = "all" | "ativo" | "inativo" | "anonimizados";
 export type StudentSortBy =
   | "name_asc"
   | "name_desc"
@@ -45,6 +46,7 @@ interface StudentsFiltersProps {
   teachers: Teacher[];
   showTeacherFilter?: boolean;
   autoTeacherId?: string | null;
+  showAnonymizedFilter?: boolean;
   /** Status principal - quando ativo, não mostra botão Limpar */
   primaryStatus?: "ativo";
 }
@@ -56,6 +58,7 @@ export function StudentsFilters({
   teachers,
   showTeacherFilter = true,
   autoTeacherId = null,
+  showAnonymizedFilter = false,
   primaryStatus = "ativo",
 }: StudentsFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -129,6 +132,11 @@ export function StudentsFilters({
                 <SelectItem value="inativo">
                   {filtersContent.students.status.inactive}
                 </SelectItem>
+                {showAnonymizedFilter && (
+                  <SelectItem value="anonimizados">
+                    {studentsContent.table.filterAnonymized}
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>

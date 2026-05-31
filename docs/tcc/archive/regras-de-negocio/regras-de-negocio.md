@@ -32,7 +32,7 @@ Este documento mapeia todas as regras de negócio implementadas na plataforma, e
 
 - Cada usuário tem exatamente 1 profile em `profiles`
 - Profile pode ter `student_id` OU `teacher_id` (não ambos)
-- Cascade delete: deletar auth.user → deleta profile e user_roles
+- Cascade delete: deletar auth.user → deleta profile (user_roles removida na migration 45 — role consolidado em profiles.role)
 - **Fonte:** `01_structure.sql:112-113`, `01_structure.sql:380-395`
 
 ### RN-003: Convite de Usuários

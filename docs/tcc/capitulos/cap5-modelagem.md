@@ -72,7 +72,6 @@ React SPA (Vite) foi escolhido por:
 | `teachers`                    | Professores cadastrados    | Dezenas                           |
 | `students`                    | Alunos por professor       | Centenas                          |
 | `profiles`                    | Usuários do sistema (auth) | Centenas                          |
-| `user_roles`                  | _Roles_ por usuário        | Centenas                          |
 | `class_logs`                  | Registro de aulas          | Milhares                          |
 | `financial_records`           | Cobranças                  | Milhares                          |
 | `financial_record_class_logs` | Relação N:N pacotes        | Milhares                          |

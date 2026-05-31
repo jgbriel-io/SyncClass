@@ -88,12 +88,12 @@ export function StudentsListView() {
 
 ### Students
 
-| Hook                              | Responsabilidade                |
-| --------------------------------- | ------------------------------- |
-| `useStudents(teacherId)`          | Lista alunos do professor       |
-| `useStudentsByTeacher(teacherId)` | Alias de useStudents            |
-| `useStudentDetails(studentId)`    | Detalhes de 1 aluno             |
-| `useStudentsStats(teacherId)`     | Stats (total, ativos, inativos) |
+| Hook                              | Responsabilidade                                                                       |
+| --------------------------------- | -------------------------------------------------------------------------------------- |
+| `useStudents(teacherId)`          | Lista alunos do professor                                                              |
+| `useStudentsByTeacher(teacherId)` | Alias de useStudents                                                                   |
+| `useStudentDetails(studentId)`    | Detalhes de 1 aluno                                                                    |
+| `useStudentsStats(teacherId)`     | Stats (total, ativos, inativos) — filtra `is_deleted = false` (anonimizados excluídos) |
 
 **Exemplo:**
 

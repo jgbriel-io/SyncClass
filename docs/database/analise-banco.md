@@ -17,7 +17,6 @@
 - `profiles` — perfis usuários
 - `students` — alunos
 - `teachers` — professores
-- `user_roles` — roles usuários
 
 ### ⚠️ Implementação dupla (2 tabelas)
 
@@ -150,7 +149,6 @@ Todos vinculados a tabelas usadas. Nenhum morto.
 - `profiles` — 2 triggers (updated_at, invalidar sessões)
 - `students` — 6 triggers (validação, normalização, proteção campos)
 - `teachers` — 7 triggers (validação, normalização, PIX, proteção)
-- `user_roles` — 1 trigger (updated_at)
 
 ---
 

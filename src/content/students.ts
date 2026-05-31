@@ -80,6 +80,10 @@ export const students = {
     toasts: {
       success: "Aluno excluído com sucesso!",
       error: "Erro ao excluir aluno.",
+      warnProfileNotDeleted:
+        "Aluno removido. O perfil de usuário não pôde ser marcado como deletado.",
+      warnAccountNotDeleted:
+        "Aluno removido. A conta de acesso vinculada não pôde ser excluída — remova manualmente se necessário.",
     },
   },
 
@@ -161,6 +165,8 @@ export const students = {
   table: {
     statusActive: "Ativo",
     statusInactive: "Inativo",
+    statusAnonymized: "Anonimizado",
+    filterAnonymized: "Anonimizados",
     editedAt: "Editado em",
     noCharges: "Sem cobranças",
     daysWithoutClass: (days: number) =>

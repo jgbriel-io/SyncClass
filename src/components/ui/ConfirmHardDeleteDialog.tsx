@@ -16,6 +16,7 @@ interface ConfirmHardDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title?: string;
+  titleClassName?: string;
   description: ReactNode;
   confirmLabel: string;
   loadingLabel: string;
@@ -29,6 +30,7 @@ export function ConfirmHardDeleteDialog({
   open,
   onOpenChange,
   title = "Excluir definitivamente?",
+  titleClassName = "text-destructive",
   description,
   confirmLabel,
   loadingLabel,
@@ -41,7 +43,7 @@ export function ConfirmHardDeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-destructive">
+          <AlertDialogTitle className={titleClassName}>
             {title}
           </AlertDialogTitle>
           <AlertDialogDescription asChild>

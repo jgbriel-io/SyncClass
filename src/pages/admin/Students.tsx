@@ -21,6 +21,7 @@ export default function StudentsPage() {
       initialSearch={searchFromUrl}
       initialFilterPreset={initialFilterPreset}
       showHardDelete={true}
+      showAnonymizedFilter={true}
     />
   );
 }

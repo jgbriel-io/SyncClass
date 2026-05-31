@@ -234,7 +234,8 @@ export function useUsersPaginated(
         const { data: teachersData, error: teachersError } = await supabase
           .from("teachers")
           .select("*")
-          .in("id", teacherIds);
+          .in("id", teacherIds)
+          .eq("is_deleted", false);
 
         if (teachersError) throw teachersError;
         teachers = teachersData || [];
