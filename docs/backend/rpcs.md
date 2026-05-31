@@ -427,7 +427,37 @@ await supabase.rpc("admin_update_auth_display_name", {
 });
 ```
 
-**Contexto de uso:** Chamado automaticamente em `useUpdateUserProfile` após atualizar `profiles.full_name`. Garante que o nome no painel Supabase (Auth Users) fique sincronizado.
+**Contexto de uso:** Chamado em `useUpdateUserProfile` após atualizar `profiles.full_name`. Também chamado em `useUpdateTeacher` quando admin edita nome de professor via `/admin/users`.
+
+---
+
+### admin_update_auth_email
+
+**Responsabilidade:** Atualiza `email` em `auth.users` quando admin edita email de um usuário. Seta `email_confirmed_at = NOW()` para evitar re-confirmação.
+
+**Arquivo:** `supabase/migrations/56_add_admin_update_auth_email_rpc.sql`
+
+**Assinatura:**
+
+```sql
+admin_update_auth_email(
+  p_user_id UUID,
+  p_email   TEXT
+) RETURNS void
+```
+
+**Segurança:** `SECURITY DEFINER` (acessa `auth.users`). Requer `is_admin()` — lança exceção se não for admin.
+
+**Chamada:**
+
+```ts
+await supabase.rpc("admin_update_auth_email", {
+  p_user_id: userId,
+  p_email: normalizedEmail,
+});
+```
+
+**Contexto de uso:** Chamado em `useUpdateTeacher` quando `normalizedEmail` está presente no update. Garante que `auth.users.email` fique sincronizado com `teachers.email` e `profiles.email`.
 
 ---
 

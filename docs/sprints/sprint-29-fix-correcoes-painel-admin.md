@@ -446,6 +446,121 @@ Testes manuais da Sprint 28 revelaram bugs críticos concentrados no painel admi
 
 ---
 
+---
+
+### BUG-019 — `useUpdateTeacher` chamava `upsert_user_role_safe` (tabela dropada) — nome e email não sincronizavam com `auth.users`
+
+**Rota:** `/admin/users` → editar professor → alterar nome ou email
+**Sintoma:** Editar nome/email de professor via aba Users atualizava `teachers.name`, `profiles.full_name` e `profiles.email`, mas `auth.users.raw_user_meta_data.full_name` e `auth.users.email` ficavam com valores antigos.
+**Root cause:** `useUpdateTeacher` chamava `upsert_user_role_safe` no loop de profiles para cada `user_id` vinculado. Essa RPC fazia INSERT em `user_roles` (tabela dropada na migration 45) → erro silenciado por ausência de `throw` após o `roleError` — na prática a RPC falhava mas o flow continuava sem chamar `admin_update_auth_display_name`. Resultado: `auth.users` nunca atualizado.
+**Severidade:** 🟡 Média (dado inconsistente no painel Supabase Auth; login/sessão não afetados)
+**Correção:** Substituído bloco `upsert_user_role_safe` por chamadas diretas:
+
+- `admin_update_auth_display_name` quando `fullName` presente
+- `admin_update_auth_email` (migration 56, nova) quando `normalizedEmail` presente
+
+**Arquivos:**
+
+- `src/hooks/useTeachers.ts` — loop de profiles: substituição de `upsert_user_role_safe`
+- `supabase/migrations/56_add_admin_update_auth_email_rpc.sql` — nova RPC
+
+---
+
+## Feature — RPC `admin_update_auth_email` (migration 56)
+
+**Contexto:** Não existia RPC para atualizar `auth.users.email` com permissão de admin. `admin_update_auth_display_name` (migration 53) só cobria `full_name`. Necessário para sincronizar email quando admin edita professor.
+
+**Comportamento:**
+
+- `SECURITY DEFINER` (acessa `auth.users` diretamente)
+- Requer `is_admin()` — lança exceção se não for admin
+- Atualiza `auth.users.email` + seta `email_confirmed_at = NOW()` (evita re-confirmação desnecessária)
+
+**Assinatura:**
+
+```sql
+admin_update_auth_email(p_user_id UUID, p_email TEXT) RETURNS void
+```
+
+**Arquivos:**
+
+- `supabase/migrations/56_add_admin_update_auth_email_rpc.sql` — criado e aplicado
+
+---
+
+## Fix — Padrão alfanumérico no nome de anonimização
+
+**Contexto:** `id.slice(0, 8)` do UUID podia gerar segmentos all-digits (ex: `"02818510"`) quando o primeiro octeto não continha letras hex (`a-f`). Visualmente indistinguível de um ID numérico.
+
+**Correção:** Scan do UUID (stripped de hifens) para encontrar o primeiro window de 8 chars com pelo menos uma letra (`a-f`) e pelo menos um dígito (`0-9`). UUID v4 sempre tem esse window.
+
+```ts
+const hex = id.replace(/-/g, "");
+let segment = hex.slice(0, 8);
+for (let i = 0; i <= hex.length - 8; i++) {
+  const s = hex.slice(i, i + 8);
+  if (/[a-f]/.test(s) && /[0-9]/.test(s)) {
+    segment = s;
+    break;
+  }
+}
+```
+
+**Migration 55** faz backfill nos registros já anonimizados (`is_deleted = true`) em `students` e `teachers`.
+
+**Arquivos:**
+
+- `src/hooks/useStudents.ts` — `useHardDeleteStudent`: segment scan
+- `src/hooks/useTeachers.ts` — `useHardDeleteTeacher`: segment scan
+- `supabase/migrations/55_fix_anonymized_names_alphanumeric.sql` — backfill
+
+---
+
+## Feature — Nome e email read-only para professor em Configurações
+
+**Contexto:** `SettingsPerfilTab` exibia campo Editar para nome e email para todos os roles. Professor editando o próprio nome via settings não sincronizava `teachers.name` (hook `useUpdateProfileName` atualiza só `profiles.full_name` + `auth.users`). Decisão: nome e email de professor são atributos gerenciados pelo admin.
+
+**Comportamento:**
+
+- `isTeacher = true` → campo Nome e campo Email ficam read-only (sem botão Editar)
+- Professor ainda pode editar: avatar, chave Pix, exportar dados (LGPD)
+- Alunos e admin mantêm comportamento original (Editar habilitado)
+
+**Arquivos:**
+
+- `src/components/layout/SettingsPerfilTab.tsx` — `!isTeacher` guard nos blocos Nome e Email
+
+---
+
+---
+
+### BUG-020 — `upsert_user_role_safe` remanescente em 3 hooks adicionais
+
+**Rotas afetadas:**
+
+- `/admin/users` → alterar role de usuário (`useUpdateUserRole`)
+- `/admin/users` → vincular usuário a aluno (`useLinkUserToStudent`)
+- `/admin/users` → vincular usuário a professor (`useLinkUserToTeacher`)
+
+**Sintoma:** Operações acima retornavam erro 500 silencioso ou toast de erro genérico por causa da RPC `upsert_user_role_safe` que fazia INSERT em `user_roles` (dropada na migration 45).
+
+**Root cause:** Mesma causa raiz do BUG-019 — `upsert_user_role_safe` não foi removida de todos os hooks quando `user_roles` foi dropada. `useUpdateUserRole` lançava o erro antes do `profiles.role` update (bloqueante). `useLinkUserToStudent` e `useLinkUserToTeacher` lançavam após o `profiles` update já ter ocorrido (partial failure).
+
+**Correção:**
+
+- `useUpdateUserRole`: removido bloco `upsert_user_role_safe` — `profiles.role` update direto é suficiente
+- `useLinkUserToStudent` / `useLinkUserToTeacher`: removido `upsert_user_role_safe` + fetch de `profile` que era usado exclusivamente para alimentar os parâmetros da RPC morta
+
+**Adicionalmente:** `syncStudentProfiles` (`useStudents.ts`) também chamava `upsert_user_role_safe` — removido no mesmo fix. Corrigido `p_teacher_id: null` hardcoded → `student.teacher_id ?? null` no `update_profile_by_id` call.
+
+**Arquivos:**
+
+- `src/hooks/useUserProfileMutations.ts` — `useUpdateUserRole`: remove `upsert_user_role_safe`
+- `src/hooks/useUserLinkMutations.ts` — `useLinkUserToStudent`, `useLinkUserToTeacher`: remove `upsert_user_role_safe` + profile fetch
+- `src/hooks/useStudents.ts` — `syncStudentProfiles`: remove `upsert_user_role_safe`; fix `p_teacher_id`
+
+---
+
 ## Bugs Pendentes
 
 Nenhum.

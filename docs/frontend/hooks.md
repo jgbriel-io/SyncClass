@@ -157,6 +157,8 @@ const { form, submit } = usePackageClassesForm();
 | `useTeacherId()`                 | ID do professor autenticado |
 | `useTeacherDashboard(teacherId)` | Dashboard do professor      |
 
+**Nota — `useUpdateTeacher`:** ao atualizar nome ou email, sincroniza automaticamente `auth.users` via RPCs `admin_update_auth_display_name` e `admin_update_auth_email`. Nome e email de professor só são editáveis pelo admin (campo read-only em `SettingsPerfilTab` para professores).
+
 **Exemplo:**
 
 ```tsx
