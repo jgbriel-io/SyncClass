@@ -211,16 +211,18 @@ export function useUpdateTeacher() {
 
           if (profile.user_id) {
             if (fullName) {
-              await supabase.rpc("admin_update_auth_display_name", {
-                p_user_id: profile.user_id,
-                p_full_name: fullName,
-              });
+              const { error: nameAuthError } = await supabase.rpc(
+                "admin_update_auth_display_name",
+                { p_user_id: profile.user_id, p_full_name: fullName }
+              );
+              if (nameAuthError) throw nameAuthError;
             }
             if (normalizedEmail) {
-              await supabase.rpc("admin_update_auth_email", {
-                p_user_id: profile.user_id,
-                p_email: normalizedEmail,
-              });
+              const { error: emailAuthError } = await supabase.rpc(
+                "admin_update_auth_email",
+                { p_user_id: profile.user_id, p_email: normalizedEmail }
+              );
+              if (emailAuthError) throw emailAuthError;
             }
           }
         }
