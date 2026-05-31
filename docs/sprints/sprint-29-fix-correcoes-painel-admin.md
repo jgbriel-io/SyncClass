@@ -532,6 +532,35 @@ for (let i = 0; i <= hex.length - 8; i++) {
 
 ---
 
+---
+
+### BUG-020 — `upsert_user_role_safe` remanescente em 3 hooks adicionais
+
+**Rotas afetadas:**
+
+- `/admin/users` → alterar role de usuário (`useUpdateUserRole`)
+- `/admin/users` → vincular usuário a aluno (`useLinkUserToStudent`)
+- `/admin/users` → vincular usuário a professor (`useLinkUserToTeacher`)
+
+**Sintoma:** Operações acima retornavam erro 500 silencioso ou toast de erro genérico por causa da RPC `upsert_user_role_safe` que fazia INSERT em `user_roles` (dropada na migration 45).
+
+**Root cause:** Mesma causa raiz do BUG-019 — `upsert_user_role_safe` não foi removida de todos os hooks quando `user_roles` foi dropada. `useUpdateUserRole` lançava o erro antes do `profiles.role` update (bloqueante). `useLinkUserToStudent` e `useLinkUserToTeacher` lançavam após o `profiles` update já ter ocorrido (partial failure).
+
+**Correção:**
+
+- `useUpdateUserRole`: removido bloco `upsert_user_role_safe` — `profiles.role` update direto é suficiente
+- `useLinkUserToStudent` / `useLinkUserToTeacher`: removido `upsert_user_role_safe` + fetch de `profile` que era usado exclusivamente para alimentar os parâmetros da RPC morta
+
+**Adicionalmente:** `syncStudentProfiles` (`useStudents.ts`) também chamava `upsert_user_role_safe` — removido no mesmo fix. Corrigido `p_teacher_id: null` hardcoded → `student.teacher_id ?? null` no `update_profile_by_id` call.
+
+**Arquivos:**
+
+- `src/hooks/useUserProfileMutations.ts` — `useUpdateUserRole`: remove `upsert_user_role_safe`
+- `src/hooks/useUserLinkMutations.ts` — `useLinkUserToStudent`, `useLinkUserToTeacher`: remove `upsert_user_role_safe` + profile fetch
+- `src/hooks/useStudents.ts` — `syncStudentProfiles`: remove `upsert_user_role_safe`; fix `p_teacher_id`
+
+---
+
 ## Bugs Pendentes
 
 Nenhum.
