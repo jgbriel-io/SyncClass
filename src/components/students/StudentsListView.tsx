@@ -1,4 +1,5 @@
 import { useMemo, useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   StudentsFilters,
   type StudentsFiltersState,
@@ -43,7 +44,6 @@ import {
 import { StudentResetPasswordDialog } from "@/components/students/StudentResetPasswordDialog";
 import { getStudentRowData } from "@/components/students/StudentsListView.helpers";
 
-// Aliases para constantes de layout
 const COL = STUD_COL;
 const TABLE_MIN_W = STUD_TABLE_MIN_W;
 
@@ -55,10 +55,10 @@ interface StudentsListViewProps {
   autoTeacherId?: string | null;
   teachers: Teacher[];
   onNewStudentClick?: () => void;
-  /** Termo de busca vindo da URL (ex.: header global) */
   initialSearch?: string;
-  /** Filtro inicial vindo da URL (ex.: dashboard aniversariantes) */
   initialFilterPreset?: StudentFilterPreset;
+  showHardDelete?: boolean;
+  showAnonymizedFilter?: boolean;
 }
 
 export function StudentsListView({
@@ -71,6 +71,8 @@ export function StudentsListView({
   onNewStudentClick,
   initialSearch = "",
   initialFilterPreset = "all",
+  showHardDelete = false,
+  showAnonymizedFilter = false,
 }: StudentsListViewProps) {
   const [filters, setFilters] = useState<StudentsFiltersState>({
     ...defaultStudentsFilters,
@@ -81,8 +83,22 @@ export function StudentsListView({
   });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Dialog states
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setSelectedStudent(null);
+      setIsFormOpen(true);
+      setSearchParams(
+        (prev) => {
+          prev.delete("action");
+          return prev;
+        },
+        { replace: true }
+      );
+    }
+  }, [searchParams, setSearchParams]);
+
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
   const [studentToArchive, setStudentToArchive] = useState<Student | null>(
     null
@@ -95,8 +111,8 @@ export function StudentsListView({
     useState<Student | null>(null);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
+  const [generatedEmail, setGeneratedEmail] = useState("");
 
-  // Detail sheet
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
 
@@ -139,6 +155,11 @@ export function StudentsListView({
       onSuccess: () => {
         setIsFormOpen(false);
         setSelectedStudent(null);
+      },
+      onCreated: ({ email, password }) => {
+        setGeneratedEmail(email);
+        setGeneratedPassword(password);
+        setIsPasswordDialogOpen(true);
       },
     });
 
@@ -184,7 +205,6 @@ export function StudentsListView({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">
@@ -192,21 +212,22 @@ export function StudentsListView({
           </h1>
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </div>
-        <Button
-          onClick={() => {
-            setSelectedStudent(null);
-            setIsFormOpen(true);
-            onNewStudentClick?.();
-          }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          {studentsContent.view.newButton}
-        </Button>
+        {filters.status !== "anonimizados" && (
+          <Button
+            onClick={() => {
+              setSelectedStudent(null);
+              setIsFormOpen(true);
+              onNewStudentClick?.();
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {studentsContent.view.newButton}
+          </Button>
+        )}
       </div>
 
       {studentsStats && <StudentsStatCards stats={studentsStats} />}
 
-      {/* Filtros */}
       <StudentsFilters
         filters={filters}
         onChange={(newFilters) => {
@@ -224,16 +245,15 @@ export function StudentsListView({
         teachers={teachers}
         showTeacherFilter={showTeacherFilter}
         autoTeacherId={autoTeacherId}
+        showAnonymizedFilter={showAnonymizedFilter}
       />
 
-      {/* Error state */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <p className="text-destructive">{common.errors.generic}</p>
         </div>
       )}
 
-      {/* Tabela */}
       {!error && (
         <div
           className="rounded-lg border bg-card shadow-card overflow-hidden"
@@ -250,7 +270,7 @@ export function StudentsListView({
                     {common.labels.status}
                   </TableHead>
                   <TableHead
-                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap sticky left-0 z-30 bg-muted"
+                    className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap tablet:sticky tablet:left-0 z-30 bg-muted"
                     style={{
                       width: COL.ALUNO,
                       minWidth: COL.ALUNO,
@@ -357,7 +377,8 @@ export function StudentsListView({
                           setStudentToHardDelete(s);
                           setHardDeleteDialogOpen(true);
                         }}
-                        showHardDelete={false}
+                        showHardDelete={showHardDelete}
+                        isAnonymized={filters.status === "anonimizados"}
                       />
                     );
                   })
@@ -401,7 +422,6 @@ export function StudentsListView({
         teacherId={autoTeacherId}
       />
 
-      {/* Form Dialog */}
       <StudentFormDialog
         open={isFormOpen}
         onOpenChange={(open) => {
@@ -414,15 +434,17 @@ export function StudentsListView({
         autoTeacherId={autoTeacherId}
       />
 
-      {/* Senha gerada/redefinida */}
       <StudentPasswordDialog
         open={isPasswordDialogOpen}
-        onOpenChange={setIsPasswordDialogOpen}
+        onOpenChange={(open) => {
+          setIsPasswordDialogOpen(open);
+          if (!open) setGeneratedEmail("");
+        }}
         password={generatedPassword}
-        source="reset"
+        email={generatedEmail || undefined}
+        source={generatedEmail ? "create" : "reset"}
       />
 
-      {/* Redefinir senha */}
       <StudentResetPasswordDialog
         open={resetPasswordDialogOpen}
         onOpenChange={(open) => {
@@ -436,7 +458,6 @@ export function StudentsListView({
         }}
       />
 
-      {/* Arquivar / Reativar */}
       <StudentArchiveDialog
         open={archiveDialogOpen}
         onOpenChange={setArchiveDialogOpen}
@@ -447,7 +468,6 @@ export function StudentsListView({
         }}
       />
 
-      {/* Excluir definitivamente */}
       <StudentHardDeleteDialog
         open={hardDeleteDialogOpen}
         onOpenChange={setHardDeleteDialogOpen}

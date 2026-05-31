@@ -1,4 +1,4 @@
-const ALLOWED_ORIGIN = (typeof Deno !== "undefined" ? Deno.env.get("APP_ORIGIN") : undefined) ?? "*";
+const ALLOWED_ORIGIN = "*";
 
 export const CORS_HEADERS = {
   "Access-Control-Allow-Origin": ALLOWED_ORIGIN,

@@ -6,8 +6,12 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./env";
 const memoryStorageMap = new Map<string, string>();
 const memoryStorage = {
   getItem: (key: string) => memoryStorageMap.get(key) ?? null,
-  setItem: (key: string, value: string) => { memoryStorageMap.set(key, value); },
-  removeItem: (key: string) => { memoryStorageMap.delete(key); },
+  setItem: (key: string, value: string) => {
+    memoryStorageMap.set(key, value);
+  },
+  removeItem: (key: string) => {
+    memoryStorageMap.delete(key);
+  },
 };
 
 // Cliente separado para signUp sem afetar a sessão principal
@@ -17,6 +21,7 @@ export const supabaseSignupClient = createClient<Database>(
   {
     auth: {
       storage: memoryStorage,
+      storageKey: "sb-signup-client-token",
       persistSession: false,
       autoRefreshToken: false,
       detectSessionInUrl: false,

@@ -21,8 +21,15 @@ import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { StudentDetailSheet } from "@/components/admin/StudentDetailSheet";
 import { OverviewTableSkeleton } from "@/components/ui/table-skeleton";
 import { OverviewTableRow } from "@/components/overview/OverviewTableRow";
-import { COL as OVERVIEW_COL, TABLE_MIN_W as OVERVIEW_TABLE_MIN_W } from "@/components/overview/OverviewTableRow.constants";
-import { TABLE_HEAD_BASE, STICKY_HEADER, STICKY_SHADOW } from "@/lib/design-tokens/table-columns";
+import {
+  COL as OVERVIEW_COL,
+  TABLE_MIN_W as OVERVIEW_TABLE_MIN_W,
+} from "@/components/overview/OverviewTableRow.constants";
+import {
+  TABLE_HEAD_BASE,
+  STICKY_HEADER,
+  STICKY_SHADOW,
+} from "@/lib/design-tokens/table-columns";
 import { overview, common } from "@/content";
 
 const PAGE_SIZE = 10;
@@ -40,8 +47,12 @@ export function OverviewView({
   showTeacherFilter = true,
   autoTeacherId = null,
 }: OverviewViewProps) {
-  const [filters, setFilters] = useState<OverviewFiltersState>(defaultOverviewFilters);
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<OverviewFiltersState>(
+    defaultOverviewFilters
+  );
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
+    null
+  );
   const [sheetOpen, setSheetOpen] = useState(false);
   const listTopRef = useRef<HTMLDivElement>(null);
 
@@ -54,11 +65,16 @@ export function OverviewView({
     hasMore,
     totalCount,
     isFetching,
-  } = useStudentsWithStatsPaginated({ pageSize: PAGE_SIZE, teacherId: autoTeacherId });
+  } = useStudentsWithStatsPaginated({
+    pageSize: PAGE_SIZE,
+    teacherId: autoTeacherId,
+  });
 
   const { data: teachers = [] } = useTeachers();
   const { data: allStudents = [] } = useStudents();
-  const activeStudentsForFilter = allStudents.filter((s) => s.status === "ativo");
+  const activeStudentsForFilter = allStudents.filter(
+    (s) => s.status === "ativo"
+  );
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -66,7 +82,8 @@ export function OverviewView({
 
   const filteredStudents = useMemo(() => {
     let result = students.filter((student) => {
-      if (filters.studentId !== "all" && student.id !== filters.studentId) return false;
+      if (filters.studentId !== "all" && student.id !== filters.studentId)
+        return false;
 
       const searchLower = filters.search.toLowerCase().trim();
       const searchDigits = searchLower.replace(/\D/g, "");
@@ -77,10 +94,12 @@ export function OverviewView({
         (student.phone || "").replace(/\D/g, "").includes(searchDigits);
       if (!matchesSearch) return false;
 
-      const matchesStatus = filters.status === "all" || student.status === filters.status;
-      if (!matchesStatus) return false;
-
-      if (showTeacherFilter && filters.teacherId !== "all" && student.teacher_id !== filters.teacherId) return false;
+      if (
+        showTeacherFilter &&
+        filters.teacherId !== "all" &&
+        student.teacher_id !== filters.teacherId
+      )
+        return false;
 
       if (filters.period !== "all") {
         const created = new Date(student.created_at || 0);
@@ -148,20 +167,99 @@ export function OverviewView({
       )}
 
       {/* Table */}
-      <div className="rounded-lg border bg-card shadow-card overflow-hidden" ref={listTopRef}>
+      <div
+        className="rounded-lg border bg-card shadow-card overflow-hidden"
+        ref={listTopRef}
+      >
         <div className="overflow-x-auto">
-          <Table className="table-fixed" style={{ minWidth: OVERVIEW_TABLE_MIN_W }}>
+          <Table
+            className="table-fixed"
+            style={{ minWidth: OVERVIEW_TABLE_MIN_W }}
+          >
             <TableHeader>
               <TableRow className="border-b bg-muted/50">
-                <TableHead className={`${TABLE_HEAD_BASE} ${STICKY_HEADER}`} style={{ ...STICKY_SHADOW, width: OVERVIEW_COL.ALUNO, minWidth: OVERVIEW_COL.ALUNO }}>{overview.table.student}</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ENTRADA, minWidth: OVERVIEW_COL.ENTRADA }}>{overview.table.entry}</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.AULAS, minWidth: OVERVIEW_COL.AULAS }}>{overview.table.classes}</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.FREQUENCIA, minWidth: OVERVIEW_COL.FREQUENCIA }}>{overview.table.frequency}</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.MEDIA, minWidth: OVERVIEW_COL.MEDIA }}>{overview.table.average}</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PAGO, minWidth: OVERVIEW_COL.PAGO }}>{overview.table.paid}</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.PENDENTE, minWidth: OVERVIEW_COL.PENDENTE }}>{overview.table.pending}</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ATRASADO, minWidth: OVERVIEW_COL.ATRASADO }}>{overview.table.overdue}</TableHead>
-                <TableHead className={TABLE_HEAD_BASE} style={{ width: OVERVIEW_COL.ACOES, minWidth: OVERVIEW_COL.ACOES }}>{overview.table.actions}</TableHead>
+                <TableHead
+                  className={`${TABLE_HEAD_BASE} ${STICKY_HEADER}`}
+                  style={{
+                    ...STICKY_SHADOW,
+                    width: OVERVIEW_COL.ALUNO,
+                    minWidth: OVERVIEW_COL.ALUNO,
+                  }}
+                >
+                  {overview.table.student}
+                </TableHead>
+                <TableHead
+                  className={TABLE_HEAD_BASE}
+                  style={{
+                    width: OVERVIEW_COL.ENTRADA,
+                    minWidth: OVERVIEW_COL.ENTRADA,
+                  }}
+                >
+                  {overview.table.entry}
+                </TableHead>
+                <TableHead
+                  className={TABLE_HEAD_BASE}
+                  style={{
+                    width: OVERVIEW_COL.AULAS,
+                    minWidth: OVERVIEW_COL.AULAS,
+                  }}
+                >
+                  {overview.table.classes}
+                </TableHead>
+                <TableHead
+                  className={TABLE_HEAD_BASE}
+                  style={{
+                    width: OVERVIEW_COL.FREQUENCIA,
+                    minWidth: OVERVIEW_COL.FREQUENCIA,
+                  }}
+                >
+                  {overview.table.frequency}
+                </TableHead>
+                <TableHead
+                  className={TABLE_HEAD_BASE}
+                  style={{
+                    width: OVERVIEW_COL.MEDIA,
+                    minWidth: OVERVIEW_COL.MEDIA,
+                  }}
+                >
+                  {overview.table.average}
+                </TableHead>
+                <TableHead
+                  className={TABLE_HEAD_BASE}
+                  style={{
+                    width: OVERVIEW_COL.PAGO,
+                    minWidth: OVERVIEW_COL.PAGO,
+                  }}
+                >
+                  {overview.table.paid}
+                </TableHead>
+                <TableHead
+                  className={TABLE_HEAD_BASE}
+                  style={{
+                    width: OVERVIEW_COL.PENDENTE,
+                    minWidth: OVERVIEW_COL.PENDENTE,
+                  }}
+                >
+                  {overview.table.pending}
+                </TableHead>
+                <TableHead
+                  className={TABLE_HEAD_BASE}
+                  style={{
+                    width: OVERVIEW_COL.ATRASADO,
+                    minWidth: OVERVIEW_COL.ATRASADO,
+                  }}
+                >
+                  {overview.table.overdue}
+                </TableHead>
+                <TableHead
+                  className={TABLE_HEAD_BASE}
+                  style={{
+                    width: OVERVIEW_COL.ACOES,
+                    minWidth: OVERVIEW_COL.ACOES,
+                  }}
+                >
+                  {overview.table.actions}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -113,20 +113,6 @@ export type Database = {
             foreignKeyName: "activities_student_id_fkey";
             columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["student_id"];
-          },
-          {
-            foreignKeyName: "activities_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["student_id"];
-          },
-          {
-            foreignKeyName: "activities_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
             referencedRelation: "students";
             referencedColumns: ["id"];
           },
@@ -157,20 +143,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "students_with_stats";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "activities_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "activities_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["teacher_id"];
           },
           {
             foreignKeyName: "activities_teacher_id_fkey";
@@ -288,20 +260,6 @@ export type Database = {
             foreignKeyName: "class_logs_student_id_fkey";
             columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["student_id"];
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["student_id"];
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
             referencedRelation: "students";
             referencedColumns: ["id"];
           },
@@ -332,20 +290,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "students_with_stats";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "class_logs_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "class_logs_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["teacher_id"];
           },
           {
             foreignKeyName: "class_logs_teacher_id_fkey";
@@ -405,25 +349,11 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "financial_record_class_logs_class_log_id_fkey";
-            columns: ["class_log_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["class_log_id"];
-          },
-          {
             foreignKeyName: "financial_record_class_logs_financial_record_id_fkey";
             columns: ["financial_record_id"];
             isOneToOne: false;
             referencedRelation: "class_logs_with_billing";
             referencedColumns: ["financial_record_id"];
-          },
-          {
-            foreignKeyName: "financial_record_class_logs_financial_record_id_fkey";
-            columns: ["financial_record_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["id"];
           },
           {
             foreignKeyName: "financial_record_class_logs_financial_record_id_fkey";
@@ -508,25 +438,11 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "financial_records_class_log_id_fkey";
-            columns: ["class_log_id"];
+            foreignKeyName: "financial_records_confirmed_by_profiles_fkey";
+            columns: ["confirmed_by_user_id"];
             isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["class_log_id"];
-          },
-          {
-            foreignKeyName: "financial_records_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["student_id"];
-          },
-          {
-            foreignKeyName: "financial_records_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["student_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
           },
           {
             foreignKeyName: "financial_records_student_id_fkey";
@@ -652,20 +568,6 @@ export type Database = {
             foreignKeyName: "profiles_student_id_fkey";
             columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["student_id"];
-          },
-          {
-            foreignKeyName: "profiles_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["student_id"];
-          },
-          {
-            foreignKeyName: "profiles_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
             referencedRelation: "students";
             referencedColumns: ["id"];
           },
@@ -696,20 +598,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "students_with_stats";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "profiles_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "profiles_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["teacher_id"];
           },
           {
             foreignKeyName: "profiles_teacher_id_fkey";
@@ -778,7 +666,7 @@ export type Database = {
           phone: string | null;
           state: string | null;
           status: string | null;
-          teacher_id: string | null;
+          teacher_id: string;
           updated_at: string | null;
         };
         Insert: {
@@ -797,7 +685,7 @@ export type Database = {
           phone?: string | null;
           state?: string | null;
           status?: string | null;
-          teacher_id?: string | null;
+          teacher_id: string;
           updated_at?: string | null;
         };
         Update: {
@@ -816,24 +704,10 @@ export type Database = {
           phone?: string | null;
           state?: string | null;
           status?: string | null;
-          teacher_id?: string | null;
+          teacher_id?: string;
           updated_at?: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: "students_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "students_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
           {
             foreignKeyName: "students_teacher_id_fkey";
             columns: ["teacher_id"];
@@ -902,60 +776,8 @@ export type Database = {
         };
         Relationships: [];
       };
-      user_roles: {
-        Row: {
-          created_at: string | null;
-          email: string | null;
-          full_name: string | null;
-          id: string;
-          role: string;
-          updated_at: string | null;
-          user_id: string;
-        };
-        Insert: {
-          created_at?: string | null;
-          email?: string | null;
-          full_name?: string | null;
-          id?: string;
-          role: string;
-          updated_at?: string | null;
-          user_id: string;
-        };
-        Update: {
-          created_at?: string | null;
-          email?: string | null;
-          full_name?: string | null;
-          id?: string;
-          role?: string;
-          updated_at?: string | null;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
     };
     Views: {
-      activities_dashboard: {
-        Row: {
-          created_at: string | null;
-          description: string | null;
-          due_date: string | null;
-          file_name: string | null;
-          file_url: string | null;
-          grade: number | null;
-          id: string | null;
-          status: string | null;
-          student_email: string | null;
-          student_id: string | null;
-          student_name: string | null;
-          student_phone: string | null;
-          teacher_email: string | null;
-          teacher_id: string | null;
-          teacher_name: string | null;
-          title: string | null;
-          updated_at: string | null;
-        };
-        Relationships: [];
-      };
       class_logs_with_billing: {
         Row: {
           attendance: boolean | null;
@@ -982,20 +804,6 @@ export type Database = {
           updated_at: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: "class_logs_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["student_id"];
-          },
-          {
-            foreignKeyName: "class_logs_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["student_id"];
-          },
           {
             foreignKeyName: "class_logs_student_id_fkey";
             columns: ["student_id"];
@@ -1035,20 +843,6 @@ export type Database = {
             foreignKeyName: "class_logs_teacher_id_fkey";
             columns: ["teacher_id"];
             isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "class_logs_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "class_logs_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
             referencedRelation: "teachers";
             referencedColumns: ["id"];
           },
@@ -1067,28 +861,6 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
-      };
-      financial_dashboard: {
-        Row: {
-          amount: number | null;
-          class_date: string | null;
-          class_log_id: string | null;
-          created_at: string | null;
-          description: string | null;
-          due_date: string | null;
-          id: string | null;
-          paid_at: string | null;
-          payment_method: string | null;
-          status: string | null;
-          student_email: string | null;
-          student_id: string | null;
-          student_name: string | null;
-          teacher_email: string | null;
-          teacher_id: string | null;
-          teacher_name: string | null;
-          updated_at: string | null;
-        };
-        Relationships: [];
       };
       students_active: {
         Row: {
@@ -1149,20 +921,6 @@ export type Database = {
           updated_at?: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: "students_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "students_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
           {
             foreignKeyName: "students_teacher_id_fkey";
             columns: ["teacher_id"];
@@ -1249,20 +1007,6 @@ export type Database = {
             foreignKeyName: "students_teacher_id_fkey";
             columns: ["teacher_id"];
             isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "students_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "students_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
             referencedRelation: "teachers";
             referencedColumns: ["id"];
           },
@@ -1345,20 +1089,6 @@ export type Database = {
             foreignKeyName: "students_teacher_id_fkey";
             columns: ["teacher_id"];
             isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "students_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "students_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
             referencedRelation: "teachers";
             referencedColumns: ["id"];
           },
@@ -1407,20 +1137,6 @@ export type Database = {
           updated_at: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: "students_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "activities_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
-          {
-            foreignKeyName: "students_teacher_id_fkey";
-            columns: ["teacher_id"];
-            isOneToOne: false;
-            referencedRelation: "financial_dashboard";
-            referencedColumns: ["teacher_id"];
-          },
           {
             foreignKeyName: "students_teacher_id_fkey";
             columns: ["teacher_id"];
@@ -1568,32 +1284,20 @@ export type Database = {
         };
         Returns: undefined;
       };
-      get_activity_status_info: {
-        Args: { p_activity_id: string };
-        Returns: {
-          activity_id: string;
-          delivered_at: string;
-          due_date: string;
-          is_on_time: boolean;
-          server_time: string;
-          status: string;
-          title: string;
-        }[];
-      };
       get_class_logs_summary: {
-        Args: { p_teacher_id?: string | null };
+        Args: { p_teacher_id?: string };
         Returns: Json;
       };
       get_financial_summary: {
         Args: { p_teacher_id?: string };
         Returns: {
-          total_paid: number;
-          total_pending: number;
-          total_overdue: number;
-          total_receivable: number;
+          count_overdue: number;
           count_paid: number;
           count_pending: number;
-          count_overdue: number;
+          total_overdue: number;
+          total_paid: number;
+          total_pending: number;
+          total_receivable: number;
         }[];
       };
       get_rate_limit_info: {
@@ -1607,10 +1311,10 @@ export type Database = {
       get_rate_limit_summary: {
         Args: { p_window_hours?: number };
         Returns: {
+          max_per_user: number;
           operation: string;
           total_requests: number;
           unique_users: number;
-          max_per_user: number;
           window_start: string;
         }[];
       };
@@ -1641,7 +1345,6 @@ export type Database = {
         Args: { p_user_id: string };
         Returns: undefined;
       };
-      is_activity_on_time: { Args: { p_due_date: string }; Returns: boolean };
       is_admin: { Args: never; Returns: boolean };
       is_student: { Args: never; Returns: boolean };
       is_teacher: { Args: never; Returns: boolean };

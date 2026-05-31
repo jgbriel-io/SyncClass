@@ -23,21 +23,34 @@ export function MetricCard({
   const isPositive = change && change >= 0;
 
   return (
-    <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm font-medium text-muted-foreground">
+    <div className="rounded-xl border bg-card p-3 tablet:p-5 shadow-card hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1 tablet:space-y-2 min-w-0 flex-1">
+          <p className="text-xs tablet:text-sm font-medium text-muted-foreground leading-tight">
             {title}
           </p>
-          <p className="text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight">
-            {value}
-          </p>
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <p className="text-xl tablet:text-2xl font-bold tracking-tight">
+              {value}
+            </p>
+            {change !== undefined && (
+              <span
+                className={cn(
+                  "text-xs font-semibold tablet:hidden",
+                  isPositive ? "text-success" : "text-destructive"
+                )}
+              >
+                {isPositive ? "+" : ""}
+                {change}%
+              </span>
+            )}
+          </div>
           {change !== undefined && (
-            <div className="flex items-center gap-1">
+            <div className="hidden tablet:flex items-center gap-1 flex-wrap">
               {isPositive ? (
-                <ArrowUpRight className="h-4 w-4 text-success" />
+                <ArrowUpRight className="h-4 w-4 text-success shrink-0" />
               ) : (
-                <ArrowDownRight className="h-4 w-4 text-destructive" />
+                <ArrowDownRight className="h-4 w-4 text-destructive shrink-0" />
               )}
               <span
                 className={cn(
@@ -49,13 +62,20 @@ export function MetricCard({
                 {change}%
               </span>
               {changeLabel && (
-                <span className="text-xs text-muted-foreground">{changeLabel}</span>
+                <span className="text-xs text-muted-foreground">
+                  {changeLabel}
+                </span>
               )}
             </div>
           )}
         </div>
-        <div className={cn("h-11 w-11 rounded-xl flex items-center justify-center", iconBg)}>
-          <Icon className={cn("h-5 w-5", iconColor)} />
+        <div
+          className={cn(
+            "h-8 w-8 tablet:h-11 tablet:w-11 rounded-lg tablet:rounded-xl flex items-center justify-center shrink-0",
+            iconBg
+          )}
+        >
+          <Icon className={cn("h-4 w-4 tablet:h-5 tablet:w-5", iconColor)} />
         </div>
       </div>
     </div>

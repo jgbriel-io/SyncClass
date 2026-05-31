@@ -20,7 +20,6 @@ import {
 import { COL } from "./ClassesTableRow.constants";
 import { classes as classesContent } from "@/content";
 
-// Helper functions
 function formatClassDateAndTime(log: {
   class_date: string;
   start_at?: string | null;
@@ -83,14 +82,12 @@ function getClassLogDisplayTitle(log: {
   const rawTitle = log.title?.trim();
   const isPackage = log.financial_record_via_package;
 
-  // Se tem título customizado
   if (rawTitle) {
     return isPackage
       ? `${rawTitle} (${classesContent.packageDialog.title})`
       : rawTitle;
   }
 
-  // Fallback: "Aula - data"
   const d = log.class_date
     ? format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", {
         locale: ptBR,
@@ -117,6 +114,7 @@ interface ClassesTableRowProps {
   onDelete: (log: ClassLogWithStudent) => void;
   onEvaluate: (log: ClassLogWithStudent) => void;
   isEvaluationBlocked: boolean;
+  isAdmin?: boolean;
 }
 
 export function ClassesTableRow({
@@ -129,6 +127,7 @@ export function ClassesTableRow({
   onDelete,
   onEvaluate,
   isEvaluationBlocked,
+  isAdmin = false,
 }: ClassesTableRowProps) {
   const lastUpdatedAt = log.updated_at;
   const { date, timeRange } = formatClassDateAndTime(log);
@@ -155,7 +154,6 @@ export function ClassesTableRow({
 
   return (
     <tr className="group hover:bg-muted/30 transition-colors">
-      {/* Status */}
       <td
         className="px-2 py-2 align-middle whitespace-nowrap"
         style={{ width: "1%" }}
@@ -165,7 +163,6 @@ export function ClassesTableRow({
         </StatusBadge>
       </td>
 
-      {/* Aluno (sticky) - XL */}
       <td
         className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`}
         style={STICKY_SHADOW}
@@ -195,7 +192,6 @@ export function ClassesTableRow({
         </div>
       </td>
 
-      {/* Informações / Título - L */}
       <td
         className={CELL_BASE}
         style={{ width: COL.INFORMACOES, minWidth: COL.INFORMACOES }}
@@ -225,7 +221,6 @@ export function ClassesTableRow({
         )}
       </td>
 
-      {/* Data - M */}
       <td
         className={`${CELL_BASE} tabular-nums`}
         style={{ width: COL.DATA, minWidth: COL.DATA }}
@@ -242,7 +237,6 @@ export function ClassesTableRow({
         </div>
       </td>
 
-      {/* Duração - S */}
       <td
         className={`${CELL_BASE} tabular-nums`}
         style={{ width: COL.DURACAO, minWidth: COL.DURACAO }}
@@ -255,7 +249,6 @@ export function ClassesTableRow({
         </span>
       </td>
 
-      {/* Nota - M */}
       <td
         className={`${CELL_BASE} tabular-nums`}
         style={{ width: COL.NOTA, minWidth: COL.NOTA }}
@@ -280,7 +273,6 @@ export function ClassesTableRow({
         </span>
       </td>
 
-      {/* Financeiro - M */}
       <td
         className={CELL_BASE}
         style={{ width: COL.FINANCEIRO, minWidth: COL.FINANCEIRO }}
@@ -296,41 +288,34 @@ export function ClassesTableRow({
         )}
       </td>
 
-      {/* Botão de avaliar - S */}
-      <td
-        className={CELL_BASE}
-        style={{ width: COL.AVALIAR, minWidth: COL.AVALIAR }}
-      >
-        <div className="flex items-center justify-end">
-          <Button
-            size="sm"
-            className={`h-8 w-[7rem] shrink-0 border-none text-xs ${
-              isEvaluationBlocked && log.attendance == null
-                ? "bg-muted text-muted-foreground cursor-not-allowed"
-                : log.attendance != null
-                  ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
-                  : "bg-success-action text-white hover:bg-success-action/90"
-            }`}
-            disabled={isEvaluationBlocked && log.attendance == null}
-            onClick={() => onEvaluate(log)}
-            title={
-              isEvaluationBlocked && log.attendance == null
+      {!isAdmin && (
+        <td
+          className={CELL_BASE}
+          style={{ width: COL.AVALIAR, minWidth: COL.AVALIAR }}
+        >
+          <div className="flex items-center justify-end">
+            <Button
+              size="sm"
+              className={`h-8 w-[7rem] shrink-0 border-none text-xs ${
+                isEvaluationBlocked && log.attendance == null
+                  ? "bg-muted text-muted-foreground cursor-not-allowed"
+                  : log.attendance != null
+                    ? "bg-warning text-white font-semibold hover:bg-warning/90 shadow"
+                    : "bg-success-action text-white hover:bg-success-action/90"
+              }`}
+              disabled={isEvaluationBlocked && log.attendance == null}
+              onClick={() => onEvaluate(log)}
+            >
+              {isEvaluationBlocked && log.attendance == null
                 ? classesContent.tableRow.evaluate
                 : log.attendance != null
                   ? classesContent.tableRow.update
-                  : classesContent.tableRow.evaluate
-            }
-          >
-            {isEvaluationBlocked && log.attendance == null
-              ? classesContent.tableRow.evaluate
-              : log.attendance != null
-                ? classesContent.tableRow.update
-                : classesContent.tableRow.evaluate}
-          </Button>
-        </div>
-      </td>
+                  : classesContent.tableRow.evaluate}
+            </Button>
+          </div>
+        </td>
+      )}
 
-      {/* Ações - XS */}
       <td
         className={CELL_BASE}
         style={{ width: COL.ACOES, minWidth: COL.ACOES }}
@@ -345,26 +330,28 @@ export function ClassesTableRow({
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(log)}>
-                <Pencil className="h-4 w-4 mr-2" />
-                {classesContent.tableRow.edit}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => onDelete(log)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {classesContent.tableRow.delete}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {!isAdmin && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(log)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  {classesContent.tableRow.edit}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => onDelete(log)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {classesContent.tableRow.delete}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </td>
     </tr>

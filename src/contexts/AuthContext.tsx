@@ -42,14 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserRole = async (userId: string): Promise<UserRole> => {
     try {
-      const { data: roleData, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (!roleError && roleData?.role) return roleData.role as UserRole;
-
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("role, teacher_id, must_change_password, deleted_at, active")

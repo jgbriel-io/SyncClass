@@ -1,6 +1,5 @@
 ﻿import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GraduationCap, Loader2, ArrowLeft } from "lucide-react";
@@ -22,9 +21,12 @@ export default function ForgotPassword() {
     try {
       const { supabase } = await import("@/integrations/supabase/client");
       const redirectTo = `${window.location.origin}/redefinir-senha`;
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo,
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo,
+        }
+      );
       if (error) {
         toast.error(error.message);
         setIsLoading(false);
@@ -51,46 +53,49 @@ export default function ForgotPassword() {
             <span className="text-base font-semibold">{common.app.name}</span>
           </div>
           <div className="space-y-6 max-w-md">
-            <h1 className="text-4xl font-bold tracking-tight">{auth.forgotPassword.pageTitle}</h1>
+            <h1 className="text-4xl font-bold tracking-tight">
+              {auth.forgotPassword.pageTitle}
+            </h1>
             <p className="text-lg text-primary-foreground/80">
               {auth.forgotPassword.pageSubtitle}
             </p>
           </div>
-          <p className="text-sm text-primary-foreground/60">{common.app.copyright(2026)}</p>
+          <p className="text-sm text-primary-foreground/60">
+            {common.app.copyright(2026)}
+          </p>
         </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className={`w-full max-w-sm ${stack('RELAXED')}`}>
+        <div className={`w-full max-w-sm ${stack("RELAXED")}`}>
           <div className="lg:hidden flex justify-center">
-            <Link to="/login" className={`flex items-center ${gap('TIGHT')} text-muted-foreground hover:text-foreground`}>
-              <GraduationCap className={iconSize('XL')} />
-              <span className={`${typography('H2')} font-semibold`}>{common.app.name}</span>
+            <Link
+              to="/login"
+              className={`flex items-center ${gap("TIGHT")} text-muted-foreground hover:text-foreground`}
+            >
+              <GraduationCap className={iconSize("XL")} />
+              <span className={`${typography("H2")} font-semibold`}>
+                {common.app.name}
+              </span>
             </Link>
           </div>
 
-          <div className={stack('TIGHT')}>
-            <h2 className={typography('H2')}>{auth.forgotPassword.title}</h2>
-            <p className={typography('SMALL')}>
+          <div className={stack("TIGHT")}>
+            <h2 className={typography("H2")}>{auth.forgotPassword.title}</h2>
+            <p className={typography("SMALL")}>
               {auth.forgotPassword.subtitle}
             </p>
           </div>
 
           {sent ? (
-            <div className={`${stack('LOOSE')} rounded-lg border bg-muted/30 p-4`}>
-              <p className={typography('SMALL')}>
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <p className={typography("SMALL")}>
                 {auth.forgotPassword.sentMessage}
               </p>
-              <Button variant="outline" className="w-full" asChild>
-                <Link to="/login">
-                  <ArrowLeft className={`mr-2 ${iconSize('SM')}`} />
-                  {auth.forgotPassword.backToLogin}
-                </Link>
-              </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className={stack('RELAXED')}>
-              <div className={stack('TIGHT')}>
+            <form onSubmit={handleSubmit} className={stack("RELAXED")}>
+              <div className={stack("TIGHT")}>
                 <Label htmlFor="email">{auth.forgotPassword.emailLabel}</Label>
                 <Input
                   id="email"
@@ -103,10 +108,16 @@ export default function ForgotPassword() {
                   disabled={isLoading}
                 />
               </div>
-              <Button type="submit" className="w-full h-11" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full h-11"
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <>
-                    <Loader2 className={`mr-2 ${iconSize('SM')} animate-spin`} />
+                    <Loader2
+                      className={`mr-2 ${iconSize("SM")} animate-spin`}
+                    />
                     {auth.forgotPassword.submitting}
                   </>
                 ) : (
@@ -117,8 +128,11 @@ export default function ForgotPassword() {
           )}
 
           <p className="text-center">
-            <Link to="/login" className={`${typography('SMALL')} hover:text-foreground inline-flex items-center ${gap('TIGHT')}`}>
-              <ArrowLeft className={iconSize('SM')} />
+            <Link
+              to="/login"
+              className={`${typography("SMALL")} hover:text-foreground inline-flex items-center ${gap("TIGHT")}`}
+            >
+              <ArrowLeft className={iconSize("SM")} />
               {auth.forgotPassword.backToLogin}
             </Link>
           </p>

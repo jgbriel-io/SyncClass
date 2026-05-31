@@ -60,7 +60,7 @@ export function UserFormDialog({
 }: UserFormDialogProps) {
   const isEdit = !!user;
   const [selectedRole, setSelectedRole] = useState<AppRole>(
-    (user?.role?.role as AppRole) || "admin"
+    (user?.role as AppRole) || "admin"
   );
 
   // Student state
@@ -145,7 +145,7 @@ export function UserFormDialog({
   useEffect(() => {
     if (!open) return;
     if (user) {
-      const userRole = (user.role?.role as AppRole) || "admin";
+      const userRole = (user.role as AppRole) || "admin";
       setSelectedRole(userRole);
       if (userRole === "admin") {
         reset({
@@ -174,6 +174,7 @@ export function UserFormDialog({
         setSelectedStatus((s.status as StudentStatus) || "ativo");
         setSelectedCountry(s.country || "Brasil");
         setSelectedState(s.state || "");
+        setSelectedTeacherId(s.teacher_id || "");
         setValue("country", s.country || "Brasil", { shouldValidate: false });
       } else if (userRole === "teacher" && user.teacher) {
         const t = user.teacher;

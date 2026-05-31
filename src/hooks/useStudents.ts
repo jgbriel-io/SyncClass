@@ -13,6 +13,7 @@ import type {
   TablesUpdate,
 } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { students as studentsContent } from "@/content";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 import { logger } from "@/lib/logger";
 import { sanitizeStudentUpdateForEdit } from "@/lib/utils/sanitizeStudentUpdate";
@@ -22,7 +23,7 @@ const DEFAULT_PAGE_SIZE = 10;
 
 export type StudentsListFilters = {
   teacherId?: string;
-  status?: "all" | "ativo" | "inativo";
+  status?: "all" | "ativo" | "inativo" | "anonimizados";
   sortBy?:
     | "name_asc"
     | "name_desc"
@@ -55,6 +56,7 @@ export function useStudents() {
       const { data, error } = await supabase
         .from("students_masked")
         .select("*")
+        .eq("is_deleted", false)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -91,15 +93,16 @@ export function useStudentsPaginated(
   const query = useQuery({
     queryKey: [QK.STUDENTS_PAGINATED, page, pageSize, filters],
     queryFn: async () => {
-      // Usar students_with_stats para ter estatísticas calculadas
+      const isAnonymizedFilter = filters?.status === "anonimizados";
       let q = supabase
         .from("students_with_stats")
-        .select("*", { count: "exact" });
+        .select("*", { count: "exact" })
+        .eq("is_deleted", isAnonymizedFilter);
 
       if (filters?.teacherId && filters.teacherId !== "all") {
         q = q.eq("teacher_id", filters.teacherId);
       }
-      if (filters?.status && filters.status !== "all") {
+      if (!isAnonymizedFilter && filters?.status && filters.status !== "all") {
         q = q.eq("status", filters.status);
       }
 
@@ -307,6 +310,13 @@ export function useUpdateStudent() {
 
       await syncStudentProfiles(data as Student);
 
+      if (safeUpdates.name) {
+        await supabase.rpc("teacher_sync_student_display_name", {
+          p_student_id: id,
+          p_name: safeUpdates.name,
+        });
+      }
+
       if (payDayChanged && oldPayDay !== newPayDay && newPayDay !== null) {
         if (newPayDay < 1 || newPayDay > 31) {
           throw new Error("Dia de pagamento deve estar entre 1 e 31");
@@ -487,32 +497,43 @@ export function useHardDeleteStudent() {
         .eq("student_id", id)
         .maybeSingle();
 
-      // 3) Delete the student record (CASCADE removes class_logs + financial_records)
-      const { error } = await supabase.from("students").delete().eq("id", id);
+      // 3) Anonymize student data (LGPD) — keeps row so class_logs/activities/financial_records remain linked
+      const anonymizedName = `Aluno ${id.slice(0, 8)}`;
+      const { error: anonError } = await supabase
+        .from("students")
+        .update({
+          is_deleted: true,
+          anonymized_at: new Date().toISOString(),
+          name: anonymizedName,
+          email: null,
+          phone: null,
+          birth_date: null,
+          city: null,
+          state: null,
+          country: null,
+        })
+        .eq("id", id);
 
-      if (error) throw error;
+      if (anonError) throw anonError;
 
-      // 4) If there's a linked user, soft delete the profile instead of hard delete
+      // 4) Soft delete profile + delete auth account
       if (linkedProfile?.user_id) {
-        // Mark profile as deleted (soft delete for audit trail)
-        // Limpar email para permitir reutilização em novos cadastros
         const { error: profileError } = await supabase
           .from("profiles")
           .update({
             deleted_at: new Date().toISOString(),
             active: false,
-            student_id: null, // Remove link
-            email: null, // Limpar email para permitir reutilização
+            student_id: null,
+            email: null,
           })
           .eq("user_id", linkedProfile.user_id);
 
         if (profileError) {
           toast.warning(
-            "Aluno removido. O perfil de usuário não pôde ser marcado como deletado."
+            studentsContent.deleteDialog.toasts.warnProfileNotDeleted
           );
         }
 
-        // Delete auth account
         const { data, error: fnError } = await supabase.functions.invoke(
           "admin-delete-user",
           {
@@ -522,7 +543,7 @@ export function useHardDeleteStudent() {
         const msg = (data as { error?: string } | null)?.error;
         if (fnError || msg) {
           toast.warning(
-            "Aluno removido. A conta de acesso vinculada não pôde ser excluída — remova manualmente se necessário."
+            studentsContent.deleteDialog.toasts.warnAccountNotDeleted
           );
         }
       }

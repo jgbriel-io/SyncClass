@@ -33,30 +33,29 @@ Todas com `SECURITY DEFINER` para bypassar o RLS das próprias tabelas que consu
 
 **Responsabilidade:** Verifica se usuário autenticado é admin.
 
+> ⚠️ Corrigido na migration 52: body anterior usava `WHERE user_id = auth.uid()` (sem cast) causando type mismatch silent. Cast `::text` é obrigatório pois `profiles.user_id` é `varchar`.
+
 **Implementação:**
 
 ```sql
-CREATE OR REPLACE FUNCTION is_admin()
+CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN
-LANGUAGE plpgsql
+LANGUAGE sql
+STABLE
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
-BEGIN
-  RETURN EXISTS (
+  SELECT EXISTS (
     SELECT 1 FROM profiles
-    WHERE user_id = auth.uid()
+    WHERE user_id::text = (auth.uid())::text
     AND role = 'admin'
-    AND active = true
   );
-END;
 $$;
 ```
 
 **Uso:**
 
 ```sql
--- Policy: admin pode ver todos os alunos
 CREATE POLICY "admin_select_students" ON students
   FOR SELECT USING (is_admin());
 ```
@@ -65,35 +64,32 @@ CREATE POLICY "admin_select_students" ON students
 
 **Responsabilidade:** Verifica se usuário autenticado é professor.
 
+> ⚠️ Corrigido na migration 52: body anterior fazia `SELECT 1 FROM teachers WHERE id = auth.uid()` — comparava `teachers.id` (UUID de domínio) com `auth.uid()` (UUID do auth user). Nunca coincidem. Resultado: todo professor via 0 alunos e 0 dados via RLS.
+
 **Implementação:**
 
 ```sql
-CREATE OR REPLACE FUNCTION is_teacher()
+CREATE OR REPLACE FUNCTION public.is_teacher()
 RETURNS BOOLEAN
-LANGUAGE plpgsql
+LANGUAGE sql
+STABLE
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
-BEGIN
-  RETURN EXISTS (
+  SELECT EXISTS (
     SELECT 1 FROM profiles
-    WHERE user_id = auth.uid()
+    WHERE user_id::text = (auth.uid())::text
     AND role = 'teacher'
-    AND active = true
   );
-END;
 $$;
 ```
 
 **Uso:**
 
 ```sql
--- Policy: professor pode ver seus próprios alunos
-CREATE POLICY "teacher_select_students" ON students
+CREATE POLICY "students_teacher_select" ON students
   FOR SELECT USING (
-    teacher_id IN (
-      SELECT teacher_id FROM profiles WHERE user_id = auth.uid()
-    )
+    (SELECT is_teacher()) AND teacher_id = (SELECT get_teacher_id())
   );
 ```
 
@@ -104,38 +100,64 @@ CREATE POLICY "teacher_select_students" ON students
 **Implementação:**
 
 ```sql
-CREATE OR REPLACE FUNCTION is_student()
+CREATE OR REPLACE FUNCTION public.is_student()
 RETURNS BOOLEAN
-LANGUAGE plpgsql
+LANGUAGE sql
+STABLE
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
-BEGIN
-  RETURN EXISTS (
+  SELECT EXISTS (
     SELECT 1 FROM profiles
-    WHERE user_id = auth.uid()
+    WHERE user_id::text = (auth.uid())::text
     AND role = 'student'
-    AND active = true
   );
-END;
 $$;
 ```
 
-**Uso:**
+### get_teacher_id()
+
+**Responsabilidade:** Retorna o `teachers.id` vinculado ao usuário autenticado.
+
+> ⚠️ Corrigido na migration 51: body anterior usava `WHERE user_id = auth.uid()` sem cast → retornava NULL → RLS `teacher_id = get_teacher_id()` sempre falso.
+
+**Implementação:**
 
 ```sql
--- Policy: aluno pode ver suas próprias atividades
-CREATE POLICY "student_select_activities" ON activities
-  FOR SELECT USING (
-    student_id IN (
-      SELECT student_id FROM profiles WHERE user_id = auth.uid()
-    )
-  );
+CREATE OR REPLACE FUNCTION public.get_teacher_id()
+RETURNS UUID
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT teacher_id FROM profiles WHERE user_id::text = (auth.uid())::text LIMIT 1;
+$$;
+```
+
+### get_student_id()
+
+**Responsabilidade:** Retorna o `students.id` vinculado ao usuário autenticado.
+
+> ⚠️ Corrigido na migration 51 (mesmo problema de cast) e migration 47 (body anterior comparava `students.id = auth.uid()` em vez de usar profiles).
+
+**Implementação:**
+
+```sql
+CREATE OR REPLACE FUNCTION public.get_student_id()
+RETURNS UUID
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT student_id FROM profiles WHERE user_id::text = (auth.uid())::text LIMIT 1;
+$$;
 ```
 
 ## Políticas por tabela
 
-### profiles / user_roles
+### profiles
 
 **SELECT:**
 

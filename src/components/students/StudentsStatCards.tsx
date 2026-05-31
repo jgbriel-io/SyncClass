@@ -14,25 +14,58 @@ interface StudentsStatCardsProps {
 
 export function StudentsStatCards({ stats }: StudentsStatCardsProps) {
   const cards = [
-    { label: studentsContent.view.statTotal, value: stats.totalStudents, icon: Users, color: "text-primary", bg: "bg-primary/10" },
-    { label: studentsContent.view.statActive, value: stats.activeStudents, icon: UserCheck, color: "text-success", bg: "bg-success/10" },
-    { label: studentsContent.view.statInactive, value: stats.inactiveStudents, icon: UserX, color: "text-muted-foreground", bg: "bg-muted" },
-    { label: studentsContent.view.statNew, value: stats.newStudentsThisMonth, icon: TrendingUp, color: "text-primary", bg: "bg-primary/10" },
+    {
+      label: studentsContent.view.statTotal,
+      value: stats.totalStudents,
+      icon: Users,
+      color: "text-primary",
+      bg: "bg-primary/10",
+    },
+    {
+      label: studentsContent.view.statActive,
+      value: stats.activeStudents,
+      icon: UserCheck,
+      color: "text-success",
+      bg: "bg-success/10",
+    },
+    {
+      label: studentsContent.view.statInactive,
+      value: stats.inactiveStudents,
+      icon: UserX,
+      color: "text-muted-foreground",
+      bg: "bg-muted",
+    },
+    {
+      label: studentsContent.view.statNew,
+      value: stats.newStudentsThisMonth,
+      icon: TrendingUp,
+      color: "text-primary",
+      bg: "bg-primary/10",
+    },
   ];
 
   return (
-    <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
+    <div className="grid gap-4 grid-cols-2 laptop:grid-cols-4">
       {cards.map(({ label, value, icon: Icon, color, bg }) => (
-        <div key={label} className="rounded-xl border bg-card p-5 shadow-card hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">{label}</p>
-              <p className={`text-2xl mobile:text-xl tablet:text-xl laptop:text-xl desktop:text-2xl font-bold tracking-tight ${color}`}>
+        <div
+          key={label}
+          className="rounded-xl border bg-card p-3 tablet:p-5 shadow-card hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="space-y-1 tablet:space-y-2 min-w-0 flex-1">
+              <p className="text-xs font-medium text-muted-foreground leading-tight">
+                {label}
+              </p>
+              <p
+                className={`text-xl tablet:text-2xl font-bold tracking-tight ${color}`}
+              >
                 {value}
               </p>
             </div>
-            <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${bg}`}>
-              <Icon className={`h-5 w-5 ${color}`} />
+            <div
+              className={`h-8 w-8 tablet:h-11 tablet:w-11 rounded-lg tablet:rounded-xl flex items-center justify-center shrink-0 ${bg}`}
+            >
+              <Icon className={`h-4 w-4 tablet:h-5 tablet:w-5 ${color}`} />
             </div>
           </div>
         </div>

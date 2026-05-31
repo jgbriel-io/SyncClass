@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard } from "./MetricCard";
 import { DashboardFinancialCards } from "./DashboardFinancialCards";
 import { DashboardTodayClasses } from "./DashboardTodayClasses";
@@ -26,7 +27,12 @@ import type { TodayClassesData } from "@/hooks/useTodayClasses";
 import type { ForecastedBilling } from "@/hooks/useForecastedBilling";
 import { dashboard } from "@/content";
 
-import type { ChartMonthsFilter, ChartLineFilterAdmin, ChartLineFilterTeacher, ChartDataPoint } from "./DashboardGrowthChart";
+import type {
+  ChartMonthsFilter,
+  ChartLineFilterAdmin,
+  ChartLineFilterTeacher,
+  ChartDataPoint,
+} from "./DashboardGrowthChart";
 
 export interface DashboardStats {
   activeStudents: number;
@@ -73,7 +79,9 @@ interface DashboardViewProps {
   chartMonths?: ChartMonthsFilter;
   onChartMonthsChange?: (v: ChartMonthsFilter) => void;
   chartLines?: ChartLineFilterAdmin | ChartLineFilterTeacher;
-  onChartLinesChange?: (v: ChartLineFilterAdmin | ChartLineFilterTeacher) => void;
+  onChartLinesChange?: (
+    v: ChartLineFilterAdmin | ChartLineFilterTeacher
+  ) => void;
 }
 
 export function DashboardView({
@@ -97,16 +105,21 @@ export function DashboardView({
 }: DashboardViewProps) {
   const [isQuickActionsExpanded, setIsQuickActionsExpanded] = useState(true);
 
-  const overduePercentage = stats && stats.activeStudents > 0
-    ? ((stats.overdueCount / stats.activeStudents) * 100).toFixed(1)
-    : "0";
+  const overduePercentage =
+    stats && stats.activeStudents > 0
+      ? ((stats.overdueCount / stats.activeStudents) * 100).toFixed(1)
+      : "0";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 tablet:space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">{title}</h1>
-        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground">{subtitle}</p>
+        <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">
+          {title}
+        </h1>
+        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground">
+          {subtitle}
+        </p>
       </div>
 
       {/* Aviso: aulas pendentes de feedback */}
@@ -116,7 +129,9 @@ export function DashboardView({
             <BookOpen className="h-5 w-5 text-warning shrink-0" />
             <p className="text-sm font-medium">
               <span className="font-semibold">{pendingFeedbackCount}</span>{" "}
-              {pendingFeedbackCount === 1 ? dashboard.pendingFeedback.singular : dashboard.pendingFeedback.plural}
+              {pendingFeedbackCount === 1
+                ? dashboard.pendingFeedback.singular
+                : dashboard.pendingFeedback.plural}
             </p>
           </div>
           <Link
@@ -139,7 +154,9 @@ export function DashboardView({
             <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <Zap className="h-4 w-4 text-primary" />
             </div>
-            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">{dashboard.view.quickActionsTitle}</h2>
+            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">
+              {dashboard.view.quickActionsTitle}
+            </h2>
           </div>
           <ChevronDown
             className={cn(
@@ -150,44 +167,78 @@ export function DashboardView({
         </button>
         {isQuickActionsExpanded && (
           <div className="p-6 border-t">
-            <div className="flex flex-wrap gap-6 justify-center sm:justify-start">
-              <Link to={`${basePath}/students`} className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform">
+            <div className="flex flex-wrap gap-6 mobile:flex-col mobile:gap-3">
+              <Link
+                to={`${basePath}/students?action=create`}
+                className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+              >
                 <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Users className="h-4 w-4 text-primary" />
                 </div>
-                <p className="text-sm">{dashboard.view.quickActions.registerStudent}</p>
+                <p className="text-sm">
+                  {dashboard.view.quickActions.registerStudent}
+                </p>
               </Link>
-              <Link to={`${basePath}/classes`} className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform">
+              <Link
+                to={`${basePath}/classes?action=create`}
+                className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+              >
                 <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
                   <GraduationCap className="h-4 w-4 text-success" />
                 </div>
-                <p className="text-sm">{dashboard.view.quickActions.registerClass}</p>
+                <p className="text-sm">
+                  {dashboard.view.quickActions.registerClass}
+                </p>
               </Link>
-              <Link to={`${basePath}/financial`} className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform">
+              <Link
+                to={`${basePath}/financial`}
+                className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+              >
                 <div className="h-9 w-9 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
                   <DollarSign className="h-4 w-4 text-warning" />
                 </div>
-                <p className="text-sm">{dashboard.view.quickActions.viewCharges}</p>
+                <p className="text-sm">
+                  {dashboard.view.quickActions.viewCharges}
+                </p>
               </Link>
-              <Link to={basePath === "/admin" ? "/admin/overview" : "/teacher/overview"} className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform">
+              <Link
+                to={
+                  basePath === "/admin"
+                    ? "/admin/overview"
+                    : "/teacher/overview"
+                }
+                className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+              >
                 <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
                   <TrendingUp className="h-4 w-4 text-accent-foreground" />
                 </div>
-                <p className="text-sm">{dashboard.view.quickActions.overview}</p>
+                <p className="text-sm">
+                  {dashboard.view.quickActions.overview}
+                </p>
               </Link>
               {basePath === "/admin" && (
                 <>
-                  <Link to="/admin/teachers" className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform">
+                  <Link
+                    to="/admin/teachers?action=create"
+                    className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+                  >
                     <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <UserPlus className="h-4 w-4 text-primary" />
                     </div>
-                    <p className="text-sm">{dashboard.view.quickActions.registerTeacher}</p>
+                    <p className="text-sm">
+                      {dashboard.view.quickActions.registerTeacher}
+                    </p>
                   </Link>
-                  <Link to="/admin/users" className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform">
+                  <Link
+                    to="/admin/users?action=create"
+                    className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+                  >
                     <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
                       <Link2 className="h-4 w-4 text-accent-foreground" />
                     </div>
-                    <p className="text-sm">{dashboard.view.quickActions.registerUser}</p>
+                    <p className="text-sm">
+                      {dashboard.view.quickActions.registerUser}
+                    </p>
                   </Link>
                 </>
               )}
@@ -210,69 +261,199 @@ export function DashboardView({
             <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 flex items-center gap-4">
               <Bell className="h-5 w-5 text-primary shrink-0" />
               <p className="text-sm font-medium">
-                {basePath === "/teacher" ? dashboard.nextClass.teacher : dashboard.nextClass.admin}{" "}
+                {basePath === "/teacher"
+                  ? dashboard.nextClass.teacher
+                  : dashboard.nextClass.admin}{" "}
                 {dashboard.nextClass.withStudent}{" "}
-                <span className="font-semibold text-primary">{todayClasses.nextClass.studentName}</span>
-                {todayClasses.nextClass.timeLabel !== dashboard.nextClass.timeUndefined && (
-                  <span className="font-normal"> das {todayClasses.nextClass.timeLabel}</span>
+                <span className="font-semibold text-primary">
+                  {todayClasses.nextClass.studentName}
+                </span>
+                {todayClasses.nextClass.timeLabel !==
+                  dashboard.nextClass.timeUndefined && (
+                  <span className="font-normal">
+                    {" "}
+                    das {todayClasses.nextClass.timeLabel}
+                  </span>
                 )}
               </p>
             </div>
           )}
 
-          {/* Estatísticas */}
-          <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
-            <MetricCard
-              title={dashboard.metrics.activeStudents}
-              value={stats?.activeStudents || 0}
-              change={stats?.newStudentsThisMonth ? Math.round((stats.newStudentsThisMonth / Math.max(stats.activeStudents - stats.newStudentsThisMonth, 1)) * 100) : undefined}
-              changeLabel={dashboard.metrics.activeStudentsChange}
-              icon={Users}
-              iconColor="text-primary"
-              iconBg="bg-primary/10"
-            />
-            <MetricCard
-              title={dashboard.metrics.overdue}
-              value={stats?.overdueCount || 0}
-              changeLabel={dashboard.metrics.overdueChange(overduePercentage)}
-              icon={AlertCircle}
-              iconColor="text-destructive"
-              iconBg="bg-destructive/10"
-            />
-            <MetricCard
-              title={dashboard.metrics.newThisMonth}
-              value={stats?.newStudentsThisMonth || 0}
-              icon={TrendingUp}
-              iconColor="text-success"
-              iconBg="bg-success/10"
-            />
-            <MetricCard
-              title={dashboard.metrics.classesThisMonth}
-              value={stats?.classesThisMonth || 0}
-              icon={GraduationCap}
-              iconColor="text-accent-foreground"
-              iconBg="bg-accent"
-            />
+          {/* Mobile: abas */}
+          <div className="tablet:hidden">
+            <Tabs defaultValue="resumo" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="resumo">
+                  {dashboard.mobileTabs.resumo}
+                </TabsTrigger>
+                <TabsTrigger value="agenda">
+                  {dashboard.mobileTabs.agenda}
+                </TabsTrigger>
+                <TabsTrigger value="grafico">
+                  {dashboard.mobileTabs.grafico}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="resumo" className="space-y-4 mt-0">
+                <div className="grid gap-4 grid-cols-2">
+                  <MetricCard
+                    title={dashboard.metrics.activeStudents}
+                    value={stats?.activeStudents || 0}
+                    change={
+                      stats?.newStudentsThisMonth
+                        ? Math.round(
+                            (stats.newStudentsThisMonth /
+                              Math.max(
+                                stats.activeStudents -
+                                  stats.newStudentsThisMonth,
+                                1
+                              )) *
+                              100
+                          )
+                        : undefined
+                    }
+                    changeLabel={dashboard.metrics.activeStudentsChange}
+                    icon={Users}
+                    iconColor="text-primary"
+                    iconBg="bg-primary/10"
+                  />
+                  <MetricCard
+                    title={dashboard.metrics.overdue}
+                    value={stats?.overdueCount || 0}
+                    changeLabel={dashboard.metrics.overdueChange(
+                      overduePercentage
+                    )}
+                    icon={AlertCircle}
+                    iconColor="text-destructive"
+                    iconBg="bg-destructive/10"
+                  />
+                  <MetricCard
+                    title={dashboard.metrics.newThisMonth}
+                    value={stats?.newStudentsThisMonth || 0}
+                    icon={TrendingUp}
+                    iconColor="text-success"
+                    iconBg="bg-success/10"
+                  />
+                  <MetricCard
+                    title={dashboard.metrics.classesThisMonth}
+                    value={stats?.classesThisMonth || 0}
+                    icon={GraduationCap}
+                    iconColor="text-accent-foreground"
+                    iconBg="bg-accent"
+                  />
+                </div>
+                <DashboardFinancialCards
+                  financialSummary={financialSummary}
+                  forecastedBilling={forecastedBilling}
+                />
+              </TabsContent>
+
+              <TabsContent value="agenda" className="space-y-4 mt-0">
+                <DashboardTodayClasses
+                  todayClasses={todayClasses}
+                  basePath={basePath}
+                />
+                <DashboardUpcomingPayments
+                  upcomingPayments={upcomingPayments}
+                  basePath={basePath}
+                />
+                <DashboardBirthdayList
+                  birthdays={birthdays}
+                  basePath={basePath}
+                />
+              </TabsContent>
+
+              <TabsContent value="grafico" className="mt-0">
+                <DashboardGrowthChart
+                  chartData={chartData}
+                  chartLoading={chartLoading}
+                  basePath={basePath}
+                  chartMonths={chartMonths}
+                  onChartMonthsChange={onChartMonthsChange}
+                  chartLines={chartLines}
+                  onChartLinesChange={onChartLinesChange}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
 
-          <DashboardFinancialCards financialSummary={financialSummary} forecastedBilling={forecastedBilling} />
+          {/* Tablet+: layout completo */}
+          <div className="hidden tablet:flex tablet:flex-col tablet:gap-6">
+            <div className="grid gap-4 grid-cols-2 laptop:grid-cols-4">
+              <MetricCard
+                title={dashboard.metrics.activeStudents}
+                value={stats?.activeStudents || 0}
+                change={
+                  stats?.newStudentsThisMonth
+                    ? Math.round(
+                        (stats.newStudentsThisMonth /
+                          Math.max(
+                            stats.activeStudents - stats.newStudentsThisMonth,
+                            1
+                          )) *
+                          100
+                      )
+                    : undefined
+                }
+                changeLabel={dashboard.metrics.activeStudentsChange}
+                icon={Users}
+                iconColor="text-primary"
+                iconBg="bg-primary/10"
+              />
+              <MetricCard
+                title={dashboard.metrics.overdue}
+                value={stats?.overdueCount || 0}
+                changeLabel={dashboard.metrics.overdueChange(overduePercentage)}
+                icon={AlertCircle}
+                iconColor="text-destructive"
+                iconBg="bg-destructive/10"
+              />
+              <MetricCard
+                title={dashboard.metrics.newThisMonth}
+                value={stats?.newStudentsThisMonth || 0}
+                icon={TrendingUp}
+                iconColor="text-success"
+                iconBg="bg-success/10"
+              />
+              <MetricCard
+                title={dashboard.metrics.classesThisMonth}
+                value={stats?.classesThisMonth || 0}
+                icon={GraduationCap}
+                iconColor="text-accent-foreground"
+                iconBg="bg-accent"
+              />
+            </div>
 
-          <DashboardTodayClasses todayClasses={todayClasses} basePath={basePath} />
+            <DashboardFinancialCards
+              financialSummary={financialSummary}
+              forecastedBilling={forecastedBilling}
+            />
+            <DashboardTodayClasses
+              todayClasses={todayClasses}
+              basePath={basePath}
+            />
 
-          <div className="grid gap-6 grid-cols-1 laptop:grid-cols-2">
-            <DashboardUpcomingPayments upcomingPayments={upcomingPayments} basePath={basePath} />
-            <DashboardBirthdayList birthdays={birthdays} basePath={basePath} />
+            <div className="grid gap-4 grid-cols-2">
+              <DashboardUpcomingPayments
+                upcomingPayments={upcomingPayments}
+                basePath={basePath}
+              />
+              <DashboardBirthdayList
+                birthdays={birthdays}
+                basePath={basePath}
+              />
+            </div>
+
+            <DashboardGrowthChart
+              chartData={chartData}
+              chartLoading={chartLoading}
+              basePath={basePath}
+              chartMonths={chartMonths}
+              onChartMonthsChange={onChartMonthsChange}
+              chartLines={chartLines}
+              onChartLinesChange={onChartLinesChange}
+            />
           </div>
-
-          <DashboardGrowthChart
-            chartData={chartData}
-            chartLoading={chartLoading}
-            basePath={basePath}
-            chartMonths={chartMonths}
-            onChartMonthsChange={onChartMonthsChange}
-            chartLines={chartLines}
-            onChartLinesChange={onChartLinesChange}
-          />
         </>
       )}
     </div>

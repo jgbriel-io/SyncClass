@@ -1,19 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React from 'react';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
 import {
   useCreateUser,
   useUpdateUserRole,
   useDeleteUser,
   useResetPassword,
   useUploadAvatar,
-} from './useUserMutations';
-import { supabase } from '@/integrations/supabase/client';
+} from "./useUserMutations";
+import { supabase } from "@/integrations/supabase/client";
 
-vi.mock('@/integrations/supabase/client');
-vi.mock('sonner', () => ({
+vi.mock("@/integrations/supabase/client");
+vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
@@ -32,15 +32,20 @@ const createWrapper = () => {
   );
 };
 
-describe('useUserMutations', () => {
+describe("useUserMutations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // inviteUserService calls getSession() before invoking edge function
+    vi.mocked(supabase.auth).getSession = vi.fn().mockResolvedValue({
+      data: { session: { access_token: "mock-token" } },
+      error: null,
+    });
   });
 
-  describe('useCreateUser', () => {
-    it('deve lidar com erro de email duplicado', async () => {
+  describe("useCreateUser", () => {
+    it("deve lidar com erro de email duplicado", async () => {
       const mockInvoke = vi.fn().mockResolvedValue({
-        data: { error: 'Email já cadastrado' },
+        data: { error: "Email já cadastrado" },
         error: null,
       });
 
@@ -51,16 +56,16 @@ describe('useUserMutations', () => {
       });
 
       result.current.mutate({
-        email: 'duplicate@test.com',
-        password: 'Test@123',
-        fullName: 'Test User',
-        role: 'admin',
+        email: "duplicate@test.com",
+        password: "Test@123",
+        fullName: "Test User",
+        role: "admin",
       });
 
       await waitFor(() => expect(result.current.isError).toBe(true));
     });
 
-    it('deve aplicar rate limiting', async () => {
+    it("deve aplicar rate limiting", async () => {
       const { result } = renderHook(() => useCreateUser(), {
         wrapper: createWrapper(),
       });
@@ -69,21 +74,21 @@ describe('useUserMutations', () => {
       for (let i = 0; i < 6; i++) {
         result.current.mutate({
           email: `test${i}@test.com`,
-          password: 'Test@123',
-          fullName: 'Test User',
-          role: 'student',
+          password: "Test@123",
+          fullName: "Test User",
+          role: "student",
         });
       }
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true);
-        expect(result.current.error?.message).toContain('Muitas tentativas');
+        expect(result.current.error?.message).toContain("Muitas tentativas");
       });
     });
   });
 
-  describe('useUpdateUserRole', () => {
-    it('deve ter a função de atualizar role', () => {
+  describe("useUpdateUserRole", () => {
+    it("deve ter a função de atualizar role", () => {
       const { result } = renderHook(() => useUpdateUserRole(), {
         wrapper: createWrapper(),
       });
@@ -93,18 +98,18 @@ describe('useUserMutations', () => {
     });
   });
 
-  describe('useDeleteUser', () => {
-    it('deve fazer soft delete do usuário preservando vínculos', async () => {
+  describe("useDeleteUser", () => {
+    it("deve fazer soft delete do usuário preservando vínculos", async () => {
       const mockProfile = {
-        student_id: 'student-123',
+        student_id: "student-123",
         teacher_id: null,
       };
 
       const mockSelect = vi.fn().mockReturnThis();
       const mockEq = vi.fn().mockReturnThis();
-      const mockSingle = vi.fn().mockResolvedValue({ 
-        data: mockProfile, 
-        error: null 
+      const mockSingle = vi.fn().mockResolvedValue({
+        data: mockProfile,
+        error: null,
       });
       const mockUpdate = vi.fn().mockReturnThis();
       const mockEqUpdate = vi.fn().mockResolvedValue({ error: null });
@@ -126,23 +131,23 @@ describe('useUserMutations', () => {
         wrapper: createWrapper(),
       });
 
-      result.current.mutate('user-123');
+      result.current.mutate("user-123");
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(mockUpdate).toHaveBeenCalledWith({ 
+      expect(mockUpdate).toHaveBeenCalledWith({
         active: false,
-        student_id: 'student-123',
+        student_id: "student-123",
         teacher_id: null,
       });
-      expect(mockEqUpdate).toHaveBeenCalledWith('user_id', 'user-123');
+      expect(mockEqUpdate).toHaveBeenCalledWith("user_id", "user-123");
     });
   });
 
-  describe('useResetPassword', () => {
-    it('deve redefinir senha via Edge Function', async () => {
+  describe("useResetPassword", () => {
+    it("deve redefinir senha via Edge Function", async () => {
       const mockGetSession = vi.fn().mockResolvedValue({
-        data: { session: { access_token: 'mock-token' } },
+        data: { session: { access_token: "mock-token" } },
         error: null,
       });
 
@@ -158,8 +163,8 @@ describe('useUserMutations', () => {
       });
 
       result.current.mutate({
-        userId: 'user-123',
-        password: 'NewPassword@123',
+        userId: "user-123",
+        password: "NewPassword@123",
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -167,10 +172,10 @@ describe('useUserMutations', () => {
       expect(global.fetch).toHaveBeenCalled();
     });
 
-    it('deve lidar com sessão expirada', async () => {
+    it("deve lidar com sessão expirada", async () => {
       const mockGetSession = vi.fn().mockResolvedValue({
         data: { session: null },
-        error: new Error('Session expired'),
+        error: new Error("Session expired"),
       });
 
       vi.mocked(supabase.auth).getSession = mockGetSession;
@@ -180,18 +185,18 @@ describe('useUserMutations', () => {
       });
 
       result.current.mutate({
-        userId: 'user-123',
-        password: 'NewPassword@123',
+        userId: "user-123",
+        password: "NewPassword@123",
       });
 
       await waitFor(() => expect(result.current.isError).toBe(true));
-      expect(result.current.error?.message).toContain('Sessão expirada');
+      expect(result.current.error?.message).toContain("Sessão expirada");
     });
   });
 
-  describe('useUploadAvatar', () => {
-    it('deve aplicar rate limiting em uploads', async () => {
-      const mockFile = new File(['test'], 'avatar.jpg', { type: 'image/jpeg' });
+  describe("useUploadAvatar", () => {
+    it("deve aplicar rate limiting em uploads", async () => {
+      const mockFile = new File(["test"], "avatar.jpg", { type: "image/jpeg" });
 
       const { result } = renderHook(() => useUploadAvatar(), {
         wrapper: createWrapper(),
@@ -200,14 +205,14 @@ describe('useUserMutations', () => {
       // Simular múltiplos uploads rápidos
       for (let i = 0; i < 6; i++) {
         result.current.mutate({
-          userId: 'user-123',
+          userId: "user-123",
           file: mockFile,
         });
       }
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true);
-        expect(result.current.error?.message).toContain('Muitos uploads');
+        expect(result.current.error?.message).toContain("Muitos uploads");
       });
     });
   });

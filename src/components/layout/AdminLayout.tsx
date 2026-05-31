@@ -25,7 +25,6 @@ import {
   Bell,
   Settings,
   FileText,
-  Shield,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
@@ -59,7 +58,6 @@ const navigation = [
   { name: "Financeiro", href: "/admin/financial", icon: CreditCard },
   { name: "Professores", href: "/admin/teachers", icon: Users },
   { name: "Usuários", href: "/admin/users", icon: Link2 },
-  { name: "Rate Limits", href: "/admin/rate-limits", icon: Shield },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {

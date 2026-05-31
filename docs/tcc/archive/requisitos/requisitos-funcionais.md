@@ -438,7 +438,7 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 - `src/components/users/UserFormDialog.tsx`
 - `src/hooks/useUsers.ts`
 
-**Migration:** `01_structure.sql` (tabelas `profiles`, `user_roles`)
+**Migration:** `01_structure.sql` (tabela `profiles`) — `user_roles` removida na migration 45, role consolidado em `profiles.role`
 
 **Testes:** ✅ Unitários em `useUsers.test.ts`
 

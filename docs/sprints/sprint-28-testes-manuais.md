@@ -20,20 +20,20 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### `/login`
 
-- [ ] Login com credenciais válidas (admin) → redireciona `/admin`
-- [ ] Login com credenciais válidas (teacher) → redireciona `/teacher`
-- [ ] Login com credenciais válidas (student) → redireciona `/student`
-- [ ] Login com senha errada → mensagem de erro em PT-BR
-- [ ] Login com email inexistente → mensagem de erro
-- [ ] Acesso a `/admin` sem autenticação → redireciona `/login`
-- [ ] Acesso a `/teacher` sem autenticação → redireciona `/login`
-- [ ] Acesso a `/student` sem autenticação → redireciona `/login`
+- [x] Login com credenciais válidas (admin) → redireciona `/admin`
+- [x] Login com credenciais válidas (teacher) → redireciona `/teacher`
+- [x] Login com credenciais válidas (student) → redireciona `/student`
+- [x] Login com senha errada → mensagem de erro em PT-BR
+- [x] Login com email inexistente → mensagem de erro
+- [x] Acesso a `/admin` sem autenticação → redireciona `/login`
+- [x] Acesso a `/teacher` sem autenticação → redireciona `/login`
+- [x] Acesso a `/student` sem autenticação → redireciona `/login`
 
 ### `/esqueci-senha`
 
-- [ ] Formulário renderiza
-- [ ] Email válido → confirmação enviada (toast)
-- [ ] Email inexistente → sem vazamento de informação (mesma mensagem)
+- [x] Formulário renderiza
+- [x] Email válido → confirmação enviada (toast)
+- [x] Email inexistente → sem vazamento de informação (mesma mensagem)
 
 ### `/redefinir-senha`
 
@@ -47,59 +47,68 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Dashboard (`/admin`)
 
-- [ ] Métricas carregam (total alunos, professores, cobranças)
-- [ ] Sem erro de console
+- [x] Métricas carregam (total alunos, professores, cobranças)
+- [x] Sem erro de console
 
 ### Students (`/admin/students`)
 
-- [ ] Lista todos os alunos de todos os professores
-- [ ] Busca por nome funciona
-- [ ] Filtros (status, professor) funcionam
-- [ ] Paginação funciona
+- [x] Lista todos os alunos de todos os professores
+- [x] Busca por nome funciona
+- [x] Filtros (status, professor) funcionam
+- [x] Paginação funciona
+- [x] Criar estudante → aparece na lista
+- [x] Editar aluno → dados atualizados (students.name, profiles.full_name, auth.users sincronizados)
+- [x] Hard delete → remove permanentemente (confirmação obrigatória)
+- [x] Admin não vê botões de ação nas linhas da tabela (read-only)
 
 ### Teachers (`/admin/teachers`)
 
-- [ ] Lista todos os professores
-- [ ] Criar professor → aparece na lista
-- [ ] Editar professor → dados atualizados
-- [ ] Soft delete → professor some da lista ativa
-- [ ] Restaurar professor arquivado → volta à lista
-- [ ] Hard delete → remove permanentemente (confirmação obrigatória)
+- [x] Lista todos os professores
+- [x] Criar professor → aparece na lista
+- [x] Editar professor → dados atualizados
+- [x] Soft delete → professor some da lista ativa
+- [x] Restaurar professor arquivado → volta à lista
+- [x] Hard delete → remove permanentemente (confirmação obrigatória)
+- [x] Redefinir Senha
 
 ### Users (`/admin/users`)
 
-- [ ] Lista todos os usuários do sistema
-- [ ] Criar usuário via convite (email) → toast de sucesso
-- [ ] Alterar role de usuário → funciona
-- [ ] Deletar usuário → sessão invalidada (logout automático se logado)
+- [x] Lista todos os usuários do sistema
+- [x] Criar usuário (admin/professor/aluno) → modal exibe email + senha gerada (sem envio de email)
+- [x] Criar aluno com professor vinculado → aluno aparece na visão do professor logado
+- [x] Coluna Vínculo exibe professor correto para alunos criados via aba Users
+- [x] Editar aluno → nome propagado para students.name, profiles.full_name e auth.users
+- [x] Editar professor → dados atualizados em teachers e profiles
+- [x] Seletor de professor pré-preenchido ao reabrir formulário de edição de aluno
+- [x] Hard delete (usuário com vínculo student/teacher) → anonimiza domain record + remove auth
+- [x] Deletar usuário → sessão invalidada (logout automático se logado)
 
 ### Financial (`/admin/financial`)
 
-- [ ] Lista cobranças de todos os professores
-- [ ] Filtro por status (pendente/pago/cancelado) funciona
-- [ ] Filtro por período funciona
-- [ ] Confirmar comprovante de pagamento → status muda para pago
-- [ ] Rejeitar comprovante → status volta a pendente
+- [x] Lista cobranças de todos os professores
+- [x] Filtro por status (pendente/pago/cancelado) funciona
+- [x] Filtro por período funciona
+- [x] Admin não vê botões de ação (read-only — confirmar/rejeitar comprovante é exclusivo do professor)
 
 ### Classes (`/admin/classes`)
 
-- [ ] Lista aulas de todos os professores
-- [ ] Filtros por período e aluno funcionam
+- [x] Lista aulas de todos os professores
+- [x] Filtros por período e aluno funcionam
+- [x] Filtro por status (em_aberto, agendada, avaliação_pendente, concluída) funciona
+- [x] Ordenação por data (mais recente / mais antiga) funciona
+- [x] Admin não vê botões de ação nas linhas (read-only)
 
 ### Activities (`/admin/activities`)
 
-- [ ] Lista atividades de todos os professores
-- [ ] Filtros funcionam
+- [x] Lista atividades de todos os professores
+- [x] Filtros de status funcionam
+- [x] Admin não vê botões de ação nas linhas (read-only)
 
 ### Overview (`/admin/overview`)
 
-- [ ] Visão consolidada de todos os professores carrega
-- [ ] Métricas por professor corretas
-
-### Rate Limits (`/admin/rate-limits`)
-
-- [ ] Dashboard de rate limiting carrega
-- [ ] Contadores exibidos
+- [x] Visão consolidada de todos os professores carrega
+- [x] Métricas por professor corretas
+- [x] Filtro de status removido (N/A no contexto de overview agregado)
 
 ---
 
@@ -117,7 +126,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [ ] Busca e filtros funcionam
 - [ ] Criar aluno (campos obrigatórios + validação de CPF/telefone) → aparece na lista
 - [ ] Criar aluno estrangeiro (sem CPF) → funciona
-- [ ] Editar aluno → dados atualizados
+- [x] Editar aluno → dados atualizados (students.name, profiles.full_name, auth.users propagados em todas as visões)
 - [ ] Upload foto de perfil → foto exibida
 - [ ] Soft delete → aluno some da lista ativa
 - [ ] Restaurar aluno arquivado
@@ -262,18 +271,18 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ## Resumo de Itens
 
-| Módulo                     | Itens   |
-| -------------------------- | ------- |
-| Auth / Público             | 11      |
-| Admin                      | 30      |
-| Professor                  | 28      |
-| Aluno                      | 13      |
-| Cross-cutting (original)   | 20      |
-| Sessão e Auth (adicionais) | 2       |
-| Integrações e Validações   | 6       |
-| Rotas Alias e Edge Cases   | 3       |
-| Volume de Dados            | 3       |
-| **Total**                  | **116** |
+| Módulo                     | Itens   | Status             |
+| -------------------------- | ------- | ------------------ |
+| Auth / Público             | 11      | 8 ✅ / 3 pendentes |
+| Admin                      | 41      | 41 ✅ concluído    |
+| Professor                  | 28      | pendente           |
+| Aluno                      | 13      | pendente           |
+| Cross-cutting (original)   | 20      | pendente           |
+| Sessão e Auth (adicionais) | 2       | pendente           |
+| Integrações e Validações   | 6       | pendente           |
+| Rotas Alias e Edge Cases   | 3       | pendente           |
+| Volume de Dados            | 3       | pendente           |
+| **Total**                  | **127** |                    |
 
 ---
 

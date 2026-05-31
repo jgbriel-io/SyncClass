@@ -42,8 +42,16 @@ export type ChartLineFilterTeacher = {
   aulas: boolean;
 };
 
-const DEFAULT_CHART_LINES_ADMIN: ChartLineFilterAdmin = { alunos: true, professores: true, aulas: true, usuarios: true };
-const DEFAULT_CHART_LINES_TEACHER: ChartLineFilterTeacher = { alunos: true, aulas: true };
+const DEFAULT_CHART_LINES_ADMIN: ChartLineFilterAdmin = {
+  alunos: true,
+  professores: true,
+  aulas: true,
+  usuarios: true,
+};
+const DEFAULT_CHART_LINES_TEACHER: ChartLineFilterTeacher = {
+  alunos: true,
+  aulas: true,
+};
 
 interface DashboardGrowthChartProps {
   chartData: ChartDataPoint[];
@@ -52,7 +60,9 @@ interface DashboardGrowthChartProps {
   chartMonths: ChartMonthsFilter;
   onChartMonthsChange?: (v: ChartMonthsFilter) => void;
   chartLines?: ChartLineFilterAdmin | ChartLineFilterTeacher;
-  onChartLinesChange?: (v: ChartLineFilterAdmin | ChartLineFilterTeacher) => void;
+  onChartLinesChange?: (
+    v: ChartLineFilterAdmin | ChartLineFilterTeacher
+  ) => void;
 }
 
 export function DashboardGrowthChart({
@@ -64,8 +74,12 @@ export function DashboardGrowthChart({
   chartLines,
   onChartLinesChange,
 }: DashboardGrowthChartProps) {
-  const [internalChartLines, setInternalChartLines] = useState<ChartLineFilterAdmin | ChartLineFilterTeacher>(
-    basePath === "/admin" ? DEFAULT_CHART_LINES_ADMIN : DEFAULT_CHART_LINES_TEACHER
+  const [internalChartLines, setInternalChartLines] = useState<
+    ChartLineFilterAdmin | ChartLineFilterTeacher
+  >(
+    basePath === "/admin"
+      ? DEFAULT_CHART_LINES_ADMIN
+      : DEFAULT_CHART_LINES_TEACHER
   );
   const lines = chartLines ?? internalChartLines;
   const setLines = onChartLinesChange ?? setInternalChartLines;
@@ -87,10 +101,14 @@ export function DashboardGrowthChart({
           </div>
           <div>
             <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">
-              {basePath === "/admin" ? dashboard.chart.titleAdmin : dashboard.chart.titleTeacher}
+              {basePath === "/admin"
+                ? dashboard.chart.titleAdmin
+                : dashboard.chart.titleTeacher}
             </h2>
             <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground">
-              {chartMonths === 1 ? dashboard.chart.currentMonth : dashboard.chart.lastMonths(chartMonths)}
+              {chartMonths === 1
+                ? dashboard.chart.currentMonth
+                : dashboard.chart.lastMonths(chartMonths)}
             </p>
           </div>
         </div>
@@ -100,7 +118,9 @@ export function DashboardGrowthChart({
               <Filter className="h-4 w-4 text-muted-foreground" />
               <Select
                 value={String(chartMonths)}
-                onValueChange={(v) => onChartMonthsChange(Number(v) as ChartMonthsFilter)}
+                onValueChange={(v) =>
+                  onChartMonthsChange(Number(v) as ChartMonthsFilter)
+                }
               >
                 <SelectTrigger className="w-[120px] h-8">
                   <SelectValue placeholder={common.placeholders.period} />
@@ -116,42 +136,51 @@ export function DashboardGrowthChart({
           )}
           {basePath === "/admin" && (
             <div className="flex flex-wrap gap-2">
-              {(["alunos", "professores", "aulas", "usuarios"] as const).map((key) => {
-                const adminLines = lines as ChartLineFilterAdmin;
-                const label = {
-                  alunos: dashboard.chart.students,
-                  professores: dashboard.chart.teachers,
-                  aulas: dashboard.chart.classes,
-                  usuarios: dashboard.chart.users,
-                }[key];
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setLines({ ...adminLines, [key]: !adminLines[key] })}
-                    className={cn(
-                      "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
-                      adminLines[key]
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    )}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
+              {(["alunos", "professores", "aulas", "usuarios"] as const).map(
+                (key) => {
+                  const adminLines = lines as ChartLineFilterAdmin;
+                  const label = {
+                    alunos: dashboard.chart.students,
+                    professores: dashboard.chart.teachers,
+                    aulas: dashboard.chart.classes,
+                    usuarios: dashboard.chart.users,
+                  }[key];
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() =>
+                        setLines({ ...adminLines, [key]: !adminLines[key] })
+                      }
+                      className={cn(
+                        "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
+                        adminLines[key]
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  );
+                }
+              )}
             </div>
           )}
           {basePath === "/teacher" && (
             <div className="flex flex-wrap gap-2">
               {(["alunos", "aulas"] as const).map((key) => {
                 const teacherLines = lines as ChartLineFilterTeacher;
-                const label = { alunos: dashboard.chart.students, aulas: dashboard.chart.classes }[key];
+                const label = {
+                  alunos: dashboard.chart.students,
+                  aulas: dashboard.chart.classes,
+                }[key];
                 return (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setLines({ ...teacherLines, [key]: !teacherLines[key] })}
+                    onClick={() =>
+                      setLines({ ...teacherLines, [key]: !teacherLines[key] })
+                    }
                     className={cn(
                       "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
                       teacherLines[key]
@@ -181,27 +210,75 @@ export function DashboardGrowthChart({
           </div>
         ) : (
           <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <AreaChart data={chartData}>
                 <defs>
-                  <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  <linearGradient
+                    id="colorStudents"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="5%"
+                      stopColor="hsl(var(--primary))"
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="hsl(var(--primary))"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                   <linearGradient id="colorClasses" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                    <stop
+                      offset="5%"
+                      stopColor="hsl(var(--success))"
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="hsl(var(--success))"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
-                  <linearGradient id="colorTeachers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(24 95% 53%)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(24 95% 53%)" stopOpacity={0} />
+                  <linearGradient
+                    id="colorTeachers"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="5%"
+                      stopColor="hsl(24 95% 53%)"
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="hsl(24 95% 53%)"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                   <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(262 83% 58%)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(262 83% 58%)" stopOpacity={0} />
+                    <stop
+                      offset="5%"
+                      stopColor="hsl(262 83% 58%)"
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="hsl(262 83% 58%)"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="hsl(var(--border))"
+                />
                 <XAxis
                   dataKey="month"
                   axisLine={false}
@@ -221,30 +298,87 @@ export function DashboardGrowthChart({
                     borderRadius: "var(--radius)",
                     boxShadow: "var(--shadow-md)",
                   }}
-                  labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
+                  labelStyle={{
+                    color: "hsl(var(--foreground))",
+                    fontWeight: 600,
+                  }}
                   formatter={(value: number, name: string) => [
                     value,
-                    name === "count" ? dashboard.chart.students : name === "classesCount" ? dashboard.chart.classes : name === "teachersCount" ? dashboard.chart.teachers : name === "usersCount" ? dashboard.chart.users : name,
+                    name === "count"
+                      ? dashboard.chart.students
+                      : name === "classesCount"
+                        ? dashboard.chart.classes
+                        : name === "teachersCount"
+                          ? dashboard.chart.teachers
+                          : name === "usersCount"
+                            ? dashboard.chart.users
+                            : name,
                   ]}
                 />
                 <Legend
                   formatter={(value) =>
-                    value === "count" ? dashboard.chart.students : value === "classesCount" ? dashboard.chart.classes : value === "teachersCount" ? dashboard.chart.teachers : value === "usersCount" ? dashboard.chart.users : value
+                    value === "count"
+                      ? dashboard.chart.students
+                      : value === "classesCount"
+                        ? dashboard.chart.classes
+                        : value === "teachersCount"
+                          ? dashboard.chart.teachers
+                          : value === "usersCount"
+                            ? dashboard.chart.users
+                            : value
                   }
                   wrapperStyle={{ paddingTop: 16 }}
                 />
-                {(basePath === "/teacher" ? (lines as ChartLineFilterTeacher).alunos : (lines as ChartLineFilterAdmin).alunos) && (
-                  <Area type="monotone" dataKey="count" name="count" stroke="hsl(var(--primary))" strokeWidth={2} fillOpacity={1} fill="url(#colorStudents)" />
+                {(basePath === "/teacher"
+                  ? (lines as ChartLineFilterTeacher).alunos
+                  : (lines as ChartLineFilterAdmin).alunos) && (
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    name="count"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorStudents)"
+                  />
                 )}
-                {basePath === "/admin" && (lines as ChartLineFilterAdmin).professores && (
-                  <Area type="monotone" dataKey="teachersCount" name="teachersCount" stroke="hsl(24 95% 53%)" strokeWidth={2} fillOpacity={1} fill="url(#colorTeachers)" />
+                {basePath === "/admin" &&
+                  (lines as ChartLineFilterAdmin).professores && (
+                    <Area
+                      type="monotone"
+                      dataKey="teachersCount"
+                      name="teachersCount"
+                      stroke="hsl(24 95% 53%)"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorTeachers)"
+                    />
+                  )}
+                {(basePath === "/teacher"
+                  ? (lines as ChartLineFilterTeacher).aulas
+                  : (lines as ChartLineFilterAdmin).aulas) && (
+                  <Area
+                    type="monotone"
+                    dataKey="classesCount"
+                    name="classesCount"
+                    stroke="hsl(var(--success))"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorClasses)"
+                  />
                 )}
-                {(basePath === "/teacher" ? (lines as ChartLineFilterTeacher).aulas : (lines as ChartLineFilterAdmin).aulas) && (
-                  <Area type="monotone" dataKey="classesCount" name="classesCount" stroke="hsl(var(--success))" strokeWidth={2} fillOpacity={1} fill="url(#colorClasses)" />
-                )}
-                {basePath === "/admin" && (lines as ChartLineFilterAdmin).usuarios && (
-                  <Area type="monotone" dataKey="usersCount" name="usersCount" stroke="hsl(262 83% 58%)" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers)" />
-                )}
+                {basePath === "/admin" &&
+                  (lines as ChartLineFilterAdmin).usuarios && (
+                    <Area
+                      type="monotone"
+                      dataKey="usersCount"
+                      name="usersCount"
+                      stroke="hsl(262 83% 58%)"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorUsers)"
+                    />
+                  )}
               </AreaChart>
             </ResponsiveContainer>
           </div>

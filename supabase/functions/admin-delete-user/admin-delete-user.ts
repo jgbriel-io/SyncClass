@@ -1,6 +1,3 @@
-// Edge Function: admin-delete-user
-// Hard delete a Supabase auth user (and cascading public records) only for admins
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { CORS_HEADERS, jsonResponse } from "../_shared/utils.ts";
@@ -38,9 +35,8 @@ serve(async (req) => {
     return jsonResponse({ error: "Not authenticated" }, 401);
   }
 
-  // Check if caller is admin
   const { data: roleRow, error: roleError } = await supabaseAdmin
-    .from("user_roles")
+    .from("profiles")
     .select("role")
     .eq("user_id", user.id)
     .single();
@@ -49,8 +45,7 @@ serve(async (req) => {
     return jsonResponse({ error: "Forbidden" }, 403);
   }
 
-  // ✅ VULN-008 FIX: Rate limiting - 20 requests por minuto
-  const { data: rateLimitOk, error: rateLimitError } = await supabaseAdmin
+  const { data: rateLimitOk, error: rateLimitError } = await supabaseAuthed
     .rpc("check_rate_limit", {
       p_operation: "admin_delete_user",
       p_max_requests: 20,
@@ -66,7 +61,6 @@ serve(async (req) => {
     }, 429);
   }
 
-  // Parse body: só aba Usuários envia userId
   interface RequestBody {
     userId?: string;
   }
@@ -82,7 +76,6 @@ serve(async (req) => {
     return jsonResponse({ error: "Missing userId" }, 400);
   }
 
-  // Usuário tem que estar inativo; pega student_id e teacher_id para apagar os registros das tabelas
   const { data: profile, error: profileError } = await supabaseAdmin
     .from("profiles")
     .select("active, student_id, teacher_id")
@@ -94,10 +87,7 @@ serve(async (req) => {
     return jsonResponse({ error: "Falha ao carregar perfil." }, 500);
   }
 
-  // Se o profile existe e está ativo, bloqueia — a menos que o student/teacher já tenha sido removido
-  // (indica que o hard delete foi iniciado pela aba Alunos/Professores)
   if (profile && profile.active === true) {
-    // Verifica se os registros vinculados ainda existem
     let studentStillExists = false;
     let teacherStillExists = false;
 
@@ -118,7 +108,6 @@ serve(async (req) => {
       teacherStillExists = !!t;
     }
 
-    // Se o registro vinculado ainda existe, o usuário de fato não foi arquivado → bloqueia
     if (studentStillExists || teacherStillExists || (!profile.student_id && !profile.teacher_id)) {
       return jsonResponse({ error: "Arquive o usuário antes de excluir definitivamente." }, 400);
     }
@@ -127,7 +116,6 @@ serve(async (req) => {
   const linkedStudentId = profile?.student_id ?? null;
   const linkedTeacherId = profile?.teacher_id ?? null;
 
-  // 1) Remove linked record from students table (ignora se já foi removido)
   if (linkedStudentId) {
     const { error: studentDeleteError } = await supabaseAdmin
       .from("students")
@@ -135,12 +123,10 @@ serve(async (req) => {
       .eq("id", linkedStudentId);
 
     if (studentDeleteError) {
-      // Ignora erro se o registro já não existir
       console.warn("Student record delete (may already be gone):", studentDeleteError.message);
     }
   }
 
-  // 2) Remove linked record from teachers table
   if (linkedTeacherId) {
     const { error: teacherDeleteError } = await supabaseAdmin
       .from("teachers")
@@ -156,9 +142,7 @@ serve(async (req) => {
     }
   }
 
-  // 3) Invalidate all sessions before deleting auth user
   if (userIdToDelete) {
-    // Invalidar sessões ANTES de deletar o usuário
     try {
       const { error: invalidateError } = await supabaseAdmin.rpc(
         'invalidate_sessions_before_delete',
@@ -167,28 +151,23 @@ serve(async (req) => {
       
       if (invalidateError) {
         console.warn("Warning: Failed to invalidate sessions:", invalidateError);
-        // Não falha a operação, apenas loga o warning
       } else {
         console.log("Sessions invalidated for user:", userIdToDelete);
       }
     } catch (err) {
       console.warn("Warning: Exception invalidating sessions:", err);
-      // Continua mesmo se falhar
     }
-    
-    // Agora deleta o auth user (cascade removes profile and user_roles)
+
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
       userIdToDelete,
     );
 
     if (deleteError) {
-      // Se o usuário já não existe (404), considera sucesso
       const isUserNotFound = deleteError.status === 404 || 
                              deleteError.code === "user_not_found" ||
                              deleteError.message?.toLowerCase().includes("user not found");
       
       if (isUserNotFound) {
-        console.log("User already deleted from Auth, cleaning up database records");
         const { error: profileCleanupError } = await supabaseAdmin
           .from("profiles")
           .delete()
@@ -197,14 +176,6 @@ serve(async (req) => {
           console.error("Profile cleanup failed:", profileCleanupError.message);
           return jsonResponse({ error: "Profile cleanup failed" }, 500);
         }
-        const { error: roleCleanupError } = await supabaseAdmin
-          .from("user_roles")
-          .delete()
-          .eq("user_id", userIdToDelete);
-        if (roleCleanupError) {
-          console.error("Role cleanup failed:", roleCleanupError.message);
-          return jsonResponse({ error: "Role cleanup failed" }, 500);
-        }
         return jsonResponse({ success: true }, 200);
       }
       
@@ -212,12 +183,9 @@ serve(async (req) => {
       return jsonResponse({ error: deleteError.message }, 500);
     }
     
-    // Invalida todas as sessões do usuário deletado
-    // Isso força o logout em todos os dispositivos
     try {
       await supabaseAdmin.auth.admin.signOut(userIdToDelete);
     } catch (signOutError) {
-      // Ignora erro de signOut pois o usuário já foi deletado
       console.log("SignOut error (expected after delete):", signOutError);
     }
   }

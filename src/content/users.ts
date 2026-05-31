@@ -52,16 +52,16 @@ export const users = {
     titleSoft: "Desativar usuário",
     titleHard: "Excluir definitivamente",
     titleArchive: "Confirmar arquivamento",
-    titleArchived: "Excluir arquivo morto?",
+    titleArchived: "Excluir definitivamente?",
     titleReactivate: "Confirmar reativação",
     descriptionSoft: (name: string) =>
       `Tem certeza que deseja desativar o usuário ${name}? O acesso será bloqueado, mas os dados serão preservados.`,
     descriptionHard: (name: string) =>
       `Tem certeza que deseja excluir definitivamente o usuário ${name}? Esta ação não pode ser desfeita.`,
     descriptionArchived: (name: string) =>
-      `Tem certeza que deseja excluir o arquivo morto do usuário ${name}? A conta será removida do sistema (Supabase Auth e perfil). O email ficará disponível para reutilização. Esta ação não pode ser desfeita.`,
+      `A conta do usuário ${name} será removida do sistema. O e-mail ficará disponível para reutilização. Esta ação não pode ser desfeita.`,
     descriptionHardDelete: (name: string) =>
-      `A conta do usuário ${name} será removida do sistema (Supabase Auth, perfil e vínculos). Esta ação não pode ser desfeita.`,
+      `Os dados pessoais do usuário ${name} serão anonimizados. O histórico será preservado. A conta de acesso será removida. Esta ação não pode ser desfeita.`,
     descriptionReactivate: (name: string) =>
       `Tem certeza que deseja reativar o usuário ${name}? Ele voltará a aparecer na lista de usuários ativos.`,
     descriptionArchiveStudent: (name: string) =>
@@ -70,10 +70,13 @@ export const users = {
       `Tem certeza que deseja arquivar o usuário ${name}? Ele será removido da lista de ativos e aparecerá como professor inativo.`,
     descriptionArchiveGeneric: (name: string) =>
       `Tem certeza que deseja arquivar o usuário ${name}? Esta ação não remove a conta do Supabase Auth, apenas arquiva o usuário no painel.`,
+    warningLabel: "Atenção:",
+    warning:
+      "A conta de acesso será removida do sistema. O e-mail ficará disponível para reutilização.",
     confirmSoft: "Desativar",
     confirmHard: "Excluir definitivamente",
     confirmArchive: "Arquivar",
-    confirmArchived: "Excluir arquivo morto",
+    confirmArchived: "Excluir definitivamente",
     confirmReactivate: "Reativar",
     deactivating: "Desativando...",
     deleting: "Excluindo...",
@@ -84,12 +87,14 @@ export const users = {
     toastDeleted: "Usuário excluído definitivamente!",
     toastArchiveError: "Erro ao arquivar usuário",
     toastDeleteError: "Erro ao excluir usuário: ",
-    toastNoLink: "Este usuário não possui vínculo com aluno ou professor. Use o painel específico para reativar.",
+    toastNoLink:
+      "Este usuário não possui vínculo com aluno ou professor. Use o painel específico para reativar.",
   },
 
   passwordDialog: {
     title: "Senha gerada",
-    description: "Anote a senha antes de fechar. Ela não será exibida novamente.",
+    description:
+      "Anote a senha antes de fechar. Ela não será exibida novamente.",
     passwordLabel: "Senha",
     copyButton: "Copiar",
     copied: "Copiado!",
@@ -99,7 +104,8 @@ export const users = {
 
   resetPasswordDialog: {
     title: "Redefinir senha",
-    description: (name: string) => `Nova senha para ${name}. Mínimo 6 caracteres.`,
+    description: (name: string) =>
+      `Nova senha para ${name}. Mínimo 6 caracteres.`,
     newPasswordLabel: "Nova senha",
     confirmPasswordLabel: "Confirmar senha",
     generateButton: "Gerar senha",

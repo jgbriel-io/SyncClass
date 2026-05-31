@@ -18,7 +18,10 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogWithStudent } from "@/hooks/useClassLogs";
-import { isClassEvaluationBlocked, getClassStatusWithTime } from "@/lib/utils/classTime";
+import {
+  isClassEvaluationBlocked,
+  getClassStatusWithTime,
+} from "@/lib/utils/classTime";
 import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 import { classes as classesContent, common } from "@/content";
 
@@ -35,10 +38,19 @@ export const COL = {
   ACOES: 160,
 } as const;
 
-export const TABLE_MIN_W = COL.ALUNO + COL.AULA_PROF + COL.DATA + COL.NOTA + COL.FINANCEIRO + COL.VALOR + COL.FEEDBACK + COL.ACOES;
+export const TABLE_MIN_W =
+  COL.ALUNO +
+  COL.AULA_PROF +
+  COL.DATA +
+  COL.NOTA +
+  COL.FINANCEIRO +
+  COL.VALOR +
+  COL.FEEDBACK +
+  COL.ACOES;
 
-const CELL = "px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-4 laptop:py-3 align-middle text-left text-sm mobile:text-xs tablet:text-xs laptop:text-xs whitespace-nowrap";
-const STICKY_CELL = "sticky left-0 z-20 bg-card";
+const CELL =
+  "px-6 py-4 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-4 laptop:py-3 align-middle text-left text-sm mobile:text-xs tablet:text-xs laptop:text-xs whitespace-nowrap";
+const STICKY_CELL = "tablet:sticky tablet:left-0 z-20 bg-card";
 const STICKY_SHADOW = { boxShadow: "2px 0 5px -2px rgba(0,0,0,0.1)" };
 
 /* ── Formatação local ──────────────────────────────────────────────── */
@@ -48,7 +60,9 @@ function formatClassDateAndTime(log: {
   start_at?: string | null;
   end_at?: string | null;
 }): { date: string; timeRange: string | null } {
-  const date = format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+  const date = format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", {
+    locale: ptBR,
+  });
   if (log.start_at && log.end_at) {
     const start = format(new Date(log.start_at), "HH:mm", { locale: ptBR });
     const end = format(new Date(log.end_at), "HH:mm", { locale: ptBR });
@@ -57,7 +71,9 @@ function formatClassDateAndTime(log: {
   return { date, timeRange: null };
 }
 
-function getPaymentStatusVariant(status: string | null): "success" | "warning" | "destructive" {
+function getPaymentStatusVariant(
+  status: string | null
+): "success" | "warning" | "destructive" {
   switch (status) {
     case "pago":
       return "success";
@@ -169,7 +185,10 @@ export function ClassLogRow({
               {escapeHtml(log.title)}
             </p>
           )}
-          <p className="text-xs text-muted-foreground truncate max-w-[200px]" title={currentTeacherName}>
+          <p
+            className="text-xs text-muted-foreground truncate max-w-[200px]"
+            title={currentTeacherName}
+          >
             {currentTeacherName}
           </p>
         </div>
@@ -202,29 +221,37 @@ export function ClassLogRow({
       <td className={CELL} style={{ minWidth: COL.FINANCEIRO }}>
         {(() => {
           // Cobrança direta (aula individual)
-          const hasDirectFinancial = log.financial_records && log.financial_records.length > 0;
-          
+          const hasDirectFinancial =
+            log.financial_records && log.financial_records.length > 0;
+
           // Cobrança de pacote
-          const packageFinancial = log.financial_record_class_logs?.[0]?.financial_records;
-          
+          const packageFinancial =
+            log.financial_record_class_logs?.[0]?.financial_records;
+
           if (hasDirectFinancial) {
             return (
-              <StatusBadge variant={getPaymentStatusVariant(log.financial_records[0].status)}>
+              <StatusBadge
+                variant={getPaymentStatusVariant(
+                  log.financial_records[0].status
+                )}
+              >
                 <Receipt className="h-3 w-3" />
                 {getPaymentStatusLabel(log.financial_records[0].status)}
               </StatusBadge>
             );
           }
-          
+
           if (packageFinancial) {
             return (
-              <StatusBadge variant={getPaymentStatusVariant(packageFinancial.status)}>
+              <StatusBadge
+                variant={getPaymentStatusVariant(packageFinancial.status)}
+              >
                 <Receipt className="h-3 w-3" />
                 {getPaymentStatusLabel(packageFinancial.status)}
               </StatusBadge>
             );
           }
-          
+
           return (
             <StatusBadge variant="default">
               {classesContent.tableRow.noCharge}
@@ -301,7 +328,9 @@ export function ClassLogRow({
             ) : (
               <>
                 <Check className="h-3.5 w-3.5 mr-1.5" />
-                {log.attendance != null ? classesContent.tableRow.update : classesContent.tableRow.evaluate}
+                {log.attendance != null
+                  ? classesContent.tableRow.update
+                  : classesContent.tableRow.evaluate}
               </>
             )}
           </Button>

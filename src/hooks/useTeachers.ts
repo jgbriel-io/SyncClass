@@ -50,6 +50,7 @@ async function fetchTeachers(): Promise<Teacher[]> {
   const { data, error } = await supabase
     .from("teachers")
     .select("*")
+    .eq("is_deleted", false)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []).map(maskCpf) as Teacher[];
@@ -60,7 +61,10 @@ async function fetchTeachersPaginated(
   pageSize: number,
   filters: TeachersListFilters | undefined
 ): Promise<{ list: Teacher[]; count: number }> {
-  let q = supabase.from("teachers").select("*", { count: "exact" });
+  let q = supabase
+    .from("teachers")
+    .select("*", { count: "exact" })
+    .eq("is_deleted", false);
   if (filters?.status && filters.status !== "all")
     q = q.eq("status", filters.status);
   q = q.order("name", { ascending: filters?.sortBy === "name_asc" });
@@ -193,6 +197,7 @@ export function useUpdateTeacher() {
           const profileUpdate: ProfileUpdate = {
             role: "teacher",
             active: isActive,
+            ...(isActive && { deleted_at: null }),
           };
           if (fullName) profileUpdate.full_name = fullName;
           if (normalizedEmail) profileUpdate.email = normalizedEmail;
@@ -402,7 +407,18 @@ export function useHardDeleteTeacher() {
         .eq("teacher_id", id)
         .maybeSingle();
 
-      const { error } = await supabase.from("teachers").delete().eq("id", id);
+      const anonymizedName = `Professor ${id.slice(0, 8)}`;
+      const { error } = await supabase
+        .from("teachers")
+        .update({
+          is_deleted: true,
+          anonymized_at: new Date().toISOString(),
+          name: anonymizedName,
+          email: null,
+          phone: null,
+          pix_key: null,
+        })
+        .eq("id", id);
 
       if (error) throw error;
 

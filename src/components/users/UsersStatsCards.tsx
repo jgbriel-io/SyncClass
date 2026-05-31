@@ -15,7 +15,7 @@ export function UsersStatsCards({
   newThisMonth,
 }: Props) {
   return (
-    <div className="grid gap-4 grid-cols-1 laptop:grid-cols-4">
+    <div className="grid gap-4 grid-cols-2 laptop:grid-cols-4">
       <StatCard
         title="Total de usuários"
         value={total}

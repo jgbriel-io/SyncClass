@@ -8,7 +8,7 @@ exports[`FinancialTableRow - Snapshot > should render financial row - paid 1`] =
         class="group hover:bg-muted/30 transition-colors"
       >
         <td
-          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap sticky left-0 z-20 bg-card group-hover:bg-muted transition-colors w-[280px] min-w-[280px] max-w-[280px] desktop:w-[360px] desktop:min-w-[360px] desktop:max-w-[360px]"
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap tablet:sticky tablet:left-0 z-20 bg-card group-hover:bg-muted transition-colors w-[280px] min-w-[280px] max-w-[280px] desktop:w-[360px] desktop:min-w-[360px] desktop:max-w-[360px]"
           style="box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);"
         >
           <div
@@ -201,7 +201,7 @@ exports[`FinancialTableRow - Snapshot > should render financial row with central
         class="group hover:bg-muted/30 transition-colors"
       >
         <td
-          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap sticky left-0 z-20 bg-card group-hover:bg-muted transition-colors w-[280px] min-w-[280px] max-w-[280px] desktop:w-[360px] desktop:min-w-[360px] desktop:max-w-[360px]"
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap tablet:sticky tablet:left-0 z-20 bg-card group-hover:bg-muted transition-colors w-[280px] min-w-[280px] max-w-[280px] desktop:w-[360px] desktop:min-w-[360px] desktop:max-w-[360px]"
           style="box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);"
         >
           <div

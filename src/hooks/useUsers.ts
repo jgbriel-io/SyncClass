@@ -53,7 +53,6 @@ export type UsersListFilters = {
 
 // Type aliases for better readability
 type ProfileRow = Tables<"profiles">;
-type UserRoleRow = Tables<"user_roles">;
 type AppRole = Enums<"app_role">;
 
 // Combined user interface with proper typing
@@ -73,13 +72,7 @@ export interface CombinedUser {
     created_at: string | null;
     updated_at: string | null;
   } | null;
-  role: {
-    id: string;
-    user_id: string;
-    role: AppRole;
-    full_name: string | null;
-    email: string | null;
-  } | null;
+  role: AppRole | null;
   student: Tables<"students"> | null;
   teacher: Tables<"teachers"> | null;
 }
@@ -94,7 +87,6 @@ export function useUsers() {
     queryFn: async (): Promise<CombinedUser[]> => {
       const [
         { data: profiles, error: profilesError },
-        { data: roles, error: rolesError },
         { data: students, error: studentsError },
         { data: teachers, error: teachersError },
       ] = await Promise.all([
@@ -104,25 +96,15 @@ export function useUsers() {
           .is("deleted_at", null)
           .order("created_at", { ascending: false })
           .limit(1000),
-        supabase.from("user_roles").select("*").limit(1000),
         supabase.from("students").select("*").limit(1000),
         supabase.from("teachers").select("*").limit(1000),
       ]);
 
       if (profilesError) throw profilesError;
-      if (rolesError) throw rolesError;
       if (studentsError) throw studentsError;
       if (teachersError) throw teachersError;
 
       return (profiles || []).map((profile: ProfileRow): CombinedUser => {
-        const roleRow = (roles || []).find(
-          (r: UserRoleRow) => r.user_id === profile.user_id
-        );
-        const emailFromProfile = profile.email;
-        const emailFromRole = roleRow?.email;
-        const primaryEmail = emailFromProfile || emailFromRole || "";
-
-        // Buscar student e teacher vinculados
         const student = profile.student_id
           ? (students || []).find((s) => s.id === profile.student_id) || null
           : null;
@@ -131,15 +113,15 @@ export function useUsers() {
           ? (teachers || []).find((t) => t.id === profile.teacher_id) || null
           : null;
 
-        const combinedUser: CombinedUser = {
+        return {
           id: profile.user_id,
-          email: primaryEmail,
+          email: profile.email || "",
           created_at: profile.created_at || "",
           profile: {
             id: profile.id,
             user_id: profile.user_id,
             full_name: profile.full_name,
-            email: emailFromProfile ?? emailFromRole ?? null,
+            email: profile.email ?? null,
             student_id: profile.student_id,
             teacher_id: profile.teacher_id,
             active: profile.active,
@@ -147,20 +129,10 @@ export function useUsers() {
             created_at: profile.created_at,
             updated_at: profile.updated_at,
           },
-          role: roleRow
-            ? {
-                id: roleRow.id,
-                user_id: roleRow.user_id,
-                role: roleRow.role,
-                full_name: roleRow.full_name,
-                email: roleRow.email,
-              }
-            : null,
+          role: profile.role,
           student,
           teacher,
         };
-
-        return combinedUser;
       });
     },
   });
@@ -228,19 +200,12 @@ export function useUsersPaginated(
         return { list: [] as CombinedUser[], count: count ?? 0 };
       }
 
-      const { data: roles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("*")
-        .in("user_id", userIds);
-
-      if (rolesError) throw rolesError;
-
       // Buscar students e teachers vinculados (incluindo inativos)
       const studentIds = profileRows
         .map((p) => p.student_id)
         .filter((id): id is string => id != null);
 
-      const teacherIds = profileRows
+      const profileTeacherIds = profileRows
         .map((p) => p.teacher_id)
         .filter((id): id is string => id != null);
 
@@ -248,7 +213,6 @@ export function useUsersPaginated(
       let teachers: Tables<"teachers">[] = [];
 
       if (studentIds.length > 0) {
-        // IMPORTANTE: Buscar TODOS os students, incluindo inativos
         const { data: studentsData, error: studentsError } = await supabase
           .from("students")
           .select("*")
@@ -258,43 +222,44 @@ export function useUsersPaginated(
         students = studentsData || [];
       }
 
+      const studentTeacherIds = students
+        .map((s) => s.teacher_id)
+        .filter((id): id is string => id != null);
+
+      const teacherIds = [
+        ...new Set([...profileTeacherIds, ...studentTeacherIds]),
+      ];
+
       if (teacherIds.length > 0) {
-        // IMPORTANTE: Buscar TODOS os teachers, incluindo inativos
         const { data: teachersData, error: teachersError } = await supabase
           .from("teachers")
           .select("*")
-          .in("id", teacherIds);
+          .in("id", teacherIds)
+          .eq("is_deleted", false);
 
         if (teachersError) throw teachersError;
         teachers = teachersData || [];
       }
 
       const list = profileRows.map((profile): CombinedUser => {
-        const roleRow = (roles || []).find(
-          (r: UserRoleRow) => r.user_id === profile.user_id
-        );
-        const emailFromProfile = profile.email;
-        const emailFromRole = roleRow?.email;
-        const primaryEmail = emailFromProfile || emailFromRole || "";
-
-        // Buscar student e teacher vinculados
         const student = profile.student_id
           ? students.find((s) => s.id === profile.student_id) || null
           : null;
 
-        const teacher = profile.teacher_id
-          ? teachers.find((t) => t.id === profile.teacher_id) || null
+        const teacherId = profile.teacher_id ?? student?.teacher_id ?? null;
+        const teacher = teacherId
+          ? teachers.find((t) => t.id === teacherId) || null
           : null;
 
         return {
           id: profile.user_id,
-          email: primaryEmail,
+          email: profile.email || "",
           created_at: profile.created_at || "",
           profile: {
             id: profile.id,
             user_id: profile.user_id,
             full_name: profile.full_name,
-            email: emailFromProfile ?? emailFromRole ?? null,
+            email: profile.email ?? null,
             student_id: profile.student_id,
             teacher_id: profile.teacher_id,
             active: profile.active,
@@ -302,15 +267,7 @@ export function useUsersPaginated(
             created_at: profile.created_at,
             updated_at: profile.updated_at,
           },
-          role: roleRow
-            ? {
-                id: roleRow.id,
-                user_id: roleRow.user_id,
-                role: roleRow.role,
-                full_name: roleRow.full_name,
-                email: roleRow.email,
-              }
-            : null,
+          role: profile.role,
           student,
           teacher,
         };

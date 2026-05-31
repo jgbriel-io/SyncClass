@@ -2,7 +2,12 @@ import { useSearchParams } from "react-router-dom";
 import { ClassesView } from "@/components/classes/ClassesView";
 import type { ClassStatusFilter } from "@/components/filters/ClassesFilters";
 
-const VALID_STATUSES: ClassStatusFilter[] = ["all", "agendada", "avaliacao_pendente", "concluida"];
+const VALID_STATUSES: ClassStatusFilter[] = [
+  "all",
+  "agendada",
+  "avaliacao_pendente",
+  "concluida",
+];
 
 export default function ClassesPage() {
   const [searchParams] = useSearchParams();
@@ -20,6 +25,7 @@ export default function ClassesPage() {
       showTeacherColumn={true}
       enableTeacherSelection={true}
       initialStatus={initialStatus}
+      isAdmin={true}
     />
   );
 }

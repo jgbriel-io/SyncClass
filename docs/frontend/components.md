@@ -84,20 +84,29 @@ npx shadcn-ui@latest add dialog
 **Customização:**
 Componentes são copiados para `src/components/ui/` — editar diretamente sem override complexo.
 
+**Primitivos customizados (além do shadcn/ui):**
+
+| Componente                    | Responsabilidade                                                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `ConfirmArchiveDialog.tsx`    | Modal genérico de archive/reactivate — aceita `title`, `description`, `onConfirm`, `variant` (`destructive`\|`default`) |
+| `ConfirmHardDeleteDialog.tsx` | Modal genérico de hard delete — título sempre `text-destructive`; suporta bloco `warning` opcional                      |
+
+Usados como base por `StudentDeleteDialog`, `TeacherStatusDialog`, `TeacherHardDeleteDialog` e `DeleteUserDialog`.
+
 ## Componentes de domínio
 
 ### Students
 
 **Localização:** `src/components/students/`
 
-| Componente                | Responsabilidade                  |
-| ------------------------- | --------------------------------- |
-| `StudentFormDialog.tsx`   | Form criar/editar aluno (Dialog)  |
-| `StudentDetailSheet.tsx`  | Detalhes do aluno (Sheet lateral) |
-| `StudentDeleteDialog.tsx` | Confirmação de exclusão           |
-| `StudentCard.tsx`         | Card de aluno (mobile)            |
-| `StudentsListView.tsx`    | Lista de alunos (tabela)          |
-| `StudentsTableRow.tsx`    | Linha da tabela de alunos         |
+| Componente                | Responsabilidade                                                                               |
+| ------------------------- | ---------------------------------------------------------------------------------------------- |
+| `StudentFormDialog.tsx`   | Form criar/editar aluno (Dialog)                                                               |
+| `StudentDetailSheet.tsx`  | Detalhes do aluno (Sheet lateral)                                                              |
+| `StudentDeleteDialog.tsx` | Confirmação de exclusão                                                                        |
+| `StudentCard.tsx`         | Card de aluno (mobile)                                                                         |
+| `StudentsListView.tsx`    | Lista de alunos (tabela); props: `showHardDelete`, `showAnonymizedFilter`, `showTeacherFilter` |
+| `StudentsTableRow.tsx`    | Linha da tabela; prop `isAnonymized`: exibe badge vermelho + oculta dropdown de ações          |
 
 ### Financial
 

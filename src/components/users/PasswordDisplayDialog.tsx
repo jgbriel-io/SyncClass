@@ -17,6 +17,7 @@ interface PasswordDisplayDialogProps {
   onOpenChange: (open: boolean) => void;
   password: string;
   source: "create" | "reset" | null;
+  email?: string;
 }
 
 export function PasswordDisplayDialog({
@@ -24,6 +25,7 @@ export function PasswordDisplayDialog({
   onOpenChange,
   password,
   source,
+  email,
 }: PasswordDisplayDialogProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -51,7 +53,10 @@ export function PasswordDisplayDialog({
     };
 
     if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(password).then(onSuccess).catch(tryInputCopy);
+      navigator.clipboard
+        .writeText(password)
+        .then(onSuccess)
+        .catch(tryInputCopy);
     } else {
       tryInputCopy();
     }
@@ -68,13 +73,26 @@ export function PasswordDisplayDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {source === "reset" ? "Senha redefinida" : usersContent.passwordDialog.title}
+            {source === "reset"
+              ? "Senha redefinida"
+              : source === "create"
+                ? "Aluno criado com sucesso!"
+                : usersContent.passwordDialog.title}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
             {usersContent.passwordDialog.description}
           </p>
+
+          {email && (
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <div className="rounded-md border bg-muted/50 px-3 py-2 text-sm">
+                {email}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>{usersContent.passwordDialog.passwordLabel}</Label>

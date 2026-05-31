@@ -28,6 +28,7 @@ const DEFAULT_PAGE_SIZE = 10;
 
 export type ClassLogsStatusFilter =
   | "all"
+  | "em_aberto"
   | "agendada"
   | "avaliacao_pendente"
   | "concluida";
@@ -37,6 +38,7 @@ export type ClassLogsFilters = {
   studentId?: string;
   period?: "all" | "week" | "month" | "3months";
   status?: ClassLogsStatusFilter;
+  sort?: "recent" | "oldest";
 };
 
 export type ClassLog = Tables<"class_logs">;
@@ -237,10 +239,11 @@ async function fetchClassLogs(
   pageSize: number,
   filters: ClassLogsFilters | undefined
 ): Promise<{ list: ClassLogWithStudent[]; count: number }> {
+  const ascending = filters?.sort === "oldest";
   let q = supabase
     .from("class_logs")
     .select(CLASS_LOG_SELECT, { count: "exact" })
-    .order("class_date", { ascending: false });
+    .order("class_date", { ascending });
 
   const effectiveTeacherId =
     teacherId ??
@@ -255,6 +258,19 @@ async function fetchClassLogs(
   if (filters?.period && filters.period !== "all") {
     const { from, to } = getDateRangeForPeriod(filters.period);
     q = q.gte("class_date", from).lte("class_date", to);
+  }
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  if (filters?.status && filters.status !== "all") {
+    if (filters.status === "em_aberto") {
+      q = q.is("attendance", null);
+    } else if (filters.status === "agendada") {
+      q = q.gt("class_date", todayStr);
+    } else if (filters.status === "avaliacao_pendente") {
+      q = q.is("attendance", null).lte("class_date", todayStr);
+    } else if (filters.status === "concluida") {
+      q = q.not("attendance", "is", null);
+    }
   }
 
   const from = page * pageSize;

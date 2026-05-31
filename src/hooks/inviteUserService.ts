@@ -9,8 +9,6 @@ import type { TablesInsert } from "@/integrations/supabase/types";
 type StudentInsert = TablesInsert<"students">;
 type TeacherInsert = TablesInsert<"teachers">;
 
-// ─── Tipos públicos ───────────────────────────────────────────────────────────
-
 export interface InviteUserBody {
   email: string;
   password?: string;
@@ -32,13 +30,13 @@ export interface InviteUserResult {
   permissionsWarning?: boolean;
 }
 
-// ─── Helpers internos ─────────────────────────────────────────────────────────
-
 type InviteResponseBody = {
   error?: string;
+  success?: boolean;
   userId?: string;
   email?: string;
   password?: string;
+  temporaryPasswordGenerated?: boolean;
   createdStudent?: { id: string } | null;
   createdTeacher?: { id: string } | null;
   permissionsWarning?: boolean;
@@ -88,14 +86,15 @@ function isClientError(body: InviteResponseBody): boolean {
  */
 export function inviteResultFromBody(
   body: InviteResponseBody,
-  bodyEmail: string
+  bodyEmail: string,
+  fallbackPassword = ""
 ): InviteUserResult | null {
   if (isClientError(body)) return null;
-  if (body?.userId && body?.password) {
+  if (body?.userId) {
     return {
       userId: body.userId,
       email: body.email ?? bodyEmail,
-      password: body.password,
+      password: body.password ?? fallbackPassword,
       createdStudent: body.createdStudent ?? null,
       createdTeacher: body.createdTeacher ?? null,
       permissionsWarning: body.permissionsWarning ?? true,
@@ -103,8 +102,6 @@ export function inviteResultFromBody(
   }
   return null;
 }
-
-// ─── Funções públicas ─────────────────────────────────────────────────────────
 
 /** Gera senha criptograficamente segura. */
 export function generateRandomPassword(length: number = 12): string {
@@ -118,7 +115,6 @@ export function generateRandomPassword(length: number = 12): string {
   crypto.getRandomValues(array);
 
   let password = "";
-  // Garantir pelo menos 1 de cada tipo
   password += lowercase[array[0] % lowercase.length];
   password += uppercase[array[1] % uppercase.length];
   password += numbers[array[2] % numbers.length];
@@ -128,7 +124,6 @@ export function generateRandomPassword(length: number = 12): string {
     password += all[array[i] % all.length];
   }
 
-  // Embaralhar com Fisher-Yates usando valores criptográficos
   const chars = password.split("");
   for (let i = chars.length - 1; i > 0; i--) {
     const j = array[i] % (i + 1);
@@ -163,11 +158,11 @@ export async function invokeInviteUser(
     });
     const parsed = data as InviteResponseBody | null;
 
-    if (parsed?.userId && parsed?.password) {
+    if (parsed?.userId && !parsed?.error) {
       return {
         userId: parsed.userId,
         email: parsed.email ?? body.email,
-        password: parsed.password,
+        password: parsed.password ?? body.password ?? "",
         createdStudent: parsed.createdStudent ?? null,
         createdTeacher: parsed.createdTeacher ?? null,
         permissionsWarning: parsed.permissionsWarning ?? false,
@@ -177,7 +172,7 @@ export async function invokeInviteUser(
     if (error) {
       const errorBody = await getFunctionResponseBody(error);
       const partial = errorBody
-        ? inviteResultFromBody(errorBody, body.email)
+        ? inviteResultFromBody(errorBody, body.email, body.password ?? "")
         : null;
       if (partial) return partial;
       const msg =
@@ -251,7 +246,6 @@ export async function createUserLegacy(
   if (!authData.user) throw new Error("Falha ao criar usuário");
   const userId = authData.user.id;
 
-  // Aguardar profile ser criado pelo trigger
   for (let i = 0; i < 8; i++) {
     const { data: p } = await supabase
       .from("profiles")
@@ -322,40 +316,21 @@ export async function createUserLegacy(
     }
   }
 
-  let roleOk = false;
-  const { error: rpcErr } = await supabase.rpc("set_user_role", {
-    p_user_id: userId,
-    p_role: body.role,
-    p_full_name: fullName,
-    p_email: normalizedEmail,
-    p_teacher_id: resolvedTeacherId ?? undefined,
-    p_student_id: resolvedStudentId ?? undefined,
-  });
-  if (!rpcErr) roleOk = true;
+  const { error: profileErr } = await supabase
+    .from("profiles")
+    .update({
+      role: body.role,
+      full_name: fullName,
+      email: normalizedEmail,
+      student_id: resolvedStudentId,
+      teacher_id: resolvedTeacherId,
+    })
+    .eq("user_id", userId);
 
-  if (!roleOk) {
-    const { error: profileErr } = await supabase
-      .from("profiles")
-      .update({
-        role: body.role,
-        full_name: fullName,
-        email: normalizedEmail,
-        student_id: resolvedStudentId,
-        teacher_id: resolvedTeacherId,
-      })
-      .eq("user_id", userId);
-    const { error: rolesErr } = await supabase.rpc("upsert_user_role_safe", {
-      p_user_id: userId,
-      p_role: body.role,
-      p_full_name: fullName || null,
-      p_email: normalizedEmail,
-    });
-    if (!profileErr && !rolesErr) roleOk = true;
-    else if (profileErr && rolesErr) {
-      throw new Error(
-        `Usuário criado mas sem role atribuída: ${rolesErr.message}`
-      );
-    }
+  if (profileErr) {
+    throw new Error(
+      `Usuário criado mas sem role atribuída: ${profileErr.message}`
+    );
   }
 
   return {
@@ -364,6 +339,6 @@ export async function createUserLegacy(
     password,
     createdStudent,
     createdTeacher,
-    permissionsWarning: !roleOk,
+    permissionsWarning: false,
   };
 }
