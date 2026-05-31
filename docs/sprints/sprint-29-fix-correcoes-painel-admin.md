@@ -561,6 +561,40 @@ for (let i = 0; i <= hex.length - 8; i++) {
 
 ---
 
+---
+
+## Fix — `validando` promovido a status real no DB (migration 58)
+
+**Contexto:** `financial_records.status` não permitia `validando` — o estado "comprovante enviado, aguardando confirmação" era derivado no front via `payment_proof_status === 'pending'`. Isso criava inconsistência: `aguardando_confirmacao` em `useStudentPortal`, `validando` em `financialStatus.ts`, e nenhum armazenado no DB. Filtros e queries não conseguiam consultar cobranças nesse estado diretamente.
+
+**Causa raiz:** Check constraint `financial_records_status_check` (e `check_valid_financial_logic`) só permitia `pendente`, `pago`, `cancelado`, `abonado`, `extornado`. `validando` era apenas uma string de retorno da função `getFinancialActualStatus`.
+
+**Correção:**
+
+1. **Migration 58** — `financial_records_status_check` e `check_valid_financial_logic` atualizados para incluir `validando`
+2. **`submit_payment_proof` RPC** — agora seta `status = 'validando'` atomicamente ao registrar comprovante (antes só setava `payment_proof_status = 'pending'`)
+3. **`getFinancialActualStatus`** — simplificado: lê `status === 'validando'` direto do DB; parâmetro `payment_proof_status` removido da assinatura
+4. **`useStudentPortal`** — tipo `"aguardando_confirmacao"` renomeado para `"validando"`
+5. **Helpers de status em classes view** — `getPaymentStatusVariant` e `getPaymentStatusLabel` atualizados com case `"validando"` em:
+   - `classesViewHelpers.ts`
+   - `ClassDetailSheet.tsx` (local duplicate)
+   - `ClassLogRow.tsx` (local duplicate)
+6. **`ClassesTableRow`** — parâmetro morto `payment_proof_status` removido das chamadas a `getFinancialActualStatus`
+
+**Fluxo após fix:** `pendente → validando (proof upload) → pago (aprovado) | pendente (rejeitado)`
+
+**Arquivos:**
+
+- `supabase/migrations/58_financial_validando_status.sql` — constraints + RPC atualizada + backfill
+- `src/lib/utils/financialStatus.ts` — `getFinancialActualStatus` simplificado
+- `src/hooks/useStudentPortal.ts` — tipo `"aguardando_confirmacao"` → `"validando"`
+- `src/components/classes/classesViewHelpers.ts` — case `validando` adicionado
+- `src/components/classes/ClassDetailSheet.tsx` — case `validando` adicionado
+- `src/components/classes/ClassLogRow.tsx` — case `validando` adicionado
+- `src/components/classes/ClassesTableRow.tsx` — parâmetro morto removido
+
+---
+
 ## Bugs Pendentes
 
 Nenhum.
