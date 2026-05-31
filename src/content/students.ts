@@ -71,9 +71,9 @@ export const students = {
   deleteDialog: {
     title: "Excluir definitivamente?",
     description: (name: string) =>
-      `Tem certeza que deseja excluir definitivamente o aluno ${name}?`,
+      `Os dados pessoais do aluno ${name} serão anonimizados (nome, e-mail, telefone). O histórico de aulas, atividades e cobranças será preservado. Esta ação não pode ser desfeita.`,
     warning:
-      "Todo o histórico de aulas e cobranças deste aluno será permanentemente removido. Esta ação não pode ser desfeita.",
+      "A conta de acesso vinculada será removida do sistema. O e-mail ficará disponível para reutilização.",
     warningLabel: "Atenção:",
     confirmButton: "Excluir definitivamente",
     deleting: "Excluindo...",
@@ -180,7 +180,7 @@ export const students = {
     selectCountry: "Selecione o país",
     selectState: "Selecione o estado",
     selectCity: "Selecione a cidade",
-    selectStateFirst: "Selecione uma UF primeiro",
+    selectStateFirst: "Selecione uma UF",
     noCitiesFound: "Nenhuma cidade encontrada.",
     noStatesFound: "Nenhum estado encontrado.",
     noCountriesFound: "Nenhum país encontrado.",

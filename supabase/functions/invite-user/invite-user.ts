@@ -1,7 +1,3 @@
-// Edge Function: invite-user
-// Cadastro atômico de usuários (auth + profiles + user_roles + students/teachers)
-// Admin: pode convidar qualquer role. Teacher: apenas students (com teacher_id próprio)
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { CORS_HEADERS, jsonResponse } from "../_shared/utils.ts";
@@ -67,10 +63,9 @@ serve(async (req) => {
     );
   }
 
-  // ✅ VULN-008 FIX: Rate limiting - 10 requests por minuto
-  const { data: rateLimitOk, error: rateLimitError } = await supabaseAdmin.rpc(
+  const { data: rateLimitOk, error: rateLimitError } = await supabaseAuthed.rpc(
     "check_rate_limit",
-    { p_operation: "invite_user", p_max_requests: 10, p_window_minutes: 1 }
+    { p_operation: "invite_user", p_max_requests: 100, p_window_minutes: 1 }
   );
 
   if (rateLimitError) {
@@ -85,35 +80,18 @@ serve(async (req) => {
     );
   }
 
-  const { data: callerRoleRow } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
+  const { data: profileRow } = await supabaseAdmin
+    .from("profiles")
+    .select("role, teacher_id")
     .eq("user_id", caller.id)
     .maybeSingle();
 
   let callerRole: Role | null = null;
-  if (callerRoleRow?.role && ROLES.includes(callerRoleRow.role as Role)) {
-    callerRole = callerRoleRow.role as Role;
-  } else {
-    const { data: profileRow } = await supabaseAdmin
-      .from("profiles")
-      .select("role, teacher_id")
-      .eq("user_id", caller.id)
-      .maybeSingle();
-    if (profileRow?.role && ROLES.includes(profileRow.role as Role))
-      callerRole = profileRow.role as Role;
-  }
+  if (profileRow?.role && ROLES.includes(profileRow.role as Role))
+    callerRole = profileRow.role as Role;
 
   const callerTeacherId =
-    callerRole === "teacher"
-      ? (
-          await supabaseAdmin
-            .from("profiles")
-            .select("teacher_id")
-            .eq("user_id", caller.id)
-            .maybeSingle()
-        ).data?.teacher_id as string | null
-      : null;
+    callerRole === "teacher" ? (profileRow?.teacher_id as string | null) : null;
 
   interface Body {
     email: string;
@@ -198,7 +176,6 @@ serve(async (req) => {
     return jsonResponse({ error: "Sem permissão para convidar usuários" }, 403);
   }
 
-  // CRÍTICO: Usar senha do body se fornecida (frontend já gerou), nunca gerar nova
   let password = body.password;
   if (!password || password.length < 6) {
     password = randomPassword();
@@ -259,7 +236,7 @@ serve(async (req) => {
     await supabaseAdmin.auth.admin.createUser({
       email: normalizedEmail,
       password,
-      email_confirm: false,
+      email_confirm: true,
       user_metadata: { full_name, temporary_password: password },
     });
 
@@ -280,17 +257,6 @@ serve(async (req) => {
   }
 
   const userId = authUser.user.id;
-
-  try {
-    await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail, {
-      data: { full_name, temporary_password: password },
-    });
-    log("Invite email sent", { email: normalizedEmail });
-  } catch (emailError) {
-    log("Failed to send invite email", {
-      error: (emailError as Error).message,
-    });
-  }
 
   try {
     await waitForProfile(userId, supabaseAdmin);
@@ -384,22 +350,8 @@ serve(async (req) => {
     );
   }
 
-  const { error: rolesErr } = await supabaseAdmin
-    .from("user_roles")
-    .update({ role, full_name, email: normalizedEmail })
-    .eq("user_id", userId);
-
-  if (rolesErr) {
-    log("user_roles update failed", { error: rolesErr.message });
-    return jsonResponse(
-      { error: rolesErr.message, userId, permissionsWarning: true },
-      500
-    );
-  }
-
   log("User created successfully", { userId, role });
 
-  // ✅ VULN-011 FIX: Não retornar senha no response
   return jsonResponse(
     {
       success: true,

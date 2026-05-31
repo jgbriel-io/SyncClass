@@ -107,8 +107,6 @@ export function ActivitiesView({
   const effectiveTeacherId =
     filters.teacherId !== "all" ? filters.teacherId : undefined;
 
-  // Admin: busca todas as atividades (de todos os professores) ou filtra por professor específico
-  // Professor: sempre filtra pelo seu ID
   const shouldFetchAll = isAdmin && !effectiveTeacherId;
 
   const {
@@ -119,7 +117,7 @@ export function ActivitiesView({
     shouldFetchAll
       ? undefined
       : effectiveTeacherId || autoTeacherId || undefined,
-    undefined, // Admin nunca filtra por aluno, só professor filtra
+    undefined,
     shouldFetchAll ? { fetchAll: true } : undefined
   );
 
@@ -147,7 +145,6 @@ export function ActivitiesView({
 
   const filteredActivities = useMemo(() => {
     let result = activities.filter((a) => {
-      // Busca
       const searchLower = filters.search.toLowerCase().trim();
       const matchSearch =
         !searchLower ||
@@ -156,7 +153,6 @@ export function ActivitiesView({
         (a.description || "").toLowerCase().includes(searchLower);
       if (!matchSearch) return false;
 
-      // Status
       const matchStatus =
         filters.status === "all" ||
         (filters.status === "vencida"
@@ -164,7 +160,6 @@ export function ActivitiesView({
           : a.status === filters.status);
       if (!matchStatus) return false;
 
-      // Período
       if (filters.period !== "all" && a.created_at) {
         const now = new Date();
         const createdDate = new Date(a.created_at);
@@ -180,7 +175,6 @@ export function ActivitiesView({
       return true;
     });
 
-    // Ordenação
     result = [...result].sort((a, b) => {
       const studentA = (a.students?.name || "").toLowerCase();
       const studentB = (b.students?.name || "").toLowerCase();
@@ -220,7 +214,6 @@ export function ActivitiesView({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">
@@ -228,15 +221,14 @@ export function ActivitiesView({
           </h1>
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </div>
-        <Button onClick={() => setSendDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          {isAdmin
-            ? activitiesContent.view.newButtonAdmin
-            : activitiesContent.view.newButton}
-        </Button>
+        {!isAdmin && (
+          <Button onClick={() => setSendDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            {activitiesContent.view.newButton}
+          </Button>
+        )}
       </div>
 
-      {/* Stat cards */}
       <div className="grid gap-4 grid-cols-2 laptop:grid-cols-5">
         <StatCard
           title={activitiesContent.view.statTotal}
@@ -271,7 +263,6 @@ export function ActivitiesView({
         />
       </div>
 
-      {/* Filtros */}
       <ActivitiesFilters
         filters={filters}
         onChange={setFilters}
@@ -283,7 +274,6 @@ export function ActivitiesView({
         primaryStatus="all"
       />
 
-      {/* Table */}
       <div className="rounded-lg border bg-card shadow-card overflow-hidden">
         <Table style={{ minWidth: ACT_TABLE_MIN_W }}>
           <TableHeader>
@@ -334,11 +324,13 @@ export function ActivitiesView({
               >
                 {activitiesContent.table.colDeliveredAt}
               </TableHead>
-              <TableHead
-                className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden xl:table-cell"
-                style={{ width: ACT_COL.AVALIAR, minWidth: ACT_COL.AVALIAR }}
-                aria-label={activitiesContent.table.colActions}
-              />
+              {!isAdmin && (
+                <TableHead
+                  className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap hidden xl:table-cell"
+                  style={{ width: ACT_COL.AVALIAR, minWidth: ACT_COL.AVALIAR }}
+                  aria-label={activitiesContent.table.colActions}
+                />
+              )}
               <TableHead
                 className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
                 style={{ width: ACT_COL.ACOES, minWidth: ACT_COL.ACOES }}
@@ -402,7 +394,6 @@ export function ActivitiesView({
         />
       </div>
 
-      {/* Dialogs */}
       <SendActivityDialog
         open={sendDialogOpen}
         onOpenChange={setSendDialogOpen}

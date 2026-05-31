@@ -50,6 +50,7 @@ interface FinancialViewProps {
   showTeacherColumn?: boolean;
   enableTeacherSelection?: boolean;
   autoTeacherId?: string | null;
+  isAdmin?: boolean;
 }
 
 export function FinancialView({
@@ -58,6 +59,7 @@ export function FinancialView({
   showTeacherColumn = true,
   enableTeacherSelection = true,
   autoTeacherId = null,
+  isAdmin = false,
 }: FinancialViewProps) {
   const [filters, setFilters] = useState<FinancialFiltersState>(
     defaultFinancialFilters
@@ -113,7 +115,6 @@ export function FinancialView({
   const updateRecord = useUpdateFinancialRecord();
   const undoPayment = useUndoFinancialPayment();
 
-  // Add actual status to records
   const recordsWithActualStatus = records.map((record) => ({
     ...record,
     actualStatus: getFinancialActualStatus(record),
@@ -121,7 +122,6 @@ export function FinancialView({
 
   const filteredRecords = useMemo(() => {
     let result = recordsWithActualStatus.filter((record) => {
-      // Apenas busca por texto (não está no banco - CPF/telefone com dígitos)
       const searchLower = filters.search.toLowerCase().trim();
       const studentName = record.students?.name || "";
       const studentEmail =
@@ -140,7 +140,6 @@ export function FinancialView({
             studentPhone.replace(/\D/g, "").includes(searchDigits)));
       if (!matchesSearch) return false;
 
-      // Filtro de status
       if (filters.status !== "all" && record.actualStatus !== filters.status) {
         return false;
       }
@@ -148,7 +147,6 @@ export function FinancialView({
       return true;
     });
 
-    // Ordenação (não está no banco)
     result = [...result].sort((a, b) => {
       const dueA = new Date((a.due_date || "") + "T12:00:00").getTime();
       const dueB = new Date((b.due_date || "") + "T12:00:00").getTime();
@@ -195,7 +193,6 @@ export function FinancialView({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">
@@ -207,11 +204,9 @@ export function FinancialView({
         </div>
       </div>
 
-      {/* Summary Cards */}
       <FinancialForecastCard forecastedBilling={forecastedBilling} />
       <FinancialSummaryCards records={recordsWithActualStatus} />
 
-      {/* Filtros avançados */}
       <FinancialFilters
         filters={filters}
         onChange={(newFilters) => {
@@ -225,7 +220,6 @@ export function FinancialView({
         students={activeStudents}
       />
 
-      {/* Error state */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <p className="text-destructive">
@@ -234,7 +228,6 @@ export function FinancialView({
         </div>
       )}
 
-      {/* Table */}
       <div
         className="rounded-lg border bg-card shadow-card overflow-hidden"
         ref={listTopRef}
@@ -285,11 +278,13 @@ export function FinancialView({
               >
                 {financialContent.view.colStatus}
               </TableHead>
-              <TableHead
-                className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
-                style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }}
-                aria-label={common.aria.evaluate}
-              />
+              {!isAdmin && (
+                <TableHead
+                  className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
+                  style={{ width: FIN_COL.AVALIAR, minWidth: FIN_COL.AVALIAR }}
+                  aria-label={common.aria.evaluate}
+                />
+              )}
               <TableHead
                 className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-2 align-middle whitespace-nowrap"
                 style={{ width: FIN_COL.ACOES, minWidth: FIN_COL.ACOES }}
@@ -309,6 +304,7 @@ export function FinancialView({
                   showTeacherColumn={showTeacherColumn}
                   teacherMap={teacherMap}
                   isUndoing={undoPayment.isPending}
+                  isAdmin={isAdmin}
                   onViewHistory={setHistoryRecord}
                   onEdit={(record) => {
                     setRecordToEdit(record);
@@ -355,7 +351,6 @@ export function FinancialView({
         />
       </div>
 
-      {/* Create Form Dialog */}
       <FinancialFormDialog
         open={isFormOpen}
         onOpenChange={(open) => {

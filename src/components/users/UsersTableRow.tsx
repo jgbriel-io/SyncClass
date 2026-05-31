@@ -71,12 +71,20 @@ export function UsersTableRow({
   getRoleLabel,
   getRoleVariant,
 }: UsersTableRowProps) {
-  const linkedStudent = user.profile?.student_id
-    ? students.find((s) => s.id === user.profile?.student_id)
-    : null;
-  const linkedTeacher = user.profile?.teacher_id
-    ? teachers.find((t) => t.id === user.profile.teacher_id)
-    : null;
+  const linkedStudent = user.student
+    ? {
+        id: user.student.id,
+        name: user.student.name,
+        status: user.student.status,
+      }
+    : user.profile?.student_id
+      ? (students.find((s) => s.id === user.profile?.student_id) ?? null)
+      : null;
+  const linkedTeacher = user.teacher
+    ? { id: user.teacher.id, name: user.teacher.name }
+    : user.profile?.teacher_id
+      ? (teachers.find((t) => t.id === user.profile.teacher_id) ?? null)
+      : null;
 
   const storedRole =
     ((user.role ?? user.profile?.role) as string | null) ?? null;
@@ -297,9 +305,7 @@ export function UsersTableRow({
                   onClick={() => onHardDelete(user)}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  {!user.profile?.student_id && !user.profile?.teacher_id
-                    ? "Excluir arquivo morto"
-                    : common.actions.delete + " definitivamente"}
+                  {common.actions.delete + " definitivamente"}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

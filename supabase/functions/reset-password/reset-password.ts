@@ -1,9 +1,3 @@
-// Edge Function: reset-password (unificada)
-// Três fluxos em um único endpoint:
-// A) Self-reset: qualquer usuário autenticado altera sua própria senha (currentPassword + newPassword)
-// B) Admin: reseta qualquer usuário por userId (password)
-// C) Admin/Professor: reseta aluno por studentId (password) — professor só do aluno vinculado
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { CORS_HEADERS, jsonResponse } from "../_shared/utils.ts";
@@ -25,11 +19,11 @@ serve(async (req) => {
   }
 
   interface RequestBody {
-    userId?: string;          // Fluxo B — admin reseta por userId
-    studentId?: string;       // Fluxo C — admin/professor reseta aluno
-    password?: string;        // Fluxo B/C — nova senha
-    currentPassword?: string; // Fluxo A — senha atual (self-reset)
-    newPassword?: string;     // Fluxo A — nova senha (self-reset)
+    userId?: string;
+    studentId?: string;
+    password?: string;
+    currentPassword?: string;
+    newPassword?: string;
     accessToken?: string;
   }
 
@@ -55,7 +49,6 @@ serve(async (req) => {
   });
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-  // 1) Authenticate caller
   const { data: { user }, error: authError } = await supabaseAuthed.auth.getUser(jwt);
 
   if (authError) {
@@ -65,8 +58,7 @@ serve(async (req) => {
     return jsonResponse({ error: "Usuário não encontrado. Token inválido." }, 401);
   }
 
-  // ✅ VULN-008 FIX: Rate limiting - 5 requests por minuto
-  const { data: rateLimitOk, error: rateLimitError } = await supabaseAdmin
+  const { data: rateLimitOk, error: rateLimitError } = await supabaseAuthed
     .rpc("check_rate_limit", {
       p_operation: "reset_password",
       p_max_requests: 5,
@@ -82,9 +74,6 @@ serve(async (req) => {
     }, 429);
   }
 
-  // ════════════════════════════════════════════════════════════
-  // Fluxo A: Self-reset (currentPassword + newPassword)
-  // ════════════════════════════════════════════════════════════
   if (body.currentPassword && body.newPassword) {
     const { currentPassword, newPassword } = body;
 
@@ -95,7 +84,6 @@ serve(async (req) => {
       return jsonResponse({ error: "A nova senha deve ter pelo menos 6 caracteres." }, 400);
     }
 
-    // Verificar senha atual via sign-in (with constant-time response to prevent email enumeration)
     const minResponseMs = 500;
     const signInStart = Date.now();
     const { error: signInError } = await supabaseAdmin.auth.signInWithPassword({
@@ -111,7 +99,6 @@ serve(async (req) => {
       return jsonResponse({ error: "Senha atual incorreta." }, 403);
     }
 
-    // Atualizar senha
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       user.id,
       { password: newPassword },
@@ -125,13 +112,8 @@ serve(async (req) => {
     return jsonResponse({ success: true }, 200);
   }
 
-  // ════════════════════════════════════════════════════════════
-  // Fluxos B/C: Admin ou Professor resetando outra pessoa
-  // ════════════════════════════════════════════════════════════
-
-  // 2) Verify caller role (admin ou teacher)
   const { data: roleRow, error: roleError } = await supabaseAdmin
-    .from("user_roles")
+    .from("profiles")
     .select("role")
     .eq("user_id", user.id)
     .single();
@@ -146,7 +128,6 @@ serve(async (req) => {
     return jsonResponse({ error: "Acesso negado. Apenas administradores ou professores podem redefinir senhas." }, 403);
   }
 
-  // 3) Validate password
   const newPassword = body?.password;
   if (!newPassword || typeof newPassword !== "string") {
     return jsonResponse({ error: "Missing password" }, 400);
@@ -155,15 +136,11 @@ serve(async (req) => {
     return jsonResponse({ error: "A senha deve ter pelo menos 6 caracteres." }, 400);
   }
 
-  // 4) Determine target user ID to update
   let targetUserId: string | null = null;
 
   const { userId, studentId } = body;
 
   if (studentId && typeof studentId === "string") {
-    // ── Fluxo C: por studentId (professor ou admin) ──
-
-    // ✅ VULN-007 FIX: usar supabaseAuthed (respeita RLS) ao invés de supabaseAdmin
     const { data: student, error: studentError } = await supabaseAuthed
       .from("students")
       .select("id, teacher_id")
@@ -171,12 +148,8 @@ serve(async (req) => {
       .maybeSingle();
 
     if (studentError || !student) {
-      // RLS já garante: se não encontrou, professor não tem acesso
       return jsonResponse({ error: "Aluno não encontrado ou sem permissão." }, 404);
     }
-
-    // ✅ Se chegou aqui, RLS já validou que o aluno pertence ao professor
-    // Não precisa mais da validação manual de teacher_id
 
     const { data: studentProfile, error: studentProfileError } = await supabaseAdmin
       .from("profiles")
@@ -191,8 +164,6 @@ serve(async (req) => {
     targetUserId = studentProfile.user_id;
 
   } else if (userId && typeof userId === "string") {
-    // ── Fluxo B: por userId direto (somente admin) ──
-
     if (callerRole !== "admin") {
       return jsonResponse({ error: "Acesso negado. Apenas administradores podem redefinir senha por userId." }, 403);
     }
@@ -202,7 +173,6 @@ serve(async (req) => {
     return jsonResponse({ error: "Informe studentId, userId, ou currentPassword + newPassword." }, 400);
   }
 
-  // 5) Reset the password
   const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
     targetUserId,
     { password: newPassword },
@@ -212,8 +182,6 @@ serve(async (req) => {
     console.error("[reset-password] Error resetting password:", updateError);
     return jsonResponse({ error: updateError.message }, 500);
   }
-
-
 
   return jsonResponse({ success: true }, 200);
 });

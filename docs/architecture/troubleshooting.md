@@ -15,12 +15,14 @@ Erros comuns, diagnóstico e soluções para problemas arquiteturais no SyncClas
 ## Quando usar este documento
 
 **Use quando:**
+
 - Encontrar erro em desenvolvimento ou produção
 - Query não retorna dados esperados
 - Performance degradada
 - Debugging de problemas arquiteturais
 
 **Não use quando:**
+
 - Procurar bugs funcionais → Issues do GitHub
 - Procurar vulnerabilidades → `docs/security/overview.md`
 - Procurar como implementar algo → `docs/architecture/patterns.md`
@@ -52,12 +54,12 @@ RLS (Row Level Security) bloqueou a operação. Possíveis razões:
 
 ```ts
 const { data: profile } = await supabase
-  .from('profiles')
-  .select('role')
-  .eq('user_id', userId)
+  .from("profiles")
+  .select("role")
+  .eq("user_id", userId)
   .single();
 
-console.log('Role:', profile?.role); // Deve ser 'teacher' ou 'admin'
+console.log("Role:", profile?.role); // Deve ser 'teacher' ou 'admin'
 ```
 
 **Passo 2:** Verificar policy no banco
@@ -81,11 +83,11 @@ VALUES ('João', 'joao@example.com', 'uuid-do-professor');
 
 ```ts
 // ❌ Usuário student tentando criar aluno
-const { error } = await supabase.from('students').insert({ name: 'João' });
+const { error } = await supabase.from("students").insert({ name: "João" });
 
 // ✅ Verificar role antes
-if (userRole !== 'teacher' && userRole !== 'admin') {
-  throw new Error('Apenas professores podem criar alunos');
+if (userRole !== "teacher" && userRole !== "admin") {
+  throw new Error("Apenas professores podem criar alunos");
 }
 ```
 
@@ -93,15 +95,15 @@ if (userRole !== 'teacher' && userRole !== 'admin') {
 
 ```ts
 // ❌ teacher_id hardcoded ou vindo do cliente
-const { error } = await supabase.from('students').insert({
-  name: 'João',
+const { error } = await supabase.from("students").insert({
+  name: "João",
   teacher_id: req.body.teacherId, // ⚠️ Nunca confiar no cliente
 });
 
 // ✅ teacher_id do usuário autenticado
 const teacherId = await getTeacherId(userId);
-const { error } = await supabase.from('students').insert({
-  name: 'João',
+const { error } = await supabase.from("students").insert({
+  name: "João",
   teacher_id: teacherId,
 });
 ```
@@ -110,15 +112,15 @@ const { error } = await supabase.from('students').insert({
 
 ```ts
 // ❌ Faltando pay_day (obrigatório na policy)
-const { error } = await supabase.from('students').insert({
-  name: 'João',
-  email: 'joao@example.com',
+const { error } = await supabase.from("students").insert({
+  name: "João",
+  email: "joao@example.com",
 });
 
 // ✅ Todos os campos obrigatórios
-const { error } = await supabase.from('students').insert({
-  name: 'João',
-  email: 'joao@example.com',
+const { error } = await supabase.from("students").insert({
+  name: "João",
+  email: "joao@example.com",
   pay_day: 10,
   hourly_rate: 50,
 });
@@ -205,7 +207,7 @@ Adicionar domínio no Supabase Dashboard (Settings → API → CORS).
 Implementar retry com backoff exponencial:
 
 ```ts
-import { useRetryMutation } from '@/hooks/useRetryMutation';
+import { useRetryMutation } from "@/hooks/useRetryMutation";
 
 const mutation = useRetryMutation({
   mutationFn: createStudent,
@@ -248,7 +250,7 @@ Ou: dados desatualizados após mutation (ex: criar aluno mas listagem não atual
 // src/hooks/useStudents.ts:12
 export const useStudents = (teacherId: string) => {
   return useQuery({
-    queryKey: ['students', teacherId], // ← Key usada
+    queryKey: ["students", teacherId], // ← Key usada
     queryFn: fetchStudents,
   });
 };
@@ -262,7 +264,7 @@ export const useCreateStudent = () => {
   return useMutation({
     mutationFn: createStudent,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] }); // ← Key invalidada
+      queryClient.invalidateQueries({ queryKey: ["students"] }); // ← Key invalidada
     },
   });
 };
@@ -271,6 +273,7 @@ export const useCreateStudent = () => {
 **Passo 3:** Verificar TanStack Query DevTools
 
 Abrir DevTools (ícone no canto inferior direito) e verificar:
+
 - Queries ativas
 - Cache entries
 - Invalidações recentes
@@ -281,12 +284,12 @@ Abrir DevTools (ícone no canto inferior direito) e verificar:
 
 ```ts
 // ❌ Query usa ['students', teacherId], invalidação usa ['students']
-queryClient.invalidateQueries({ queryKey: ['students'] });
+queryClient.invalidateQueries({ queryKey: ["students"] });
 
 // ✅ Invalidar com prefixo (invalida todas as variações)
-queryClient.invalidateQueries({ queryKey: ['students'] });
+queryClient.invalidateQueries({ queryKey: ["students"] });
 // Ou invalidar exata
-queryClient.invalidateQueries({ queryKey: ['students', teacherId] });
+queryClient.invalidateQueries({ queryKey: ["students", teacherId] });
 ```
 
 **Cenário 2:** Invalidação não chamada
@@ -297,7 +300,7 @@ export const useCreateStudent = () => {
   return useMutation({
     mutationFn: createStudent,
     onSuccess: () => {
-      toast.success('Aluno criado!');
+      toast.success("Aluno criado!");
     },
   });
 };
@@ -307,8 +310,8 @@ export const useCreateStudent = () => {
   return useMutation({
     mutationFn: createStudent,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] });
-      toast.success('Aluno criado!');
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      toast.success("Aluno criado!");
     },
   });
 };
@@ -320,7 +323,7 @@ export const useCreateStudent = () => {
 // ❌ Filtros não incluídos na key
 export const useStudents = (teacherId: string, filters: Filters) => {
   return useQuery({
-    queryKey: ['students', teacherId], // ⚠️ Faltando filters
+    queryKey: ["students", teacherId], // ⚠️ Faltando filters
     queryFn: () => fetchStudents(teacherId, filters),
   });
 };
@@ -328,7 +331,7 @@ export const useStudents = (teacherId: string, filters: Filters) => {
 // ✅ Filtros incluídos
 export const useStudents = (teacherId: string, filters: Filters) => {
   return useQuery({
-    queryKey: ['students', teacherId, filters],
+    queryKey: ["students", teacherId, filters],
     queryFn: () => fetchStudents(teacherId, filters),
   });
 };
@@ -357,62 +360,69 @@ Ocorre ao tentar acessar rota admin ou executar query que usa `is_admin()`.
 
 ### Causa
 
-Função `is_admin()` no banco **não tem** `SECURITY DEFINER`. Sem isso, a função executa com permissões do usuário (que não tem acesso a `user_roles`), causando recursão infinita com RLS.
+Pode ter duas origens:
+
+1. Função `is_admin()` **não tem** `SECURITY DEFINER` — executa com permissões do usuário, causando recursão infinita com RLS.
+2. Corpo da função incorreto — versão antiga usava `FROM user_roles` (tabela removida na migration 45) ou `FROM teachers WHERE id = auth.uid()` (nunca coincide com auth UUID).
 
 ### Diagnóstico
 
-**Passo 1:** Verificar definição da função
+**Passo 1:** Verificar que a função existe e tem SECURITY DEFINER
 
 ```sql
--- supabase/migrations/04_rls_and_permissions.sql:45
-SELECT prosecdef FROM pg_proc WHERE proname = 'is_admin';
--- Deve retornar 't' (true)
+SELECT proname, prosecdef, prosrc
+FROM pg_proc
+WHERE proname IN ('is_admin', 'is_teacher', 'is_student')
+  AND pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public');
+-- prosecdef deve ser 't'; prosrc deve referenciar profiles, não user_roles
 ```
 
-**Passo 2:** Verificar RLS em `user_roles`
+**Passo 2:** Testar com JWT simulado
 
 ```sql
-SELECT * FROM pg_policies WHERE tablename = 'user_roles';
--- Deve ter policy permitindo acesso via is_admin()
+SELECT set_config('request.jwt.claims', '{"sub":"<user_id>","role":"authenticated"}', true);
+SELECT is_admin(), is_teacher();
 ```
 
 ### Solução
 
-**Recriar função com `SECURITY DEFINER`:**
+**Recriar funções com implementação correta (migration 52):**
 
 ```sql
--- supabase/migrations/025_fix_is_admin.sql
-DROP FUNCTION IF EXISTS is_admin();
-
-CREATE OR REPLACE FUNCTION is_admin()
-RETURNS BOOLEAN AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM user_roles
-    WHERE user_id = auth.uid() AND role = 'admin'
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles
+    WHERE user_id::text = (auth.uid())::text
+    AND role = 'admin'
   );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER; -- ← Obrigatório
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_teacher()
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles
+    WHERE user_id::text = (auth.uid())::text
+    AND role = 'teacher'
+  );
+$$;
 ```
 
-Aplicar migration:
-
-```bash
-supabase db push
-```
+> ⚠️ Cast `::text` obrigatório — `profiles.user_id` é `varchar`, `auth.uid()` retorna `uuid`. Sem cast, comparação retorna NULL silenciosamente.
 
 ### Prevenção
 
 - Sempre usar `SECURITY DEFINER` em funções que acessam tabelas com RLS
-- Testar funções com usuário não-admin antes de deploy
-- Adicionar comentário no código:
+- Usar `::text` cast em comparações com `auth.uid()`
+- Verificar corpo da função no banco com `SELECT prosrc FROM pg_proc WHERE proname = 'is_teacher'` após cada migration
 
-```sql
--- SECURITY DEFINER obrigatório — sem isso causa recursão infinita com RLS
-CREATE OR REPLACE FUNCTION is_admin() ...
-```
-
-**Arquivo relacionado:** `supabase/migrations/04_rls_and_permissions.sql:45`
+**Arquivo relacionado:** `supabase/migrations/52_fix_is_teacher_is_admin_correct_profiles_lookup.sql`
 
 ---
 
@@ -434,9 +444,9 @@ Query demora >2s para retornar, causando loading prolongado na UI.
 **Passo 1:** Medir tempo da query
 
 ```ts
-console.time('useStudents');
-const { data } = await supabase.from('students').select('*');
-console.timeEnd('useStudents'); // Ex: useStudents: 2341ms
+console.time("useStudents");
+const { data } = await supabase.from("students").select("*");
+console.timeEnd("useStudents"); // Ex: useStudents: 2341ms
 ```
 
 **Passo 2:** Verificar `EXPLAIN ANALYZE` no banco
@@ -447,6 +457,7 @@ SELECT * FROM students WHERE teacher_id = 'uuid';
 ```
 
 Procurar por:
+
 - `Seq Scan` (full table scan) — adicionar índice
 - `Nested Loop` com muitas iterações — N+1 query
 - `execution time: >1000ms` — query lenta
@@ -462,29 +473,32 @@ Procurar por:
 
 ```ts
 // ❌ N+1 — busca alunos, depois busca professor de cada um
-const students = await supabase.from('students').select('*');
+const students = await supabase.from("students").select("*");
 for (const student of students) {
-  const teacher = await supabase.from('profiles').select('*').eq('user_id', student.teacher_id);
+  const teacher = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("user_id", student.teacher_id);
 }
 
 // ✅ JOIN — 1 query
 const students = await supabase
-  .from('students')
-  .select('*, profiles!teacher_id(full_name, email)');
+  .from("students")
+  .select("*, profiles!teacher_id(full_name, email)");
 ```
 
 **Cenário 2:** Agregação no cliente
 
 ```ts
 // ❌ Busca todos os registros para calcular total
-const { data } = await supabase.from('financial_records').select('*');
+const { data } = await supabase.from("financial_records").select("*");
 const total = data.reduce((sum, r) => sum + r.amount, 0);
 
 // ✅ Usar view materializada ou RPC
 const { data } = await supabase
-  .from('financial_dashboard')
-  .select('total_amount')
-  .eq('teacher_id', teacherId)
+  .from("financial_dashboard")
+  .select("total_amount")
+  .eq("teacher_id", teacherId)
   .single();
 ```
 
@@ -500,14 +514,14 @@ CREATE INDEX idx_financial_records_student_id ON financial_records(student_id);
 
 ```ts
 // ❌ Busca todos os registros
-const { data } = await supabase.from('class_logs').select('*');
+const { data } = await supabase.from("class_logs").select("*");
 
 // ✅ Paginação
 const { data } = await supabase
-  .from('class_logs')
-  .select('*')
+  .from("class_logs")
+  .select("*")
   .range(page * pageSize, (page + 1) * pageSize - 1)
-  .order('class_date', { ascending: false });
+  .order("class_date", { ascending: false });
 ```
 
 ### Prevenção
@@ -518,6 +532,7 @@ const { data } = await supabase
 - Implementar paginação em listas grandes (>50 registros)
 
 **Débito técnico relacionado:**
+
 - `docs/architecture/technical-debt.md` → ARQ-002 (Agregação no cliente)
 - `docs/architecture/technical-debt.md` → ARQ-005 (N+1 queries)
 

@@ -61,20 +61,21 @@ export const teachers = {
   },
 
   deleteDialog: {
-    title: "⚠️ EXCLUSÃO PERMANENTE",
+    title: "Excluir definitivamente?",
     description: (name: string) =>
-      `Tem certeza que deseja excluir definitivamente o professor ${name}?`,
+      `Os dados pessoais do professor ${name} serão anonimizados (nome, e-mail, telefone). O histórico de aulas será preservado. Esta ação não pode ser desfeita.`,
     warning:
-      "Todo o histórico de aulas deste professor será permanentemente removido. Esta ação não pode ser desfeita.",
+      "A conta de acesso vinculada será removida do sistema. O e-mail ficará disponível para reutilização.",
     warningLabel: "Atenção:",
     confirmButton: "Excluir definitivamente",
     deleting: "Excluindo...",
-    scheduledTitle: "⚠️ Confirmar exclusão com aulas agendadas",
+    scheduledTitle: "Confirmar exclusão com aulas agendadas",
     scheduledDescription: (count: string) =>
-      `Este professor possui ${count} aula(s) agendada(s). Ao confirmar, todas serão excluídas permanentemente junto com o professor. Esta ação não pode ser desfeita.`,
+      `Este professor possui ${count} aula(s) agendada(s). Ao confirmar, todas serão removidas permanentemente. Esta ação não pode ser desfeita.`,
     forceConfirmButton: "Excluir tudo permanentemente",
     toasts: {
-      forceSuccess: "Professor e todas as aulas foram excluídos permanentemente.",
+      forceSuccess:
+        "Professor e todas as aulas foram excluídos permanentemente.",
       noAccount: "Este professor não possui conta de acesso vinculada.",
       success: "Professor excluído com sucesso!",
       error: "Erro ao excluir professor.",
@@ -83,7 +84,8 @@ export const teachers = {
 
   resetPasswordDialog: {
     title: "Redefinir senha do professor",
-    description: (name: string) => `Nova senha para ${name}. Mínimo 6 caracteres.`,
+    description: (name: string) =>
+      `Nova senha para ${name}. Mínimo 6 caracteres.`,
     newPasswordLabel: "Nova senha",
     confirmPasswordLabel: "Confirmar senha",
     generateButton: "Gerar senha",
@@ -121,6 +123,7 @@ export const teachers = {
   validation: {
     nameMin: "Nome deve ter pelo menos 2 caracteres",
     emailInvalid: "Email inválido",
-    phoneFormat: "Telefone deve ter 10 ou 11 dígitos no formato (00) 00000-0000",
+    phoneFormat:
+      "Telefone deve ter 10 ou 11 dígitos no formato (00) 00000-0000",
   },
 } as const;

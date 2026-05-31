@@ -113,7 +113,7 @@ const { data, error } = await supabase.functions.invoke("invite-user", {
 2. Verifica que usuário está inativo (active=false)
 3. Invalida todas as sessões do usuário
 4. Deleta student/teacher vinculado (se existir)
-5. Deleta auth user (cascade remove profile e user_roles)
+5. Deleta auth user (cascade remove profile — user_roles foi removida na migration 45)
 
 **Rate limiting:** 20 req/min via `check_rate_limit('admin_delete_user', 20, 1)`
 

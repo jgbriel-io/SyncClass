@@ -1,18 +1,8 @@
 import { useState } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmHardDeleteDialog } from "@/components/ui/ConfirmHardDeleteDialog";
 import { useHardDeleteTeacher, type Teacher } from "@/hooks/useTeachers";
-import { teachers as teachersContent, common } from "@/content";
+import { teachers as teachersContent } from "@/content";
 
 interface TeacherHardDeleteDialogProps {
   open: boolean;
@@ -28,23 +18,19 @@ export function TeacherHardDeleteDialog({
   onClose,
 }: TeacherHardDeleteDialogProps) {
   const hardDeleteTeacher = useHardDeleteTeacher();
-  // Guarda o número de aulas agendadas quando o backend retorna conflito
   const [scheduledCount, setScheduledCount] = useState<string | null>(null);
 
   const handleConfirm = () => {
     if (!teacher) return;
-
     hardDeleteTeacher.mutate(
       { id: teacher.id, force: false },
       {
         onSuccess: onClose,
         onError: (error) => {
-          const errorMessage = (error as Error).message;
-
-          // Backend sinaliza conflito de aulas agendadas — abre confirmação extra
-          if (errorMessage.includes("aula(s) agendada(s)")) {
-            const numAulas = errorMessage.match(/(\d+) aula\(s\)/)?.[1] ?? "?";
-            setScheduledCount(numAulas);
+          const msg = (error as Error).message;
+          if (msg.includes("aula(s) agendada(s)")) {
+            const count = msg.match(/(\d+) aula\(s\)/)?.[1] ?? "?";
+            setScheduledCount(count);
           }
         },
       }
@@ -53,7 +39,6 @@ export function TeacherHardDeleteDialog({
 
   const handleForceConfirm = () => {
     if (!teacher) return;
-
     hardDeleteTeacher.mutate(
       { id: teacher.id, force: true },
       {
@@ -66,78 +51,41 @@ export function TeacherHardDeleteDialog({
     );
   };
 
-  const handleForceCancel = () => {
-    setScheduledCount(null);
-    onClose();
-  };
-
-  // Segundo dialog: confirmação de força quando há aulas agendadas
+  // Second step: confirm force-delete when scheduled classes exist
   if (scheduledCount !== null) {
     return (
-      <AlertDialog open onOpenChange={() => handleForceCancel()}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-destructive">
-              {teachersContent.deleteDialog.scheduledTitle}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {teachersContent.deleteDialog.scheduledDescription(scheduledCount ?? "?")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={hardDeleteTeacher.isPending} onClick={handleForceCancel}>
-              {common.actions.cancel}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleForceConfirm}
-              disabled={hardDeleteTeacher.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {hardDeleteTeacher.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {teachersContent.deleteDialog.deleting}
-                </>
-              ) : (
-                teachersContent.deleteDialog.forceConfirmButton
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmHardDeleteDialog
+        open
+        onOpenChange={() => {
+          setScheduledCount(null);
+          onClose();
+        }}
+        title={teachersContent.deleteDialog.scheduledTitle}
+        description={teachersContent.deleteDialog.scheduledDescription(
+          scheduledCount
+        )}
+        confirmLabel={teachersContent.deleteDialog.forceConfirmButton}
+        loadingLabel={teachersContent.deleteDialog.deleting}
+        isPending={hardDeleteTeacher.isPending}
+        onConfirm={handleForceConfirm}
+      />
     );
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-destructive">{teachersContent.deleteDialog.title}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {teachersContent.deleteDialog.description(teacher?.name ?? "")}
-            <br />
-            <br />
-            <strong className="text-destructive">{teachersContent.deleteDialog.warningLabel}</strong> {teachersContent.deleteDialog.warning}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={hardDeleteTeacher.isPending}>{common.actions.cancel}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirm}
-            disabled={hardDeleteTeacher.isPending}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            {hardDeleteTeacher.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {teachersContent.deleteDialog.deleting}
-              </>
-            ) : (
-              teachersContent.deleteDialog.confirmButton
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmHardDeleteDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={teachersContent.deleteDialog.title}
+      description={teachersContent.deleteDialog.description(
+        teacher?.name ?? ""
+      )}
+      confirmLabel={teachersContent.deleteDialog.confirmButton}
+      loadingLabel={teachersContent.deleteDialog.deleting}
+      isPending={hardDeleteTeacher.isPending}
+      onConfirm={handleConfirm}
+      warningLabel={teachersContent.deleteDialog.warningLabel}
+      warning={teachersContent.deleteDialog.warning}
+    />
   );
 }

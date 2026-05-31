@@ -6,7 +6,8 @@ export default function StudentsPage() {
   const [searchParams] = useSearchParams();
   const searchFromUrl = searchParams.get("search") ?? "";
   const filterFromUrl = searchParams.get("filter");
-  const initialFilterPreset = filterFromUrl === "aniversariantes" ? "aniversariantes" : "all";
+  const initialFilterPreset =
+    filterFromUrl === "aniversariantes" ? "aniversariantes" : "all";
   const { data: teachers = [] } = useTeachers();
 
   return (
@@ -19,6 +20,7 @@ export default function StudentsPage() {
       teachers={teachers}
       initialSearch={searchFromUrl}
       initialFilterPreset={initialFilterPreset}
+      showHardDelete={true}
     />
   );
 }

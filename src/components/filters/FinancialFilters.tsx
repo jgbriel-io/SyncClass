@@ -92,7 +92,7 @@ export function FinancialFilters({
         </div>
 
         {/* Filtros Básicos + Botões */}
-        <div className="flex flex-col gap-2 tablet:flex-row tablet:flex-wrap tablet:items-end">
+        <div className="grid grid-cols-2 gap-2 tablet:flex tablet:flex-row tablet:flex-wrap tablet:items-end">
           {/* Status */}
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">
@@ -104,7 +104,7 @@ export function FinancialFilters({
                 onChange({ ...filters, status: v as FinancialStatusFilter })
               }
             >
-              <SelectTrigger className="w-[130px]">
+              <SelectTrigger className="w-full tablet:w-[130px]">
                 <SelectValue placeholder={common.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
@@ -164,7 +164,7 @@ export function FinancialFilters({
                 });
               }}
             >
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full tablet:w-[150px]">
                 <SelectValue placeholder={common.placeholders.period} />
               </SelectTrigger>
               <SelectContent>
@@ -184,38 +184,40 @@ export function FinancialFilters({
             </Select>
           </div>
 
-          {/* Botão Mais Filtros */}
-          <CollapsibleTrigger asChild>
-            <Button variant="outline" size="sm" className="h-10 gap-2">
-              <Filter className="h-4 w-4" />
-              {filtersContent.buttons.moreFilters}
-              {isOpen ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-          </CollapsibleTrigger>
+          <div className="col-span-2 flex gap-2 tablet:contents">
+            {/* Botão Mais Filtros */}
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="sm" className="h-10 gap-2">
+                <Filter className="h-4 w-4" />
+                {filtersContent.buttons.moreFilters}
+                {isOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
 
-          {/* Botão Limpar */}
-          {hasActiveFilters && onReset && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onReset}
-              className="h-10"
-            >
-              <X className="h-4 w-4 mr-1" />
-              {filtersContent.buttons.clear}
-            </Button>
-          )}
+            {/* Botão Limpar */}
+            {hasActiveFilters && onReset && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onReset}
+                className="h-10"
+              >
+                <X className="h-4 w-4 mr-1" />
+                {filtersContent.buttons.clear}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Linha 2: Filtros Avançados (expansível) */}
       <CollapsibleContent>
         <div className="rounded-lg border bg-muted/30 p-4">
-          <div className="flex flex-col gap-3 tablet:flex-row tablet:flex-wrap">
+          <div className="grid grid-cols-2 gap-2 tablet:flex tablet:flex-row tablet:flex-wrap">
             {/* Aluno */}
             <div className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-muted-foreground">
@@ -225,15 +227,15 @@ export function FinancialFilters({
                 value={filters.studentId}
                 onValueChange={(v) => onChange({ ...filters, studentId: v })}
               >
-                <SelectTrigger className="w-[200px] pl-3 text-left">
+                <SelectTrigger className="w-full tablet:w-[200px] pl-3 text-left">
                   <SelectValue placeholder={common.placeholders.student} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all" className="pl-6">
+                  <SelectItem value="all">
                     {filtersContent.financial.options.allStudents}
                   </SelectItem>
                   {students.map((s) => (
-                    <SelectItem key={s.id} value={s.id} className="pl-6">
+                    <SelectItem key={s.id} value={s.id}>
                       {s.name || "—"}
                     </SelectItem>
                   ))}
@@ -252,7 +254,7 @@ export function FinancialFilters({
                   onChange({ ...filters, sortBy: v as FinancialSortBy })
                 }
               >
-                <SelectTrigger className="w-[220px] pl-3 text-left">
+                <SelectTrigger className="w-full tablet:w-[220px] pl-3 text-left">
                   <SelectValue placeholder={common.placeholders.sortBy} />
                 </SelectTrigger>
                 <SelectContent>

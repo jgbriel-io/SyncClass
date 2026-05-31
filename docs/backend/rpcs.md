@@ -401,6 +401,66 @@ const { data } = await supabase.from("financial_dashboard").select("*");
 
 **Nota:** Refresh deve ser feito periodicamente (cron job ou trigger).
 
+### admin_update_auth_display_name
+
+**Responsabilidade:** Atualiza `raw_user_meta_data.full_name` em `auth.users` para refletir renomeações feitas pelo admin.
+
+**Arquivo:** `supabase/migrations/53_add_admin_update_auth_display_name_rpc.sql`
+
+**Assinatura:**
+
+```sql
+admin_update_auth_display_name(
+  p_user_id UUID,
+  p_full_name TEXT
+) RETURNS void
+```
+
+**Segurança:** `SECURITY DEFINER` (acessa `auth.users`). Requer `is_admin()` — lança exceção se não for admin.
+
+**Chamada:**
+
+```ts
+await supabase.rpc("admin_update_auth_display_name", {
+  p_user_id: userId,
+  p_full_name: fullName,
+});
+```
+
+**Contexto de uso:** Chamado automaticamente em `useUpdateUserProfile` após atualizar `profiles.full_name`. Garante que o nome no painel Supabase (Auth Users) fique sincronizado.
+
+---
+
+### teacher_sync_student_display_name
+
+**Responsabilidade:** Sincroniza nome do aluno em `profiles.full_name` + `auth.users` metadata quando professor edita o nome via portal `/teacher/students`.
+
+**Arquivo:** `supabase/migrations/54_add_teacher_sync_student_display_name_rpc.sql`
+
+**Assinatura:**
+
+```sql
+teacher_sync_student_display_name(
+  p_student_id UUID,
+  p_name TEXT
+) RETURNS void
+```
+
+**Segurança:** `SECURITY DEFINER` (bypassa `profiles_select_policy` que bloqueia professor de ler profiles de outros usuários). Valida que o aluno pertence ao professor chamador (ou que é admin).
+
+**Chamada:**
+
+```ts
+await supabase.rpc("teacher_sync_student_display_name", {
+  p_student_id: studentId,
+  p_name: newName,
+});
+```
+
+**Contexto de uso:** Chamado em `useUpdateStudent` após update bem-sucedido na tabela `students`, quando `name` está presente no update. Resolve inconsistência onde `students.name` atualizava mas `profiles.full_name` e `auth.users` ficavam stale.
+
+---
+
 ## Ver também
 
 - [Backend Overview](./overview.md) — Visão geral do backend

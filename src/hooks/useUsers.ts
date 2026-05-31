@@ -205,7 +205,7 @@ export function useUsersPaginated(
         .map((p) => p.student_id)
         .filter((id): id is string => id != null);
 
-      const teacherIds = profileRows
+      const profileTeacherIds = profileRows
         .map((p) => p.teacher_id)
         .filter((id): id is string => id != null);
 
@@ -213,7 +213,6 @@ export function useUsersPaginated(
       let teachers: Tables<"teachers">[] = [];
 
       if (studentIds.length > 0) {
-        // IMPORTANTE: Buscar TODOS os students, incluindo inativos
         const { data: studentsData, error: studentsError } = await supabase
           .from("students")
           .select("*")
@@ -223,8 +222,15 @@ export function useUsersPaginated(
         students = studentsData || [];
       }
 
+      const studentTeacherIds = students
+        .map((s) => s.teacher_id)
+        .filter((id): id is string => id != null);
+
+      const teacherIds = [
+        ...new Set([...profileTeacherIds, ...studentTeacherIds]),
+      ];
+
       if (teacherIds.length > 0) {
-        // IMPORTANTE: Buscar TODOS os teachers, incluindo inativos
         const { data: teachersData, error: teachersError } = await supabase
           .from("teachers")
           .select("*")
@@ -239,8 +245,9 @@ export function useUsersPaginated(
           ? students.find((s) => s.id === profile.student_id) || null
           : null;
 
-        const teacher = profile.teacher_id
-          ? teachers.find((t) => t.id === profile.teacher_id) || null
+        const teacherId = profile.teacher_id ?? student?.teacher_id ?? null;
+        const teacher = teacherId
+          ? teachers.find((t) => t.id === teacherId) || null
           : null;
 
         return {

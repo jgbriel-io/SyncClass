@@ -73,7 +73,7 @@ export function UsersFilters({
         </div>
 
         {/* Filtros Básicos + Botões */}
-        <div className="flex flex-col gap-2 tablet:flex-row tablet:flex-wrap tablet:items-end">
+        <div className="grid grid-cols-2 gap-2 tablet:flex tablet:flex-row tablet:flex-wrap tablet:items-end">
           {/* Privilégio */}
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">
@@ -85,7 +85,7 @@ export function UsersFilters({
                 onChange({ ...filters, role: v as UserRoleFilter })
               }
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-full tablet:w-[140px]">
                 <SelectValue placeholder={common.placeholders.privilege} />
               </SelectTrigger>
               <SelectContent>
@@ -116,7 +116,7 @@ export function UsersFilters({
                 onChange({ ...filters, status: v as UserStatusFilter })
               }
             >
-              <SelectTrigger className="w-[130px]">
+              <SelectTrigger className="w-full tablet:w-[130px]">
                 <SelectValue placeholder={common.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
@@ -133,38 +133,40 @@ export function UsersFilters({
             </Select>
           </div>
 
-          {/* Botão Mais Filtros */}
-          <CollapsibleTrigger asChild>
-            <Button variant="outline" size="sm" className="h-10 gap-2">
-              <Filter className="h-4 w-4" />
-              {filtersContent.buttons.moreFilters}
-              {isOpen ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-          </CollapsibleTrigger>
+          <div className="col-span-2 flex gap-2 tablet:contents">
+            {/* Botão Mais Filtros */}
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="sm" className="h-10 gap-2">
+                <Filter className="h-4 w-4" />
+                {filtersContent.buttons.moreFilters}
+                {isOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
 
-          {/* Botão Limpar */}
-          {hasActiveFilters && onReset && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onReset}
-              className="h-10"
-            >
-              <X className="h-4 w-4 mr-1" />
-              {filtersContent.buttons.clear}
-            </Button>
-          )}
+            {/* Botão Limpar */}
+            {hasActiveFilters && onReset && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onReset}
+                className="h-10"
+              >
+                <X className="h-4 w-4 mr-1" />
+                {filtersContent.buttons.clear}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Linha 2: Filtros Avançados (expansível) */}
       <CollapsibleContent>
         <div className="rounded-lg border bg-muted/30 p-4">
-          <div className="flex flex-col gap-3 tablet:flex-row tablet:flex-wrap">
+          <div className="grid grid-cols-2 gap-2 tablet:flex tablet:flex-row tablet:flex-wrap">
             {/* Ordenar */}
             <div className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-muted-foreground">
@@ -176,7 +178,7 @@ export function UsersFilters({
                   onChange({ ...filters, sortBy: v as UserSortBy })
                 }
               >
-                <SelectTrigger className="w-[220px] pl-3 text-left">
+                <SelectTrigger className="w-full tablet:w-[220px] pl-3 text-left">
                   <SelectValue placeholder={common.placeholders.sortBy} />
                 </SelectTrigger>
                 <SelectContent>

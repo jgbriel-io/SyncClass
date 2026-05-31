@@ -8,6 +8,7 @@ export default function FinancialPage() {
       showTeacherColumn={true}
       enableTeacherSelection={true}
       autoTeacherId={null}
+      isAdmin={true}
     />
   );
 }

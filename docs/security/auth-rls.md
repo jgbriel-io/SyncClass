@@ -70,16 +70,15 @@ const {
 
 **Armazenamento:**
 
-- `user_roles` — cache para RLS (consulta rápida)
-- `profiles.role` — fonte de verdade
+- `profiles.role` — fonte de verdade (migration 45 removeu a tabela `user_roles` e consolidou tudo em `profiles`)
 
 **Fluxo de criação:**
 
 1. Admin convida usuário via Edge Function `invite-user`
-2. Edge Function cria registro em `auth.users` (email confirmado automaticamente)
-3. Trigger `on_auth_user_created` cria registros em `profiles` e `user_roles`
-4. Usuário recebe email com link de reset de senha
-5. Usuário define senha e faz login
+2. Edge Function cria registro em `auth.users` (email confirmado automaticamente — sem envio de email)
+3. Trigger `on_auth_user_created` cria registro em `profiles` com o `role` correto
+4. Admin recebe modal com email + senha gerada
+5. Usuário faz login com as credenciais fornecidas
 
 **Verificação de role:**
 

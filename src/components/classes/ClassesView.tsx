@@ -50,6 +50,8 @@ interface ClassesViewProps {
   autoTeacherId?: string | null;
   /** Status inicial vindo da URL (ex.: notificações) */
   initialStatus?: ClassStatusFilter;
+  /** Modo admin: oculta botões de criar/editar */
+  isAdmin?: boolean;
 }
 
 export function ClassesView({
@@ -60,6 +62,7 @@ export function ClassesView({
   enableTeacherSelection = true,
   autoTeacherId = null,
   initialStatus,
+  isAdmin = false,
 }: ClassesViewProps) {
   const [filters, setFilters] = useState<ClassesFiltersState>({
     ...defaultClassesFilters,
@@ -124,6 +127,7 @@ export function ClassesView({
         studentId: filters.studentId,
         period: filters.period,
         status: filters.status,
+        sort: filters.sort,
       }),
       [
         effectiveTeacherId,
@@ -131,6 +135,7 @@ export function ClassesView({
         filters.studentId,
         filters.period,
         filters.status,
+        filters.sort,
       ]
     ),
   });
@@ -256,7 +261,6 @@ export function ClassesView({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">
@@ -266,24 +270,28 @@ export function ClassesView({
             {subtitle}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setPackageDialogOpen(true)}>
-            <Package className="h-4 w-4 mr-2" />
-            {classesContent.view.packageButton}
-          </Button>
-          <Button
-            onClick={() => {
-              setSelectedLog(null);
-              setIsFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {classesContent.view.newButton}
-          </Button>
-        </div>
+        {!isAdmin && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setPackageDialogOpen(true)}
+            >
+              <Package className="h-4 w-4 mr-2" />
+              {classesContent.view.packageButton}
+            </Button>
+            <Button
+              onClick={() => {
+                setSelectedLog(null);
+                setIsFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {classesContent.view.newButton}
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Summary Cards */}
       <div className="grid gap-4 grid-cols-2 laptop:grid-cols-4">
         <StatCard
           title={classesContent.view.statTotal}
@@ -315,7 +323,6 @@ export function ClassesView({
         />
       </div>
 
-      {/* Filtros */}
       <ClassesFilters
         filters={filters}
         onChange={(newFilters) => {
@@ -343,6 +350,7 @@ export function ClassesView({
           isLoading={isLoading}
           showTeacherColumn={showTeacherColumn}
           teacherMap={teacherMap}
+          isAdmin={isAdmin}
         />
       )}
 

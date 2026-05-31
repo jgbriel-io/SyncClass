@@ -93,7 +93,7 @@ export function ClassesFilters({
         </div>
 
         {/* Filtros Básicos + Botões */}
-        <div className="flex flex-col gap-2 tablet:flex-row tablet:flex-wrap tablet:items-end">
+        <div className="grid grid-cols-2 gap-2 tablet:flex tablet:flex-row tablet:flex-wrap tablet:items-end">
           {/* Status */}
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">
@@ -105,7 +105,7 @@ export function ClassesFilters({
                 onChange({ ...filters, status: v as ClassStatusFilter })
               }
             >
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full tablet:w-[160px]">
                 <SelectValue placeholder={common.placeholders.status} />
               </SelectTrigger>
               <SelectContent>
@@ -118,7 +118,7 @@ export function ClassesFilters({
                 <SelectItem value="agendada">
                   {classesContent.filters.statusScheduled}
                 </SelectItem>
-                <SelectItem value="pendente">
+                <SelectItem value="avaliacao_pendente">
                   {classesContent.filters.statusPending}
                 </SelectItem>
                 <SelectItem value="concluida">
@@ -137,15 +137,15 @@ export function ClassesFilters({
               value={filters.studentId}
               onValueChange={(v) => onChange({ ...filters, studentId: v })}
             >
-              <SelectTrigger className="w-[200px] pl-3 text-left">
+              <SelectTrigger className="w-full tablet:w-[200px] pl-3 text-left">
                 <SelectValue placeholder={common.placeholders.student} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="pl-6">
+                <SelectItem value="all">
                   {classesContent.filters.studentAll}
                 </SelectItem>
                 {students.map((s) => (
-                  <SelectItem key={s.id} value={s.id} className="pl-6">
+                  <SelectItem key={s.id} value={s.id}>
                     {s.name || "—"}
                   </SelectItem>
                 ))}
@@ -164,7 +164,7 @@ export function ClassesFilters({
                 onChange({ ...filters, sort: v as ClassSortFilter })
               }
             >
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full tablet:w-[160px]">
                 <SelectValue placeholder={common.placeholders.sorting} />
               </SelectTrigger>
               <SelectContent>
@@ -178,38 +178,40 @@ export function ClassesFilters({
             </Select>
           </div>
 
-          {/* Botão Mais Filtros */}
-          <CollapsibleTrigger asChild>
-            <Button variant="outline" size="sm" className="h-10 gap-2">
-              <Filter className="h-4 w-4" />
-              {classesContent.filters.moreFilters}
-              {isOpen ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-          </CollapsibleTrigger>
+          <div className="col-span-2 flex gap-2 tablet:contents">
+            {/* Botão Mais Filtros */}
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="sm" className="h-10 gap-2">
+                <Filter className="h-4 w-4" />
+                {classesContent.filters.moreFilters}
+                {isOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
 
-          {/* Botão Limpar */}
-          {hasActiveFilters && onReset && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onReset}
-              className="h-10"
-            >
-              <X className="h-4 w-4 mr-1" />
-              {classesContent.filters.clear}
-            </Button>
-          )}
+            {/* Botão Limpar */}
+            {hasActiveFilters && onReset && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onReset}
+                className="h-10"
+              >
+                <X className="h-4 w-4 mr-1" />
+                {classesContent.filters.clear}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Linha 2: Filtros Avançados (expansível) */}
       <CollapsibleContent>
         <div className="rounded-lg border bg-muted/30 p-4">
-          <div className="flex flex-col gap-3 tablet:flex-row tablet:flex-wrap">
+          <div className="grid grid-cols-2 gap-2 tablet:flex tablet:flex-row tablet:flex-wrap">
             {/* Professor */}
             {showTeacherFilter && (
               <div className="flex flex-col gap-1.5">
@@ -220,17 +222,17 @@ export function ClassesFilters({
                   value={filters.teacherId}
                   onValueChange={(v) => onChange({ ...filters, teacherId: v })}
                 >
-                  <SelectTrigger className="w-[200px] pl-3 text-left">
+                  <SelectTrigger className="w-full tablet:w-[200px] pl-3 text-left">
                     <SelectValue
                       placeholder={common.placeholders.teacherResponsible}
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all" className="pl-6">
+                    <SelectItem value="all">
                       {classesContent.filters.teacherAll}
                     </SelectItem>
                     {teachers.map((t) => (
-                      <SelectItem key={t.id} value={t.id} className="pl-6">
+                      <SelectItem key={t.id} value={t.id}>
                         {t.name || "—"}
                       </SelectItem>
                     ))}
@@ -250,7 +252,7 @@ export function ClassesFilters({
                   onChange({ ...filters, classType: v as ClassTypeFilter })
                 }
               >
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full tablet:w-[140px]">
                   <SelectValue placeholder={common.placeholders.type} />
                 </SelectTrigger>
                 <SelectContent>
@@ -278,7 +280,7 @@ export function ClassesFilters({
                   onChange({ ...filters, period: v as ClassPeriodFilter })
                 }
               >
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full tablet:w-[140px]">
                   <SelectValue placeholder={common.placeholders.period} />
                 </SelectTrigger>
                 <SelectContent>

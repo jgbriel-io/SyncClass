@@ -40,6 +40,7 @@ interface ClassesTableViewProps {
   onDelete: (log: ClassLogWithStudent) => void;
   onEvaluate: (log: ClassLogWithStudent) => void;
   onCreateNew: () => void;
+  isAdmin?: boolean;
 }
 
 export function ClassesTableView({
@@ -59,6 +60,7 @@ export function ClassesTableView({
   onDelete,
   onEvaluate,
   onCreateNew,
+  isAdmin = false,
 }: ClassesTableViewProps) {
   return (
     <div
@@ -123,11 +125,13 @@ export function ClassesTableView({
               >
                 {classesContent.table.colFinancial}
               </TableHead>
-              <TableHead
-                className={cn(tableThSmall, "hidden xl:table-cell")}
-                style={{ width: CL_COL.AVALIAR, minWidth: CL_COL.AVALIAR }}
-                aria-label={common.aria.evaluate}
-              />
+              {!isAdmin && (
+                <TableHead
+                  className={cn(tableThSmall, "hidden xl:table-cell")}
+                  style={{ width: CL_COL.AVALIAR, minWidth: CL_COL.AVALIAR }}
+                  aria-label={common.aria.evaluate}
+                />
+              )}
               <TableHead
                 className={tableThSmall}
                 style={{ width: CL_COL.ACOES, minWidth: CL_COL.ACOES }}
@@ -160,6 +164,7 @@ export function ClassesTableView({
                     onDelete={onDelete}
                     onEvaluate={onEvaluate}
                     isEvaluationBlocked={isClassEvaluationBlocked(log)}
+                    isAdmin={isAdmin}
                   />
                 );
               })

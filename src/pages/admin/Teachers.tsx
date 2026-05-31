@@ -284,7 +284,7 @@ export default function TeachersPage() {
                           setTeacherToHardDelete(t);
                           setHardDeleteDialogOpen(true);
                         }}
-                        showHardDelete={false}
+                        showHardDelete={true}
                       />
                     ))
                   )}

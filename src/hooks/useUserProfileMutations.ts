@@ -108,6 +108,12 @@ export function useUpdateUserProfile() {
         .update({ full_name: fullName })
         .eq("user_id", userId);
       if (error) throw error;
+
+      // Best-effort: sync display name in auth.users metadata (cosmetic, dashboard only)
+      await supabase.rpc("admin_update_auth_display_name", {
+        p_user_id: userId,
+        p_full_name: fullName,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });

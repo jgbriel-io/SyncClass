@@ -79,6 +79,7 @@ export const common = {
     notInformed: "Não informado",
     noPrivilege: "Sem privilégio",
     noName: "(sem nome)",
+    teacher: "Professor",
   },
 
   // Input placeholders
@@ -215,12 +216,14 @@ export const common = {
     selectStudent: "Selecione um aluno",
     loadingCities: "Carregando cidades...",
     errorBoundaryTitle: "Algo deu errado",
-    errorBoundaryMessage: "Ocorreu um erro inesperado. Nossa equipe foi notificada e está trabalhando para resolver o problema.",
+    errorBoundaryMessage:
+      "Ocorreu um erro inesperado. Nossa equipe foi notificada e está trabalhando para resolver o problema.",
     errorBoundaryTechnical: "Detalhes técnicos (apenas em desenvolvimento)",
     errorBoundaryRetry: "Tentar novamente",
     errorBoundaryHome: "Voltar ao início",
     sectionErrorTitle: "Erro ao carregar seção",
-    sectionErrorMessage: "Ocorreu um erro ao carregar esta seção. Tente recarregar ou continue usando outras partes do sistema.",
+    sectionErrorMessage:
+      "Ocorreu um erro ao carregar esta seção. Tente recarregar ou continue usando outras partes do sistema.",
     sectionErrorReload: "Recarregar seção",
     phoneInvalid: "Telefone inválido.",
     dateInvalid: "Data inválida.",
@@ -311,7 +314,8 @@ export const common = {
   app: {
     name: "English School",
     copyright: (year: number) => `English School © ${year}`,
-    tagline: "Manage your classes, track progress, and handle payments all in one place.",
+    tagline:
+      "Manage your classes, track progress, and handle payments all in one place.",
     lgpd: "Conforme LGPD",
     developedBy: "Desenvolvido com",
     by: "por",
@@ -338,7 +342,8 @@ export const common = {
     noResultsHint: "Ajuste os filtros acima ou limpe a busca",
     noData: "Nenhum dado disponível",
     noRecords: "Nenhum registro encontrado",
-    searchEmpty: (query: string) => `Não encontramos resultados para "${query}". Tente ajustar os filtros ou termos de busca.`,
+    searchEmpty: (query: string) =>
+      `Não encontramos resultados para "${query}". Tente ajustar os filtros ou termos de busca.`,
     filterEmpty: "Ajuste os filtros para ver os resultados.",
   },
 

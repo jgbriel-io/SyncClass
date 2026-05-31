@@ -174,6 +174,7 @@ export function UserFormDialog({
         setSelectedStatus((s.status as StudentStatus) || "ativo");
         setSelectedCountry(s.country || "Brasil");
         setSelectedState(s.state || "");
+        setSelectedTeacherId(s.teacher_id || "");
         setValue("country", s.country || "Brasil", { shouldValidate: false });
       } else if (userRole === "teacher" && user.teacher) {
         const t = user.teacher;

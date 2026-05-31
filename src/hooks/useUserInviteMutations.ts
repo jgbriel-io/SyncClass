@@ -24,7 +24,7 @@ export function useInviteStudent() {
         teacher_id: data.teacher_id ?? undefined,
         studentData: data as Partial<StudentInsert>,
       });
-      return { ...result, createdStudent: result.createdStudent ?? { id: "" } };
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
@@ -32,7 +32,6 @@ export function useInviteStudent() {
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
-      toast.success("Aluno e conta de acesso criados com sucesso!");
     },
     onError: (error: Error) => toast.error(sanitizeErrorMessage(error)),
   });
@@ -51,7 +50,7 @@ export function useInviteTeacher() {
         role: "teacher",
         teacherData: data as Partial<TeacherInsert>,
       });
-      return { ...result, createdTeacher: result.createdTeacher ?? { id: "" } };
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.TEACHERS] });

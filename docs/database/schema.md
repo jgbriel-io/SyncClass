@@ -16,8 +16,7 @@ Tabelas, relacionamentos e integridade referencial.
 ```
 auth.users (Supabase Auth)
     │
-    ├──1:1── profiles (role, teacher_id, student_id, active)
-    └──1:1── user_roles (role — cache para RLS)
+    └──1:1── profiles (role, teacher_id, student_id, active)
 
 teachers
     │
@@ -39,7 +38,6 @@ teachers
 | teachers                    | Cadastro de professores              | Baixo (< 100)     |
 | students                    | Cadastro de alunos                   | Médio (< 10k)     |
 | profiles                    | Vínculo auth.users ↔ teacher/student | = users           |
-| user_roles                  | Cache de role para RLS               | = users           |
 | class_logs                  | Registro de aulas ministradas        | Alto (> 100k)     |
 | financial_records           | Cobranças (individuais ou pacotes)   | Alto (> 50k)      |
 | financial_record_class_logs | N:N aulas ↔ cobranças de pacote      | Médio             |
@@ -65,7 +63,6 @@ teachers
 ### 1:1 (um para um)
 
 - `auth.users` ↔ `profiles` (via `user_id UNIQUE`)
-- `auth.users` ↔ `user_roles` (via `user_id UNIQUE`)
 
 ## Integridade referencial
 
@@ -75,7 +72,6 @@ teachers
 | profiles.teacher_id → teachers                  | SET NULL      | Profile mantido mesmo sem teacher        |
 | profiles.student_id → students                  | SET NULL      | Profile mantido mesmo sem student        |
 | profiles.user_id → auth.users                   | CASCADE       | Profile deletado com o usuário           |
-| user_roles.user_id → auth.users                 | CASCADE       | Role deletada com o usuário              |
 | class_logs.student_id → students                | CASCADE       | Aulas deletadas com o aluno              |
 | class_logs.teacher_id → teachers                | SET NULL      | Aula mantida sem professor               |
 | financial_records.student_id → students         | CASCADE       | Cobranças deletadas com o aluno          |
