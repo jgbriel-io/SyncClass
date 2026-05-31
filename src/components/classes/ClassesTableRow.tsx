@@ -142,13 +142,11 @@ export function ClassesTableRow({
     ? getFinancialActualStatus({
         status: log.financial_records[0].status,
         due_date: log.financial_records[0].due_date,
-        payment_proof_status: log.financial_records[0].payment_proof_status,
       })
     : packageFinancial
       ? getFinancialActualStatus({
           status: packageFinancial.status,
           due_date: packageFinancial.due_date,
-          payment_proof_status: packageFinancial.payment_proof_status,
         })
       : null;
 

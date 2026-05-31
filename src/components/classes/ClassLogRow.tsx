@@ -77,10 +77,10 @@ function getPaymentStatusVariant(
   switch (status) {
     case "pago":
       return "success";
-    case "pendente":
-      return "warning";
     case "atrasado":
       return "destructive";
+    case "pendente":
+    case "validando":
     default:
       return "warning";
   }
@@ -90,10 +90,10 @@ function getPaymentStatusLabel(status: string | null): string {
   switch (status) {
     case "pago":
       return "Pago";
-    case "pendente":
-      return "Pendente";
     case "atrasado":
       return "Atrasado";
+    case "validando":
+      return "Validando";
     default:
       return "Pendente";
   }
