@@ -242,6 +242,27 @@ Usados como base por `StudentDeleteDialog`, `TeacherStatusDialog`, `TeacherHardD
 </StudentShell>
 ```
 
+### SettingsPerfilTab
+
+**Responsabilidade:** Aba de perfil nas configurações do usuário — avatar, nome, email, chave Pix (professor), exportar dados (LGPD).
+
+**Arquivo:** `src/components/layout/SettingsPerfilTab.tsx`
+
+**Props:**
+
+| Prop          | Tipo             | Descrição                                     |
+| ------------- | ---------------- | --------------------------------------------- |
+| `userId`      | `string`         | UUID do usuário autenticado                   |
+| `displayName` | `string`         | Nome exibido                                  |
+| `email`       | `string`         | Email atual                                   |
+| `avatarUrl`   | `string`         | URL do avatar                                 |
+| `teacherId`   | `string \| null` | ID do professor (exibe campo Pix se presente) |
+| `isTeacher`   | `boolean`        | Se `true`, nome e email ficam read-only       |
+
+**Regra de negócio:** Nome e email de professor são gerenciados exclusivamente pelo admin. `isTeacher = true` esconde os botões Editar nesses campos. Alunos e admin mantêm edição livre.
+
+---
+
 ## Auth
 
 **Localização:** `src/components/auth/`

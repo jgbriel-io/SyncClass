@@ -356,10 +356,12 @@ Este documento mapeia todas as regras de negócio implementadas na plataforma, e
 
 ### RN-044: Anonimização de Dados
 
-- Usuário pode solicitar anonimização (direito LGPD)
-- Funções: `anonymize_teacher_data()`, `anonymize_student_data()`
-- Remove dados pessoais, preserva IDs
-- **Fonte:** `02_logic_and_views.sql`, `05_cpf_removal_and_country.sql`
+- Hard delete (admin only) anonimiza dados pessoais do aluno/professor; histórico (aulas, cobranças, atividades) preservado vinculado ao registro anonimizado
+- Campos zerados: nome, email, telefone, endereço, data de nascimento
+- `is_deleted = true` + `anonymized_at` marcam o registro
+- Nome anonimizado: `"Aluno/Professor XXXXXXXX"` — 8 chars hex sempre alfanuméricos (mix letras `a-f` + dígitos)
+- Implementado em `useHardDeleteStudent` / `useHardDeleteTeacher`
+- **Fonte:** `src/hooks/useStudents.ts`, `src/hooks/useTeachers.ts`, `migrations/55_fix_anonymized_names_alphanumeric.sql`
 
 ### RN-045: Auditoria de Operações
 

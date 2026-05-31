@@ -454,19 +454,21 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 
 **Implementação:**
 
-- Admin convida novo usuário
-- Edge function envia email com link de ativação
-- Usuário define senha no primeiro acesso
-- Email template customizável
+- Admin cria novo usuário via edge function `invite-user`
+- Senha gerada automaticamente; exibida em modal (email + senha com toggle de visibilidade)
+- Conta criada com `email_confirmed_at` setado — usuário pode logar imediatamente sem confirmação por email
+- Envio de email de ativação removido (Sprint 29 — interferia nos testes e gerava dependência de SMTP)
 
 **Arquivos:**
 
-- `supabase/functions/invite-user/index.ts`
-- `src/hooks/useInviteUser.ts`
+- `supabase/functions/invite-user/invite-user.ts`
+- `src/hooks/inviteUserService.ts`
+- `src/hooks/useUserInviteMutations.ts`
+- `src/components/users/PasswordDisplayDialog.tsx`
 
-**Migration:** Não requer (usa Supabase Auth)
+**Migration:** Não requer (usa Supabase Auth Admin API)
 
-**Testes:** ⚠️ Manual (envio de email)
+**Testes:** ✅ Unitários em `useUserMutations.test.tsx`
 
 ---
 
@@ -539,19 +541,21 @@ Este documento detalha **todos os 30 requisitos funcionais** (RF01-RF30) impleme
 
 **Implementação:**
 
-- Funções: `anonymize_teacher_data()`, `anonymize_student_data()`
-- Remove dados pessoais: nome, email, telefone, endereço
-- Preserva IDs para integridade referencial
-- Campo `anonymized_at` marca data de anonimização
+- Hard delete via admin → anonimiza dados pessoais (nome, email, telefone, endereço, cidade, estado, país, data de nascimento)
+- Preserva IDs e histórico (class_logs, activities, financial_records) para integridade referencial e auditoria
+- Campo `is_deleted = true` + `anonymized_at` marcam o registro como anonimizado
+- Nome anonimizado segue padrão `"Aluno XXXXXXXX"` / `"Professor XXXXXXXX"` onde `XXXXXXXX` é sempre alfanumérico (letras hex `a-f` + dígitos) — primeiros 8 chars do UUID com garantia de mix
+- Implementado em `useHardDeleteStudent` / `useHardDeleteTeacher` (não funções SQL)
 
 **Arquivos:**
 
-- `supabase/migrations/02_logic_and_views.sql` (funções)
-- `supabase/migrations/05_cpf_removal_and_country.sql` (atualização)
+- `src/hooks/useStudents.ts` — `useHardDeleteStudent`
+- `src/hooks/useTeachers.ts` — `useHardDeleteTeacher`
+- `supabase/migrations/55_fix_anonymized_names_alphanumeric.sql` — backfill de registros existentes
 
-**Migration:** `02_logic_and_views.sql`
+**Migration:** `55_fix_anonymized_names_alphanumeric.sql`
 
-**Testes:** ⚠️ Via migration (executar função e verificar resultado)
+**Testes:** ⚠️ Manual (verificar campos após hard delete)
 
 ---
 
