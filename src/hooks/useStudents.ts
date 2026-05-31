@@ -17,6 +17,7 @@ import { students as studentsContent } from "@/content";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 import { logger } from "@/lib/logger";
 import { sanitizeStudentUpdateForEdit } from "@/lib/utils/sanitizeStudentUpdate";
+import { pickAnonSegment } from "@/lib/utils/anonymize";
 import { QK } from "./queryKeys";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -488,16 +489,7 @@ export function useHardDeleteStudent() {
         .maybeSingle();
 
       // 3) Anonymize student data (LGPD) — keeps row so class_logs/activities/financial_records remain linked
-      const hex = id.replace(/-/g, "");
-      let segment = hex.slice(0, 8);
-      for (let i = 0; i <= hex.length - 8; i++) {
-        const s = hex.slice(i, i + 8);
-        if (/[a-f]/.test(s) && /[0-9]/.test(s)) {
-          segment = s;
-          break;
-        }
-      }
-      const anonymizedName = `Aluno ${segment}`;
+      const anonymizedName = `Aluno ${pickAnonSegment(id)}`;
       const { error: anonError } = await supabase
         .from("students")
         .update({

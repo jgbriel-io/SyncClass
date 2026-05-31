@@ -60,22 +60,35 @@ export const layout = {
       emailLabel: "Email",
       pixKeyLabel: "Chave PIX",
       pixKeyPlaceholder: "CPF, email, telefone ou chave aleatória",
-      pixKeyHint: "Esta chave será exibida para seus alunos na tela de pagamento.",
-      emailConfirmHint: "Você receberá um email de confirmação no novo endereço.",
+      pixKeyHint:
+        "Esta chave será exibida para seus alunos na tela de pagamento.",
+      emailConfirmHint:
+        "Você receberá um email de confirmação no novo endereço.",
       editButton: "Editar",
       cancelButton: "Cancelar",
       saveButton: "Salvar",
+      exportLabel: "Exportar meus dados",
+      exportHint:
+        "Baixe uma cópia dos seus dados em formato JSON (LGPD, art. 18, inc. V). Limite: 3 exportações por hora.",
+      exportButton: "Exportar meus dados",
+      exportingButton: "Exportando...",
       toasts: {
         nameSuccess: "Nome atualizado com sucesso!",
         nameError: "Erro ao atualizar nome. Tente novamente.",
-        emailSuccess: "Email de confirmação enviado! Verifique sua caixa de entrada.",
+        emailSuccess:
+          "Email de confirmação enviado! Verifique sua caixa de entrada.",
         emailError: "Erro ao atualizar email. Tente novamente.",
         pixSuccess: "Chave PIX atualizada com sucesso!",
         pixError: "Erro ao atualizar chave PIX. Tente novamente.",
+        exportSuccess: "Dados exportados com sucesso!",
+        exportRateLimit: "Limite atingido. Tente novamente em 1 hora.",
+        exportError: "Erro ao exportar dados. Tente novamente.",
+        sessionExpired: "Sessão expirada. Faça login novamente.",
       },
     },
     password: {
-      sessionWarning: "Ao alterar sua senha, sua sessão será encerrada e você precisará fazer login novamente com a nova senha.",
+      sessionWarning:
+        "Ao alterar sua senha, sua sessão será encerrada e você precisará fazer login novamente com a nova senha.",
       currentPasswordLabel: "Senha atual",
       currentPasswordPlaceholder: "Digite sua senha atual",
       newPasswordLabel: "Nova senha",
@@ -91,7 +104,8 @@ export const layout = {
     preferences: {
       comingSoon: "Opções de tema, idioma e notificações em breve.",
       installAppLabel: "Instalar App",
-      installAppDescription: "Instale o app na sua tela inicial para acesso mais rápido e funcionamento offline.",
+      installAppDescription:
+        "Instale o app na sua tela inicial para acesso mais rápido e funcionamento offline.",
       installAppButton: "Instalar App",
       installAppSuccess: "App instalado com sucesso!",
       installAppBrowserHint: "Use o menu do navegador para instalar o app",

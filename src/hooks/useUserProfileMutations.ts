@@ -337,6 +337,6 @@ export function useHardDeleteUser() {
         })
       );
     },
-    onError: () => {},
+    onError: (error: unknown) => toast.error(sanitizeErrorMessage(error)),
   });
 }
