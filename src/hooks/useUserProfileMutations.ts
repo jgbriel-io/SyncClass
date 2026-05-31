@@ -264,11 +264,13 @@ export function useUpdateProfileEmail() {
   return useMutation({
     mutationFn: async ({ email }: { email: string }) => {
       const normalized = email.trim().toLowerCase();
-      const { error } = await supabase.auth.updateUser({ email: normalized });
+      const { error } = await supabase.rpc("user_update_own_email", {
+        p_email: normalized,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Email atualizado! Confirme no link enviado.");
+      toast.success("Email atualizado com sucesso!");
     },
     onError: (err: Error) => {
       toast.error(

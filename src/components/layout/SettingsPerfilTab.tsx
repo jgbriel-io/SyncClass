@@ -299,11 +299,6 @@ export function SettingsPerfilTab({
               </Button>
             ))}
         </div>
-        {editingEmail && (
-          <p className="text-xs text-amber-600 dark:text-amber-400">
-            {s.emailConfirmHint}
-          </p>
-        )}
       </div>
 
       {/* PIX */}

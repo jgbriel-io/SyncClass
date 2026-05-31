@@ -75,8 +75,7 @@ export const layout = {
       toasts: {
         nameSuccess: "Nome atualizado com sucesso!",
         nameError: "Erro ao atualizar nome. Tente novamente.",
-        emailSuccess:
-          "Email de confirmação enviado! Verifique sua caixa de entrada.",
+        emailSuccess: "Email atualizado com sucesso!",
         emailError: "Erro ao atualizar email. Tente novamente.",
         pixSuccess: "Chave PIX atualizada com sucesso!",
         pixError: "Erro ao atualizar chave PIX. Tente novamente.",
