@@ -626,6 +626,6 @@ Nenhum.
 ## Next Steps
 
 1. Sprint 30 — QA da visão do professor (criar aula, atividade, cobrança, pacote)
-2. Sprint 30 — QA do portal do aluno (submissão atividade, upload comprovante, histórico)
-3. Sprint 30 — Isolamento RLS (Professor A não vê dados do Professor B)
-4. Sprint 30 — Cross-cutting: logout, sessão expirada, responsividade mobile
+2. Sprint 31 — QA do portal do aluno (submissão atividade, upload comprovante, histórico)
+3. Sprint 32 — Isolamento RLS (Professor A não vê dados do Professor B)
+4. Sprint 33 — Cross-cutting: logout, sessão expirada, responsividade mobile
