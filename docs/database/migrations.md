@@ -86,6 +86,8 @@ Localizadas em `supabase/migrations/`, aplicar em ordem sequencial.
 | 54  | add_teacher_sync_student_display_name_rpc       | RPC `teacher_sync_student_display_name(student_id, name)`: sincroniza `profiles.full_name` + `auth.users` metadata para alunos; valida ownership do professor |
 | 55  | fix_anonymized_names_alphanumeric               | Backfill de nomes anonimizados (`Aluno/Professor XXXXXXXX`) para garantir padrão alfanumérico — `id.slice(0,8)` podia gerar segmentos all-digits              |
 | 56  | add_admin_update_auth_email_rpc                 | RPC `admin_update_auth_email(user_id, email)`: atualiza `auth.users.email` + `email_confirmed_at` via SECURITY DEFINER (admin only)                           |
+| 57  | add_user_update_own_email_rpc                   | RPC `user_update_own_email(email)`: aluno/admin atualiza próprio email sem trigger de confirmação Supabase; atualiza `auth.users` + `profiles.email`          |
+| 58  | financial_validando_status                      | Adiciona `validando` aos constraints de `financial_records.status`; atualiza `submit_payment_proof` para setar `status = 'validando'` atomicamente            |
 
 ## Dependências críticas
 

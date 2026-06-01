@@ -1,5 +1,8 @@
 import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
-import { DetailSection, DetailSectionGroup } from "@/components/ui/custom/DetailSection";
+import {
+  DetailSection,
+  DetailSectionGroup,
+} from "@/components/ui/custom/DetailSection";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
@@ -16,7 +19,9 @@ function formatClassDateAndTime(log: {
   start_at?: string | null;
   end_at?: string | null;
 }): { date: string; timeRange: string | null } {
-  const date = format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+  const date = format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", {
+    locale: ptBR,
+  });
   if (log.start_at && log.end_at) {
     const start = format(new Date(log.start_at), "HH:mm", { locale: ptBR });
     const end = format(new Date(log.end_at), "HH:mm", { locale: ptBR });
@@ -33,14 +38,16 @@ function formatDuration(minutes: number | null | undefined): string {
   return m > 0 ? `${h}h ${m}min` : `${h}h`;
 }
 
-function getPaymentStatusVariant(status: string | null): "success" | "warning" | "destructive" {
+function getPaymentStatusVariant(
+  status: string | null
+): "success" | "warning" | "destructive" {
   switch (status) {
     case "pago":
       return "success";
-    case "pendente":
-      return "warning";
     case "atrasado":
       return "destructive";
+    case "pendente":
+    case "validando":
     default:
       return "warning";
   }
@@ -50,30 +57,36 @@ function getPaymentStatusLabel(status: string | null): string {
   switch (status) {
     case "pago":
       return classesContent.tableRow.statusPaid;
-    case "pendente":
-      return classesContent.tableRow.statusPending;
     case "atrasado":
       return classesContent.tableRow.statusOverdue;
+    case "validando":
+      return classesContent.tableRow.statusValidating;
     default:
       return classesContent.tableRow.statusPending;
   }
 }
 
-function getClassLogDisplayTitle(log: { 
-  title?: string | null; 
+function getClassLogDisplayTitle(log: {
+  title?: string | null;
   class_date?: string;
   financial_record_via_package?: boolean;
 }): string {
   const rawTitle = log.title?.trim();
   const isPackage = log.financial_record_via_package;
-  
+
   // Se tem título customizado
   if (rawTitle) {
-    return isPackage ? `${escapeHtml(rawTitle)} (Pacote)` : escapeHtml(rawTitle);
+    return isPackage
+      ? `${escapeHtml(rawTitle)} (Pacote)`
+      : escapeHtml(rawTitle);
   }
-  
+
   // Fallback: "Aula - data"
-  const d = log.class_date ? format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "";
+  const d = log.class_date
+    ? format(new Date(log.class_date + "T00:00:00"), "dd/MM/yyyy", {
+        locale: ptBR,
+      })
+    : "";
   const fallbackTitle = d ? `Aula - ${d}` : "Aula";
   return isPackage ? `${fallbackTitle} (Pacote)` : fallbackTitle;
 }
@@ -98,12 +111,13 @@ export function ClassDetailSheet({
 
   const statusBadge = getClassStatusWithTime(classLog);
   const { date, timeRange } = formatClassDateAndTime(classLog);
-  const financialStatus = classLog.financial_records && classLog.financial_records.length > 0
-    ? getFinancialActualStatus({
-        status: classLog.financial_records[0].status,
-        due_date: classLog.financial_records[0].due_date,
-      })
-    : null;
+  const financialStatus =
+    classLog.financial_records && classLog.financial_records.length > 0
+      ? getFinancialActualStatus({
+          status: classLog.financial_records[0].status,
+          due_date: classLog.financial_records[0].due_date,
+        })
+      : null;
 
   return (
     <BaseDetailSheet
@@ -133,7 +147,9 @@ export function ClassDetailSheet({
           value={
             <>
               <p>{date}</p>
-              {timeRange && <p className="text-muted-foreground">{timeRange}</p>}
+              {timeRange && (
+                <p className="text-muted-foreground">{timeRange}</p>
+              )}
             </>
           }
         />
@@ -156,25 +172,29 @@ export function ClassDetailSheet({
           }
         />
 
-        {classLog.financial_records && classLog.financial_records.length > 0 && (
-          <DetailSection
-            icon={Receipt}
-            label={classesContent.detailSheet.financialSection}
-            value={
-              <div className="flex flex-wrap items-center gap-2">
-                <StatusBadge variant={getPaymentStatusVariant(financialStatus)}>
-                  {getPaymentStatusLabel(financialStatus)}
-                </StatusBadge>
-                <span className="text-sm font-medium tabular-nums">
-                  {formatCurrency(classLog.financial_records[0].amount)}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {classesContent.detailSheet.financialSection}: {formatDate(classLog.financial_records[0].due_date)}
-                </span>
-              </div>
-            }
-          />
-        )}
+        {classLog.financial_records &&
+          classLog.financial_records.length > 0 && (
+            <DetailSection
+              icon={Receipt}
+              label={classesContent.detailSheet.financialSection}
+              value={
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge
+                    variant={getPaymentStatusVariant(financialStatus)}
+                  >
+                    {getPaymentStatusLabel(financialStatus)}
+                  </StatusBadge>
+                  <span className="text-sm font-medium tabular-nums">
+                    {formatCurrency(classLog.financial_records[0].amount)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {classesContent.detailSheet.financialSection}:{" "}
+                    {formatDate(classLog.financial_records[0].due_date)}
+                  </span>
+                </div>
+              }
+            />
+          )}
 
         {/* Observações e Feedback */}
         <div className="space-y-4">
@@ -189,7 +209,7 @@ export function ClassDetailSheet({
               </p>
             </div>
           )}
-          
+
           {/* Feedback (preenchido ao avaliar a aula) */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -203,10 +223,13 @@ export function ClassDetailSheet({
               <p className="text-sm text-muted-foreground">—</p>
             )}
           </div>
-          
+
           {classLog.updated_at && (
             <p className="text-xs text-muted-foreground">
-              {classesContent.tableRow.editedAt} {format(new Date(classLog.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              {classesContent.tableRow.editedAt}{" "}
+              {format(new Date(classLog.updated_at), "dd/MM/yyyy 'às' HH:mm", {
+                locale: ptBR,
+              })}
             </p>
           )}
         </div>

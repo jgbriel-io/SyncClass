@@ -491,6 +491,73 @@ await supabase.rpc("teacher_sync_student_display_name", {
 
 ---
 
+### user_update_own_email
+
+**Responsabilidade:** Permite que usuário autenticado atualize o próprio email sem disparar o fluxo de confirmação por email do Supabase.
+
+**Arquivo:** `supabase/migrations/57_add_user_update_own_email_rpc.sql`
+
+**Assinatura:**
+
+```sql
+user_update_own_email(p_email TEXT) RETURNS void
+```
+
+**Segurança:** `SECURITY DEFINER`. Valida que o caller tem profile ativo antes de prosseguir. Atualiza `auth.users.email` + `email_confirmed_at` + `profiles.email` atomicamente.
+
+**Contexto de uso:** Chamado em `useUpdateProfileEmail` para alunos e admins que editam o próprio email via Configurações. Professores têm o campo bloqueado (nome e email são admin-only).
+
+---
+
+### submit_payment_proof
+
+**Responsabilidade:** Registra comprovante de pagamento enviado pelo aluno e transiciona a cobrança para `status = 'validando'`.
+
+**Arquivo:** `supabase/migrations/03_rpcs_and_triggers.sql` (atualizada em migration 58)
+
+**Assinatura:**
+
+```sql
+submit_payment_proof(
+  p_financial_record_id UUID,
+  p_proof_url TEXT,
+  p_proof_filename TEXT
+) RETURNS JSONB
+```
+
+**Segurança:** `SECURITY DEFINER`. Requer `is_student()` e valida ownership da cobrança.
+
+**Efeito:** Seta `payment_proof_url`, `payment_proof_filename`, `payment_proof_uploaded_at`, `payment_proof_status = 'pending'`, **`status = 'validando'`**.
+
+**Fluxo:** `pendente → validando (upload) → pago (aprovado) | pendente (rejeitado por `review_payment_proof`)`
+
+---
+
+### review_payment_proof
+
+**Responsabilidade:** Professor ou admin aprova/rejeita comprovante de pagamento.
+
+**Arquivo:** `supabase/migrations/03_rpcs_and_triggers.sql`
+
+**Assinatura:**
+
+```sql
+review_payment_proof(
+  p_financial_record_id UUID,
+  p_approved BOOLEAN,
+  p_rejection_reason TEXT DEFAULT NULL
+) RETURNS JSONB
+```
+
+**Segurança:** `SECURITY DEFINER`. Requer `is_teacher()` ou `is_admin()`. Professor valida ownership (cobrança pertence a aluno seu).
+
+**Efeito:**
+
+- Aprovado: `status = 'pago'`, `payment_proof_status = 'approved'`, `paid_at = NOW()`
+- Rejeitado: `status = 'pendente'`, `payment_proof_status = 'rejected'`, proof URL/filename limpos (aluno pode reenviar)
+
+---
+
 ## Ver também
 
 - [Backend Overview](./overview.md) — Visão geral do backend

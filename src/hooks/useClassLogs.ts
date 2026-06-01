@@ -18,6 +18,7 @@ import {
   CLASS_OVERLAP_MESSAGE,
   validateNoOverlap,
 } from "@/lib/utils/classTime";
+import { classes as classesContent } from "@/content";
 import { QK } from "./queryKeys";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -534,7 +535,7 @@ export function useCreateClassLog() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS] });
       queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS_SUMMARY] });
-      toast.success("Aula registrada com sucesso!");
+      toast.success(classesContent.logFormDialog.toasts.success);
     },
     onError: (error) => {
       toast.error(
@@ -609,9 +610,9 @@ export function useCreateClassLogWithFinancial() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
 
       if (variables.createFinancial) {
-        toast.success("Aula e cobrança registradas com sucesso!");
+        toast.success(classesContent.logFormDialog.toasts.successWithPayment);
       } else {
-        toast.success("Aula registrada com sucesso!");
+        toast.success(classesContent.logFormDialog.toasts.success);
       }
     },
     onError: (error) => {
@@ -698,7 +699,7 @@ export function useUpdateClassLog() {
       });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
-      toast.success("Registro atualizado com sucesso!");
+      toast.success(classesContent.logFormDialog.toasts.successEdit);
     },
     onError: (error) => {
       toast.error(
@@ -831,7 +832,7 @@ export function useDeleteClassLog() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
-      toast.success("Registro removido com sucesso!");
+      toast.success(classesContent.logFormDialog.toasts.successDelete);
     },
     onError: () => {
       toast.error(

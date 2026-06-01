@@ -83,7 +83,9 @@ export const classes = {
     cancel: "Cancelar",
     toasts: {
       success: "Aula registrada com sucesso!",
+      successWithPayment: "Aula e cobrança registradas com sucesso!",
       successEdit: "Aula atualizada com sucesso!",
+      successDelete: "Registro removido com sucesso!",
       error: "Erro ao salvar aula.",
     },
   },
@@ -92,9 +94,11 @@ export const classes = {
     noCharge: "Sem cobrança",
     sectionTitleNew: "Dados da Cobrança *",
     sectionTitleEdit: "Dados da Cobrança",
-    futureClassHint: "Para aula agendada: a cobrança fica em aberto; presença e feedback podem ser marcados depois.",
+    futureClassHint:
+      "Para aula agendada: a cobrança fica em aberto; presença e feedback podem ser marcados depois.",
     calculatedValue: "Valor calculado:",
-    noHourlyRate: "Aluno sem valor/hora cadastrado. Informe o valor manualmente.",
+    noHourlyRate:
+      "Aluno sem valor/hora cadastrado. Informe o valor manualmente.",
     noTimeRange: "Informe início e término para calcular o valor.",
     amountLabel: "Valor (R$) *",
     amountLabelEdit: "Valor (R$)",
@@ -111,7 +115,8 @@ export const classes = {
     cash: "Dinheiro",
     transfer: "Transferência",
     other: "Outro",
-    editDateHint: "Alterar a data da aula não altera o vencimento automaticamente; edite aqui se quiser.",
+    editDateHint:
+      "Alterar a data da aula não altera o vencimento automaticamente; edite aqui se quiser.",
   },
 
   packageDialog: {
@@ -141,7 +146,8 @@ export const classes = {
       invalidTime: "Informe o horário de início e término.",
       endTimeBeforeStart: "Horário de término deve ser posterior ao início.",
       noDatesFound: "Nenhuma data encontrada para o mês e dias selecionados.",
-      generated: (count: number, month: string, year: number) => `${count} aula(s) gerada(s) para ${month}/${year}.`,
+      generated: (count: number, month: string, year: number) =>
+        `${count} aula(s) gerada(s) para ${month}/${year}.`,
       selectPaymentMethod: "Selecione o método de pagamento.",
       success: "Pacote cadastrado com sucesso!",
       error: "Erro ao cadastrar pacote.",
@@ -158,7 +164,8 @@ export const classes = {
     feedbackPlaceholder: "Observações sobre a aula...",
     chargeAbsenceLabel: "Cobrar esta falta",
     refundLabel: "Extornar pagamento",
-    refundDescription: "O pagamento será marcado como extornado (devolvido ao aluno)",
+    refundDescription:
+      "O pagamento será marcado como extornado (devolvido ao aluno)",
     confirmPaymentLabel: "Confirmar pagamento",
     cancel: "Cancelar",
     save: "Salvar",
@@ -218,7 +225,8 @@ export const classes = {
       `Tem certeza que deseja excluir o registro de aula de ${studentName} do dia ${date}?`,
     warningPaid:
       "Esta aula possui uma cobrança já paga. A exclusão da aula também exclui a cobrança. Deseja excluir mesmo assim?",
-    warningLinked: "⚠️ Esta aula possui uma cobrança vinculada que também será afetada.",
+    warningLinked:
+      "⚠️ Esta aula possui uma cobrança vinculada que também será afetada.",
     confirmButton: "Excluir",
     deleting: "Excluindo...",
     toasts: {

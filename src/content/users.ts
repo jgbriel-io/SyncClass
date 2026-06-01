@@ -44,6 +44,7 @@ export const users = {
     toasts: {
       success: "Usuário criado com sucesso!",
       successEdit: "Usuário atualizado com sucesso!",
+      successTeacherInvite: "Professor e conta de acesso criados com sucesso!",
       error: "Erro ao salvar usuário.",
     },
   },
@@ -116,6 +117,8 @@ export const users = {
       mismatch: "As senhas não coincidem.",
       noAccount: "Este usuário não possui conta de acesso vinculada.",
       success: "Senha redefinida com sucesso!",
+      successForUser:
+        "Senha redefinida com sucesso. O usuário precisará fazer login novamente.",
       error: "Erro ao redefinir senha.",
     },
   },

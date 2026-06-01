@@ -11,6 +11,7 @@ import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
 import { useOptimisticMutation } from "@/hooks/useOptimisticMutation";
+import { activities as activitiesContent } from "@/content";
 import { QK } from "./queryKeys";
 
 // ---------------------------------------------------------------------------
@@ -339,7 +340,7 @@ export function useCreateActivity() {
         queryKey: [QK.ACTIVITIES],
         exact: false,
       });
-      toast.success("Atividade enviada com sucesso!");
+      toast.success(activitiesContent.sendDialog.toasts.success);
     },
     onError: (error) => {
       logger.error(error, { context: "useCreateActivity" });
@@ -368,7 +369,7 @@ export function useUpdateActivity() {
         queryKey: [QK.ACTIVITIES],
         exact: false,
       });
-      toast.success("Atividade atualizada com sucesso!");
+      toast.success(activitiesContent.editDialog.toasts.success);
     },
     onError: (error) => {
       logger.error(error, { context: "useUpdateActivity" });
@@ -465,7 +466,7 @@ export function useAddActivityCorrection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.ACTIVITIES] });
-      toast.success("Correção enviada com sucesso!");
+      toast.success(activitiesContent.correctionDialog.toasts.success);
     },
     onError: (error) => {
       logger.error(error, { context: "useAddActivityCorrection" });
@@ -495,7 +496,7 @@ export function useDeleteActivity() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.ACTIVITIES] });
-      toast.success("Atividade excluída com sucesso!");
+      toast.success(activitiesContent.deleteDialog.toasts.success);
     },
     onError: (error) => {
       logger.error(error, { context: "useDeleteActivity" });

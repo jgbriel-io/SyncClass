@@ -462,19 +462,21 @@ const { value, onChange } = useDateMask();
 
 ### useToast
 
-**Responsabilidade:** Toast notifications (Sonner).
+**Responsabilidade:** Toast notifications via Sonner.
 
-**Arquivo:** `src/hooks/use-toast.ts`
+**Import correto:** `import { toast } from "sonner"` — não usar `@/hooks/use-toast` (descontinuado, era shadcn).
 
 **Exemplo:**
 
 ```tsx
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { students as studentsContent } from "@/content";
 
-toast.success("Sucesso!");
-toast.error("Erro!");
-toast.info("Info!");
+toast.success(studentsContent.toasts.created);
+toast.error(sanitizeErrorMessage(error));
 ```
+
+**Regra:** Todo `toast.success` em hook deve referenciar `src/content/{domínio}.ts`. Nunca hardcode string de toast em hook.
 
 ### useChangePassword
 
@@ -501,7 +503,7 @@ const handleChange = async () => {
 // src/hooks/useStudents.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type Student = Database["public"]["Tables"]["students"]["Row"];

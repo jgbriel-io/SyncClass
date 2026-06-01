@@ -35,7 +35,7 @@ interface StudentFinancialRecord {
   amount: number;
   due_date: string;
   description: string | null;
-  status: "pendente" | "pago" | "atrasado" | "aguardando_confirmacao";
+  status: "pendente" | "pago" | "atrasado" | "validando";
   paid_at: string | null;
   payment_proof_status?: string | null;
   payment_proof_url?: string | null;

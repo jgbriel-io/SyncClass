@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QK } from "./queryKeys";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export interface ProfileWithRole {
   id: string;
@@ -97,17 +97,10 @@ export function useLinkStudentToProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
-      toast({
-        title: "Usuário vinculado",
-        description: "O usuário foi vinculado ao aluno com sucesso.",
-      });
+      toast.success("Usuário vinculado ao aluno com sucesso.");
     },
     onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Erro ao vincular",
-        description: "Não foi possível vincular o usuário ao aluno.",
-      });
+      toast.error("Não foi possível vincular o usuário ao aluno.");
     },
   });
 }
@@ -127,17 +120,10 @@ export function useUnlinkStudentFromProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
-      toast({
-        title: "Vínculo removido",
-        description: "O vínculo entre usuário e aluno foi removido.",
-      });
+      toast.success("Vínculo entre usuário e aluno removido.");
     },
     onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Erro ao desvincular",
-        description: "Não foi possível remover o vínculo.",
-      });
+      toast.error("Não foi possível remover o vínculo.");
     },
   });
 }

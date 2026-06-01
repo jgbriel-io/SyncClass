@@ -17,6 +17,7 @@ import { students as studentsContent } from "@/content";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 import { logger } from "@/lib/logger";
 import { sanitizeStudentUpdateForEdit } from "@/lib/utils/sanitizeStudentUpdate";
+import { pickAnonSegment } from "@/lib/utils/anonymize";
 import { QK } from "./queryKeys";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -185,7 +186,7 @@ export function useCreateStudent() {
         queryKey: [QK.STUDENTS_PAGINATED],
         exact: false,
       });
-      toast.success("Aluno cadastrado com sucesso!");
+      toast.success(studentsContent.toasts.created);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -358,7 +359,7 @@ export function useUpdateStudent() {
         queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
         queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
       }
-      toast.success("Aluno atualizado com sucesso!");
+      toast.success(studentsContent.toasts.updated);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -408,7 +409,7 @@ export function useSoftDeleteStudent() {
         exact: false,
       });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES], exact: false });
-      toast.success("Aluno arquivado e dados anonimizados (LGPD)");
+      toast.success(studentsContent.toasts.archived);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -488,16 +489,7 @@ export function useHardDeleteStudent() {
         .maybeSingle();
 
       // 3) Anonymize student data (LGPD) — keeps row so class_logs/activities/financial_records remain linked
-      const hex = id.replace(/-/g, "");
-      let segment = hex.slice(0, 8);
-      for (let i = 0; i <= hex.length - 8; i++) {
-        const s = hex.slice(i, i + 8);
-        if (/[a-f]/.test(s) && /[0-9]/.test(s)) {
-          segment = s;
-          break;
-        }
-      }
-      const anonymizedName = `Aluno ${segment}`;
+      const anonymizedName = `Aluno ${pickAnonSegment(id)}`;
       const { error: anonError } = await supabase
         .from("students")
         .update({
@@ -555,7 +547,7 @@ export function useHardDeleteStudent() {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES_LINKED_IDS] });
-      toast.success("Aluno excluído definitivamente.");
+      toast.success(studentsContent.toasts.deleted);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -603,7 +595,7 @@ export function useRestoreStudent() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
-      toast.success("Aluno restaurado com sucesso!");
+      toast.success(studentsContent.toasts.restored);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -671,7 +663,7 @@ export function useUpdateStudentPaymentDay() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
 
-      toast.success(data.message || "Dia de pagamento atualizado com sucesso!");
+      toast.success(data.message || studentsContent.toasts.payDayUpdated);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);

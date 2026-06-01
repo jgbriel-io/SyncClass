@@ -14,6 +14,8 @@ import {
 } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
+import { pickAnonSegment } from "@/lib/utils/anonymize";
+import { teachers as teachersContent } from "@/content";
 import { QK } from "./queryKeys";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -157,7 +159,7 @@ export function useCreateTeacher() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.TEACHERS] });
-      toast.success("Professor cadastrado com sucesso!");
+      toast.success(teachersContent.toasts.created);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -211,16 +213,18 @@ export function useUpdateTeacher() {
 
           if (profile.user_id) {
             if (fullName) {
-              await supabase.rpc("admin_update_auth_display_name", {
-                p_user_id: profile.user_id,
-                p_full_name: fullName,
-              });
+              const { error: nameAuthError } = await supabase.rpc(
+                "admin_update_auth_display_name",
+                { p_user_id: profile.user_id, p_full_name: fullName }
+              );
+              if (nameAuthError) throw nameAuthError;
             }
             if (normalizedEmail) {
-              await supabase.rpc("admin_update_auth_email", {
-                p_user_id: profile.user_id,
-                p_email: normalizedEmail,
-              });
+              const { error: emailAuthError } = await supabase.rpc(
+                "admin_update_auth_email",
+                { p_user_id: profile.user_id, p_email: normalizedEmail }
+              );
+              if (emailAuthError) throw emailAuthError;
             }
           }
         }
@@ -234,7 +238,7 @@ export function useUpdateTeacher() {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
-      toast.success("Professor atualizado com sucesso!");
+      toast.success(teachersContent.toasts.updated);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -272,7 +276,7 @@ export function useSoftDeleteTeacher() {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
-      toast.success("Professor arquivado com sucesso!");
+      toast.success(teachersContent.toasts.archived);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -340,7 +344,7 @@ export function useUpdatePixKey() {
         queryKey: [QK.TEACHER_PIX_KEY, teacherId],
       });
       queryClient.invalidateQueries({ queryKey: [QK.TEACHERS] });
-      toast.success("Chave PIX atualizada com sucesso!");
+      toast.success(teachersContent.toasts.pixUpdated);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -409,16 +413,7 @@ export function useHardDeleteTeacher() {
         .eq("teacher_id", id)
         .maybeSingle();
 
-      const hex = id.replace(/-/g, "");
-      let segment = hex.slice(0, 8);
-      for (let i = 0; i <= hex.length - 8; i++) {
-        const s = hex.slice(i, i + 8);
-        if (/[a-f]/.test(s) && /[0-9]/.test(s)) {
-          segment = s;
-          break;
-        }
-      }
-      const anonymizedName = `Professor ${segment}`;
+      const anonymizedName = `Professor ${pickAnonSegment(id)}`;
       const { error } = await supabase
         .from("teachers")
         .update({
@@ -472,7 +467,7 @@ export function useHardDeleteTeacher() {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES_LINKED_IDS] });
-      toast.success("Professor excluído definitivamente.");
+      toast.success(teachersContent.toasts.deleted);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);

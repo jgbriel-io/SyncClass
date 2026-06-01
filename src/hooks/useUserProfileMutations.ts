@@ -10,6 +10,7 @@ import { sanitizeErrorMessage } from "@/lib/security/errorHandler";
 import { toast } from "sonner";
 import type { Enums } from "@/integrations/supabase/types";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
+import { layout, users as usersContent } from "@/content";
 
 type AppRole = Enums<"app_role">;
 
@@ -80,7 +81,7 @@ export function useUpdateUserRole() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
-      toast.success("Usuário atualizado com sucesso!");
+      toast.success(usersContent.form.toasts.successEdit);
     },
     onError: (error: Error) => toast.error(sanitizeErrorMessage(error)),
   });
@@ -141,7 +142,7 @@ export function useUpdateMyProfile() {
         queryKey: [QK.CURRENT_USER_PROFILE, userId],
       });
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
-      toast.success("Foto de perfil atualizada.");
+      toast.success(layout.settings.profile.avatarSuccess);
     },
     onError: (err: Error) =>
       toast.error(
@@ -201,7 +202,7 @@ export function useUploadAvatar() {
         queryKey: [QK.CURRENT_USER_PROFILE, userId],
       });
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
-      toast.success("Foto de perfil atualizada.");
+      toast.success(layout.settings.profile.avatarSuccess);
     },
     onError: (err: Error) => {
       if (
@@ -247,7 +248,7 @@ export function useUpdateProfileName() {
       });
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
-      toast.success("Nome atualizado com sucesso!");
+      toast.success(layout.settings.profile.toasts.nameSuccess);
     },
     onError: (err: Error) => {
       toast.error(
@@ -264,11 +265,13 @@ export function useUpdateProfileEmail() {
   return useMutation({
     mutationFn: async ({ email }: { email: string }) => {
       const normalized = email.trim().toLowerCase();
-      const { error } = await supabase.auth.updateUser({ email: normalized });
+      const { error } = await supabase.rpc("user_update_own_email", {
+        p_email: normalized,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Email atualizado! Confirme no link enviado.");
+      toast.success(layout.settings.profile.toasts.emailSuccess);
     },
     onError: (err: Error) => {
       toast.error(
@@ -337,6 +340,6 @@ export function useHardDeleteUser() {
         })
       );
     },
-    onError: () => {},
+    onError: (error: unknown) => toast.error(sanitizeErrorMessage(error)),
   });
 }

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import type { Enums, TablesInsert } from "@/integrations/supabase/types";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
+import { users as usersContent } from "@/content";
 import {
   generateRandomPassword,
   invokeInviteUser,
@@ -89,7 +90,7 @@ export function useCreateUser() {
         queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
       if (variables.role === "teacher" || result?.createdTeacher)
         queryClient.invalidateQueries({ queryKey: [QK.TEACHERS] });
-      if (!result?.password) toast.success("Usuário criado com sucesso!");
+      if (!result?.password) toast.success(usersContent.form.toasts.success);
     },
     onError: (error: Error, variables) => {
       logger.error(error, {
@@ -147,9 +148,7 @@ export function useResetPassword() {
       }
     },
     onSuccess: () =>
-      toast.success(
-        "Senha redefinida com sucesso. O usuário precisará fazer login novamente."
-      ),
+      toast.success(usersContent.resetPasswordDialog.toasts.successForUser),
     onError: (error: Error) => toast.error(sanitizeErrorMessage(error)),
   });
 }

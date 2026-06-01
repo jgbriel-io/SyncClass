@@ -561,6 +561,64 @@ for (let i = 0; i <= hex.length - 8; i++) {
 
 ---
 
+---
+
+## Fix — `validando` promovido a status real no DB (migration 58)
+
+**Contexto:** `financial_records.status` não permitia `validando` — o estado "comprovante enviado, aguardando confirmação" era derivado no front via `payment_proof_status === 'pending'`. Isso criava inconsistência: `aguardando_confirmacao` em `useStudentPortal`, `validando` em `financialStatus.ts`, e nenhum armazenado no DB. Filtros e queries não conseguiam consultar cobranças nesse estado diretamente.
+
+**Causa raiz:** Check constraint `financial_records_status_check` (e `check_valid_financial_logic`) só permitia `pendente`, `pago`, `cancelado`, `abonado`, `extornado`. `validando` era apenas uma string de retorno da função `getFinancialActualStatus`.
+
+**Correção:**
+
+1. **Migration 58** — `financial_records_status_check` e `check_valid_financial_logic` atualizados para incluir `validando`
+2. **`submit_payment_proof` RPC** — agora seta `status = 'validando'` atomicamente ao registrar comprovante (antes só setava `payment_proof_status = 'pending'`)
+3. **`getFinancialActualStatus`** — simplificado: lê `status === 'validando'` direto do DB; parâmetro `payment_proof_status` removido da assinatura
+4. **`useStudentPortal`** — tipo `"aguardando_confirmacao"` renomeado para `"validando"`
+5. **Helpers de status em classes view** — `getPaymentStatusVariant` e `getPaymentStatusLabel` atualizados com case `"validando"` em:
+   - `classesViewHelpers.ts`
+   - `ClassDetailSheet.tsx` (local duplicate)
+   - `ClassLogRow.tsx` (local duplicate)
+6. **`ClassesTableRow`** — parâmetro morto `payment_proof_status` removido das chamadas a `getFinancialActualStatus`
+
+**Fluxo após fix:** `pendente → validando (proof upload) → pago (aprovado) | pendente (rejeitado)`
+
+**Arquivos:**
+
+- `supabase/migrations/58_financial_validando_status.sql` — constraints + RPC atualizada + backfill
+- `src/lib/utils/financialStatus.ts` — `getFinancialActualStatus` simplificado
+- `src/hooks/useStudentPortal.ts` — tipo `"aguardando_confirmacao"` → `"validando"`
+- `src/components/classes/classesViewHelpers.ts` — case `validando` adicionado
+- `src/components/classes/ClassDetailSheet.tsx` — case `validando` adicionado
+- `src/components/classes/ClassLogRow.tsx` — case `validando` adicionado
+- `src/components/classes/ClassesTableRow.tsx` — parâmetro morto removido
+
+---
+
+---
+
+## Refactor — Centralização de strings de toast em `src/content/`
+
+**Contexto:** Auditoria de toasts revelou 12 hooks com strings hardcoded e `useProfiles.ts` usando `use-toast` do shadcn em vez do `sonner` (padrão do projeto). Strings duplicadas entre hooks e `src/content/` criavam fonte dupla de verdade.
+
+**Mudanças:**
+
+- `useProfiles.ts` — migrado de `import { toast } from "@/hooks/use-toast"` → `import { toast } from "sonner"`. Chamadas `toast({ title, description, variant })` convertidas para `toast.success/error()`.
+- `useActivities.ts` — usa `activitiesContent.{sendDialog,editDialog,correctionDialog,deleteDialog}.toasts.success`
+- `useFinancialRecords.ts` — usa `financialContent.{view,confirmPaymentDialog,undoDialog,deleteDialog}.toasts.{success,successEdit}`
+- `useClassLogs.ts` — usa `classesContent.logFormDialog.toasts.{success,successWithPayment,successEdit,successDelete}` (2 novas strings adicionadas)
+- `useStudents.ts` — usa `studentsContent.toasts.*` (nova seção adicionada: `created`, `updated`, `archived`, `deleted`, `restored`, `payDayUpdated`)
+- `useTeachers.ts` — usa `teachersContent.toasts.*` (nova seção adicionada: `created`, `updated`, `archived`, `pixUpdated`, `deleted`)
+- `useUserProfileMutations.ts` — usa `layout.settings.profile.toasts.*` + `usersContent.form.toasts.successEdit` (`avatarSuccess` adicionado ao layout)
+- `useUserAuthMutations.ts` — usa `usersContent.{form,resetPasswordDialog}.toasts.*` (`successForUser` adicionado)
+- `useUserInviteMutations.ts` — usa `usersContent.form.toasts.successTeacherInvite` (adicionado)
+
+**Content files alterados:** `students.ts`, `teachers.ts`, `classes.ts`, `financial.ts`, `layout.ts`, `users.ts`
+
+**Regra estabelecida:** Todo `toast.success/error` em hooks deve referenciar `src/content/`. Nunca hardcode string de toast em hook.
+
+---
+
 ## Bugs Pendentes
 
 Nenhum.
@@ -568,6 +626,6 @@ Nenhum.
 ## Next Steps
 
 1. Sprint 30 — QA da visão do professor (criar aula, atividade, cobrança, pacote)
-2. Sprint 30 — QA do portal do aluno (submissão atividade, upload comprovante, histórico)
-3. Sprint 30 — Isolamento RLS (Professor A não vê dados do Professor B)
-4. Sprint 30 — Cross-cutting: logout, sessão expirada, responsividade mobile
+2. Sprint 31 — QA do portal do aluno (submissão atividade, upload comprovante, histórico)
+3. Sprint 32 — Isolamento RLS (Professor A não vê dados do Professor B)
+4. Sprint 33 — Cross-cutting: logout, sessão expirada, responsividade mobile

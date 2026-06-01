@@ -269,26 +269,91 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ---
 
+## 6. Validação de Toasts (Sprint 29 — refactor centralização)
+
+Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), validar que cada ação exibe o toast correto na UI.
+
+### Alunos
+
+- [ ] Criar aluno → "Aluno cadastrado com sucesso!"
+- [ ] Editar aluno → "Aluno atualizado com sucesso!"
+- [ ] Arquivar aluno → "Aluno arquivado e dados anonimizados (LGPD)"
+- [ ] Hard delete aluno → "Aluno excluído definitivamente."
+- [ ] Restaurar aluno → "Aluno restaurado com sucesso!"
+- [ ] Alterar dia de pagamento → "Dia de pagamento atualizado com sucesso!"
+
+### Professores
+
+- [ ] Criar professor → "Professor cadastrado com sucesso!"
+- [ ] Editar professor → "Professor atualizado com sucesso!"
+- [ ] Arquivar professor → "Professor arquivado com sucesso!"
+- [ ] Editar chave PIX → "Chave PIX atualizada com sucesso!"
+- [ ] Hard delete professor → "Professor excluído definitivamente."
+
+### Aulas
+
+- [ ] Registrar aula sem cobrança → "Aula registrada com sucesso!"
+- [ ] Registrar aula com cobrança → "Aula e cobrança registradas com sucesso!"
+- [ ] Editar aula → "Aula atualizada com sucesso!"
+- [ ] Deletar aula → "Registro removido com sucesso!"
+
+### Financeiro
+
+- [ ] Criar cobrança → "Cobrança criada com sucesso!"
+- [ ] Confirmar pagamento → "Pagamento confirmado com sucesso!"
+- [ ] Desfazer pagamento → "Pagamento desfeito com sucesso!"
+- [ ] Editar cobrança → "Cobrança atualizada com sucesso!"
+- [ ] Excluir cobrança → "Cobrança excluída com sucesso!"
+
+### Atividades
+
+- [ ] Enviar atividade → "Atividade enviada com sucesso!"
+- [ ] Editar atividade → "Atividade atualizada com sucesso!"
+- [ ] Enviar correção → "Correção enviada com sucesso!"
+- [ ] Excluir atividade → "Atividade excluída com sucesso!"
+
+### Perfil / Usuários
+
+- [ ] Alterar foto de perfil → "Foto de perfil atualizada."
+- [ ] Alterar nome (settings) → "Nome atualizado com sucesso!"
+- [ ] Alterar email (settings) → "Email atualizado com sucesso!"
+- [ ] Admin alterar role de usuário → "Usuário atualizado com sucesso!"
+- [ ] Admin convidar professor → "Professor e conta de acesso criados com sucesso!"
+- [ ] Admin reset senha de usuário → "Senha redefinida com sucesso. O usuário precisará fazer login novamente."
+- [ ] Vincular usuário a aluno → "Usuário vinculado ao aluno com sucesso."
+- [ ] Desvincular usuário → "Vínculo entre usuário e aluno removido."
+
+### Comprovante de Pagamento
+
+- [ ] Aluno envia comprovante → "Comprovante enviado! Aguarde a confirmação do professor."
+- [ ] Professor aprova comprovante → "Pagamento confirmado com sucesso!"
+- [ ] Professor rejeita comprovante → "Comprovante rejeitado."
+
+---
+
 ## Resumo de Itens
 
-| Módulo                     | Itens   | Status             |
-| -------------------------- | ------- | ------------------ |
-| Auth / Público             | 11      | 8 ✅ / 3 pendentes |
-| Admin                      | 41      | 41 ✅ concluído    |
-| Professor                  | 28      | pendente           |
-| Aluno                      | 13      | pendente           |
-| Cross-cutting (original)   | 20      | pendente           |
-| Sessão e Auth (adicionais) | 2       | pendente           |
-| Integrações e Validações   | 6       | pendente           |
-| Rotas Alias e Edge Cases   | 3       | pendente           |
-| Volume de Dados            | 3       | pendente           |
-| **Total**                  | **127** |                    |
+| Módulo                          | Itens   | Status             |
+| ------------------------------- | ------- | ------------------ |
+| Auth / Público                  | 11      | 8 ✅ / 3 pendentes |
+| Admin                           | 41      | 41 ✅ concluído    |
+| Professor                       | 28      | pendente           |
+| Aluno                           | 13      | pendente           |
+| Cross-cutting (original)        | 20      | pendente           |
+| Sessão e Auth (adicionais)      | 2       | pendente           |
+| Integrações e Validações        | 6       | pendente           |
+| Rotas Alias e Edge Cases        | 3       | pendente           |
+| Volume de Dados                 | 3       | pendente           |
+| Validação de Toasts (Sprint 29) | 30      | pendente           |
+| **Total**                       | **157** |                    |
 
 ---
 
 ## Critério de Conclusão
 
-Sprint concluída quando todos os 116 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
+Sprint concluída quando todos os 157 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
+
+Inclui 30 itens de validação de toasts adicionados em sprint 29 (refactor de centralização de strings).
 
 **Bugs encontrados:** documentar abaixo com `[BUG-XXX]` + rota + descrição + severidade.
 

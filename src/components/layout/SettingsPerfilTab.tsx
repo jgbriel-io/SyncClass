@@ -108,7 +108,7 @@ export function SettingsPerfilTab({
         data: { session },
       } = await supabase.auth.getSession();
       if (!session) {
-        toast.error("Sessão expirada. Faça login novamente.");
+        toast.error(s.toasts.sessionExpired);
         return;
       }
       const res = await supabase.functions.invoke("export-user-data", {
@@ -118,9 +118,9 @@ export function SettingsPerfilTab({
       if (res.error) {
         const msg = (res.error as { message?: string })?.message ?? "";
         if (msg.includes("429") || msg.toLowerCase().includes("rate limit")) {
-          toast.error("Limite atingido. Tente novamente em 1 hora.");
+          toast.error(s.toasts.exportRateLimit);
         } else {
-          toast.error("Erro ao exportar dados. Tente novamente.");
+          toast.error(s.toasts.exportError);
         }
         return;
       }
@@ -132,9 +132,9 @@ export function SettingsPerfilTab({
       a.download = `syncclass-export-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("Dados exportados com sucesso!");
+      toast.success(s.toasts.exportSuccess);
     } catch (_e) {
-      toast.error("Erro ao exportar dados. Tente novamente.");
+      toast.error(s.toasts.exportError);
     } finally {
       setIsExporting(false);
     }
@@ -299,11 +299,6 @@ export function SettingsPerfilTab({
               </Button>
             ))}
         </div>
-        {editingEmail && (
-          <p className="text-xs text-amber-600 dark:text-amber-400">
-            {s.emailConfirmHint}
-          </p>
-        )}
       </div>
 
       {/* PIX */}
@@ -362,12 +357,9 @@ export function SettingsPerfilTab({
       <div className="space-y-2 border-t pt-4">
         <Label className="flex items-center gap-2">
           <Download className="h-4 w-4" />
-          Exportar meus dados
+          {s.exportLabel}
         </Label>
-        <p className="text-xs text-muted-foreground">
-          Baixe uma cópia dos seus dados em formato JSON (LGPD, art. 18, inc.
-          V). Limite: 3 exportações por hora.
-        </p>
+        <p className="text-xs text-muted-foreground">{s.exportHint}</p>
         <Button
           type="button"
           size="sm"
@@ -378,12 +370,12 @@ export function SettingsPerfilTab({
           {isExporting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Exportando...
+              {s.exportingButton}
             </>
           ) : (
             <>
               <Download className="h-4 w-4" />
-              Exportar meus dados
+              {s.exportButton}
             </>
           )}
         </Button>
