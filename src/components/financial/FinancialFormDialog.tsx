@@ -193,17 +193,22 @@ export function FinancialFormDialog({
 
     const amount = parseMoneyToNumber(data.amount);
 
+    const effectiveClassLogId = initialData
+      ? initialData.class_log_id || null
+      : data.class_log_id || null;
+
     onSubmit({
       student_id: data.student_id,
-      // Preservar class_log_id original ao editar
-      class_log_id: initialData
-        ? initialData.class_log_id || null
-        : data.class_log_id || null,
+      class_log_id: effectiveClassLogId,
       amount: amount,
       due_date: brDateToIso(data.due_date),
       payment_method: data.payment_method || null,
       description: data.description || null,
       status: "pendente",
+      // record_type is immutable — only set on creation, never on update
+      ...(!initialData && {
+        record_type: effectiveClassLogId ? "avulsa" : "manual",
+      }),
     });
   };
 

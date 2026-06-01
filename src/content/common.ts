@@ -80,6 +80,7 @@ export const common = {
     noPrivilege: "Sem privilégio",
     noName: "(sem nome)",
     teacher: "Professor",
+    student: "Aluno",
   },
 
   // Input placeholders

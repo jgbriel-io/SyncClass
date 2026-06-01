@@ -578,6 +578,7 @@ export function useCreateClassLogWithFinancial() {
             description,
             payment_method: financialData.payment_method || null,
             status: "pendente",
+            record_type: "avulsa",
           });
 
         if (financialError) {

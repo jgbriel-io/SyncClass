@@ -97,7 +97,6 @@ const classLogBaseSchema = z
         message: "Data inválida",
       }),
     financial_description: z.string().optional(),
-    financial_payment_method: z.string().optional(),
     semCobranca: z.boolean().optional(),
   })
   .refine(

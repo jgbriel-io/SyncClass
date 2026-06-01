@@ -75,9 +75,19 @@ export function ClassesView({
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    if (searchParams.get("action") === "create") {
+    const action = searchParams.get("action");
+    if (action === "create") {
       setSelectedLog(null);
       setIsFormOpen(true);
+      setSearchParams(
+        (prev) => {
+          prev.delete("action");
+          return prev;
+        },
+        { replace: true }
+      );
+    } else if (action === "create-package") {
+      setPackageDialogOpen(true);
       setSearchParams(
         (prev) => {
           prev.delete("action");

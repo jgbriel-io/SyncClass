@@ -59,6 +59,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Criar estudante → aparece na lista
 - [x] Editar aluno → dados atualizados (students.name, profiles.full_name, auth.users sincronizados)
 - [x] Hard delete → remove permanentemente (confirmação obrigatória)
+- [ ] Hard delete aluno sem aulas agendadas → modal exibe checkbox + botão bloqueado até marcar
+- [ ] Hard delete aluno COM aulas agendadas → mesmo modal com checkbox, force delete ao confirmar
 - [x] Admin não vê botões de ação nas linhas da tabela (read-only)
 
 ### Teachers (`/admin/teachers`)
@@ -69,6 +71,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Soft delete → professor some da lista ativa
 - [x] Restaurar professor arquivado → volta à lista
 - [x] Hard delete → remove permanentemente (confirmação obrigatória)
+- [ ] Hard delete professor sem aulas agendadas → modal exibe checkbox + botão bloqueado até marcar
+- [ ] Hard delete professor COM aulas agendadas → force delete ao confirmar checkbox
 - [x] Redefinir Senha
 
 ### Users (`/admin/users`)
@@ -81,6 +85,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Editar professor → dados atualizados em teachers e profiles
 - [x] Seletor de professor pré-preenchido ao reabrir formulário de edição de aluno
 - [x] Hard delete (usuário com vínculo student/teacher) → anonimiza domain record + remove auth
+- [ ] Hard delete usuário admin (sem vínculo) → modal com checkbox, profiles.full_name/email/avatar_url anonimizados
 - [x] Deletar usuário → sessão invalidada (logout automático se logado)
 
 ### Financial (`/admin/financial`)
@@ -106,9 +111,10 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Overview (`/admin/overview`)
 
-- [x] Visão consolidada de todos os professores carrega
-- [x] Métricas por professor corretas
-- [x] Filtro de status removido (N/A no contexto de overview agregado)
+- [ ] Tabela de todos os alunos da plataforma carrega (não agrupada por professor — visão global)
+- [ ] Colunas: Nome, Professor, Status, Total Aulas, Aulas Mês, Valor Mês, Saldo
+- [ ] Métricas por aluno corretas (aulas e valores batem com o que está no financeiro/aulas)
+- [ ] Busca e filtros de status funcionam
 
 ---
 
@@ -117,28 +123,44 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 ### Home (`/teacher`)
 
 - [x] Dashboard com métricas do professor logado
-- [ ] Cards de estatísticas carregam (total alunos, aulas do mês, receita, pendências)
-- [ ] Cards financeiros carregam (total pago, pendente, atrasado)
-- [ ] Card de previsão de faturamento mensal exibe valor correto
-- [ ] Lista de aniversariantes do mês exibe alunos com aniversário no mês atual
-- [ ] Lista de próximos pagamentos exibe cobranças com vencimento próximo
+- [x] Cards de estatísticas carregam (total alunos, aulas do mês, receita, pendências)
+- [x] Cards financeiros carregam (total pago, pendente, atrasado)
+- [x] Card de previsão de faturamento mensal exibe valor correto
+- [x] Lista de aniversariantes do mês exibe alunos com aniversário no mês atual
+- [x] Lista de próximos vencimentos exibe cobranças com vencimento próximo
 - [ ] Seção "Aulas de Hoje" exibe aulas agendadas para o dia atual
-- [ ] Contador de avaliações pendentes exibe aulas passadas sem attendance preenchido
-- [ ] Gráfico de crescimento de alunos renderiza com dados
-- [ ] Filtro do gráfico (3 / 6 / 12 meses) muda os dados exibidos
-- [ ] Sem erro de console no carregamento
+- [x] Contador de avaliações pendentes exibe aulas passadas sem attendance preenchido
+- [x] Gráfico de crescimento de alunos renderiza com dados
+- [x] Filtro do gráfico (3 / 6 / 12 meses) muda os dados exibidos
+- [x] Sem erro de console no carregamento
+- [x] Seletor de período (Mês / Semestre / Ano) exibido no header do dashboard
+- [x] Alterar para "Semestre" → todos os cards atualizam (previsão, recebido, pendente, novos alunos, aulas)
+- [x] Alterar para "Ano" → cards atualizam com escopo anual (jan–dez)
+- [x] Voltar para "Mês" → valores voltam ao escopo mensal
+- [x] Label "Novos este Mês/Semestre/Ano" muda conforme período selecionado
+- [x] Label "Aulas este Mês/Semestre/Ano" muda conforme período selecionado
+- [x] Card "Previsão" muda label (Mensal/Semestral/Anual) conforme período
 
 ### Students (`/teacher/students`)
 
 - [x] Lista apenas alunos do professor logado (não vê alunos de outros professores)
-- [ ] Busca e filtros funcionam
-- [ ] Criar aluno (campos obrigatórios + validação de CPF/telefone) → aparece na lista
-- [ ] Criar aluno estrangeiro (sem CPF) → funciona
+- [x] Busca e filtros funcionam
+- [x] Criar aluno brasileiro (campos obrigatórios + validação de telefone) → aparece na lista
+- [x] Criar aluno estrangeiro (telefone internacional) → funciona
 - [x] Editar aluno → dados atualizados (students.name, profiles.full_name, auth.users propagados em todas as visões)
-- [ ] Upload foto de perfil → foto exibida
-- [ ] Soft delete → aluno some da lista ativa
-- [ ] Restaurar aluno arquivado
-- [ ] Sheet de detalhes do aluno abre com histórico completo
+- [x] Soft delete → aluno some da lista ativa
+- [x] Restaurar aluno arquivado
+- [x] Sheet de detalhes do aluno abre com histórico completo
+
+### Classes (`/teacher/classes`)
+
+- [x] Lista aulas do professor
+- [ ] Criar aula simples (data, hora, duração, aluno, presença) → aparece
+- [ ] Criar pacote de aulas (cria múltiplas aulas + 1 cobrança vinculada)
+- [ ] Editar aula (data, nota, feedback, duração)
+- [ ] Registrar falta (presença = false)
+- [ ] Deletar aula
+- [ ] Filtro por aluno e período funcionam
 
 ### Financial (`/teacher/financial`)
 
@@ -166,16 +188,6 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [ ] Remover integração → badge volta para "Não configurado", webhook URL some
 - [ ] Professor sem API key → aluno vê mensagem amigável no checkout (não crash)
 
-### Classes (`/teacher/classes`)
-
-- [ ] Lista aulas do professor
-- [ ] Criar aula simples (data, hora, duração, aluno, presença) → aparece
-- [ ] Criar pacote de aulas (cria múltiplas aulas + 1 cobrança vinculada)
-- [ ] Editar aula (data, nota, feedback, duração)
-- [ ] Registrar falta (presença = false)
-- [ ] Deletar aula
-- [ ] Filtro por aluno e período funcionam
-
 ### Activities (`/teacher/activities`)
 
 - [ ] Lista atividades do professor
@@ -187,7 +199,9 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Overview (`/teacher/overview`)
 
-- [ ] Resumo do próprio desempenho/métricas carrega
+- [ ] Tabela dos próprios alunos com métricas carrega (Visão Geral dos Alunos — não é desempenho do professor)
+- [ ] Colunas: Nome, Status, Total Aulas, Aulas Mês, Valor Mês, Saldo
+- [ ] Valores batem com o que está em `/teacher/financial` e `/teacher/classes`
 
 ---
 
@@ -256,7 +270,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Upload de Arquivos
 
-- [ ] Foto de perfil (professor e aluno) — upload e exibição
+- [ ] Foto de perfil — upload pelo próprio usuário via Settings → Perfil (professor em `/teacher`, aluno em `/student`; não é feito pelo professor na tela de gestão de alunos)
 - [ ] Arquivo de atividade — upload pelo aluno
 - [ ] Arquivo de correção — upload pelo professor
 
@@ -359,24 +373,24 @@ Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), 
 
 ## Resumo de Itens
 
-| Módulo                                  | Itens   | Status             |
-| --------------------------------------- | ------- | ------------------ |
-| Auth / Público                          | 11      | 8 ✅ / 3 pendentes |
-| Admin                                   | 41      | 41 ✅ concluído    |
-| Professor — Financial + Settings        | 37      | pendente           |
-| Professor — Classes / Activities / Home | 15      | pendente           |
-| Aluno — Financial + Checkout AbacatePay | 12      | pendente           |
-| Aluno — Activities / History / Home     | 5       | pendente           |
-| Cross-cutting (RLS, Sessão, LGPD)       | 15      | pendente           |
-| Integrações, Edge Cases, Volume         | 12      | pendente           |
-| Validação de Toasts (Sprint 29 + 30)    | 29      | pendente           |
-| **Total**                               | **177** |                    |
+| Módulo                                  | Itens   | Status              |
+| --------------------------------------- | ------- | ------------------- |
+| Auth / Público                          | 11      | 8 ✅ / 3 pendentes  |
+| Admin (incl. hard delete checkbox)      | 44      | 41 ✅ / 3 pendentes |
+| Professor — Financial + Settings        | 37      | pendente            |
+| Professor — Classes / Activities / Home | 22      | pendente            |
+| Aluno — Financial + Checkout AbacatePay | 12      | pendente            |
+| Aluno — Activities / History / Home     | 5       | pendente            |
+| Cross-cutting (RLS, Sessão, LGPD)       | 15      | pendente            |
+| Integrações, Edge Cases, Volume         | 12      | pendente            |
+| Validação de Toasts (Sprint 29 + 30)    | 29      | pendente            |
+| **Total**                               | **187** |                     |
 
 ---
 
 ## Critério de Conclusão
 
-Sprint concluída quando todos os 177 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
+Sprint concluída quando todos os 187 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
 
 Inclui 29 itens de validação de toasts. Itens de upload de comprovante e confirmação manual de pagamento removidos (fluxo substituído por AbacatePay na Sprint 30). Itens de checkout AbacatePay e reembolso adicionados.
 
