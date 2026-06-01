@@ -43,7 +43,8 @@ export const overview = {
     days: (count: number) => `há ${count} dia${count === 1 ? "" : "s"}`,
     months: (months: number, days: number) => {
       const monthLabel = `mês${months === 1 ? "" : "es"}`;
-      const dayLabel = days === 0 ? "" : ` e ${days} dia${days === 1 ? "" : "s"}`;
+      const dayLabel =
+        days === 0 ? "" : ` e ${days} dia${days === 1 ? "" : "s"}`;
       return `há ${months} ${monthLabel}${dayLabel}`;
     },
   },

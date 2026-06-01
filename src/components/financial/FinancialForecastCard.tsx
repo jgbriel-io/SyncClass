@@ -15,7 +15,9 @@ interface FinancialForecastCardProps {
   forecastedBilling: ForecastData | null | undefined;
 }
 
-export function FinancialForecastCard({ forecastedBilling }: FinancialForecastCardProps) {
+export function FinancialForecastCard({
+  forecastedBilling,
+}: FinancialForecastCardProps) {
   if (!forecastedBilling) return null;
 
   return (
@@ -43,11 +45,15 @@ export function FinancialForecastCard({ forecastedBilling }: FinancialForecastCa
           <div className="w-full bg-muted rounded-full h-2">
             <div
               className="bg-primary h-2 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(forecastedBilling.receivedPercentage, 100)}%` }}
+              style={{
+                width: `${Math.min(forecastedBilling.receivedPercentage, 100)}%`,
+              }}
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            {forecastedBilling.receivedPercentage}% recebido ({forecastedBilling.paidCount}/{forecastedBilling.totalCount} cobranças)
+            {forecastedBilling.receivedPercentage}% recebido (
+            {forecastedBilling.paidCount}/{forecastedBilling.totalCount}{" "}
+            cobranças)
           </p>
         </div>
       </div>

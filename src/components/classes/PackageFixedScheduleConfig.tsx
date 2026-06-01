@@ -13,8 +13,18 @@ import { cn } from "@/lib/utils";
 import { classes as classesContent, common } from "@/content";
 
 const MONTH_NAMES = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ];
 
 const WEEKDAYS: { value: number; label: string }[] = [
@@ -63,10 +73,15 @@ export function PackageFixedScheduleConfig({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium">{classesContent.packageDialog.description}</p>
+      <p className="text-sm font-medium">
+        {classesContent.packageDialog.description}
+      </p>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label>{classesContent.packageDialog.filters?.monthLabel || classesContent.filters.monthLabel}</Label>
+          <Label>
+            {classesContent.packageDialog.filters?.monthLabel ||
+              classesContent.filters.monthLabel}
+          </Label>
           <Select
             value={fixedMonth ? String(fixedMonth) : ""}
             onValueChange={(v) => onFixedMonthChange(Number(v))}
@@ -84,7 +99,10 @@ export function PackageFixedScheduleConfig({
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>{classesContent.packageDialog.filters?.yearLabel || classesContent.filters.yearLabel}</Label>
+          <Label>
+            {classesContent.packageDialog.filters?.yearLabel ||
+              classesContent.filters.yearLabel}
+          </Label>
           <Select
             value={fixedYear ? String(fixedYear) : ""}
             onValueChange={(v) => onFixedYearChange(Number(v))}
@@ -103,7 +121,10 @@ export function PackageFixedScheduleConfig({
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>{classesContent.packageDialog.filters?.weekdaysLabel || classesContent.filters.weekdaysLabel}</Label>
+        <Label>
+          {classesContent.packageDialog.filters?.weekdaysLabel ||
+            classesContent.filters.weekdaysLabel}
+        </Label>
         <div className="flex flex-wrap gap-2">
           {WEEKDAYS.map(({ value, label }) => (
             <label

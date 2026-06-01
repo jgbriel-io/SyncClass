@@ -40,4 +40,7 @@ export interface TeacherSubmitData {
   };
 }
 
-export type UserFormSubmitData = AdminSubmitData | StudentSubmitData | TeacherSubmitData;
+export type UserFormSubmitData =
+  | AdminSubmitData
+  | StudentSubmitData
+  | TeacherSubmitData;

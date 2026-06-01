@@ -1,7 +1,15 @@
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
-import { CheckCircle, AlertCircle, BookOpen, Calendar, Loader2, TrendingUp, Award } from "lucide-react";
+import {
+  CheckCircle,
+  AlertCircle,
+  BookOpen,
+  Calendar,
+  Loader2,
+  TrendingUp,
+  Award,
+} from "lucide-react";
 import { formatDate } from "@/lib/utils/formatters";
 import {
   useStudentProfile,
@@ -32,13 +40,17 @@ export default function StudentHome() {
       )}
 
       {!isLoading && (
-        <div className={stack('RELAXED')}>
+        <div className={stack("RELAXED")}>
           {/* Título + subtítulo */}
           <div className="text-center">
-            <h1 className={`${typography('DISPLAY')} mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl`}>
+            <h1
+              className={`${typography("DISPLAY")} mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl`}
+            >
               {studentPortal.home.greeting(studentName)}
             </h1>
-            <p className={`${typography('SMALL')} mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm mt-1`}>
+            <p
+              className={`${typography("SMALL")} mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm mt-1`}
+            >
               {studentPortal.home.subtitle}
             </p>
           </div>
@@ -47,8 +59,12 @@ export default function StudentHome() {
           {!profile && (
             <div className="rounded-xl border bg-card p-5 shadow-card text-center">
               <AlertCircle className="h-10 w-10 text-warning mx-auto mb-3" />
-              <h2 className={`${typography('H3')} laptop:text-base desktop:text-lg`}>{studentPortal.home.noProfile}</h2>
-              <p className={`${typography('SMALL')} mt-1`}>
+              <h2
+                className={`${typography("H3")} laptop:text-base desktop:text-lg`}
+              >
+                {studentPortal.home.noProfile}
+              </h2>
+              <p className={`${typography("SMALL")} mt-1`}>
                 {studentPortal.home.noProfileDescription}
               </p>
             </div>
@@ -60,7 +76,11 @@ export default function StudentHome() {
               <StudentMetricCard
                 icon={isFinancialOk ? CheckCircle : AlertCircle}
                 label={studentPortal.home.financialLabel}
-                value={isFinancialOk ? studentPortal.home.financialOk : studentPortal.home.financialPending}
+                value={
+                  isFinancialOk
+                    ? studentPortal.home.financialOk
+                    : studentPortal.home.financialPending
+                }
                 description={
                   isFinancialOk
                     ? studentPortal.home.financialOkDescription
@@ -72,31 +92,41 @@ export default function StudentHome() {
               {/* Card Última Aula */}
               {lastClass ? (
                 <div className="rounded-xl border bg-card p-5 shadow-card">
-                  <div className={`flex items-center justify-between ${gap('LOOSE')}`}>
-                    <div className={`flex items-center ${gap('DEFAULT')}`}>
+                  <div
+                    className={`flex items-center justify-between ${gap("LOOSE")}`}
+                  >
+                    <div className={`flex items-center ${gap("DEFAULT")}`}>
                       <div className="h-10 w-10 rounded-lg bg-accent flex items-center justify-center">
-                        <BookOpen className={iconSize('MD')} />
+                        <BookOpen className={iconSize("MD")} />
                       </div>
                       <div>
-                        <h2 className={`${typography('H3')} laptop:text-base desktop:text-lg`}>{studentPortal.home.lastClassTitle}</h2>
-                        <div className={`flex items-center ${gap('TIGHT')} ${typography('SMALL')}`}>
-                          <Calendar className={iconSize('XS')} />
+                        <h2
+                          className={`${typography("H3")} laptop:text-base desktop:text-lg`}
+                        >
+                          {studentPortal.home.lastClassTitle}
+                        </h2>
+                        <div
+                          className={`flex items-center ${gap("TIGHT")} ${typography("SMALL")}`}
+                        >
+                          <Calendar className={iconSize("XS")} />
                           {formatDate(lastClass.class_date)}
                         </div>
                       </div>
                     </div>
                     {lastClass.grade !== null && (
                       <div className="text-right">
-                        <p className={typography('TABLE_HEADER')}>
+                        <p className={typography("TABLE_HEADER")}>
                           {studentPortal.home.gradeLabel}
                         </p>
-                        <p className={`text-2xl font-bold ${
-                          Number(lastClass.grade) >= 7 
-                            ? "text-success" 
-                            : Number(lastClass.grade) >= 5 
-                            ? "text-warning" 
-                            : "text-destructive"
-                        }`}>
+                        <p
+                          className={`text-2xl font-bold ${
+                            Number(lastClass.grade) >= 7
+                              ? "text-success"
+                              : Number(lastClass.grade) >= 5
+                                ? "text-warning"
+                                : "text-destructive"
+                          }`}
+                        >
                           {Number(lastClass.grade).toFixed(1)}
                         </p>
                       </div>
@@ -104,8 +134,10 @@ export default function StudentHome() {
                   </div>
                   {lastClass.feedback && (
                     <div className="pt-4 border-t">
-                      <p className={typography('SMALL')}>
-                        <span className="font-medium text-foreground">{studentPortal.home.feedbackLabel} </span>
+                      <p className={typography("SMALL")}>
+                        <span className="font-medium text-foreground">
+                          {studentPortal.home.feedbackLabel}{" "}
+                        </span>
                         {lastClass.feedback}
                       </p>
                     </div>
@@ -121,7 +153,9 @@ export default function StudentHome() {
               )}
 
               {/* Cards Aulas realizadas + Média geral */}
-              <div className={`grid grid-cols-1 sm:grid-cols-2 ${gap('LOOSE')}`}>
+              <div
+                className={`grid grid-cols-1 sm:grid-cols-2 ${gap("LOOSE")}`}
+              >
                 <StudentMetricCard
                   icon={TrendingUp}
                   label={studentPortal.home.totalClassesLabel}
@@ -131,7 +165,9 @@ export default function StudentHome() {
                 <StudentMetricCard
                   icon={Award}
                   label={studentPortal.home.averageGradeLabel}
-                  value={stats.averageGrade > 0 ? stats.averageGrade.toFixed(1) : "—"}
+                  value={
+                    stats.averageGrade > 0 ? stats.averageGrade.toFixed(1) : "—"
+                  }
                   variant="success"
                 />
               </div>

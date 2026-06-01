@@ -1,9 +1,33 @@
 // Lista de estados brasileiros e helpers para buscar cidades via API do IBGE.
 
 export type BrStateCode =
-  | "AC" | "AL" | "AP" | "AM" | "BA" | "CE" | "DF" | "ES" | "GO"
-  | "MA" | "MT" | "MS" | "MG" | "PA" | "PB" | "PR" | "PE" | "PI"
-  | "RJ" | "RN" | "RS" | "RO" | "RR" | "SC" | "SP" | "SE" | "TO";
+  | "AC"
+  | "AL"
+  | "AP"
+  | "AM"
+  | "BA"
+  | "CE"
+  | "DF"
+  | "ES"
+  | "GO"
+  | "MA"
+  | "MT"
+  | "MS"
+  | "MG"
+  | "PA"
+  | "PB"
+  | "PR"
+  | "PE"
+  | "PI"
+  | "RJ"
+  | "RN"
+  | "RS"
+  | "RO"
+  | "RR"
+  | "SC"
+  | "SP"
+  | "SE"
+  | "TO";
 
 export interface BrCityOption {
   value: string;
@@ -45,7 +69,9 @@ export const BR_STATES: BrState[] = [
   { code: "TO", name: "Tocantins" },
 ];
 
-export async function fetchIbgeCitiesByUf(uf: BrStateCode): Promise<BrCityOption[]> {
+export async function fetchIbgeCitiesByUf(
+  uf: BrStateCode
+): Promise<BrCityOption[]> {
   try {
     const response = await fetch(
       `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`

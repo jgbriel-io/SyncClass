@@ -4,8 +4,10 @@
 export const pwa = {
   installBanner: {
     title: "Instalar App",
-    description: "Instale o app na sua tela inicial para acesso mais rápido e funcionamento offline.",
-    descriptionFull: "Acesse mais rápido instalando o app na sua tela inicial. Funciona offline!",
+    description:
+      "Instale o app na sua tela inicial para acesso mais rápido e funcionamento offline.",
+    descriptionFull:
+      "Acesse mais rápido instalando o app na sua tela inicial. Funciona offline!",
     installButton: "Instalar",
     installingButton: "Instalando...",
     laterButton: "Agora não",

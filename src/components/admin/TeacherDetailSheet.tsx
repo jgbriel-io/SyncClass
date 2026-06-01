@@ -47,22 +47,32 @@ export function TeacherDetailSheet({
   );
 
   const teacherStudents = useMemo(
-    () => students.filter((s) => s.teacher_id === teacherId && s.status === "ativo"),
+    () =>
+      students.filter(
+        (s) => s.teacher_id === teacherId && s.status === "ativo"
+      ),
     [students, teacherId]
   );
 
   const teacherClasses = useMemo(
-    () => classLogs.filter((log) => log.students?.teacher_id === teacherId && log.attendance),
+    () =>
+      classLogs.filter(
+        (log) => log.students?.teacher_id === teacherId && log.attendance
+      ),
     [classLogs, teacherId]
   );
 
   const teacherFinancials = useMemo(
-    () => financialRecords.filter((rec) => rec.students?.teacher_id === teacherId && rec.status === "pago"),
+    () =>
+      financialRecords.filter(
+        (rec) => rec.students?.teacher_id === teacherId && rec.status === "pago"
+      ),
     [financialRecords, teacherId]
   );
 
   const totalReceived = useMemo(
-    () => teacherFinancials.reduce((sum, rec) => sum + Number(rec.amount || 0), 0),
+    () =>
+      teacherFinancials.reduce((sum, rec) => sum + Number(rec.amount || 0), 0),
     [teacherFinancials]
   );
 
@@ -86,7 +96,9 @@ export function TeacherDetailSheet({
               variant={teacher.status === "ativo" ? "success" : "default"}
               className="mt-2"
             >
-              {teacher.status === "ativo" ? common.labels.active : common.labels.inactive}
+              {teacher.status === "ativo"
+                ? common.labels.active
+                : common.labels.inactive}
             </StatusBadge>
           </>
         )
@@ -100,29 +112,53 @@ export function TeacherDetailSheet({
           <Skeleton className="h-20 w-full" />
         </div>
       ) : (
-        <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
+        <Tabs
+          defaultValue="info"
+          className="flex-1 flex flex-col overflow-hidden"
+        >
           <TabsList className="mx-6 mt-4 grid w-full grid-cols-3">
-            <TabsTrigger value="info">{teachersContent.detailSheet.tabInfo}</TabsTrigger>
-            <TabsTrigger value="students">{teachersContent.detailSheet.tabStudents}</TabsTrigger>
-            <TabsTrigger value="stats">{teachersContent.detailSheet.tabClasses}</TabsTrigger>
+            <TabsTrigger value="info">
+              {teachersContent.detailSheet.tabInfo}
+            </TabsTrigger>
+            <TabsTrigger value="students">
+              {teachersContent.detailSheet.tabStudents}
+            </TabsTrigger>
+            <TabsTrigger value="stats">
+              {teachersContent.detailSheet.tabClasses}
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab: Informações */}
-          <TabsContent value="info" className="flex-1 overflow-auto m-0 px-6 py-4">
+          <TabsContent
+            value="info"
+            className="flex-1 overflow-auto m-0 px-6 py-4"
+          >
             <Card className="p-4 space-y-3">
               <h3 className="font-semibold text-sm flex items-center gap-2">
                 <User className="h-4 w-4" />
                 {teachersContent.detailSheet.personalDataSection}
               </h3>
               <div className="grid gap-4 text-sm">
-                <DetailSection icon={Mail} label={common.labels.email} value={teacher.email || "—"} inline />
-                <DetailSection icon={Phone} label={common.labels.phone} value={formatPhoneDisplay(teacher.phone, "Brasil") || "—"} inline />
+                <DetailSection
+                  icon={Mail}
+                  label={common.labels.email}
+                  value={teacher.email || "—"}
+                  inline
+                />
+                <DetailSection
+                  icon={Phone}
+                  label={common.labels.phone}
+                  value={formatPhoneDisplay(teacher.phone, "Brasil") || "—"}
+                  inline
+                />
                 <DetailSection
                   icon={Calendar}
                   label={common.labels.createdAt}
                   value={
                     teacher.created_at
-                      ? format(new Date(teacher.created_at), "dd/MM/yyyy", { locale: ptBR })
+                      ? format(new Date(teacher.created_at), "dd/MM/yyyy", {
+                          locale: ptBR,
+                        })
                       : "—"
                   }
                   inline
@@ -132,11 +168,15 @@ export function TeacherDetailSheet({
           </TabsContent>
 
           {/* Tab: Alunos */}
-          <TabsContent value="students" className="flex-1 overflow-auto m-0 px-6 py-4">
+          <TabsContent
+            value="students"
+            className="flex-1 overflow-auto m-0 px-6 py-4"
+          >
             <Card className="p-4">
               <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
                 <Users className="h-4 w-4" />
-                {teachersContent.detailSheet.activeStudentsLabel} ({teacherStudents.length})
+                {teachersContent.detailSheet.activeStudentsLabel} (
+                {teacherStudents.length})
               </h3>
               {teacherStudents.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
@@ -152,7 +192,12 @@ export function TeacherDetailSheet({
                       <div>
                         <p className="text-sm font-medium">{student.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {student.email || formatPhoneDisplay(student.phone, student.country) || "—"}
+                          {student.email ||
+                            formatPhoneDisplay(
+                              student.phone,
+                              student.country
+                            ) ||
+                            "—"}
                         </p>
                       </div>
                       <div className="text-right text-xs text-muted-foreground">
@@ -171,15 +216,22 @@ export function TeacherDetailSheet({
           </TabsContent>
 
           {/* Tab: Estatísticas */}
-          <TabsContent value="stats" className="flex-1 overflow-auto m-0 px-6 py-4">
+          <TabsContent
+            value="stats"
+            className="flex-1 overflow-auto m-0 px-6 py-4"
+          >
             <div className="grid gap-4">
               <Card className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-primary" />
-                    <span className="text-sm text-muted-foreground">{teachersContent.detailSheet.totalStudentsLabel}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {teachersContent.detailSheet.totalStudentsLabel}
+                    </span>
                   </div>
-                  <span className="text-2xl font-bold">{teacherStudents.length}</span>
+                  <span className="text-2xl font-bold">
+                    {teacherStudents.length}
+                  </span>
                 </div>
               </Card>
 
@@ -187,9 +239,13 @@ export function TeacherDetailSheet({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-primary" />
-                    <span className="text-sm text-muted-foreground">{teachersContent.detailSheet.totalClassesLabel}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {teachersContent.detailSheet.totalClassesLabel}
+                    </span>
                   </div>
-                  <span className="text-2xl font-bold">{teacherClasses.length}</span>
+                  <span className="text-2xl font-bold">
+                    {teacherClasses.length}
+                  </span>
                 </div>
               </Card>
 
@@ -197,7 +253,9 @@ export function TeacherDetailSheet({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5 text-success" />
-                    <span className="text-sm text-muted-foreground">{teachersContent.detailSheet.totalReceivedLabel}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {teachersContent.detailSheet.totalReceivedLabel}
+                    </span>
                   </div>
                   <span className="text-2xl font-bold text-success">
                     {formatCurrency(totalReceived)}
@@ -209,7 +267,9 @@ export function TeacherDetailSheet({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5 text-primary" />
-                    <span className="text-sm text-muted-foreground">{teachersContent.detailSheet.averagePerClassLabel}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {teachersContent.detailSheet.averagePerClassLabel}
+                    </span>
                   </div>
                   <span className="text-2xl font-bold">
                     {teacherClasses.length > 0

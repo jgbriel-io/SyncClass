@@ -1,6 +1,6 @@
 /**
  * Mapeia erros do Postgres para mensagens amigáveis ao usuário
- * 
+ *
  * Códigos de erro PostgreSQL:
  * - 23514: CHECK constraint violation
  * - 23505: UNIQUE constraint violation
@@ -94,7 +94,11 @@ export function mapPostgresError(error: unknown): string {
   // ========================================
   // RLS - ROW LEVEL SECURITY (42501)
   // ========================================
-  if (code === "42501" || message.includes("permission denied") || message.includes("insufficient privilege")) {
+  if (
+    code === "42501" ||
+    message.includes("permission denied") ||
+    message.includes("insufficient privilege")
+  ) {
     if (message.includes("students")) {
       return "Você não tem permissão para acessar dados deste aluno.";
     }
@@ -244,7 +248,9 @@ export function mapPostgresError(error: unknown): string {
 export function isConstraintError(error: unknown): boolean {
   const pgError = error as PostgresError;
   const code = pgError?.code;
-  return code === "23514" || code === "23505" || code === "23503" || code === "23502";
+  return (
+    code === "23514" || code === "23505" || code === "23503" || code === "23502"
+  );
 }
 
 /**

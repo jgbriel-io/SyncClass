@@ -36,7 +36,8 @@ export const activities = {
 
   sendDialog: {
     title: "Enviar atividade",
-    description: "Selecione o aluno, preencha o título e anexe o arquivo da atividade.",
+    description:
+      "Selecione o aluno, preencha o título e anexe o arquivo da atividade.",
     teacherLabel: "Professor *",
     teacherPlaceholder: "Selecione um professor",
     teacherRequired: "Selecione um professor",
@@ -59,7 +60,8 @@ export const activities = {
     toasts: {
       fileNotFound: "Arquivo não encontrado.",
       fileRequired: "Selecione ou envie um arquivo.",
-      rateLimitExceeded: (seconds: number) => `Muitos uploads. Aguarde ${seconds} segundos.`,
+      rateLimitExceeded: (seconds: number) =>
+        `Muitos uploads. Aguarde ${seconds} segundos.`,
       error: (msg: string) => `Erro ao enviar atividade: ${msg}`,
       success: "Atividade enviada com sucesso!",
     },
@@ -67,7 +69,8 @@ export const activities = {
 
   editDialog: {
     title: "Editar atividade",
-    description: (studentName: string) => `Altere título, descrição, prazo ou arquivo. Aluno: ${studentName}`,
+    description: (studentName: string) =>
+      `Altere título, descrição, prazo ou arquivo. Aluno: ${studentName}`,
     titleLabel: "Título *",
     titlePlaceholder: "Ex: Reading Comprehension - Unit 5",
     descriptionLabel: "Descrição (opcional)",
@@ -75,7 +78,8 @@ export const activities = {
     dueDateLabel: "Prazo de entrega *",
     dueDateHint: "Data e hora limite para o aluno entregar.",
     fileLabel: "Arquivo",
-    fileSourceCurrent: (fileName: string) => `Manter arquivo atual (${fileName})`,
+    fileSourceCurrent: (fileName: string) =>
+      `Manter arquivo atual (${fileName})`,
     fileSourceNew: "Enviar novo arquivo",
     fileSourceExisting: "Usar arquivo já na plataforma",
     fileSourceNone: "(nenhum ainda)",
@@ -113,7 +117,8 @@ export const activities = {
     activityLabel: "Atividade:",
     responseTextLabel: "Resposta (texto)",
     fileLabel: "Arquivo *",
-    fileHint: "Envie sua resposta (PDF, DOC, DOCX, JPG, PNG ou TXT - máx. 10 MB)",
+    fileHint:
+      "Envie sua resposta (PDF, DOC, DOCX, JPG, PNG ou TXT - máx. 10 MB)",
     fileSelectLabel: "Clique para selecionar um arquivo",
     orDivider: "Ou",
     submitButton: "Entregar",
@@ -126,7 +131,8 @@ export const activities = {
 
   deleteDialog: {
     title: "Confirmar exclusão",
-    description: (title: string) => `Tem certeza que deseja excluir a atividade "${title}"?`,
+    description: (title: string) =>
+      `Tem certeza que deseja excluir a atividade "${title}"?`,
     irreversible: "Esta ação não pode ser desfeita.",
     confirmButton: "Excluir",
     deleting: "Excluindo...",

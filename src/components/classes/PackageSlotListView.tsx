@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
@@ -43,9 +47,14 @@ export function PackageSlotListView({
       </div>
       <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-1">
         {slots.map((slot, index) => (
-          <div key={index} className="flex flex-wrap items-end gap-2 rounded-lg">
+          <div
+            key={index}
+            className="flex flex-wrap items-end gap-2 rounded-lg"
+          >
             <div className="flex-1 min-w-[120px] space-y-1">
-              <Label className="text-xs">{classesContent.packageDialog.slotDateLabel}</Label>
+              <Label className="text-xs">
+                {classesContent.packageDialog.slotDateLabel}
+              </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -56,7 +65,8 @@ export function PackageSlotListView({
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {slot.class_date || classesContent.logFormDialog.datePlaceholder}
+                    {slot.class_date ||
+                      classesContent.logFormDialog.datePlaceholder}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -65,7 +75,11 @@ export function PackageSlotListView({
                     selected={brDateStringToDate(slot.class_date) ?? undefined}
                     onSelect={(date) => {
                       if (date)
-                        onUpdateSlot(index, "class_date", format(date, "dd/MM/yyyy", { locale: ptBR }));
+                        onUpdateSlot(
+                          index,
+                          "class_date",
+                          format(date, "dd/MM/yyyy", { locale: ptBR })
+                        );
                     }}
                     locale={ptBR}
                     disabled={(date) => {
@@ -80,20 +94,28 @@ export function PackageSlotListView({
               </Popover>
             </div>
             <div className="w-[90px] space-y-1">
-              <Label className="text-xs">{classesContent.packageDialog.slotStartLabel}</Label>
+              <Label className="text-xs">
+                {classesContent.packageDialog.slotStartLabel}
+              </Label>
               <Input
                 type="time"
                 value={slot.start_time}
-                onChange={(e) => onUpdateSlot(index, "start_time", e.target.value)}
+                onChange={(e) =>
+                  onUpdateSlot(index, "start_time", e.target.value)
+                }
                 className="h-9"
               />
             </div>
             <div className="w-[90px] space-y-1">
-              <Label className="text-xs">{classesContent.packageDialog.slotEndLabel}</Label>
+              <Label className="text-xs">
+                {classesContent.packageDialog.slotEndLabel}
+              </Label>
               <Input
                 type="time"
                 value={slot.end_time}
-                onChange={(e) => onUpdateSlot(index, "end_time", e.target.value)}
+                onChange={(e) =>
+                  onUpdateSlot(index, "end_time", e.target.value)
+                }
                 className="h-9"
               />
             </div>

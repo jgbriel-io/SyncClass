@@ -1,6 +1,18 @@
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
-import { useDeleteActivity, type ActivityWithRelations } from "@/hooks/useActivities";
+import {
+  useDeleteActivity,
+  type ActivityWithRelations,
+} from "@/hooks/useActivities";
 import { activities as activitiesContent, common } from "@/content";
 
 interface ActivityDeleteDialogProps {
@@ -10,7 +22,12 @@ interface ActivityDeleteDialogProps {
   onClose: () => void;
 }
 
-export function ActivityDeleteDialog({ open, onOpenChange, activity, onClose }: ActivityDeleteDialogProps) {
+export function ActivityDeleteDialog({
+  open,
+  onOpenChange,
+  activity,
+  onClose,
+}: ActivityDeleteDialogProps) {
   const deleteActivity = useDeleteActivity();
 
   const handleConfirm = () => {
@@ -24,7 +41,9 @@ export function ActivityDeleteDialog({ open, onOpenChange, activity, onClose }: 
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{activitiesContent.deleteDialog.title}</AlertDialogTitle>
+          <AlertDialogTitle>
+            {activitiesContent.deleteDialog.title}
+          </AlertDialogTitle>
           <AlertDialogDescription>
             {activitiesContent.deleteDialog.description(activity?.title ?? "")}
             <br />
@@ -32,14 +51,19 @@ export function ActivityDeleteDialog({ open, onOpenChange, activity, onClose }: 
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteActivity.isPending}>{common.actions.cancel}</AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteActivity.isPending}>
+            {common.actions.cancel}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={deleteActivity.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {deleteActivity.isPending ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{activitiesContent.deleteDialog.deleting}</>
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {activitiesContent.deleteDialog.deleting}
+              </>
             ) : (
               activitiesContent.deleteDialog.confirmButton
             )}

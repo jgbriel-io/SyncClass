@@ -20,34 +20,40 @@ export default function AdminDashboard() {
   const { data: profile } = useCurrentUserProfile(user?.id);
 
   const { data: stats, isLoading: loadingStats } = useDashboardStats();
-  const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary();
+  const { data: financialSummary, isLoading: loadingFinancial } =
+    useFinancialSummary();
   const { data: forecastedBilling } = useForecastedBilling();
-  const { data: upcomingPayments = [], isLoading: loadingPayments } = useUpcomingPayments();
-  const { data: birthdays = [], isLoading: loadingBirthdays } = useBirthdaysThisMonth();
-  const { data: chartData = [], isLoading: loadingChart } = useNewStudentsByMonth(chartMonths);
+  const { data: upcomingPayments = [], isLoading: loadingPayments } =
+    useUpcomingPayments();
+  const { data: birthdays = [], isLoading: loadingBirthdays } =
+    useBirthdaysThisMonth();
+  const { data: chartData = [], isLoading: loadingChart } =
+    useNewStudentsByMonth(chartMonths);
   const { data: todayClasses } = useTodayClasses(null);
-  const { data: pendingEvaluationLogs = [] } = usePendingEvaluationClassLogs(null);
+  const { data: pendingEvaluationLogs = [] } =
+    usePendingEvaluationClassLogs(null);
 
-  const isLoading = loadingStats || loadingFinancial || loadingPayments || loadingBirthdays;
+  const isLoading =
+    loadingStats || loadingFinancial || loadingPayments || loadingBirthdays;
   const displayName = profile?.full_name?.trim() || "Admin";
 
   return (
-      <DashboardView
-        title="Dashboard"
-        subtitle={`Bem-vindo de volta, ${displayName}! Aqui está o resumo da sua instituição.`}
-        stats={stats}
-        financialSummary={financialSummary}
-        forecastedBilling={forecastedBilling}
-        upcomingPayments={upcomingPayments}
-        birthdays={birthdays}
-        chartData={chartData}
-        todayClasses={todayClasses}
-        pendingFeedbackCount={pendingEvaluationLogs.length}
-        isLoading={isLoading}
-        chartLoading={loadingChart}
-        basePath="/admin"
-        chartMonths={chartMonths}
-        onChartMonthsChange={setChartMonths}
-      />
+    <DashboardView
+      title="Dashboard"
+      subtitle={`Bem-vindo de volta, ${displayName}! Aqui está o resumo da sua instituição.`}
+      stats={stats}
+      financialSummary={financialSummary}
+      forecastedBilling={forecastedBilling}
+      upcomingPayments={upcomingPayments}
+      birthdays={birthdays}
+      chartData={chartData}
+      todayClasses={todayClasses}
+      pendingFeedbackCount={pendingEvaluationLogs.length}
+      isLoading={isLoading}
+      chartLoading={loadingChart}
+      basePath="/admin"
+      chartMonths={chartMonths}
+      onChartMonthsChange={setChartMonths}
+    />
   );
 }

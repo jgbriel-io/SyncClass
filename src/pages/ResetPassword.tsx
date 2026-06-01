@@ -27,7 +27,7 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validação de requisitos de senha
     if (password.length < 8) {
       toast.error(auth.resetPassword.toasts.minLength);
@@ -87,17 +87,22 @@ export default function ResetPassword() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center p-8">
-        <div className={`w-full max-w-sm ${stack('RELAXED')} text-center`}>
-          <h2 className={typography('H1')}>{auth.resetPassword.expiredTitle}</h2>
-          <p className={typography('SMALL')}>
+        <div className={`w-full max-w-sm ${stack("RELAXED")} text-center`}>
+          <h2 className={typography("H1")}>
+            {auth.resetPassword.expiredTitle}
+          </h2>
+          <p className={typography("SMALL")}>
             {auth.resetPassword.expiredMessage}
           </p>
           <Button asChild className="w-full">
             <Link to="/esqueci-senha">{auth.resetPassword.requestNewLink}</Link>
           </Button>
           <p>
-            <Link to="/login" className={`${typography('SMALL')} hover:text-foreground inline-flex items-center ${gap('TIGHT')}`}>
-              <ArrowLeft className={iconSize('SM')} />
+            <Link
+              to="/login"
+              className={`${typography("SMALL")} hover:text-foreground inline-flex items-center ${gap("TIGHT")}`}
+            >
+              <ArrowLeft className={iconSize("SM")} />
               {auth.resetPassword.backToLogin}
             </Link>
           </p>
@@ -118,28 +123,39 @@ export default function ResetPassword() {
             <span className="text-base font-semibold">{common.app.name}</span>
           </div>
           <div className="space-y-6 max-w-md">
-            <h1 className="text-4xl font-bold tracking-tight">{auth.resetPassword.pageTitle}</h1>
+            <h1 className="text-4xl font-bold tracking-tight">
+              {auth.resetPassword.pageTitle}
+            </h1>
             <p className="text-lg text-primary-foreground/80">
               {auth.resetPassword.pageSubtitle}
             </p>
           </div>
-          <p className="text-sm text-primary-foreground/60">{common.app.copyright(2026)}</p>
+          <p className="text-sm text-primary-foreground/60">
+            {common.app.copyright(2026)}
+          </p>
         </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className={`w-full max-w-sm ${stack('RELAXED')}`}>
+        <div className={`w-full max-w-sm ${stack("RELAXED")}`}>
           <div className="lg:hidden flex justify-center">
-            <Link to="/login" className={`flex items-center ${gap('TIGHT')} text-muted-foreground hover:text-foreground`}>
-              <GraduationCap className={iconSize('XL')} />
-              <span className={`${typography('H2')} font-semibold`}>{common.app.name}</span>
+            <Link
+              to="/login"
+              className={`flex items-center ${gap("TIGHT")} text-muted-foreground hover:text-foreground`}
+            >
+              <GraduationCap className={iconSize("XL")} />
+              <span className={`${typography("H2")} font-semibold`}>
+                {common.app.name}
+              </span>
             </Link>
           </div>
 
-          <div className={stack('TIGHT')}>
-            <h2 className={typography('H2')}>{auth.resetPassword.title}</h2>
+          <div className={stack("TIGHT")}>
+            <h2 className={typography("H2")}>{auth.resetPassword.title}</h2>
             <div className="rounded-lg border bg-muted/50 p-3 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">{auth.resetPassword.requirements.title}</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                {auth.resetPassword.requirements.title}
+              </p>
               <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                 <li>{auth.resetPassword.requirements.minLength}</li>
                 <li>{auth.resetPassword.requirements.uppercase}</li>
@@ -150,9 +166,11 @@ export default function ResetPassword() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className={stack('RELAXED')}>
-            <div className={stack('TIGHT')}>
-              <Label htmlFor="password">{auth.resetPassword.passwordLabel}</Label>
+          <form onSubmit={handleSubmit} className={stack("RELAXED")}>
+            <div className={stack("TIGHT")}>
+              <Label htmlFor="password">
+                {auth.resetPassword.passwordLabel}
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -171,11 +189,15 @@ export default function ResetPassword() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   disabled={isSubmitting}
                 >
-                  {showPassword ? <EyeOff className={iconSize('SM')} /> : <Eye className={iconSize('SM')} />}
+                  {showPassword ? (
+                    <EyeOff className={iconSize("SM")} />
+                  ) : (
+                    <Eye className={iconSize("SM")} />
+                  )}
                 </button>
               </div>
             </div>
-            <div className={stack('TIGHT')}>
+            <div className={stack("TIGHT")}>
               <Label htmlFor="confirm">{auth.resetPassword.confirmLabel}</Label>
               <Input
                 id="confirm"
@@ -189,10 +211,14 @@ export default function ResetPassword() {
                 disabled={isSubmitting}
               />
             </div>
-            <Button type="submit" className="w-full h-11" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              className="w-full h-11"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? (
                 <>
-                  <Loader2 className={`mr-2 ${iconSize('SM')} animate-spin`} />
+                  <Loader2 className={`mr-2 ${iconSize("SM")} animate-spin`} />
                   {auth.resetPassword.submitting}
                 </>
               ) : (
@@ -202,8 +228,11 @@ export default function ResetPassword() {
           </form>
 
           <p className="text-center">
-            <Link to="/login" className={`${typography('SMALL')} hover:text-foreground inline-flex items-center ${gap('TIGHT')}`}>
-              <ArrowLeft className={iconSize('SM')} />
+            <Link
+              to="/login"
+              className={`${typography("SMALL")} hover:text-foreground inline-flex items-center ${gap("TIGHT")}`}
+            >
+              <ArrowLeft className={iconSize("SM")} />
               {auth.resetPassword.backToLogin}
             </Link>
           </p>

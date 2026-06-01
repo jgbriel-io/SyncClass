@@ -18,7 +18,9 @@ export function getStudentRowData(
 ) {
   const totalClasses = student.total_classes_current_month ?? 0;
   const monthlyTotal = student.total_amount_current_month ?? 0;
-  const teacherName = student.teacher_id ? teacherMap[student.teacher_id] || "—" : "—";
+  const teacherName = student.teacher_id
+    ? teacherMap[student.teacher_id] || "—"
+    : "—";
 
   return {
     student,

@@ -29,19 +29,21 @@ const TeacherFinancialPage = () => {
   if (!teacherId) {
     return (
       <div className="text-center py-12">
-        <p className={typography('SMALL')}>Não foi possível carregar seu perfil de professor.</p>
+        <p className={typography("SMALL")}>
+          Não foi possível carregar seu perfil de professor.
+        </p>
       </div>
     );
   }
 
   return (
     <FinancialView
-        title="Financeiro"
-        subtitle="Gerencie cobranças e pagamentos"
-        showTeacherColumn={false}
-        enableTeacherSelection={false}
-        autoTeacherId={teacherId}
-      />
+      title="Financeiro"
+      subtitle="Gerencie cobranças e pagamentos"
+      showTeacherColumn={false}
+      enableTeacherSelection={false}
+      autoTeacherId={teacherId}
+    />
   );
 };
 

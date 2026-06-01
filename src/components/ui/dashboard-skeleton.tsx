@@ -51,9 +51,9 @@ interface DashboardSkeletonProps {
  * Skeleton para dashboard completo
  * Cards de estatísticas + tabela
  */
-export function DashboardSkeleton({ 
+export function DashboardSkeleton({
   metricCards = 4,
-  showTable = true 
+  showTable = true,
 }: DashboardSkeletonProps) {
   return (
     <div className="space-y-6">
@@ -61,14 +61,14 @@ export function DashboardSkeleton({
       <div className="grid grid-cols-1 laptop:grid-cols-4 gap-4">
         <CardSkeleton count={metricCards} />
       </div>
-      
+
       {/* Table Section */}
       {showTable && (
         <Card className="p-6">
           <div className="space-y-4">
             {/* Table Header */}
             <Skeleton className="h-8 w-48" />
-            
+
             {/* Table Rows */}
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => (

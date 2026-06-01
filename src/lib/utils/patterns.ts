@@ -1,6 +1,6 @@
 /**
  * Padrões de RegExp e máscaras centralizados
- * 
+ *
  * Este arquivo concentra todos os padrões de validação e formatação
  * usados no projeto, evitando duplicação e garantindo consistência.
  */
@@ -13,23 +13,23 @@ export const REGEX_PATTERNS = {
   // Telefones
   phone: /^\(\d{2}\) \d{4,5}-\d{4}$/,
   phoneDigits: /\D/g, // Remove tudo que não é dígito
-  
+
   // Datas
   date: /^\d{2}\/\d{2}\/\d{4}$/,
   dateDigits: /\D/g, // Remove tudo que não é dígito
-  
+
   // Horários
   time: /^([01]?\d|2[0-3]):([0-5]\d)$/,
-  
+
   // Números e valores
   onlyDigits: /[^\d]/g, // Remove tudo que não é dígito
   leadingZeros: /^0+(?!$)/, // Remove zeros à esquerda, exceto se for apenas "0"
   nonNumeric: /[^.\d,]/g, // Remove tudo exceto dígitos, ponto e vírgula
-  
+
   // Formatação
   commaDecimal: /,/g, // Vírgula (para substituir por ponto)
   dotDecimal: /\./g, // Ponto (para substituir por vírgula)
-  
+
   // Limpeza de texto
   nonAlphanumeric: /[^A-Za-zÀ-ÿ0-9]/g, // Remove caracteres especiais
   specialChars: /:/g, // Remove caracteres especiais específicos (usado em IDs),
@@ -47,14 +47,14 @@ export const REGEX_PATTERNS = {
  */
 export function maskPhone(value: string): string {
   const digits = value.replace(REGEX_PATTERNS.phoneDigits, "").slice(0, 11);
-  
+
   if (digits.length <= 2) return digits;
   if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
   if (digits.length <= 10) {
     // Formato antigo: (00) 0000-0000
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
   }
-  
+
   // Formato novo: (00) 00000-0000
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
@@ -64,10 +64,10 @@ export function maskPhone(value: string): string {
  */
 export function maskDate(value: string): string {
   const digits = value.replace(REGEX_PATTERNS.dateDigits, "").slice(0, 8);
-  
+
   if (digits.length <= 2) return digits;
   if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  
+
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
@@ -77,12 +77,12 @@ export function maskDate(value: string): string {
 export function maskMoney(value: string): string {
   // Remove tudo que não é dígito
   const digits = value.replace(REGEX_PATTERNS.onlyDigits, "");
-  
+
   if (!digits) return "";
-  
+
   // Converte para número e formata
   const number = parseInt(digits, 10) / 100;
-  
+
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -115,10 +115,10 @@ export function brDateStringToDate(br: string): Date | undefined {
  */
 export function isValidDateString(value: string): boolean {
   if (!REGEX_PATTERNS.date.test(value)) return false;
-  
+
   const [day, month, year] = value.split("/").map(Number);
   const date = new Date(year, month - 1, day);
-  
+
   return (
     date.getFullYear() === year &&
     date.getMonth() === month - 1 &&
@@ -153,17 +153,17 @@ export function isValidEmailFormat(value: string): boolean {
 export function parseMoneyToNumber(value: string): number {
   // Remove tudo exceto dígitos, vírgula e ponto
   const cleaned = value.replace(/[^\d,.]/g, "");
-  
+
   // Se tem vírgula e ponto, assume formato brasileiro (1.234,56)
   if (cleaned.includes(",") && cleaned.includes(".")) {
     return parseFloat(cleaned.replace(/\./g, "").replace(",", "."));
   }
-  
+
   // Se tem apenas vírgula, assume formato brasileiro (1234,56)
   if (cleaned.includes(",")) {
     return parseFloat(cleaned.replace(",", "."));
   }
-  
+
   // Se tem apenas ponto ou nenhum, assume formato americano (1234.56)
   return parseFloat(cleaned);
 }
@@ -175,7 +175,7 @@ export function parseMoneyToNumber(value: string): number {
 export function formatNumberToMoneyBR(value: number | string): string {
   const num = typeof value === "string" ? parseFloat(value) : value;
   if (isNaN(num)) return "0,00";
-  
+
   return num.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -209,7 +209,10 @@ export function removeLeadingZeros(value: string): string {
  * Extrai a primeira letra maiúscula de um nome (para avatar)
  */
 export function getAvatarLetter(name: string): string {
-  const cleaned = name.replace(REGEX_PATTERNS.nonAlphanumeric, "").charAt(0).toUpperCase();
+  const cleaned = name
+    .replace(REGEX_PATTERNS.nonAlphanumeric, "")
+    .charAt(0)
+    .toUpperCase();
   return cleaned || "?";
 }
 

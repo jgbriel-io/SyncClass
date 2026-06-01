@@ -25,7 +25,10 @@ interface EmptyStateWithActionProps {
   actionLabel?: string;
 }
 
-export function EmptyStudentsState({ onAction, actionLabel = ui.emptyStates.students.actionLabel }: EmptyStateWithActionProps) {
+export function EmptyStudentsState({
+  onAction,
+  actionLabel = ui.emptyStates.students.actionLabel,
+}: EmptyStateWithActionProps) {
   return (
     <EmptyState
       illustration={<EmptyStudentsIllustration />}
@@ -38,7 +41,10 @@ export function EmptyStudentsState({ onAction, actionLabel = ui.emptyStates.stud
   );
 }
 
-export function EmptyClassesState({ onAction, actionLabel = ui.emptyStates.classes.actionLabel }: EmptyStateWithActionProps) {
+export function EmptyClassesState({
+  onAction,
+  actionLabel = ui.emptyStates.classes.actionLabel,
+}: EmptyStateWithActionProps) {
   return (
     <EmptyState
       illustration={<EmptyClassesIllustration />}
@@ -94,7 +100,10 @@ export function EmptySearchState({ query }: { query?: string }) {
   );
 }
 
-export function EmptyActivitiesState({ onAction, actionLabel = ui.emptyStates.activities.actionLabel }: EmptyStateWithActionProps) {
+export function EmptyActivitiesState({
+  onAction,
+  actionLabel = ui.emptyStates.activities.actionLabel,
+}: EmptyStateWithActionProps) {
   return (
     <EmptyState
       illustration={<EmptyActivitiesIllustration />}

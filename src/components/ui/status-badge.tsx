@@ -16,7 +16,11 @@ const variantStyles: Record<StatusVariant, string> = {
   info: "bg-blue-50 text-blue-600 border-blue-200",
 };
 
-export function StatusBadge({ variant, children, className }: StatusBadgeProps) {
+export function StatusBadge({
+  variant,
+  children,
+  className,
+}: StatusBadgeProps) {
   return (
     <span
       className={cn(

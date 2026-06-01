@@ -50,7 +50,8 @@ export function ClassHistoryList({
   groupByMonth = false,
 }: ClassHistoryListProps) {
   const sortedLogs = useMemo(
-    () => [...classLogs].sort((a, b) => b.class_date.localeCompare(a.class_date)),
+    () =>
+      [...classLogs].sort((a, b) => b.class_date.localeCompare(a.class_date)),
     [classLogs]
   );
 
@@ -88,9 +89,10 @@ export function ClassHistoryList({
                   key={log.id}
                   classLog={{
                     ...log,
-                    title: showStudentName && log.student_name
-                      ? `${log.title || common.labels.date} - ${log.student_name}`
-                      : log.title || common.labels.date,
+                    title:
+                      showStudentName && log.student_name
+                        ? `${log.title || common.labels.date} - ${log.student_name}`
+                        : log.title || common.labels.date,
                   }}
                 />
               ))}
@@ -108,9 +110,10 @@ export function ClassHistoryList({
           key={log.id}
           classLog={{
             ...log,
-            title: showStudentName && log.student_name
-              ? `${log.title || common.labels.date} - ${log.student_name}`
-              : log.title || common.labels.date,
+            title:
+              showStudentName && log.student_name
+                ? `${log.title || common.labels.date} - ${log.student_name}`
+                : log.title || common.labels.date,
           }}
         />
       ))}

@@ -1,5 +1,8 @@
 import { cn } from "@/lib/utils";
-import { AVATAR_SIZES, type AvatarSize } from "@/lib/design-tokens/avatar-sizes";
+import {
+  AVATAR_SIZES,
+  type AvatarSize,
+} from "@/lib/design-tokens/avatar-sizes";
 
 interface AvatarCircleProps {
   name: string;
@@ -8,14 +11,14 @@ interface AvatarCircleProps {
   className?: string;
 }
 
-export function AvatarCircle({ 
-  name, 
+export function AvatarCircle({
+  name,
   avatarUrl,
-  size = 'DEFAULT',
-  className 
+  size = "DEFAULT",
+  className,
 }: AvatarCircleProps) {
   const initial = name.charAt(0).toUpperCase();
-  
+
   if (avatarUrl) {
     return (
       <img
@@ -29,18 +32,16 @@ export function AvatarCircle({
       />
     );
   }
-  
+
   return (
-    <div 
+    <div
       className={cn(
         "rounded-full bg-accent flex items-center justify-center flex-shrink-0",
         AVATAR_SIZES[size],
         className
       )}
     >
-      <span className="font-medium text-accent-foreground">
-        {initial}
-      </span>
+      <span className="font-medium text-accent-foreground">{initial}</span>
     </div>
   );
 }

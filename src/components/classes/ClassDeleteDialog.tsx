@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/utils/formatters";
-import { useDeleteClassLog, type ClassLogWithStudent } from "@/hooks/useClassLogs";
+import {
+  useDeleteClassLog,
+  type ClassLogWithStudent,
+} from "@/hooks/useClassLogs";
 import { classes as classesContent, common } from "@/content";
 
 interface ClassDeleteDialogProps {
@@ -37,7 +40,9 @@ export function ClassDeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{classesContent.deleteDialog.title}</AlertDialogTitle>
+          <AlertDialogTitle>
+            {classesContent.deleteDialog.title}
+          </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2">
               <p>
@@ -59,7 +64,9 @@ export function ClassDeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteLog.isPending}>{common.actions.cancel}</AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteLog.isPending}>
+            {common.actions.cancel}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={deleteLog.isPending}

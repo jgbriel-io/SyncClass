@@ -8,7 +8,11 @@ const TeacherActivitiesPage = () => {
   return (
     <ActivitiesView
       title="Atividades"
-      subtitle={isAdmin ? "Todas as atividades da plataforma" : "Envie materiais e correções para seus alunos"}
+      subtitle={
+        isAdmin
+          ? "Todas as atividades da plataforma"
+          : "Envie materiais e correções para seus alunos"
+      }
       autoTeacherId={isAdmin ? undefined : teacherId}
       isAdmin={isAdmin}
     />

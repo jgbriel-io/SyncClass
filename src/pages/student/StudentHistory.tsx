@@ -4,10 +4,28 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StudentClassCard } from "@/components/student/StudentClassCard";
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, BookOpen, TrendingUp, TrendingDown, Award, Calendar as CalendarIcon, XCircle } from "lucide-react";
-import { useStudentClassLogs, useStudentStats, useLastClass } from "@/hooks/useStudentPortal";
+import {
+  Loader2,
+  BookOpen,
+  TrendingUp,
+  TrendingDown,
+  Award,
+  Calendar as CalendarIcon,
+  XCircle,
+} from "lucide-react";
+import {
+  useStudentClassLogs,
+  useStudentStats,
+  useLastClass,
+} from "@/hooks/useStudentPortal";
 import { formatDate } from "@/lib/utils/formatters";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
@@ -73,7 +91,8 @@ export default function StudentHistory() {
 
   const gradeStats = useMemo(() => {
     const grades = classesWithGrade.map((l) => Number(l.grade));
-    if (grades.length === 0) return { best: 0, worst: 0, trend: null as "up" | "down" | null };
+    if (grades.length === 0)
+      return { best: 0, worst: 0, trend: null as "up" | "down" | null };
     const best = Math.max(...grades);
     const worst = Math.min(...grades);
     const n = 3;
@@ -91,7 +110,7 @@ export default function StudentHistory() {
   // Filtrar e ordenar aulas
   const filteredClassLogs = useMemo(() => {
     let filtered = classLogs;
-    
+
     // Filtrar por status
     if (statusFilter !== "all") {
       filtered = classLogs.filter((log) => {
@@ -101,7 +120,7 @@ export default function StudentHistory() {
           end_at: log.end_at ?? null,
           attendance: log.attendance,
         });
-        
+
         if (statusFilter === "aberto") {
           // Em aberto = Pendente (não avaliada) ou Agendada
           return status.label === "Pendente" || status.label === "Agendada";
@@ -109,23 +128,35 @@ export default function StudentHistory() {
         if (statusFilter === "concluida") {
           return status.label === "Concluída";
         }
-        
+
         return true;
       });
     }
-    
+
     // Ordenar
     const sorted = [...filtered].sort((a, b) => {
-      const dateA = new Date(a.class_date + "T" + (a.start_at ? new Date(a.start_at).toTimeString().slice(0, 8) : "00:00:00"));
-      const dateB = new Date(b.class_date + "T" + (b.start_at ? new Date(b.start_at).toTimeString().slice(0, 8) : "00:00:00"));
-      
+      const dateA = new Date(
+        a.class_date +
+          "T" +
+          (a.start_at
+            ? new Date(a.start_at).toTimeString().slice(0, 8)
+            : "00:00:00")
+      );
+      const dateB = new Date(
+        b.class_date +
+          "T" +
+          (b.start_at
+            ? new Date(b.start_at).toTimeString().slice(0, 8)
+            : "00:00:00")
+      );
+
       if (sortOrder === "recente") {
         return dateB.getTime() - dateA.getTime(); // Mais recente primeiro
       } else {
         return dateA.getTime() - dateB.getTime(); // Mais antiga primeiro
       }
     });
-    
+
     return sorted;
   }, [classLogs, statusFilter, sortOrder]);
 
@@ -135,9 +166,12 @@ export default function StudentHistory() {
         <EmptyState icon={BookOpen} message={studentPortal.history.noHistory} />
       </div>
     ) : (
-      <div className={stack('DEFAULT')}>
+      <div className={stack("DEFAULT")}>
         {records.map((record) => (
-          <StudentClassCard key={record.id} classLog={classLogToCardProps(record)} />
+          <StudentClassCard
+            key={record.id}
+            classLog={classLogToCardProps(record)}
+          />
         ))}
       </div>
     );
@@ -145,7 +179,10 @@ export default function StudentHistory() {
   const renderStatusFilter = () => (
     <div className="flex flex-wrap items-center gap-4 mb-4">
       <div className="flex items-center gap-3">
-        <Label htmlFor="status-filter" className="text-sm font-medium whitespace-nowrap">
+        <Label
+          htmlFor="status-filter"
+          className="text-sm font-medium whitespace-nowrap"
+        >
           {studentPortal.history.statusFilterLabel}
         </Label>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -153,15 +190,24 @@ export default function StudentHistory() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="aberto">{studentPortal.history.statusOpen}</SelectItem>
-            <SelectItem value="concluida">{studentPortal.history.statusCompleted}</SelectItem>
-            <SelectItem value="all">{studentPortal.history.statusAll}</SelectItem>
+            <SelectItem value="aberto">
+              {studentPortal.history.statusOpen}
+            </SelectItem>
+            <SelectItem value="concluida">
+              {studentPortal.history.statusCompleted}
+            </SelectItem>
+            <SelectItem value="all">
+              {studentPortal.history.statusAll}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
-      
+
       <div className="flex items-center gap-3">
-        <Label htmlFor="sort-order" className="text-sm font-medium whitespace-nowrap">
+        <Label
+          htmlFor="sort-order"
+          className="text-sm font-medium whitespace-nowrap"
+        >
           {studentPortal.history.sortLabel}
         </Label>
         <Select value={sortOrder} onValueChange={setSortOrder}>
@@ -169,8 +215,12 @@ export default function StudentHistory() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="recente">{studentPortal.history.sortRecent}</SelectItem>
-            <SelectItem value="antiga">{studentPortal.history.sortOldest}</SelectItem>
+            <SelectItem value="recente">
+              {studentPortal.history.sortRecent}
+            </SelectItem>
+            <SelectItem value="antiga">
+              {studentPortal.history.sortOldest}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -181,8 +231,8 @@ export default function StudentHistory() {
     <PageContainer constrained maxWidth="5xl">
       {/* Header */}
       <div className="mb-4">
-        <h1 className={typography('H1')}>{studentPortal.history.title}</h1>
-        <p className={`${typography('SMALL')} mt-1`}>
+        <h1 className={typography("H1")}>{studentPortal.history.title}</h1>
+        <p className={`${typography("SMALL")} mt-1`}>
           {studentPortal.history.subtitle}
         </p>
       </div>
@@ -197,7 +247,7 @@ export default function StudentHistory() {
       {/* Error */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-          <p className={typography('ERROR')}>
+          <p className={typography("ERROR")}>
             {studentPortal.history.loadError}
           </p>
         </div>
@@ -206,9 +256,15 @@ export default function StudentHistory() {
       {!isLoading && !error && (
         <Tabs defaultValue="aulas" className="w-full">
           <TabsList className="w-full sm:w-auto mb-4">
-            <TabsTrigger value="aulas" className="flex-1 sm:flex-none">{studentPortal.history.tabClasses}</TabsTrigger>
-            <TabsTrigger value="presenca" className="flex-1 sm:flex-none">{studentPortal.history.tabAttendance}</TabsTrigger>
-            <TabsTrigger value="media" className="flex-1 sm:flex-none">{studentPortal.history.tabGrades}</TabsTrigger>
+            <TabsTrigger value="aulas" className="flex-1 sm:flex-none">
+              {studentPortal.history.tabClasses}
+            </TabsTrigger>
+            <TabsTrigger value="presenca" className="flex-1 sm:flex-none">
+              {studentPortal.history.tabAttendance}
+            </TabsTrigger>
+            <TabsTrigger value="media" className="flex-1 sm:flex-none">
+              {studentPortal.history.tabGrades}
+            </TabsTrigger>
           </TabsList>
 
           {/* Aba Aulas: resumo (total + última aula) + cards completos */}
@@ -218,13 +274,19 @@ export default function StudentHistory() {
                 icon={CalendarIcon}
                 label={studentPortal.history.totalClassesLabel}
                 value={stats.totalClasses}
-                description={lastClass ? studentPortal.history.lastClassLabel(formatDate(lastClass.class_date)) : undefined}
+                description={
+                  lastClass
+                    ? studentPortal.history.lastClassLabel(
+                        formatDate(lastClass.class_date)
+                      )
+                    : undefined
+                }
                 variant="default"
               />
             </div>
             {renderStatusFilter()}
-            <div className={stack('DEFAULT')}>
-              <h2 className={typography('TABLE_HEADER')}>
+            <div className={stack("DEFAULT")}>
+              <h2 className={typography("TABLE_HEADER")}>
                 {studentPortal.history.sectionTitle}
               </h2>
               {renderClassCards(filteredClassLogs)}
@@ -233,7 +295,9 @@ export default function StudentHistory() {
 
           {/* Aba Presença: stats (taxa %, total faltas, última falta) + cards só faltas */}
           <TabsContent value="presenca" className="mt-0">
-            <div className={`grid grid-cols-1 sm:grid-cols-3 ${gap('DEFAULT')} mb-6`}>
+            <div
+              className={`grid grid-cols-1 sm:grid-cols-3 ${gap("DEFAULT")} mb-6`}
+            >
               <StudentMetricCard
                 icon={TrendingUp}
                 label={studentPortal.history.attendanceRateLabel}
@@ -253,13 +317,15 @@ export default function StudentHistory() {
                 variant="default"
               />
             </div>
-            <div className={stack('DEFAULT')}>
-              <h2 className={typography('TABLE_HEADER')}>
+            <div className={stack("DEFAULT")}>
+              <h2 className={typography("TABLE_HEADER")}>
                 {studentPortal.history.missedClassesTitle}
               </h2>
               {missedClasses.length === 0 ? (
                 <div className="rounded-lg border bg-card p-6 text-center">
-                  <p className={typography('SMALL')}>{studentPortal.history.noAbsences}</p>
+                  <p className={typography("SMALL")}>
+                    {studentPortal.history.noAbsences}
+                  </p>
                 </div>
               ) : (
                 renderClassCards(missedClasses)
@@ -269,33 +335,45 @@ export default function StudentHistory() {
 
           {/* Aba Médias: cards (média, melhor, pior) + lista de aulas com nota */}
           <TabsContent value="media" className="mt-0">
-            <div className={`grid grid-cols-1 sm:grid-cols-2 ${gap('DEFAULT')} mb-6`}>
+            <div
+              className={`grid grid-cols-1 sm:grid-cols-2 ${gap("DEFAULT")} mb-6`}
+            >
               <StudentMetricCard
                 icon={Award}
                 label={studentPortal.history.averageGradeLabel}
-                value={stats.averageGrade > 0 ? stats.averageGrade.toFixed(1) : "—"}
+                value={
+                  stats.averageGrade > 0 ? stats.averageGrade.toFixed(1) : "—"
+                }
                 variant="default"
               />
               <StudentMetricCard
                 icon={TrendingUp}
                 label={studentPortal.history.bestGradeLabel}
-                value={classesWithGrade.length > 0 ? gradeStats.best.toFixed(1) : "—"}
+                value={
+                  classesWithGrade.length > 0 ? gradeStats.best.toFixed(1) : "—"
+                }
                 variant="success"
               />
               <StudentMetricCard
                 icon={TrendingDown}
                 label={studentPortal.history.worstGradeLabel}
-                value={classesWithGrade.length > 0 ? gradeStats.worst.toFixed(1) : "—"}
+                value={
+                  classesWithGrade.length > 0
+                    ? gradeStats.worst.toFixed(1)
+                    : "—"
+                }
                 variant="destructive"
               />
             </div>
-            <div className={stack('DEFAULT')}>
-              <h2 className={typography('TABLE_HEADER')}>
+            <div className={stack("DEFAULT")}>
+              <h2 className={typography("TABLE_HEADER")}>
                 {studentPortal.history.gradesSectionTitle}
               </h2>
               {classesWithGrade.length === 0 ? (
                 <div className="rounded-lg border bg-card p-6 text-center">
-                  <p className={typography('SMALL')}>{studentPortal.history.noGrades}</p>
+                  <p className={typography("SMALL")}>
+                    {studentPortal.history.noGrades}
+                  </p>
                 </div>
               ) : (
                 renderClassCards(classesWithGrade)

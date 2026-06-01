@@ -11,7 +11,10 @@ interface DashboardUpcomingPaymentsProps {
   basePath: "/admin" | "/teacher";
 }
 
-export function DashboardUpcomingPayments({ upcomingPayments, basePath }: DashboardUpcomingPaymentsProps) {
+export function DashboardUpcomingPayments({
+  upcomingPayments,
+  basePath,
+}: DashboardUpcomingPaymentsProps) {
   return (
     <div className="rounded-xl border bg-card shadow-card">
       <div className="flex items-center justify-between border-b px-6 py-4">
@@ -20,8 +23,12 @@ export function DashboardUpcomingPayments({ upcomingPayments, basePath }: Dashbo
             <Clock className="h-4 w-4 text-warning" />
           </div>
           <div>
-            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">{dashboard.upcomingPayments.title}</h2>
-            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">{dashboard.upcomingPayments.subtitle}</p>
+            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">
+              {dashboard.upcomingPayments.title}
+            </h2>
+            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
+              {dashboard.upcomingPayments.subtitle}
+            </p>
           </div>
         </div>
         <StatusBadge variant="warning">{upcomingPayments.length}</StatusBadge>
@@ -46,9 +53,13 @@ export function DashboardUpcomingPayments({ upcomingPayments, basePath }: Dashbo
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">{payment.studentName}</p>
+                  <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
+                    {payment.studentName}
+                  </p>
                   <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
-                    {dashboard.upcomingPayments.dueIn(formatDate(payment.dueDate))}
+                    {dashboard.upcomingPayments.dueIn(
+                      formatDate(payment.dueDate)
+                    )}
                   </p>
                 </div>
               </div>

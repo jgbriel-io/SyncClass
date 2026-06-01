@@ -3,10 +3,20 @@ import { useState, useEffect } from "react";
 import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { FileText, Download, MessageSquare, File, Edit, Eye } from "lucide-react";
+import {
+  FileText,
+  Download,
+  MessageSquare,
+  File,
+  Edit,
+  Eye,
+} from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getActivityFileUrl, type ActivityWithRelations } from "@/hooks/useActivities";
+import {
+  getActivityFileUrl,
+  type ActivityWithRelations,
+} from "@/hooks/useActivities";
 import { ActivityCorrectionFormInline } from "@/components/activities/ActivityCorrectionFormInline";
 import { toast } from "sonner";
 import { sanitizeHtml, sanitizeText } from "@/lib/utils/sanitize";
@@ -18,7 +28,9 @@ interface ActivityDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   onDownload: (filePath: string, fileName: string) => void;
   getStatusLabel: (activity: ActivityWithRelations | null) => string;
-  getStatusVariant: (activity: ActivityWithRelations | null) => "success" | "warning" | "default" | "info" | "destructive";
+  getStatusVariant: (
+    activity: ActivityWithRelations | null
+  ) => "success" | "warning" | "default" | "info" | "destructive";
   /** Abre o sheet já com o formulário de correção visível (ex.: ao clicar em Corrigir na tabela) */
   initialCorrectionMode?: boolean;
   /** Chamado após enviar a correção com sucesso (ex.: refetch + atualizar atividade) */
@@ -38,7 +50,12 @@ export function ActivityDetailSheet({
   const [showCorrectionForm, setShowCorrectionForm] = useState(false);
 
   useEffect(() => {
-    if (open && activity && initialCorrectionMode && activity.status === "entregue") {
+    if (
+      open &&
+      activity &&
+      initialCorrectionMode &&
+      activity.status === "entregue"
+    ) {
       setShowCorrectionForm(true);
     }
   }, [open, activity, initialCorrectionMode]);
@@ -58,8 +75,11 @@ export function ActivityDetailSheet({
 
   if (!activity) return null;
 
-  const hasStudentResponse = activity.student_response_text || activity.student_response_file_url;
-  const showCorrectionFormArea = activity.status === "entregue" && (showCorrectionForm || initialCorrectionMode);
+  const hasStudentResponse =
+    activity.student_response_text || activity.student_response_file_url;
+  const showCorrectionFormArea =
+    activity.status === "entregue" &&
+    (showCorrectionForm || initialCorrectionMode);
 
   return (
     <BaseDetailSheet
@@ -68,8 +88,12 @@ export function ActivityDetailSheet({
       title={activity.title}
       subtitle={
         <>
-          <p className="text-sm font-normal text-muted-foreground">{activity.students?.name}</p>
-          <StatusBadge variant={getStatusVariant(activity)}>{getStatusLabel(activity)}</StatusBadge>
+          <p className="text-sm font-normal text-muted-foreground">
+            {activity.students?.name}
+          </p>
+          <StatusBadge variant={getStatusVariant(activity)}>
+            {getStatusLabel(activity)}
+          </StatusBadge>
         </>
       }
       size="DEFAULT"
@@ -78,104 +102,215 @@ export function ActivityDetailSheet({
       <div className="w-full max-h-full self-start overflow-auto px-6 py-3">
         <div className="space-y-4">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{common.labels.sendDate}</p>
-            <p className="text-sm text-foreground">{format(new Date(activity.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+              {common.labels.sendDate}
+            </p>
+            <p className="text-sm text-foreground">
+              {format(new Date(activity.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                locale: ptBR,
+              })}
+            </p>
           </div>
 
           {activity.due_date && (
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{common.labels.dueDate}</p>
-              <p className="text-sm text-foreground">{format(new Date(activity.due_date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                {common.labels.dueDate}
+              </p>
+              <p className="text-sm text-foreground">
+                {format(new Date(activity.due_date), "dd/MM/yyyy 'às' HH:mm", {
+                  locale: ptBR,
+                })}
+              </p>
             </div>
           )}
 
           {activity.description && (
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{common.labels.description}</p>
-              <div className="text-sm whitespace-pre-wrap text-foreground prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(activity.description) }} />
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                {common.labels.description}
+              </p>
+              <div
+                className="text-sm whitespace-pre-wrap text-foreground prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(activity.description),
+                }}
+              />
             </div>
           )}
 
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{common.labels.activityFile}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+              {common.labels.activityFile}
+            </p>
             <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-3">
               <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-              <span className="text-sm truncate flex-1 min-w-0">{activity.file_name}</span>
+              <span className="text-sm truncate flex-1 min-w-0">
+                {activity.file_name}
+              </span>
               <div className="flex items-center gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewFile(activity.file_url)} title={common.buttons.viewWeb}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => handleViewFile(activity.file_url)}
+                  title={common.buttons.viewWeb}
+                >
                   <Eye className="h-4 w-4" />
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => onDownload(activity.file_url, activity.file_name)}>
-                  <Download className="h-4 w-4 mr-1" />{activitiesContent.detailSheet.downloadButton}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    onDownload(activity.file_url, activity.file_name)
+                  }
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  {activitiesContent.detailSheet.downloadButton}
                 </Button>
               </div>
             </div>
           </div>
 
-          {(activity.status === "entregue" || activity.status === "corrigida") && hasStudentResponse && (
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{common.labels.studentResponse}</p>
-              {activity.student_response_text && (
-                <div className="rounded-lg border bg-muted/30 p-4 mb-3">
-                  <p className="text-sm whitespace-pre-wrap text-foreground">{sanitizeText(activity.student_response_text)}</p>
-                </div>
-              )}
-              {activity.student_response_file_url && activity.student_response_file_name && (
-                <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-3">
-                  <File className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-sm truncate flex-1 min-w-0">{activity.student_response_file_name}</span>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewFile(activity.student_response_file_url || "")} title={common.buttons.viewWeb}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => onDownload(activity.student_response_file_url || "", activity.student_response_file_name || "")}>
-                      <Download className="h-4 w-4 mr-1" />{activitiesContent.detailSheet.downloadButton}
-                    </Button>
+          {(activity.status === "entregue" ||
+            activity.status === "corrigida") &&
+            hasStudentResponse && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                  {common.labels.studentResponse}
+                </p>
+                {activity.student_response_text && (
+                  <div className="rounded-lg border bg-muted/30 p-4 mb-3">
+                    <p className="text-sm whitespace-pre-wrap text-foreground">
+                      {sanitizeText(activity.student_response_text)}
+                    </p>
                   </div>
-                </div>
-              )}
-              {activity.delivered_at && (
-                <p className="text-xs text-muted-foreground mt-2">{common.labels.deliveredAt} {format(new Date(activity.delivered_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-              )}
-            </div>
-          )}
+                )}
+                {activity.student_response_file_url &&
+                  activity.student_response_file_name && (
+                    <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-3">
+                      <File className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm truncate flex-1 min-w-0">
+                        {activity.student_response_file_name}
+                      </span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            handleViewFile(
+                              activity.student_response_file_url || ""
+                            )
+                          }
+                          title={common.buttons.viewWeb}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            onDownload(
+                              activity.student_response_file_url || "",
+                              activity.student_response_file_name || ""
+                            )
+                          }
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          {activitiesContent.detailSheet.downloadButton}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                {activity.delivered_at && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {common.labels.deliveredAt}{" "}
+                    {format(
+                      new Date(activity.delivered_at),
+                      "dd/MM/yyyy 'às' HH:mm",
+                      { locale: ptBR }
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
 
-          {activity.status === "corrigida" && (activity.feedback || activity.grade != null || (activity.correction_file_url && activity.correction_file_name)) && (
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
-                <MessageSquare className="h-3.5 w-3.5" />{common.labels.feedbackCorrection}
-              </p>
-              {activity.grade != null && (
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">{common.labels.grade}:</span>
-                  <span className="text-sm font-semibold tabular-nums">{Number(activity.grade).toFixed(1)}</span>
-                  <span className="text-xs text-muted-foreground">/ 100</span>
-                </div>
-              )}
-              {activity.feedback && (
-                <div className="rounded-lg border bg-muted/30 p-4 mb-3">
-                  <p className="text-sm whitespace-pre-wrap text-foreground">{sanitizeText(activity.feedback)}</p>
-                </div>
-              )}
-              {activity.correction_file_url && activity.correction_file_name && (
-                <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-3">
-                  <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-sm truncate flex-1 min-w-0">{activity.correction_file_name}</span>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewFile(activity.correction_file_url!)} title={common.buttons.viewWeb}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => onDownload(activity.correction_file_url!, activity.correction_file_name!)}>
-                      <Download className="h-4 w-4 mr-1" />{activitiesContent.detailSheet.downloadButton}
-                    </Button>
+          {activity.status === "corrigida" &&
+            (activity.feedback ||
+              activity.grade != null ||
+              (activity.correction_file_url &&
+                activity.correction_file_name)) && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  {common.labels.feedbackCorrection}
+                </p>
+                {activity.grade != null && (
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground">
+                      {common.labels.grade}:
+                    </span>
+                    <span className="text-sm font-semibold tabular-nums">
+                      {Number(activity.grade).toFixed(1)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">/ 100</span>
                   </div>
-                </div>
-              )}
-              {activity.corrected_at && (
-                <p className="text-xs text-muted-foreground mt-2">{common.labels.correctedAt} {format(new Date(activity.corrected_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-              )}
-            </div>
-          )}
+                )}
+                {activity.feedback && (
+                  <div className="rounded-lg border bg-muted/30 p-4 mb-3">
+                    <p className="text-sm whitespace-pre-wrap text-foreground">
+                      {sanitizeText(activity.feedback)}
+                    </p>
+                  </div>
+                )}
+                {activity.correction_file_url &&
+                  activity.correction_file_name && (
+                    <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-3">
+                      <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm truncate flex-1 min-w-0">
+                        {activity.correction_file_name}
+                      </span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            handleViewFile(activity.correction_file_url!)
+                          }
+                          title={common.buttons.viewWeb}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            onDownload(
+                              activity.correction_file_url!,
+                              activity.correction_file_name!
+                            )
+                          }
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          {activitiesContent.detailSheet.downloadButton}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                {activity.corrected_at && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {common.labels.correctedAt}{" "}
+                    {format(
+                      new Date(activity.corrected_at),
+                      "dd/MM/yyyy 'às' HH:mm",
+                      { locale: ptBR }
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
         </div>
       </div>
 
@@ -188,11 +323,19 @@ export function ActivityDetailSheet({
                 setShowCorrectionForm(false);
                 onCorrectionSuccess?.();
               }}
-              onCancel={!initialCorrectionMode ? () => setShowCorrectionForm(false) : undefined}
+              onCancel={
+                !initialCorrectionMode
+                  ? () => setShowCorrectionForm(false)
+                  : undefined
+              }
             />
           ) : (
-            <Button className="w-full h-10 border-none bg-success-action text-white hover:bg-success-action/90" onClick={() => setShowCorrectionForm(true)}>
-              <Edit className="h-4 w-4 mr-2" />{activitiesContent.detailSheet.correctActivityButton}
+            <Button
+              className="w-full h-10 border-none bg-success-action text-white hover:bg-success-action/90"
+              onClick={() => setShowCorrectionForm(true)}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              {activitiesContent.detailSheet.correctActivityButton}
             </Button>
           )}
         </div>

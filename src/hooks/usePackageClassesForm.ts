@@ -1,6 +1,10 @@
 import { toast } from "sonner";
 import { REGEX_PATTERNS, isValidDateString } from "@/lib/utils/patterns";
-import { brDateToIso, buildTimestamptzFromDateAndTime as buildTimestamptz, getDefaultDueDateForPackage } from "@/lib/utils/classFormHelpers";
+import {
+  brDateToIso,
+  buildTimestamptzFromDateAndTime as buildTimestamptz,
+  getDefaultDueDateForPackage,
+} from "@/lib/utils/classFormHelpers";
 import {
   useCreateClassLogPackage,
   CreateClassLogPackageItem,
@@ -12,15 +16,28 @@ import type { Slot } from "@/components/classes/PackageSlotList";
 import type { Student } from "./useStudents";
 
 const MONTH_NAMES = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ];
 
 function getMonthName(month: number): string {
   return MONTH_NAMES[month - 1] ?? String(month);
 }
 
-function getDefaultDueDateForClassMonth(classDateBr: string, payDay: number | null): string {
+function getDefaultDueDateForClassMonth(
+  classDateBr: string,
+  payDay: number | null
+): string {
   return getDefaultDueDateForPackage(classDateBr, payDay, REGEX_PATTERNS.date);
 }
 
@@ -62,15 +79,18 @@ export const usePackageClassesForm = ({
   const createPackage = useCreateClassLogPackage();
 
   const validate = (): string | null => {
-    if (enableTeacherSelection && !selectedTeacherId) return common.errors.selectTeacher;
+    if (enableTeacherSelection && !selectedTeacherId)
+      return common.errors.selectTeacher;
     if (!studentId) return common.errors.selectStudent;
     if (slots.length === 0)
       return "Adicione ao menos uma aula ou use Horário fixo para gerar as aulas do mês.";
     for (let i = 0; i < slots.length; i++) {
       const s = slots[i];
       if (!s.class_date?.trim()) return `Informe a data da aula ${i + 1}.`;
-      if (!REGEX_PATTERNS.date.test(s.class_date)) return `Data inválida na aula ${i + 1}.`;
-      if (!isValidDateString(s.class_date)) return `Data inválida na aula ${i + 1}.`;
+      if (!REGEX_PATTERNS.date.test(s.class_date))
+        return `Data inválida na aula ${i + 1}.`;
+      if (!isValidDateString(s.class_date))
+        return `Data inválida na aula ${i + 1}.`;
       if (!isDateTodayOrFuture(s.class_date))
         return `A data da aula ${i + 1} deve ser de hoje em diante.`;
       if (!s.start_time?.trim() || !REGEX_PATTERNS.time.test(s.start_time))
@@ -92,8 +112,10 @@ export const usePackageClassesForm = ({
       return;
     }
 
-    const rawTeacherId = teacherId || (enableTeacherSelection ? selectedTeacherId : null);
-    const effectiveTeacherId = rawTeacherId && String(rawTeacherId).trim() ? rawTeacherId : null;
+    const rawTeacherId =
+      teacherId || (enableTeacherSelection ? selectedTeacherId : null);
+    const effectiveTeacherId =
+      rawTeacherId && String(rawTeacherId).trim() ? rawTeacherId : null;
     const payDay = selectedStudent?.pay_day ?? null;
     const hourlyRate = selectedStudent?.hourly_rate ?? null;
     const studentName = selectedStudent?.name ?? "Aluno";
@@ -124,12 +146,18 @@ export const usePackageClassesForm = ({
       return { classLog };
     });
 
-    let packageFinancial: CreateClassLogPackagePayload["packageFinancial"] = null;
+    let packageFinancial: CreateClassLogPackagePayload["packageFinancial"] =
+      null;
     if (!semCobranca && hourlyRate != null && hourlyRate > 0) {
-      const totalAmount = items.reduce((sum, it) => sum + (it.classLog.billed_amount ?? 0), 0);
+      const totalAmount = items.reduce(
+        (sum, it) => sum + (it.classLog.billed_amount ?? 0),
+        0
+      );
       if (totalAmount > 0) {
         const firstDate = slots[0]?.class_date;
-        const dueBr = firstDate ? getDefaultDueDateForClassMonth(firstDate, payDay ?? null) : "";
+        const dueBr = firstDate
+          ? getDefaultDueDateForClassMonth(firstDate, payDay ?? null)
+          : "";
         const [, m, y] = firstDate?.split("/") ?? [];
         const monthYear = m && y ? `${getMonthName(Number(m))} ${y}` : "";
         if (!paymentMethod?.trim()) {
@@ -138,7 +166,9 @@ export const usePackageClassesForm = ({
         }
         packageFinancial = {
           amount: totalAmount,
-          due_date: dueBr ? brDateToIso(dueBr) : new Date().toISOString().slice(0, 10),
+          due_date: dueBr
+            ? brDateToIso(dueBr)
+            : new Date().toISOString().slice(0, 10),
           description: `Pacote mensal - ${studentName} - ${slots.length} aula(s) - ${monthYear}`,
           payment_method: paymentMethod.trim(),
         };

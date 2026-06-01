@@ -1,4 +1,10 @@
-import { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, FieldValues } from "react-hook-form";
+import {
+  UseFormRegister,
+  UseFormSetValue,
+  UseFormWatch,
+  FieldErrors,
+  FieldValues,
+} from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +17,11 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BR_STATES, type BrCityOption } from "@/lib/br-locations";
@@ -66,8 +76,13 @@ export function StudentLocationSection({
     <>
       {/* País */}
       <div className={STACK.TIGHT}>
-        <Label htmlFor="country">{studentsContent.locationSection.countryLabel}</Label>
-        <Popover open={countryPopoverOpen} onOpenChange={onCountryPopoverChange}>
+        <Label htmlFor="country">
+          {studentsContent.locationSection.countryLabel}
+        </Label>
+        <Popover
+          open={countryPopoverOpen}
+          onOpenChange={onCountryPopoverChange}
+        >
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -80,16 +95,21 @@ export function StudentLocationSection({
               disabled={isLoading}
             >
               <span className="min-w-0 truncate">
-                {selectedCountry || studentsContent.locationSection.selectCountry}
+                {selectedCountry ||
+                  studentsContent.locationSection.selectCountry}
               </span>
-              <ChevronsUpDown className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`} />
+              <ChevronsUpDown
+                className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`}
+              />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-full p-0" align="start">
             <Command>
               <CommandInput placeholder={ui.location.countryPlaceholder} />
               <CommandList>
-                <CommandEmpty>{studentsContent.locationSection.noCountriesFound}</CommandEmpty>
+                <CommandEmpty>
+                  {studentsContent.locationSection.noCountriesFound}
+                </CommandEmpty>
                 <CommandGroup>
                   {COMMON_COUNTRIES.map((country) => (
                     <CommandItem
@@ -97,7 +117,9 @@ export function StudentLocationSection({
                       value={country.name}
                       onSelect={() => {
                         onCountryChange(country.name);
-                        setValue("country", country.name, { shouldValidate: true });
+                        setValue("country", country.name, {
+                          shouldValidate: true,
+                        });
                         onStateChange("");
                         setValue("state", "", { shouldValidate: false });
                         setValue("city", "", { shouldValidate: false });
@@ -113,14 +135,18 @@ export function StudentLocationSection({
           </PopoverContent>
         </Popover>
         {errors.country && (
-          <p className="text-sm text-destructive">{String(errors.country.message)}</p>
+          <p className="text-sm text-destructive">
+            {String(errors.country.message)}
+          </p>
         )}
       </div>
 
       {/* Estado */}
       {isBrazilSelected ? (
         <div className={STACK.TIGHT}>
-          <Label htmlFor="state">{studentsContent.locationSection.stateLabel}</Label>
+          <Label htmlFor="state">
+            {studentsContent.locationSection.stateLabel}
+          </Label>
           <Popover open={statePopoverOpen} onOpenChange={onStatePopoverChange}>
             <PopoverTrigger asChild>
               <Button
@@ -137,14 +163,18 @@ export function StudentLocationSection({
                   {BR_STATES.find((s) => s.code === selectedState)?.name ||
                     studentsContent.locationSection.selectState}
                 </span>
-                <ChevronsUpDown className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`} />
+                <ChevronsUpDown
+                  className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`}
+                />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
               <Command>
                 <CommandInput placeholder={ui.location.statePlaceholder} />
                 <CommandList>
-                  <CommandEmpty>{studentsContent.locationSection.noStatesFound}</CommandEmpty>
+                  <CommandEmpty>
+                    {studentsContent.locationSection.noStatesFound}
+                  </CommandEmpty>
                   <CommandGroup>
                     {BR_STATES.map((state) => (
                       <CommandItem
@@ -152,12 +182,16 @@ export function StudentLocationSection({
                         value={`${state.name} ${state.code}`}
                         onSelect={() => {
                           onStateChange(state.code);
-                          setValue("state", state.code, { shouldValidate: true });
+                          setValue("state", state.code, {
+                            shouldValidate: true,
+                          });
                           setValue("city", "", { shouldValidate: false });
                           onStatePopoverChange(false);
                         }}
                       >
-                        <span className="mr-2 text-xs opacity-50">{state.code}</span>
+                        <span className="mr-2 text-xs opacity-50">
+                          {state.code}
+                        </span>
                         <span>{state.name}</span>
                       </CommandItem>
                     ))}
@@ -167,12 +201,16 @@ export function StudentLocationSection({
             </PopoverContent>
           </Popover>
           {errors.state && (
-            <p className="text-sm text-destructive">{String(errors.state.message)}</p>
+            <p className="text-sm text-destructive">
+              {String(errors.state.message)}
+            </p>
           )}
         </div>
       ) : (
         <div className={STACK.TIGHT}>
-          <Label htmlFor="state">{studentsContent.locationSection.stateManualLabel}</Label>
+          <Label htmlFor="state">
+            {studentsContent.locationSection.stateManualLabel}
+          </Label>
           <Input
             id="state"
             placeholder={ui.location.stateManualPlaceholder}
@@ -180,7 +218,9 @@ export function StudentLocationSection({
             disabled={isLoading}
           />
           {errors.state && (
-            <p className="text-sm text-destructive">{String(errors.state.message)}</p>
+            <p className="text-sm text-destructive">
+              {String(errors.state.message)}
+            </p>
           )}
         </div>
       )}
@@ -188,7 +228,9 @@ export function StudentLocationSection({
       {/* Cidade */}
       {isBrazilSelected ? (
         <div className={STACK.TIGHT}>
-          <Label htmlFor="city">{studentsContent.locationSection.cityLabel}</Label>
+          <Label htmlFor="city">
+            {studentsContent.locationSection.cityLabel}
+          </Label>
           <Popover open={cityPopoverOpen} onOpenChange={onCityPopoverChange}>
             <PopoverTrigger asChild>
               <Button
@@ -207,24 +249,32 @@ export function StudentLocationSection({
                     if (current) return current.label;
                     if (watchedCity) return watchedCity;
                     if (isLoadingCities) return common.errors.loadingCities;
-                    return selectedState ? studentsContent.locationSection.selectCity : studentsContent.locationSection.selectStateFirst;
+                    return selectedState
+                      ? studentsContent.locationSection.selectCity
+                      : studentsContent.locationSection.selectStateFirst;
                   })()}
                 </span>
-                <ChevronsUpDown className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`} />
+                <ChevronsUpDown
+                  className={`ml-2 ${ICON_SIZES.SM} shrink-0 opacity-50`}
+                />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
               <Command>
                 <CommandInput placeholder={ui.location.cityPlaceholder} />
                 <CommandList>
-                  <CommandEmpty>{studentsContent.locationSection.noCitiesFound}</CommandEmpty>
+                  <CommandEmpty>
+                    {studentsContent.locationSection.noCitiesFound}
+                  </CommandEmpty>
                   <CommandGroup>
                     {cities.map((city) => (
                       <CommandItem
                         key={city.value}
                         value={city.label}
                         onSelect={() => {
-                          setValue("city", city.value, { shouldValidate: true });
+                          setValue("city", city.value, {
+                            shouldValidate: true,
+                          });
                           onCityPopoverChange(false);
                         }}
                       >
@@ -237,12 +287,16 @@ export function StudentLocationSection({
             </PopoverContent>
           </Popover>
           {errors.city && (
-            <p className="text-sm text-destructive">{String(errors.city.message)}</p>
+            <p className="text-sm text-destructive">
+              {String(errors.city.message)}
+            </p>
           )}
         </div>
       ) : (
         <div className={STACK.TIGHT}>
-          <Label htmlFor="city">{studentsContent.locationSection.cityLabel}</Label>
+          <Label htmlFor="city">
+            {studentsContent.locationSection.cityLabel}
+          </Label>
           <Input
             id="city"
             placeholder={ui.location.cityManualPlaceholder}
@@ -250,7 +304,9 @@ export function StudentLocationSection({
             disabled={isLoading}
           />
           {errors.city && (
-            <p className="text-sm text-destructive">{String(errors.city.message)}</p>
+            <p className="text-sm text-destructive">
+              {String(errors.city.message)}
+            </p>
           )}
         </div>
       )}

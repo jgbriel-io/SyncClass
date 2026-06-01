@@ -3,16 +3,16 @@ import { formatCurrency } from "@/lib/utils/formatters";
 
 interface NumericCellProps {
   value: number | null | undefined;
-  format?: 'number' | 'currency' | 'percentage';
+  format?: "number" | "currency" | "percentage";
   className?: string;
   emptyText?: string;
 }
 
-export function NumericCell({ 
-  value, 
-  format = 'number',
+export function NumericCell({
+  value,
+  format = "number",
   className,
-  emptyText = '—'
+  emptyText = "—",
 }: NumericCellProps) {
   if (value == null) {
     return (
@@ -21,21 +21,21 @@ export function NumericCell({
       </span>
     );
   }
-  
+
   let formatted: string;
   switch (format) {
-    case 'currency':
+    case "currency":
       formatted = formatCurrency(value);
       break;
-    case 'percentage':
+    case "percentage":
       formatted = `${value.toFixed(1)}%`;
       break;
     default:
       formatted = String(value);
   }
-  
+
   return (
-    <span 
+    <span
       className={cn("text-xs font-medium tabular-nums", className)}
       title={formatted}
     >

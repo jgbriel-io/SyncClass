@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { checkRateLimit, resetRateLimit, resetAllRateLimits, RATE_LIMIT_CONFIGS } from "./rateLimit";
+import {
+  checkRateLimit,
+  resetRateLimit,
+  resetAllRateLimits,
+  RATE_LIMIT_CONFIGS,
+} from "./rateLimit";
 
 describe("Rate Limiting", () => {
   beforeEach(() => {
@@ -185,7 +190,9 @@ describe("Rate Limiting", () => {
       // Simular tentativa de criar 10 registros rapidamente
       const results = [];
       for (let i = 0; i < 10; i++) {
-        results.push(checkRateLimit("createFinancialRecord", RATE_LIMIT_CONFIGS.CRITICAL));
+        results.push(
+          checkRateLimit("createFinancialRecord", RATE_LIMIT_CONFIGS.CRITICAL)
+        );
       }
 
       // Primeiros 3 permitidos, resto bloqueado
@@ -229,7 +236,9 @@ describe("Rate Limiting", () => {
       const config = { maxCalls: 5, windowMs: 60000 };
 
       // Simular 5 chamadas simultâneas
-      const results = Array.from({ length: 5 }, () => checkRateLimit("test", config));
+      const results = Array.from({ length: 5 }, () =>
+        checkRateLimit("test", config)
+      );
 
       // Todas devem ser permitidas
       expect(results.every((r) => r.allowed)).toBe(true);

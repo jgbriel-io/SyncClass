@@ -16,7 +16,10 @@ interface DashboardBirthdayListProps {
   basePath: "/admin" | "/teacher";
 }
 
-export function DashboardBirthdayList({ birthdays, basePath }: DashboardBirthdayListProps) {
+export function DashboardBirthdayList({
+  birthdays,
+  basePath,
+}: DashboardBirthdayListProps) {
   return (
     <div className="rounded-xl border bg-card shadow-card flex flex-col min-h-0">
       <div className="flex items-center justify-between border-b px-6 py-4 shrink-0">
@@ -25,8 +28,12 @@ export function DashboardBirthdayList({ birthdays, basePath }: DashboardBirthday
             <span className="text-lg">🎂</span>
           </div>
           <div>
-            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">{dashboard.birthdays.title}</h2>
-            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">{dashboard.birthdays.subtitle}</p>
+            <h2 className="text-lg mobile:text-base tablet:text-base laptop:text-base desktop:text-lg font-semibold">
+              {dashboard.birthdays.title}
+            </h2>
+            <p className="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground">
+              {dashboard.birthdays.subtitle}
+            </p>
           </div>
         </div>
         <StatusBadge variant="warning">{birthdays.length}</StatusBadge>
@@ -50,7 +57,9 @@ export function DashboardBirthdayList({ birthdays, basePath }: DashboardBirthday
                     {birthday.name.charAt(0)}
                   </span>
                 </div>
-                <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">{birthday.name}</p>
+                <p className="font-medium text-sm mobile:text-xs tablet:text-xs laptop:text-xs">
+                  {birthday.name}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs text-muted-foreground">

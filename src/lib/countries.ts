@@ -60,4 +60,4 @@ export const COMMON_COUNTRIES: Country[] = [
 ];
 
 // Ordenar alfabeticamente por nome em português
-COMMON_COUNTRIES.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+COMMON_COUNTRIES.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));

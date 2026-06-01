@@ -8,7 +8,10 @@ import {
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { REGEX_PATTERNS } from "@/lib/utils/patterns";
-import { brDateToIso, buildTimestamptzFromDateAndTime as buildTimestamptz } from "@/lib/utils/classFormHelpers";
+import {
+  brDateToIso,
+  buildTimestamptzFromDateAndTime as buildTimestamptz,
+} from "@/lib/utils/classFormHelpers";
 import { classes as classesContent, common } from "@/content";
 import type { Slot } from "./PackageSlotList";
 
@@ -55,8 +58,8 @@ export function PackageFinancialSection({
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium">
-        {classesContent.packageDialog.title}: {total > 0 ? formatCurrency(total) : "—"} ({validSlots.length}{" "}
-        aula(s))
+        {classesContent.packageDialog.title}:{" "}
+        {total > 0 ? formatCurrency(total) : "—"} ({validSlots.length} aula(s))
       </p>
       {rate <= 0 && (
         <p className="text-xs text-amber-600">
@@ -70,11 +73,21 @@ export function PackageFinancialSection({
             <SelectValue placeholder={common.placeholders.select} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="pix">{classesContent.logFinancialSection.pix}</SelectItem>
-            <SelectItem value="cartao">{classesContent.logFinancialSection.card}</SelectItem>
-            <SelectItem value="dinheiro">{classesContent.logFinancialSection.cash}</SelectItem>
-            <SelectItem value="transferencia">{classesContent.logFinancialSection.transfer}</SelectItem>
-            <SelectItem value="outro">{classesContent.logFinancialSection.other}</SelectItem>
+            <SelectItem value="pix">
+              {classesContent.logFinancialSection.pix}
+            </SelectItem>
+            <SelectItem value="cartao">
+              {classesContent.logFinancialSection.card}
+            </SelectItem>
+            <SelectItem value="dinheiro">
+              {classesContent.logFinancialSection.cash}
+            </SelectItem>
+            <SelectItem value="transferencia">
+              {classesContent.logFinancialSection.transfer}
+            </SelectItem>
+            <SelectItem value="outro">
+              {classesContent.logFinancialSection.other}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>

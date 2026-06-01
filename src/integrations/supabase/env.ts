@@ -7,7 +7,12 @@
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
-if (typeof url !== "string" || !url.trim() || typeof key !== "string" || !key.trim()) {
+if (
+  typeof url !== "string" ||
+  !url.trim() ||
+  typeof key !== "string" ||
+  !key.trim()
+) {
   const hint =
     typeof url === "undefined" && typeof key === "undefined"
       ? " Variáveis não definidas no ambiente de BUILD. No Cloudflare Pages: Settings > Environment variables > adicione VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY (Production e/ou Preview) e dispare um novo deploy (Build)."

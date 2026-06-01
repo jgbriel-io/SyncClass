@@ -29,9 +29,13 @@ function groupByMonthYear(entries: StudentStatementEntry[]) {
     .sort(([a], [b]) => b.localeCompare(a))
     .map(([key, items]) => ({
       key,
-      label: format(new Date(items[0]!.class_date + "T12:00:00"), "MMMM 'de' yyyy", {
-        locale: ptBR,
-      }),
+      label: format(
+        new Date(items[0]!.class_date + "T12:00:00"),
+        "MMMM 'de' yyyy",
+        {
+          locale: ptBR,
+        }
+      ),
       items,
     }));
 }
@@ -67,7 +71,11 @@ export const StudentStatementTab = memo(function StudentStatementTab({
     <div className={embedded ? "space-y-4" : "p-6 space-y-4"}>
       {/* Header informativo */}
       <div className="rounded-lg border bg-card p-3 flex items-center justify-between gap-4">
-        <p className="text-sm font-medium">{totalAmount != null ? studentPortal.statement.totalLabel : studentPortal.statement.historyLabel}</p>
+        <p className="text-sm font-medium">
+          {totalAmount != null
+            ? studentPortal.statement.totalLabel
+            : studentPortal.statement.historyLabel}
+        </p>
         {(totalAmount != null ? totalAmount : totalBilled) > 0 && (
           <p className="text-2xl font-semibold tabular-nums">
             {formatCurrency(totalAmount != null ? totalAmount : totalBilled)}
@@ -106,9 +114,14 @@ export const StudentStatementTab = memo(function StudentStatementTab({
 
       {/* Footer */}
       <div className="pt-4 border-t text-xs text-muted-foreground text-center">
-        <p>{studentPortal.statement.statementLabel} {studentName}</p>
+        <p>
+          {studentPortal.statement.statementLabel} {studentName}
+        </p>
         <p className="mt-1">
-          {totalClasses} {totalClasses !== 1 ? studentPortal.statement.classesPlural : studentPortal.statement.classesLabel}
+          {totalClasses}{" "}
+          {totalClasses !== 1
+            ? studentPortal.statement.classesPlural
+            : studentPortal.statement.classesLabel}
           {openBilling > 0 &&
             ` • ${openBilling} ${openBilling !== 1 ? studentPortal.statement.chargesPlural : studentPortal.statement.chargesLabel} ${studentPortal.statement.openChargesLabel}`}
         </p>
@@ -134,5 +147,9 @@ export const StudentStatementTab = memo(function StudentStatementTab({
     );
   }
 
-  return embedded ? content : <ScrollArea className="h-full">{content}</ScrollArea>;
+  return embedded ? (
+    content
+  ) : (
+    <ScrollArea className="h-full">{content}</ScrollArea>
+  );
 });

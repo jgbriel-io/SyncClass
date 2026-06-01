@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserProfile } from "@/hooks/useUsers";
-import { useActivities, useMarkActivityAsDelivered, getActivityFileUrl, type ActivityWithRelations } from "@/hooks/useActivities";
+import {
+  useActivities,
+  useMarkActivityAsDelivered,
+  getActivityFileUrl,
+  type ActivityWithRelations,
+} from "@/hooks/useActivities";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyActivitiesStudentState } from "@/components/ui/contextual-empty-states";
 import { Loader2 } from "lucide-react";
@@ -16,10 +21,16 @@ import { studentPortal } from "@/content";
 const StudentActivitiesPage = () => {
   const { user } = useAuth();
   const [deliverDialogOpen, setDeliverDialogOpen] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<ActivityWithRelations | null>(null);
+  const [selectedActivity, setSelectedActivity] =
+    useState<ActivityWithRelations | null>(null);
 
-  const { data: profile, isLoading: profileLoading } = useCurrentUserProfile(user?.id);
-  const { data: activities = [], isLoading } = useActivities(undefined, profile?.student_id || undefined);
+  const { data: profile, isLoading: profileLoading } = useCurrentUserProfile(
+    user?.id
+  );
+  const { data: activities = [], isLoading } = useActivities(
+    undefined,
+    profile?.student_id || undefined
+  );
   const markAsDelivered = useMarkActivityAsDelivered();
 
   const handleViewFile = async (filePath: string) => {
@@ -35,26 +46,26 @@ const StudentActivitiesPage = () => {
     try {
       toast.loading(studentPortal.activities.toasts.downloadPreparing);
       const signedUrl = await getActivityFileUrl(filePath);
-      
+
       // Forçar download via fetch para evitar abrir em nova aba
       const response = await fetch(signedUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      
+
       const link = document.createElement("a");
       link.href = url;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Liberar memória
       window.URL.revokeObjectURL(url);
-      
+
       toast.dismiss();
       toast.success(studentPortal.activities.toasts.downloadSuccess);
     } catch (error) {
-      logger.error(error as Error, { context: 'download_activity_file' });
+      logger.error(error as Error, { context: "download_activity_file" });
       toast.dismiss();
       toast.error(studentPortal.activities.toasts.downloadError);
     }
@@ -84,8 +95,8 @@ const StudentActivitiesPage = () => {
     <PageContainer constrained maxWidth="5xl">
       {/* Header */}
       <div className="mb-4">
-        <h1 className={typography('H1')}>{studentPortal.activities.title}</h1>
-        <p className={`${typography('SMALL')} mt-1`}>
+        <h1 className={typography("H1")}>{studentPortal.activities.title}</h1>
+        <p className={`${typography("SMALL")} mt-1`}>
           {studentPortal.activities.subtitle}
         </p>
       </div>
@@ -105,11 +116,11 @@ const StudentActivitiesPage = () => {
       )}
 
       {!profileLoading && !isLoading && activities.length > 0 && (
-        <div className={stack('DEFAULT')}>
-          <h2 className={typography('TABLE_HEADER')}>
+        <div className={stack("DEFAULT")}>
+          <h2 className={typography("TABLE_HEADER")}>
             {studentPortal.activities.sectionTitle}
           </h2>
-          <div className={stack('DEFAULT')}>
+          <div className={stack("DEFAULT")}>
             {activities.map((activity) => (
               <StudentActivityCard
                 key={activity.id}

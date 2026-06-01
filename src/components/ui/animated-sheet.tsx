@@ -1,6 +1,6 @@
 /**
  * Sheet Animado com Framer Motion
- * 
+ *
  * Transição de Slide ao abrir BaseDetailSheet
  * Otimizado com domMax
  */

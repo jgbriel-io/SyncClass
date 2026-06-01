@@ -11,7 +11,11 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Loader2, Upload, CalendarIcon, Pencil } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { REGEX_PATTERNS } from "@/lib/utils/patterns";
 import {
@@ -31,7 +35,10 @@ function dueDateAndTimeToIso(dueDate: string, dueTime: string): string {
   return local.toISOString();
 }
 
-function parseDueDateForForm(dueDate: string | null | undefined): { date: string; time: string } {
+function parseDueDateForForm(dueDate: string | null | undefined): {
+  date: string;
+  time: string;
+} {
   if (!dueDate) {
     const d = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     return {
@@ -57,8 +64,16 @@ const editActivitySchema = z
   .object({
     title: z.string().min(1, activitiesContent.validation.titleRequired),
     description: z.string().optional(),
-    due_date: z.string().min(1, activitiesContent.validation.dueDateRequired).regex(REGEX_PATTERNS.date, activitiesContent.validation.dueDateFormat),
-    due_time: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/, activitiesContent.validation.dueTimeFormat),
+    due_date: z
+      .string()
+      .min(1, activitiesContent.validation.dueDateRequired)
+      .regex(REGEX_PATTERNS.date, activitiesContent.validation.dueDateFormat),
+    due_time: z
+      .string()
+      .regex(
+        /^([01]?\d|2[0-3]):[0-5]\d$/,
+        activitiesContent.validation.dueTimeFormat
+      ),
     fileSource: z.enum(["current", "new", "existing"]),
     file: z.instanceof(File).optional(),
     existingFileUrl: z.string().optional(),
@@ -90,7 +105,8 @@ export function EditActivityDialog({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const { data: existingFiles = [], isLoading: loadingFiles } = useActivityFilesForTeacher(teacherId);
+  const { data: existingFiles = [], isLoading: loadingFiles } =
+    useActivityFilesForTeacher(teacherId);
   const updateActivity = useUpdateActivity();
 
   const {
@@ -104,7 +120,11 @@ export function EditActivityDialog({
     resolver: zodResolver(editActivitySchema),
     defaultValues: {
       fileSource: "current",
-      due_date: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "dd/MM/yyyy", { locale: ptBR }),
+      due_date: format(
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        "dd/MM/yyyy",
+        { locale: ptBR }
+      ),
       due_time: "23:59",
     },
   });
@@ -153,7 +173,9 @@ export function EditActivityDialog({
         file_type = data.file.type;
         file_size = data.file.size;
       } else if (data.fileSource === "existing" && data.existingFileUrl) {
-        const existing = existingFiles.find((f) => f.file_url === data.existingFileUrl);
+        const existing = existingFiles.find(
+          (f) => f.file_url === data.existingFileUrl
+        );
         if (!existing) {
           toast.error(activitiesContent.editDialog.toasts.fileNotFound);
           return;
@@ -177,7 +199,9 @@ export function EditActivityDialog({
 
       onOpenChange(false);
     } catch (error) {
-      toast.error(activitiesContent.editDialog.toasts.error((error as Error).message));
+      toast.error(
+        activitiesContent.editDialog.toasts.error((error as Error).message)
+      );
     } finally {
       setIsUploading(false);
     }
@@ -192,115 +216,151 @@ export function EditActivityDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={activitiesContent.editDialog.title}
-      description={activitiesContent.editDialog.description(activity.students?.name ?? "—")}
+      description={activitiesContent.editDialog.description(
+        activity.students?.name ?? "—"
+      )}
       size="SM"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="edit-title">{activitiesContent.editDialog.titleLabel}</Label>
-            <Input
-              id="edit-title"
-              placeholder={activitiesContent.editDialog.titlePlaceholder}
-              {...register("title")}
-              disabled={isPending}
-            />
-            {errors.title && (
-              <p className="text-sm text-destructive">{errors.title.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label>{activitiesContent.editDialog.dueDateLabel}</Label>
-            <p className="text-xs text-muted-foreground">{activitiesContent.editDialog.dueDateHint}</p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="edit-due_date"
-                    variant="outline"
-                    className="w-full sm:flex-1 justify-start text-left font-normal"
-                    disabled={isPending}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dueDate || common.labels.date}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dueDate && REGEX_PATTERNS.date.test(dueDate) ? (() => {
-                      const [d, m, y] = dueDate.split("/");
-                      return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-                    })() : undefined}
-                    onSelect={(date) => {
-                      if (date) setValue("due_date", format(date, "dd/MM/yyyy", { locale: ptBR }), { shouldValidate: true });
-                    }}
-                    locale={ptBR}
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                  />
-                </PopoverContent>
-              </Popover>
-              <Input
-                id="edit-due_time"
-                type="time"
-                {...register("due_time")}
-                disabled={isPending}
-                className="w-full sm:w-[120px]"
-              />
-            </div>
-            {errors.due_date && <p className="text-sm text-destructive">{errors.due_date.message}</p>}
-            {errors.due_time && <p className="text-sm text-destructive">{errors.due_time.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-description">{common.labels.description} {common.labels.optional}</Label>
-            <Textarea
-              id="edit-description"
-              placeholder={common.placeholders.instructionsHint}
-              rows={3}
-              {...register("description")}
-              disabled={isPending}
-            />
-          </div>
-
-          <ActivityFileSourceField
-            fileSource={fileSource}
-            selectedFile={selectedFile}
-            existingFileUrl={watch("existingFileUrl")}
-            existingFiles={existingFiles}
-            isPending={isPending}
-            loadingFiles={loadingFiles}
-            currentFileName={activity.file_name}
-            onFileSourceChange={(source) => {
-              setValue("fileSource", source);
-              setSelectedFile(null);
-              setValue("file", undefined);
-              setValue("existingFileUrl", undefined);
-            }}
-            onFileChange={handleFileChange}
-            onExistingFileChange={(url) => setValue("existingFileUrl", url)}
-            errorMessage={errors.file?.message ?? errors.existingFileUrl?.message}
+        <div className="space-y-2">
+          <Label htmlFor="edit-title">
+            {activitiesContent.editDialog.titleLabel}
+          </Label>
+          <Input
+            id="edit-title"
+            placeholder={activitiesContent.editDialog.titlePlaceholder}
+            {...register("title")}
+            disabled={isPending}
           />
+          {errors.title && (
+            <p className="text-sm text-destructive">{errors.title.message}</p>
+          )}
+        </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
-              {common.actions.cancel}
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {activitiesContent.editDialog.submitting}
-                </>
-              ) : (
-                <>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  {activitiesContent.editDialog.submitButton}
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+        <div className="space-y-2">
+          <Label>{activitiesContent.editDialog.dueDateLabel}</Label>
+          <p className="text-xs text-muted-foreground">
+            {activitiesContent.editDialog.dueDateHint}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="edit-due_date"
+                  variant="outline"
+                  className="w-full sm:flex-1 justify-start text-left font-normal"
+                  disabled={isPending}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dueDate || common.labels.date}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={
+                    dueDate && REGEX_PATTERNS.date.test(dueDate)
+                      ? (() => {
+                          const [d, m, y] = dueDate.split("/");
+                          return new Date(
+                            parseInt(y, 10),
+                            parseInt(m, 10) - 1,
+                            parseInt(d, 10)
+                          );
+                        })()
+                      : undefined
+                  }
+                  onSelect={(date) => {
+                    if (date)
+                      setValue(
+                        "due_date",
+                        format(date, "dd/MM/yyyy", { locale: ptBR }),
+                        { shouldValidate: true }
+                      );
+                  }}
+                  locale={ptBR}
+                  disabled={(date) =>
+                    date < new Date(new Date().setHours(0, 0, 0, 0))
+                  }
+                />
+              </PopoverContent>
+            </Popover>
+            <Input
+              id="edit-due_time"
+              type="time"
+              {...register("due_time")}
+              disabled={isPending}
+              className="w-full sm:w-[120px]"
+            />
+          </div>
+          {errors.due_date && (
+            <p className="text-sm text-destructive">
+              {errors.due_date.message}
+            </p>
+          )}
+          {errors.due_time && (
+            <p className="text-sm text-destructive">
+              {errors.due_time.message}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="edit-description">
+            {common.labels.description} {common.labels.optional}
+          </Label>
+          <Textarea
+            id="edit-description"
+            placeholder={common.placeholders.instructionsHint}
+            rows={3}
+            {...register("description")}
+            disabled={isPending}
+          />
+        </div>
+
+        <ActivityFileSourceField
+          fileSource={fileSource}
+          selectedFile={selectedFile}
+          existingFileUrl={watch("existingFileUrl")}
+          existingFiles={existingFiles}
+          isPending={isPending}
+          loadingFiles={loadingFiles}
+          currentFileName={activity.file_name}
+          onFileSourceChange={(source) => {
+            setValue("fileSource", source);
+            setSelectedFile(null);
+            setValue("file", undefined);
+            setValue("existingFileUrl", undefined);
+          }}
+          onFileChange={handleFileChange}
+          onExistingFileChange={(url) => setValue("existingFileUrl", url)}
+          errorMessage={errors.file?.message ?? errors.existingFileUrl?.message}
+        />
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
+            {common.actions.cancel}
+          </Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {activitiesContent.editDialog.submitting}
+              </>
+            ) : (
+              <>
+                <Pencil className="mr-2 h-4 w-4" />
+                {activitiesContent.editDialog.submitButton}
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </form>
     </BaseDialog>
   );
 }

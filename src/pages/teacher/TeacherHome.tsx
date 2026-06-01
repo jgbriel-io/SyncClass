@@ -18,35 +18,49 @@ const TeacherHome = () => {
   const [chartMonths, setChartMonths] = useState<ChartMonthsFilter>(3);
   const displayName = fullName?.trim() || "Professor";
 
-  const { data: stats, isLoading: loadingStats } = useTeacherDashboardStats(teacherId);
-  const { data: financialSummary, isLoading: loadingFinancial } = useFinancialSummary(teacherId ?? undefined);
-  const { data: forecastedBilling } = useForecastedBilling(teacherId ?? undefined);
-  const { data: upcomingPayments = [], isLoading: loadingPayments } = useTeacherUpcomingPayments(teacherId);
-  const { data: birthdays = [], isLoading: loadingBirthdays } = useTeacherBirthdaysThisMonth(teacherId);
-  const { data: chartData = [], isLoading: loadingChart } = useTeacherNewStudentsByMonth(teacherId, chartMonths);
+  const { data: stats, isLoading: loadingStats } =
+    useTeacherDashboardStats(teacherId);
+  const { data: financialSummary, isLoading: loadingFinancial } =
+    useFinancialSummary(teacherId ?? undefined);
+  const { data: forecastedBilling } = useForecastedBilling(
+    teacherId ?? undefined
+  );
+  const { data: upcomingPayments = [], isLoading: loadingPayments } =
+    useTeacherUpcomingPayments(teacherId);
+  const { data: birthdays = [], isLoading: loadingBirthdays } =
+    useTeacherBirthdaysThisMonth(teacherId);
+  const { data: chartData = [], isLoading: loadingChart } =
+    useTeacherNewStudentsByMonth(teacherId, chartMonths);
   const { data: todayClasses } = useTodayClasses(teacherId);
-  const { data: pendingEvaluationLogs = [] } = usePendingEvaluationClassLogs(teacherId ?? null);
+  const { data: pendingEvaluationLogs = [] } = usePendingEvaluationClassLogs(
+    teacherId ?? null
+  );
 
-  const isLoading = loadingStats || loadingFinancial || loadingPayments || loadingBirthdays || !teacherId;
+  const isLoading =
+    loadingStats ||
+    loadingFinancial ||
+    loadingPayments ||
+    loadingBirthdays ||
+    !teacherId;
 
   return (
-      <DashboardView
-        title="Dashboard"
-        subtitle={`Bem-vindo de volta, ${displayName}! Aqui está o resumo dos seus alunos.`}
-        stats={stats}
-        financialSummary={financialSummary}
-        forecastedBilling={forecastedBilling}
-        upcomingPayments={upcomingPayments}
-        birthdays={birthdays}
-        chartData={chartData}
-        todayClasses={todayClasses}
-        pendingFeedbackCount={pendingEvaluationLogs.length}
-        isLoading={isLoading}
-        chartLoading={loadingChart}
-        basePath="/teacher"
-        chartMonths={chartMonths}
-        onChartMonthsChange={setChartMonths}
-      />
+    <DashboardView
+      title="Dashboard"
+      subtitle={`Bem-vindo de volta, ${displayName}! Aqui está o resumo dos seus alunos.`}
+      stats={stats}
+      financialSummary={financialSummary}
+      forecastedBilling={forecastedBilling}
+      upcomingPayments={upcomingPayments}
+      birthdays={birthdays}
+      chartData={chartData}
+      todayClasses={todayClasses}
+      pendingFeedbackCount={pendingEvaluationLogs.length}
+      isLoading={isLoading}
+      chartLoading={loadingChart}
+      basePath="/teacher"
+      chartMonths={chartMonths}
+      onChartMonthsChange={setChartMonths}
+    />
   );
 };
 

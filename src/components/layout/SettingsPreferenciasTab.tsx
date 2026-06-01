@@ -3,7 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Download, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { pwa, layout } from "@/content";
-import { isPWAInstalled, isPWAInstallPromptAvailable, showPWAInstallPrompt } from "@/lib/pwa";
+import {
+  isPWAInstalled,
+  isPWAInstallPromptAvailable,
+  showPWAInstallPrompt,
+} from "@/lib/pwa";
 
 export function SettingsPreferenciasTab() {
   return (
@@ -45,7 +49,9 @@ export function SettingsPreferenciasTab() {
         <div className="rounded-lg border bg-success/10 border-success/20 p-3">
           <div className="flex items-center gap-2 text-success">
             <CheckCircle2 className="h-4 w-4" />
-            <span className="text-sm font-medium">{layout.settings.preferences.pwaInstalled}</span>
+            <span className="text-sm font-medium">
+              {layout.settings.preferences.pwaInstalled}
+            </span>
           </div>
         </div>
       )}

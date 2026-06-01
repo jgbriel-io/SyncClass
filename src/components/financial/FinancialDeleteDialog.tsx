@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/formatters";
-import { useDeleteFinancialRecord, type FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
+import {
+  useDeleteFinancialRecord,
+  type FinancialRecordWithRelations,
+} from "@/hooks/useFinancialRecords";
 import { financial } from "@/content";
 
 interface FinancialDeleteDialogProps {
@@ -46,12 +49,16 @@ export function FinancialDeleteDialog({
                   record ? formatCurrency(Number(record.amount)) : ""
                 )}
               </p>
-              <p className="text-destructive font-medium">{financial.deleteDialog.irreversible}</p>
+              <p className="text-destructive font-medium">
+                {financial.deleteDialog.irreversible}
+              </p>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteRecord.isPending}>{financial.deleteDialog.cancel}</AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteRecord.isPending}>
+            {financial.deleteDialog.cancel}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={deleteRecord.isPending}

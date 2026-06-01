@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { emailSchema } from "@/lib/validation/email";
 import { REGEX_PATTERNS, isValidDateString } from "@/lib/utils/patterns";
-import { students as studentsContent, teachers as teachersContent, users as usersContent } from "@/content";
+import {
+  students as studentsContent,
+  teachers as teachersContent,
+  users as usersContent,
+} from "@/content";
 
 // Schema para Admin (simples)
 export const adminSchema = z.object({
@@ -21,7 +25,9 @@ export const baseStudentSchema = z.object({
   birth_date: z
     .string()
     .min(1, studentsContent.validation.birthDateRequired)
-    .refine((val) => isValidDateString(val), { message: studentsContent.validation.birthDateInvalid }),
+    .refine((val) => isValidDateString(val), {
+      message: studentsContent.validation.birthDateInvalid,
+    }),
   role: z.literal("student"),
 });
 
@@ -30,28 +36,31 @@ export const brazilianStudentSchema = baseStudentSchema.extend({
   country: z.literal("Brasil").optional(),
   state: z.string().min(2, studentsContent.validation.stateRequired).max(2),
   city: z.string().min(2, studentsContent.validation.cityRequired).max(100),
-  phone: z.string()
+  phone: z
+    .string()
     .min(1, studentsContent.validation.phoneRequired)
     .refine(
-      (v) => (v.length === 14 || v.length === 15) && REGEX_PATTERNS.phone.test(v),
+      (v) =>
+        (v.length === 14 || v.length === 15) && REGEX_PATTERNS.phone.test(v),
       studentsContent.validation.phoneDigits
     ),
 });
 
 // Schema para alunos ESTRANGEIROS
 export const foreignStudentSchema = baseStudentSchema.extend({
-  country: z.string().min(2, studentsContent.validation.countryRequired).max(100),
+  country: z
+    .string()
+    .min(2, studentsContent.validation.countryRequired)
+    .max(100),
   state: z.string().min(1, studentsContent.validation.stateRequired).max(100),
   city: z.string().min(1, studentsContent.validation.cityRequired).max(100),
-  phone: z.string()
+  phone: z
+    .string()
     .min(1, studentsContent.validation.phoneRequired)
-    .refine(
-      (v) => {
-        const digitsOnly = v.replace(/\D/g, "");
-        return digitsOnly.length >= 7 && digitsOnly.length <= 15;
-      },
-      studentsContent.validation.phoneDigits
-    ),
+    .refine((v) => {
+      const digitsOnly = v.replace(/\D/g, "");
+      return digitsOnly.length >= 7 && digitsOnly.length <= 15;
+    }, studentsContent.validation.phoneDigits),
 });
 
 // Manter compatibilidade
@@ -67,7 +76,9 @@ export const teacherSchema = z.object({
     .refine(
       (val) => {
         if (!val || val.trim() === "") return true;
-        return val.length >= 14 && val.length <= 15 && REGEX_PATTERNS.phone.test(val);
+        return (
+          val.length >= 14 && val.length <= 15 && REGEX_PATTERNS.phone.test(val)
+        );
       },
       { message: teachersContent.validation.phoneFormat }
     ),

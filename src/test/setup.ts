@@ -1,5 +1,5 @@
-import { beforeAll, afterEach, vi } from 'vitest';
-import '@testing-library/jest-dom';
+import { beforeAll, afterEach, vi } from "vitest";
+import "@testing-library/jest-dom";
 
 // Mock localStorage
 const localStorageMock = {
@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 // Mock do window.matchMedia (para testes de tema)
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({
     matches: false,

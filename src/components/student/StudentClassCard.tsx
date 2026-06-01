@@ -2,7 +2,20 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, User, Clock, CheckCircle2, XCircle, Star, ChevronRight, ChevronDown, ChevronUp, MessageSquare, DollarSign, Timer } from "lucide-react";
+import {
+  Calendar,
+  User,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Star,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  MessageSquare,
+  DollarSign,
+  Timer,
+} from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDate, formatCurrency } from "@/lib/utils/formatters";
@@ -34,7 +47,10 @@ interface StudentClassCardProps {
   onClick?: () => void;
 }
 
-function formatTimeRange(startAt: string | null | undefined, endAt: string | null | undefined): string {
+function formatTimeRange(
+  startAt: string | null | undefined,
+  endAt: string | null | undefined
+): string {
   if (!startAt || !endAt) return "—";
   try {
     const start = format(new Date(startAt), "HH:mm", { locale: ptBR });
@@ -45,7 +61,11 @@ function formatTimeRange(startAt: string | null | undefined, endAt: string | nul
   }
 }
 
-function formatDuration(minutes: number | null | undefined, startAt: string | null | undefined, endAt: string | null | undefined): string {
+function formatDuration(
+  minutes: number | null | undefined,
+  startAt: string | null | undefined,
+  endAt: string | null | undefined
+): string {
   if (minutes != null && minutes > 0) {
     if (minutes >= 60) {
       const h = Math.floor(minutes / 60);
@@ -85,31 +105,32 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
     : status.label === "Pendente"
       ? studentPortal.classCard.notEvaluatedLabel
       : status.label;
-  const badgeVariant = isConcluida
-    ? "success"
-    : status.variant;
+  const badgeVariant = isConcluida ? "success" : status.variant;
 
   // Calcular status de pagamento
-  const paymentStatus = classLog.payment_status && classLog.payment_due_date
-    ? getFinancialActualStatus({
-        status: classLog.payment_status,
-        due_date: classLog.payment_due_date,
-      })
-    : null;
+  const paymentStatus =
+    classLog.payment_status && classLog.payment_due_date
+      ? getFinancialActualStatus({
+          status: classLog.payment_status,
+          due_date: classLog.payment_due_date,
+        })
+      : null;
 
-  const paymentBadgeLabel = paymentStatus === "pago"
-    ? "Pago"
-    : paymentStatus === "atrasado"
-      ? "Atrasado"
-      : paymentStatus === "pendente"
-        ? "Pendente"
-        : null;
+  const paymentBadgeLabel =
+    paymentStatus === "pago"
+      ? "Pago"
+      : paymentStatus === "atrasado"
+        ? "Atrasado"
+        : paymentStatus === "pendente"
+          ? "Pendente"
+          : null;
 
-  const paymentBadgeVariant = paymentStatus === "pago"
-    ? "success"
-    : paymentStatus === "atrasado"
-      ? "destructive"
-      : "warning";
+  const paymentBadgeVariant =
+    paymentStatus === "pago"
+      ? "success"
+      : paymentStatus === "atrasado"
+        ? "destructive"
+        : "warning";
 
   const handleToggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -132,21 +153,23 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
               {(() => {
                 const rawTitle = classLog.title?.trim();
                 const isPackage = classLog.is_package;
-                
+
                 // Se tem título customizado
                 if (rawTitle) {
                   // Se o título já é "Aula - data", não duplicar
-                  const isDefaultFormat = rawTitle.match(/^Aula\s*-\s*\d{2}\/\d{2}\/\d{4}$/i);
-                  
+                  const isDefaultFormat = rawTitle.match(
+                    /^Aula\s*-\s*\d{2}\/\d{2}\/\d{4}$/i
+                  );
+
                   if (isDefaultFormat) {
                     // É o formato padrão, adiciona (Pacote) se necessário
                     return isPackage ? `${rawTitle} (Pacote)` : rawTitle;
                   }
-                  
+
                   // É um título customizado
                   return isPackage ? `${rawTitle} (Pacote)` : rawTitle;
                 }
-                
+
                 // Fallback: "Aula - data"
                 const fallbackTitle = `Aula - ${formatDate(classLog.class_date)}`;
                 return isPackage ? `${fallbackTitle} (Pacote)` : fallbackTitle;
@@ -154,15 +177,22 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
             </h3>
             <div className="flex items-center gap-3 shrink-0">
               <div className="flex flex-col items-end gap-0.5">
-                <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">{studentPortal.classCard.attendanceLabel}</span>
+                <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">
+                  {studentPortal.classCard.attendanceLabel}
+                </span>
                 <StatusBadge variant={badgeVariant} className="shrink-0">
                   {badgeLabel}
                 </StatusBadge>
               </div>
               {paymentBadgeLabel && (
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">{studentPortal.classCard.paymentLabel}</span>
-                  <StatusBadge variant={paymentBadgeVariant} className="shrink-0">
+                  <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">
+                    {studentPortal.classCard.paymentLabel}
+                  </span>
+                  <StatusBadge
+                    variant={paymentBadgeVariant}
+                    className="shrink-0"
+                  >
                     {paymentBadgeLabel}
                   </StatusBadge>
                 </div>
@@ -176,12 +206,16 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
               {classLog.attendance ? (
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-success" />
-                  <span className="text-sm font-medium text-success">{studentPortal.classCard.presentLabel}</span>
+                  <span className="text-sm font-medium text-success">
+                    {studentPortal.classCard.presentLabel}
+                  </span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5">
                   <XCircle className="h-4 w-4 text-destructive" />
-                  <span className="text-sm font-medium text-destructive">{studentPortal.classCard.notAttendedLabel}</span>
+                  <span className="text-sm font-medium text-destructive">
+                    {studentPortal.classCard.notAttendedLabel}
+                  </span>
                 </div>
               )}
             </div>
@@ -204,43 +238,73 @@ export function StudentClassCard({ classLog, onClick }: StudentClassCardProps) {
             <>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                <span>{studentPortal.classCard.teacherLabel}: {classLog.teacher_name || "—"}</span>
+                <span>
+                  {studentPortal.classCard.teacherLabel}:{" "}
+                  {classLog.teacher_name || "—"}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <DollarSign className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                <span>{studentPortal.classCard.classValueLabel}: {classLog.amount != null ? formatCurrency(classLog.amount) : "—"}</span>
+                <span>
+                  {studentPortal.classCard.classValueLabel}:{" "}
+                  {classLog.amount != null
+                    ? formatCurrency(classLog.amount)
+                    : "—"}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Star className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                <span>{common.labels.grade}: {classLog.grade != null ? Number(classLog.grade).toFixed(1) : "—"}</span>
+                <span>
+                  {common.labels.grade}:{" "}
+                  {classLog.grade != null
+                    ? Number(classLog.grade).toFixed(1)
+                    : "—"}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Timer className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                <span>{studentPortal.classCard.durationLabel}: {formatDuration(classLog.duration_minutes, classLog.start_at, classLog.end_at)}</span>
+                <span>
+                  {studentPortal.classCard.durationLabel}:{" "}
+                  {formatDuration(
+                    classLog.duration_minutes,
+                    classLog.start_at,
+                    classLog.end_at
+                  )}
+                </span>
               </div>
-              
+
               {/* Observações (preenchidas ao criar a aula) */}
               {classLog.observations?.trim() && (
                 <div className="flex items-start gap-2 text-sm text-muted-foreground">
                   <MessageSquare className="h-4 w-4 flex-shrink-0 text-muted-foreground mt-0.5" />
                   <div className="min-w-0 flex-1">
-                    <span className="font-medium">{studentPortal.classCard.observationsLabel}: </span>
-                    <span className="whitespace-pre-wrap">{sanitizeText(classLog.observations)}</span>
+                    <span className="font-medium">
+                      {studentPortal.classCard.observationsLabel}:{" "}
+                    </span>
+                    <span className="whitespace-pre-wrap">
+                      {sanitizeText(classLog.observations)}
+                    </span>
                   </div>
                 </div>
               )}
-              
+
               {/* Feedback (preenchido ao avaliar a aula) - abaixo da lista */}
               <div className="pt-3 space-y-2">
-                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">{studentPortal.classCard.feedbackSectionLabel}</p>
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                  {studentPortal.classCard.feedbackSectionLabel}
+                </p>
                 <div className="flex items-start gap-2 text-sm">
                   <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <span className="text-muted-foreground">
                       {hasDetails ? (
-                        <span className="whitespace-pre-wrap">{sanitizeText(classLog.feedback)}</span>
+                        <span className="whitespace-pre-wrap">
+                          {sanitizeText(classLog.feedback)}
+                        </span>
                       ) : (
-                        <span className="italic">{studentPortal.classCard.noFeedbackMessage}</span>
+                        <span className="italic">
+                          {studentPortal.classCard.noFeedbackMessage}
+                        </span>
                       )}
                     </span>
                   </div>

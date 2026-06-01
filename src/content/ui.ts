@@ -5,36 +5,43 @@ export const ui = {
   emptyStates: {
     students: {
       title: "Nenhum aluno cadastrado",
-      description: "Comece adicionando seu primeiro aluno para começar a acompanhar aulas e pagamentos.",
+      description:
+        "Comece adicionando seu primeiro aluno para começar a acompanhar aulas e pagamentos.",
       actionLabel: "Adicionar primeiro aluno",
     },
     classes: {
       title: "Nenhuma aula registrada",
-      description: "Registre as aulas ministradas para acompanhar o progresso e gerar cobranças automaticamente.",
+      description:
+        "Registre as aulas ministradas para acompanhar o progresso e gerar cobranças automaticamente.",
       actionLabel: "Registrar primeira aula",
     },
     financial: {
       title: "Nenhuma cobrança registrada",
-      description: "As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças.",
+      description:
+        "As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças.",
       actionLabel: "Criar primeira cobrança",
     },
     history: {
       title: "Nenhum histórico disponível",
-      description: "As aulas realizadas aparecerão aqui com suas notas e feedback.",
+      description:
+        "As aulas realizadas aparecerão aqui com suas notas e feedback.",
     },
     search: {
       title: "Nenhum resultado encontrado",
-      description: (query: string) => `Não encontramos resultados para "${query}". Tente ajustar os filtros ou termos de busca.`,
+      description: (query: string) =>
+        `Não encontramos resultados para "${query}". Tente ajustar os filtros ou termos de busca.`,
       descriptionNoQuery: "Ajuste os filtros para ver os resultados.",
     },
     activities: {
       title: "Nenhuma atividade enviada",
-      description: "Envie materiais e tarefas para seus alunos. Eles poderão entregar as respostas e você poderá corrigir aqui.",
+      description:
+        "Envie materiais e tarefas para seus alunos. Eles poderão entregar as respostas e você poderá corrigir aqui.",
       actionLabel: "Enviar primeira atividade",
     },
     activitiesStudent: {
       title: "Nenhuma atividade recebida",
-      description: "Quando seu professor enviar atividades, elas aparecerão aqui para você visualizar e entregar.",
+      description:
+        "Quando seu professor enviar atividades, elas aparecerão aqui para você visualizar e entregar.",
     },
     birthdays: {
       title: "Nenhum aniversariante hoje",
