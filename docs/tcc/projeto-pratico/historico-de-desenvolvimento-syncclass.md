@@ -15,25 +15,29 @@ tags:
 
 ## 📅 Linha do Tempo Geral
 
-| Fase               | Período       | Marco Principal                                   |
-| :----------------- | :------------ | :------------------------------------------------ |
-| **Commit Inicial** | 19 Jan 2026   | Estrutura base (Remix/Vite)                       |
-| **Sprint 1**       | 19–23 Jan     | Fundação e Schema de Banco                        |
-| **Sprint 2**       | 26–29 Jan     | Autenticação & Perfis (Roles)                     |
-| **Sprint 3**       | 29–30 Jan     | Qualidade, Infraestrutura e PWA                   |
-| **Sprint 4**       | 31 Jan–08 Fev | Features Avançadas e Dashboard                    |
-| **Sprint 5**       | 09–13 Fev     | Estabilização, UX e Mobile-First                  |
-| **Sprint 6**       | 14–18 Fev     | Segurança e Correções Críticas                    |
-| **Sprint 7**       | 19 Fev–11 Mar | **Auditorias e Migrations (GAP de Histórico)**    |
-| **Sprint 8**       | 10–11 Mar     | Reestruturação (Novo Repo: `sync-class-platform`) |
-| **Sprint 9**       | 21 Abr 2026   | Restore Completo e Organização TCC                |
-| **Sprint 10**      | 21 Abr 2026   | Refactor: Remove Duplicate Queries                |
-| **Sprint 11**      | 21 Abr 2026   | Fix: Timezone & Error Boundary                    |
-| **Sprint 12**      | 21 Abr 2026   | Refactor: Content Structure (i18n Prep)           |
-| **Sprint 13**      | 21 Abr 2026   | Refactor: Centralize UI Strings                   |
-| **Sprint 14**      | 21 Abr 2026   | Refactor: Remove Hardcoded Strings                |
-| **Sprint 15**      | 21 Abr 2026   | Refactor: Final String Audit                      |
-| **Sprint 16**      | 21 Mai 2026   | Refactor: Docs Architecture Organization          |
+| Fase               | Período        | Marco Principal                                     |
+| :----------------- | :------------- | :-------------------------------------------------- |
+| **Commit Inicial** | 19 Jan 2026    | Estrutura base (Remix/Vite)                         |
+| **Sprint 1**       | 19–23 Jan      | Fundação e Schema de Banco                          |
+| **Sprint 2**       | 26–29 Jan      | Autenticação & Perfis (Roles)                       |
+| **Sprint 3**       | 29–30 Jan      | Qualidade, Infraestrutura e PWA                     |
+| **Sprint 4**       | 31 Jan–08 Fev  | Features Avançadas e Dashboard                      |
+| **Sprint 5**       | 09–13 Fev      | Estabilização, UX e Mobile-First                    |
+| **Sprint 6**       | 14–18 Fev      | Segurança e Correções Críticas                      |
+| **Sprint 7**       | 19 Fev–11 Mar  | **Auditorias e Migrations (GAP de Histórico)**      |
+| **Sprint 8**       | 10–11 Mar      | Reestruturação (Novo Repo: `sync-class-platform`)   |
+| **Sprint 9**       | 21 Abr 2026    | Restore Completo e Organização TCC                  |
+| **Sprint 10**      | 21 Abr 2026    | Refactor: Remove Duplicate Queries                  |
+| **Sprint 11**      | 21 Abr 2026    | Fix: Timezone & Error Boundary                      |
+| **Sprint 12**      | 21 Abr 2026    | Refactor: Content Structure (i18n Prep)             |
+| **Sprint 13**      | 21 Abr 2026    | Refactor: Centralize UI Strings                     |
+| **Sprint 14**      | 21 Abr 2026    | Refactor: Remove Hardcoded Strings                  |
+| **Sprint 15**      | 21 Abr 2026    | Refactor: Final String Audit                        |
+| **Sprint 16**      | 21 Mai 2026    | Refactor: Docs Architecture Organization            |
+| **Sprint 17–27**   | 21–25 Mai 2026 | Refatoração, Segurança, Compliance, QA              |
+| **Sprint 28**      | 26 Mai 2026    | QA: Testes Manuais (em andamento)                   |
+| **Sprint 29**      | 31 Mai 2026    | Fix: Correções críticas do painel admin (19 bugs)   |
+| **Sprint 30**      | 01 Jun 2026    | **Feature: Integração AbacatePay (PIX automático)** |
 
 ---
 

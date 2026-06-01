@@ -370,6 +370,7 @@ export const common = {
     download: "Baixar",
     copy: "Copiar",
     copied: "Copiado!",
+    resetPassword: "Redefinir senha",
     yes: "Sim",
     no: "Não",
     apply: "Aplicar",

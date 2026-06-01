@@ -29,11 +29,12 @@ CI/CD              → GitHub Actions → Cloudflare Pages
 | Commits                    | 60                                 |
 | Arquivos TypeScript        | 357                                |
 | Linhas de código (src)     | ~50.467                            |
-| Migrations SQL             | 43                                 |
+| Migrations SQL             | 61                                 |
 | Suites de teste            | 26                                 |
 | Testes automatizados       | 287                                |
-| Sprints implementadas      | 27                                 |
-| Período de desenvolvimento | 19 jan – 26 mai 2026 (~18 semanas) |
+| Sprints implementadas      | 30                                 |
+| Edge Functions             | 9                                  |
+| Período de desenvolvimento | 19 jan – 01 jun 2026 (~19 semanas) |
 
 ---
 
@@ -94,29 +95,37 @@ MVP funcional entregue em ~30 dias úteis (19/jan → 18/fev).
 | --------- | ------- | --------------------------------------------- | ----------- |
 | Sprint 28 | 26 mai  | Testes manuais — 20 rotas, 116 itens, 5 roles | 🔴 Pendente |
 
+### Fase 6 — Fixes & Feature Pós-QA (Sprints 29–30)
+
+| Sprint    | Período | Foco                                                        | Items |
+| --------- | ------- | ----------------------------------------------------------- | ----- |
+| Sprint 29 | 31 mai  | Fix: 19 bugs críticos do painel admin + propagação de dados | ✅    |
+| Sprint 30 | 01 jun  | Feature: Integração AbacatePay — PIX automático + reembolso | ✅    |
+
 ---
 
 ## Features Fora do Escopo (Documentadas, Não Implementadas)
 
 Mantidas como sprints `NAO-IMPLEMENTADA` por decisão de escopo, não por limitação técnica:
 
-| Feature                                        | Arquivo de referência                        |
-| ---------------------------------------------- | -------------------------------------------- |
-| Notificações em tempo real                     | `sprint-notificacoes-NAO-IMPLEMENTADA.md`    |
-| Exportação de relatórios em PDF                | `sprint-exportacao-pdf-NAO-IMPLEMENTADA.md`  |
-| Integração com pagamento real (Stripe/PIX API) | `sprint-pagamento-real-NAO-IMPLEMENTADA.md`  |
-| Gamificação do portal do aluno                 | `sprint-gamificacao-NAO-IMPLEMENTADA.md`     |
-| Integração Google Calendar                     | `sprint-google-calendar-NAO-IMPLEMENTADA.md` |
+| Feature                         | Arquivo de referência                        |
+| ------------------------------- | -------------------------------------------- |
+| Notificações em tempo real      | `sprint-notificacoes-NAO-IMPLEMENTADA.md`    |
+| Exportação de relatórios em PDF | `sprint-exportacao-pdf-NAO-IMPLEMENTADA.md`  |
+| Gamificação do portal do aluno  | `sprint-gamificacao-NAO-IMPLEMENTADA.md`     |
+| Integração Google Calendar      | `sprint-google-calendar-NAO-IMPLEMENTADA.md` |
+
+> **Nota:** Integração com gateway de pagamento real foi implementada na Sprint 30 via AbacatePay. Ver `sprint-30-abacatepay-integration.md`.
 
 ---
 
 ## Hipóteses do TCC — Validadas
 
-| Hipótese                                                           | Evidência                                                                                                                          | Status      |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **H1** SaaS funcional solo em ~3 meses com IA como aceleradora     | 60 commits, 357 arquivos, ~50k linhas, 1 desenvolvedor, 18 semanas                                                                 | ✅ Validada |
-| **H2** Supabase reduz ≥60% do esforço backend vs stack tradicional | 43 migrations SQL gerenciam auth, RLS, RPCs, triggers — equivalente a ~80 endpoints REST + middleware de auth em stack tradicional | ✅ Validada |
-| **H3** Plataforma unificada reduz tarefas manuais do professor     | Portal único: alunos, aulas, cobranças, atividades, relatórios                                                                     | ✅ Validada |
+| Hipótese                                                           | Evidência                                                                                                                                                                                                              | Status      |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| **H1** SaaS funcional solo em ~3 meses com IA como aceleradora     | 60 commits, 357 arquivos, ~50k linhas, 1 desenvolvedor, 18 semanas                                                                                                                                                     | ✅ Validada |
+| **H2** Supabase reduz ≥60% do esforço backend vs stack tradicional | 61 migrations SQL gerenciam auth, RLS, RPCs, triggers, Edge Functions — equivalente a ~80+ endpoints REST + middleware de auth em stack tradicional; integração AbacatePay em 3 Edge Functions (sem servidor dedicado) | ✅ Validada |
+| **H3** Plataforma unificada reduz tarefas manuais do professor     | Portal único: alunos, aulas, cobranças, atividades, relatórios                                                                                                                                                         | ✅ Validada |
 
 ---
 

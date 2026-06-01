@@ -50,6 +50,47 @@ Exemplo: Professor cria uma cobrança
    UI atualiza com novo dado
 ```
 
+## Fluxo de pagamento AbacatePay
+
+Exemplo: Aluno paga cobrança via PIX automático
+
+```
+1. PROFESSOR
+   Cria cobrança → financial_records (status='pendente')
+
+2. ALUNO
+   Acessa /student/checkout/:recordId
+
+3. COMPONENT (src/pages/student/StudentCheckout.tsx)
+   Aluno informa CPF → clica "Gerar QR Code"
+   Chama: useCreateAbacatePayment().mutate({ financialRecordId: record.id, cpf })
+
+4. EDGE FUNCTION (create-abacate-payment)
+   Auth: JWT do aluno via Authorization header
+   Valida ownership: record.student_id === profile.student_id
+   Cache idempotente: retorna pix_code existente se pix_expires_at ainda válido
+   Resolve teacher → descriptografa abacate_pay_api_key
+   POST https://api.abacatepay.com/v1/pixQrCode/create
+   Salva brCode + external_payment_id + pix_expires_at
+   Retorna { brCode, expiresAt }
+
+5. COMPONENT
+   Renderiza QR Code (qrcode.react)
+   useCheckoutPaymentStatus: realtime subscription em financial_records WHERE id = recordId
+
+6. ALUNO
+   Escaneia QR Code no app bancário → realiza pagamento
+
+7. ABACATEPAY → WEBHOOK
+   POST /functions/v1/abacate-webhook?webhookSecret=<teacher-secret>
+   Edge Function: valida secret → idempotência (webhook_processing_log) → UPDATE status='pago'
+
+8. REALTIME (Supabase Realtime)
+   Subscription detecta UPDATE em financial_records
+   useCheckoutPaymentStatus dispara onPaid callback → setPaid(true)
+   UI exibe tela "Pagamento confirmado!"
+```
+
 ## Fluxo de autenticação
 
 **Arquivo principal:** `src/contexts/AuthContext.tsx:45`

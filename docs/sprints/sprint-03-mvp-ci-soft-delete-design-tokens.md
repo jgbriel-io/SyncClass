@@ -14,26 +14,31 @@
 Após Sprint 2, o sistema tinha autenticação e CRUD funcional, mas com problemas críticos de qualidade e infraestrutura:
 
 **Qualidade:**
+
 - Sem CI/CD — builds quebrados só descobertos em produção
 - Sem testes automatizados
 - Sem lint/type-check automatizado
 - Código não validado antes de merge
 
 **UX:**
+
 - Deletar aluno apagava permanentemente (perda de histórico de aulas e cobranças)
 - Sem feedback visual de loading (CLS — Cumulative Layout Shift)
 - Empty states genéricos sem contexto
 
 **Manutenção:**
+
 - 20+ cores hardcoded (`#3B82F6`, `#EF4444`) espalhadas no código
 - 11 duplicações de `formatCurrency` em componentes diferentes
 - Sem sistema de design tokens (dificulta Dark Mode futuro)
 
 **Performance:**
+
 - Queries lentas em tabelas grandes (sem índices compostos)
 - Renderização inicial lenta (sem skeletons)
 
 **PWA:**
+
 - Aplicação não instalável
 - Sem service worker
 - Sem ícones para diferentes tamanhos de tela
@@ -41,11 +46,13 @@ Após Sprint 2, o sistema tinha autenticação e CRUD funcional, mas com problem
 ## Requirements
 
 ### CI/CD
+
 - GitHub Actions com pipeline: lint → type-check → build → test
 - Executar em todo push e pull request
 - Bloquear merge se pipeline falhar
 
 ### Soft Delete
+
 - Alunos arquivados em vez de deletados permanentemente
 - Preservar histórico de aulas e cobranças
 - UI muda de "Deletar" para "Arquivar"
@@ -53,12 +60,14 @@ Após Sprint 2, o sistema tinha autenticação e CRUD funcional, mas com problem
 - Filtro para mostrar/ocultar arquivados
 
 ### Design Tokens
+
 - Centralizar cores semânticas (`success`, `destructive`, `warning`, `muted`)
 - Remover cores hardcoded
 - Sistema preparado para Dark Mode
 - Tokens de spacing, typography, border-radius
 
 ### Formatters Centralizados
+
 - Função única `formatCurrency(value)`
 - Função única `formatDate(date)`
 - Função única `formatCPF(cpf)`
@@ -66,11 +75,13 @@ Após Sprint 2, o sistema tinha autenticação e CRUD funcional, mas com problem
 - Remover duplicações
 
 ### Performance
+
 - Índices compostos no banco para queries frequentes
 - Skeletons para estados de loading
 - Reduzir CLS (Cumulative Layout Shift)
 
 ### PWA
+
 - Aplicação instalável (Add to Home Screen)
 - Service worker funcional
 - Ícones em 8 tamanhos (72px–512px)
@@ -78,6 +89,7 @@ Após Sprint 2, o sistema tinha autenticação e CRUD funcional, mas com problem
 - Logo SVG com identidade visual
 
 ### Empty States
+
 - Empty states personalizados por contexto
 - Ilustrações SVG customizadas
 - CTAs contextuais (ex: "Adicionar Aluno" em lista vazia de alunos)
@@ -85,12 +97,14 @@ Após Sprint 2, o sistema tinha autenticação e CRUD funcional, mas com problem
 ## Background
 
 **Stack de qualidade:**
+
 - GitHub Actions para CI/CD
 - ESLint para lint
 - TypeScript para type-check
 - Vitest para testes unitários (será adicionado)
 
 **Soft delete pattern:**
+
 ```sql
 -- Adicionar coluna em todas as tabelas
 ALTER TABLE students ADD COLUMN deleted_at TIMESTAMPTZ;
@@ -106,17 +120,19 @@ UPDATE students SET deleted_at = NULL WHERE id = ?;
 ```
 
 **Design tokens pattern:**
+
 ```ts
 // lib/utils/design-tokens.ts
 export const colors = {
-  success: 'text-green-600',
-  destructive: 'text-red-600',
-  warning: 'text-yellow-600',
-  muted: 'text-gray-500',
+  success: "text-green-600",
+  destructive: "text-red-600",
+  warning: "text-yellow-600",
+  muted: "text-gray-500",
 };
 ```
 
 **PWA requirements:**
+
 - `vite-plugin-pwa` para gerar service worker
 - `manifest.json` com nome, ícones, theme color
 - Ícones em múltiplos tamanhos para diferentes dispositivos
@@ -354,46 +370,46 @@ public/
 
 ### Migrations Aplicadas
 
-| Migration | Descrição |
-|-----------|-----------|
-| `03_soft_delete.sql` | Adiciona `deleted_at` em `students`, `teachers`, `profiles` |
-| `04_composite_indexes.sql` | Índices compostos para performance 10x melhor |
+| Migration                  | Descrição                                                   |
+| -------------------------- | ----------------------------------------------------------- |
+| `03_soft_delete.sql`       | Adiciona `deleted_at` em `students`, `teachers`, `profiles` |
+| `04_composite_indexes.sql` | Índices compostos para performance 10x melhor               |
 
 ### Edge Functions Criadas
 
-| Function | Responsabilidade |
-|----------|------------------|
+| Function      | Responsabilidade                           |
+| ------------- | ------------------------------------------ |
 | `invite-user` | Criação de usuário (já existia, melhorado) |
 
 ### Componentes Criados
 
-| Componente | Responsabilidade | Arquivo |
-|------------|------------------|---------|
-| `TableSkeleton` | Skeleton de tabela | `src/components/ui/TableSkeleton.tsx` |
-| `DashboardSkeleton` | Skeleton de dashboard | `src/components/ui/DashboardSkeleton.tsx` |
-| `CardSkeleton` | Skeleton genérico | `src/components/ui/CardSkeleton.tsx` |
-| `EmptyStudents` | Empty state de alunos | `src/components/empty-states/EmptyStudents.tsx` |
-| `EmptyClasses` | Empty state de aulas | `src/components/empty-states/EmptyClasses.tsx` |
-| `EmptyFinancial` | Empty state de financeiro | `src/components/empty-states/EmptyFinancial.tsx` |
-| `EmptyHistory` | Empty state de histórico | `src/components/empty-states/EmptyHistory.tsx` |
-| `EmptySearch` | Empty state de busca | `src/components/empty-states/EmptySearch.tsx` |
-| `StudentClassCard` | Card de aula (mobile) | `src/components/student/StudentClassCard.tsx` |
+| Componente             | Responsabilidade          | Arquivo                                           |
+| ---------------------- | ------------------------- | ------------------------------------------------- |
+| `TableSkeleton`        | Skeleton de tabela        | `src/components/ui/TableSkeleton.tsx`             |
+| `DashboardSkeleton`    | Skeleton de dashboard     | `src/components/ui/DashboardSkeleton.tsx`         |
+| `CardSkeleton`         | Skeleton genérico         | `src/components/ui/CardSkeleton.tsx`              |
+| `EmptyStudents`        | Empty state de alunos     | `src/components/empty-states/EmptyStudents.tsx`   |
+| `EmptyClasses`         | Empty state de aulas      | `src/components/empty-states/EmptyClasses.tsx`    |
+| `EmptyFinancial`       | Empty state de financeiro | `src/components/empty-states/EmptyFinancial.tsx`  |
+| `EmptyHistory`         | Empty state de histórico  | `src/components/empty-states/EmptyHistory.tsx`    |
+| `EmptySearch`          | Empty state de busca      | `src/components/empty-states/EmptySearch.tsx`     |
+| `StudentClassCard`     | Card de aula (mobile)     | `src/components/student/StudentClassCard.tsx`     |
 | `StudentFinancialCard` | Card de cobrança (mobile) | `src/components/student/StudentFinancialCard.tsx` |
-| `StudentMetricCard` | Card de métrica (mobile) | `src/components/student/StudentMetricCard.tsx` |
+| `StudentMetricCard`    | Card de métrica (mobile)  | `src/components/student/StudentMetricCard.tsx`    |
 
 ### Hooks Criados
 
-| Hook | Responsabilidade | Arquivo |
-|------|------------------|---------|
-| `useSoftDeleteStudent` | Arquivar aluno | `src/hooks/useSoftDeleteStudent.ts` |
-| `useRestoreStudent` | Restaurar aluno arquivado | `src/hooks/useRestoreStudent.ts` |
+| Hook                   | Responsabilidade          | Arquivo                             |
+| ---------------------- | ------------------------- | ----------------------------------- |
+| `useSoftDeleteStudent` | Arquivar aluno            | `src/hooks/useSoftDeleteStudent.ts` |
+| `useRestoreStudent`    | Restaurar aluno arquivado | `src/hooks/useRestoreStudent.ts`    |
 
 ### Utilitários Criados
 
-| Utilitário | Responsabilidade | Arquivo |
-|------------|------------------|---------|
+| Utilitário      | Responsabilidade           | Arquivo                          |
+| --------------- | -------------------------- | -------------------------------- |
 | `design-tokens` | Cores, spacing, typography | `src/lib/utils/design-tokens.ts` |
-| `formatters` | Formatação de valores | `src/lib/utils/formatters.ts` |
+| `formatters`    | Formatação de valores      | `src/lib/utils/formatters.ts`    |
 
 ## Files Created
 
@@ -476,6 +492,7 @@ docs/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 2 migrations aplicadas (soft delete + índices)
 - ✅ 11 componentes novos criados
 - ✅ 2 hooks de soft delete criados
@@ -487,6 +504,7 @@ docs/
 - ✅ Score de auditoria: 7.0/10
 
 ### Melhorias Qualitativas
+
 - ✅ CI/CD automatizado (builds não quebram mais em produção)
 - ✅ Soft delete preserva histórico (não perde dados)
 - ✅ Design tokens preparados para Dark Mode
@@ -506,6 +524,7 @@ docs/
 ## Lessons Learned
 
 ### O que funcionou bem
+
 - ✅ **GitHub Actions:** CI/CD em 30min — builds quebrados detectados antes de produção
 - ✅ **Soft delete:** Preserva histórico completo — nenhum dado perdido desde implementação
 - ✅ **Design tokens:** Mudança de cor em 1 lugar atualiza 20+ componentes — preparado para Dark Mode
@@ -513,26 +532,13 @@ docs/
 - ✅ **PWA:** Aplicação instalável em 1h de trabalho — `vite-plugin-pwa` eliminou complexidade
 
 ### O que poderia melhorar
+
 - ⚠️ **Sprint intensa:** 20+ commits em 1 dia — deveria ter dividido em 2 sprints
 - ⚠️ **Testes adiados:** Vitest não implementado — bugs só descobertos em teste manual
 - ⚠️ **Skeletons genéricos:** Não refletem estrutura real dos dados — CLS ainda presente em alguns casos
 
 ### Aplicações futuras
+
 - 💡 **Testes desde Sprint 1:** Próximo projeto deve ter Vitest configurado no setup inicial
 - 💡 **Sprints menores:** Limitar a 10 tasks por sprint — melhor controle de qualidade
 - 💡 **Skeletons específicos:** Criar skeleton que espelha estrutura exata do componente final
-
-## Next Steps
-
-1. Sprint 4: Implementar dashboard avançado com gráficos
-2. Sprint 4: Adicionar histórico do aluno
-3. Sprint 4: Implementar reset de senha
-4. Sprint 5: Adicionar testes unitários com Vitest
-5. Sprint 5: Implementar módulo de atividades
-
-## References
-
-- Commits: 29–30 janeiro 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Validação: `docs/archive/VALIDACAO_SPRINTS_1_9.md`
-- Auditoria: `docs/front/frontend-audit.md`

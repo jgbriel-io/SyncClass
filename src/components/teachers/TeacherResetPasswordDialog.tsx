@@ -13,15 +13,14 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useResetPassword } from "@/hooks/useUsers";
-import { useTeacherUserId } from "@/hooks/useTeachers";
 import type { Teacher } from "@/hooks/useTeachers";
-import { teachers as teachersContent, common } from "@/content";
+import { generateRandomPassword } from "@/hooks/inviteUserService";
+import { teachers as teachersContent, common, auth } from "@/content";
 
 interface TeacherResetPasswordDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   teacher: Teacher | null;
-  /** Chamado com a nova senha após sucesso, para exibir no TeacherPasswordDialog */
   onSuccess: (password: string) => void;
 }
 
@@ -33,12 +32,7 @@ export function TeacherResetPasswordDialog({
 }: TeacherResetPasswordDialogProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { data: userId, isLoading: lookingUpUser } = useTeacherUserId(
-    teacher?.id
-  );
-  const adminResetPassword = useResetPassword();
-
-  const isPending = adminResetPassword.isPending || lookingUpUser;
+  const resetPassword = useResetPassword();
 
   const handleClose = () => {
     onOpenChange(false);
@@ -46,25 +40,44 @@ export function TeacherResetPasswordDialog({
     setConfirmPassword("");
   };
 
-  const handleSubmit = async () => {
-    if (!teacher) return;
-    if (newPassword.length < 6) {
-      toast.error(teachersContent.resetPasswordDialog.toasts.minLength);
+  const isPasswordValid =
+    newPassword.length >= 8 &&
+    /[A-Z]/.test(newPassword) &&
+    /[a-z]/.test(newPassword) &&
+    /[0-9]/.test(newPassword) &&
+    /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(newPassword);
+
+  const handleSubmit = () => {
+    if (newPassword.length < 8) {
+      toast.error(auth.resetPassword.toasts.minLength);
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      toast.error(auth.resetPassword.toasts.uppercase);
+      return;
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      toast.error(auth.resetPassword.toasts.lowercase);
+      return;
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      toast.error(auth.resetPassword.toasts.number);
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(newPassword)) {
+      toast.error(auth.resetPassword.toasts.special);
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error(teachersContent.resetPasswordDialog.toasts.mismatch);
+      toast.error(auth.resetPassword.toasts.passwordMismatch);
       return;
     }
 
-    if (!userId) {
-      toast.error(teachersContent.resetPasswordDialog.toasts.noAccount);
-      return;
-    }
-
+    if (!teacher) return;
     const passwordToShow = newPassword;
-    adminResetPassword.mutate(
-      { userId, password: newPassword },
+
+    resetPassword.mutate(
+      { teacherId: teacher.id, password: newPassword },
       {
         onSuccess: () => {
           handleClose();
@@ -94,6 +107,19 @@ export function TeacherResetPasswordDialog({
 
         {teacher && (
           <>
+            <div className="rounded-lg border bg-muted/50 p-3 space-y-2 mb-4">
+              <p className="text-xs font-medium text-muted-foreground">
+                {auth.resetPassword.requirements.title}
+              </p>
+              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                <li>{auth.resetPassword.requirements.minLength}</li>
+                <li>{auth.resetPassword.requirements.uppercase}</li>
+                <li>{auth.resetPassword.requirements.lowercase}</li>
+                <li>{auth.resetPassword.requirements.number}</li>
+                <li>{auth.resetPassword.requirements.special}</li>
+              </ul>
+            </div>
+
             <div className="space-y-4 py-2">
               <div className="space-y-2">
                 <Label htmlFor="reset-pw-teacher-new">
@@ -106,8 +132,8 @@ export function TeacherResetPasswordDialog({
                   placeholder={common.placeholders.password}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  minLength={6}
-                  disabled={isPending}
+                  minLength={8}
+                  disabled={resetPassword.isPending}
                 />
               </div>
               <div className="space-y-2">
@@ -121,8 +147,8 @@ export function TeacherResetPasswordDialog({
                   placeholder={common.placeholders.password}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  minLength={6}
-                  disabled={isPending}
+                  minLength={8}
+                  disabled={resetPassword.isPending}
                 />
               </div>
               <Button
@@ -130,11 +156,7 @@ export function TeacherResetPasswordDialog({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const chars =
-                    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-                  let p = "";
-                  for (let i = 0; i < 10; i++)
-                    p += chars.charAt(Math.floor(Math.random() * chars.length));
+                  const p = generateRandomPassword(12);
                   setNewPassword(p);
                   setConfirmPassword(p);
                 }}
@@ -144,22 +166,18 @@ export function TeacherResetPasswordDialog({
             </div>
 
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={handleClose}
-                disabled={isPending}
-              >
+              <Button variant="outline" onClick={handleClose}>
                 {common.actions.cancel}
               </Button>
               <Button
                 disabled={
-                  isPending ||
-                  newPassword.length < 6 ||
+                  resetPassword.isPending ||
+                  !isPasswordValid ||
                   newPassword !== confirmPassword
                 }
                 onClick={handleSubmit}
               >
-                {isPending ? (
+                {resetPassword.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {teachersContent.resetPasswordDialog.submitting}

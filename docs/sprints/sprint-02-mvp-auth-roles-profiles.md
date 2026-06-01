@@ -10,6 +10,7 @@
 ## Problem Statement
 
 Após Sprint 1, o sistema tinha CRUD básico mas sem controle de acesso:
+
 - Qualquer usuário podia ver/editar dados de qualquer professor/aluno
 - Sem autenticação (login/logout)
 - Sem separação de roles (admin, teacher, student)
@@ -23,12 +24,14 @@ Após Sprint 1, o sistema tinha CRUD básico mas sem controle de acesso:
 ## Requirements
 
 ### Autenticação
+
 - Login com email/senha via Supabase Auth
 - Logout funcional
 - Proteção de rotas (redirect se não autenticado)
 - Criação de contas vinculadas (aluno/professor → usuário Supabase)
 
 ### Roles & Permissões
+
 - 3 roles: `admin`, `teacher`, `student`
 - Admin: acesso total
 - Teacher: acessa apenas seus próprios alunos
@@ -36,6 +39,7 @@ Após Sprint 1, o sistema tinha CRUD básico mas sem controle de acesso:
 - Role armazenado em `profiles.role` e sincronizado com `auth.users.raw_user_meta_data`
 
 ### Formulários Completos
+
 - Cadastro de aluno com criação automática de conta de usuário
 - Cadastro de professor com role correto
 - Seleção de professor ao cadastrar aluno (dropdown)
@@ -43,11 +47,13 @@ Após Sprint 1, o sistema tinha CRUD básico mas sem controle de acesso:
 - Validação de campos únicos (email, telefone)
 
 ### UI Padronizada
+
 - Migração de tabelas manuais para componentes shadcn/ui
 - `PageContainer` e `EmptyState` padronizados
 - Views compartilhadas entre admin e professor (DRY)
 
 ### Segurança
+
 - Remover `.env` do repositório
 - Adicionar `.env.example` com variáveis necessárias
 - Documentar rotação de chaves
@@ -55,11 +61,13 @@ Após Sprint 1, o sistema tinha CRUD básico mas sem controle de acesso:
 ## Background
 
 **Stack de autenticação:**
+
 - Supabase Auth (PostgreSQL + JWT)
 - Row Level Security (RLS) no banco
 - Roles armazenados em `profiles.role`
 
 **Estrutura de usuários:**
+
 ```
 auth.users (Supabase Auth)
   ↓ user_id
@@ -69,6 +77,7 @@ teachers / students (dados específicos)
 ```
 
 **Componentes shadcn/ui a serem adicionados:**
+
 - `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableCell`
 - `Button`, `Input`, `Select`, `Dialog`, `Sheet`
 - `Card`, `Badge`, `Skeleton`
@@ -107,10 +116,13 @@ Para evitar duplicação entre admin e teacher:
 ```tsx
 // src/components/shared/FinancialView.tsx
 export const FinancialView = ({ teacherId, isAdmin }) => {
-  const query = isAdmin 
-    ? supabase.from('financial_records').select('*')
-    : supabase.from('financial_records').select('*').eq('teacher_id', teacherId);
-  
+  const query = isAdmin
+    ? supabase.from("financial_records").select("*")
+    : supabase
+        .from("financial_records")
+        .select("*")
+        .eq("teacher_id", teacherId);
+
   // Renderiza mesma UI para ambos
 };
 ```
@@ -246,36 +258,36 @@ export const FinancialView = ({ teacherId, isAdmin }) => {
 
 ### Migrations Aplicadas
 
-| Migration | Descrição |
-|-----------|-----------|
+| Migration          | Descrição                                                      |
+| ------------------ | -------------------------------------------------------------- |
 | `02_add_roles.sql` | Adiciona coluna `role` em `profiles`, trigger de sincronização |
 
 ### Edge Functions Criadas
 
-| Function | Responsabilidade |
-|----------|------------------|
+| Function      | Responsabilidade                                                   |
+| ------------- | ------------------------------------------------------------------ |
 | `invite-user` | Cria usuário em `auth.users` + `profiles` + envia email de convite |
 
 ### Componentes Criados
 
-| Componente | Responsabilidade | Arquivo |
-|------------|------------------|---------|
-| `AuthContext` | Gerencia estado de autenticação | `src/contexts/AuthContext.tsx` |
-| `ProtectedRoute` | Protege rotas privadas | `src/components/auth/ProtectedRoute.tsx` |
-| `AuthRedirect` | Redireciona usuários logados | `src/components/auth/AuthRedirect.tsx` |
-| `StudentFormDialog` | Formulário completo de aluno | `src/components/students/StudentFormDialog.tsx` |
+| Componente          | Responsabilidade                 | Arquivo                                         |
+| ------------------- | -------------------------------- | ----------------------------------------------- |
+| `AuthContext`       | Gerencia estado de autenticação  | `src/contexts/AuthContext.tsx`                  |
+| `ProtectedRoute`    | Protege rotas privadas           | `src/components/auth/ProtectedRoute.tsx`        |
+| `AuthRedirect`      | Redireciona usuários logados     | `src/components/auth/AuthRedirect.tsx`          |
+| `StudentFormDialog` | Formulário completo de aluno     | `src/components/students/StudentFormDialog.tsx` |
 | `TeacherFormDialog` | Formulário completo de professor | `src/components/teachers/TeacherFormDialog.tsx` |
-| `FinancialView` | View compartilhada de financeiro | `src/components/shared/FinancialView.tsx` |
-| `DashboardView` | View compartilhada de dashboard | `src/components/shared/DashboardView.tsx` |
-| `ClassesView` | View compartilhada de aulas | `src/components/shared/ClassesView.tsx` |
-| `PageContainer` | Layout padrão de páginas | `src/components/layout/PageContainer.tsx` |
-| `EmptyState` | Estado vazio genérico | `src/components/layout/EmptyState.tsx` |
+| `FinancialView`     | View compartilhada de financeiro | `src/components/shared/FinancialView.tsx`       |
+| `DashboardView`     | View compartilhada de dashboard  | `src/components/shared/DashboardView.tsx`       |
+| `ClassesView`       | View compartilhada de aulas      | `src/components/shared/ClassesView.tsx`         |
+| `PageContainer`     | Layout padrão de páginas         | `src/components/layout/PageContainer.tsx`       |
+| `EmptyState`        | Estado vazio genérico            | `src/components/layout/EmptyState.tsx`          |
 
 ### Hooks Criados
 
-| Hook | Responsabilidade | Arquivo |
-|------|------------------|---------|
-| `useAuth` | Acessa contexto de autenticação | `src/hooks/useAuth.ts` |
+| Hook                    | Responsabilidade                | Arquivo                              |
+| ----------------------- | ------------------------------- | ------------------------------------ |
+| `useAuth`               | Acessa contexto de autenticação | `src/hooks/useAuth.ts`               |
 | `useCurrentUserProfile` | Busca profile do usuário logado | `src/hooks/useCurrentUserProfile.ts` |
 
 ## Files Created
@@ -347,6 +359,7 @@ docs/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 1 migration aplicada (roles)
 - ✅ 1 Edge Function criada (invite-user)
 - ✅ 10 componentes novos criados
@@ -355,6 +368,7 @@ docs/
 - ✅ 2 hooks de autenticação criados
 
 ### Melhorias Qualitativas
+
 - ✅ Sistema seguro com autenticação e roles
 - ✅ UI consistente com shadcn/ui
 - ✅ Criação de usuários automatizada (não precisa mais do Dashboard)
@@ -373,31 +387,20 @@ docs/
 ## Lessons Learned
 
 ### O que funcionou bem
+
 - ✅ **Supabase Auth:** Setup de autenticação em 1 dia vs ~1 semana com backend tradicional
 - ✅ **shadcn/ui:** Componentes prontos aceleraram UI — tabelas profissionais sem CSS customizado
 - ✅ **Views compartilhadas:** `FinancialView` reutilizada entre admin e teacher eliminou 200+ linhas duplicadas
 - ✅ **Edge Functions:** `invite-user` centraliza criação de usuários — não precisa mais do Dashboard
 
 ### O que poderia melhorar
+
 - ⚠️ **Formulários grandes:** `StudentFormDialog` com ~300 linhas — deveria ter quebrado em subcomponentes
 - ⚠️ **Sem RLS:** Policies de segurança adiadas para Sprint 7 — risco de vazamento de dados
 - ⚠️ **Email genérico:** Template de convite sem identidade visual — baixa taxa de ativação
 
 ### Aplicações futuras
+
 - 💡 **Zod desde o início:** Próximas features devem usar Zod em vez de regex (Sprint 3)
 - 💡 **RLS obrigatório:** Novas tabelas devem ter policies antes de merge (Sprint 7)
 - 💡 **Componentes < 200 linhas:** Quebrar formulários grandes em steps ou subcomponentes
-
-## Next Steps
-
-1. Sprint 3: Adicionar CI/CD com GitHub Actions
-2. Sprint 3: Implementar soft delete de alunos
-3. Sprint 3: Adicionar design tokens centralizados
-4. Sprint 4: Implementar recuperação de senha
-5. Sprint 4: Adicionar RLS policies no banco
-
-## References
-
-- Commits: 26–29 janeiro 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Validação: `docs/archive/VALIDACAO_SPRINTS_1_9.md`

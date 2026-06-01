@@ -12,6 +12,7 @@
 Após Sprint 8, a arquitetura estava correta mas alguns arquivos cresceram demais:
 
 **Arquivos Grandes:**
+
 - Hooks com 200-300 linhas (múltiplas responsabilidades)
 - Componentes com 150-200 linhas (lógica complexa)
 - Dificulta leitura e manutenção
@@ -19,11 +20,13 @@ Após Sprint 8, a arquitetura estava correta mas alguns arquivos cresceram demai
 - Viola Single Responsibility Principle
 
 **Exemplos Identificados:**
+
 - `useStudents.ts` — 250 linhas (CRUD + filtros + paginação + soft delete)
 - `useFinancialRecords.ts` — 280 linhas (CRUD + aprovação + auditoria + relatórios)
 - `StudentFormDialog.tsx` — 180 linhas (formulário + validação + upload + localização)
 
 **Impacto:**
+
 - Código difícil de navegar
 - Testes complexos (muitos casos em um arquivo)
 - Merge conflicts frequentes (múltiplos devs editando mesmo arquivo)
@@ -32,19 +35,23 @@ Após Sprint 8, a arquitetura estava correta mas alguns arquivos cresceram demai
 ## Requirements
 
 ### Critérios de Split
+
 - Arquivos > 150 linhas devem ser analisados
 - Split se houver múltiplas responsabilidades claras
 - Manter coesão (não separar código fortemente acoplado)
 
 ### Hooks
+
 - Separar CRUD de operações especiais
 - Exemplo: `useStudents` → `useStudents` (CRUD) + `useStudentFilters` + `useStudentPagination`
 
 ### Componentes
+
 - Separar formulários grandes em seções
 - Exemplo: `StudentFormDialog` → `StudentFormDialog` + `StudentLocationSection` + `StudentFinancialSection`
 
 ### Critérios de Conclusão
+
 - ✅ Nenhum arquivo > 200 linhas (exceto casos justificados)
 - ✅ Cada arquivo tem responsabilidade única e clara
 - ✅ Testes mais focados e simples
@@ -52,20 +59,33 @@ Após Sprint 8, a arquitetura estava correta mas alguns arquivos cresceram demai
 ## Background
 
 **Single Responsibility Principle (SRP):**
+
 - Cada módulo deve ter uma única razão para mudar
 - Se arquivo muda por múltiplas razões → split
 
 **Exemplo de violação:**
+
 ```ts
 // useStudents.ts (250 linhas)
-export const useStudents = () => { /* CRUD */ };
-export const useStudentFilters = () => { /* Filtros */ };
-export const useStudentPagination = () => { /* Paginação */ };
-export const useSoftDeleteStudent = () => { /* Soft delete */ };
-export const useRestoreStudent = () => { /* Restore */ };
+export const useStudents = () => {
+  /* CRUD */
+};
+export const useStudentFilters = () => {
+  /* Filtros */
+};
+export const useStudentPagination = () => {
+  /* Paginação */
+};
+export const useSoftDeleteStudent = () => {
+  /* Soft delete */
+};
+export const useRestoreStudent = () => {
+  /* Restore */
+};
 ```
 
 **Solução:**
+
 ```
 useStudents.ts          ← CRUD básico (50 linhas)
 useStudentFilters.ts    ← Filtros (40 linhas)
@@ -276,35 +296,35 @@ src/hooks/
 
 ### Hooks Splitados
 
-| Hook Original | Linhas | Novos Hooks | Linhas |
-|---------------|--------|-------------|--------|
-| `useStudents.ts` | 250 | `students/useStudents.ts` | 50 |
-| | | `students/useStudentFilters.ts` | 40 |
-| | | `students/useStudentPagination.ts` | 30 |
-| | | `students/useStudentActions.ts` | 50 |
-| `useFinancialRecords.ts` | 280 | `financial/useFinancialRecords.ts` | 60 |
-| | | `financial/usePaymentApproval.ts` | 50 |
-| | | `financial/useFinancialReports.ts` | 40 |
-| `useClasses.ts` | 220 | `classes/useClasses.ts` | 55 |
-| | | `classes/useClassPackages.ts` | 45 |
-| | | `classes/useAttendance.ts` | 35 |
-| `useActivities.ts` | 240 | `activities/useActivities.ts` | 50 |
-| | | `activities/useSendActivity.ts` | 40 |
-| | | `activities/useDeliverActivity.ts` | 45 |
-| | | `activities/useCorrectActivity.ts` | 40 |
-| `useTeachers.ts` | 180 | `teachers/useTeachers.ts` | 55 |
-| | | `teachers/useTeacherActions.ts` | 45 |
-| `useUsers.ts` | 170 | `users/useUsers.ts` | 50 |
-| | | `users/usePasswordManagement.ts` | 40 |
+| Hook Original            | Linhas | Novos Hooks                        | Linhas |
+| ------------------------ | ------ | ---------------------------------- | ------ |
+| `useStudents.ts`         | 250    | `students/useStudents.ts`          | 50     |
+|                          |        | `students/useStudentFilters.ts`    | 40     |
+|                          |        | `students/useStudentPagination.ts` | 30     |
+|                          |        | `students/useStudentActions.ts`    | 50     |
+| `useFinancialRecords.ts` | 280    | `financial/useFinancialRecords.ts` | 60     |
+|                          |        | `financial/usePaymentApproval.ts`  | 50     |
+|                          |        | `financial/useFinancialReports.ts` | 40     |
+| `useClasses.ts`          | 220    | `classes/useClasses.ts`            | 55     |
+|                          |        | `classes/useClassPackages.ts`      | 45     |
+|                          |        | `classes/useAttendance.ts`         | 35     |
+| `useActivities.ts`       | 240    | `activities/useActivities.ts`      | 50     |
+|                          |        | `activities/useSendActivity.ts`    | 40     |
+|                          |        | `activities/useDeliverActivity.ts` | 45     |
+|                          |        | `activities/useCorrectActivity.ts` | 40     |
+| `useTeachers.ts`         | 180    | `teachers/useTeachers.ts`          | 55     |
+|                          |        | `teachers/useTeacherActions.ts`    | 45     |
+| `useUsers.ts`            | 170    | `users/useUsers.ts`                | 50     |
+|                          |        | `users/usePasswordManagement.ts`   | 40     |
 
 ### Componentes Splitados
 
-| Componente Original | Linhas | Novos Componentes | Linhas |
-|---------------------|--------|-------------------|--------|
-| `StudentFormDialog.tsx` | 180 | `StudentFormDialog.tsx` | 80 |
-| | | `StudentBasicInfoSection.tsx` | 40 |
-| | | `StudentLocationSection.tsx` | 50 |
-| | | `StudentFinancialSection.tsx` | 40 |
+| Componente Original     | Linhas | Novos Componentes             | Linhas |
+| ----------------------- | ------ | ----------------------------- | ------ |
+| `StudentFormDialog.tsx` | 180    | `StudentFormDialog.tsx`       | 80     |
+|                         |        | `StudentBasicInfoSection.tsx` | 40     |
+|                         |        | `StudentLocationSection.tsx`  | 50     |
+|                         |        | `StudentFinancialSection.tsx` | 40     |
 
 ## Files Created
 
@@ -367,6 +387,7 @@ src/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 6 hooks splitados (1340 linhas → 24 arquivos menores)
 - ✅ 1 componente splitado (180 linhas → 4 arquivos menores)
 - ✅ Média de linhas por arquivo: 250 → 45 (redução de 82%)
@@ -374,6 +395,7 @@ src/
 - ✅ 30+ imports atualizados
 
 ### Melhorias Qualitativas
+
 - ✅ Código mais legível (arquivos menores)
 - ✅ Responsabilidades claras (SRP)
 - ✅ Testes mais focados (testar uma coisa por vez)
@@ -406,17 +428,3 @@ src/
 
 - [ ] Alguns hooks ainda têm ~100 linhas — analisar se precisam de split adicional
 - [ ] Alguns componentes ainda têm ~120 linhas — analisar se precisam de split
-
-## Next Steps
-
-1. Sprint 10: Remover queries duplicadas
-2. Sprint 11: Fix de timezone e error boundary
-3. Sprint 12: Centralização de strings (i18n prep)
-4. Sprint 13: Centralizar UI strings
-5. Sprint 14: Remover strings hardcoded
-
-## References
-
-- Commits: 21 abr 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Auditoria de clean code: `docs/architecture/clean-code.md`

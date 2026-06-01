@@ -12,12 +12,14 @@
 Após Sprint 3, o sistema tinha base sólida mas faltavam features essenciais para uso real:
 
 **Dashboard:**
+
 - Dashboard genérico sem métricas relevantes
 - Sem gráficos de crescimento
 - Sem visão de faturamento futuro
 - Sem indicadores de performance
 
 **Gestão de Usuários:**
+
 - Sem reset de senha (usuários presos se esquecerem senha)
 - Sem hard delete (alunos arquivados ocupam espaço permanentemente)
 - Sem sincronização entre abas (deletar em "Alunos" não refletia em "Usuários")
@@ -25,20 +27,24 @@ Após Sprint 3, o sistema tinha base sólida mas faltavam features essenciais pa
 - Sem upload de foto de perfil
 
 **Histórico:**
+
 - Aluno não conseguia ver seu próprio histórico de aulas
 - Sem timeline unificada de eventos
 - Sem auditoria de pagamentos
 
 **Busca:**
+
 - Sem busca global (usuário tinha que navegar por múltiplas páginas)
 
 **Validação:**
+
 - Emails inválidos aceitos (ex: `usuario@gmial.com`)
 - Sem rate limit (vulnerável a spam)
 
 ## Requirements
 
 ### Dashboard Avançado
+
 - Gráfico de crescimento de alunos (filtros: 1/3/6/12 meses)
 - Visão diária de aulas
 - Cards de métricas: total de alunos, faturamento mensal, aulas do mês
@@ -47,12 +53,14 @@ Após Sprint 3, o sistema tinha base sólida mas faltavam features essenciais pa
 - Aulas de hoje
 
 ### Histórico do Aluno
+
 - Página `StudentHistory` com timeline de eventos
 - Histórico de aulas (data, duração, observações)
 - Histórico de pagamentos (valor, data, status)
 - Filtros por período
 
 ### Reset de Senha
+
 - Usuário pode resetar própria senha (esqueci senha)
 - Admin pode resetar senha de qualquer usuário
 - Professor pode resetar senha de aluno vinculado
@@ -60,6 +68,7 @@ Após Sprint 3, o sistema tinha base sólida mas faltavam features essenciais pa
 - Edge Function unificada `reset-password`
 
 ### Gestão de Usuários
+
 - Hard delete de professores (exclusão permanente)
 - Sincronização entre abas (deletar em "Alunos" reflete em "Usuários")
 - Reativação de contas arquivadas
@@ -67,17 +76,20 @@ Após Sprint 3, o sistema tinha base sólida mas faltavam features essenciais pa
 - Edge Function `admin-delete-user` tolerante a falhas
 
 ### Busca Global
+
 - Search bar no header
 - Busca em: alunos, professores, usuários
 - Busca por: nome, email, telefone
 - Resultados agrupados por tipo
 
 ### Validação de Email
+
 - Whitelist de provedores reais (gmail.com, outlook.com, etc.)
 - Rejeitar typos comuns (gmial.com, hotmial.com)
 - Rate limit: máximo 10 tentativas por minuto
 
 ### Auditoria
+
 - Histórico de pagamentos para admin
 - Quem aprovou/rejeitou comprovante
 - Data e hora de cada ação
@@ -85,10 +97,12 @@ Após Sprint 3, o sistema tinha base sólida mas faltavam features essenciais pa
 ## Background
 
 **Stack de gráficos:**
+
 - Recharts para gráficos de linha/barra
 - Tailwind para cards de métricas
 
 **Fluxo de reset de senha:**
+
 ```
 1. Usuário clica "Esqueci senha"
 2. Frontend chama Edge Function reset-password
@@ -99,6 +113,7 @@ Após Sprint 3, o sistema tinha base sólida mas faltavam features essenciais pa
 ```
 
 **Hard delete vs Soft delete:**
+
 - Soft delete: `deleted_at` preenchido, registro preservado
 - Hard delete: registro removido permanentemente do banco
 - Usar hard delete apenas quando necessário (LGPD, limpeza)
@@ -110,11 +125,11 @@ Após Sprint 3, o sistema tinha base sólida mas faltavam features essenciais pa
 ```tsx
 // Dashboard com múltiplos cards
 <DashboardView>
-  <MetricsCards />        // Total alunos, faturamento, aulas
-  <GrowthChart />         // Gráfico de crescimento
-  <TodayClasses />        // Aulas de hoje
-  <Birthdays />           // Aniversariantes
-  <UpcomingPayments />    // Cobranças pendentes
+  <MetricsCards /> // Total alunos, faturamento, aulas
+  <GrowthChart /> // Gráfico de crescimento
+  <TodayClasses /> // Aulas de hoje
+  <Birthdays /> // Aniversariantes
+  <UpcomingPayments /> // Cobranças pendentes
 </DashboardView>
 ```
 
@@ -357,41 +372,41 @@ Após Sprint 3, o sistema tinha base sólida mas faltavam features essenciais pa
 
 ### Migrations Aplicadas
 
-| Migration | Descrição |
-|-----------|-----------|
-| `05_rate_limit.sql` | Tabela `rate_limit_tracker` para rate limiting |
-| `06_payment_audit.sql` | Colunas de auditoria em `financial_records` |
+| Migration              | Descrição                                      |
+| ---------------------- | ---------------------------------------------- |
+| `05_rate_limit.sql`    | Tabela `rate_limit_tracker` para rate limiting |
+| `06_payment_audit.sql` | Colunas de auditoria em `financial_records`    |
 
 ### Edge Functions Criadas/Modificadas
 
-| Function | Responsabilidade |
-|----------|------------------|
-| `reset-password` | Reset de senha unificado (substitui 2 funções) |
-| `admin-delete-user` | Hard delete de usuários (tolerante a falhas) |
+| Function            | Responsabilidade                               |
+| ------------------- | ---------------------------------------------- |
+| `reset-password`    | Reset de senha unificado (substitui 2 funções) |
+| `admin-delete-user` | Hard delete de usuários (tolerante a falhas)   |
 
 ### Componentes Criados
 
-| Componente | Responsabilidade | Arquivo |
-|------------|------------------|---------|
-| `GrowthChart` | Gráfico de crescimento | `src/components/dashboard/GrowthChart.tsx` |
-| `MetricsCards` | Cards de métricas | `src/components/dashboard/MetricsCards.tsx` |
-| `UpcomingPayments` | Cobranças pendentes | `src/components/dashboard/UpcomingPayments.tsx` |
-| `Birthdays` | Aniversariantes do mês | `src/components/dashboard/Birthdays.tsx` |
-| `TodayClasses` | Aulas de hoje | `src/components/dashboard/TodayClasses.tsx` |
-| `StudentHistory` | Histórico do aluno | `src/pages/student/StudentHistory.tsx` |
-| `TimelineItem` | Item de timeline | `src/components/student/TimelineItem.tsx` |
-| `ProfilePhotoUpload` | Upload de foto | `src/components/profile/ProfilePhotoUpload.tsx` |
-| `HardDeleteDialog` | Dialog de hard delete | `src/components/teachers/HardDeleteDialog.tsx` |
-| `GlobalSearch` | Busca global | `src/components/layout/GlobalSearch.tsx` |
+| Componente             | Responsabilidade        | Arquivo                                             |
+| ---------------------- | ----------------------- | --------------------------------------------------- |
+| `GrowthChart`          | Gráfico de crescimento  | `src/components/dashboard/GrowthChart.tsx`          |
+| `MetricsCards`         | Cards de métricas       | `src/components/dashboard/MetricsCards.tsx`         |
+| `UpcomingPayments`     | Cobranças pendentes     | `src/components/dashboard/UpcomingPayments.tsx`     |
+| `Birthdays`            | Aniversariantes do mês  | `src/components/dashboard/Birthdays.tsx`            |
+| `TodayClasses`         | Aulas de hoje           | `src/components/dashboard/TodayClasses.tsx`         |
+| `StudentHistory`       | Histórico do aluno      | `src/pages/student/StudentHistory.tsx`              |
+| `TimelineItem`         | Item de timeline        | `src/components/student/TimelineItem.tsx`           |
+| `ProfilePhotoUpload`   | Upload de foto          | `src/components/profile/ProfilePhotoUpload.tsx`     |
+| `HardDeleteDialog`     | Dialog de hard delete   | `src/components/teachers/HardDeleteDialog.tsx`      |
+| `GlobalSearch`         | Busca global            | `src/components/layout/GlobalSearch.tsx`            |
 | `PaymentHistoryDialog` | Auditoria de pagamentos | `src/components/financial/PaymentHistoryDialog.tsx` |
-| `UnifiedFinancialView` | View unificada | `src/components/financial/UnifiedFinancialView.tsx` |
+| `UnifiedFinancialView` | View unificada          | `src/components/financial/UnifiedFinancialView.tsx` |
 
 ### Hooks Criados
 
-| Hook | Responsabilidade | Arquivo |
-|------|------------------|---------|
+| Hook                   | Responsabilidade         | Arquivo                             |
+| ---------------------- | ------------------------ | ----------------------------------- |
 | `useReactivateAccount` | Reativar conta arquivada | `src/hooks/useReactivateAccount.ts` |
-| `useGlobalSearch` | Busca global | `src/hooks/useGlobalSearch.ts` |
+| `useGlobalSearch`      | Busca global             | `src/hooks/useGlobalSearch.ts`      |
 
 ## Files Created
 
@@ -466,6 +481,7 @@ src/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 2 migrations aplicadas
 - ✅ 2 Edge Functions criadas/modificadas
 - ✅ 12 componentes novos criados
@@ -474,6 +490,7 @@ src/
 - ✅ 1 biblioteca adicionada (recharts)
 
 ### Melhorias Qualitativas
+
 - ✅ Dashboard informativo com métricas relevantes
 - ✅ Histórico completo para alunos
 - ✅ Reset de senha funcional (não precisa mais de admin)
@@ -493,31 +510,20 @@ src/
 ## Lessons Learned
 
 ### O que funcionou bem
+
 - ✅ **Recharts:** Gráficos profissionais em 2h — biblioteca madura, documentação excelente
 - ✅ **Edge Functions unificadas:** `reset-password` substituiu 2 funções — código DRY, manutenção simplificada
 - ✅ **Hard delete tolerante a falhas:** `admin-delete-user` não quebra se registro já foi deletado — robustez aumentada
 - ✅ **Busca global:** UX melhorada drasticamente — usuários não precisam navegar por múltiplas páginas
 
 ### O que poderia melhorar
+
 - ⚠️ **Sprint longa:** 14 tasks em 9 dias — deveria ter priorizado features críticas
 - ⚠️ **Upload de foto sem validação:** Aceita qualquer tamanho — risco de storage overflow
 - ⚠️ **Validação de email com whitelist:** Lista hardcoded — difícil de manter, não escala
 
 ### Aplicações futuras
+
 - 💡 **Validação de upload:** Próximas features de upload devem ter limite de tamanho desde o início
 - 💡 **Whitelist dinâmica:** Mover lista de provedores para tabela no banco — admin pode adicionar novos
 - 💡 **Sprints focadas:** Máximo 10 tasks por sprint — melhor controle de escopo
-
-## Next Steps
-
-1. Sprint 5: Implementar responsividade mobile completa
-2. Sprint 5: Adicionar módulo de atividades
-3. Sprint 5: Implementar pacotes de aulas
-4. Sprint 5: Adicionar QR Code PIX
-5. Sprint 5: Adicionar testes unitários com Vitest
-
-## References
-
-- Commits: 31 jan–08 fev 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Validação: `docs/archive/VALIDACAO_SPRINTS_1_9.md`

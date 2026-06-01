@@ -219,6 +219,7 @@ const onSubmit = async (data: FormData) => {
 - `mark_as_paid_idempotent`
 - `confirm_payment_idempotent`
 - `undo_payment_idempotent`
+- `create-abacate-payment` Edge Function (10 req/min via `check_rate_limit`)
 
 **Implementação:**
 
@@ -279,11 +280,24 @@ $$;
 
 **Conceito:** Previne operações duplicadas (double-click, retry).
 
-**Aplicado em:**
+**Aplicado em (RPCs):**
 
 - `mark_as_paid_idempotent`
 - `confirm_payment_idempotent`
 - `undo_payment_idempotent`
+
+**Aplicado em (webhooks — Sprint 30):**
+
+A partir da Sprint 30, webhooks AbacatePay usam `webhook_processing_log` (tabela com UNIQUE(event_id, gateway)) em vez de `idempotency_keys`:
+
+```sql
+-- INSERT retorna conflito code 23505 se event_id já foi processado
+INSERT INTO webhook_processing_log (event_id, gateway)
+VALUES (body.id, 'abacate-pay');
+-- Código 23505 = já processado → ack sem reprocessar
+```
+
+A diferença: `idempotency_keys` é gerado pelo frontend (UUID enviado na chamada); `webhook_processing_log` usa o `id` do evento enviado pela AbacatePay.
 
 **Implementação:**
 

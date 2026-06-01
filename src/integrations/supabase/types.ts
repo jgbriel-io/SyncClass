@@ -372,6 +372,7 @@ export type Database = {
           created_at: string | null;
           description: string | null;
           due_date: string | null;
+          external_payment_id: string | null;
           id: string;
           paid_at: string | null;
           payment_method: string | null;
@@ -380,6 +381,9 @@ export type Database = {
           payment_proof_status: string | null;
           payment_proof_uploaded_at: string | null;
           payment_proof_url: string | null;
+          payment_provider: string | null;
+          pix_code: string | null;
+          pix_expires_at: string | null;
           status: string;
           student_id: string;
           updated_at: string | null;
@@ -391,6 +395,7 @@ export type Database = {
           created_at?: string | null;
           description?: string | null;
           due_date?: string | null;
+          external_payment_id?: string | null;
           id?: string;
           paid_at?: string | null;
           payment_method?: string | null;
@@ -399,6 +404,9 @@ export type Database = {
           payment_proof_status?: string | null;
           payment_proof_uploaded_at?: string | null;
           payment_proof_url?: string | null;
+          payment_provider?: string | null;
+          pix_code?: string | null;
+          pix_expires_at?: string | null;
           status?: string;
           student_id: string;
           updated_at?: string | null;
@@ -410,6 +418,7 @@ export type Database = {
           created_at?: string | null;
           description?: string | null;
           due_date?: string | null;
+          external_payment_id?: string | null;
           id?: string;
           paid_at?: string | null;
           payment_method?: string | null;
@@ -418,6 +427,9 @@ export type Database = {
           payment_proof_status?: string | null;
           payment_proof_uploaded_at?: string | null;
           payment_proof_url?: string | null;
+          payment_provider?: string | null;
+          pix_code?: string | null;
+          pix_expires_at?: string | null;
           status?: string;
           student_id?: string;
           updated_at?: string | null;
@@ -740,6 +752,7 @@ export type Database = {
           email: string | null;
           hourly_rate: number | null;
           id: string;
+          is_deleted: boolean;
           name: string;
           phone: string | null;
           pix_key: string | null;
@@ -754,6 +767,7 @@ export type Database = {
           email?: string | null;
           hourly_rate?: number | null;
           id?: string;
+          is_deleted?: boolean;
           name: string;
           phone?: string | null;
           pix_key?: string | null;
@@ -768,11 +782,33 @@ export type Database = {
           email?: string | null;
           hourly_rate?: number | null;
           id?: string;
+          is_deleted?: boolean;
           name?: string;
           phone?: string | null;
           pix_key?: string | null;
           status?: string | null;
           updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      webhook_processing_log: {
+        Row: {
+          event_id: string;
+          gateway: string;
+          id: string;
+          processed_at: string | null;
+        };
+        Insert: {
+          event_id: string;
+          gateway: string;
+          id?: string;
+          processed_at?: string | null;
+        };
+        Update: {
+          event_id?: string;
+          gateway?: string;
+          id?: string;
+          processed_at?: string | null;
         };
         Relationships: [];
       };
@@ -1243,6 +1279,14 @@ export type Database = {
       };
     };
     Functions: {
+      admin_update_auth_display_name: {
+        Args: { p_full_name: string; p_user_id: string };
+        Returns: undefined;
+      };
+      admin_update_auth_email: {
+        Args: { p_email: string; p_user_id: string };
+        Returns: undefined;
+      };
       anonymize_student: { Args: { p_student_id: string }; Returns: undefined };
       anonymize_teacher: { Args: { p_teacher_id: string }; Returns: undefined };
       check_phone_exists_platform: {
@@ -1356,6 +1400,7 @@ export type Database = {
         };
         Returns: Json;
       };
+      normalize_phone: { Args: { p_phone: string }; Returns: string };
       restore_student: { Args: { p_student_id: string }; Returns: Json };
       review_payment_proof: {
         Args: {
@@ -1365,6 +1410,7 @@ export type Database = {
         };
         Returns: Json;
       };
+      sanitize_html: { Args: { input: string }; Returns: string };
       soft_delete_student: { Args: { p_student_id: string }; Returns: Json };
       soft_delete_teacher: { Args: { p_teacher_id: string }; Returns: Json };
       submit_payment_proof: {
@@ -1374,6 +1420,10 @@ export type Database = {
           p_proof_url: string;
         };
         Returns: Json;
+      };
+      teacher_sync_student_display_name: {
+        Args: { p_name: string; p_student_id: string };
+        Returns: undefined;
       };
       undo_payment_idempotent: {
         Args: { p_idempotency_key: string; p_record_id: string };
@@ -1400,6 +1450,7 @@ export type Database = {
         };
         Returns: Json;
       };
+      user_update_own_email: { Args: { p_email: string }; Returns: undefined };
     };
     Enums: {
       student_origin:

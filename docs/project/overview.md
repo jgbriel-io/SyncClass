@@ -1,6 +1,6 @@
 # Contexto do Projeto — SyncClass
 
-**Última Atualização:** 23/05/2026
+**Última Atualização:** 01/06/2026
 
 ## O que é
 
@@ -66,9 +66,10 @@ Plataforma web unificada que:
 
 - Cobranças individuais e por pacote
 - Status: pendente → pago / cancelado / abonado / extornado
-- Upload e aprovação de comprovante
-- QR Code PIX para pagamento
-- Idempotência em operações críticas
+- Pagamento automático via AbacatePay (QR Code PIX + webhook de confirmação)
+- Reembolso automático via AbacatePay ou manual com rastreio de status
+- Multi-tenant: cada professor usa sua própria conta AbacatePay
+- Idempotência em operações críticas (webhook_processing_log)
 
 ### Gestão de Atividades
 
@@ -171,33 +172,31 @@ Components → Hooks → Supabase SDK → PostgreSQL
 - Gerencia seus próprios alunos
 - Registra aulas e cria cobranças
 - Cria e corrige atividades
-- Aprova comprovantes de pagamento
+- Processa reembolsos (automático via AbacatePay ou manual com confirmação)
 - Convida alunos para o portal
 
 ### Student (Aluno)
 
 - Acessa seu histórico de aulas
 - Visualiza cobranças pendentes
-- Envia comprovantes de pagamento
+- Paga via QR Code PIX (gerado automaticamente via AbacatePay)
 - Entrega atividades
-- Gera QR Code PIX
 
 ## Status do Projeto
 
 ### Desenvolvimento
 
-- **Período:** Janeiro–Maio 2026 (~4 meses)
+- **Período:** Janeiro–Junho 2026 (~5 meses)
 - **Desenvolvedor:** 1 (solo)
-- **Commits:** 54
-- **Sprints:** 27 documentadas
+- **Sprints:** 30 documentadas
 
 ### Implementação
 
 - **Requisitos Funcionais:** 30/35 (85%)
 - **Requisitos Não Funcionais:** 36/36 (100%)
 - **Regras de Negócio:** 59/59 (100%)
-- **Migrations:** 43
-- **Edge Functions:** 6
+- **Migrations:** 61
+- **Edge Functions:** 9
 - **Testes:** 26 arquivos de teste unitários + 129 design tokens
 - **RLS Policies:** 40+
 
@@ -205,7 +204,7 @@ Components → Hooks → Supabase SDK → PostgreSQL
 
 - **Arquivos de docs:** 53
 - **Capítulos TCC:** 10
-- **Sprints documentadas:** 27
+- **Sprints documentadas:** 30
 - **Strings UI centralizadas:** 900+
 
 ## Contexto Acadêmico
@@ -241,7 +240,6 @@ Components → Hooks → Supabase SDK → PostgreSQL
 - Integração com Google Calendar
 - Relatórios exportáveis (PDF)
 - Sistema de notificações
-- Gateway de pagamento real (Stripe/Mercado Pago)
 - Multi-tenancy com planos (Freemium/Pro)
 
 ### Melhorias Planejadas

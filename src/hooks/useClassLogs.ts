@@ -68,9 +68,6 @@ export interface ClassLogWithStudent extends ClassLog {
     amount: number;
     due_date: string;
     description?: string | null;
-    payment_proof_url?: string | null;
-    payment_proof_filename?: string | null;
-    payment_proof_status?: string | null;
   }>;
   financial_record_class_logs?: Array<{
     financial_records: {
@@ -86,9 +83,6 @@ export interface ClassLogWithStudent extends ClassLog {
       amount: number;
       due_date: string;
       description?: string | null;
-      payment_proof_url?: string | null;
-      payment_proof_filename?: string | null;
-      payment_proof_status?: string | null;
     };
   }>;
   /** true quando a cobrança foi vinculada via pacote (financial_record_class_logs) */
@@ -197,14 +191,12 @@ const CLASS_LOG_SELECT = `
   students!inner ( name, teacher_id ),
   teachers ( name ),
   financial_records (
-    id, status, amount, due_date,
-    payment_proof_url, payment_proof_filename, payment_proof_status
+    id, status, amount, due_date
   ),
   financial_record_class_logs (
     financial_record_id,
     financial_records (
-      id, status, amount, due_date,
-      payment_proof_url, payment_proof_filename, payment_proof_status
+      id, status, amount, due_date
     )
   )
 `;
@@ -304,7 +296,7 @@ async function fetchPendingEvaluationClassLogs(): Promise<
   const { data, error } = await supabase
     .from("class_logs")
     .select(
-      `*, students ( name, teacher_id ), teachers ( name ), financial_records ( id, status, amount, due_date, payment_proof_url, payment_proof_filename, payment_proof_status )`
+      `*, students ( name, teacher_id ), teachers ( name ), financial_records ( id, status, amount, due_date )`
     )
     .is("attendance", null)
     .lte("class_date", todayStr)

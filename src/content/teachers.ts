@@ -85,7 +85,7 @@ export const teachers = {
   resetPasswordDialog: {
     title: "Redefinir senha do professor",
     description: (name: string) =>
-      `Nova senha para ${name}. Mínimo 6 caracteres.`,
+      `Nova senha para ${name}. A senha deve atender aos requisitos abaixo.`,
     newPasswordLabel: "Nova senha",
     confirmPasswordLabel: "Confirmar senha",
     generateButton: "Gerar senha",

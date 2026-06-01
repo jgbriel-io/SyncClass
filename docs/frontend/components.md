@@ -112,15 +112,41 @@ Usados como base por `StudentDeleteDialog`, `TeacherStatusDialog`, `TeacherHardD
 
 **Localização:** `src/components/financial/`
 
-| Componente                  | Responsabilidade                          |
-| --------------------------- | ----------------------------------------- |
-| `FinancialFormDialog.tsx`   | Form criar/editar cobrança                |
-| `FinancialDetailSheet.tsx`  | Detalhes da cobrança                      |
-| `FinancialDeleteDialog.tsx` | Confirmação de exclusão                   |
-| `FinancialCard.tsx`         | Card de cobrança (mobile)                 |
-| `FinancialView.tsx`         | Lista de cobranças (tabela)               |
-| `PaymentProofUpload.tsx`    | Upload de comprovante                     |
-| `PaymentProofReview.tsx`    | Revisão de comprovante (aprovar/rejeitar) |
+| Componente                          | Responsabilidade                                                                                     |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `FinancialFormDialog.tsx`           | Form criar/editar cobrança                                                                           |
+| `FinancialDetailSheet.tsx`          | Detalhes da cobrança                                                                                 |
+| `FinancialDeleteDialog.tsx`         | Confirmação de exclusão                                                                              |
+| `FinancialCard.tsx`                 | Card de cobrança (mobile)                                                                            |
+| `FinancialView.tsx`                 | Lista de cobranças (tabela); prop `isAdmin` oculta coluna de ações                                   |
+| `FinancialTableRow.tsx`             | Linha da tabela; botão "Reembolso" para `status='pago'`; prop `onRequestRefund?`                     |
+| `FinancialRefundDialog.tsx`         | Dialog de reembolso bifurcado: AbacatePay (Edge Function + campo reason) ou manual (instrução texto) |
+| `FinancialPaymentHistoryDialog.tsx` | Histórico de pagamento (simplificado — proof upload removido na Sprint 30)                           |
+
+**Removidos na Sprint 30 (fluxo manual):**
+
+- `FinancialUndoDialog.tsx` — confirmação de "Desfazer" (pago → pendente)
+- `FinancialConfirmPaymentDialog.tsx` — confirmação manual de pagamento
+
+### Student Portal
+
+**Localização:** `src/pages/student/` e `src/components/student/`
+
+| Componente                 | Responsabilidade                                                                                                                        |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `StudentCheckout.tsx`      | Página de checkout PIX (`/student/checkout/:recordId`): QR Code AbacatePay, realtime payment detection                                  |
+| `StudentFinancialCard.tsx` | Card de cobrança no portal do aluno; suporta 7 status: `pendente`, `pago`, `atrasado`, `validando`, `abonado`, `extornado`, `cancelado` |
+
+### Layout — Configurações
+
+**Localização:** `src/components/layout/`
+
+| Componente                  | Responsabilidade                                                                              |
+| --------------------------- | --------------------------------------------------------------------------------------------- |
+| `SettingsPerfilTab.tsx`     | Aba de perfil em Configurações; nome/email read-only para professores (gerenciado pelo admin) |
+| `SettingsPagamentosTab.tsx` | Aba de pagamentos: configuração de API key AbacatePay + exibição do webhook URL por professor |
+
+**Removido na Sprint 30:** `SettingsModal.tsx` — modal de configurações substituído por página dedicada (`/settings`).
 
 ### Activities
 

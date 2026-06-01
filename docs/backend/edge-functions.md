@@ -12,6 +12,9 @@ Edge Functions Deno/TS para operações server-side. Rodam em runtime isolado co
 - [export-user-data](#export-user-data)
 - [cleanup-old-records](#cleanup-old-records)
 - [cleanup-storage](#cleanup-storage)
+- [create-abacate-payment](#create-abacate-payment)
+- [refund-abacate-payment](#refund-abacate-payment)
+- [abacate-webhook](#abacate-webhook)
 - [Deploy](#deploy)
 - [Ver também](#ver-também)
 
@@ -49,10 +52,17 @@ supabase/functions/
 │   └── index.ts
 ├── cleanup-storage/
 │   └── index.ts
+├── create-abacate-payment/
+│   └── index.ts              ← geração de PIX QR Code via AbacatePay
+├── refund-abacate-payment/
+│   └── index.ts              ← reembolso automático via AbacatePay
+├── abacate-webhook/
+│   └── index.ts              ← webhook handler (billing.paid, checkout.refunded)
 └── _shared/                  ← utilitários compartilhados
 ```
 
 **Padrão:** Entry point `index.ts` importa implementação de arquivo separado (facilita testes).
+**Padrão AbacatePay:** Auth JWT via `Authorization` header → `userClient.auth.getUser()` → operações privilegiadas via `serviceClient` (SERVICE_ROLE_KEY) → `decrypt_sensitive_data` RPC para descriptografar API key do professor.
 
 ## invite-user
 
@@ -259,6 +269,124 @@ const { data, error } = await supabase.functions.invoke("cleanup-storage");
   filesDeleted: 5;
 }
 ```
+
+## create-abacate-payment
+
+**Responsabilidade:** Gera QR Code PIX via AbacatePay API usando as credenciais do professor dono da cobrança.
+
+**Arquivo:** `supabase/functions/create-abacate-payment/index.ts`
+
+**Auth:** JWT (caller deve ser aluno — `profile.student_id != null`)
+
+**Fluxo:**
+
+1. Valida JWT e identidade do aluno (`profile.student_id`)
+2. Rate limit: `check_rate_limit('create_abacate_payment', 10, 1)` via `userClient`
+3. Busca `financial_record` e verifica ownership (`record.student_id === profile.student_id`)
+4. **Cache idempotente:** se `pix_code` existe e `pix_expires_at` ainda válido, retorna sem chamar AbacatePay
+5. Resolve professor via `students.teacher_id` → busca `teachers.abacate_pay_api_key`
+6. Descriptografa API key via `decrypt_sensitive_data` RPC
+7. `POST https://api.abacatepay.com/v1/pixQrCode/create` com dados da cobrança e do aluno
+8. Salva `brCode`, `external_payment_id`, `pix_expires_at`, `payment_provider='abacate_pay'` no record
+9. Retorna `{ brCode, expiresAt }`
+
+**Chamada:**
+
+```ts
+const { data, error } = await supabase.functions.invoke(
+  "create-abacate-payment",
+  {
+    body: {
+      financial_record_id: "uuid-da-cobrança",
+      cpf: "12345678901", // CPF do aluno (11 dígitos, sem formatação)
+      cellphone: "11999999999", // opcional
+    },
+  }
+);
+// data: { brCode: "00020126...", expiresAt: "2026-06-02T10:00:00Z" }
+```
+
+**Considerações de segurança:**
+
+- API key do professor nunca chega ao frontend — descriptografada e usada apenas dentro da Edge Function
+- `userClient` para rate limit garante que `auth.uid()` resolve corretamente (não via service role)
+
+---
+
+## refund-abacate-payment
+
+**Responsabilidade:** Processa reembolso automático via AbacatePay API para cobranças pagas com `payment_provider='abacate_pay'`.
+
+**Arquivo:** `supabase/functions/refund-abacate-payment/index.ts`
+
+**Auth:** JWT (caller deve ser professor — `profile.teacher_id != null`)
+
+**Fluxo:**
+
+1. Valida JWT e identidade do professor (`profile.teacher_id`)
+2. Busca `financial_record` com `students!inner(teacher_id)` para ownership check
+3. Verifica `student.teacher_id === profile.teacher_id`
+4. Valida `payment_provider = 'abacate_pay'` e `external_payment_id` presente
+5. Valida `status = 'pago'` (só cobranças pagas)
+6. Busca `abacate_pay_api_key` do professor e descriptografa
+7. `POST https://api.abacatepay.com/v2/transparents/refund { id: external_payment_id, reason? }`
+   - `reason` omitido do body se string vazia
+8. Em sucesso: `UPDATE status='extornado' WHERE status='pago'` (guard idempotente)
+9. Retorna `{ refundPublicId }`
+
+**Chamada:**
+
+```ts
+const { data, error } = await supabase.functions.invoke(
+  "refund-abacate-payment",
+  {
+    body: {
+      financial_record_id: "uuid-da-cobrança",
+      reason: "Aula cancelada pelo professor", // opcional
+    },
+  }
+);
+// data: { refundPublicId: "tran_refund789xyz" }
+```
+
+**Mapeamento de erros AbacatePay:**
+
+- `INSUFFICIENT_FUNDS` → "Saldo insuficiente na conta AbacatePay para processar o reembolso."
+- Outros → "Falha ao processar reembolso. Verifique se o pagamento está em estado válido na AbacatePay."
+
+---
+
+## abacate-webhook
+
+**Responsabilidade:** Recebe e processa eventos de pagamento e reembolso vindos da AbacatePay.
+
+**Arquivo:** `supabase/functions/abacate-webhook/index.ts`
+
+**Auth:** `webhookSecret` via query param (`?webhookSecret=<uuid>`) — validado contra `teachers.abacate_pay_webhook_secret`
+
+**Fluxo:**
+
+1. Valida `webhookSecret` → lookup em `teachers` (multi-tenant: cada professor tem seu secret)
+2. Parseia body; se vazio → ack (200)
+3. **Idempotência:** INSERT em `webhook_processing_log(event_id, gateway='abacate-pay')`
+   - Conflito UNIQUE (23505) = já processado → ack sem reprocessar
+4. Dispatch por `body.event`:
+   - `billing.paid` / `pixQrCode.paid` → `UPDATE status='pago', paid_at=NOW()` WHERE `external_payment_id = billingId` AND `status != 'pago'`
+   - `checkout.refunded` → `UPDATE status='extornado'` WHERE `external_payment_id = billingId` AND `status != 'extornado'`
+5. Retorna `{ received: true }`
+
+**URL de registro no AbacatePay Dashboard:**
+
+```
+https://<project-ref>.supabase.co/functions/v1/abacate-webhook?webhookSecret=<teacher-secret>
+```
+
+**Considerações:**
+
+- Secret rotacionado automaticamente sempre que professor atualiza API key (`useUpdateTeacherAbacatePayConfig` → `crypto.randomUUID()`)
+- Health check: GET → `{ status: "ok" }` (para monitoramento)
+
+---
 
 ## Deploy
 

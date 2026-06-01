@@ -1,5 +1,10 @@
 ﻿import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -34,7 +39,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { SettingsModal } from "@/components/layout/SettingsModal";
 import { Footer } from "@/components/layout/Footer";
 import { layout, common } from "@/content";
 
@@ -43,12 +47,13 @@ interface TeacherLayoutProps {
 }
 
 const navigation = [
-  { name: "Dashboard", href: "/teacher", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/teacher", icon: LayoutDashboard, exact: true },
   { name: "Visão Geral", href: "/teacher/overview", icon: ClipboardList },
   { name: "Alunos", href: "/teacher/students", icon: Users },
   { name: "Aulas", href: "/teacher/classes", icon: BookOpen },
   { name: "Atividades", href: "/teacher/activities", icon: FileText },
   { name: "Financeiro", href: "/teacher/financial", icon: CreditCard },
+  { name: layout.settings.title, href: "/teacher/settings", icon: Settings },
 ];
 
 export default function TeacherLayout({ children }: TeacherLayoutProps) {
@@ -57,7 +62,6 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -70,21 +74,33 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
   }, [location.pathname, searchParams]);
   const { data: profile } = useCurrentUserProfile(user?.id);
   const teacherId = profile?.teacher_id;
-  const { data: pendingClasses = [], isLoading: loadingNotifications } = usePendingEvaluationClassLogs(teacherId);
+  const { data: pendingClasses = [], isLoading: loadingNotifications } =
+    usePendingEvaluationClassLogs(teacherId);
 
   useEffect(() => {
     const path = location.pathname;
     if (path === "/teacher" || path === "/teacher/") {
       queryClient.invalidateQueries({ queryKey: ["teacher-dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["financial_summary"] });
-      queryClient.invalidateQueries({ queryKey: ["teacher-upcoming-payments"] });
+      queryClient.invalidateQueries({
+        queryKey: ["teacher-upcoming-payments"],
+      });
       queryClient.invalidateQueries({ queryKey: ["teacher-birthdays"] });
-      queryClient.invalidateQueries({ queryKey: ["teacher-new-students-and-classes-by-month"] });
+      queryClient.invalidateQueries({
+        queryKey: ["teacher-new-students-and-classes-by-month"],
+      });
       queryClient.invalidateQueries({ queryKey: ["today_classes"] });
-    } else if (path.startsWith("/teacher/overview") || path.startsWith("/teacher/students") || path.startsWith("/admin/overview") || path.startsWith("/admin/students")) {
+    } else if (
+      path.startsWith("/teacher/overview") ||
+      path.startsWith("/teacher/students") ||
+      path.startsWith("/admin/overview") ||
+      path.startsWith("/admin/students")
+    ) {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["students_with_stats"] });
-      queryClient.invalidateQueries({ queryKey: ["class_logs_by_student_ids"] });
+      queryClient.invalidateQueries({
+        queryKey: ["class_logs_by_student_ids"],
+      });
     } else if (path.startsWith("/teacher/classes")) {
       queryClient.invalidateQueries({ queryKey: ["class_logs"] });
       queryClient.invalidateQueries({ queryKey: ["class_logs_summary"] });
@@ -109,7 +125,10 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
   };
 
   const userInitial = user?.email?.charAt(0).toUpperCase() || "P";
-  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || common.tooltips.teacher;
+  const userName =
+    user?.user_metadata?.full_name ||
+    user?.email?.split("@")[0] ||
+    common.tooltips.teacher;
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,17 +145,23 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
           sidebarCollapsed ? "w-[72px]" : "w-64",
-          mobileOpen ? "translate-x-0" : "-translate-x-full laptop:translate-x-0"
+          mobileOpen
+            ? "translate-x-0"
+            : "-translate-x-full laptop:translate-x-0"
         )}
       >
         {/* Logo */}
-        <div className={cn(
-          "flex h-16 items-center border-b border-sidebar-border",
-          sidebarCollapsed ? "justify-center px-2" : "justify-between px-4"
-        )}>
+        <div
+          className={cn(
+            "flex h-16 items-center border-b border-sidebar-border",
+            sidebarCollapsed ? "justify-center px-2" : "justify-between px-4"
+          )}
+        >
           <Link to="/teacher" className="flex items-center gap-4">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 flex items-center justify-center shadow-lg">
-              <span className="text-sidebar-primary-foreground font-bold text-base">{layout.logo.initial}</span>
+              <span className="text-sidebar-primary-foreground font-bold text-base">
+                {layout.logo.initial}
+              </span>
             </div>
             {!sidebarCollapsed && (
               <span className="text-base font-semibold text-sidebar-foreground tracking-tight">
@@ -144,7 +169,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
               </span>
             )}
           </Link>
-          
+
           {/* Mobile close */}
           <button
             onClick={() => setMobileOpen(false)}
@@ -158,7 +183,9 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         <nav className="flex-1 py-4 overflow-y-auto">
           <div className={cn("space-y-1", sidebarCollapsed ? "px-2" : "px-3")}>
             {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
+              const isActive = (item as { exact?: boolean }).exact
+                ? location.pathname === item.href
+                : location.pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.name}
@@ -172,7 +199,12 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                       : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                   )}
                 >
-                  <item.icon className={cn("h-5 w-5 shrink-0", isActive && "drop-shadow-sm")} />
+                  <item.icon
+                    className={cn(
+                      "h-5 w-5 shrink-0",
+                      isActive && "drop-shadow-sm"
+                    )}
+                  />
                   {!sidebarCollapsed && <span>{item.name}</span>}
                 </Link>
               );
@@ -190,7 +222,12 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
               sidebarCollapsed && "justify-center px-2"
             )}
           >
-            <ChevronLeft className={cn("h-5 w-5 transition-transform duration-300", sidebarCollapsed && "rotate-180")} />
+            <ChevronLeft
+              className={cn(
+                "h-5 w-5 transition-transform duration-300",
+                sidebarCollapsed && "rotate-180"
+              )}
+            />
             {!sidebarCollapsed && <span>{layout.sidebar.collapse}</span>}
           </button>
 
@@ -208,16 +245,24 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             ) : (
               <LogOut className="h-5 w-5 shrink-0" />
             )}
-            {!sidebarCollapsed && <span>{isLoggingOut ? layout.sidebar.loggingOut : layout.sidebar.logout}</span>}
+            {!sidebarCollapsed && (
+              <span>
+                {isLoggingOut
+                  ? layout.sidebar.loggingOut
+                  : layout.sidebar.logout}
+              </span>
+            )}
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <div className={cn(
-        "flex flex-col min-h-screen transition-all duration-300 ease-in-out",
-        sidebarCollapsed ? "laptop:pl-[72px]" : "laptop:pl-64"
-      )}>
+      <div
+        className={cn(
+          "flex flex-col min-h-screen transition-all duration-300 ease-in-out",
+          sidebarCollapsed ? "laptop:pl-[72px]" : "laptop:pl-64"
+        )}
+      >
         {/* Top bar - alinhado ao AdminLayout */}
         <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 tablet:px-5 laptop:px-6 desktop:px-8">
           {/* Left: menu + search */}
@@ -230,7 +275,10 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             >
               <Menu className="h-6 w-6" />
             </button>
-            <form onSubmit={handleSearchSubmit} className="hidden tablet:block w-full max-w-sm">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="hidden tablet:block w-full max-w-sm"
+            >
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <Input
@@ -258,7 +306,10 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                 >
                   <Bell className="h-5 w-5 text-muted-foreground" />
                   {pendingClasses.length > 0 && (
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" aria-hidden />
+                    <span
+                      className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive"
+                      aria-hidden
+                    />
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -284,9 +335,19 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                             to="/teacher/classes?status=avaliacao_pendente"
                             className="block rounded-md px-2 py-2 text-sm hover:bg-muted focus:bg-muted focus:outline-none"
                           >
-                            <span className="font-medium text-foreground">{layout.topbar.notificationPending}</span>
+                            <span className="font-medium text-foreground">
+                              {layout.topbar.notificationPending}
+                            </span>
                             <p className="mt-0.5 truncate text-muted-foreground">
-                              {(log.students as { name?: string } | null)?.name ?? "Aluno"} · {log.class_date && format(new Date(log.class_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
+                              {(log.students as { name?: string } | null)
+                                ?.name ?? "Aluno"}{" "}
+                              ·{" "}
+                              {log.class_date &&
+                                format(
+                                  new Date(log.class_date + "T12:00:00"),
+                                  "dd/MM/yyyy",
+                                  { locale: ptBR }
+                                )}
                             </p>
                           </Link>
                         </li>
@@ -302,7 +363,10 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2 px-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
+                    <AvatarImage
+                      src={profile?.avatar_url ?? undefined}
+                      alt=""
+                    />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-sm font-medium">
                       {userInitial}
                     </AvatarFallback>
@@ -315,7 +379,10 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>{layout.topbar.myAccount}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2" onClick={() => setSettingsOpen(true)}>
+                <DropdownMenuItem
+                  className="gap-2"
+                  onClick={() => navigate("/teacher/settings")}
+                >
                   <Settings className="h-4 w-4" />
                   {layout.topbar.settings}
                 </DropdownMenuItem>
@@ -330,7 +397,9 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                   ) : (
                     <LogOut className="h-4 w-4" />
                   )}
-                  {isLoggingOut ? layout.sidebar.loggingOut : layout.sidebar.logout}
+                  {isLoggingOut
+                    ? layout.sidebar.loggingOut
+                    : layout.sidebar.logout}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -338,12 +407,13 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         </header>
 
         {/* Page content - flex-1 faz crescer para empurrar o footer para baixo */}
-        <main className="flex-1 p-4 tablet:p-5 laptop:p-6 desktop:p-8 animate-fade-in">{children}</main>
-        
+        <main className="flex-1 p-4 tablet:p-5 laptop:p-6 desktop:p-8 animate-fade-in">
+          {children}
+        </main>
+
         {/* Footer - sempre no bottom */}
         <Footer />
       </div>
-      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }

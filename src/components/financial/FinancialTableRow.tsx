@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Eye, Loader2, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Eye, Trash2 } from "lucide-react";
 import { FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import {
   CELL_BASE,
@@ -47,11 +47,9 @@ interface FinancialTableRowProps {
   record: FinancialRecordWithRelations & { actualStatus: string };
   showTeacherColumn: boolean;
   teacherMap: Map<string, string>;
-  isUndoing: boolean;
   onViewHistory: (record: FinancialRecordWithRelations) => void;
   onEdit: (record: FinancialRecordWithRelations) => void;
-  onConfirmPayment: (record: FinancialRecordWithRelations) => void;
-  onUndoPayment: (record: FinancialRecordWithRelations) => void;
+  onRequestRefund?: (record: FinancialRecordWithRelations) => void;
   onDelete?: (record: FinancialRecordWithRelations) => void;
   isAdmin?: boolean;
 }
@@ -60,11 +58,9 @@ export function FinancialTableRow({
   record,
   showTeacherColumn,
   teacherMap,
-  isUndoing,
   onViewHistory,
   onEdit,
-  onConfirmPayment,
-  onUndoPayment,
+  onRequestRefund,
   onDelete,
   isAdmin = false,
 }: FinancialTableRowProps) {
@@ -220,26 +216,15 @@ export function FinancialTableRow({
           style={{ width: COL.AVALIAR, minWidth: COL.AVALIAR }}
         >
           <div className="flex items-center justify-end">
-            {record.actualStatus === "pago" ? (
+            {record.actualStatus === "pago" && onRequestRefund ? (
               <Button
                 size="sm"
-                className="h-8 w-[7rem] shrink-0 whitespace-nowrap bg-warning text-white font-semibold hover:bg-warning/90 border-none shadow text-xs"
-                disabled={isUndoing}
-                onClick={() => onUndoPayment(record)}
-                title={
-                  isUndoing
-                    ? financial.tableRow.undoing
-                    : financial.tableRow.undo
-                }
+                variant="outline"
+                className="h-8 w-[7rem] shrink-0 whitespace-nowrap text-xs"
+                onClick={() => onRequestRefund(record)}
+                title={financial.tableRow.requestRefund}
               >
-                {isUndoing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" />
-                    {financial.tableRow.undoing}
-                  </>
-                ) : (
-                  financial.tableRow.undo
-                )}
+                {financial.tableRow.requestRefund}
               </Button>
             ) : record.actualStatus === "abonado" ||
               record.actualStatus === "extornado" ||
@@ -253,16 +238,7 @@ export function FinancialTableRow({
               >
                 {financial.tableRow.finalized}
               </Button>
-            ) : (
-              <Button
-                size="sm"
-                className="h-8 w-[7rem] shrink-0 bg-success-action text-white hover:bg-success-action/90 border-none text-xs"
-                onClick={() => onConfirmPayment(record)}
-                title={financial.tableRow.confirm}
-              >
-                {financial.tableRow.confirm}
-              </Button>
-            )}
+            ) : null}
           </div>
         </td>
       )}

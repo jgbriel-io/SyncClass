@@ -33,18 +33,37 @@ teachers
 
 ## Tabelas principais
 
-| Tabela                      | Responsabilidade                     | Linhas estimadas  |
-| --------------------------- | ------------------------------------ | ----------------- |
-| teachers                    | Cadastro de professores              | Baixo (< 100)     |
-| students                    | Cadastro de alunos                   | Médio (< 10k)     |
-| profiles                    | Vínculo auth.users ↔ teacher/student | = users           |
-| class_logs                  | Registro de aulas ministradas        | Alto (> 100k)     |
-| financial_records           | Cobranças (individuais ou pacotes)   | Alto (> 50k)      |
-| financial_record_class_logs | N:N aulas ↔ cobranças de pacote      | Médio             |
-| activities                  | Tarefas atribuídas a alunos          | Alto (> 50k)      |
-| audit_logs                  | Auditoria de operações               | Muito alto        |
-| idempotency_keys            | Controle de operações duplicadas     | Médio (TTL curto) |
-| performance_logs            | Métricas de performance              | Muito alto        |
+| Tabela                      | Responsabilidade                           | Linhas estimadas  |
+| --------------------------- | ------------------------------------------ | ----------------- |
+| teachers                    | Cadastro de professores                    | Baixo (< 100)     |
+| students                    | Cadastro de alunos                         | Médio (< 10k)     |
+| profiles                    | Vínculo auth.users ↔ teacher/student       | = users           |
+| class_logs                  | Registro de aulas ministradas              | Alto (> 100k)     |
+| financial_records           | Cobranças (individuais ou pacotes)         | Alto (> 50k)      |
+| financial_record_class_logs | N:N aulas ↔ cobranças de pacote            | Médio             |
+| activities                  | Tarefas atribuídas a alunos                | Alto (> 50k)      |
+| audit_logs                  | Auditoria de operações                     | Muito alto        |
+| idempotency_keys            | Controle de operações duplicadas           | Médio (TTL curto) |
+| performance_logs            | Métricas de performance                    | Muito alto        |
+| webhook_processing_log      | Idempotência de eventos webhook AbacatePay | Baixo (TTL curto) |
+
+### Campos AbacatePay (Sprint 30)
+
+**`financial_records` — colunas adicionadas (migration 59):**
+
+| Coluna                | Tipo        | Descrição                                                                    |
+| --------------------- | ----------- | ---------------------------------------------------------------------------- |
+| `payment_provider`    | TEXT        | `'abacate_pay'` \| `'manual'` \| NULL. Check constraint valida valores.      |
+| `external_payment_id` | TEXT        | ID da cobrança na AbacatePay (`pix_char_...`). Index parcial WHERE NOT NULL. |
+| `pix_code`            | TEXT        | Código PIX copia-e-cola (brCode). Cacheado para evitar regeneração.          |
+| `pix_expires_at`      | TIMESTAMPTZ | Expiração do QR Code. NULL = sem cache válido.                               |
+
+**`teachers` — colunas adicionadas (migration 60):**
+
+| Coluna                       | Tipo | Descrição                                                                                                        |
+| ---------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------- |
+| `abacate_pay_api_key`        | TEXT | API key criptografada via pgcrypto. Descriptografada apenas em Edge Functions com SERVICE_ROLE_KEY.              |
+| `abacate_pay_webhook_secret` | TEXT | UUID único por professor. Validado como query param nos webhooks. Rotacionado automaticamente ao trocar API key. |
 
 ## Relacionamentos
 

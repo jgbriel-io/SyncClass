@@ -422,16 +422,3 @@ src/
 
 - [ ] Logging de erros apenas no console — serviço de logging externo planejado para trabalho futuro
 - [ ] Timezone hardcoded (`America/Sao_Paulo`) — adicionar configuração por usuário depois
-
-## Next Steps
-
-1. Sprint 12: Centralização de strings (i18n prep)
-2. Sprint 13: Centralizar UI strings
-3. Sprint 14: Remover strings hardcoded
-4. Sprint 15: Auditoria final de strings
-
-## References
-
-- Commits: 21 abr 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Bug reports: Issues #42 (timezone) e #43 (error boundary)

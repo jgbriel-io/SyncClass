@@ -12,6 +12,7 @@
 Textos hardcoded em ~170 componentes .tsx. Dificulta manutenção, cria duplicação, inviabiliza i18n.
 
 **Problemas Identificados:**
+
 - Strings literais espalhadas em 170+ componentes
 - Duplicação de mensagens (ex: "Salvar" repetido 50x)
 - Impossível adicionar i18n (inglês, espanhol) sem refatoração massiva
@@ -19,6 +20,7 @@ Textos hardcoded em ~170 componentes .tsx. Dificulta manutenção, cria duplica�
 - Inconsistência (mesma mensagem com textos diferentes)
 
 **Exemplos:**
+
 ```tsx
 // Componente 1
 <Button>Salvar</Button>
@@ -46,6 +48,7 @@ Textos hardcoded em ~170 componentes .tsx. Dificulta manutenção, cria duplica�
 **Projeto:** React + TypeScript + Vite. ~170 arquivos .tsx em `src/components/` organizados por domínio: activities, classes, financial, students, teachers, users, dashboard, overview, student (portal), auth, layout.
 
 **Arquivos existentes:**
+
 - `src/lib/utils/errorMessages.ts` — mensagens de erro genéricas
 - `src/lib/duplicate-messages.ts` — mensagens duplicadas identificadas
 
@@ -235,36 +238,36 @@ import { common } from '@/content';
 
 ### Arquivos de Content Criados
 
-| Arquivo | Seções | Linhas |
-|---------|--------|--------|
-| `common.ts` | actions, errors, table, status | 80 |
-| `auth.ts` | login, forgotPassword, resetPassword, changePassword | 60 |
-| `layout.ts` | adminNav, teacherNav, studentNav, footer, settings | 50 |
-| `dashboard.ts` | metrics, charts, todayClasses, birthdays, upcomingPayments | 40 |
-| `activities.ts` | view, dialogs, tableRow, filters, emptyState, validation | 90 |
-| `classes.ts` | view, dialogs, tableRow, filters, emptyState, validation | 100 |
-| `financial.ts` | view, dialogs, tableRow, filters, emptyState, validation | 95 |
-| `students.ts` | view, dialogs, tableRow, filters, emptyState, validation | 85 |
-| `teachers.ts` | view, dialogs, tableRow, filters, validation | 70 |
-| `users.ts` | view, dialogs, tableRow, filters, validation | 65 |
-| `overview.ts` | view, tableRow, filters | 35 |
-| `student-portal.ts` | home, financial, history, activities, checkout, cards, pixPayment | 75 |
-| `index.ts` | barrel export | 15 |
+| Arquivo             | Seções                                                            | Linhas |
+| ------------------- | ----------------------------------------------------------------- | ------ |
+| `common.ts`         | actions, errors, table, status                                    | 80     |
+| `auth.ts`           | login, forgotPassword, resetPassword, changePassword              | 60     |
+| `layout.ts`         | adminNav, teacherNav, studentNav, footer, settings                | 50     |
+| `dashboard.ts`      | metrics, charts, todayClasses, birthdays, upcomingPayments        | 40     |
+| `activities.ts`     | view, dialogs, tableRow, filters, emptyState, validation          | 90     |
+| `classes.ts`        | view, dialogs, tableRow, filters, emptyState, validation          | 100    |
+| `financial.ts`      | view, dialogs, tableRow, filters, emptyState, validation          | 95     |
+| `students.ts`       | view, dialogs, tableRow, filters, emptyState, validation          | 85     |
+| `teachers.ts`       | view, dialogs, tableRow, filters, validation                      | 70     |
+| `users.ts`          | view, dialogs, tableRow, filters, validation                      | 65     |
+| `overview.ts`       | view, tableRow, filters                                           | 35     |
+| `student-portal.ts` | home, financial, history, activities, checkout, cards, pixPayment | 75     |
+| `index.ts`          | barrel export                                                     | 15     |
 
 ### Componentes Migrados
 
-| Domínio | Componentes Migrados | Strings Removidas |
-|---------|----------------------|-------------------|
-| Auth & Layout | 12 | ~50 |
-| Activities | 8 | ~40 |
-| Classes | 15 | ~70 |
-| Financial | 12 | ~60 |
-| Students | 10 | ~50 |
-| Teachers | 8 | ~40 |
-| Users | 7 | ~35 |
-| Overview | 5 | ~25 |
-| Dashboard | 8 | ~40 |
-| Student Portal | 12 | ~60 |
+| Domínio        | Componentes Migrados | Strings Removidas |
+| -------------- | -------------------- | ----------------- |
+| Auth & Layout  | 12                   | ~50               |
+| Activities     | 8                    | ~40               |
+| Classes        | 15                   | ~70               |
+| Financial      | 12                   | ~60               |
+| Students       | 10                   | ~50               |
+| Teachers       | 8                    | ~40               |
+| Users          | 7                    | ~35               |
+| Overview       | 5                    | ~25               |
+| Dashboard      | 8                    | ~40               |
+| Student Portal | 12                   | ~60               |
 
 ## Files Created
 
@@ -307,6 +310,7 @@ src/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 13 arquivos de content criados (860 linhas)
 - ✅ 97 componentes migrados
 - ✅ ~470 strings hardcoded removidas
@@ -314,6 +318,7 @@ src/
 - ✅ 100% dos textos de UI centralizados
 
 ### Melhorias Qualitativas
+
 - ✅ Código DRY (sem duplicação de textos)
 - ✅ Manutenção facilitada (mudança em um lugar)
 - ✅ Consistência (mesmos textos em contextos similares)
@@ -347,15 +352,3 @@ src/
 
 - [ ] Apenas PT-BR — adicionar EN na próxima fase
 - [ ] Alguns textos ainda podem estar hardcoded em lugares não óbvios — auditoria na Sprint 15
-
-## Next Steps
-
-1. Sprint 13: Centralizar UI strings (toasts, placeholders, aria-labels)
-2. Sprint 14: Remover strings hardcoded restantes
-3. Sprint 15: Auditoria final de strings
-4. Futuro: Adicionar suporte a EN (inglês)
-
-## References
-
-- Commits: 21 abr–20 mai 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`

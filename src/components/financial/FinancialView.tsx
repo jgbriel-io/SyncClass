@@ -14,16 +14,14 @@ import {
 } from "@/components/filters/FinancialFilters";
 import { defaultFinancialFilters } from "@/components/filters/filterDefaults";
 import { FinancialFormDialog } from "@/components/financial/FinancialFormDialog";
-import { FinancialUndoDialog } from "@/components/financial/FinancialUndoDialog";
+import { FinancialRefundDialog } from "@/components/financial/FinancialRefundDialog";
 import { FinancialDeleteDialog } from "@/components/financial/FinancialDeleteDialog";
-import { FinancialConfirmPaymentDialog } from "@/components/financial/FinancialConfirmPaymentDialog";
 import { FinancialPaymentHistoryDialog } from "@/components/financial/FinancialPaymentHistoryDialog";
 import {
   useFinancialRecords,
   useFinancialSummary,
   useCreateFinancialRecord,
   useUpdateFinancialRecord,
-  useUndoFinancialPayment,
   FinancialRecordInsert,
   FinancialRecordWithRelations,
 } from "@/hooks/useFinancialRecords";
@@ -65,13 +63,11 @@ export function FinancialView({
     defaultFinancialFilters
   );
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [confirmPaymentRecord, setConfirmPaymentRecord] =
-    useState<FinancialRecordWithRelations | null>(null);
   const [recordToEdit, setRecordToEdit] =
     useState<FinancialRecordWithRelations | null>(null);
-  const [recordToUndo, setRecordToUndo] =
+  const [recordToRefund, setRecordToRefund] =
     useState<FinancialRecordWithRelations | null>(null);
-  const [undoDialogOpen, setUndoDialogOpen] = useState(false);
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] =
     useState<FinancialRecordWithRelations | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -113,7 +109,6 @@ export function FinancialView({
   const activeStudents = students.filter((s) => s.status === "ativo");
   const createRecord = useCreateFinancialRecord();
   const updateRecord = useUpdateFinancialRecord();
-  const undoPayment = useUndoFinancialPayment();
 
   const recordsWithActualStatus = records.map((record) => ({
     ...record,
@@ -303,19 +298,15 @@ export function FinancialView({
                   record={record}
                   showTeacherColumn={showTeacherColumn}
                   teacherMap={teacherMap}
-                  isUndoing={undoPayment.isPending}
                   isAdmin={isAdmin}
                   onViewHistory={setHistoryRecord}
                   onEdit={(record) => {
                     setRecordToEdit(record);
                     setIsFormOpen(true);
                   }}
-                  onConfirmPayment={(record) => {
-                    setConfirmPaymentRecord(record);
-                  }}
-                  onUndoPayment={(record) => {
-                    setRecordToUndo(record);
-                    setUndoDialogOpen(true);
+                  onRequestRefund={(record) => {
+                    setRecordToRefund(record);
+                    setRefundDialogOpen(true);
                   }}
                   onDelete={(record) => {
                     setRecordToDelete(record);
@@ -363,16 +354,16 @@ export function FinancialView({
         enableTeacherSelection={enableTeacherSelection}
       />
 
-      <FinancialUndoDialog
-        open={undoDialogOpen}
+      <FinancialRefundDialog
+        open={refundDialogOpen}
         onOpenChange={(open) => {
-          setUndoDialogOpen(open);
-          if (!open) setRecordToUndo(null);
+          setRefundDialogOpen(open);
+          if (!open) setRecordToRefund(null);
         }}
-        record={recordToUndo}
+        record={recordToRefund}
         onClose={() => {
-          setUndoDialogOpen(false);
-          setRecordToUndo(null);
+          setRefundDialogOpen(false);
+          setRecordToRefund(null);
         }}
       />
 
@@ -389,19 +380,9 @@ export function FinancialView({
         }}
       />
 
-      <FinancialConfirmPaymentDialog
-        open={!!confirmPaymentRecord}
-        onOpenChange={(open) => {
-          if (!open) setConfirmPaymentRecord(null);
-        }}
-        record={confirmPaymentRecord}
-        onClose={() => setConfirmPaymentRecord(null)}
-      />
-
       <FinancialPaymentHistoryDialog
         record={historyRecord}
         onClose={() => setHistoryRecord(null)}
-        onConfirmPayment={(record) => setConfirmPaymentRecord(record)}
       />
     </div>
   );

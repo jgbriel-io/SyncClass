@@ -12,6 +12,7 @@
 Após Sprint 7, o sistema estava funcional e seguro, mas com problemas arquiteturais identificados na auditoria de clean code:
 
 **Violação de Arquitetura:**
+
 - Componentes e páginas chamavam Supabase diretamente
 - Violação do padrão `Components → Hooks → Supabase`
 - Lógica de dados misturada com UI
@@ -19,10 +20,12 @@ Após Sprint 7, o sistema estava funcional e seguro, mas com problemas arquitetu
 - Dificulta manutenção (mudança no Supabase afeta múltiplos componentes)
 
 **Duplicação:**
+
 - Padrão `useAuth() + useCurrentUserProfile(user?.id)` duplicado em 6 páginas teacher
 - Cada página teacher repetia mesma lógica para buscar `teacherId`
 
 **Impacto:**
+
 - Código acoplado (componente depende diretamente do Supabase)
 - Testes difíceis (precisa mockar Supabase em cada componente)
 - Manutenção cara (mudança no schema afeta múltiplos arquivos)
@@ -30,16 +33,19 @@ Após Sprint 7, o sistema estava funcional e seguro, mas com problemas arquitetu
 ## Requirements
 
 ### Separação de Responsabilidades
+
 - Nenhum `supabase.from()` em `src/components/` (exceto auth público)
 - Nenhum `supabase.from()` em `src/pages/`
 - Toda lógica de dados em `src/hooks/`
 
 ### Hook `useTeacherId()`
+
 - Encapsular padrão `useAuth() + useCurrentUserProfile()`
 - Retornar: `{ teacherId, fullName, profile, isLoading, isError, role, user }`
 - Usar em todas as páginas teacher
 
 ### Critérios de Conclusão
+
 - ✅ Nenhum `supabase.from()` em componentes/páginas (exceto auth)
 - ✅ `useTeacherId` usado em todas as páginas teacher
 - ✅ Toda lógica de dados passa por `src/hooks/`
@@ -47,6 +53,7 @@ Após Sprint 7, o sistema estava funcional e seguro, mas com problemas arquitetu
 ## Background
 
 **Arquitetura correta:**
+
 ```
 Components (UI apenas)
   ↓ usa
@@ -56,6 +63,7 @@ Supabase Client (acesso ao banco)
 ```
 
 **Arquitetura incorreta (antes):**
+
 ```
 Components (UI + lógica de dados)
   ↓ chama diretamente
@@ -63,6 +71,7 @@ Supabase Client
 ```
 
 **Padrão duplicado (antes):**
+
 ```tsx
 // TeacherHome.tsx
 const { user } = useAuth();
@@ -78,6 +87,7 @@ const teacherId = profile?.id;
 ```
 
 **Padrão encapsulado (depois):**
+
 ```tsx
 // Todas as páginas teacher
 const { teacherId, fullName, isLoading } = useTeacherId();
@@ -92,7 +102,7 @@ const { teacherId, fullName, isLoading } = useTeacherId();
 export const useTeacherId = () => {
   const { user } = useAuth();
   const { data: profile, isLoading, isError } = useCurrentUserProfile(user?.id);
-  
+
   return {
     teacherId: profile?.id,
     fullName: profile?.full_name,
@@ -170,20 +180,20 @@ grep -r "supabase.from" src/pages/
 
 ### Hooks Criados
 
-| Hook | Responsabilidade | Arquivo |
-|------|------------------|---------|
+| Hook           | Responsabilidade                        | Arquivo                     |
+| -------------- | --------------------------------------- | --------------------------- |
 | `useTeacherId` | Encapsular padrão de busca de teacherId | `src/hooks/useTeacherId.ts` |
 
 ### Páginas Modificadas
 
-| Página | Mudança |
-|--------|---------|
-| `TeacherHome.tsx` | Substituir `useAuth + useCurrentUserProfile` por `useTeacherId` |
-| `TeacherStudents.tsx` | Substituir `useAuth + useCurrentUserProfile` por `useTeacherId` |
-| `TeacherClasses.tsx` | Substituir `useAuth + useCurrentUserProfile` por `useTeacherId` |
-| `TeacherFinancial.tsx` | Substituir `useAuth + useCurrentUserProfile` por `useTeacherId` |
+| Página                  | Mudança                                                         |
+| ----------------------- | --------------------------------------------------------------- |
+| `TeacherHome.tsx`       | Substituir `useAuth + useCurrentUserProfile` por `useTeacherId` |
+| `TeacherStudents.tsx`   | Substituir `useAuth + useCurrentUserProfile` por `useTeacherId` |
+| `TeacherClasses.tsx`    | Substituir `useAuth + useCurrentUserProfile` por `useTeacherId` |
+| `TeacherFinancial.tsx`  | Substituir `useAuth + useCurrentUserProfile` por `useTeacherId` |
 | `TeacherActivities.tsx` | Substituir `useAuth + useCurrentUserProfile` por `useTeacherId` |
-| `TeacherOverview.tsx` | Substituir `useAuth + useCurrentUserProfile` por `useTeacherId` |
+| `TeacherOverview.tsx`   | Substituir `useAuth + useCurrentUserProfile` por `useTeacherId` |
 
 ## Files Created
 
@@ -215,12 +225,14 @@ src/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 1 hook criado
 - ✅ 6 páginas refatoradas
 - ✅ 12 linhas de código duplicado removidas (2 linhas × 6 páginas)
 - ✅ 0 `supabase.from()` em componentes/páginas (exceto auth)
 
 ### Melhorias Qualitativas
+
 - ✅ Arquitetura correta implementada
 - ✅ Código DRY (sem duplicação)
 - ✅ Manutenção simplificada (mudança no Supabase afeta apenas hooks)
@@ -250,16 +262,3 @@ src/
 
 - [ ] Ainda existem alguns hooks grandes (~200 linhas) — refatorar na Sprint 9
 - [ ] Alguns hooks têm lógica duplicada — remover na Sprint 10
-
-## Next Steps
-
-1. Sprint 9: Refatorar arquivos grandes (split)
-2. Sprint 10: Remover queries duplicadas
-3. Sprint 11: Fix de timezone e error boundary
-4. Sprint 12: Centralização de strings (i18n prep)
-
-## References
-
-- Commits: 11 mar–21 abr 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Auditoria de clean code: `docs/architecture/clean-code.md`

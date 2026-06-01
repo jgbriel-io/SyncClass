@@ -166,18 +166,12 @@ export const classes = {
     refundLabel: "Extornar pagamento",
     refundDescription:
       "O pagamento será marcado como extornado (devolvido ao aluno)",
-    confirmPaymentLabel: "Confirmar pagamento",
     cancel: "Cancelar",
     save: "Salvar",
-    proofPending: "Aguardando confirmação",
-    proofApproved: "Comprovante aprovado",
-    proofRejected: "Comprovante rejeitado",
-    viewProof: "Ver",
     description: "Registre o resultado e feedback da aula.",
     submitButton: "Salvar",
     submitting: "Salvando...",
     toasts: {
-      proofOpenError: "Erro ao abrir comprovante",
       evaluationError: "Erro ao registrar avaliação. Tente novamente.",
       success: "Avaliação registrada com sucesso!",
     },
