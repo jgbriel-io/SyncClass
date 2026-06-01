@@ -73,6 +73,100 @@ Sprint 28 (QA manual) identificou falhas no fluxo de redefinição de senha da a
 
 ---
 
+---
+
+### BUG-031-004 — `start_at` exibido como ISO raw na mensagem de guard do hard delete
+
+**Rotas:** `/admin/students`, `/admin/teachers`
+**Sintoma:** Mensagem de alerta exibia `09/06/2026 2026-06-09T10:00:00+00:00 - Professor Teste` em vez de `09/06/2026 10:00 - Professor Teste`.
+**Root cause:** `const time = c.start_at || ""` — `start_at` é datetime ISO completo, não só hora.
+**Severidade:** 🟡 Média (UX confuso)
+**Correção:** `c.start_at.slice(11, 16)` extrai `HH:MM`. Se null, omite horário do item.
+**Arquivos:**
+
+- `src/hooks/useStudents.ts` — slice(11,16) + omissão quando null
+- `src/hooks/useTeachers.ts` — idem
+
+---
+
+### BUG-031-005 — `StudentHardDeleteDialog` sem fluxo de confirmação forçada
+
+**Rota:** `/admin/students` → dropdown → "Excluir definitivamente"
+**Sintoma:** Clicar em "Excluir" gerava erro toast quando aluno tinha aulas agendadas. O guard lançava exceção que não era tratada pela UI — sem caminho para confirmar e prosseguir.
+**Root cause:** `StudentHardDeleteDialog` chamava `mutate({ id })` sem `force` e sem capturar o erro para exibir segundo passo. `TeacherHardDeleteDialog` tinha two-step via segundo modal; `StudentHardDeleteDialog` não tinha nenhum.
+**Severidade:** 🔴 Crítica (feature completamente quebrada para alunos com aulas)
+**Correção:** Adicionado `checkboxLabel` ao `ConfirmHardDeleteDialog` (checkbox obrigatório para habilitar botão). Todos os dialogs de hard delete passam `force: true` direto e exibem checkbox de confirmação. Um único modal — sem segundo modal.
+**Arquivos:**
+
+- `src/components/ui/ConfirmHardDeleteDialog.tsx` — prop `checkboxLabel?` + checkbox com gate no botão
+- `src/components/students/StudentDeleteDialog.tsx` — `force: true` + `checkboxLabel`
+- `src/components/teachers/TeacherHardDeleteDialog.tsx` — removido two-step; `force: true` + `checkboxLabel`
+- `src/content/students.ts` — `checkboxLabel` adicionado
+- `src/content/teachers.ts` — `checkboxLabel` adicionado (substituiu `scheduledTitle/Description/forceConfirmButton`)
+
+---
+
+### BUG-031-006 — Hard delete sem anonimização completa de PII em `profiles`
+
+**Rotas:** `/admin/students`, `/admin/teachers`, `/admin/users`
+**Sintoma:** Hard delete anonimizava a linha em `students`/`teachers` mas deixava `full_name` e `avatar_url` intactos em `profiles`. Hard delete de usuário admin (`useHardDeleteUser`) não fazia nenhuma anonimização — chamava a edge function diretamente.
+**Root cause:** Profiles update em students/teachers só zeravam `email`; `full_name` e `avatar_url` permaneciam. `useHardDeleteUser` não tinha nenhuma etapa de anonimização antes da chamada à edge function.
+**Severidade:** 🟠 Alta (LGPD — PII residual após exclusão)
+**Correção:** Todos os 3 fluxos agora anonimizam `profiles` com `full_name: "Usuário {seg}"`, `email: null`, `avatar_url: null`, `deleted_at`, `active: false` antes de chamar `admin-delete-user`.
+**Arquivos:**
+
+- `src/hooks/useStudents.ts` — `full_name` + `avatar_url` adicionados ao profiles update
+- `src/hooks/useTeachers.ts` — idem
+- `src/hooks/useUserProfileMutations.ts` — profiles lookup + anonimização adicionados antes da edge function; import `pickAnonSegment`
+
+---
+
+### BUG-031-007 — `formatDateTime` sem timezone fixo causava divergência CI/local
+
+**Contexto:** CI (UTC+0) e ambiente local (UTC-3) renderizavam timestamps diferentes para o mesmo valor ISO.
+**Sintoma:** Snapshot `FinancialTableRow` passava localmente mas falhava no CI — `07:30` vs `10:30` para `2024-01-15T10:30:00Z`.
+**Root cause:** `Intl.DateTimeFormat("pt-BR", { hour, minute })` sem `timeZone` usa timezone do sistema.
+**Severidade:** 🟡 Média (falha de CI bloqueante)
+**Correção:** `timeZone: "America/Sao_Paulo"` adicionado às opções de `formatDateTime`.
+**Arquivos:**
+
+- `src/lib/utils/formatters.ts` — `timeZone: "America/Sao_Paulo"` em `formatDateTime`
+- `src/components/financial/__snapshots__/FinancialTableRow.test.tsx.snap` — regenerado
+
+---
+
+### BUG-031-008 — Cálculo de semestre com `new Date(year, 5, 31)` rolava para julho
+
+**Contexto:** Filtro de período do dashboard — opção "Semestre".
+**Sintoma:** H1 terminava em 1 de julho em vez de 30 de junho. `new Date(2026, 5, 31)` → `2026-07-01` (JavaScript faz rollover automaticamente).
+**Root cause:** Dia 31 hardcoded para meses de 30 dias.
+**Severidade:** 🟡 Média (dados incorretos no filtro semestral)
+**Correção:** `endOfMonth(new Date(year, isH1 ? 5 : 11, 1))` — usa `date-fns` para calcular último dia correto do mês.
+**Arquivos:**
+
+- `src/lib/utils/periodFilter.ts` — `endOfMonth` substituindo dia 31 hardcoded
+
+---
+
+## Nova Feature — Filtro de Período no Dashboard
+
+**Contexto:** Cards do dashboard misturavam escopos temporais (Previsão Mensal de um período, Total Recebido de outro), tornando os números inconsistentes entre si.
+
+**Implementação:** Seletor Mês / Semestre / Ano no header do dashboard. Todos os cards usam o mesmo período.
+
+- `src/lib/utils/periodFilter.ts` — tipo `PeriodFilter`, `getDateRangeForPeriod()` (H1/H2 calendário)
+- `supabase/migrations/62_financial_summary_date_range.sql` — `p_date_from`/`p_date_to` opcionais em `get_financial_summary` (`total_overdue` não filtrado por período — Decision A)
+- `src/hooks/useFinancialSummary` — aceita `dateRange?`
+- `src/hooks/useForecastedBilling` — aceita `dateRange?`
+- `src/hooks/useDashboardStats` — aceita `period?`
+- `src/hooks/useTeacherDashboardStats` — aceita `period?`
+- `src/components/dashboard/DashboardPeriodFilter.tsx` — botões Mês/Semestre/Ano
+- `src/components/dashboard/DashboardView.tsx` — props `periodFilter`/`onPeriodFilterChange`; helper `byPeriod()` elimina ternários repetidos
+- `src/components/dashboard/DashboardFinancialCards.tsx` — `FORECAST_LABELS` record; recebe `periodFilter`
+- `src/pages/admin/Dashboard.tsx` e `src/pages/teacher/TeacherHome.tsx` — `useState<PeriodFilter>("month")` + conectado a todos os hooks
+
+---
+
 ## Edge Functions — Deploy realizado
 
 | Function         | Versão após fix |
@@ -82,10 +176,17 @@ Sprint 28 (QA manual) identificou falhas no fluxo de redefinição de senha da a
 ## Testing & Validation
 
 - [x] `npm run type-check` — zero erros
+- [x] `npm run test` — 287 testes passando
 - [x] `/admin/teachers` → redefinir senha → modal com bloco de requisitos visível
 - [x] Redefinir senha via aba teachers → funciona (senha atualizada, modal de nova senha exibido)
 - [x] Modal idêntico ao de alunos em requisitos e validação
 - [x] Botão "Redefinir senha" idêntico nas 3 abas (students/teachers/users)
+- [x] Hard delete aluno com aulas agendadas → modal com checkbox → force delete funciona
+- [x] Hard delete teacher com aulas agendadas → mesmo padrão (um modal, checkbox)
+- [x] Hard delete usuário admin → profiles anonimizados antes da exclusão
+- [x] `formatDateTime` → UTC-3 consistente local e CI
+- [x] Dashboard filtro Mês/Semestre/Ano → todos os cards atualizam
+- [x] Semestre H1 termina em 30/06 (não 01/07)
 
 ## References
 

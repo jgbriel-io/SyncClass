@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Download, X } from "lucide-react";
-import { isPWAInstalled, isPWAInstallPromptAvailable, showPWAInstallPrompt } from "@/lib/pwa";
+import {
+  isPWAInstalled,
+  isPWAInstallPromptAvailable,
+  showPWAInstallPrompt,
+} from "@/lib/pwa";
 import { toast } from "sonner";
 import { pwa } from "@/content";
 
@@ -49,10 +53,10 @@ export function InstallPWABanner() {
 
   const handleInstall = async () => {
     setIsInstalling(true);
-    
+
     try {
       const accepted = await showPWAInstallPrompt();
-      
+
       if (accepted) {
         toast.success(pwa.installBanner.toasts.success);
         setIsVisible(false);
@@ -82,7 +86,7 @@ export function InstallPWABanner() {
           <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
             <Download className="h-5 w-5 text-primary" />
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm mb-1">
               {pwa.installBanner.title}
@@ -90,7 +94,7 @@ export function InstallPWABanner() {
             <p className="text-xs text-muted-foreground mb-3">
               {pwa.installBanner.descriptionFull}
             </p>
-            
+
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -98,7 +102,9 @@ export function InstallPWABanner() {
                 disabled={isInstalling}
                 className="flex-1"
               >
-                {isInstalling ? pwa.installBanner.installingButton : pwa.installBanner.installButton}
+                {isInstalling
+                  ? pwa.installBanner.installingButton
+                  : pwa.installBanner.installButton}
               </Button>
               <Button
                 size="sm"

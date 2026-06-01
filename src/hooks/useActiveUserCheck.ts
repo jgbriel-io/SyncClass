@@ -7,7 +7,7 @@ import { toast } from "sonner";
 /**
  * Hook que verifica se o usuário está ativo (active = true).
  * Se o usuário for desativado (active = false), faz logout automático.
- * 
+ *
  * CONTEXTO: O trigger de invalidação de sessões está desabilitado,
  * então precisamos verificar manualmente no frontend.
  */
@@ -24,8 +24,10 @@ export function useActiveUserCheck() {
 
     // Se active for explicitamente false, fazer logout
     if (isActive === false) {
-      toast.error("Sua conta foi desativada. Entre em contato com o administrador.");
-      
+      toast.error(
+        "Sua conta foi desativada. Entre em contato com o administrador."
+      );
+
       // Fazer logout
       signOut();
     }

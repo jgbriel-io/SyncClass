@@ -3,16 +3,26 @@ import { formatCurrency } from "@/lib/utils/formatters";
 import type { ForecastedBilling } from "@/hooks/useForecastedBilling";
 import type { FinancialSummary } from "./DashboardView";
 import { dashboard } from "@/content";
+import { type PeriodFilter } from "@/lib/utils/periodFilter";
 
 interface DashboardFinancialCardsProps {
   financialSummary?: FinancialSummary;
   forecastedBilling?: ForecastedBilling;
+  periodFilter?: PeriodFilter;
 }
+
+const FORECAST_LABELS: Record<PeriodFilter, string> = {
+  month: dashboard.financial.forecastedMonthly,
+  semester: dashboard.financial.forecastedSemester,
+  year: dashboard.financial.forecastedYear,
+};
 
 export function DashboardFinancialCards({
   financialSummary,
   forecastedBilling,
+  periodFilter = "month",
 }: DashboardFinancialCardsProps) {
+  const forecastLabel = FORECAST_LABELS[periodFilter];
   if (financialSummary == null && forecastedBilling == null) return null;
 
   return (
@@ -22,7 +32,7 @@ export function DashboardFinancialCards({
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <p className="text-xs tablet:text-sm font-medium text-muted-foreground">
-                {dashboard.financial.forecastedMonthly}
+                {forecastLabel}
               </p>
               <p className="text-xl tablet:text-2xl font-bold tracking-tight text-primary">
                 {formatCurrency(forecastedBilling.totalForecast)}

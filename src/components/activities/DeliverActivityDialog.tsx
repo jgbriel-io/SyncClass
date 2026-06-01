@@ -10,26 +10,39 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Loader2, Upload, FileText, X } from "lucide-react";
 import { uploadActivityFile } from "@/hooks/useActivities";
 import { useAuth } from "@/contexts/AuthContext";
-import { validateFile, checkUploadRateLimit, FILE_TYPES, formatFileSize } from "@/lib/utils/fileValidation";
+import {
+  validateFile,
+  checkUploadRateLimit,
+  FILE_TYPES,
+  formatFileSize,
+} from "@/lib/utils/fileValidation";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 
 import { activities as activitiesContent, common } from "@/content";
 
-const deliverSchema = z.object({
-  response_text: z.string().optional(),
-  response_file: z.instanceof(File).optional(),
-}).refine((data) => data.response_text || data.response_file, {
-  message: activitiesContent.deliverDialog.toasts.error("Forneça uma resposta em texto ou envie um arquivo"),
-  path: ["response_text"],
-});
+const deliverSchema = z
+  .object({
+    response_text: z.string().optional(),
+    response_file: z.instanceof(File).optional(),
+  })
+  .refine((data) => data.response_text || data.response_file, {
+    message: activitiesContent.deliverDialog.toasts.error(
+      "Forneça uma resposta em texto ou envie um arquivo"
+    ),
+    path: ["response_text"],
+  });
 
 type DeliverFormData = z.infer<typeof deliverSchema>;
 
 interface DeliverActivityDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDeliver: (data: { responseText?: string; responseFileUrl?: string; responseFileName?: string }) => Promise<void>;
+  onDeliver: (data: {
+    responseText?: string;
+    responseFileUrl?: string;
+    responseFileName?: string;
+  }) => Promise<void>;
   activityTitle: string;
 }
 
@@ -66,10 +79,10 @@ export function DeliverActivityDialog({
     if (!file) return;
 
     // Validar tipo e tamanho do arquivo
-    const validation = validateFile(file, 'ACTIVITY_RESPONSE');
+    const validation = validateFile(file, "ACTIVITY_RESPONSE");
     if (!validation.valid) {
       toast.error(validation.error);
-      e.target.value = ''; // Limpar input
+      e.target.value = ""; // Limpar input
       return;
     }
 
@@ -87,7 +100,11 @@ export function DeliverActivityDialog({
     if (user?.id) {
       const rateLimit = checkUploadRateLimit(user.id, 10, 60000); // 10 uploads por minuto
       if (!rateLimit.allowed) {
-        toast.error(activitiesContent.sendDialog.toasts.rateLimitExceeded(rateLimit.retryAfter ?? 0));
+        toast.error(
+          activitiesContent.sendDialog.toasts.rateLimitExceeded(
+            rateLimit.retryAfter ?? 0
+          )
+        );
         return;
       }
     }
@@ -116,8 +133,10 @@ export function DeliverActivityDialog({
       onOpenChange(false);
       toast.success(activitiesContent.deliverDialog.toasts.success);
     } catch (error) {
-      logger.error(error as Error, { context: 'deliver_activity' });
-      toast.error(activitiesContent.deliverDialog.toasts.error((error as Error).message));
+      logger.error(error as Error, { context: "deliver_activity" });
+      toast.error(
+        activitiesContent.deliverDialog.toasts.error((error as Error).message)
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -138,103 +157,109 @@ export function DeliverActivityDialog({
       size="LG"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="response_text">
-              {activitiesContent.deliverDialog.responseTextLabel}
-            </Label>
-            <Textarea
-              id="response_text"
-              {...register("response_text")}
-              placeholder={common.placeholders.answerHint}
-              rows={6}
-              className="resize-none"
-            />
-            {errors.response_text && (
-              <p className="text-sm text-destructive">{errors.response_text.message}</p>
-            )}
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="response_text">
+            {activitiesContent.deliverDialog.responseTextLabel}
+          </Label>
+          <Textarea
+            id="response_text"
+            {...register("response_text")}
+            placeholder={common.placeholders.answerHint}
+            rows={6}
+            className="resize-none"
+          />
+          {errors.response_text && (
+            <p className="text-sm text-destructive">
+              {errors.response_text.message}
+            </p>
+          )}
+        </div>
 
-          {/* Divisor */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                {activitiesContent.deliverDialog.orDivider}
-              </span>
-            </div>
+        {/* Divisor */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
           </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              {activitiesContent.deliverDialog.orDivider}
+            </span>
+          </div>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="response_file">
-              {activitiesContent.deliverDialog.fileLabel}
-            </Label>
-            {!selectedFile ? (
-              <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 hover:border-primary/50 transition-colors">
-                <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                <Label
-                  htmlFor="response_file"
-                  className="cursor-pointer text-sm text-primary hover:underline"
-                >
-                  {activitiesContent.deliverDialog.fileSelectLabel}
-                </Label>
-                <input
-                  id="response_file"
-                  type="file"
-                  accept={FILE_TYPES.ACTIVITY_RESPONSE.accept}
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  {activitiesContent.deliverDialog.fileHint}
+        <div className="space-y-2">
+          <Label htmlFor="response_file">
+            {activitiesContent.deliverDialog.fileLabel}
+          </Label>
+          {!selectedFile ? (
+            <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 hover:border-primary/50 transition-colors">
+              <Upload className="h-10 w-10 text-muted-foreground mb-2" />
+              <Label
+                htmlFor="response_file"
+                className="cursor-pointer text-sm text-primary hover:underline"
+              >
+                {activitiesContent.deliverDialog.fileSelectLabel}
+              </Label>
+              <input
+                id="response_file"
+                type="file"
+                accept={FILE_TYPES.ACTIVITY_RESPONSE.accept}
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                {activitiesContent.deliverDialog.fileHint}
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4 bg-accent rounded-lg p-4">
+              <FileText className="h-8 w-8 text-primary" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {selectedFile.name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatFileSize(selectedFile.size)}
                 </p>
               </div>
-            ) : (
-              <div className="flex items-center gap-4 bg-accent rounded-lg p-4">
-                <FileText className="h-8 w-8 text-primary" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{selectedFile.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatFileSize(selectedFile.size)}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRemoveFile}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-            {errors.response_file && (
-              <p className="text-sm text-destructive">{errors.response_file.message}</p>
-            )}
-          </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleRemoveFile}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          {errors.response_file && (
+            <p className="text-sm text-destructive">
+              {errors.response_file.message}
+            </p>
+          )}
+        </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
-              {common.actions.cancel}
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {activitiesContent.deliverDialog.submitting}
-                </>
-              ) : (
-                activitiesContent.deliverDialog.submitButton
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isSubmitting}
+          >
+            {common.actions.cancel}
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {activitiesContent.deliverDialog.submitting}
+              </>
+            ) : (
+              activitiesContent.deliverDialog.submitButton
+            )}
+          </Button>
+        </DialogFooter>
+      </form>
     </BaseDialog>
   );
 }

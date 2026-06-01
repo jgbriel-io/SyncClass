@@ -44,7 +44,12 @@ function getEmailDomain(email: string): string {
 /** Retorna true se o domínio do email está na lista de permitidos. */
 export function isAllowedEmailDomain(email: string): boolean {
   const domain = getEmailDomain(email);
-  return domain.length > 0 && ALLOWED_EMAIL_DOMAINS.includes(domain as (typeof ALLOWED_EMAIL_DOMAINS)[number]);
+  return (
+    domain.length > 0 &&
+    ALLOWED_EMAIL_DOMAINS.includes(
+      domain as (typeof ALLOWED_EMAIL_DOMAINS)[number]
+    )
+  );
 }
 
 /** Schema de email: formato válido (aceita qualquer domínio). */

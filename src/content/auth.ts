@@ -12,16 +12,19 @@ export const auth = {
     toasts: {
       success: "Login realizado com sucesso!",
       invalidCredentials: "Email ou senha incorretos",
-      emailNotConfirmed: "Email não confirmado. Verifique sua caixa de entrada.",
+      emailNotConfirmed:
+        "Email não confirmado. Verifique sua caixa de entrada.",
       generic: "Ocorreu um erro. Tente novamente.",
     },
   },
 
   forgotPassword: {
     pageTitle: "Esqueceu a senha?",
-    pageSubtitle: "Informe seu email e enviaremos um link para redefinir sua senha.",
+    pageSubtitle:
+      "Informe seu email e enviaremos um link para redefinir sua senha.",
     title: "Redefinir senha",
-    subtitle: "Digite o email da sua conta. Enviaremos um link para criar uma nova senha.",
+    subtitle:
+      "Digite o email da sua conta. Enviaremos um link para criar uma nova senha.",
     emailLabel: "Email",
     emailPlaceholder: "seu@email.com",
     submitButton: "Enviar link",
@@ -48,7 +51,8 @@ export const auth = {
     backToLogin: "Voltar ao login",
     requestNewLink: "Solicitar novo link",
     expiredTitle: "Link expirado ou inválido",
-    expiredMessage: "Solicite um novo link de redefinição de senha na página de login.",
+    expiredMessage:
+      "Solicite um novo link de redefinição de senha na página de login.",
     requirements: {
       title: "Requisitos da senha:",
       minLength: "Mínimo de 8 caracteres",
@@ -64,7 +68,8 @@ export const auth = {
       uppercase: "A senha deve conter pelo menos uma letra maiúscula.",
       lowercase: "A senha deve conter pelo menos uma letra minúscula.",
       number: "A senha deve conter pelo menos um número.",
-      special: "A senha deve conter pelo menos um caractere especial (!@#$%^&*).",
+      special:
+        "A senha deve conter pelo menos um caractere especial (!@#$%^&*).",
       passwordMismatch: "As senhas não coincidem.",
       generic: "Ocorreu um erro. Tente novamente.",
     },
@@ -72,7 +77,8 @@ export const auth = {
 
   changePassword: {
     title: "Alterar senha",
-    securityNotice: "Por segurança, você precisa alterar sua senha temporária antes de continuar.",
+    securityNotice:
+      "Por segurança, você precisa alterar sua senha temporária antes de continuar.",
     currentPasswordLabel: "Senha atual",
     newPasswordLabel: "Nova senha",
     confirmPasswordLabel: "Confirmar nova senha",

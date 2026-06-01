@@ -1,7 +1,15 @@
 import React from "react";
-import ErrorBoundary, { ErrorBoundaryFallbackProps } from "@/components/ErrorBoundary";
+import ErrorBoundary, {
+  ErrorBoundaryFallbackProps,
+} from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { common } from "@/content";
 
@@ -9,13 +17,18 @@ import { common } from "@/content";
  * Fallback component para seções específicas (não full-page)
  * Usado para isolar erros em partes da aplicação
  */
-function SectionErrorFallback({ error, resetError }: ErrorBoundaryFallbackProps) {
+function SectionErrorFallback({
+  error,
+  resetError,
+}: ErrorBoundaryFallbackProps) {
   return (
     <Card className="border-destructive/50">
       <CardHeader>
         <div className="flex items-center gap-2">
           <AlertCircle className="h-4 w-4 text-destructive" />
-          <CardTitle className="text-base">{common.errors.sectionErrorTitle}</CardTitle>
+          <CardTitle className="text-base">
+            {common.errors.sectionErrorTitle}
+          </CardTitle>
         </div>
       </CardHeader>
       <CardContent>
@@ -34,7 +47,12 @@ function SectionErrorFallback({ error, resetError }: ErrorBoundaryFallbackProps)
         )}
       </CardContent>
       <CardFooter>
-        <Button onClick={resetError} size="sm" variant="outline" className="gap-2">
+        <Button
+          onClick={resetError}
+          size="sm"
+          variant="outline"
+          className="gap-2"
+        >
           <RefreshCw className="h-3 w-3" />
           {common.errors.sectionErrorReload}
         </Button>
@@ -46,14 +64,20 @@ function SectionErrorFallback({ error, resetError }: ErrorBoundaryFallbackProps)
 /**
  * Error Boundary para seções específicas da aplicação
  * Isola erros para não quebrar a aplicação inteira
- * 
+ *
  * @example
  * <SectionErrorBoundary>
  *   <FinancialView />
  * </SectionErrorBoundary>
  */
-export function SectionErrorBoundary({ children }: { children: React.ReactNode }) {
-  return <ErrorBoundary fallback={SectionErrorFallback}>{children}</ErrorBoundary>;
+export function SectionErrorBoundary({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <ErrorBoundary fallback={SectionErrorFallback}>{children}</ErrorBoundary>
+  );
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

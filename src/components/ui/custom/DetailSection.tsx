@@ -14,10 +14,10 @@ interface DetailSectionProps {
 
 /**
  * Componente auxiliar para seções de detalhes
- * 
+ *
  * Padroniza a exibição de informações no formato:
  * Ícone + Label + Valor
- * 
+ *
  * @example
  * ```tsx
  * <DetailSection
@@ -35,8 +35,14 @@ export function DetailSection({
 }: DetailSectionProps) {
   if (inline) {
     return (
-      <div className={`flex items-center ${gap('TIGHT')} ${typography('BODY')}`}>
-        {Icon && <Icon className={`${iconSize('SM')} text-muted-foreground flex-shrink-0`} />}
+      <div
+        className={`flex items-center ${gap("TIGHT")} ${typography("BODY")}`}
+      >
+        {Icon && (
+          <Icon
+            className={`${iconSize("SM")} text-muted-foreground flex-shrink-0`}
+          />
+        )}
         <span className="text-muted-foreground">{label}:</span>
         <span className="font-medium">{value}</span>
       </div>
@@ -44,12 +50,14 @@ export function DetailSection({
   }
 
   return (
-    <div className={stack('TIGHT')}>
-      <p className={`${typography('TABLE_HEADER')} flex items-center ${gap('TIGHT')}`}>
-        {Icon && <Icon className={iconSize('XS')} />}
+    <div className={stack("TIGHT")}>
+      <p
+        className={`${typography("TABLE_HEADER")} flex items-center ${gap("TIGHT")}`}
+      >
+        {Icon && <Icon className={iconSize("XS")} />}
         {label}
       </p>
-      <div className={`${typography('BODY')} text-foreground`}>{value}</div>
+      <div className={`${typography("BODY")} text-foreground`}>{value}</div>
     </div>
   );
 }
@@ -62,5 +70,5 @@ interface DetailSectionGroupProps {
  * Agrupa múltiplas DetailSections com espaçamento consistente
  */
 export function DetailSectionGroup({ children }: DetailSectionGroupProps) {
-  return <div className={stack('LOOSE')}>{children}</div>;
+  return <div className={stack("LOOSE")}>{children}</div>;
 }

@@ -1,4 +1,10 @@
-import { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, FieldValues } from "react-hook-form";
+import {
+  UseFormRegister,
+  UseFormSetValue,
+  UseFormWatch,
+  FieldErrors,
+  FieldValues,
+} from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Receipt } from "lucide-react";
 import { format } from "date-fns";
@@ -98,7 +108,8 @@ export function ClassLogFinancialSection({
                 </span>
                 {effectiveDurationMinutes && hourlyRate ? (
                   <span className="ml-1">
-                    ({formatCurrency(hourlyRate)}/h × {effectiveDurationMinutes} min)
+                    ({formatCurrency(hourlyRate)}/h × {effectiveDurationMinutes}{" "}
+                    min)
                   </span>
                 ) : null}
               </p>
@@ -114,7 +125,9 @@ export function ClassLogFinancialSection({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="financial_amount">{classesContent.logFinancialSection.amountLabel}</Label>
+                <Label htmlFor="financial_amount">
+                  {classesContent.logFinancialSection.amountLabel}
+                </Label>
                 <Input
                   id="financial_amount"
                   type="text"
@@ -129,7 +142,9 @@ export function ClassLogFinancialSection({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="financial_due_date">{classesContent.logFinancialSection.dueDateLabel}</Label>
+                <Label htmlFor="financial_due_date">
+                  {classesContent.logFinancialSection.dueDateLabel}
+                </Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -141,13 +156,16 @@ export function ClassLogFinancialSection({
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {financialDueDate || classesContent.logFinancialSection.selectDate}
+                      {financialDueDate ||
+                        classesContent.logFinancialSection.selectDate}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={brDateStringToDate(financialDueDate || "") ?? undefined}
+                      selected={
+                        brDateStringToDate(financialDueDate || "") ?? undefined
+                      }
                       onSelect={(date) => {
                         if (date) {
                           setValue(
@@ -171,11 +189,15 @@ export function ClassLogFinancialSection({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="financial_description">{classesContent.logFinancialSection.descriptionLabel}</Label>
+              <Label htmlFor="financial_description">
+                {classesContent.logFinancialSection.descriptionLabel}
+              </Label>
               <Input
                 id="financial_description"
                 type="text"
-                placeholder={classesContent.logFinancialSection.descriptionPlaceholder}
+                placeholder={
+                  classesContent.logFinancialSection.descriptionPlaceholder
+                }
                 {...register("financial_description")}
               />
               <p className="text-xs text-muted-foreground">
@@ -184,19 +206,38 @@ export function ClassLogFinancialSection({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="financial_payment_method">{classesContent.logFinancialSection.paymentMethodLabel}</Label>
+              <Label htmlFor="financial_payment_method">
+                {classesContent.logFinancialSection.paymentMethodLabel}
+              </Label>
               <Select
-                onValueChange={(value) => setValue("financial_payment_method", value)}
+                onValueChange={(value) =>
+                  setValue("financial_payment_method", value)
+                }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={classesContent.logFinancialSection.paymentMethodPlaceholder} />
+                  <SelectValue
+                    placeholder={
+                      classesContent.logFinancialSection
+                        .paymentMethodPlaceholder
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pix">{classesContent.logFinancialSection.pix}</SelectItem>
-                  <SelectItem value="cartao">{classesContent.logFinancialSection.card}</SelectItem>
-                  <SelectItem value="dinheiro">{classesContent.logFinancialSection.cash}</SelectItem>
-                  <SelectItem value="transferencia">{classesContent.logFinancialSection.transfer}</SelectItem>
-                  <SelectItem value="outro">{classesContent.logFinancialSection.other}</SelectItem>
+                  <SelectItem value="pix">
+                    {classesContent.logFinancialSection.pix}
+                  </SelectItem>
+                  <SelectItem value="cartao">
+                    {classesContent.logFinancialSection.card}
+                  </SelectItem>
+                  <SelectItem value="dinheiro">
+                    {classesContent.logFinancialSection.cash}
+                  </SelectItem>
+                  <SelectItem value="transferencia">
+                    {classesContent.logFinancialSection.transfer}
+                  </SelectItem>
+                  <SelectItem value="outro">
+                    {classesContent.logFinancialSection.other}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -217,7 +258,9 @@ export function ClassLogFinancialSection({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="financial_amount_edit">{classesContent.logFinancialSection.amountLabelEdit}</Label>
+            <Label htmlFor="financial_amount_edit">
+              {classesContent.logFinancialSection.amountLabelEdit}
+            </Label>
             <Input
               id="financial_amount_edit"
               type="text"
@@ -227,7 +270,9 @@ export function ClassLogFinancialSection({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="financial_due_date_edit">{classesContent.logFinancialSection.dueDateLabelEdit}</Label>
+            <Label htmlFor="financial_due_date_edit">
+              {classesContent.logFinancialSection.dueDateLabelEdit}
+            </Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -239,13 +284,16 @@ export function ClassLogFinancialSection({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {financialDueDate || classesContent.logFinancialSection.selectDate}
+                  {financialDueDate ||
+                    classesContent.logFinancialSection.selectDate}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={brDateStringToDate(financialDueDate || "") ?? undefined}
+                  selected={
+                    brDateStringToDate(financialDueDate || "") ?? undefined
+                  }
                   onSelect={(date) => {
                     if (date) {
                       setValue(

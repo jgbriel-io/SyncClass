@@ -2,21 +2,32 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { STACK } from "@/lib/design-tokens/spacing";
 import { GAP } from "@/lib/design-tokens/spacing";
 import { auth } from "@/content";
-import { useChangePassword, type ChangePasswordForm } from "@/hooks/useChangePassword";
+import {
+  useChangePassword,
+  type ChangePasswordForm,
+} from "@/hooks/useChangePassword";
 
 interface ChangePasswordDialogProps {
   open: boolean;
   onSuccess: () => void;
 }
 
-export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogProps) {
+export function ChangePasswordDialog({
+  open,
+  onSuccess,
+}: ChangePasswordDialogProps) {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -41,8 +52,16 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => {/* Não permitir fechar */}}>
-      <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+    <Dialog
+      open={open}
+      onOpenChange={() => {
+        /* Não permitir fechar */
+      }}
+    >
+      <DialogContent
+        className="sm:max-w-md"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{auth.changePassword.title}</DialogTitle>
         </DialogHeader>
@@ -54,7 +73,9 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
 
           <form onSubmit={handleSubmit(onSubmit)} className={STACK.DEFAULT}>
             <div className={STACK.TIGHT}>
-              <Label htmlFor="currentPassword">{auth.changePassword.currentPasswordLabel}</Label>
+              <Label htmlFor="currentPassword">
+                {auth.changePassword.currentPasswordLabel}
+              </Label>
               <div className="relative">
                 <Input
                   id="currentPassword"
@@ -76,12 +97,16 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
                 </button>
               </div>
               {errors.currentPassword && (
-                <p className="text-sm text-destructive">{errors.currentPassword.message}</p>
+                <p className="text-sm text-destructive">
+                  {errors.currentPassword.message}
+                </p>
               )}
             </div>
 
             <div className={STACK.TIGHT}>
-              <Label htmlFor="newPassword">{auth.changePassword.newPasswordLabel}</Label>
+              <Label htmlFor="newPassword">
+                {auth.changePassword.newPasswordLabel}
+              </Label>
               <div className="relative">
                 <Input
                   id="newPassword"
@@ -103,12 +128,16 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
                 </button>
               </div>
               {errors.newPassword && (
-                <p className="text-sm text-destructive">{errors.newPassword.message}</p>
+                <p className="text-sm text-destructive">
+                  {errors.newPassword.message}
+                </p>
               )}
             </div>
 
             <div className={STACK.TIGHT}>
-              <Label htmlFor="confirmPassword">{auth.changePassword.confirmPasswordLabel}</Label>
+              <Label htmlFor="confirmPassword">
+                {auth.changePassword.confirmPasswordLabel}
+              </Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -130,13 +159,17 @@ export function ChangePasswordDialog({ open, onSuccess }: ChangePasswordDialogPr
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+                <p className="text-sm text-destructive">
+                  {errors.confirmPassword.message}
+                </p>
               )}
             </div>
 
             <div className={`flex justify-end ${GAP.DEFAULT} pt-4`}>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 {auth.changePassword.submitButton}
               </Button>
             </div>

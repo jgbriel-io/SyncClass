@@ -1,4 +1,10 @@
-import { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, FieldValues } from "react-hook-form";
+import {
+  UseFormRegister,
+  UseFormSetValue,
+  UseFormWatch,
+  FieldErrors,
+  FieldValues,
+} from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -38,15 +48,16 @@ export function StudentContactSection({
   isBrazilSelected,
 }: StudentContactSectionProps) {
   const birthDate = watch("birth_date");
-  const { handleChange: handleDateChange, handleKeyDown: handleDateKeyDown } = useDateMask(
-    (value, options) => setValue("birth_date", value, options)
-  );
+  const { handleChange: handleDateChange, handleKeyDown: handleDateKeyDown } =
+    useDateMask((value, options) => setValue("birth_date", value, options));
 
   return (
     <>
       {/* Data de Nascimento */}
       <div className={STACK.TIGHT}>
-        <Label htmlFor="birth_date">{studentsContent.contactSection.birthDateLabel}</Label>
+        <Label htmlFor="birth_date">
+          {studentsContent.contactSection.birthDateLabel}
+        </Label>
         <div className={`flex ${GAP.TIGHT}`}>
           <Input
             id="birth_date"
@@ -83,10 +94,18 @@ export function StudentContactSection({
                     const currentDate = birthDate
                       ? brDateStringToDate(birthDate)
                       : new Date(2000, 0, 1);
-                    const newDate = new Date(parseInt(year), currentDate?.getMonth() ?? 0, 1);
-                    setValue("birth_date", format(newDate, "dd/MM/yyyy", { locale: ptBR }), {
-                      shouldValidate: true,
-                    });
+                    const newDate = new Date(
+                      parseInt(year),
+                      currentDate?.getMonth() ?? 0,
+                      1
+                    );
+                    setValue(
+                      "birth_date",
+                      format(newDate, "dd/MM/yyyy", { locale: ptBR }),
+                      {
+                        shouldValidate: true,
+                      }
+                    );
                   }}
                 >
                   <SelectTrigger className="w-full">
@@ -109,15 +128,19 @@ export function StudentContactSection({
                 selected={brDateStringToDate(birthDate || "") ?? undefined}
                 onSelect={(date) => {
                   if (date) {
-                    setValue("birth_date", format(date, "dd/MM/yyyy", { locale: ptBR }), {
-                      shouldValidate: true,
-                    });
+                    setValue(
+                      "birth_date",
+                      format(date, "dd/MM/yyyy", { locale: ptBR }),
+                      {
+                        shouldValidate: true,
+                      }
+                    );
                   }
                 }}
                 locale={ptBR}
                 month={
                   birthDate
-                    ? brDateStringToDate(birthDate) ?? new Date(2000, 0, 1)
+                    ? (brDateStringToDate(birthDate) ?? new Date(2000, 0, 1))
                     : new Date(2000, 0, 1)
                 }
                 onMonthChange={() => {}}
@@ -129,22 +152,32 @@ export function StudentContactSection({
           </Popover>
         </div>
         {errors.birth_date && (
-          <p className="text-sm text-destructive">{String(errors.birth_date.message)}</p>
+          <p className="text-sm text-destructive">
+            {String(errors.birth_date.message)}
+          </p>
         )}
       </div>
 
       {/* Telefone */}
       <div className={STACK.TIGHT}>
-        <Label htmlFor="phone">{studentsContent.contactSection.phoneLabel}</Label>
+        <Label htmlFor="phone">
+          {studentsContent.contactSection.phoneLabel}
+        </Label>
         <Input
           id="phone"
           type="text"
           inputMode={isBrazilSelected ? "numeric" : "text"}
-          placeholder={isBrazilSelected ? "(00) 00000-0000" : studentsContent.contactSection.phoneInternational}
+          placeholder={
+            isBrazilSelected
+              ? "(00) 00000-0000"
+              : studentsContent.contactSection.phoneInternational
+          }
           {...register("phone")}
           onChange={(e) => {
             if (isBrazilSelected) {
-              setValue("phone", maskPhone(e.target.value), { shouldValidate: true });
+              setValue("phone", maskPhone(e.target.value), {
+                shouldValidate: true,
+              });
             } else {
               setValue("phone", e.target.value, { shouldValidate: true });
             }
@@ -152,13 +185,17 @@ export function StudentContactSection({
           disabled={isLoading}
         />
         {errors.phone && (
-          <p className="text-sm text-destructive">{String(errors.phone.message)}</p>
+          <p className="text-sm text-destructive">
+            {String(errors.phone.message)}
+          </p>
         )}
       </div>
 
       {/* Email */}
       <div className={STACK.TIGHT}>
-        <Label htmlFor="email">{studentsContent.contactSection.emailLabel}</Label>
+        <Label htmlFor="email">
+          {studentsContent.contactSection.emailLabel}
+        </Label>
         <Input
           id="email"
           type="email"
@@ -167,7 +204,9 @@ export function StudentContactSection({
           disabled={isLoading}
         />
         {errors.email && (
-          <p className="text-sm text-destructive">{String(errors.email.message)}</p>
+          <p className="text-sm text-destructive">
+            {String(errors.email.message)}
+          </p>
         )}
       </div>
     </>

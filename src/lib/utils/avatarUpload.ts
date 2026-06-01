@@ -5,7 +5,11 @@
 
 export const AVATAR_MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
 export const AVATAR_MAX_PX = 512; // largura e altura máximas em pixels
-export const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const AVATAR_ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
 
 export interface AvatarValidationError {
   code: "type" | "size" | "dimensions";
@@ -18,7 +22,11 @@ export interface AvatarValidationError {
  */
 export function validateAndResizeAvatar(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    if (!AVATAR_ALLOWED_TYPES.includes(file.type as (typeof AVATAR_ALLOWED_TYPES)[number])) {
+    if (
+      !AVATAR_ALLOWED_TYPES.includes(
+        file.type as (typeof AVATAR_ALLOWED_TYPES)[number]
+      )
+    ) {
       reject({
         code: "type" as const,
         message: `Formato inválido. Use ${AVATAR_ALLOWED_TYPES.join(", ")}.`,
@@ -51,14 +59,20 @@ export function validateAndResizeAvatar(file: File): Promise<Blob> {
 
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject({ code: "type" as const, message: "Não foi possível ler a imagem." } as AvatarValidationError);
+      reject({
+        code: "type" as const,
+        message: "Não foi possível ler a imagem.",
+      } as AvatarValidationError);
     };
 
     img.src = url;
   });
 }
 
-function resizeImageToMaxPx(img: HTMLImageElement, mimeType: string): Promise<Blob> {
+function resizeImageToMaxPx(
+  img: HTMLImageElement,
+  mimeType: string
+): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const w = img.naturalWidth;
     const h = img.naturalHeight;

@@ -104,10 +104,14 @@ export function StudentHardDeleteDialog({
       isPending={hardDeleteStudent.isPending}
       onConfirm={() => {
         if (!student) return;
-        hardDeleteStudent.mutate({ id: student.id }, { onSuccess: onClose });
+        hardDeleteStudent.mutate(
+          { id: student.id, force: true },
+          { onSuccess: onClose }
+        );
       }}
       warningLabel={studentsContent.deleteDialog.warningLabel}
       warning={studentsContent.deleteDialog.warning}
+      checkboxLabel={studentsContent.deleteDialog.checkboxLabel}
     />
   );
 }

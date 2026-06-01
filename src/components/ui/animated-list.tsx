@@ -1,6 +1,6 @@
 /**
  * Lista Animada com Framer Motion
- * 
+ *
  * Fade-in suave ao renderizar listas
  * Usa domMax para otimizar bundle size
  */
@@ -18,11 +18,11 @@ interface AnimatedListProps {
 /**
  * Container para lista animada
  */
-export function AnimatedList({ 
-  children, 
+export function AnimatedList({
+  children,
   className,
   delay = 0,
-  staggerChildren = 0.05 
+  staggerChildren = 0.05,
 }: AnimatedListProps) {
   return (
     <LazyMotion features={domMax} strict>
@@ -50,11 +50,11 @@ export function AnimatedList({
 /**
  * Item individual da lista animada
  */
-export function AnimatedListItem({ 
-  children, 
-  className 
-}: { 
-  children: ReactNode; 
+export function AnimatedListItem({
+  children,
+  className,
+}: {
+  children: ReactNode;
   className?: string;
 }) {
   return (
@@ -62,8 +62,8 @@ export function AnimatedListItem({
       className={className}
       variants={{
         hidden: { opacity: 0, y: 10 },
-        visible: { 
-          opacity: 1, 
+        visible: {
+          opacity: 1,
           y: 0,
           transition: {
             duration: 0.3,
@@ -80,11 +80,11 @@ export function AnimatedListItem({
 /**
  * Tbody animado para tabelas
  */
-export function AnimatedTableBody({ 
-  children, 
-  className 
-}: { 
-  children: ReactNode; 
+export function AnimatedTableBody({
+  children,
+  className,
+}: {
+  children: ReactNode;
   className?: string;
 }) {
   return (
@@ -112,11 +112,11 @@ export function AnimatedTableBody({
 /**
  * Tr animado para linhas de tabela
  */
-export function AnimatedTableRow({ 
-  children, 
-  className 
-}: { 
-  children: ReactNode; 
+export function AnimatedTableRow({
+  children,
+  className,
+}: {
+  children: ReactNode;
   className?: string;
 }) {
   return (
@@ -124,8 +124,8 @@ export function AnimatedTableRow({
       className={className}
       variants={{
         hidden: { opacity: 0, x: -10 },
-        visible: { 
-          opacity: 1, 
+        visible: {
+          opacity: 1,
           x: 0,
           transition: {
             duration: 0.2,

@@ -33,25 +33,28 @@ const TeacherStudentsPage = () => {
   if (!teacherId) {
     return (
       <div className="text-center py-12">
-        <p className={typography('SMALL')}>Não foi possível carregar seu perfil de professor.</p>
+        <p className={typography("SMALL")}>
+          Não foi possível carregar seu perfil de professor.
+        </p>
       </div>
     );
   }
 
   const filterFromUrl = searchParams.get("filter");
-  const initialFilterPreset = filterFromUrl === "aniversariantes" ? "aniversariantes" : "all";
+  const initialFilterPreset =
+    filterFromUrl === "aniversariantes" ? "aniversariantes" : "all";
 
   return (
     <StudentsListView
-        title="Alunos"
-        subtitle="Gerencie seus alunos"
-        showTeacherColumn={false}
-        showTeacherFilter={false}
-        autoTeacherId={teacherId}
-        teachers={teachers}
-        initialSearch={searchFromUrl}
-        initialFilterPreset={initialFilterPreset}
-      />
+      title="Alunos"
+      subtitle="Gerencie seus alunos"
+      showTeacherColumn={false}
+      showTeacherFilter={false}
+      autoTeacherId={teacherId}
+      teachers={teachers}
+      initialSearch={searchFromUrl}
+      initialFilterPreset={initialFilterPreset}
+    />
   );
 };
 

@@ -1,4 +1,10 @@
-import { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, FieldValues } from "react-hook-form";
+import {
+  UseFormRegister,
+  UseFormSetValue,
+  UseFormWatch,
+  FieldErrors,
+  FieldValues,
+} from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -61,7 +71,9 @@ export function ClassLogStudentSection({
   onTeacherChange,
 }: ClassLogStudentSectionProps) {
   const classDate = watch("class_date");
-  const selectedTeacherName = teachers.find((t) => t.id === selectedTeacherId)?.name;
+  const selectedTeacherName = teachers.find(
+    (t) => t.id === selectedTeacherId
+  )?.name;
 
   return (
     <>
@@ -88,7 +100,9 @@ export function ClassLogStudentSection({
                 disabled={loadingTeachers}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={common.placeholders.selectTeacher} />
+                  <SelectValue
+                    placeholder={common.placeholders.selectTeacher}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {teachers.map((teacher) => (
@@ -127,13 +141,17 @@ export function ClassLogStudentSection({
         </Select>
         <input type="hidden" {...register("student_id")} />
         {errors.student_id && (
-          <p className="text-sm text-destructive">{String(errors.student_id.message)}</p>
+          <p className="text-sm text-destructive">
+            {String(errors.student_id.message)}
+          </p>
         )}
       </div>
 
       {/* Título da Aula */}
       <div className="space-y-2">
-        <Label htmlFor="title">{classesContent.logFormDialog.titleFieldLabel}</Label>
+        <Label htmlFor="title">
+          {classesContent.logFormDialog.titleFieldLabel}
+        </Label>
         <Input
           id="title"
           type="text"
@@ -144,7 +162,9 @@ export function ClassLogStudentSection({
 
       {/* Data da Aula */}
       <div className="space-y-2">
-        <Label htmlFor="class_date">{classesContent.logFormDialog.dateLabel}</Label>
+        <Label htmlFor="class_date">
+          {classesContent.logFormDialog.dateLabel}
+        </Label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -165,9 +185,13 @@ export function ClassLogStudentSection({
               selected={brDateStringToDate(classDate || "") ?? undefined}
               onSelect={(date) => {
                 if (date) {
-                  setValue("class_date", format(date, "dd/MM/yyyy", { locale: ptBR }), {
-                    shouldValidate: true,
-                  });
+                  setValue(
+                    "class_date",
+                    format(date, "dd/MM/yyyy", { locale: ptBR }),
+                    {
+                      shouldValidate: true,
+                    }
+                  );
                 }
               }}
               locale={ptBR}
@@ -181,36 +205,49 @@ export function ClassLogStudentSection({
           </PopoverContent>
         </Popover>
         {errors.class_date && (
-          <p className="text-sm text-destructive">{String(errors.class_date.message)}</p>
+          <p className="text-sm text-destructive">
+            {String(errors.class_date.message)}
+          </p>
         )}
       </div>
 
       {/* Horário */}
       <div className="space-y-3 rounded-lg border p-3">
-        <p className="text-sm font-medium">{classesContent.logFormDialog.titleFieldLabel}</p>
+        <p className="text-sm font-medium">
+          {classesContent.logFormDialog.titleFieldLabel}
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="start_time">{classesContent.logFormDialog.startTimeLabel}</Label>
+            <Label htmlFor="start_time">
+              {classesContent.logFormDialog.startTimeLabel}
+            </Label>
             <Input id="start_time" type="time" {...register("start_time")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="end_time">{classesContent.logFormDialog.endTimeLabel}</Label>
+            <Label htmlFor="end_time">
+              {classesContent.logFormDialog.endTimeLabel}
+            </Label>
             <Input id="end_time" type="time" {...register("end_time")} />
             {errors.end_time && (
-              <p className="text-xs text-destructive">{String(errors.end_time.message)}</p>
+              <p className="text-xs text-destructive">
+                {String(errors.end_time.message)}
+              </p>
             )}
           </div>
         </div>
         {effectiveDurationMinutes != null && (
           <p className="text-xs text-muted-foreground">
-            {classesContent.logFormDialog.titleFieldLabel}: {effectiveDurationMinutes} min
+            {classesContent.logFormDialog.titleFieldLabel}:{" "}
+            {effectiveDurationMinutes} min
           </p>
         )}
       </div>
 
       {/* Observações */}
       <div className="space-y-2">
-        <Label htmlFor="observations">{classesContent.logFormDialog.observationsLabel}</Label>
+        <Label htmlFor="observations">
+          {classesContent.logFormDialog.observationsLabel}
+        </Label>
         <Textarea
           id="observations"
           placeholder={common.placeholders.preClassNotesHint}
@@ -218,7 +255,9 @@ export function ClassLogStudentSection({
           {...register("observations")}
         />
         {errors.observations && (
-          <p className="text-sm text-destructive">{String(errors.observations.message)}</p>
+          <p className="text-sm text-destructive">
+            {String(errors.observations.message)}
+          </p>
         )}
       </div>
     </>

@@ -1,9 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QK } from "./queryKeys";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import startOfMonth from "date-fns/startOfMonth";
 import endOfMonth from "date-fns/endOfMonth";
+import {
+  type PeriodFilter,
+  getDateRangeForPeriod,
+} from "@/lib/utils/periodFilter";
 import subMonths from "date-fns/subMonths";
 import eachDayOfInterval from "date-fns/eachDayOfInterval";
 import ptBR from "date-fns/locale/pt-BR";
@@ -48,9 +52,12 @@ interface FinancialRecordWithStudent {
   };
 }
 
-export function useTeacherDashboardStats(teacherId: string | null) {
+export function useTeacherDashboardStats(
+  teacherId: string | null,
+  period: PeriodFilter = "month"
+) {
   return useQuery({
-    queryKey: [QK.TEACHER_DASHBOARD_STATS, teacherId],
+    queryKey: [QK.TEACHER_DASHBOARD_STATS, teacherId, period],
     queryFn: async (): Promise<TeacherDashboardStats> => {
       if (!teacherId) {
         return {
@@ -61,42 +68,39 @@ export function useTeacherDashboardStats(teacherId: string | null) {
         };
       }
 
-      // Active students (excluindo alunos deletados via soft delete)
+      const { from, to } = getDateRangeForPeriod(period);
+      const periodStart = parseISO(from).toISOString();
+      const periodEnd = parseISO(to).toISOString();
+
+      // activeCount: total atual, sem filtro de período (reflete estado real da turma)
       const { count: activeCount } = await supabase
         .from("students_active")
         .select("*", { count: "exact", head: true })
         .eq("status", "ativo")
         .eq("teacher_id", teacherId);
 
-      // First, get all student ids for this teacher (excluindo deletados)
       const { data: teacherStudents, error: teacherStudentsError } =
         await supabase
           .from("students_active")
           .select("id")
           .eq("teacher_id", teacherId);
 
-      if (teacherStudentsError) {
-        throw teacherStudentsError;
-      }
+      if (teacherStudentsError) throw teacherStudentsError;
 
       const studentIds = (teacherStudents || []).map((s) => s.id);
 
       let overdueCount = 0;
       let classCount = 0;
 
-      // New students this month (excluindo deletados)
-      const startMonth = startOfMonth(new Date()).toISOString();
-      const endMonth = endOfMonth(new Date()).toISOString();
-
       const { count: newCount } = await supabase
         .from("students_active")
         .select("*", { count: "exact", head: true })
-        .gte("created_at", startMonth)
-        .lte("created_at", endMonth)
+        .gte("created_at", periodStart)
+        .lte("created_at", periodEnd)
         .eq("teacher_id", teacherId);
 
       if (studentIds.length > 0) {
-        // Overdue = não pago e due_date < hoje (status no DB é "pendente", atrasado é derivado de due_date)
+        // overdueCount: sempre estado atual — inadimplência não tem janela temporal (Decision A)
         const todayStr = format(new Date(), "yyyy-MM-dd");
         const { count: overdue } = await supabase
           .from("financial_records")
@@ -107,12 +111,11 @@ export function useTeacherDashboardStats(teacherId: string | null) {
 
         overdueCount = overdue || 0;
 
-        // Classes this month for this teacher's students
         const { count: classes } = await supabase
           .from("class_logs")
           .select("id", { count: "exact", head: true })
-          .gte("class_date", startMonth)
-          .lte("class_date", endMonth)
+          .gte("class_date", from)
+          .lte("class_date", to)
           .in("student_id", studentIds);
 
         classCount = classes || 0;

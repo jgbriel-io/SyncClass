@@ -3,10 +3,14 @@ import { QK } from "./queryKeys";
 import { supabase } from "@/integrations/supabase/client";
 import startOfMonth from "date-fns/startOfMonth";
 import endOfMonth from "date-fns/endOfMonth";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import subMonths from "date-fns/subMonths";
 import eachDayOfInterval from "date-fns/eachDayOfInterval";
 import ptBR from "date-fns/locale/pt-BR";
+import {
+  type PeriodFilter,
+  getDateRangeForPeriod,
+} from "@/lib/utils/periodFilter";
 
 interface DashboardStats {
   activeStudents: number;
@@ -37,35 +41,35 @@ export interface MonthlyChartData {
   usersCount?: number; // total usuários = alunos + professores (admin)
 }
 
-export function useDashboardStats() {
+export function useDashboardStats(period: PeriodFilter = "month") {
   return useQuery({
-    queryKey: [QK.DASHBOARD_STATS],
+    queryKey: [QK.DASHBOARD_STATS, period],
     queryFn: async () => {
-      const now = new Date();
-      const monthStart = startOfMonth(now);
-      const monthEnd = endOfMonth(now);
+      const { from, to } = getDateRangeForPeriod(period);
+      const periodStart = parseISO(from);
+      const periodEnd = parseISO(to);
 
-      // Get students stats
-      // Use students_masked para garantir mascaramento LGPD
-      // (não afeta esta query pois não seleciona CPF/telefone)
-      const { data: students, error: studentsError } = await supabase
-        .from("students_masked")
-        .select("id, status, created_at");
+      const [allStudentsRes, newStudentsRes] = await Promise.all([
+        supabase.from("students_masked").select("id, status"),
+        supabase
+          .from("students_masked")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", periodStart.toISOString())
+          .lte("created_at", periodEnd.toISOString()),
+      ]);
 
-      if (studentsError) throw studentsError;
+      if (allStudentsRes.error) throw allStudentsRes.error;
+      if (newStudentsRes.error) throw newStudentsRes.error;
 
+      const students = allStudentsRes.data;
       const activeStudents =
         students?.filter((s) => s.status === "ativo").length || 0;
       const inactiveStudents =
         students?.filter((s) => s.status === "inativo").length || 0;
-      const newStudentsThisMonth =
-        students?.filter((s) => {
-          const createdAt = new Date(s.created_at || "");
-          return createdAt >= monthStart && createdAt <= monthEnd;
-        }).length || 0;
+      const newStudentsThisMonth = newStudentsRes.count || 0;
 
-      // Get overdue payments count
-      const today = format(now, "yyyy-MM-dd");
+      // overdueCount: always current state, not period-filtered
+      const today = format(new Date(), "yyyy-MM-dd");
       const { data: overdueRecords, error: overdueError } = await supabase
         .from("financial_records")
         .select("id")
@@ -75,12 +79,11 @@ export function useDashboardStats() {
       if (overdueError) throw overdueError;
       const overdueCount = overdueRecords?.length || 0;
 
-      // Get classes this month
       const { data: classLogs, error: classesError } = await supabase
         .from("class_logs")
         .select("id")
-        .gte("class_date", format(monthStart, "yyyy-MM-dd"))
-        .lte("class_date", format(monthEnd, "yyyy-MM-dd"));
+        .gte("class_date", from)
+        .lte("class_date", to);
 
       if (classesError) throw classesError;
       const classesThisMonth = classLogs?.length || 0;

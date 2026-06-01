@@ -12,7 +12,7 @@ const WARNING_THRESHOLD = 3 * 1024 * 1024; // 3MB (aviso preventivo)
  */
 export function calculateStorageSize(): number {
   let total = 0;
-  
+
   for (const key in localStorage) {
     if (Object.prototype.hasOwnProperty.call(localStorage, key)) {
       const value = localStorage[key];
@@ -20,7 +20,7 @@ export function calculateStorageSize(): number {
       total += key.length + value.length;
     }
   }
-  
+
   return total;
 }
 
@@ -47,7 +47,7 @@ export function checkStorageQuota(): {
   const percentage = (used / (5 * 1024 * 1024)) * 100; // % de 5MB
   const shouldClear = used > MAX_STORAGE_SIZE;
   const shouldWarn = used > WARNING_THRESHOLD && !shouldClear;
-  
+
   return {
     used,
     usedMB,
@@ -64,17 +64,17 @@ export function checkStorageQuota(): {
 export function clearStorageExcept(keepKeys: string[] = []): void {
   // Salvar valores das keys que devem ser mantidas
   const savedValues: Record<string, string> = {};
-  
-  keepKeys.forEach(key => {
+
+  keepKeys.forEach((key) => {
     const value = localStorage.getItem(key);
     if (value !== null) {
       savedValues[key] = value;
     }
   });
-  
+
   // Limpar tudo
   localStorage.clear();
-  
+
   // Restaurar valores salvos
   Object.entries(savedValues).forEach(([key, value]) => {
     localStorage.setItem(key, value);
@@ -85,9 +85,13 @@ export function clearStorageExcept(keepKeys: string[] = []): void {
  * Lista as keys do LocalStorage ordenadas por tamanho
  * Útil para debug e identificar o que está ocupando espaço
  */
-export function getStorageStats(): Array<{ key: string; size: number; sizeMB: string }> {
+export function getStorageStats(): Array<{
+  key: string;
+  size: number;
+  sizeMB: string;
+}> {
   const stats: Array<{ key: string; size: number; sizeMB: string }> = [];
-  
+
   for (const key in localStorage) {
     if (Object.prototype.hasOwnProperty.call(localStorage, key)) {
       const value = localStorage[key];
@@ -99,7 +103,7 @@ export function getStorageStats(): Array<{ key: string; size: number; sizeMB: st
       });
     }
   }
-  
+
   // Ordenar por tamanho (maior primeiro)
   return stats.sort((a, b) => b.size - a.size);
 }

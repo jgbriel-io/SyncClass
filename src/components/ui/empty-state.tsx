@@ -57,7 +57,7 @@ const sizeClasses = {
 
 /**
  * Componente de Empty State melhorado
- * 
+ *
  * Mostra uma mensagem quando não há dados para exibir,
  * com opção de ícone, ilustração customizada e CTA.
  */
@@ -73,7 +73,12 @@ export function EmptyState({
   const sizes = sizeClasses[size];
 
   return (
-    <div className={cn("flex flex-col items-center justify-center text-center", sizes.container)}>
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center text-center",
+        sizes.container
+      )}
+    >
       {/* Ilustração ou Ícone */}
       {illustration ? (
         <div className="mb-4">{illustration}</div>
@@ -97,7 +102,11 @@ export function EmptyState({
 
       {/* CTA (opcional) */}
       {actionLabel && onAction && (
-        <Button onClick={onAction} className="mt-6" size={size === "sm" ? "sm" : "default"}>
+        <Button
+          onClick={onAction}
+          className="mt-6"
+          size={size === "sm" ? "sm" : "default"}
+        >
           {actionLabel}
         </Button>
       )}

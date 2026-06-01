@@ -38,7 +38,7 @@ export const useActivityFileActions = () => {
       toast.dismiss();
       toast.success(activities.view.toasts.downloadSuccess);
     } catch (error) {
-      logger.error(error as Error, { context: 'download_activity_file' });
+      logger.error(error as Error, { context: "download_activity_file" });
       toast.dismiss();
       toast.error(activities.view.toasts.downloadError);
     } finally {

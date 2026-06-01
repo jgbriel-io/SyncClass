@@ -9,7 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Upload, FileText } from "lucide-react";
-import { useAddActivityCorrection, uploadActivityFile, ActivityWithRelations } from "@/hooks/useActivities";
+import {
+  useAddActivityCorrection,
+  uploadActivityFile,
+  ActivityWithRelations,
+} from "@/hooks/useActivities";
 import { toast } from "sonner";
 import { activities as activitiesContent, common } from "@/content";
 
@@ -82,7 +86,10 @@ export function AddCorrectionDialog({
       }
 
       const gradeValue = data.grade?.trim()
-        ? Math.min(100, Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0))
+        ? Math.min(
+            100,
+            Math.max(0, parseFloat(data.grade.replace(",", ".")) || 0)
+          )
         : null;
       await addCorrection.mutateAsync({
         activityId: activity.id,
@@ -96,7 +103,11 @@ export function AddCorrectionDialog({
       setSelectedFile(null);
       onOpenChange(false);
     } catch (error) {
-      toast.error(activitiesContent.correctionDialog.toasts.error((error as Error).message));
+      toast.error(
+        activitiesContent.correctionDialog.toasts.error(
+          (error as Error).message
+        )
+      );
     } finally {
       setIsUploading(false);
     }
@@ -116,92 +127,108 @@ export function AddCorrectionDialog({
       <DialogDescription asChild>
         <div className="space-y-1 mb-4">
           <p className="text-sm text-muted-foreground">
-            {activitiesContent.correctionDialog.activityLabel} <span className="font-medium text-foreground">{activity.title}</span>
+            {activitiesContent.correctionDialog.activityLabel}{" "}
+            <span className="font-medium text-foreground">
+              {activity.title}
+            </span>
           </p>
           <p className="text-sm text-muted-foreground">
-            {activitiesContent.correctionDialog.studentLabel} <span className="font-medium text-foreground">{activity.students?.name}</span>
+            {activitiesContent.correctionDialog.studentLabel}{" "}
+            <span className="font-medium text-foreground">
+              {activity.students?.name}
+            </span>
           </p>
         </div>
       </DialogDescription>
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          {/* Feedback */}
-          <div className="space-y-2">
-            <Label htmlFor="feedback">{activitiesContent.correctionDialog.feedbackLabel}</Label>
-            <Textarea
-              id="feedback"
-              placeholder={activitiesContent.correctionDialog.feedbackPlaceholder}
-              rows={5}
-              {...register("feedback")}
-              disabled={isPending}
-            />
-            {errors.feedback && (
-              <p className="text-sm text-destructive">{errors.feedback.message}</p>
-            )}
-          </div>
-
-          {/* Nota (opcional) */}
-          <div className="space-y-2">
-            <Label htmlFor="grade">{activitiesContent.correctionDialog.gradeLabel}</Label>
-            <Input
-              id="grade"
-              type="text"
-              placeholder={activitiesContent.correctionDialog.gradePlaceholder}
-              {...register("grade")}
-              disabled={isPending}
-            />
-            {errors.grade && (
-              <p className="text-sm text-destructive">{errors.grade.message}</p>
-            )}
-          </div>
-
-          {/* Upload de Arquivo de Correção (opcional) */}
-          <div className="space-y-2">
-            <Label htmlFor="correctionFile">{activitiesContent.correctionDialog.correctionFileLabel}</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="correctionFile"
-                type="file"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-                onChange={handleFileChange}
-                disabled={isPending}
-                className="cursor-pointer"
-              />
-              {selectedFile && (
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <FileText className="h-4 w-4" />
-                  <span className="truncate max-w-[150px]">{selectedFile.name}</span>
-                </div>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {activitiesContent.correctionDialog.correctionFileHint}
+        {/* Feedback */}
+        <div className="space-y-2">
+          <Label htmlFor="feedback">
+            {activitiesContent.correctionDialog.feedbackLabel}
+          </Label>
+          <Textarea
+            id="feedback"
+            placeholder={activitiesContent.correctionDialog.feedbackPlaceholder}
+            rows={5}
+            {...register("feedback")}
+            disabled={isPending}
+          />
+          {errors.feedback && (
+            <p className="text-sm text-destructive">
+              {errors.feedback.message}
             </p>
-          </div>
+          )}
+        </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
+        {/* Nota (opcional) */}
+        <div className="space-y-2">
+          <Label htmlFor="grade">
+            {activitiesContent.correctionDialog.gradeLabel}
+          </Label>
+          <Input
+            id="grade"
+            type="text"
+            placeholder={activitiesContent.correctionDialog.gradePlaceholder}
+            {...register("grade")}
+            disabled={isPending}
+          />
+          {errors.grade && (
+            <p className="text-sm text-destructive">{errors.grade.message}</p>
+          )}
+        </div>
+
+        {/* Upload de Arquivo de Correção (opcional) */}
+        <div className="space-y-2">
+          <Label htmlFor="correctionFile">
+            {activitiesContent.correctionDialog.correctionFileLabel}
+          </Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="correctionFile"
+              type="file"
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+              onChange={handleFileChange}
               disabled={isPending}
-            >
-              {common.actions.cancel}
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {activitiesContent.correctionDialog.submitting}
-                </>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  {activitiesContent.correctionDialog.submitButton}
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+              className="cursor-pointer"
+            />
+            {selectedFile && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <FileText className="h-4 w-4" />
+                <span className="truncate max-w-[150px]">
+                  {selectedFile.name}
+                </span>
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {activitiesContent.correctionDialog.correctionFileHint}
+          </p>
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
+            {common.actions.cancel}
+          </Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {activitiesContent.correctionDialog.submitting}
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                {activitiesContent.correctionDialog.submitButton}
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </form>
     </BaseDialog>
   );
 }

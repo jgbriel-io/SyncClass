@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,6 +9,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { common } from "@/content";
 
@@ -24,6 +26,7 @@ interface ConfirmHardDeleteDialogProps {
   onConfirm: () => void;
   warningLabel?: string;
   warning?: string;
+  checkboxLabel?: string;
 }
 
 export function ConfirmHardDeleteDialog({
@@ -38,9 +41,17 @@ export function ConfirmHardDeleteDialog({
   onConfirm,
   warningLabel,
   warning,
+  checkboxLabel,
 }: ConfirmHardDeleteDialogProps) {
+  const [checked, setChecked] = useState(false);
+
+  const handleOpenChange = (v: boolean) => {
+    if (!v) setChecked(false);
+    onOpenChange(v);
+  };
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className={titleClassName}>
@@ -64,13 +75,28 @@ export function ConfirmHardDeleteDialog({
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {checkboxLabel && (
+          <div className="flex items-center gap-2 py-1">
+            <Checkbox
+              id="hard-delete-confirm"
+              checked={checked}
+              onCheckedChange={(v) => setChecked(!!v)}
+            />
+            <Label
+              htmlFor="hard-delete-confirm"
+              className="text-sm font-medium cursor-pointer"
+            >
+              {checkboxLabel}
+            </Label>
+          </div>
+        )}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>
             {common.actions.cancel}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
-            disabled={isPending}
+            disabled={isPending || (checkboxLabel != null && !checked)}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {isPending ? (

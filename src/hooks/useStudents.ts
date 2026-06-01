@@ -463,9 +463,11 @@ export function useHardDeleteStudent() {
               }) => {
                 const [y, m, d] = c.class_date.split("-");
                 const date = `${d}/${m}/${y}`;
-                const time = c.start_at || "";
+                const time = c.start_at ? c.start_at.slice(11, 16) : "";
                 const teacher = c.teachers?.name || "Professor desconhecido";
-                return `${date} ${time} - ${teacher}`;
+                return time
+                  ? `${date} ${time} - ${teacher}`
+                  : `${date} - ${teacher}`;
               }
             )
             .join("\n");
@@ -515,7 +517,9 @@ export function useHardDeleteStudent() {
             deleted_at: new Date().toISOString(),
             active: false,
             student_id: null,
+            full_name: `Usuário ${pickAnonSegment(linkedProfile.user_id)}`,
             email: null,
+            avatar_url: null,
           })
           .eq("user_id", linkedProfile.user_id);
 

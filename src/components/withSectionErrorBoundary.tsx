@@ -3,7 +3,7 @@ import { SectionErrorBoundary } from "./SectionErrorBoundary";
 
 /**
  * HOC para envolver componentes com SectionErrorBoundary
- * 
+ *
  * @example
  * export default withSectionErrorBoundary(FinancialView);
  */

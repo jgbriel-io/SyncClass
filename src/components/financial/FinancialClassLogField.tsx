@@ -39,7 +39,9 @@ interface FinancialClassLogFieldProps {
 }
 
 function formatClassLogDate(dateString: string): string {
-  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR });
+  return format(new Date(dateString + "T00:00:00"), "dd/MM/yyyy", {
+    locale: ptBR,
+  });
 }
 
 export function FinancialClassLogField({
@@ -66,13 +68,18 @@ export function FinancialClassLogField({
               ? (() => {
                   const firstClass = packageClasses[0];
                   const rawTitle = firstClass.title?.trim();
-                  const displayTitle = rawTitle || `${financial.formDialog.classDatePrefix}${formatClassLogDate(firstClass.class_date)}`;
+                  const displayTitle =
+                    rawTitle ||
+                    `${financial.formDialog.classDatePrefix}${formatClassLogDate(firstClass.class_date)}`;
                   return `${displayTitle} ${financial.formDialog.packageLabel}`;
                 })()
               : currentClassLog
                 ? (() => {
                     const rawTitle = currentClassLog.title?.trim();
-                    return rawTitle || `${financial.formDialog.classDatePrefix}${formatClassLogDate(currentClassLog.class_date)}`;
+                    return (
+                      rawTitle ||
+                      `${financial.formDialog.classDatePrefix}${formatClassLogDate(currentClassLog.class_date)}`
+                    );
                   })()
                 : financial.formDialog.noClassLinked
           }
@@ -84,18 +91,24 @@ export function FinancialClassLogField({
         <Select
           value={selectedClassLogId || undefined}
           onValueChange={onClassLogChange}
-          disabled={!selectedStudentId || loadingClassLogs || (requireClassLog && classLogOptions.length === 0)}
+          disabled={
+            !selectedStudentId ||
+            loadingClassLogs ||
+            (requireClassLog && classLogOptions.length === 0)
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder={
-              !selectedStudentId 
-                ? financial.formDialog.classSelectStudentFirst
-                : loadingClassLogs 
-                  ? financial.formDialog.classLoading
-                  : requireClassLog && classLogOptions.length === 0
-                    ? financial.formDialog.classNone
-                    : financial.formDialog.classSelect
-            } />
+            <SelectValue
+              placeholder={
+                !selectedStudentId
+                  ? financial.formDialog.classSelectStudentFirst
+                  : loadingClassLogs
+                    ? financial.formDialog.classLoading
+                    : requireClassLog && classLogOptions.length === 0
+                      ? financial.formDialog.classNone
+                      : financial.formDialog.classSelect
+              }
+            />
           </SelectTrigger>
           <SelectContent>
             {classLogOptions.map((log) => (
@@ -108,11 +121,14 @@ export function FinancialClassLogField({
           </SelectContent>
         </Select>
       )}
-      {selectedStudentId && classLogOptions.length === 0 && !loadingClassLogs && !isEditMode && (
-        <p className="text-xs text-muted-foreground">
-          {financial.formDialog.classNoneWithCharge}
-        </p>
-      )}
+      {selectedStudentId &&
+        classLogOptions.length === 0 &&
+        !loadingClassLogs &&
+        !isEditMode && (
+          <p className="text-xs text-muted-foreground">
+            {financial.formDialog.classNoneWithCharge}
+          </p>
+        )}
       {errorMessage && (
         <p className="text-sm text-destructive">{errorMessage}</p>
       )}

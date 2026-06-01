@@ -49,7 +49,9 @@ export function checkRateLimit(
   }
 
   // Remover chamadas antigas (fora da janela de tempo)
-  state.calls = state.calls.filter((timestamp) => now - timestamp < config.windowMs);
+  state.calls = state.calls.filter(
+    (timestamp) => now - timestamp < config.windowMs
+  );
 
   // Verificar se excedeu o limite
   if (state.calls.length >= config.maxCalls) {
@@ -92,7 +94,7 @@ export function useRateLimit(
 ): (callback: () => void | Promise<void>) => Promise<void> {
   return async (callback: () => void | Promise<void>) => {
     const result = checkRateLimit(key, config);
-    
+
     if (!result.allowed) {
       throw new Error(
         `Muitas requisições. Aguarde ${result.retryAfter} segundo(s) antes de tentar novamente.`
@@ -109,16 +111,16 @@ export function useRateLimit(
 export const RATE_LIMIT_CONFIGS = {
   // Operações críticas (criar/deletar)
   CRITICAL: { maxCalls: 3, windowMs: 60000 }, // 3 por minuto
-  
+
   // Operações normais (update)
   NORMAL: { maxCalls: 10, windowMs: 60000 }, // 10 por minuto
-  
+
   // Operações de leitura
   READ: { maxCalls: 30, windowMs: 60000 }, // 30 por minuto
-  
+
   // Upload de arquivos
   UPLOAD: { maxCalls: 5, windowMs: 300000 }, // 5 por 5 minutos
-  
+
   // Autenticação
   AUTH: { maxCalls: 5, windowMs: 300000 }, // 5 por 5 minutos
 } as const;

@@ -125,7 +125,9 @@ describe("Validation Schemas", () => {
 
   describe("observationsSchema", () => {
     it("deve aceitar observação válida", () => {
-      expect(observationsSchema.safeParse("Observação teste").success).toBe(true);
+      expect(observationsSchema.safeParse("Observação teste").success).toBe(
+        true
+      );
     });
 
     it("deve aceitar vazio", () => {

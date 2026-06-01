@@ -1,17 +1,17 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
-import { TeachersTableRow } from './TeachersTableRow';
+import { describe, it, expect, vi } from "vitest";
+import { render } from "@testing-library/react";
+import { TeachersTableRow } from "./TeachersTableRow";
 
-describe('TeachersTableRow - Snapshot', () => {
+describe("TeachersTableRow - Snapshot", () => {
   const mockTeacher = {
-    id: '1',
-    name: 'Prof. Maria',
-    email: 'maria@example.com',
-    phone: '11988888888',
-    status: 'ativo',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-15T10:30:00Z',
-    school_id: 'school-1',
+    id: "1",
+    name: "Prof. Maria",
+    email: "maria@example.com",
+    phone: "11988888888",
+    status: "ativo",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-15T10:30:00Z",
+    school_id: "school-1",
   };
 
   const mockHandlers = {
@@ -22,7 +22,7 @@ describe('TeachersTableRow - Snapshot', () => {
     onHardDelete: vi.fn(),
   };
 
-  it('should render teacher row with centralized content - active', () => {
+  it("should render teacher row with centralized content - active", () => {
     const { container } = render(
       <table>
         <tbody>
@@ -38,8 +38,8 @@ describe('TeachersTableRow - Snapshot', () => {
     expect(container).toMatchSnapshot();
   });
 
-  it('should render teacher row - inactive', () => {
-    const inactiveTeacher = { ...mockTeacher, status: 'inativo' };
+  it("should render teacher row - inactive", () => {
+    const inactiveTeacher = { ...mockTeacher, status: "inativo" };
     const { container } = render(
       <table>
         <tbody>

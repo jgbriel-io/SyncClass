@@ -1,6 +1,6 @@
 /**
  * Design Tokens: Tamanhos de Modais
- * 
+ *
  * Centraliza os tamanhos de Dialogs (centrais) e Sheets (laterais)
  * para garantir consistência e facilitar manutenção.
  */
@@ -11,15 +11,15 @@
 
 /**
  * Tamanhos para Dialogs (modais que aparecem no centro da tela)
- * 
+ *
  * - SM: Formulários simples (poucos campos)
  * - MD: Formulários médios (cadastros)
  * - LG: Formulários complexos (visualização + formulário)
  */
 export const DIALOG_SIZES = {
-  SM: "sm:max-w-md",   // 448px - Formulários simples
-  MD: "sm:max-w-lg",   // 512px - Formulários médios
-  LG: "sm:max-w-2xl",  // 672px - Formulários complexos
+  SM: "sm:max-w-md", // 448px - Formulários simples
+  MD: "sm:max-w-lg", // 512px - Formulários médios
+  LG: "sm:max-w-2xl", // 672px - Formulários complexos
 } as const;
 
 export type DialogSize = keyof typeof DIALOG_SIZES;
@@ -40,17 +40,17 @@ export const DIALOG_SIZE_MAP: Record<DialogSize, string> = {
 
 /**
  * Tamanhos para Sheets (modais que deslizam da lateral)
- * 
+ *
  * - DEFAULT: Visualização padrão
  * - LG: Visualização com mais informações
  * - XL: Visualização completa (múltiplas tabs)
  * - FULL: Ocupa toda a largura
  */
 export const SHEET_SIZES = {
-  DEFAULT: "sm:max-w-lg",   // 512px - Visualização padrão
-  LG: "sm:max-w-xl",        // 640px - Visualização média
-  XL: "sm:max-w-2xl",       // 672px - Visualização completa
-  FULL: "sm:max-w-full",    // 100% - Largura total
+  DEFAULT: "sm:max-w-lg", // 512px - Visualização padrão
+  LG: "sm:max-w-xl", // 640px - Visualização média
+  XL: "sm:max-w-2xl", // 672px - Visualização completa
+  FULL: "sm:max-w-full", // 100% - Largura total
 } as const;
 
 export type SheetSize = keyof typeof SHEET_SIZES;
@@ -79,7 +79,7 @@ export const MODAL_SIZES_PX = {
   DIALOG_SM: 448,
   DIALOG_MD: 512,
   DIALOG_LG: 672,
-  
+
   // Sheets
   SHEET_DEFAULT: 512,
   SHEET_LG: 640,
@@ -139,13 +139,13 @@ export function getSheetSizePx(size: SheetSize): number | null {
 
 /**
  * Exemplo de uso no BaseDialog:
- * 
+ *
  * import { DIALOG_SIZE_MAP, DialogSize } from '@/lib/design-tokens/modal-sizes';
- * 
+ *
  * interface BaseDialogProps {
  *   size?: DialogSize;
  * }
- * 
+ *
  * function BaseDialog({ size = 'SM' }: BaseDialogProps) {
  *   return (
  *     <DialogContent className={DIALOG_SIZE_MAP[size]}>
@@ -157,13 +157,13 @@ export function getSheetSizePx(size: SheetSize): number | null {
 
 /**
  * Exemplo de uso no BaseDetailSheet:
- * 
+ *
  * import { SHEET_SIZE_MAP, SheetSize } from '@/lib/design-tokens/modal-sizes';
- * 
+ *
  * interface BaseDetailSheetProps {
  *   size?: SheetSize;
  * }
- * 
+ *
  * function BaseDetailSheet({ size = 'DEFAULT' }: BaseDetailSheetProps) {
  *   return (
  *     <SheetContent className={SHEET_SIZE_MAP[size]}>

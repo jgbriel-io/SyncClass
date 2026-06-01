@@ -33,11 +33,13 @@ interface OverviewTableRowProps {
   onViewStudent: (studentId: string) => void;
 }
 
-export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowProps) {
+export function OverviewTableRow({
+  student,
+  onViewStudent,
+}: OverviewTableRowProps) {
   const hasOverdue = student.stats.totalOverdue > 0;
   const lowAttendance =
-    student.stats.attendanceRate !== null &&
-    student.stats.attendanceRate < 75;
+    student.stats.attendanceRate !== null && student.stats.attendanceRate < 75;
 
   const formatSince = (dateStr?: string | null) => {
     if (!dateStr) return overview.symbols.emDash;
@@ -56,7 +58,10 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
   return (
     <tr className="group hover:bg-muted/30 transition-colors">
       {/* Aluno — sticky XL */}
-      <td className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`} style={STICKY_SHADOW}>
+      <td
+        className={`${CELL_BASE} ${STICKY_CELL} ${getXLColumnClasses()}`}
+        style={STICKY_SHADOW}
+      >
         <div className="flex items-center gap-4 overflow-hidden">
           <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-medium text-accent-foreground">
@@ -67,29 +72,53 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
             <p className="text-xs font-medium truncate" title={student.name}>
               {student.name}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate" title={student.email || formatPhoneDisplay(student.phone, student.country) || "—"}>
-              {student.email || formatPhoneDisplay(student.phone, student.country) || "—"}
+            <p
+              className="text-xs text-muted-foreground mt-0.5 truncate"
+              title={
+                student.email ||
+                formatPhoneDisplay(student.phone, student.country) ||
+                "—"
+              }
+            >
+              {student.email ||
+                formatPhoneDisplay(student.phone, student.country) ||
+                "—"}
             </p>
           </div>
         </div>
       </td>
 
       {/* Entrada - M */}
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.ENTRADA, minWidth: COL.ENTRADA }}>
-        <span className="text-xs text-muted-foreground truncate block" title={formatSince(student.created_at)}>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.ENTRADA, minWidth: COL.ENTRADA }}
+      >
+        <span
+          className="text-xs text-muted-foreground truncate block"
+          title={formatSince(student.created_at)}
+        >
           {formatSince(student.created_at)}
         </span>
       </td>
 
       {/* Aulas - S */}
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.AULAS, minWidth: COL.AULAS }}>
-        <span className="text-xs font-medium truncate block" title={String(student.stats.totalClasses)}>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.AULAS, minWidth: COL.AULAS }}
+      >
+        <span
+          className="text-xs font-medium truncate block"
+          title={String(student.stats.totalClasses)}
+        >
           {student.stats.totalClasses}
         </span>
       </td>
 
       {/* Frequência - M */}
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.FREQUENCIA, minWidth: COL.FREQUENCIA }}>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.FREQUENCIA, minWidth: COL.FREQUENCIA }}
+      >
         <div className="flex items-center gap-1">
           {student.stats.attendanceRate !== null ? (
             <>
@@ -100,9 +129,7 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
               )}
               <span
                 className={`text-xs font-medium truncate ${
-                  lowAttendance
-                    ? "text-rose-600"
-                    : "text-success"
+                  lowAttendance ? "text-rose-600" : "text-success"
                 }`}
                 title={`${student.stats.attendanceRate.toFixed(0)}%`}
               >
@@ -110,7 +137,10 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
               </span>
             </>
           ) : (
-            <span className="text-xs text-muted-foreground truncate" title={overview.symbols.emDash}>
+            <span
+              className="text-xs text-muted-foreground truncate"
+              title={overview.symbols.emDash}
+            >
               {overview.symbols.emDash}
             </span>
           )}
@@ -118,43 +148,64 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
       </td>
 
       {/* Média - S */}
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.MEDIA, minWidth: COL.MEDIA }}>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.MEDIA, minWidth: COL.MEDIA }}
+      >
         {student.stats.averageGrade !== null ? (
           <span
             className={`text-xs font-medium truncate block ${
               student.stats.averageGrade >= 7
                 ? "text-success"
                 : student.stats.averageGrade >= 5
-                ? "text-amber-600"
-                : "text-rose-600"
+                  ? "text-amber-600"
+                  : "text-rose-600"
             }`}
             title={student.stats.averageGrade.toFixed(1)}
           >
             {student.stats.averageGrade.toFixed(1)}
           </span>
         ) : (
-          <span className="text-xs text-muted-foreground truncate block" title={overview.symbols.emDash}>
+          <span
+            className="text-xs text-muted-foreground truncate block"
+            title={overview.symbols.emDash}
+          >
             {overview.symbols.emDash}
           </span>
         )}
       </td>
 
       {/* Pago - S */}
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.PAGO, minWidth: COL.PAGO }}>
-        <span className="text-xs text-success font-medium truncate block" title={formatCurrency(student.stats.totalPaid)}>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.PAGO, minWidth: COL.PAGO }}
+      >
+        <span
+          className="text-xs text-success font-medium truncate block"
+          title={formatCurrency(student.stats.totalPaid)}
+        >
           {formatCurrency(student.stats.totalPaid)}
         </span>
       </td>
 
       {/* Pendente - S */}
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.PENDENTE, minWidth: COL.PENDENTE }}>
-        <span className="text-xs text-amber-600 font-medium truncate block" title={formatCurrency(student.stats.totalPending)}>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.PENDENTE, minWidth: COL.PENDENTE }}
+      >
+        <span
+          className="text-xs text-amber-600 font-medium truncate block"
+          title={formatCurrency(student.stats.totalPending)}
+        >
           {formatCurrency(student.stats.totalPending)}
         </span>
       </td>
 
       {/* Atrasado - S */}
-      <td className={`${CELL_BASE} tabular-nums`} style={{ width: COL.ATRASADO, minWidth: COL.ATRASADO }}>
+      <td
+        className={`${CELL_BASE} tabular-nums`}
+        style={{ width: COL.ATRASADO, minWidth: COL.ATRASADO }}
+      >
         <span
           className={`text-xs font-medium truncate block ${
             hasOverdue ? "text-rose-600" : "text-muted-foreground"
@@ -166,7 +217,10 @@ export function OverviewTableRow({ student, onViewStudent }: OverviewTableRowPro
       </td>
 
       {/* Ações - XS */}
-      <td className={CELL_BASE} style={{ width: COL.ACOES, minWidth: COL.ACOES }}>
+      <td
+        className={CELL_BASE}
+        style={{ width: COL.ACOES, minWidth: COL.ACOES }}
+      >
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"

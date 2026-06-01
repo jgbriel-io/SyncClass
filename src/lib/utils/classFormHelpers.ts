@@ -65,7 +65,11 @@ export function getDefaultDueDateForPackage(
 ): string {
   if (!classDateBr || !dateRegex.test(classDateBr)) {
     const today = new Date();
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const lastDay = new Date(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      0
+    ).getDate();
     const day = Math.min(
       payDay && payDay >= 1 && payDay <= 31 ? payDay : today.getDate(),
       lastDay

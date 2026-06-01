@@ -6,7 +6,10 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SHEET_SIZE_MAP, type SheetSize } from "@/lib/design-tokens/modal-sizes";
+import {
+  SHEET_SIZE_MAP,
+  type SheetSize,
+} from "@/lib/design-tokens/modal-sizes";
 
 interface BaseDetailSheetProps {
   open: boolean;
@@ -21,10 +24,10 @@ interface BaseDetailSheetProps {
 
 /**
  * Componente base para todos os Detail Sheets (modais laterais)
- * 
+ *
  * Centraliza a estrutura do Sheet do shadcn/ui e garante
  * consistência visual entre todos os modais de visualização.
- * 
+ *
  * Tamanhos disponíveis:
  * - DEFAULT (512px): Visualização padrão
  * - LG (640px): Visualização média

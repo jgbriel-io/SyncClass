@@ -1,6 +1,6 @@
 /**
  * Ilustrações SVG minimalistas para Empty States
- * 
+ *
  * Estilo: Line art simples, monocromático
  * Cores: Usando tokens de design (text-muted-foreground)
  */
@@ -16,22 +16,99 @@ export function EmptyStudentsIllustration() {
       className="text-muted-foreground/30"
     >
       {/* Cadeira/Mesa de estudante */}
-      <rect x="30" y="70" width="60" height="4" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-      <rect x="35" y="74" width="8" height="26" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-      <rect x="77" y="74" width="8" height="26" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-      
+      <rect
+        x="30"
+        y="70"
+        width="60"
+        height="4"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+      <rect
+        x="35"
+        y="74"
+        width="8"
+        height="26"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+      <rect
+        x="77"
+        y="74"
+        width="8"
+        height="26"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+
       {/* Livro */}
-      <rect x="45" y="55" width="30" height="20" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-      <line x1="60" y1="55" x2="60" y2="75" stroke="currentColor" strokeWidth="2" />
-      
+      <rect
+        x="45"
+        y="55"
+        width="30"
+        height="20"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+      <line
+        x1="60"
+        y1="55"
+        x2="60"
+        y2="75"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+
       {/* Pessoa simples */}
-      <circle cx="60" cy="30" r="8" stroke="currentColor" strokeWidth="2" fill="none" />
-      <path d="M 52 45 Q 60 38 68 45" stroke="currentColor" strokeWidth="2" fill="none" />
-      
+      <circle
+        cx="60"
+        cy="30"
+        r="8"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+      <path
+        d="M 52 45 Q 60 38 68 45"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+
       {/* Plus icon (adicionar) */}
-      <circle cx="90" cy="35" r="12" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="2 2" />
-      <line x1="90" y1="29" x2="90" y2="41" stroke="currentColor" strokeWidth="2" />
-      <line x1="84" y1="35" x2="96" y2="35" stroke="currentColor" strokeWidth="2" />
+      <circle
+        cx="90"
+        cy="35"
+        r="12"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+        strokeDasharray="2 2"
+      />
+      <line
+        x1="90"
+        y1="29"
+        x2="90"
+        y2="41"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <line
+        x1="84"
+        y1="35"
+        x2="96"
+        y2="35"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
     </svg>
   );
 }
@@ -47,23 +124,119 @@ export function EmptyClassesIllustration() {
       className="text-muted-foreground/30"
     >
       {/* Calendário */}
-      <rect x="25" y="30" width="70" height="60" rx="4" stroke="currentColor" strokeWidth="2" fill="none" />
-      <line x1="25" y1="45" x2="95" y2="45" stroke="currentColor" strokeWidth="2" />
-      
+      <rect
+        x="25"
+        y="30"
+        width="70"
+        height="60"
+        rx="4"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+      <line
+        x1="25"
+        y1="45"
+        x2="95"
+        y2="45"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+
       {/* Argolas do calendário */}
-      <line x1="40" y1="30" x2="40" y2="25" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <line x1="60" y1="30" x2="60" y2="25" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <line x1="80" y1="30" x2="80" y2="25" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      
+      <line
+        x1="40"
+        y1="30"
+        x2="40"
+        y2="25"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="60"
+        y1="30"
+        x2="60"
+        y2="25"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="80"
+        y1="30"
+        x2="80"
+        y2="25"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+
       {/* Grid de dias (vazio) */}
-      <circle cx="40" cy="60" r="3" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.3" />
-      <circle cx="55" cy="60" r="3" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.3" />
-      <circle cx="70" cy="60" r="3" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.3" />
-      <circle cx="85" cy="60" r="3" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.3" />
-      
-      <circle cx="40" cy="75" r="3" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.3" />
-      <circle cx="55" cy="75" r="3" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.3" />
-      <circle cx="70" cy="75" r="3" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.3" />
+      <circle
+        cx="40"
+        cy="60"
+        r="3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.3"
+      />
+      <circle
+        cx="55"
+        cy="60"
+        r="3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.3"
+      />
+      <circle
+        cx="70"
+        cy="60"
+        r="3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.3"
+      />
+      <circle
+        cx="85"
+        cy="60"
+        r="3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.3"
+      />
+
+      <circle
+        cx="40"
+        cy="75"
+        r="3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.3"
+      />
+      <circle
+        cx="55"
+        cy="75"
+        r="3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.3"
+      />
+      <circle
+        cx="70"
+        cy="75"
+        r="3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.3"
+      />
     </svg>
   );
 }
@@ -79,19 +252,66 @@ export function EmptyFinancialIllustration() {
       className="text-muted-foreground/30"
     >
       {/* Carteira/Wallet */}
-      <rect x="30" y="45" width="60" height="40" rx="4" stroke="currentColor" strokeWidth="2" fill="none" />
+      <rect
+        x="30"
+        y="45"
+        width="60"
+        height="40"
+        rx="4"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
       <path d="M 30 55 L 90 55" stroke="currentColor" strokeWidth="2" />
-      
+
       {/* Pocket/Bolso */}
-      <rect x="70" y="60" width="12" height="16" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-      
+      <rect
+        x="70"
+        y="60"
+        width="12"
+        height="16"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+
       {/* Moeda com símbolo R$ */}
-      <circle cx="55" cy="70" r="8" stroke="currentColor" strokeWidth="2" fill="none" />
-      <text x="51" y="74" fontSize="10" fill="currentColor" fontWeight="bold">R$</text>
-      
+      <circle
+        cx="55"
+        cy="70"
+        r="8"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+      <text x="51" y="74" fontSize="10" fill="currentColor" fontWeight="bold">
+        R$
+      </text>
+
       {/* Linhas de movimento (vazio) */}
-      <line x1="35" y1="35" x2="50" y2="35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" strokeDasharray="2 2" />
-      <line x1="70" y1="35" x2="85" y2="35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" strokeDasharray="2 2" />
+      <line
+        x1="35"
+        y1="35"
+        x2="50"
+        y2="35"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.3"
+        strokeDasharray="2 2"
+      />
+      <line
+        x1="70"
+        y1="35"
+        x2="85"
+        y2="35"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.3"
+        strokeDasharray="2 2"
+      />
     </svg>
   );
 }
@@ -107,24 +327,47 @@ export function EmptyHistoryIllustration() {
       className="text-muted-foreground/30"
     >
       {/* Relógio */}
-      <circle cx="60" cy="60" r="30" stroke="currentColor" strokeWidth="2" fill="none" />
-      
+      <circle
+        cx="60"
+        cy="60"
+        r="30"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+
       {/* Ponteiros */}
-      <line x1="60" y1="60" x2="60" y2="40" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="60" y1="60" x2="75" y2="60" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      
+      <line
+        x1="60"
+        y1="60"
+        x2="60"
+        y2="40"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <line
+        x1="60"
+        y1="60"
+        x2="75"
+        y2="60"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+
       {/* Marcadores de hora */}
       <circle cx="60" cy="35" r="2" fill="currentColor" />
       <circle cx="85" cy="60" r="2" fill="currentColor" />
       <circle cx="60" cy="85" r="2" fill="currentColor" />
       <circle cx="35" cy="60" r="2" fill="currentColor" />
-      
+
       {/* Seta circular (histórico) */}
-      <path 
-        d="M 45 25 Q 30 30 25 45" 
-        stroke="currentColor" 
-        strokeWidth="2" 
-        fill="none" 
+      <path
+        d="M 45 25 Q 30 30 25 45"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
         strokeLinecap="round"
         opacity="0.5"
       />
@@ -144,12 +387,45 @@ export function EmptySearchIllustration() {
       className="text-muted-foreground/30"
     >
       {/* Lupa */}
-      <circle cx="55" cy="55" r="25" stroke="currentColor" strokeWidth="2.5" fill="none" />
-      <line x1="73" y1="73" x2="90" y2="90" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      
+      <circle
+        cx="55"
+        cy="55"
+        r="25"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        fill="none"
+      />
+      <line
+        x1="73"
+        y1="73"
+        x2="90"
+        y2="90"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+
       {/* X dentro (não encontrado) */}
-      <line x1="47" y1="47" x2="63" y2="63" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
-      <line x1="63" y1="47" x2="47" y2="63" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
+      <line
+        x1="47"
+        y1="47"
+        x2="63"
+        y2="63"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.5"
+      />
+      <line
+        x1="63"
+        y1="47"
+        x2="47"
+        y2="63"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.5"
+      />
     </svg>
   );
 }
@@ -165,13 +441,63 @@ export function EmptyActivitiesIllustration() {
       className="text-muted-foreground/30"
     >
       {/* Documento/lista */}
-      <rect x="35" y="25" width="50" height="65" rx="3" stroke="currentColor" strokeWidth="2" fill="none" />
-      <line x1="42" y1="38" x2="78" y2="38" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
-      <line x1="42" y1="48" x2="78" y2="48" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
-      <line x1="42" y1="58" x2="65" y2="58" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+      <rect
+        x="35"
+        y="25"
+        width="50"
+        height="65"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+      <line
+        x1="42"
+        y1="38"
+        x2="78"
+        y2="38"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.6"
+      />
+      <line
+        x1="42"
+        y1="48"
+        x2="78"
+        y2="48"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.6"
+      />
+      <line
+        x1="42"
+        y1="58"
+        x2="65"
+        y2="58"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.6"
+      />
       {/* Lápis/check */}
-      <path d="M 72 62 L 82 52 L 88 58 L 78 68 Z" stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" />
-      <line x1="82" y1="52" x2="85" y2="49" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M 72 62 L 82 52 L 88 58 L 78 68 Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="82"
+        y1="52"
+        x2="85"
+        y2="49"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

@@ -5,7 +5,12 @@ import { useTeacherId } from "@/hooks/useTeacherId";
 import type { ClassStatusFilter } from "@/components/filters/ClassesFilters";
 import { typography } from "@/lib/design-tokens/typography";
 
-const VALID_STATUSES: ClassStatusFilter[] = ["all", "agendada", "avaliacao_pendente", "concluida"];
+const VALID_STATUSES: ClassStatusFilter[] = [
+  "all",
+  "agendada",
+  "avaliacao_pendente",
+  "concluida",
+];
 
 function TeacherClassesPage() {
   const { role, isLoading, teacherId } = useTeacherId();
@@ -31,7 +36,9 @@ function TeacherClassesPage() {
   if (!teacherId) {
     return (
       <div className="text-center py-12">
-        <p className={typography('SMALL')}>Não foi possível carregar seu perfil de professor.</p>
+        <p className={typography("SMALL")}>
+          Não foi possível carregar seu perfil de professor.
+        </p>
       </div>
     );
   }

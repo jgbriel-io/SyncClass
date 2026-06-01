@@ -26,10 +26,11 @@ export function StudentDetailSheet({
   teacherId = null,
 }: StudentDetailSheetProps) {
   const { data: student, isLoading } = useStudentDetails(studentId);
-  const { data: activities = [], isLoading: activitiesLoading, refetch: refetchActivities } = useActivities(
-    teacherId ?? undefined,
-    studentId ?? undefined
-  );
+  const {
+    data: activities = [],
+    isLoading: activitiesLoading,
+    refetch: refetchActivities,
+  } = useActivities(teacherId ?? undefined, studentId ?? undefined);
 
   return (
     <BaseDetailSheet
@@ -40,8 +41,12 @@ export function StudentDetailSheet({
         isLoading ? (
           <Skeleton className="h-4 w-20" />
         ) : (
-          <StatusBadge variant={student?.status === "ativo" ? "success" : "default"}>
-            {student?.status === "ativo" ? common.labels.active : common.labels.inactive}
+          <StatusBadge
+            variant={student?.status === "ativo" ? "success" : "default"}
+          >
+            {student?.status === "ativo"
+              ? common.labels.active
+              : common.labels.inactive}
           </StatusBadge>
         )
       }
@@ -55,19 +60,26 @@ export function StudentDetailSheet({
           <Skeleton className="h-32 w-full" />
         </div>
       ) : student ? (
-        <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
+        <Tabs
+          defaultValue="info"
+          className="flex-1 flex flex-col overflow-hidden"
+        >
           <TabsList className="mx-6 mt-4 grid grid-cols-4">
             <TabsTrigger value="info" className="text-xs">
-              <User className="h-3.5 w-3.5 mr-1.5" />{studentsContent.detailSheet.tabInfo}
+              <User className="h-3.5 w-3.5 mr-1.5" />
+              {studentsContent.detailSheet.tabInfo}
             </TabsTrigger>
             <TabsTrigger value="classes" className="text-xs">
-              <BookOpen className="h-3.5 w-3.5 mr-1.5" />{studentsContent.detailSheet.tabClasses}
+              <BookOpen className="h-3.5 w-3.5 mr-1.5" />
+              {studentsContent.detailSheet.tabClasses}
             </TabsTrigger>
             <TabsTrigger value="activities" className="text-xs">
-              <FileText className="h-3.5 w-3.5 mr-1.5" />{studentsContent.detailSheet.tabActivities}
+              <FileText className="h-3.5 w-3.5 mr-1.5" />
+              {studentsContent.detailSheet.tabActivities}
             </TabsTrigger>
             <TabsTrigger value="financial" className="text-xs">
-              <CreditCard className="h-3.5 w-3.5 mr-1.5" />{studentsContent.detailSheet.tabFinancial}
+              <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+              {studentsContent.detailSheet.tabFinancial}
             </TabsTrigger>
           </TabsList>
 
@@ -92,7 +104,9 @@ export function StudentDetailSheet({
           </TabsContent>
         </Tabs>
       ) : (
-        <div className="p-6 text-center text-muted-foreground">{common.errors.studentNotFound}</div>
+        <div className="p-6 text-center text-muted-foreground">
+          {common.errors.studentNotFound}
+        </div>
       )}
     </BaseDetailSheet>
   );

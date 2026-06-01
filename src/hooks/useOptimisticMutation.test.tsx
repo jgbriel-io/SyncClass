@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useOptimisticMutation, useRetryMutation } from "./useOptimisticMutation";
+import {
+  useOptimisticMutation,
+  useRetryMutation,
+} from "./useOptimisticMutation";
 import React from "react";
 
 // Mock do toast
@@ -31,7 +34,9 @@ describe("useOptimisticMutation", () => {
   });
 
   it("deve executar mutação com sucesso", async () => {
-    const mutationFn = vi.fn().mockResolvedValue({ id: "1", status: "success" });
+    const mutationFn = vi
+      .fn()
+      .mockResolvedValue({ id: "1", status: "success" });
     const onSuccess = vi.fn();
 
     const { result } = renderHook(
@@ -59,7 +64,9 @@ describe("useOptimisticMutation", () => {
     const queryClient = new QueryClient();
     queryClient.setQueryData(["test"], [{ id: "1", status: "pending" }]);
 
-    const mutationFn = vi.fn().mockResolvedValue({ id: "1", status: "completed" });
+    const mutationFn = vi
+      .fn()
+      .mockResolvedValue({ id: "1", status: "completed" });
     const optimisticUpdate = vi.fn((oldData, variables) => {
       return oldData.map((item: { id: string; status: string }) =>
         item.id === variables ? { ...item, status: "completed" } : item
@@ -94,7 +101,10 @@ describe("useOptimisticMutation", () => {
 
     const mutationFn = vi.fn().mockRejectedValue(new Error("Erro de teste"));
     const optimisticUpdate = vi.fn((oldData) => {
-      return oldData.map((item: { id: string; status: string }) => ({ ...item, status: "completed" }));
+      return oldData.map((item: { id: string; status: string }) => ({
+        ...item,
+        status: "completed",
+      }));
     });
     const onError = vi.fn();
 
@@ -162,7 +172,9 @@ describe("useRetryMutation", () => {
   });
 
   it("deve executar mutação com sucesso", async () => {
-    const mutationFn = vi.fn().mockResolvedValue({ id: "1", status: "success" });
+    const mutationFn = vi
+      .fn()
+      .mockResolvedValue({ id: "1", status: "success" });
     const onSuccess = vi.fn();
 
     const { result } = renderHook(

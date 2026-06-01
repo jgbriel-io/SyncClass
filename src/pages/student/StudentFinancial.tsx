@@ -4,7 +4,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StudentFinancialCard } from "@/components/student/StudentFinancialCard";
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
 import { CheckCircle, Loader2, DollarSign, Wallet } from "lucide-react";
-import { useStudentFinancialRecords, useStudentStats } from "@/hooks/useStudentPortal";
+import {
+  useStudentFinancialRecords,
+  useStudentStats,
+} from "@/hooks/useStudentPortal";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack } from "@/lib/design-tokens/spacing";
 import { studentPortal } from "@/content";
@@ -20,11 +23,11 @@ export default function StudentFinancial() {
 
   return (
     <PageContainer constrained maxWidth="5xl">
-      <div className={stack('RELAXED')}>
+      <div className={stack("RELAXED")}>
         {/* Título + subtítulo */}
         <div>
-          <h1 className={typography('H1')}>{studentPortal.financial.title}</h1>
-          <p className={`${typography('SMALL')} mt-1`}>
+          <h1 className={typography("H1")}>{studentPortal.financial.title}</h1>
+          <p className={`${typography("SMALL")} mt-1`}>
             {studentPortal.financial.subtitle}
           </p>
         </div>
@@ -39,7 +42,7 @@ export default function StudentFinancial() {
         {/* Error */}
         {error && (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-            <p className={typography('ERROR')}>
+            <p className={typography("ERROR")}>
               {studentPortal.financial.loadError}
             </p>
           </div>
@@ -51,14 +54,24 @@ export default function StudentFinancial() {
             <StudentMetricCard
               icon={isFinancialOk ? CheckCircle : Wallet}
               label={studentPortal.financial.financialStatusLabel}
-              value={isFinancialOk ? studentPortal.financial.financialOk : studentPortal.financial.financialPending(pendingCount)}
-              description={isFinancialOk ? studentPortal.financial.financialOkDescription : paidCount > 0 ? `${paidCount} quitada${paidCount !== 1 ? "s" : ""}. ${pendingCount} em aberto.` : `${pendingCount} cobrança${pendingCount !== 1 ? "s" : ""} aguardando pagamento.`}
+              value={
+                isFinancialOk
+                  ? studentPortal.financial.financialOk
+                  : studentPortal.financial.financialPending(pendingCount)
+              }
+              description={
+                isFinancialOk
+                  ? studentPortal.financial.financialOkDescription
+                  : paidCount > 0
+                    ? `${paidCount} quitada${paidCount !== 1 ? "s" : ""}. ${pendingCount} em aberto.`
+                    : `${pendingCount} cobrança${pendingCount !== 1 ? "s" : ""} aguardando pagamento.`
+              }
               variant={isFinancialOk ? "success" : "warning"}
             />
 
             {/* Lista de cobranças */}
-            <div className={stack('DEFAULT')}>
-              <h2 className={typography('TABLE_HEADER')}>
+            <div className={stack("DEFAULT")}>
+              <h2 className={typography("TABLE_HEADER")}>
                 {studentPortal.financial.historyTitle}
               </h2>
               {records.length === 0 ? (
@@ -82,7 +95,10 @@ export default function StudentFinancial() {
                     }}
                     onPayClick={
                       payment.status !== "pago"
-                        ? () => navigate(`/student/financial/checkout/${payment.id}`)
+                        ? () =>
+                            navigate(
+                              `/student/financial/checkout/${payment.id}`
+                            )
                         : undefined
                     }
                   />
@@ -91,7 +107,7 @@ export default function StudentFinancial() {
             </div>
 
             {/* Último texto */}
-            <p className={`text-center ${typography('SMALL')} px-4`}>
+            <p className={`text-center ${typography("SMALL")} px-4`}>
               {studentPortal.financial.contactNote}
             </p>
           </>

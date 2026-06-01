@@ -32,7 +32,7 @@ export function PostClassAbsenceSection({
             {classesContent.postClassDialog.chargeAbsenceLabel}
           </Label>
           <p className={`${TYPOGRAPHY.SMALL} mt-1`}>
-            {chargeAbsence 
+            {chargeAbsence
               ? "A cobrança será mantida com o status atual"
               : isPaymentAlreadyPaid
                 ? "A cobrança será mantida como paga (ou extornada se marcar abaixo)"
@@ -40,7 +40,7 @@ export function PostClassAbsenceSection({
           </p>
         </div>
       </div>
-      
+
       {!chargeAbsence && isPaymentAlreadyPaid && (
         <div className={`flex items-start ${GAP.TIGHT} ml-6 pt-2 border-t`}>
           <Checkbox
@@ -49,7 +49,10 @@ export function PostClassAbsenceSection({
             onCheckedChange={(checked) => onRefundPaymentChange(!!checked)}
           />
           <div className="flex-1">
-            <Label htmlFor="refundPayment" className="cursor-pointer font-medium text-amber-600">
+            <Label
+              htmlFor="refundPayment"
+              className="cursor-pointer font-medium text-amber-600"
+            >
               {classesContent.postClassDialog.refundLabel}
             </Label>
             <p className={`${TYPOGRAPHY.SMALL} mt-1`}>

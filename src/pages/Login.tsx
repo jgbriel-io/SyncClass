@@ -66,23 +66,25 @@ export default function Login() {
         <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground">
           <div className="flex items-center gap-4">
             <div className="h-10 w-10 rounded-xl bg-primary-foreground/20 backdrop-blur flex items-center justify-center">
-              <GraduationCap className={iconSize('LG')} />
+              <GraduationCap className={iconSize("LG")} />
             </div>
-            <span className={`${typography('H2')} font-semibold`}>{common.app.name}</span>
+            <span className={`${typography("H2")} font-semibold`}>
+              {common.app.name}
+            </span>
           </div>
 
-          <div className={`${stack('RELAXED')} max-w-md`}>
-            <h1 className={`${typography('DISPLAY')} leading-tight`}>
+          <div className={`${stack("RELAXED")} max-w-md`}>
+            <h1 className={`${typography("DISPLAY")} leading-tight`}>
               Your English learning platform
             </h1>
-            <p className={`${typography('H3')} text-primary-foreground/80 leading-relaxed`}>
+            <p
+              className={`${typography("H3")} text-primary-foreground/80 leading-relaxed`}
+            >
               {common.app.tagline}
             </p>
           </div>
 
-          <p className={typography('SMALL')}>
-            {common.app.copyright(2026)}
-          </p>
+          <p className={typography("SMALL")}>{common.app.copyright(2026)}</p>
         </div>
 
         {/* Decorative elements */}
@@ -101,18 +103,14 @@ export default function Login() {
             <span className="text-lg font-semibold">{common.app.name}</span>
           </div>
 
-          <div className={`${stack('RELAXED')} text-center lg:text-left`}>
-                <h2 className={typography('H2')}>
-                  {auth.login.title}
-                </h2>
-                <p className={typography('BODY')}>
-                  {auth.login.subtitle}
-                </p>
+          <div className={`${stack("RELAXED")} text-center lg:text-left`}>
+            <h2 className={typography("H2")}>{auth.login.title}</h2>
+            <p className={typography("BODY")}>{auth.login.subtitle}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className={stack('RELAXED')}>
-            <div className={stack('LOOSE')}>
-              <div className={stack('TIGHT')}>
+          <form onSubmit={handleSubmit} className={stack("RELAXED")}>
+            <div className={stack("LOOSE")}>
+              <div className={stack("TIGHT")}>
                 <Label htmlFor="email">{auth.login.emailLabel}</Label>
                 <Input
                   id="email"
@@ -126,7 +124,7 @@ export default function Login() {
                 />
               </div>
 
-              <div className={stack('TIGHT')}>
+              <div className={stack("TIGHT")}>
                 <Label htmlFor="password">{auth.login.passwordLabel}</Label>
                 <div className="relative">
                   <Input
@@ -146,9 +144,9 @@ export default function Login() {
                     disabled={isLoading}
                   >
                     {showPassword ? (
-                      <EyeOff className={iconSize('SM')} />
+                      <EyeOff className={iconSize("SM")} />
                     ) : (
-                      <Eye className={iconSize('SM')} />
+                      <Eye className={iconSize("SM")} />
                     )}
                   </button>
                 </div>
@@ -158,14 +156,14 @@ export default function Login() {
             <Button type="submit" className="w-full h-11" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className={`mr-2 ${iconSize('SM')} animate-spin`} />
+                  <Loader2 className={`mr-2 ${iconSize("SM")} animate-spin`} />
                   {auth.login.submitting}
                 </>
               ) : (
                 auth.login.submitButton
               )}
             </Button>
-            <p className={`text-center ${typography('BODY')}`}>
+            <p className={`text-center ${typography("BODY")}`}>
               <Link
                 to="/esqueci-senha"
                 className="text-muted-foreground hover:text-foreground underline underline-offset-2"
