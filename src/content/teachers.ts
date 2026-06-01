@@ -69,10 +69,8 @@ export const teachers = {
     warningLabel: "Atenção:",
     confirmButton: "Excluir definitivamente",
     deleting: "Excluindo...",
-    scheduledTitle: "Confirmar exclusão com aulas agendadas",
-    scheduledDescription: (count: string) =>
-      `Este professor possui ${count} aula(s) agendada(s). Ao confirmar, todas serão removidas permanentemente. Esta ação não pode ser desfeita.`,
-    forceConfirmButton: "Excluir tudo permanentemente",
+    checkboxLabel:
+      "Entendo que todas as aulas e dados vinculados serão excluídos permanentemente",
     toasts: {
       forceSuccess:
         "Professor e todas as aulas foram excluídos permanentemente.",

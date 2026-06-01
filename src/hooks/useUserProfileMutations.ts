@@ -7,6 +7,7 @@ import {
   type AvatarValidationError,
 } from "@/lib/utils/avatarUpload";
 import { sanitizeErrorMessage } from "@/lib/security/errorHandler";
+import { pickAnonSegment } from "@/lib/utils/anonymize";
 import { toast } from "sonner";
 import type { Enums } from "@/integrations/supabase/types";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
@@ -317,6 +318,20 @@ export function useHardDeleteUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (userId: string) => {
+      // Anonymize profile PII before deleting auth account (LGPD)
+      const { error: anonError } = await supabase
+        .from("profiles")
+        .update({
+          deleted_at: new Date().toISOString(),
+          active: false,
+          full_name: `Usuário ${pickAnonSegment(userId)}`,
+          email: null,
+          avatar_url: null,
+        })
+        .eq("user_id", userId);
+
+      if (anonError) throw anonError;
+
       const { data, error } = await supabase.functions.invoke(
         "admin-delete-user",
         { body: { userId } }

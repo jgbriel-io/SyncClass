@@ -425,9 +425,11 @@ export function useHardDeleteTeacher() {
               }) => {
                 const [y, m, d] = c.class_date.split("-");
                 const date = `${d}/${m}/${y}`;
-                const time = c.start_at || "";
+                const time = c.start_at ? c.start_at.slice(11, 16) : "";
                 const student = c.students?.name || "Aluno desconhecido";
-                return `${date} ${time} - ${student}`;
+                return time
+                  ? `${date} ${time} - ${student}`
+                  : `${date} - ${student}`;
               }
             )
             .join("\n");
@@ -471,7 +473,9 @@ export function useHardDeleteTeacher() {
             deleted_at: new Date().toISOString(),
             active: false,
             teacher_id: null,
+            full_name: `Usuário ${pickAnonSegment(linkedProfile.user_id)}`,
             email: null,
+            avatar_url: null,
           })
           .eq("user_id", linkedProfile.user_id);
 

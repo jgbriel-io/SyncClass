@@ -77,6 +77,8 @@ export const students = {
     warningLabel: "Atenção:",
     confirmButton: "Excluir definitivamente",
     deleting: "Excluindo...",
+    checkboxLabel:
+      "Entendo que todas as aulas e cobranças serão excluídas permanentemente",
     toasts: {
       success: "Aluno excluído com sucesso!",
       error: "Erro ao excluir aluno.",
