@@ -269,32 +269,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ---
 
-## Resumo de Itens
-
-| Módulo                     | Itens   | Status             |
-| -------------------------- | ------- | ------------------ |
-| Auth / Público             | 11      | 8 ✅ / 3 pendentes |
-| Admin                      | 41      | 41 ✅ concluído    |
-| Professor                  | 28      | pendente           |
-| Aluno                      | 13      | pendente           |
-| Cross-cutting (original)   | 20      | pendente           |
-| Sessão e Auth (adicionais) | 2       | pendente           |
-| Integrações e Validações   | 6       | pendente           |
-| Rotas Alias e Edge Cases   | 3       | pendente           |
-| Volume de Dados            | 3       | pendente           |
-| **Total**                  | **127** |                    |
-
----
-
-## Critério de Conclusão
-
-Sprint concluída quando todos os 116 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
-
-**Bugs encontrados:** documentar abaixo com `[BUG-XXX]` + rota + descrição + severidade.
-
----
-
-## Validação de Toasts (Sprint 29 — refactor centralização)
+## 6. Validação de Toasts (Sprint 29 — refactor centralização)
 
 Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), validar que cada ação exibe o toast correto na UI.
 
@@ -353,6 +328,34 @@ Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), 
 - [ ] Aluno envia comprovante → "Comprovante enviado! Aguarde a confirmação do professor."
 - [ ] Professor aprova comprovante → "Pagamento confirmado com sucesso!"
 - [ ] Professor rejeita comprovante → "Comprovante rejeitado."
+
+---
+
+## Resumo de Itens
+
+| Módulo                          | Itens   | Status             |
+| ------------------------------- | ------- | ------------------ |
+| Auth / Público                  | 11      | 8 ✅ / 3 pendentes |
+| Admin                           | 41      | 41 ✅ concluído    |
+| Professor                       | 28      | pendente           |
+| Aluno                           | 13      | pendente           |
+| Cross-cutting (original)        | 20      | pendente           |
+| Sessão e Auth (adicionais)      | 2       | pendente           |
+| Integrações e Validações        | 6       | pendente           |
+| Rotas Alias e Edge Cases        | 3       | pendente           |
+| Volume de Dados                 | 3       | pendente           |
+| Validação de Toasts (Sprint 29) | 30      | pendente           |
+| **Total**                       | **157** |                    |
+
+---
+
+## Critério de Conclusão
+
+Sprint concluída quando todos os 157 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
+
+Inclui 30 itens de validação de toasts adicionados em sprint 29 (refactor de centralização de strings).
+
+**Bugs encontrados:** documentar abaixo com `[BUG-XXX]` + rota + descrição + severidade.
 
 ---
 
