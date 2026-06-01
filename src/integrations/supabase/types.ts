@@ -745,6 +745,8 @@ export type Database = {
       };
       teachers: {
         Row: {
+          abacate_pay_api_key: string | null;
+          abacate_pay_webhook_secret: string | null;
           address: string | null;
           anonymized_at: string | null;
           country: string | null;
@@ -760,6 +762,8 @@ export type Database = {
           updated_at: string | null;
         };
         Insert: {
+          abacate_pay_api_key?: string | null;
+          abacate_pay_webhook_secret?: string | null;
           address?: string | null;
           anonymized_at?: string | null;
           country?: string | null;
@@ -775,6 +779,8 @@ export type Database = {
           updated_at?: string | null;
         };
         Update: {
+          abacate_pay_api_key?: string | null;
+          abacate_pay_webhook_secret?: string | null;
           address?: string | null;
           anonymized_at?: string | null;
           country?: string | null;
@@ -1333,7 +1339,11 @@ export type Database = {
         Returns: Json;
       };
       get_financial_summary: {
-        Args: { p_teacher_id?: string };
+        Args: {
+          p_date_from?: string;
+          p_date_to?: string;
+          p_teacher_id?: string;
+        };
         Returns: {
           count_overdue: number;
           count_paid: number;

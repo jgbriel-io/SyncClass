@@ -12,18 +12,27 @@ import { useForecastedBilling } from "@/hooks/useForecastedBilling";
 import { useTodayClasses } from "@/hooks/useTodayClasses";
 import { usePendingEvaluationClassLogs } from "@/hooks/useClassLogs";
 import type { ChartMonthsFilter } from "@/components/dashboard/DashboardGrowthChart";
+import {
+  type PeriodFilter,
+  getDateRangeForPeriod,
+} from "@/lib/utils/periodFilter";
 
 const TeacherHome = () => {
   const { teacherId, fullName } = useTeacherId();
   const [chartMonths, setChartMonths] = useState<ChartMonthsFilter>(3);
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("month");
   const displayName = fullName?.trim() || "Professor";
+  const dateRange = getDateRangeForPeriod(periodFilter);
 
-  const { data: stats, isLoading: loadingStats } =
-    useTeacherDashboardStats(teacherId);
+  const { data: stats, isLoading: loadingStats } = useTeacherDashboardStats(
+    teacherId,
+    periodFilter
+  );
   const { data: financialSummary, isLoading: loadingFinancial } =
-    useFinancialSummary(teacherId ?? undefined);
+    useFinancialSummary(teacherId ?? undefined, dateRange);
   const { data: forecastedBilling } = useForecastedBilling(
-    teacherId ?? undefined
+    teacherId ?? undefined,
+    dateRange
   );
   const { data: upcomingPayments = [], isLoading: loadingPayments } =
     useTeacherUpcomingPayments(teacherId);
@@ -60,6 +69,8 @@ const TeacherHome = () => {
       basePath="/teacher"
       chartMonths={chartMonths}
       onChartMonthsChange={setChartMonths}
+      periodFilter={periodFilter}
+      onPeriodFilterChange={setPeriodFilter}
     />
   );
 };

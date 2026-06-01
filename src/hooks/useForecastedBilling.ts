@@ -27,19 +27,28 @@ export interface ForecastedBilling {
  *
  * @param teacherId - Se informado, filtra apenas cobranças de alunos desse professor.
  */
-export function useForecastedBilling(teacherId?: string | null) {
+export function useForecastedBilling(
+  teacherId?: string | null,
+  dateRange?: { from: string; to: string }
+) {
   return useQuery({
-    queryKey: [QK.FORECASTED_BILLING, teacherId],
+    queryKey: [
+      QK.FORECASTED_BILLING,
+      teacherId,
+      dateRange?.from,
+      dateRange?.to,
+    ],
     queryFn: async (): Promise<ForecastedBilling> => {
       const now = new Date();
-      const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
-      const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+      const rangeFrom =
+        dateRange?.from ?? format(startOfMonth(now), "yyyy-MM-dd");
+      const rangeTo = dateRange?.to ?? format(endOfMonth(now), "yyyy-MM-dd");
 
       const { data, error } = await supabase
         .from("financial_records")
         .select("amount, status, due_date, students(teacher_id)")
-        .gte("due_date", monthStart)
-        .lte("due_date", monthEnd);
+        .gte("due_date", rangeFrom)
+        .lte("due_date", rangeTo);
 
       if (error) throw error;
 

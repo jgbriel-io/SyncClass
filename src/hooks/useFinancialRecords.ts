@@ -173,9 +173,15 @@ async function fetchFinancialRecords(
   return { list, count: count ?? 0 };
 }
 
-async function fetchFinancialSummary(teacherId?: string | null) {
+async function fetchFinancialSummary(
+  teacherId?: string | null,
+  dateFrom?: string,
+  dateTo?: string
+) {
   const { data, error } = await supabase.rpc("get_financial_summary", {
     p_teacher_id: teacherId ?? null,
+    p_date_from: dateFrom ?? null,
+    p_date_to: dateTo ?? null,
   });
   if (error) throw error;
 
@@ -307,10 +313,14 @@ export function useFinancialRecords(
   };
 }
 
-export function useFinancialSummary(teacherId?: string | null) {
+export function useFinancialSummary(
+  teacherId?: string | null,
+  dateRange?: { from: string; to: string }
+) {
   return useQuery({
-    queryKey: [QK.FINANCIAL_SUMMARY, teacherId],
-    queryFn: () => fetchFinancialSummary(teacherId),
+    queryKey: [QK.FINANCIAL_SUMMARY, teacherId, dateRange?.from, dateRange?.to],
+    queryFn: () =>
+      fetchFinancialSummary(teacherId, dateRange?.from, dateRange?.to),
     staleTime: 5 * 60 * 1000,
   });
 }

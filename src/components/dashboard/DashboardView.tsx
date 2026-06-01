@@ -26,6 +26,8 @@ import { DashboardGrowthChart } from "./DashboardGrowthChart";
 import type { TodayClassesData } from "@/hooks/useTodayClasses";
 import type { ForecastedBilling } from "@/hooks/useForecastedBilling";
 import { dashboard } from "@/content";
+import { DashboardPeriodFilter } from "./DashboardPeriodFilter";
+import { type PeriodFilter } from "@/lib/utils/periodFilter";
 
 import type {
   ChartMonthsFilter,
@@ -82,6 +84,8 @@ interface DashboardViewProps {
   onChartLinesChange?: (
     v: ChartLineFilterAdmin | ChartLineFilterTeacher
   ) => void;
+  periodFilter?: PeriodFilter;
+  onPeriodFilterChange?: (v: PeriodFilter) => void;
 }
 
 export function DashboardView({
@@ -102,6 +106,8 @@ export function DashboardView({
   onChartMonthsChange,
   chartLines,
   onChartLinesChange,
+  periodFilter = "month",
+  onPeriodFilterChange,
 }: DashboardViewProps) {
   const [isQuickActionsExpanded, setIsQuickActionsExpanded] = useState(true);
 
@@ -110,16 +116,46 @@ export function DashboardView({
       ? ((stats.overdueCount / stats.activeStudents) * 100).toFixed(1)
       : "0";
 
+  function byPeriod<T>(month: T, semester: T, year: T): T {
+    if (periodFilter === "semester") return semester;
+    if (periodFilter === "year") return year;
+    return month;
+  }
+
+  const newStudentsLabel = byPeriod(
+    dashboard.metrics.newThisMonth,
+    dashboard.metrics.newThisSemester,
+    dashboard.metrics.newThisYear
+  );
+  const classesLabel = byPeriod(
+    dashboard.metrics.classesThisMonth,
+    dashboard.metrics.classesThisSemester,
+    dashboard.metrics.classesThisYear
+  );
+  const activeStudentsChangeLabel = byPeriod(
+    dashboard.metrics.activeStudentsChange,
+    dashboard.metrics.activeStudentsChangeSemester,
+    dashboard.metrics.activeStudentsChangeYear
+  );
+
   return (
     <div className="space-y-4 tablet:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">
-          {title}
-        </h1>
-        <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground">
-          {subtitle}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl mobile:text-2xl tablet:text-2xl laptop:text-2xl desktop:text-3xl font-semibold tracking-tight">
+            {title}
+          </h1>
+          <p className="text-sm mobile:text-xs tablet:text-xs laptop:text-xs desktop:text-sm text-muted-foreground">
+            {subtitle}
+          </p>
+        </div>
+        {onPeriodFilterChange && (
+          <DashboardPeriodFilter
+            value={periodFilter}
+            onChange={onPeriodFilterChange}
+          />
+        )}
       </div>
 
       {/* Aviso: aulas pendentes de feedback */}
@@ -312,7 +348,7 @@ export function DashboardView({
                           )
                         : undefined
                     }
-                    changeLabel={dashboard.metrics.activeStudentsChange}
+                    changeLabel={activeStudentsChangeLabel}
                     icon={Users}
                     iconColor="text-primary"
                     iconBg="bg-primary/10"
@@ -328,14 +364,14 @@ export function DashboardView({
                     iconBg="bg-destructive/10"
                   />
                   <MetricCard
-                    title={dashboard.metrics.newThisMonth}
+                    title={newStudentsLabel}
                     value={stats?.newStudentsThisMonth || 0}
                     icon={TrendingUp}
                     iconColor="text-success"
                     iconBg="bg-success/10"
                   />
                   <MetricCard
-                    title={dashboard.metrics.classesThisMonth}
+                    title={classesLabel}
                     value={stats?.classesThisMonth || 0}
                     icon={GraduationCap}
                     iconColor="text-accent-foreground"
@@ -345,6 +381,7 @@ export function DashboardView({
                 <DashboardFinancialCards
                   financialSummary={financialSummary}
                   forecastedBilling={forecastedBilling}
+                  periodFilter={periodFilter}
                 />
               </TabsContent>
 
@@ -395,7 +432,7 @@ export function DashboardView({
                       )
                     : undefined
                 }
-                changeLabel={dashboard.metrics.activeStudentsChange}
+                changeLabel={activeStudentsChangeLabel}
                 icon={Users}
                 iconColor="text-primary"
                 iconBg="bg-primary/10"
@@ -409,14 +446,14 @@ export function DashboardView({
                 iconBg="bg-destructive/10"
               />
               <MetricCard
-                title={dashboard.metrics.newThisMonth}
+                title={newStudentsLabel}
                 value={stats?.newStudentsThisMonth || 0}
                 icon={TrendingUp}
                 iconColor="text-success"
                 iconBg="bg-success/10"
               />
               <MetricCard
-                title={dashboard.metrics.classesThisMonth}
+                title={classesLabel}
                 value={stats?.classesThisMonth || 0}
                 icon={GraduationCap}
                 iconColor="text-accent-foreground"
@@ -427,6 +464,7 @@ export function DashboardView({
             <DashboardFinancialCards
               financialSummary={financialSummary}
               forecastedBilling={forecastedBilling}
+              periodFilter={periodFilter}
             />
             <DashboardTodayClasses
               todayClasses={todayClasses}
