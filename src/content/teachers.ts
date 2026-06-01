@@ -126,4 +126,12 @@ export const teachers = {
     phoneFormat:
       "Telefone deve ter 10 ou 11 dígitos no formato (00) 00000-0000",
   },
+
+  toasts: {
+    created: "Professor cadastrado com sucesso!",
+    updated: "Professor atualizado com sucesso!",
+    archived: "Professor arquivado com sucesso!",
+    pixUpdated: "Chave PIX atualizada com sucesso!",
+    deleted: "Professor excluído definitivamente.",
+  },
 } as const;

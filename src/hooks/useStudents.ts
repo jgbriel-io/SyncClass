@@ -186,7 +186,7 @@ export function useCreateStudent() {
         queryKey: [QK.STUDENTS_PAGINATED],
         exact: false,
       });
-      toast.success("Aluno cadastrado com sucesso!");
+      toast.success(studentsContent.toasts.created);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -359,7 +359,7 @@ export function useUpdateStudent() {
         queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
         queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
       }
-      toast.success("Aluno atualizado com sucesso!");
+      toast.success(studentsContent.toasts.updated);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -409,7 +409,7 @@ export function useSoftDeleteStudent() {
         exact: false,
       });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES], exact: false });
-      toast.success("Aluno arquivado e dados anonimizados (LGPD)");
+      toast.success(studentsContent.toasts.archived);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -547,7 +547,7 @@ export function useHardDeleteStudent() {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES_LINKED_IDS] });
-      toast.success("Aluno excluído definitivamente.");
+      toast.success(studentsContent.toasts.deleted);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -595,7 +595,7 @@ export function useRestoreStudent() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENTS] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
-      toast.success("Aluno restaurado com sucesso!");
+      toast.success(studentsContent.toasts.restored);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -663,7 +663,7 @@ export function useUpdateStudentPaymentDay() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
 
-      toast.success(data.message || "Dia de pagamento atualizado com sucesso!");
+      toast.success(data.message || studentsContent.toasts.payDayUpdated);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);

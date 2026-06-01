@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 import { pickAnonSegment } from "@/lib/utils/anonymize";
+import { teachers as teachersContent } from "@/content";
 import { QK } from "./queryKeys";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -158,7 +159,7 @@ export function useCreateTeacher() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QK.TEACHERS] });
-      toast.success("Professor cadastrado com sucesso!");
+      toast.success(teachersContent.toasts.created);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -237,7 +238,7 @@ export function useUpdateTeacher() {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
-      toast.success("Professor atualizado com sucesso!");
+      toast.success(teachersContent.toasts.updated);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -275,7 +276,7 @@ export function useSoftDeleteTeacher() {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
-      toast.success("Professor arquivado com sucesso!");
+      toast.success(teachersContent.toasts.archived);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -343,7 +344,7 @@ export function useUpdatePixKey() {
         queryKey: [QK.TEACHER_PIX_KEY, teacherId],
       });
       queryClient.invalidateQueries({ queryKey: [QK.TEACHERS] });
-      toast.success("Chave PIX atualizada com sucesso!");
+      toast.success(teachersContent.toasts.pixUpdated);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);
@@ -466,7 +467,7 @@ export function useHardDeleteTeacher() {
       queryClient.invalidateQueries({ queryKey: [QK.USERS] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES_LINKED_IDS] });
-      toast.success("Professor excluído definitivamente.");
+      toast.success(teachersContent.toasts.deleted);
     },
     onError: (error: unknown) => {
       const userMessage = sanitizeErrorMessage(error);

@@ -206,4 +206,12 @@ export const students = {
     passante: "Passante",
     outro: "Outro",
   },
+  toasts: {
+    created: "Aluno cadastrado com sucesso!",
+    updated: "Aluno atualizado com sucesso!",
+    archived: "Aluno arquivado e dados anonimizados (LGPD)",
+    deleted: "Aluno excluído definitivamente.",
+    restored: "Aluno restaurado com sucesso!",
+    payDayUpdated: "Dia de pagamento atualizado com sucesso!",
+  },
 } as const;

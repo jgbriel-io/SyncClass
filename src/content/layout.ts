@@ -67,6 +67,7 @@ export const layout = {
       editButton: "Editar",
       cancelButton: "Cancelar",
       saveButton: "Salvar",
+      avatarSuccess: "Foto de perfil atualizada.",
       exportLabel: "Exportar meus dados",
       exportHint:
         "Baixe uma cópia dos seus dados em formato JSON (LGPD, art. 18, inc. V). Limite: 3 exportações por hora.",

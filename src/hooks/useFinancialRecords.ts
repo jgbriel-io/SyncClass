@@ -17,6 +17,7 @@ import { sanitizeErrorMessage } from "@/lib/security/errorHandler";
 import { logger } from "@/lib/logger";
 import { useOptimisticMutation } from "@/hooks/useOptimisticMutation";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
+import { financial as financialContent } from "@/content";
 import { QK } from "./queryKeys";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -343,7 +344,7 @@ export function useCreateFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
-      toast.success("Cobrança criada com sucesso!");
+      toast.success(financialContent.view.toasts.success);
     },
     onError: (error) => {
       logger.error(error, { context: "useCreateFinancialRecord" });
@@ -441,7 +442,7 @@ export function useConfirmPayment() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
-      toast.success("Pagamento confirmado com sucesso!");
+      toast.success(financialContent.confirmPaymentDialog.toasts.success);
     },
     onError: (error) => {
       logger.error(error, { context: "useConfirmPayment" });
@@ -480,7 +481,7 @@ export function useUndoFinancialPayment() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
-      toast.success("Cobrança desfeita com sucesso!");
+      toast.success(financialContent.undoDialog.toasts.success);
     },
     onError: (error) => {
       logger.error(error, { context: "useUndoFinancialPayment" });
@@ -504,7 +505,7 @@ export function useUpdateFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
-      toast.success("Cobrança atualizada com sucesso!");
+      toast.success(financialContent.view.toasts.successEdit);
     },
     onError: (error) => {
       logger.error(error, { context: "useUpdateFinancialRecord" });
@@ -556,7 +557,7 @@ export function useDeleteFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
-      toast.success("Cobrança removida com sucesso!");
+      toast.success(financialContent.deleteDialog.toasts.success);
     },
     onError: (error) => {
       logger.error(error, { context: "useDeleteFinancialRecord" });

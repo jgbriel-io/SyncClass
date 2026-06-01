@@ -3,6 +3,7 @@ import { sanitizeErrorMessage } from "@/lib/security/errorHandler";
 import { QK } from "./queryKeys";
 import { toast } from "sonner";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import { users as usersContent } from "@/content";
 import { generateRandomPassword, invokeInviteUser } from "./inviteUserService";
 
 type StudentInsert = TablesInsert<"students">;
@@ -58,7 +59,7 @@ export function useInviteTeacher() {
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.TEACHERS_PAGINATED] });
-      toast.success("Professor e conta de acesso criados com sucesso!");
+      toast.success(usersContent.form.toasts.successTeacherInvite);
     },
     onError: (error: Error) => toast.error(sanitizeErrorMessage(error)),
   });
