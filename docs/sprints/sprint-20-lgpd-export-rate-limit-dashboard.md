@@ -316,16 +316,3 @@ src/
 
 - `supabase/functions/**/` no `.gitignore` ignora diretórios novos de Edge Functions — usar `git add -f` para novas functions
 - `supabase.functions.invoke` retorna dados já parsed; `Content-Disposition` no header da Edge Function não é suficiente para trigger de download automático — precisa criar Blob + anchor no cliente
-
-## Next Steps
-
-1. **Sprint 21:** Tech Debt Backlog — God hooks, race conditions, N+1 queries ([sprint-21](./sprint-21-tech-debt-backlog.md))
-2. **Sprint 22:** Frontend Quality — Code review fixes, validação, state management ([sprint-22](./sprint-22-frontend-quality-fixes.md))
-
-## References
-
-- [LGPD Art. 18, V](http://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm)
-- [Sprint 20](./sprint-20-lgpd-rate-limiting.md) — LGPD anonymization + rate limiting base
-- Edge Function: `supabase/functions/export-user-data/index.ts`
-- Migration: `supabase/migrations/28_rate_limit_summary_rpc.sql`
-- Hook: `src/hooks/useRateLimitDashboard.ts`

@@ -12,26 +12,31 @@
 Após Sprint 5, o sistema tinha features completas mas com vulnerabilidades críticas identificadas em auditoria de segurança:
 
 **Idempotência:**
+
 - Operações financeiras não idempotentes (duplo clique = pagamento duplicado)
 - Sem `idempotency_key` para prevenir duplicação
 - Race conditions em operações concorrentes
 
 **Gestão de Faltas:**
+
 - Sem registro de faltas de alunos
 - Professor não conseguia marcar ausência
 - Sem relatório de frequência
 
 **Internacionalização:**
+
 - CPF obrigatório (impede cadastro de estrangeiros)
 - Sem campo `country` para identificar nacionalidade
 - Validações assumem formato brasileiro
 
 **Migrations:**
+
 - Migrations desincronizadas com estado do banco
 - Migrations aplicadas manualmente (não versionadas)
 - Sem consolidação (25+ migrations pequenas)
 
 **Bugs Críticos:**
+
 - 2 rounds de bugs identificados em auditoria
 - Vulnerabilidades de segurança (BOLA, IDOR)
 - Lógica de negócio no frontend (deveria estar no banco)
@@ -39,30 +44,35 @@ Após Sprint 5, o sistema tinha features completas mas com vulnerabilidades crí
 ## Requirements
 
 ### Idempotência
+
 - Tabela `idempotency_keys` para rastrear operações
 - RPCs idempotentes: `mark_as_paid_idempotent`, `confirm_payment_idempotent`, `undo_payment_idempotent`
 - Chave única: `(user_id, operation_type, resource_id)`
 - TTL de 24h para chaves (limpeza automática)
 
 ### Gestão de Faltas
+
 - Registrar faltas de alunos
 - Relatório de frequência (% de presença)
 - Filtros: período, aluno
 - Impacto no financeiro (descontar falta do pacote)
 
 ### Suporte a Estrangeiros
+
 - Campo `country` em `students` e `teachers`
 - CPF opcional (apenas para brasileiros)
 - Validações condicionais baseadas em país
 - Máscaras de telefone internacionais
 
 ### Consolidação de Migrations
+
 - Consolidar migrations 01-04 em arquivo único
 - Sincronizar com estado atual do banco
 - Regenerar tipos Supabase
 - Documentar schema completo
 
 ### Correção de Bugs
+
 - Round 1: 8 bugs críticos (BOLA, IDOR, lógica no frontend)
 - Round 2: 5 bugs médios (validações, edge cases)
 - Adicionar testes de regressão
@@ -70,6 +80,7 @@ Após Sprint 5, o sistema tinha features completas mas com vulnerabilidades crí
 ## Background
 
 **Idempotência:**
+
 ```sql
 -- Tabela de chaves
 CREATE TABLE idempotency_keys (
@@ -91,10 +102,10 @@ BEGIN
   IF EXISTS (SELECT 1 FROM idempotency_keys WHERE id = p_idempotency_key) THEN
     RETURN; -- Já processado, não fazer nada
   END IF;
-  
+
   -- Processar operação
   UPDATE financial_records SET status = 'paid' WHERE id = p_financial_id;
-  
+
   -- Registrar chave
   INSERT INTO idempotency_keys (id, user_id, operation_type, resource_id)
   VALUES (p_idempotency_key, auth.uid(), 'mark_as_paid', p_financial_id);
@@ -103,12 +114,14 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
 **Gestão de Faltas:**
+
 - Adicionar coluna `attended` (boolean) em `class_logs`
 - `attended = true` → presença
 - `attended = false` → falta
 - `attended = null` → não marcado ainda
 
 **Suporte a Estrangeiros:**
+
 - Campo `country` (ISO 3166-1 alpha-2: BR, US, UK, etc.)
 - CPF obrigatório apenas se `country = 'BR'`
 - Validação condicional no frontend e banco
@@ -234,7 +247,7 @@ ALTER TABLE students ADD CONSTRAINT cpf_required_for_br
 - **Implementação:**
   - View `student_attendance_report` com query:
     ```sql
-    SELECT 
+    SELECT
       student_id,
       COUNT(*) FILTER (WHERE attended = true) AS present,
       COUNT(*) FILTER (WHERE attended = false) AS absent,
@@ -355,42 +368,42 @@ ALTER TABLE students ADD CONSTRAINT cpf_required_for_br
 
 ### Migrations Aplicadas
 
-| Migration | Descrição |
-|-----------|-----------|
-| `09_idempotency.sql` | Tabela `idempotency_keys` + cleanup |
-| `10_idempotent_rpcs.sql` | RPCs idempotentes para operações financeiras |
-| `11_attendance.sql` | Campo `attended` em `class_logs` |
-| `12_attendance_report.sql` | View `student_attendance_report` |
-| `13_country_support.sql` | Campo `country`, CPF opcional |
-| `14_fix_critical_bugs_round1.sql` | Correção de 8 bugs críticos |
-| `00_consolidated.sql` | Consolidação de migrations 01-04 |
+| Migration                         | Descrição                                    |
+| --------------------------------- | -------------------------------------------- |
+| `09_idempotency.sql`              | Tabela `idempotency_keys` + cleanup          |
+| `10_idempotent_rpcs.sql`          | RPCs idempotentes para operações financeiras |
+| `11_attendance.sql`               | Campo `attended` em `class_logs`             |
+| `12_attendance_report.sql`        | View `student_attendance_report`             |
+| `13_country_support.sql`          | Campo `country`, CPF opcional                |
+| `14_fix_critical_bugs_round1.sql` | Correção de 8 bugs críticos                  |
+| `00_consolidated.sql`             | Consolidação de migrations 01-04             |
 
 ### Views Criadas
 
-| View | Descrição |
-|------|-----------|
+| View                        | Descrição                         |
+| --------------------------- | --------------------------------- |
 | `student_attendance_report` | Relatório de frequência por aluno |
 
 ### RPCs Criados
 
-| RPC | Responsabilidade |
-|-----|------------------|
-| `mark_as_paid_idempotent` | Marcar como pago (idempotente) |
-| `confirm_payment_idempotent` | Confirmar pagamento (idempotente) |
-| `undo_payment_idempotent` | Desfazer pagamento (idempotente) |
-| `cleanup_old_idempotency_keys` | Limpar chaves > 24h |
+| RPC                            | Responsabilidade                  |
+| ------------------------------ | --------------------------------- |
+| `mark_as_paid_idempotent`      | Marcar como pago (idempotente)    |
+| `confirm_payment_idempotent`   | Confirmar pagamento (idempotente) |
+| `undo_payment_idempotent`      | Desfazer pagamento (idempotente)  |
+| `cleanup_old_idempotency_keys` | Limpar chaves > 24h               |
 
 ### Componentes Criados
 
-| Componente | Responsabilidade | Arquivo |
-|------------|------------------|---------|
-| `AttendanceToggle` | Marcar presença/falta | `src/components/classes/AttendanceToggle.tsx` |
+| Componente         | Responsabilidade        | Arquivo                                       |
+| ------------------ | ----------------------- | --------------------------------------------- |
+| `AttendanceToggle` | Marcar presença/falta   | `src/components/classes/AttendanceToggle.tsx` |
 | `AttendanceReport` | Relatório de frequência | `src/components/classes/AttendanceReport.tsx` |
 
 ### Hooks Criados
 
-| Hook | Responsabilidade | Arquivo |
-|------|------------------|---------|
+| Hook                | Responsabilidade      | Arquivo                          |
+| ------------------- | --------------------- | -------------------------------- |
 | `useMarkAttendance` | Marcar presença/falta | `src/hooks/useMarkAttendance.ts` |
 
 ## Files Created
@@ -447,6 +460,7 @@ docs/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 7 migrations aplicadas
 - ✅ 3 RPCs idempotentes criados
 - ✅ 1 view criada (relatório de frequência)
@@ -457,6 +471,7 @@ docs/
 - ✅ Tipos Supabase regenerados
 
 ### Melhorias Qualitativas
+
 - ✅ Idempotência (sem pagamentos duplicados)
 - ✅ Gestão de faltas (feature nova)
 - ✅ Suporte a estrangeiros (inclusão)
@@ -491,17 +506,3 @@ docs/
 - [ ] Relatório de frequência básico — adicionar gráficos depois
 - [ ] Validação de país apenas no frontend — adicionar no banco depois
 - [ ] Máscaras de telefone internacionais — adicionar biblioteca depois
-
-## Next Steps
-
-1. Sprint 7: Hardening de segurança com 17 migrations
-2. Sprint 7: 6 auditorias técnicas completas
-3. Sprint 7: Documentação completa do sistema
-4. Sprint 8: Refatoração de arquitetura (separar Supabase de componentes)
-5. Sprint 9: Refatoração de arquivos grandes
-
-## References
-
-- Commits: 14–18 fev 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Validação: `docs/archive/VALIDACAO_SPRINTS_1_9.md`

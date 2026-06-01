@@ -12,6 +12,7 @@
 Após Sprint 12, a estrutura de `src/content/` estava criada mas ainda havia strings hardcoded não migradas:
 
 **Strings Faltando:**
+
 - Toasts de sucesso/erro em componentes (~50 strings)
 - Placeholders de inputs (~30 strings)
 - Labels de tabelas (~20 strings)
@@ -23,6 +24,7 @@ Após Sprint 12, a estrutura de `src/content/` estava criada mas ainda havia str
 **Total:** ~190 strings hardcoded ainda presentes
 
 **Impacto:**
+
 - Centralização incompleta (Sprint 12 cobriu ~70%)
 - Inconsistência (alguns textos centralizados, outros não)
 - Dificulta i18n (ainda há strings hardcoded)
@@ -30,15 +32,18 @@ Após Sprint 12, a estrutura de `src/content/` estava criada mas ainda havia str
 ## Requirements
 
 ### Novos Arquivos de Content
+
 - `src/content/validation.ts` — todas mensagens de validação Zod
 - `src/content/ui.ts` — empty states, paginação, filtros genéricos
 - `src/content/pwa.ts` — install banner, PIX payment box
 
 ### Expandir Arquivos Existentes
+
 - Adicionar seções `toasts`, `placeholders`, `labels` em todos os arquivos de domínio
 - Expandir `common.ts` com seções: `toasts`, `aria`, `emptyStates`, `placeholders`, `labels`
 
 ### Critérios de Conclusão
+
 - ✅ 100% das strings de UI centralizadas
 - ✅ Nenhuma string hardcoded em componentes (exceto constantes técnicas)
 - ✅ Build sem erros
@@ -48,35 +53,38 @@ Após Sprint 12, a estrutura de `src/content/` estava criada mas ainda havia str
 **Tipos de strings ainda hardcoded:**
 
 1. **Toasts:**
+
 ```tsx
 // Antes
-toast.success('Aluno criado com sucesso!');
-toast.error('Erro ao criar aluno.');
+toast.success("Aluno criado com sucesso!");
+toast.error("Erro ao criar aluno.");
 
 // Depois
-import { students } from '@/content';
+import { students } from "@/content";
 toast.success(students.formDialog.toasts.success);
 toast.error(students.formDialog.toasts.error);
 ```
 
 2. **Placeholders:**
+
 ```tsx
 // Antes
-<Input placeholder="Digite o nome do aluno" />
+<Input placeholder="Digite o nome do aluno" />;
 
 // Depois
-import { students } from '@/content';
-<Input placeholder={students.formDialog.namePlaceholder} />
+import { students } from "@/content";
+<Input placeholder={students.formDialog.namePlaceholder} />;
 ```
 
 3. **Validação Zod:**
+
 ```tsx
 // Antes
-z.string().min(1, 'Campo obrigatório').email('Email inválido')
+z.string().min(1, "Campo obrigatório").email("Email inválido");
 
 // Depois
-import { validation } from '@/content';
-z.string().min(1, validation.required).email(validation.emailInvalid)
+import { validation } from "@/content";
+z.string().min(1, validation.required).email(validation.emailInvalid);
 ```
 
 ## Proposed Solution
@@ -86,11 +94,11 @@ z.string().min(1, validation.required).email(validation.emailInvalid)
 ```ts
 // src/content/validation.ts
 export const validation = {
-  required: 'Campo obrigatório',
-  emailRequired: 'Email é obrigatório',
-  emailInvalid: 'Email inválido',
-  phoneRequired: 'Telefone é obrigatório',
-  phoneInvalid: 'Telefone inválido',
+  required: "Campo obrigatório",
+  emailRequired: "Email é obrigatório",
+  emailInvalid: "Email inválido",
+  phoneRequired: "Telefone é obrigatório",
+  phoneInvalid: "Telefone inválido",
   // ... todas as validações
 };
 
@@ -98,15 +106,15 @@ export const validation = {
 export const ui = {
   emptyStates: {
     students: {
-      title: 'Nenhum aluno cadastrado',
-      description: 'Comece adicionando seu primeiro aluno',
-      actionLabel: 'Adicionar Aluno',
+      title: "Nenhum aluno cadastrado",
+      description: "Comece adicionando seu primeiro aluno",
+      actionLabel: "Adicionar Aluno",
     },
     // ... outros empty states
   },
   pagination: {
-    previous: 'Anterior',
-    next: 'Próximo',
+    previous: "Anterior",
+    next: "Próximo",
     // ...
   },
 };
@@ -114,10 +122,10 @@ export const ui = {
 // src/content/pwa.ts
 export const pwa = {
   installBanner: {
-    title: 'Instalar SyncClass',
-    description: 'Instale o app para acesso rápido',
-    install: 'Instalar',
-    dismiss: 'Agora não',
+    title: "Instalar SyncClass",
+    description: "Instale o app para acesso rápido",
+    install: "Instalar",
+    dismiss: "Agora não",
   },
 };
 ```
@@ -131,10 +139,10 @@ export const activities = {
   sendDialog: {
     // ... campos existentes
     toasts: {
-      success: 'Atividade enviada com sucesso!',
-      error: 'Erro ao enviar atividade.',
+      success: "Atividade enviada com sucesso!",
+      error: "Erro ao enviar atividade.",
     },
-    descriptionPlaceholder: 'Descreva a atividade...',
+    descriptionPlaceholder: "Descreva a atividade...",
   },
 };
 ```
@@ -297,23 +305,23 @@ export const activities = {
 
 ### Novos Arquivos Criados
 
-| Arquivo | Seções | Chaves | Linhas |
-|---------|--------|--------|--------|
-| `validation.ts` | Validações Zod | 30 | 60 |
-| `ui.ts` | Empty states, pagination, filtros | 40 | 80 |
-| `pwa.ts` | Install banner, PIX | 15 | 30 |
+| Arquivo         | Seções                            | Chaves | Linhas |
+| --------------- | --------------------------------- | ------ | ------ |
+| `validation.ts` | Validações Zod                    | 30     | 60     |
+| `ui.ts`         | Empty states, pagination, filtros | 40     | 80     |
+| `pwa.ts`        | Install banner, PIX               | 15     | 30     |
 
 ### Arquivos Expandidos
 
-| Arquivo | Novas Seções | Novas Chaves | Linhas Adicionadas |
-|---------|--------------|--------------|-------------------|
-| `activities.ts` | toasts, deliverDialog | 15 | 30 |
-| `classes.ts` | toasts em todos dialogs | 20 | 40 |
-| `financial.ts` | toasts em todos dialogs | 15 | 30 |
-| `students.ts` | toasts, placeholders, table | 18 | 35 |
-| `teachers.ts` | toasts, table | 12 | 25 |
-| `users.ts` | toasts, table | 15 | 30 |
-| `common.ts` | toasts, aria, emptyStates, placeholders, labels | 50 | 100 |
+| Arquivo         | Novas Seções                                    | Novas Chaves | Linhas Adicionadas |
+| --------------- | ----------------------------------------------- | ------------ | ------------------ |
+| `activities.ts` | toasts, deliverDialog                           | 15           | 30                 |
+| `classes.ts`    | toasts em todos dialogs                         | 20           | 40                 |
+| `financial.ts`  | toasts em todos dialogs                         | 15           | 30                 |
+| `students.ts`   | toasts, placeholders, table                     | 18           | 35                 |
+| `teachers.ts`   | toasts, table                                   | 12           | 25                 |
+| `users.ts`      | toasts, table                                   | 15           | 30                 |
+| `common.ts`     | toasts, aria, emptyStates, placeholders, labels | 50           | 100                |
 
 ## Files Created
 
@@ -347,12 +355,14 @@ src/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 3 novos arquivos criados (170 linhas)
 - ✅ 7 arquivos expandidos (290 linhas adicionadas)
 - ✅ 185 novas chaves de texto adicionadas
 - ✅ Estrutura completa para centralização
 
 ### Melhorias Qualitativas
+
 - ✅ Estrutura completa de content (16 arquivos)
 - ✅ Todas as categorias de texto cobertas
 - ✅ Pronto para Sprint 14 (substituir strings hardcoded)
@@ -383,15 +393,3 @@ src/
 
 - [ ] Strings ainda não substituídas nos componentes — Sprint 14
 - [ ] Auditoria final necessária — Sprint 15
-
-## Next Steps
-
-1. Sprint 14: Substituir strings hardcoded nos componentes
-2. Sprint 15: Auditoria final de strings
-3. Futuro: Adicionar suporte a EN (inglês)
-
-## References
-
-- Commits: 20 mai 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Sprint anterior: Sprint 12 (estrutura inicial de content)

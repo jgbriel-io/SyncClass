@@ -407,18 +407,3 @@ Itens identificados mas não resolvidos nesta sprint:
 
 - 📝 Manter padrão de resumo + refs cruzadas em novos docs
 - 📝 Sincronizar datas de atualização em batch (evitar inconsistências)
-
-## Next Steps
-
-1. ✅ **Criar README do TCC** — índice navegável
-2. ✅ **Revisar Cap 1-10** — padronizar estrutura + atualizar referências
-3. ✅ **Renomear tcc-referencia.md** — para referencias.md
-4. ✅ **Atualizar assets-pendentes.md** — corrigir refs antigas
-5. ✅ **Atualizar referencias-bibliograficas.md** — adicionar TanStack Query + shadcn/ui
-6. 🔄 **Commitar trabalho** — `docs(tcc): review and standardize all chapters (Sprint 17)`
-
-## References
-
-- `docs/tcc/` — capítulos do TCC
-- `docs/sprints/TEMPLATE.md` — template padrão para sprints
-- `docs/README.md` — índice principal da documentação

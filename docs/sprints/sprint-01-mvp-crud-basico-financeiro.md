@@ -10,6 +10,7 @@
 ## Problem Statement
 
 Início do projeto a partir do zero. Necessidade de estabelecer:
+
 - Schema inicial do banco de dados para suportar gestão de professores, alunos, aulas e cobranças
 - CRUD básico de pagamentos e aulas
 - Estrutura frontend inicial com React + TypeScript + Vite
@@ -34,12 +35,14 @@ Sem essa base, nenhuma outra funcionalidade poderia ser desenvolvida.
 ## Background
 
 **Stack escolhida:**
+
 - Frontend: React 18 + TypeScript 5.8 + Vite 5.4
 - Backend: Supabase (PostgreSQL 15 + Auth + Storage)
 - UI: Tailwind CSS 3.4 (shadcn/ui será adicionado na Sprint 2)
 - Validação: Regex patterns customizados (Zod será adicionado depois)
 
 **Estrutura inicial:**
+
 ```
 src/
 ├── pages/           # Páginas principais
@@ -51,6 +54,7 @@ src/
 ```
 
 **Convenções estabelecidas:**
+
 - Código em inglês, comentários em português
 - Componentes em PascalCase
 - Arquivos `.tsx` para componentes React
@@ -243,32 +247,32 @@ export const REGEX_PATTERNS = {
 
 ### Migrations Aplicadas
 
-| Migration | Descrição |
-|-----------|-----------|
+| Migration               | Descrição                                                                 |
+| ----------------------- | ------------------------------------------------------------------------- |
 | `01_initial_schema.sql` | Tabelas base: profiles, teachers, students, class_logs, financial_records |
 
 ### Componentes Criados
 
-| Componente | Responsabilidade | Arquivo |
-|------------|------------------|---------|
-| `PaymentForm` | Formulário de criação/edição de pagamento | `src/components/financial/PaymentForm.tsx` |
-| `PaymentList` | Tabela de cobranças | `src/components/financial/PaymentList.tsx` |
-| `PaymentCalculator` | Calculadora de valor de aulas | `src/components/financial/PaymentCalculator.tsx` |
-| `ClassForm` | Formulário de registro de aula | `src/components/classes/ClassForm.tsx` |
-| `ClassList` | Tabela de aulas | `src/components/classes/ClassList.tsx` |
-| `Teachers` | Página de professores | `src/pages/Teachers.tsx` |
-| `StudentDetails` | Página de detalhes do aluno | `src/pages/StudentDetails.tsx` |
+| Componente          | Responsabilidade                          | Arquivo                                          |
+| ------------------- | ----------------------------------------- | ------------------------------------------------ |
+| `PaymentForm`       | Formulário de criação/edição de pagamento | `src/components/financial/PaymentForm.tsx`       |
+| `PaymentList`       | Tabela de cobranças                       | `src/components/financial/PaymentList.tsx`       |
+| `PaymentCalculator` | Calculadora de valor de aulas             | `src/components/financial/PaymentCalculator.tsx` |
+| `ClassForm`         | Formulário de registro de aula            | `src/components/classes/ClassForm.tsx`           |
+| `ClassList`         | Tabela de aulas                           | `src/components/classes/ClassList.tsx`           |
+| `Teachers`          | Página de professores                     | `src/pages/Teachers.tsx`                         |
+| `StudentDetails`    | Página de detalhes do aluno               | `src/pages/StudentDetails.tsx`                   |
 
 ### Hooks Criados
 
-| Hook | Responsabilidade | Arquivo |
-|------|------------------|---------|
-| `usePayments` | Buscar cobranças do banco | `src/hooks/usePayments.ts` |
-| `useCreatePayment` | Criar nova cobrança | `src/hooks/usePayments.ts` |
-| `useUpdatePayment` | Editar cobrança existente | `src/hooks/usePayments.ts` |
-| `useClasses` | Buscar aulas do banco | `src/hooks/useClasses.ts` |
-| `useCreateClass` | Registrar nova aula | `src/hooks/useClasses.ts` |
-| `useTeachers` | Buscar professores do banco | `src/hooks/useTeachers.ts` |
+| Hook               | Responsabilidade            | Arquivo                    |
+| ------------------ | --------------------------- | -------------------------- |
+| `usePayments`      | Buscar cobranças do banco   | `src/hooks/usePayments.ts` |
+| `useCreatePayment` | Criar nova cobrança         | `src/hooks/usePayments.ts` |
+| `useUpdatePayment` | Editar cobrança existente   | `src/hooks/usePayments.ts` |
+| `useClasses`       | Buscar aulas do banco       | `src/hooks/useClasses.ts`  |
+| `useCreateClass`   | Registrar nova aula         | `src/hooks/useClasses.ts`  |
+| `useTeachers`      | Buscar professores do banco | `src/hooks/useTeachers.ts` |
 
 ## Files Created
 
@@ -322,6 +326,7 @@ src/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 5 tabelas criadas no banco de dados
 - ✅ 7 componentes React criados
 - ✅ 3 hooks customizados implementados
@@ -329,6 +334,7 @@ src/
 - ✅ 1 integração externa (API IBGE)
 
 ### Melhorias Qualitativas
+
 - ✅ Base sólida para desenvolvimento das próximas sprints
 - ✅ Arquitetura limpa: separação entre componentes, hooks e utilitários
 - ✅ Validação de dados na entrada (evita dados inválidos no banco)
@@ -346,33 +352,22 @@ src/
 ## Lessons Learned
 
 ### O que funcionou bem
+
 - ✅ **Supabase como BaaS:** Schema inicial + RLS em 5 dias vs ~2 semanas para backend tradicional
 - ✅ **Vite + TypeScript:** Setup rápido, hot reload instantâneo, erros de tipo em tempo de desenvolvimento
 - ✅ **Estrutura de pastas por domínio:** `components/financial/`, `components/classes/` facilitou navegação desde o início
 - ✅ **API IBGE para CEP:** Integração simples, sem autenticação, melhorou UX significativamente
 
 ### O que poderia melhorar
+
 - ⚠️ **Validação com regex:** Frágil e difícil de manter — Zod seria melhor desde o início
 - ⚠️ **Sem testes:** Bugs só descobertos em teste manual — testes unitários desde Sprint 1 teriam economizado tempo
 - ⚠️ **Componentes grandes:** `PaymentForm` com ~200 linhas — deveria ter quebrado em subcomponentes menores
 - ⚠️ **Sem error boundaries:** Erros do Supabase crasham a aplicação inteira
 
 ### Aplicações futuras
+
 - 💡 **Zod para validação:** Migrar regex para schemas Zod (Sprint 3)
 - 💡 **Testes desde o início:** Próximas features devem ter testes unitários antes de merge
 - 💡 **Componentes < 150 linhas:** Quebrar componentes grandes em subcomponentes reutilizáveis
 - 💡 **Error boundaries:** Adicionar em cada página principal para isolar falhas
-
-## Next Steps
-
-1. Sprint 2: Implementar autenticação com roles (admin, teacher, student)
-2. Sprint 2: Criar formulários completos de cadastro de aluno e professor
-3. Sprint 2: Migrar para componentes shadcn/ui (substituir tabelas manuais)
-4. Sprint 3: Adicionar CI/CD com GitHub Actions
-5. Sprint 3: Implementar soft delete de alunos
-
-## References
-
-- Commits: 19–23 janeiro 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Validação: `docs/archive/VALIDACAO_SPRINTS_1_9.md`

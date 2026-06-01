@@ -12,6 +12,7 @@
 Após Sprint 13, a estrutura de `src/content/` estava completa mas as strings hardcoded ainda não foram substituídas nos componentes:
 
 **Strings Hardcoded Identificadas:**
+
 - 20 componentes com toasts hardcoded
 - 15 componentes com placeholders hardcoded
 - 10 componentes com validações Zod hardcoded
@@ -21,6 +22,7 @@ Após Sprint 13, a estrutura de `src/content/` estava completa mas as strings ha
 **Total:** ~58 componentes com strings hardcoded
 
 **Impacto:**
+
 - Centralização incompleta (estrutura pronta mas não usada)
 - Inconsistência (alguns componentes usam content, outros não)
 - Dificulta manutenção (mudança de texto exige editar componentes)
@@ -28,6 +30,7 @@ Após Sprint 13, a estrutura de `src/content/` estava completa mas as strings ha
 ## Requirements
 
 ### Substituir Strings Hardcoded
+
 - Toasts em todos os componentes
 - Placeholders em todos os inputs
 - Validações Zod em todos os schemas
@@ -35,6 +38,7 @@ Após Sprint 13, a estrutura de `src/content/` estava completa mas as strings ha
 - Aria-labels em componentes de acessibilidade
 
 ### Critérios de Conclusão
+
 - ✅ 100% dos componentes usando `@/content`
 - ✅ Nenhuma string hardcoded de UI (exceto constantes técnicas)
 - ✅ Build sem erros
@@ -46,10 +50,10 @@ Após Sprint 13, a estrutura de `src/content/` estava completa mas as strings ha
 
 ```tsx
 // Antes
-toast.success('Atividade enviada com sucesso!');
+toast.success("Atividade enviada com sucesso!");
 
 // Depois
-import { activities } from '@/content';
+import { activities } from "@/content";
 toast.success(activities.sendDialog.toasts.success);
 ```
 
@@ -58,13 +62,16 @@ toast.success(activities.sendDialog.toasts.success);
 ```tsx
 // Antes
 const schema = z.object({
-  email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
+  email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
 });
 
 // Depois
-import { validation } from '@/content';
+import { validation } from "@/content";
 const schema = z.object({
-  email: z.string().min(1, validation.emailRequired).email(validation.emailInvalid),
+  email: z
+    .string()
+    .min(1, validation.emailRequired)
+    .email(validation.emailInvalid),
 });
 ```
 
@@ -247,26 +254,26 @@ const schema = z.object({
 
 ### Componentes Atualizados por Domínio
 
-| Domínio | Componentes | Strings Substituídas |
-|---------|-------------|----------------------|
-| Activities | 8 | 25 |
-| Classes | 10 | 35 |
-| Financial | 9 | 30 |
-| Students | 8 | 28 |
-| Teachers | 6 | 20 |
-| Users | 5 | 18 |
-| Dashboard | 4 | 12 |
-| Student Portal | 8 | 22 |
+| Domínio        | Componentes | Strings Substituídas |
+| -------------- | ----------- | -------------------- |
+| Activities     | 8           | 25                   |
+| Classes        | 10          | 35                   |
+| Financial      | 9           | 30                   |
+| Students       | 8           | 28                   |
+| Teachers       | 6           | 20                   |
+| Users          | 5           | 18                   |
+| Dashboard      | 4           | 12                   |
+| Student Portal | 8           | 22                   |
 
 ### Tipos de Strings Substituídas
 
-| Tipo | Quantidade | Arquivos Afetados |
-|------|------------|-------------------|
-| Toasts | 80 | 30 |
-| Placeholders | 35 | 15 |
-| Validações Zod | 40 | 5 |
-| Empty States | 15 | 5 |
-| Aria-labels | 20 | 8 |
+| Tipo           | Quantidade | Arquivos Afetados |
+| -------------- | ---------- | ----------------- |
+| Toasts         | 80         | 30                |
+| Placeholders   | 35         | 15                |
+| Validações Zod | 40         | 5                 |
+| Empty States   | 15         | 5                 |
+| Aria-labels    | 20         | 8                 |
 
 ## Files Modified
 
@@ -292,12 +299,14 @@ const schema = z.object({
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 58 componentes atualizados
 - ✅ 190 strings hardcoded substituídas
 - ✅ 0 strings hardcoded de UI restantes
 - ✅ 100% dos textos centralizados
 
 ### Melhorias Qualitativas
+
 - ✅ Centralização completa (100%)
 - ✅ Código consistente (todos usam `@/content`)
 - ✅ Manutenção facilitada (mudança em um lugar)
@@ -329,15 +338,3 @@ const schema = z.object({
 
 - [ ] Auditoria final necessária para confirmar 100% — Sprint 15
 - [ ] Apenas PT-BR — adicionar EN na próxima fase
-
-## Next Steps
-
-1. Sprint 15: Auditoria final de strings
-2. Futuro: Adicionar suporte a EN (inglês)
-3. Futuro: Adicionar suporte a ES (espanhol)
-
-## References
-
-- Commits: 20 mai 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Sprint anterior: Sprint 13 (estrutura completa de content)

@@ -12,59 +12,66 @@
 Após Sprint 9, os arquivos estavam organizados mas com queries duplicadas identificadas na auditoria:
 
 **Queries Duplicadas:**
+
 - Mesma query repetida em múltiplos hooks
 - Exemplo: buscar `teacherId` do usuário logado (repetido 8x)
 - Exemplo: buscar alunos de um professor (repetido 5x)
 - Exemplo: buscar cobranças pendentes (repetido 4x)
 
 **Impacto:**
+
 - Código duplicado (DRY violation)
 - Manutenção cara (mudança precisa ser feita em múltiplos lugares)
 - Inconsistência (queries similares com pequenas diferenças)
 - Performance (queries não otimizadas igualmente)
 
 **Exemplos Identificados:**
+
 ```ts
 // Hook 1
 const { data } = await supabase
-  .from('students')
-  .select('*')
-  .eq('teacher_id', teacherId)
-  .is('deleted_at', null);
+  .from("students")
+  .select("*")
+  .eq("teacher_id", teacherId)
+  .is("deleted_at", null);
 
 // Hook 2 (duplicado)
 const { data } = await supabase
-  .from('students')
-  .select('*')
-  .eq('teacher_id', teacherId)
-  .is('deleted_at', null);
+  .from("students")
+  .select("*")
+  .eq("teacher_id", teacherId)
+  .is("deleted_at", null);
 
 // Hook 3 (duplicado com pequena diferença)
 const { data } = await supabase
-  .from('students')
-  .select('id, name, email')
-  .eq('teacher_id', teacherId)
-  .is('deleted_at', null);
+  .from("students")
+  .select("id, name, email")
+  .eq("teacher_id", teacherId)
+  .is("deleted_at", null);
 ```
 
 ## Requirements
 
 ### Identificar Queries Duplicadas
+
 - Buscar padrões repetidos em hooks
 - Listar todas as queries duplicadas
 - Priorizar por frequência de duplicação
 
 ### Criar Query Builders
+
 - Funções reutilizáveis para queries comuns
 - Exemplo: `getStudentsByTeacher(teacherId, options)`
 - Exemplo: `getPendingPayments(studentId, options)`
 
 ### Refatorar Hooks
+
 - Substituir queries duplicadas por query builders
 - Manter funcionalidade idêntica
 - Adicionar testes
 
 ### Critérios de Conclusão
+
 - ✅ Nenhuma query duplicada (exceto casos justificados)
 - ✅ Query builders testados e documentados
 - ✅ Hooks mais simples e legíveis
@@ -72,13 +79,14 @@ const { data } = await supabase
 ## Background
 
 **Query Builder Pattern:**
+
 ```ts
 // Antes (duplicado em 5 hooks)
 const { data } = await supabase
-  .from('students')
-  .select('*')
-  .eq('teacher_id', teacherId)
-  .is('deleted_at', null);
+  .from("students")
+  .select("*")
+  .eq("teacher_id", teacherId)
+  .is("deleted_at", null);
 
 // Depois (query builder reutilizável)
 const data = await getStudentsByTeacher(teacherId);
@@ -89,14 +97,14 @@ export const getStudentsByTeacher = async (
   options?: { includeDeleted?: boolean; select?: string }
 ) => {
   let query = supabase
-    .from('students')
-    .select(options?.select || '*')
-    .eq('teacher_id', teacherId);
-  
+    .from("students")
+    .select(options?.select || "*")
+    .eq("teacher_id", teacherId);
+
   if (!options?.includeDeleted) {
-    query = query.is('deleted_at', null);
+    query = query.is("deleted_at", null);
   }
-  
+
   const { data, error } = await query;
   if (error) throw error;
   return data;
@@ -104,6 +112,7 @@ export const getStudentsByTeacher = async (
 ```
 
 **Vantagens:**
+
 - Código DRY (uma única implementação)
 - Manutenção fácil (mudança em um lugar)
 - Consistência (mesma query em todos os lugares)
@@ -127,16 +136,37 @@ src/lib/queries/
 
 ```ts
 // src/lib/queries/students.ts
-export const getStudentsByTeacher = (teacherId, options?) => { /* ... */ };
-export const getStudentById = (studentId, options?) => { /* ... */ };
-export const getActiveStudents = (teacherId, options?) => { /* ... */ };
-export const getArchivedStudents = (teacherId, options?) => { /* ... */ };
+export const getStudentsByTeacher = (teacherId, options?) => {
+  /* ... */
+};
+export const getStudentById = (studentId, options?) => {
+  /* ... */
+};
+export const getActiveStudents = (teacherId, options?) => {
+  /* ... */
+};
+export const getArchivedStudents = (teacherId, options?) => {
+  /* ... */
+};
 
 // src/lib/queries/financial.ts
-export const getPendingPayments = (studentId, options?) => { /* ... */ };
-export const getPaidPayments = (studentId, options?) => { /* ... */ };
-export const getOverduePayments = (studentId, options?) => { /* ... */ };
-export const getPaymentsByPeriod = (studentId, startDate, endDate, options?) => { /* ... */ };
+export const getPendingPayments = (studentId, options?) => {
+  /* ... */
+};
+export const getPaidPayments = (studentId, options?) => {
+  /* ... */
+};
+export const getOverduePayments = (studentId, options?) => {
+  /* ... */
+};
+export const getPaymentsByPeriod = (
+  studentId,
+  startDate,
+  endDate,
+  options?
+) => {
+  /* ... */
+};
 ```
 
 ## Task Breakdown
@@ -341,25 +371,25 @@ export const getPaymentsByPeriod = (studentId, startDate, endDate, options?) => 
 
 ### Query Builders Criados
 
-| Arquivo | Query Builders | Linhas |
-|---------|----------------|--------|
-| `students.ts` | 4 query builders | 80 |
-| `financial.ts` | 5 query builders | 100 |
-| `classes.ts` | 5 query builders | 95 |
-| `activities.ts` | 4 query builders | 75 |
-| `teachers.ts` | 2 query builders | 40 |
-| `users.ts` | 2 query builders | 40 |
+| Arquivo         | Query Builders   | Linhas |
+| --------------- | ---------------- | ------ |
+| `students.ts`   | 4 query builders | 80     |
+| `financial.ts`  | 5 query builders | 100    |
+| `classes.ts`    | 5 query builders | 95     |
+| `activities.ts` | 4 query builders | 75     |
+| `teachers.ts`   | 2 query builders | 40     |
+| `users.ts`      | 2 query builders | 40     |
 
 ### Hooks Refatorados
 
-| Hook | Queries Removidas | Linhas Reduzidas |
-|------|-------------------|------------------|
-| `useStudents` | 3 queries duplicadas | -15 linhas |
-| `useFinancialRecords` | 4 queries duplicadas | -20 linhas |
-| `useClasses` | 3 queries duplicadas | -15 linhas |
-| `useActivities` | 2 queries duplicadas | -10 linhas |
-| `useTeachers` | 2 queries duplicadas | -10 linhas |
-| `useUsers` | 1 query duplicada | -5 linhas |
+| Hook                  | Queries Removidas    | Linhas Reduzidas |
+| --------------------- | -------------------- | ---------------- |
+| `useStudents`         | 3 queries duplicadas | -15 linhas       |
+| `useFinancialRecords` | 4 queries duplicadas | -20 linhas       |
+| `useClasses`          | 3 queries duplicadas | -15 linhas       |
+| `useActivities`       | 2 queries duplicadas | -10 linhas       |
+| `useTeachers`         | 2 queries duplicadas | -10 linhas       |
+| `useUsers`            | 1 query duplicada    | -5 linhas        |
 
 ## Files Created
 
@@ -417,6 +447,7 @@ docs/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ 6 arquivos de query builders criados (430 linhas)
 - ✅ 22 query builders implementados
 - ✅ 15 queries duplicadas removidas
@@ -425,6 +456,7 @@ docs/
 - ✅ 12 testes unitários adicionados
 
 ### Melhorias Qualitativas
+
 - ✅ Código DRY (sem duplicação)
 - ✅ Manutenção facilitada (mudança em um lugar)
 - ✅ Consistência (mesma query em todos os lugares)
@@ -456,17 +488,3 @@ docs/
 
 - [ ] Alguns query builders ainda básicos — adicionar opções avançadas depois
 - [ ] Sem cache de queries — adicionar React Query cache depois
-
-## Next Steps
-
-1. Sprint 11: Fix de timezone e error boundary
-2. Sprint 12: Centralização de strings (i18n prep)
-3. Sprint 13: Centralizar UI strings
-4. Sprint 14: Remover strings hardcoded
-5. Sprint 15: Auditoria final de strings
-
-## References
-
-- Commits: 21 abr 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Auditoria de clean code: `docs/architecture/clean-code.md`

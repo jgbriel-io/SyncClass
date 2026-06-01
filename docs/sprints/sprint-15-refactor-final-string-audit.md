@@ -12,12 +12,14 @@
 Após Sprint 14, a substituição de strings hardcoded foi concluída mas era necessária uma auditoria final para garantir 100% de centralização:
 
 **Necessidade de Auditoria:**
+
 - Confirmar que nenhuma string foi esquecida
 - Identificar falsos positivos (constantes técnicas que não devem ser centralizadas)
 - Validar que aplicação funciona identicamente
 - Documentar resultado final
 
 **Possíveis Strings Restantes:**
+
 - Strings em lugares não óbvios (condicionais, fallbacks)
 - Strings técnicas que não devem ser centralizadas (IDs, keys, constantes)
 - Strings em arquivos não auditados (utils, lib)
@@ -25,18 +27,21 @@ Após Sprint 14, a substituição de strings hardcoded foi concluída mas era ne
 ## Requirements
 
 ### Auditoria Completa
+
 - Grep em todos os arquivos do projeto
 - Identificar strings hardcoded restantes
 - Classificar: UI (deve centralizar) vs Técnica (pode manter)
 - Substituir strings de UI restantes
 
 ### Validação Final
+
 - Build sem erros
 - Testes passando
 - Aplicação funciona identicamente
 - Documentar resultado
 
 ### Critérios de Conclusão
+
 - ✅ Auditoria completa executada
 - ✅ 100% das strings de UI centralizadas
 - ✅ Strings técnicas documentadas (por que não foram centralizadas)
@@ -47,6 +52,7 @@ Após Sprint 14, a substituição de strings hardcoded foi concluída mas era ne
 **Tipos de strings:**
 
 1. **UI (deve centralizar):**
+
 ```tsx
 // ❌ Hardcoded
 <p>Nenhum resultado encontrado</p>
@@ -56,13 +62,15 @@ Após Sprint 14, a substituição de strings hardcoded foi concluída mas era ne
 ```
 
 2. **Técnica (pode manter):**
+
 ```tsx
 // ✅ OK manter hardcoded (constante técnica)
-const API_URL = 'https://api.example.com';
-const STORAGE_KEY = 'user-preferences';
+const API_URL = "https://api.example.com";
+const STORAGE_KEY = "user-preferences";
 ```
 
 **Grep patterns:**
+
 ```bash
 # Buscar strings com letra maiúscula (possível UI)
 grep -r '"[A-Z]' src/
@@ -89,15 +97,15 @@ grep -r 'placeholder="' src/
 
 ### Classificação de Strings
 
-| Tipo | Deve Centralizar? | Exemplo |
-|------|-------------------|---------|
-| Texto visível ao usuário | ✅ Sim | "Salvar", "Erro ao salvar" |
-| Placeholder de input | ✅ Sim | "Digite seu nome" |
-| Aria-label | ✅ Sim | "Fechar modal" |
-| Toast/mensagem | ✅ Sim | "Sucesso!" |
-| Constante técnica | ❌ Não | "API_URL", "STORAGE_KEY" |
-| ID/key | ❌ Não | "user-id", "data-testid" |
-| Regex pattern | ❌ Não | "^[A-Z]" |
+| Tipo                     | Deve Centralizar? | Exemplo                    |
+| ------------------------ | ----------------- | -------------------------- |
+| Texto visível ao usuário | ✅ Sim            | "Salvar", "Erro ao salvar" |
+| Placeholder de input     | ✅ Sim            | "Digite seu nome"          |
+| Aria-label               | ✅ Sim            | "Fechar modal"             |
+| Toast/mensagem           | ✅ Sim            | "Sucesso!"                 |
+| Constante técnica        | ❌ Não            | "API_URL", "STORAGE_KEY"   |
+| ID/key                   | ❌ Não            | "user-id", "data-testid"   |
+| Regex pattern            | ❌ Não            | "^[A-Z]"                   |
 
 ## Task Breakdown
 
@@ -249,31 +257,31 @@ grep -r 'placeholder="' src/
 
 ### Strings Encontradas na Auditoria
 
-| Grep | Strings Encontradas | UI (centralizar) | Técnicas (manter) |
-|------|---------------------|------------------|-------------------|
-| `"[A-Z]'` | 72 | 3 | 69 |
-| `>[A-Z]` | 15 | 0 | 15 (falsos positivos) |
-| `aria-label="` | 13 | 0 | 0 (já centralizados) |
-| `placeholder="` | 19 | 0 | 0 (já centralizados) |
-| `title="` | 49 | 0 | 0 (já centralizados) |
+| Grep            | Strings Encontradas | UI (centralizar) | Técnicas (manter)     |
+| --------------- | ------------------- | ---------------- | --------------------- |
+| `"[A-Z]'`       | 72                  | 3                | 69                    |
+| `>[A-Z]`        | 15                  | 0                | 15 (falsos positivos) |
+| `aria-label="`  | 13                  | 0                | 0 (já centralizados)  |
+| `placeholder="` | 19                  | 0                | 0 (já centralizados)  |
+| `title="`       | 49                  | 0                | 0 (já centralizados)  |
 
 ### Strings Técnicas Mantidas (Exemplos)
 
-| String | Arquivo | Justificativa |
-|--------|---------|---------------|
-| `"VITE_SUPABASE_URL"` | `env.ts` | Variável de ambiente |
-| `"user-preferences"` | `storage.ts` | Storage key |
-| `"^[A-Z]{2}$"` | `validation.ts` | Regex pattern |
-| `"data-testid"` | `*.test.tsx` | Test ID |
-| `"America/Sao_Paulo"` | `timezone.ts` | Timezone constant |
+| String                | Arquivo         | Justificativa        |
+| --------------------- | --------------- | -------------------- |
+| `"VITE_SUPABASE_URL"` | `env.ts`        | Variável de ambiente |
+| `"user-preferences"`  | `storage.ts`    | Storage key          |
+| `"^[A-Z]{2}$"`        | `validation.ts` | Regex pattern        |
+| `"data-testid"`       | `*.test.tsx`    | Test ID              |
+| `"America/Sao_Paulo"` | `timezone.ts`   | Timezone constant    |
 
 ### Últimas 3 Strings Substituídas
 
-| String | Arquivo | Substituído Por |
-|--------|---------|-----------------|
-| "Erro ao carregar perfil" | `TeacherFinancial.tsx` | `common.errors.loadProfile` |
-| "Erro ao carregar perfil" | `TeacherStudents.tsx` | `common.errors.loadProfile` |
-| "Email inválido" | `Teachers.tsx` | `common.errors.validateEmail` |
+| String                    | Arquivo                | Substituído Por               |
+| ------------------------- | ---------------------- | ----------------------------- |
+| "Erro ao carregar perfil" | `TeacherFinancial.tsx` | `common.errors.loadProfile`   |
+| "Erro ao carregar perfil" | `TeacherStudents.tsx`  | `common.errors.loadProfile`   |
+| "Email inválido"          | `Teachers.tsx`         | `common.errors.validateEmail` |
 
 ## Files Created
 
@@ -306,6 +314,7 @@ docs/
 ## Results & Impact
 
 ### Métricas Quantitativas
+
 - ✅ Auditoria completa executada (5 greps)
 - ✅ 168 strings analisadas
 - ✅ 3 strings de UI substituídas
@@ -314,6 +323,7 @@ docs/
 - ✅ 100% de centralização alcançado
 
 ### Melhorias Qualitativas
+
 - ✅ Centralização completa (100%)
 - ✅ Strings técnicas documentadas (transparência)
 - ✅ Aplicação validada (nenhuma regressão)
@@ -345,24 +355,3 @@ docs/
 
 - [ ] Apenas PT-BR — adicionar EN na próxima fase
 - [ ] Strings técnicas hardcoded — OK manter (documentadas)
-
-## Next Steps
-
-1. **Futuro:** Adicionar suporte a EN (inglês)
-   - Criar `src/content/en/` com traduções
-   - Adicionar seletor de idioma
-   - Usar biblioteca i18n (react-i18next)
-
-2. **Futuro:** Adicionar suporte a ES (espanhol)
-   - Criar `src/content/es/` com traduções
-
-3. **Futuro:** Adicionar testes de i18n
-   - Garantir que todas as chaves existem em todos os idiomas
-   - Detectar chaves faltando
-
-## References
-
-- Commits: 20 mai 2026 (branch `syncclass/old-homolog`)
-- Análise completa: `docs/archive/ANALISE_OLD_HOMOLOG.md`
-- Sprint anterior: Sprint 14 (substituição de strings)
-- Documentação: `docs/architecture/string-centralization.md`
