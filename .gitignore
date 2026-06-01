@@ -175,3 +175,6 @@ desktop.ini
 *.tsbuildinfo
 .eslintcache
 .vite/
+
+# Reference code (not part of the project)
+integracao-abacate-referencia/
