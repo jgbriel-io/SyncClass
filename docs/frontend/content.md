@@ -32,25 +32,25 @@
 
 **Arquivos (17):**
 
-| Arquivo             | Strings | Conteúdo                                        |
-| ------------------- | ------- | ----------------------------------------------- |
-| `index.ts`          | —       | Barrel export (re-exporta todos)                |
-| `common.ts`         | 150+    | Strings genéricas (buttons, tooltips, messages) |
-| `auth.ts`           | 40+     | Autenticação (login, logout, reset password)    |
-| `layout.ts`         | 30+     | Layout/shells (sidebar, header, footer)         |
-| `dashboard.ts`      | 50+     | Dashboard (cards, metrics, charts)              |
-| `activities.ts`     | 100+    | Atividades (form, list, detail, correction)     |
-| `classes.ts`        | 60+     | Aulas (form, list, detail, attendance)          |
-| `financial.ts`      | 50+     | Financeiro (form, list, detail, payment)        |
-| `students.ts`       | 60+     | Alunos (form, list, detail)                     |
-| `teachers.ts`       | 40+     | Professores (form, list, detail)                |
-| `users.ts`          | 80+     | Usuários (form, list, detail, roles)            |
-| `overview.ts`       | 40+     | Visões gerais (stats, summaries)                |
-| `student-portal.ts` | 100+    | Portal do aluno (home, activities, financial)   |
-| `validation.ts`     | 30+     | Validação (Zod error messages)                  |
-| `ui.ts`             | 25+     | UI genérica (empty states, loading, errors)     |
-| `pwa.ts`            | 15+     | PWA (install prompt, offline)                   |
-| `filters.ts`        | 20+     | Filtros (search, sort, status)                  |
+| Arquivo             | Strings | Conteúdo                                                                  |
+| ------------------- | ------- | ------------------------------------------------------------------------- |
+| `index.ts`          | —       | Barrel export (re-exporta todos)                                          |
+| `common.ts`         | 150+    | Strings genéricas (buttons, tooltips, messages)                           |
+| `auth.ts`           | 40+     | Autenticação (login, logout, reset password)                              |
+| `layout.ts`         | 30+     | Layout/shells (sidebar, header, footer)                                   |
+| `dashboard.ts`      | 50+     | Dashboard (cards, metrics, charts)                                        |
+| `activities.ts`     | 100+    | Atividades (form, list, detail, correction)                               |
+| `classes.ts`        | 60+     | Aulas (form, list, detail, attendance)                                    |
+| `financial.ts`      | 80+     | Financeiro (form, list, detail, refundDialog, pixPaymentDialog, checkout) |
+| `students.ts`       | 60+     | Alunos (form, list, detail)                                               |
+| `teachers.ts`       | 40+     | Professores (form, list, detail)                                          |
+| `users.ts`          | 80+     | Usuários (form, list, detail, roles)                                      |
+| `overview.ts`       | 40+     | Visões gerais (stats, summaries)                                          |
+| `student-portal.ts` | 100+    | Portal do aluno (home, activities, financial)                             |
+| `validation.ts`     | 30+     | Validação (Zod error messages)                                            |
+| `ui.ts`             | 25+     | UI genérica (empty states, loading, errors)                               |
+| `pwa.ts`            | 15+     | PWA (install prompt, offline)                                             |
+| `filters.ts`        | 20+     | Filtros (search, sort, status)                                            |
 
 **Total:** 900+ strings centralizadas
 

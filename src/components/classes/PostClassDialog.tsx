@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,58 +13,37 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { useUpdateClassLog } from "@/hooks/useClassLogs";
-import {
-  useMarkAsPaid,
-  useUpdateFinancialStatus,
-} from "@/hooks/useFinancialRecords";
+import { useUpdateFinancialStatus } from "@/hooks/useFinancialRecords";
 import { logger } from "@/lib/logger";
 import { PostClassAbsenceSection } from "./PostClassAbsenceSection";
-import { PostClassPaymentSection } from "./PostClassPaymentSection";
 import { STACK, GAP } from "@/lib/design-tokens/spacing";
 import { ICON_SIZES } from "@/lib/design-tokens/icon-sizes";
 import { TYPOGRAPHY } from "@/lib/design-tokens/typography";
 import { classes as classesContent, common } from "@/content";
 
-/** Schema do modal Avaliar aula: nota, feedback e confirmar pagamento obrigatórios quando aplicável */
-function createPostClassSchema(requirePaymentConfirmation: boolean) {
-  return z
-    .object({
-      attendance: z.boolean(),
-      grade: z.string().optional(),
-      feedback: z
-        .string()
-        .min(1, "Informe o feedback")
-        .max(500, "Máximo 500 caracteres"),
-      chargeAbsence: z.boolean().optional(),
-      confirmPayment: z.boolean().optional(),
-      refundPayment: z.boolean().optional(),
-    })
-    .refine(
-      (data) => {
-        // Só exige nota se o aluno COMPARECEU
-        if (!data.attendance) return true;
-        const g = data.grade?.trim();
-        if (!g) return false;
-        const n = parseFloat(g.replace(",", "."));
-        return !Number.isNaN(n) && n >= 0 && n <= 100;
-      },
-      { message: "Informe a nota (0–100)", path: ["grade"] }
-    )
-    .refine(
-      (data) => {
-        // Só exige confirmação de pagamento se COMPARECEU e tem cobrança não paga
-        if (!requirePaymentConfirmation) return true;
-        if (!data.attendance) return true; // Se faltou, não exige confirmação de pagamento
-        return data.confirmPayment === true;
-      },
-      {
-        message: "Marque a opção para confirmar pagamento",
-        path: ["confirmPayment"],
-      }
-    );
-}
+const postClassSchema = z
+  .object({
+    attendance: z.boolean(),
+    grade: z.string().optional(),
+    feedback: z
+      .string()
+      .min(1, "Informe o feedback")
+      .max(500, "Máximo 500 caracteres"),
+    chargeAbsence: z.boolean().optional(),
+    refundPayment: z.boolean().optional(),
+  })
+  .refine(
+    (data) => {
+      if (!data.attendance) return true;
+      const g = data.grade?.trim();
+      if (!g) return false;
+      const n = parseFloat(g.replace(",", "."));
+      return !Number.isNaN(n) && n >= 0 && n <= 100;
+    },
+    { message: "Informe a nota (0–100)", path: ["grade"] }
+  );
 
-type PostClassFormData = z.infer<ReturnType<typeof createPostClassSchema>>;
+type PostClassFormData = z.infer<typeof postClassSchema>;
 
 interface PostClassDialogProps {
   open: boolean;
@@ -80,55 +59,27 @@ export function PostClassDialog({
   onSuccess,
 }: PostClassDialogProps) {
   const updateClassLog = useUpdateClassLog();
-
-  // Hooks com toasts desabilitados (vamos mostrar um toast único no final)
-  const markAsPaid = useMarkAsPaid();
   const updateFinancialStatus = useUpdateFinancialStatus();
 
-  // Supabase pode retornar financial_records como objeto ou array (1:1)
-  // Também precisa verificar financial_record_class_logs para aulas de pacote
   const financialRecord = (() => {
-    // Primeiro tenta financial_records direto
     if (classLog?.financial_records) {
       const records = Array.isArray(classLog.financial_records)
         ? classLog.financial_records
         : [classLog.financial_records];
-      if (records.length > 0 && records[0]?.id) {
-        return records[0];
-      }
+      if (records.length > 0 && records[0]?.id) return records[0];
     }
-    // Se não tem direto, tenta via pacote
     if (
       classLog?.financial_record_class_logs &&
       classLog.financial_record_class_logs.length > 0
     ) {
-      const packageFinancial =
-        classLog.financial_record_class_logs[0]?.financial_records;
-      if (packageFinancial?.id) {
-        return packageFinancial;
-      }
+      const pkg = classLog.financial_record_class_logs[0]?.financial_records;
+      if (pkg?.id) return pkg;
     }
     return null;
   })();
 
   const hasFinancialRecord = !!financialRecord?.id;
   const isPaymentAlreadyPaid = financialRecord?.status === "pago";
-  const requirePaymentConfirmation = !!(
-    classLog &&
-    hasFinancialRecord &&
-    !isPaymentAlreadyPaid
-  );
-
-  const hasPaymentProof = !!financialRecord?.payment_proof_url;
-  const paymentProofUrl = financialRecord?.payment_proof_url;
-  const paymentProofFilename =
-    financialRecord?.payment_proof_filename || "Comprovante";
-  const paymentProofStatus = financialRecord?.payment_proof_status;
-
-  const postClassSchema = useMemo(
-    () => createPostClassSchema(requirePaymentConfirmation),
-    [requirePaymentConfirmation]
-  );
 
   const {
     register,
@@ -144,14 +95,12 @@ export function PostClassDialog({
       grade: "",
       feedback: "",
       chargeAbsence: false,
-      confirmPayment: false,
       refundPayment: false,
     },
   });
 
   const attendance = watch("attendance");
   const chargeAbsence = watch("chargeAbsence");
-  const confirmPayment = watch("confirmPayment");
   const refundPayment = watch("refundPayment");
 
   useEffect(() => {
@@ -161,16 +110,14 @@ export function PostClassDialog({
         grade: classLog.grade != null ? String(classLog.grade) : "",
         feedback: classLog.feedback ?? "",
         chargeAbsence: false,
-        confirmPayment: isPaymentAlreadyPaid,
         refundPayment: false,
       });
     }
-  }, [open, classLog, reset, isPaymentAlreadyPaid]);
+  }, [open, classLog, reset]);
 
   const handleFormSubmit = async (data: PostClassFormData) => {
     if (!classLog) return;
 
-    const attendanceValue = data.attendance;
     const gradeValue = data.grade?.trim()
       ? Math.min(
           100,
@@ -179,94 +126,59 @@ export function PostClassDialog({
       : null;
     const feedbackValue = data.feedback?.trim() || null;
 
+    const originalToastSuccess = toast.success;
+    const toastQueue: string[] = [];
+    toast.success = (message: string) => {
+      toastQueue.push(message);
+      return 0;
+    };
+    let successMessage = "";
     try {
-      // Suprimir toasts automáticos temporariamente
-      const originalToastSuccess = toast.success;
-      const toastQueue: string[] = [];
-
-      // Interceptar toasts durante as operações
-      toast.success = (message: string) => {
-        toastQueue.push(message);
-        return 0; // Retornar um ID dummy
-      };
-
       await updateClassLog.mutateAsync({
         id: classLog.id,
-        attendance: attendanceValue,
+        attendance: data.attendance,
         grade: gradeValue,
         feedback: feedbackValue,
       });
 
-      let successMessage = "";
-
-      // Lógica de cobrança quando o aluno FALTOU
-      if (!attendanceValue && hasFinancialRecord && financialRecord?.id) {
+      if (!data.attendance && hasFinancialRecord && financialRecord?.id) {
         if (!data.chargeAbsence) {
-          // Faltou e NÃO quer cobrar
-          if (isPaymentAlreadyPaid) {
-            // Se já estava pago e marcou para extornar
-            if (data.refundPayment) {
-              await updateFinancialStatus.mutateAsync({
-                id: financialRecord.id,
-                status: "extornado",
-              });
-              successMessage = "Falta registrada e pagamento extornado";
-            } else {
-              // Mantém como pago (não faz nada)
-              successMessage = "Falta registrada, pagamento mantido como pago";
-            }
-          } else {
-            // Não estava pago, marca como abonado
+          if (isPaymentAlreadyPaid && data.refundPayment) {
+            await updateFinancialStatus.mutateAsync({
+              id: financialRecord.id,
+              status: "extornado",
+            });
+            successMessage = "Falta registrada e pagamento extornado";
+          } else if (!isPaymentAlreadyPaid) {
             await updateFinancialStatus.mutateAsync({
               id: financialRecord.id,
               status: "abonado",
             });
             successMessage = "Falta registrada e cobrança abonada";
+          } else {
+            successMessage = "Falta registrada, pagamento mantido como pago";
           }
         } else {
-          // Faltou e QUER cobrar: mantém o status atual
-          if (isPaymentAlreadyPaid) {
-            successMessage = "Falta registrada, cobrança mantida como paga";
-          } else {
-            successMessage = "Falta registrada, cobrança mantida como pendente";
-          }
+          successMessage = isPaymentAlreadyPaid
+            ? "Falta registrada, cobrança mantida como paga"
+            : "Falta registrada, cobrança mantida como pendente";
         }
-      }
-      // Lógica de pagamento quando o aluno COMPARECEU
-      else if (
-        attendanceValue &&
-        hasFinancialRecord &&
-        data.confirmPayment &&
-        financialRecord?.id
-      ) {
-        await markAsPaid.mutateAsync(financialRecord.id);
-        successMessage = "Avaliação e pagamento registrados com sucesso";
-      } else if (attendanceValue) {
-        // Compareceu mas não tem cobrança ou não confirmou pagamento
-        successMessage = "Avaliação registrada com sucesso";
       } else {
-        // Faltou mas não tem cobrança
-        successMessage = "Falta registrada";
+        successMessage = "Avaliação registrada com sucesso";
       }
 
-      // Restaurar toast original e mostrar apenas uma mensagem
-      toast.success = originalToastSuccess;
-      toast.success(successMessage);
-
+      originalToastSuccess(successMessage);
       onSuccess();
       onOpenChange(false);
     } catch (error) {
-      // Restaurar toast original em caso de erro
-      toast.success = originalToastSuccess;
       logger.error(error as Error, { context: "post_class_evaluation" });
       toast.error(classesContent.postClassDialog.toasts.evaluationError);
+    } finally {
+      toast.success = originalToastSuccess;
     }
   };
 
-  const isPending =
-    updateClassLog.isPending ||
-    markAsPaid.isPending ||
-    updateFinancialStatus.isPending;
+  const isPending = updateClassLog.isPending || updateFinancialStatus.isPending;
 
   if (!classLog) return null;
 
@@ -324,24 +236,21 @@ export function PostClassDialog({
               placeholder={common.placeholders.gradeHint}
               {...register("grade")}
               onKeyDown={(e) => {
-                // Permitir: backspace, delete, tab, escape, enter, ponto, vírgula
                 if (
-                  e.key === "Backspace" ||
-                  e.key === "Delete" ||
-                  e.key === "Tab" ||
-                  e.key === "Escape" ||
-                  e.key === "Enter" ||
-                  e.key === "." ||
-                  e.key === "," ||
-                  e.key === "ArrowLeft" ||
-                  e.key === "ArrowRight"
-                ) {
+                  [
+                    "Backspace",
+                    "Delete",
+                    "Tab",
+                    "Escape",
+                    "Enter",
+                    ".",
+                    ",",
+                    "ArrowLeft",
+                    "ArrowRight",
+                  ].includes(e.key)
+                )
                   return;
-                }
-                // Bloquear se não for número
-                if (!/[0-9]/.test(e.key)) {
-                  e.preventDefault();
-                }
+                if (!/[0-9]/.test(e.key)) e.preventDefault();
               }}
             />
             {errors.grade && (
@@ -382,21 +291,6 @@ export function PostClassDialog({
             </p>
           )}
         </div>
-
-        {attendance && hasFinancialRecord && (
-          <PostClassPaymentSection
-            confirmPayment={confirmPayment}
-            isPaymentAlreadyPaid={isPaymentAlreadyPaid}
-            hasPaymentProof={hasPaymentProof}
-            paymentProofUrl={paymentProofUrl}
-            paymentProofFilename={paymentProofFilename}
-            paymentProofStatus={paymentProofStatus}
-            onConfirmPaymentChange={(checked) =>
-              setValue("confirmPayment", checked)
-            }
-            errorMessage={errors.confirmPayment?.message}
-          />
-        )}
 
         <div className={`flex justify-end ${GAP.TIGHT} pt-2`}>
           <Button

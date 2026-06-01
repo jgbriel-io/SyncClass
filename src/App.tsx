@@ -64,6 +64,7 @@ const StudentPanel = lazy(() => import("./pages/StudentPanel"));
 // Lazy loading - outras páginas
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Policies = lazy(() => import("./pages/Policies"));
+const SettingsPage = lazy(() => import("./pages/settings/SettingsPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -163,6 +164,7 @@ function AppContent() {
             <Route path="users" element={<UsersPage />} />
             <Route path="teachers" element={<AdminTeachersPage />} />
             <Route path="policies" element={<Policies />} />
+            <Route path="settings/*" element={<SettingsPage />} />
           </Route>
 
           {/* Teacher Routes - layout persistente */}
@@ -177,6 +179,7 @@ function AppContent() {
             <Route path="classes" element={<TeacherClassesPage />} />
             <Route path="activities" element={<TeacherActivitiesPage />} />
             <Route path="policies" element={<Policies />} />
+            <Route path="settings/*" element={<SettingsPage />} />
           </Route>
 
           {/* Student Routes - layout persistente */}
@@ -193,6 +196,7 @@ function AppContent() {
             />
             <Route path="activities" element={<StudentActivitiesPage />} />
             <Route path="policies" element={<Policies />} />
+            <Route path="settings/*" element={<SettingsPage />} />
           </Route>
 
           {/* Catch-all */}

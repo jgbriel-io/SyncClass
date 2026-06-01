@@ -58,7 +58,18 @@
       "Bash(Sort-Object Name)",
       "Bash(Select-Object -Last 10 -ExpandProperty Name)",
       "Bash(cat)",
-      "Bash(python3 /tmp/write_types.py)"
+      "Bash(python3 /tmp/write_types.py)",
+      "Skill(branch)",
+      "Skill(branch:*)",
+      "Bash(findstr /R /C:\"useMutation.*{\" hooks\\\\*.ts)",
+      "Bash(Get-ChildItem src/components/financial/ -Name)",
+      "Bash(Get-ChildItem src/components/student/ -Name)",
+      "mcp__supabase__deploy_edge_function",
+      "mcp__supabase__get_project_url",
+      "mcp__supabase__get_logs",
+      "Bash(xargs grep -l \"SettingsModal\")",
+      "mcp__plugin_context-mode_context-mode__ctx_upgrade",
+      "Bash(\"C:/Program Files/nodejs/node.exe\" \"C:/Users/jgabriel/.claude/plugins/cache/context-mode/context-mode/1.0.135/cli.bundle.mjs\" upgrade --platform claude-code)"
     ]
   },
   "enableAllProjectMcpServers": true,

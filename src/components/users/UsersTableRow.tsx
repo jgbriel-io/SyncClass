@@ -277,7 +277,7 @@ export function UsersTableRow({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onResetPassword(user)}>
                 <KeyRound className="h-4 w-4 mr-2" />
-                Redefinir senha
+                {common.actions.resetPassword}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className={

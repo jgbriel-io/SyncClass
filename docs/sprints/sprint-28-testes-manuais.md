@@ -86,9 +86,9 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 ### Financial (`/admin/financial`)
 
 - [x] Lista cobranças de todos os professores
-- [x] Filtro por status (pendente/pago/cancelado) funciona
+- [x] Filtro por status (pendente/pago/atrasado/validando/abonado/extornado/cancelado) funciona
 - [x] Filtro por período funciona
-- [x] Admin não vê botões de ação (read-only — confirmar/rejeitar comprovante é exclusivo do professor)
+- [x] Admin não vê botões de ação (read-only — reembolso e edição são exclusivos do professor)
 
 ### Classes (`/admin/classes`)
 
@@ -116,13 +116,21 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Home (`/teacher`)
 
-- [ ] Dashboard com métricas do professor logado
-- [ ] Lista de aniversariantes do mês
-- [ ] Próximas aulas agendadas
+- [x] Dashboard com métricas do professor logado
+- [ ] Cards de estatísticas carregam (total alunos, aulas do mês, receita, pendências)
+- [ ] Cards financeiros carregam (total pago, pendente, atrasado)
+- [ ] Card de previsão de faturamento mensal exibe valor correto
+- [ ] Lista de aniversariantes do mês exibe alunos com aniversário no mês atual
+- [ ] Lista de próximos pagamentos exibe cobranças com vencimento próximo
+- [ ] Seção "Aulas de Hoje" exibe aulas agendadas para o dia atual
+- [ ] Contador de avaliações pendentes exibe aulas passadas sem attendance preenchido
+- [ ] Gráfico de crescimento de alunos renderiza com dados
+- [ ] Filtro do gráfico (3 / 6 / 12 meses) muda os dados exibidos
+- [ ] Sem erro de console no carregamento
 
 ### Students (`/teacher/students`)
 
-- [ ] Lista apenas alunos do professor logado (não vê alunos de outros professores)
+- [x] Lista apenas alunos do professor logado (não vê alunos de outros professores)
 - [ ] Busca e filtros funcionam
 - [ ] Criar aluno (campos obrigatórios + validação de CPF/telefone) → aparece na lista
 - [ ] Criar aluno estrangeiro (sem CPF) → funciona
@@ -141,7 +149,22 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [ ] Cancelar cobrança
 - [ ] Abonar cobrança
 - [ ] Timeline de transações exibe histórico
-- [ ] Ver QR Code PIX de cobrança
+- [ ] Cobrança `pago` com `payment_provider='abacate_pay'` → botão "Reembolso" visível
+- [ ] Botão "Reembolso" (AbacatePay) → dialog exibe campo motivo + botão "Reembolsar via PIX"
+- [ ] Confirmar reembolso AbacatePay → toast "Reembolso PIX processado com sucesso!", status → `extornado`
+- [ ] Cobrança `pago` sem `payment_provider` (manual/legado) → dialog exibe instrução manual + botão "Confirmar reembolso"
+- [ ] Confirmar reembolso manual → toast "Reembolso registrado com sucesso!", status → `extornado`
+- [ ] Cobrança com aula vinculada (`attendance != null`) → aviso destrutivo extra exibido no dialog de reembolso
+
+### Settings — Pagamentos (`/settings` ou `/teacher/settings`)
+
+- [ ] Aba "Pagamentos" exibe badge "Não configurado" sem API key salva
+- [ ] Campo API key não pré-preenche com ciphertext ao clicar "Editar" (deve iniciar vazio)
+- [ ] Salvar API key válida → badge muda para "Configurado", webhook URL exibida
+- [ ] Webhook URL copiada com botão → toast de confirmação
+- [ ] Clicar "Editar" novamente → campo começa vazio (não mostra ciphertext)
+- [ ] Remover integração → badge volta para "Não configurado", webhook URL some
+- [ ] Professor sem API key → aluno vê mensagem amigável no checkout (não crash)
 
 ### Classes (`/teacher/classes`)
 
@@ -183,14 +206,19 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 ### Financial (`/student/financial`)
 
 - [ ] Lista cobranças do aluno logado (não vê cobranças de outros alunos)
-- [ ] Status de cada cobrança exibido corretamente
-- [ ] Upload de comprovante de pagamento → status muda para "aguardando confirmação"
-- [ ] Ver QR Code PIX de cobrança pendente
+- [ ] Status de cada cobrança exibido corretamente (pendente / pago / atrasado / abonado / extornado / cancelado)
+- [ ] Cobrança `pendente` com `payment_provider='abacate_pay'` → botão "Pagar via PIX" leva para `/checkout/:id`
 
 ### Checkout (`/student/financial/checkout/:recordId`)
 
 - [ ] Carrega cobrança específica pelo ID
-- [ ] Upload de comprovante funciona
+- [ ] Cobrança AbacatePay: formulário de CPF exibido
+- [ ] Cobrança AbacatePay: informar CPF + clicar "Gerar QR Code" → QR Code PIX renderiza
+- [ ] Cobrança AbacatePay: segundo acesso com QR ainda válido → mesmo QR retornado (cache)
+- [ ] Cobrança AbacatePay: após pagamento real → tela "Pagamento confirmado!" exibida automaticamente (realtime)
+- [ ] Cobrança AbacatePay: QR expirado → formulário de CPF exibido novamente
+- [ ] Cobrança manual/legada (`payment_provider != 'abacate_pay'`) → mensagem informativa exibida, sem formulário CPF
+- [ ] Professor sem API key configurada → mensagem de erro amigável no checkout
 - [ ] ID de outro aluno → acesso bloqueado (RLS)
 
 ### Activities (`/student/activities`)
@@ -229,7 +257,6 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 ### Upload de Arquivos
 
 - [ ] Foto de perfil (professor e aluno) — upload e exibição
-- [ ] Comprovante de pagamento — upload pelo aluno
 - [ ] Arquivo de atividade — upload pelo aluno
 - [ ] Arquivo de correção — upload pelo professor
 
@@ -300,10 +327,10 @@ Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), 
 ### Financeiro
 
 - [ ] Criar cobrança → "Cobrança criada com sucesso!"
-- [ ] Confirmar pagamento → "Pagamento confirmado com sucesso!"
-- [ ] Desfazer pagamento → "Pagamento desfeito com sucesso!"
 - [ ] Editar cobrança → "Cobrança atualizada com sucesso!"
 - [ ] Excluir cobrança → "Cobrança excluída com sucesso!"
+- [ ] Reembolso via AbacatePay → "Reembolso PIX processado com sucesso!"
+- [ ] Reembolso manual → "Reembolso registrado com sucesso!"
 
 ### Atividades
 
@@ -323,37 +350,35 @@ Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), 
 - [ ] Vincular usuário a aluno → "Usuário vinculado ao aluno com sucesso."
 - [ ] Desvincular usuário → "Vínculo entre usuário e aluno removido."
 
-### Comprovante de Pagamento
+### Pagamentos AbacatePay (Settings)
 
-- [ ] Aluno envia comprovante → "Comprovante enviado! Aguarde a confirmação do professor."
-- [ ] Professor aprova comprovante → "Pagamento confirmado com sucesso!"
-- [ ] Professor rejeita comprovante → "Comprovante rejeitado."
+- [ ] Salvar API key → "Configuração salva com sucesso!"
+- [ ] Copiar webhook URL → toast de confirmação de cópia
 
 ---
 
 ## Resumo de Itens
 
-| Módulo                          | Itens   | Status             |
-| ------------------------------- | ------- | ------------------ |
-| Auth / Público                  | 11      | 8 ✅ / 3 pendentes |
-| Admin                           | 41      | 41 ✅ concluído    |
-| Professor                       | 28      | pendente           |
-| Aluno                           | 13      | pendente           |
-| Cross-cutting (original)        | 20      | pendente           |
-| Sessão e Auth (adicionais)      | 2       | pendente           |
-| Integrações e Validações        | 6       | pendente           |
-| Rotas Alias e Edge Cases        | 3       | pendente           |
-| Volume de Dados                 | 3       | pendente           |
-| Validação de Toasts (Sprint 29) | 30      | pendente           |
-| **Total**                       | **157** |                    |
+| Módulo                                  | Itens   | Status             |
+| --------------------------------------- | ------- | ------------------ |
+| Auth / Público                          | 11      | 8 ✅ / 3 pendentes |
+| Admin                                   | 41      | 41 ✅ concluído    |
+| Professor — Financial + Settings        | 37      | pendente           |
+| Professor — Classes / Activities / Home | 15      | pendente           |
+| Aluno — Financial + Checkout AbacatePay | 12      | pendente           |
+| Aluno — Activities / History / Home     | 5       | pendente           |
+| Cross-cutting (RLS, Sessão, LGPD)       | 15      | pendente           |
+| Integrações, Edge Cases, Volume         | 12      | pendente           |
+| Validação de Toasts (Sprint 29 + 30)    | 29      | pendente           |
+| **Total**                               | **177** |                    |
 
 ---
 
 ## Critério de Conclusão
 
-Sprint concluída quando todos os 157 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
+Sprint concluída quando todos os 177 itens testados, com bugs críticos (bloqueadores) resolvidos antes de marcar ✅.
 
-Inclui 30 itens de validação de toasts adicionados em sprint 29 (refactor de centralização de strings).
+Inclui 29 itens de validação de toasts. Itens de upload de comprovante e confirmação manual de pagamento removidos (fluxo substituído por AbacatePay na Sprint 30). Itens de checkout AbacatePay e reembolso adicionados.
 
 **Bugs encontrados:** documentar abaixo com `[BUG-XXX]` + rota + descrição + severidade.
 

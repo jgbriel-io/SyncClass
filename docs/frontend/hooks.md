@@ -105,11 +105,17 @@ const { data: stats } = useStudentsStats(teacherId);
 
 ### Financial
 
-| Hook                              | Responsabilidade            |
-| --------------------------------- | --------------------------- |
-| `useFinancialRecords(filters)`    | Lista cobranças com filtros |
-| `useStudentStatement(studentId)`  | Extrato do aluno            |
-| `useForecastedBilling(teacherId)` | Previsão de faturamento     |
+| Hook                                         | Responsabilidade                                                                                  |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `useFinancialRecords(filters)`               | Lista cobranças com filtros                                                                       |
+| `useStudentStatement(studentId)`             | Extrato do aluno                                                                                  |
+| `useForecastedBilling(teacherId)`            | Previsão de faturamento                                                                           |
+| `useCreateAbacatePayment()`                  | Invoca Edge Function `create-abacate-payment` para gerar QR Code PIX                              |
+| `useRefundAbacatePayment()`                  | Invoca Edge Function `refund-abacate-payment` para reembolso automático                           |
+| `useUpdateFinancialStatus()`                 | Atualiza status diretamente (ex: `extornado` para reembolso manual); tem `mutationInFlight` guard |
+| `useCheckoutPaymentStatus(recordId, onPaid)` | Realtime subscription — dispara `onPaid` quando webhook confirma pagamento                        |
+
+**Removido na Sprint 30:** `usePaymentProof` — upload e revisão de comprovante.
 
 **Exemplo:**
 

@@ -22,7 +22,7 @@ export const QK = {
   TEACHERS: "teachers",
   TEACHERS_PAGINATED: "teachers_paginated",
   TEACHER_USER_ID: "teacher_user_id",
-  TEACHER_PIX_KEY: "teacher_pix_key",
+  TEACHER_ABACATE_PAY_CONFIG: "teacher_abacate_pay_config",
 
   // Profiles
   PROFILES: "profiles",

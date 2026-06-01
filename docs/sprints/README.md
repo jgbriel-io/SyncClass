@@ -24,42 +24,45 @@ Sprints documentam desenvolvimento incremental do SyncClass. Cada sprint = conju
 
 ## Histórico de Desenvolvimento
 
-| Sprint    | Período            | Foco                                         | Status          | Arquivo                                                             |
-| --------- | ------------------ | -------------------------------------------- | --------------- | ------------------------------------------------------------------- |
-| Sprint 1  | 19–23 jan 2026     | MVP: CRUD Básico & Financeiro                | ✅ Implementada | [sprint-01](./sprint-01-mvp-crud-basico-financeiro.md)              |
-| Sprint 2  | 26–29 jan 2026     | MVP: Auth, Roles & Profiles                  | ✅ Implementada | [sprint-02](./sprint-02-mvp-auth-roles-profiles.md)                 |
-| Sprint 3  | 29–30 jan 2026     | MVP: CI, Soft Delete & Design Tokens         | ✅ Implementada | [sprint-03](./sprint-03-mvp-ci-soft-delete-design-tokens.md)        |
-| Sprint 4  | 31 jan–08 fev 2026 | MVP: Dashboard, Histórico & Reset Senha      | ✅ Implementada | [sprint-04](./sprint-04-mvp-dashboard-historico-reset-senha.md)     |
-| Sprint 5  | 09–13 fev 2026     | MVP: Mobile, Atividades, Pacotes & PIX       | ✅ Implementada | [sprint-05](./sprint-05-mvp-mobile-atividades-pacotes-pix.md)       |
-| Sprint 6  | 14–18 fev 2026     | MVP: Idempotência, Faltas & Estrangeiros     | ✅ Implementada | [sprint-06](./sprint-06-mvp-idempotencia-faltas-estrangeiros.md)    |
-| Sprint 7  | 19 fev–11 mar 2026 | MVP: Hardening, RLS & Rate Limit             | ✅ Implementada | [sprint-07](./sprint-07-mvp-hardening-rls-rate-limit.md)            |
-| Sprint 8  | 11 mar–21 abr 2026 | Refactor: Supabase/Hooks Separation          | ✅ Implementada | [sprint-08](./sprint-08-refactor-supabase-hooks-separation.md)      |
-| Sprint 9  | 21 abr 2026        | Refactor: Split Large Files                  | ✅ Implementada | [sprint-09](./sprint-09-refactor-split-large-files.md)              |
-| Sprint 10 | 21 abr 2026        | Refactor: Remove Duplicate Queries           | ✅ Implementada | [sprint-10](./sprint-10-refactor-remove-duplicate-queries.md)       |
-| Sprint 11 | 21 abr 2026        | Fix: Timezone & Error Boundary               | ✅ Implementada | [sprint-11](./sprint-11-fix-timezone-error-boundary.md)             |
-| Sprint 12 | 21 abr–20 mai 2026 | Refactor: Content Structure (I18n Prep)      | ✅ Implementada | [sprint-12](./sprint-12-refactor-content-structure-i18n-prep.md)    |
-| Sprint 13 | 20 mai 2026        | Refactor: Centralize UI Strings              | ✅ Implementada | [sprint-13](./sprint-13-refactor-centralize-ui-strings.md)          |
-| Sprint 14 | 20 mai 2026        | Refactor: Remove Hardcoded Strings           | ✅ Implementada | [sprint-14](./sprint-14-refactor-remove-hardcoded-strings.md)       |
-| Sprint 15 | 20 mai 2026        | Refactor: Final String Audit                 | ✅ Implementada | [sprint-15](./sprint-15-refactor-final-string-audit.md)             |
-| Sprint 16 | 21 mai 2026        | Refactor: Docs Architecture Organization     | ✅ Implementada | [sprint-16](./sprint-16-refactor-docs-architecture-organization.md) |
-| Sprint 17 | 21 mai 2026        | Refactor: TCC Documentation Review           | ✅ Implementada | [sprint-17](./sprint-17-refactor-tcc-documentation-review.md)       |
-| Sprint 18 | 22 mai 2026        | Consolidação & Code Review                   | ✅ Implementada | [sprint-18](./sprint-18-consolidacao-problemas-identificados.md)    |
-| Sprint 19 | 22–23 mai 2026     | Security: LGPD Anonymization + Rate Limiting | ✅ Implementada | [sprint-19](./sprint-19-lgpd-rate-limiting.md)                      |
-| Sprint 20 | 23–25 mai 2026     | Feature: LGPD Export + Rate Limit Dashboard  | ✅ Implementada | [sprint-20](./sprint-20-lgpd-export-rate-limit-dashboard.md)        |
-| Sprint 21 | 24 mai 2026        | Refactor: Tech Debt Backlog (pós-MVP)        | ✅ Implementada | [sprint-21](./sprint-21-tech-debt-backlog.md)                       |
-| Sprint 22 | 25 mai 2026        | Fix: Frontend Quality (code review)          | ✅ Implementada | [sprint-22](./sprint-22-frontend-quality-fixes.md)                  |
-| Sprint 23 | 25 mai 2026        | Fix: Backend Quality (code review)           | ✅ Implementada | [sprint-23](./sprint-23-backend-quality-fixes.md)                   |
-| Sprint 24 | 25 mai 2026        | Security: RLS Full Audit                     | ✅ Implementada | [sprint-24](./sprint-24-rls-audit.md)                               |
-| Sprint 25 | 25 mai 2026        | DB: Database Structural Analysis             | ✅ Implementada | [sprint-25](./sprint-25-database-analysis.md)                       |
-| Sprint 26 | 25 mai 2026        | Security: Full Security Audit                | ✅ Implementada | [sprint-26](./sprint-26-security-audit.md)                          |
-| Sprint 27 | 25 mai 2026        | Security: Supabase Advisors + npm audit      | ✅ Implementada | [sprint-27](./sprint-27-supabase-advisors.md)                       |
-| Sprint 28 | 26 mai 2026        | QA: Testes Manuais — 116 itens, 20 rotas     | 🔴 Pendente     | [sprint-28](./sprint-28-testes-manuais.md)                          |
+| Sprint    | Período            | Foco                                                     | Status          | Arquivo                                                             |
+| --------- | ------------------ | -------------------------------------------------------- | --------------- | ------------------------------------------------------------------- |
+| Sprint 1  | 19–23 jan 2026     | MVP: CRUD Básico & Financeiro                            | ✅ Implementada | [sprint-01](./sprint-01-mvp-crud-basico-financeiro.md)              |
+| Sprint 2  | 26–29 jan 2026     | MVP: Auth, Roles & Profiles                              | ✅ Implementada | [sprint-02](./sprint-02-mvp-auth-roles-profiles.md)                 |
+| Sprint 3  | 29–30 jan 2026     | MVP: CI, Soft Delete & Design Tokens                     | ✅ Implementada | [sprint-03](./sprint-03-mvp-ci-soft-delete-design-tokens.md)        |
+| Sprint 4  | 31 jan–08 fev 2026 | MVP: Dashboard, Histórico & Reset Senha                  | ✅ Implementada | [sprint-04](./sprint-04-mvp-dashboard-historico-reset-senha.md)     |
+| Sprint 5  | 09–13 fev 2026     | MVP: Mobile, Atividades, Pacotes & PIX                   | ✅ Implementada | [sprint-05](./sprint-05-mvp-mobile-atividades-pacotes-pix.md)       |
+| Sprint 6  | 14–18 fev 2026     | MVP: Idempotência, Faltas & Estrangeiros                 | ✅ Implementada | [sprint-06](./sprint-06-mvp-idempotencia-faltas-estrangeiros.md)    |
+| Sprint 7  | 19 fev–11 mar 2026 | MVP: Hardening, RLS & Rate Limit                         | ✅ Implementada | [sprint-07](./sprint-07-mvp-hardening-rls-rate-limit.md)            |
+| Sprint 8  | 11 mar–21 abr 2026 | Refactor: Supabase/Hooks Separation                      | ✅ Implementada | [sprint-08](./sprint-08-refactor-supabase-hooks-separation.md)      |
+| Sprint 9  | 21 abr 2026        | Refactor: Split Large Files                              | ✅ Implementada | [sprint-09](./sprint-09-refactor-split-large-files.md)              |
+| Sprint 10 | 21 abr 2026        | Refactor: Remove Duplicate Queries                       | ✅ Implementada | [sprint-10](./sprint-10-refactor-remove-duplicate-queries.md)       |
+| Sprint 11 | 21 abr 2026        | Fix: Timezone & Error Boundary                           | ✅ Implementada | [sprint-11](./sprint-11-fix-timezone-error-boundary.md)             |
+| Sprint 12 | 21 abr–20 mai 2026 | Refactor: Content Structure (I18n Prep)                  | ✅ Implementada | [sprint-12](./sprint-12-refactor-content-structure-i18n-prep.md)    |
+| Sprint 13 | 20 mai 2026        | Refactor: Centralize UI Strings                          | ✅ Implementada | [sprint-13](./sprint-13-refactor-centralize-ui-strings.md)          |
+| Sprint 14 | 20 mai 2026        | Refactor: Remove Hardcoded Strings                       | ✅ Implementada | [sprint-14](./sprint-14-refactor-remove-hardcoded-strings.md)       |
+| Sprint 15 | 20 mai 2026        | Refactor: Final String Audit                             | ✅ Implementada | [sprint-15](./sprint-15-refactor-final-string-audit.md)             |
+| Sprint 16 | 21 mai 2026        | Refactor: Docs Architecture Organization                 | ✅ Implementada | [sprint-16](./sprint-16-refactor-docs-architecture-organization.md) |
+| Sprint 17 | 21 mai 2026        | Refactor: TCC Documentation Review                       | ✅ Implementada | [sprint-17](./sprint-17-refactor-tcc-documentation-review.md)       |
+| Sprint 18 | 22 mai 2026        | Consolidação & Code Review                               | ✅ Implementada | [sprint-18](./sprint-18-consolidacao-problemas-identificados.md)    |
+| Sprint 19 | 22–23 mai 2026     | Security: LGPD Anonymization + Rate Limiting             | ✅ Implementada | [sprint-19](./sprint-19-lgpd-rate-limiting.md)                      |
+| Sprint 20 | 23–25 mai 2026     | Feature: LGPD Export + Rate Limit Dashboard              | ✅ Implementada | [sprint-20](./sprint-20-lgpd-export-rate-limit-dashboard.md)        |
+| Sprint 21 | 24 mai 2026        | Refactor: Tech Debt Backlog (pós-MVP)                    | ✅ Implementada | [sprint-21](./sprint-21-tech-debt-backlog.md)                       |
+| Sprint 22 | 25 mai 2026        | Fix: Frontend Quality (code review)                      | ✅ Implementada | [sprint-22](./sprint-22-frontend-quality-fixes.md)                  |
+| Sprint 23 | 25 mai 2026        | Fix: Backend Quality (code review)                       | ✅ Implementada | [sprint-23](./sprint-23-backend-quality-fixes.md)                   |
+| Sprint 24 | 25 mai 2026        | Security: RLS Full Audit                                 | ✅ Implementada | [sprint-24](./sprint-24-rls-audit.md)                               |
+| Sprint 25 | 25 mai 2026        | DB: Database Structural Analysis                         | ✅ Implementada | [sprint-25](./sprint-25-database-analysis.md)                       |
+| Sprint 26 | 25 mai 2026        | Security: Full Security Audit                            | ✅ Implementada | [sprint-26](./sprint-26-security-audit.md)                          |
+| Sprint 27 | 25 mai 2026        | Security: Supabase Advisors + npm audit                  | ✅ Implementada | [sprint-27](./sprint-27-supabase-advisors.md)                       |
+| Sprint 28 | 26 mai 2026        | QA: Testes Manuais — 116 itens, 20 rotas                 | 🔴 Pendente     | [sprint-28](./sprint-28-testes-manuais.md)                          |
+| Sprint 29 | 31 mai 2026        | Fix: Correções do painel admin e propagação entre visões | ✅ Implementada | [sprint-29](./sprint-29-fix-correcoes-painel-admin.md)              |
+| Sprint 30 | 01 jun 2026        | Feature: AbacatePay Integration (PIX Automático)         | ✅ Implementada | [sprint-30](./sprint-30-abacatepay-integration.md)                  |
+| Sprint 31 | 01 jun 2026        | Fix: Correções encontradas durante QA — teachers         | ✅ Implementada | [sprint-31](./sprint-31-fix-qa-teachers.md)                         |
 
 **Resumo:**
 
-- **Implementadas:** 27 sprints (1–27) — desenvolvimento encerrado
+- **Implementadas:** 30 sprints (1–27, 29–31) — desenvolvimento ativo
 - **Em andamento:** Sprint 28 (QA manual)
-- **Total:** 28 sprints documentadas
+- **Total:** 31 sprints documentadas
 
 ---
 
@@ -87,12 +90,12 @@ LGPD anonymization, rate limiting server-side, exportação de dados, dashboard 
 
 Features planejadas mas fora do escopo do TCC. Documentadas para extensão futura.
 
-| Foco                                           | Arquivo                                                              |
-| ---------------------------------------------- | -------------------------------------------------------------------- |
-| Notificações em tempo real                     | [sprint-notificacoes](./sprint-notificacoes-NAO-IMPLEMENTADA.md)     |
-| Exportação de relatórios em PDF                | [sprint-exportacao-pdf](./sprint-exportacao-pdf-NAO-IMPLEMENTADA.md) |
-| Integração com pagamento real (Stripe/Pix API) | [sprint-pagamento-real](./sprint-pagamento-real-NAO-IMPLEMENTADA.md) |
-| Gamificação do portal do aluno                 | [sprint-gamificacao](./sprint-gamificacao-NAO-IMPLEMENTADA.md)       |
+| Foco                                                                                              | Arquivo                                                              |
+| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Notificações em tempo real                                                                        | [sprint-notificacoes](./sprint-notificacoes-NAO-IMPLEMENTADA.md)     |
+| Exportação de relatórios em PDF                                                                   | [sprint-exportacao-pdf](./sprint-exportacao-pdf-NAO-IMPLEMENTADA.md) |
+| ~~Integração com pagamento real (Stripe/Pix API)~~ — **Implementado via AbacatePay na Sprint 30** | [sprint-pagamento-real](./sprint-pagamento-real-NAO-IMPLEMENTADA.md) |
+| Gamificação do portal do aluno                                                                    | [sprint-gamificacao](./sprint-gamificacao-NAO-IMPLEMENTADA.md)       |
 
 ---
 

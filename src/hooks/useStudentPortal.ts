@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QK } from "./queryKeys";
@@ -35,12 +36,19 @@ interface StudentFinancialRecord {
   amount: number;
   due_date: string;
   description: string | null;
-  status: "pendente" | "pago" | "atrasado" | "validando";
+  status:
+    | "pendente"
+    | "pago"
+    | "atrasado"
+    | "validando"
+    | "abonado"
+    | "extornado"
+    | "cancelado";
   paid_at: string | null;
-  payment_proof_status?: string | null;
-  payment_proof_url?: string | null;
-  payment_proof_filename?: string | null;
-  payment_proof_uploaded_at?: string | null;
+  payment_provider?: string | null;
+  pix_code?: string | null;
+  pix_expires_at?: string | null;
+  external_payment_id?: string | null;
 }
 
 interface StudentStats {
@@ -273,7 +281,7 @@ export function useStudentFinancialRecords() {
       const { data, error } = await supabase
         .from("financial_records")
         .select(
-          "id, amount, due_date, description, status, paid_at, payment_proof_status, payment_proof_url, payment_proof_filename, payment_proof_uploaded_at"
+          "id, amount, due_date, description, status, paid_at, payment_provider, pix_code, pix_expires_at, external_payment_id"
         )
         .eq("student_id", profile.student_id)
         .order("due_date", { ascending: false });
@@ -337,4 +345,38 @@ export function useLastClass() {
   // Get the most recent class with attendance
   const lastClass = classLogs.find((log) => log.attendance);
   return lastClass || classLogs[0];
+}
+
+export function useCheckoutPaymentStatus(
+  recordId: string | undefined,
+  onPaid: () => void
+) {
+  const onPaidRef = useRef(onPaid);
+  onPaidRef.current = onPaid;
+
+  useEffect(() => {
+    if (!recordId) return;
+
+    const channel = supabase
+      .channel(`checkout-${recordId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "financial_records",
+          filter: `id=eq.${recordId}`,
+        },
+        (payload) => {
+          if ((payload.new as { status?: string })?.status === "pago") {
+            onPaidRef.current();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [recordId]);
 }

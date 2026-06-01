@@ -89,13 +89,13 @@
 
 ### Requisitos Futuros (RF31-RF35)
 
-| ID   | Requisito                                       | Módulo       | Status    |
-| ---- | ----------------------------------------------- | ------------ | --------- |
-| RF31 | Sistema de notificações (email, push, in-app)   | Notificações | Sprint 14 |
-| RF32 | Exportação de relatórios em PDF                 | Relatórios   | Sprint 15 |
-| RF33 | Integração com Google Calendar                  | Integrações  | Sprint 16 |
-| RF34 | Gateway de pagamento real (Stripe/Mercado Pago) | Financeiro   | Sprint 17 |
-| RF35 | Sistema de gamificação (badges, conquistas)     | Gamificação  | Sprint 18 |
+| ID   | Requisito                                                                     | Módulo       | Status       |
+| ---- | ----------------------------------------------------------------------------- | ------------ | ------------ |
+| RF31 | Sistema de notificações (email, push, in-app)                                 | Notificações | Sprint 14    |
+| RF32 | Exportação de relatórios em PDF                                               | Relatórios   | Sprint 15    |
+| RF33 | Integração com Google Calendar                                                | Integrações  | Sprint 16    |
+| RF34 | Gateway de pagamento real (AbacatePay — PIX automático via QR Code + webhook) | Financeiro   | ✅ Sprint 30 |
+| RF35 | Sistema de gamificação (badges, conquistas)                                   | Gamificação  | Sprint 18    |
 
 ### Requisitos Não Funcionais Principais (RNF01-RNF10)
 

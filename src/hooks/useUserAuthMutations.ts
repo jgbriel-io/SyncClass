@@ -108,6 +108,7 @@ export function useResetPassword() {
     mutationFn: async (params: {
       userId?: string;
       studentId?: string;
+      teacherId?: string;
       password: string;
     }) => {
       const {

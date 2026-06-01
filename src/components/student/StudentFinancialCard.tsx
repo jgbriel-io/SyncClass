@@ -1,13 +1,26 @@
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, FileText, CreditCard, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  Calendar,
+  FileText,
+  CreditCard,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { sanitizeText } from "@/lib/utils/sanitize";
 import { studentPortal } from "@/content/student-portal";
 
-type FinancialStatus = "pago" | "pendente" | "atrasado" | "validando";
+type FinancialStatus =
+  | "pago"
+  | "pendente"
+  | "atrasado"
+  | "validando"
+  | "abonado"
+  | "extornado"
+  | "cancelado";
 
 interface StudentFinancialCardProps {
   record: {
@@ -21,11 +34,14 @@ interface StudentFinancialCardProps {
   onPayClick?: () => void;
 }
 
-const statusConfig: Record<FinancialStatus, {
-  variant: "success" | "warning" | "destructive";
-  label: string;
-  borderColor: string;
-}> = {
+const statusConfig: Record<
+  FinancialStatus,
+  {
+    variant: "success" | "warning" | "destructive";
+    label: string;
+    borderColor: string;
+  }
+> = {
   pago: {
     variant: "success",
     label: studentPortal.financialCard.paidLabel,
@@ -46,11 +62,29 @@ const statusConfig: Record<FinancialStatus, {
     label: studentPortal.financialCard.validatingLabel,
     borderColor: "border-l-warning",
   },
+  abonado: {
+    variant: "default",
+    label: studentPortal.financialCard.abonadoLabel,
+    borderColor: "border-l-muted",
+  },
+  extornado: {
+    variant: "default",
+    label: studentPortal.financialCard.extornadoLabel,
+    borderColor: "border-l-muted",
+  },
+  cancelado: {
+    variant: "default",
+    label: studentPortal.financialCard.canceladoLabel,
+    borderColor: "border-l-muted",
+  },
 };
 
-export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCardProps) {
+export function StudentFinancialCard({
+  record,
+  onPayClick,
+}: StudentFinancialCardProps) {
   const config = statusConfig[record.status];
-  
+
   const formattedDueDate = formatDate(record.due_date);
 
   const formattedPaymentDate = record.payment_date
@@ -62,7 +96,9 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
       <div className="space-y-3">
         {/* Valor e Status */}
         <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold">{formatCurrency(record.amount)}</span>
+          <span className="text-2xl font-bold">
+            {formatCurrency(record.amount)}
+          </span>
           <StatusBadge variant={config.variant}>{config.label}</StatusBadge>
         </div>
 
@@ -72,7 +108,10 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-muted-foreground">
-              {studentPortal.financialCard.dueDateLabel}: <span className="font-medium text-foreground">{formattedDueDate}</span>
+              {studentPortal.financialCard.dueDateLabel}:{" "}
+              <span className="font-medium text-foreground">
+                {formattedDueDate}
+              </span>
             </span>
           </div>
 
@@ -81,7 +120,10 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
               <span className="text-muted-foreground">
-                {studentPortal.financialCard.paidAtLabel}: <span className="font-medium text-foreground">{formattedPaymentDate}</span>
+                {studentPortal.financialCard.paidAtLabel}:{" "}
+                <span className="font-medium text-foreground">
+                  {formattedPaymentDate}
+                </span>
               </span>
             </div>
           )}
@@ -90,7 +132,9 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
           {record.description && (
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <span className="text-muted-foreground">{sanitizeText(record.description)}</span>
+              <span className="text-muted-foreground">
+                {sanitizeText(record.description)}
+              </span>
             </div>
           )}
 
@@ -98,31 +142,26 @@ export function StudentFinancialCard({ record, onPayClick }: StudentFinancialCar
           {record.status === "atrasado" && (
             <div className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span className="text-sm font-medium">{studentPortal.financialCard.overdueMessage}</span>
-            </div>
-          )}
-
-          {/* Validando */}
-          {record.status === "validando" && (
-            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-              <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-              <span className="text-sm font-medium">{studentPortal.financialCard.validatingMessage}</span>
+              <span className="text-sm font-medium">
+                {studentPortal.financialCard.overdueMessage}
+              </span>
             </div>
           )}
         </div>
 
         {/* Botão de pagamento (apenas se pendente ou atrasado) */}
-        {(record.status === "pendente" || record.status === "atrasado") && onPayClick && (
-          <Button
-            className="w-full"
-            size="sm"
-            variant={record.status === "atrasado" ? "destructive" : "default"}
-            onClick={onPayClick}
-          >
-            <CreditCard className="h-4 w-4 mr-2" />
-            {studentPortal.financialCard.payNowButton}
-          </Button>
-        )}
+        {(record.status === "pendente" || record.status === "atrasado") &&
+          onPayClick && (
+            <Button
+              className="w-full"
+              size="sm"
+              variant={record.status === "atrasado" ? "destructive" : "default"}
+              onClick={onPayClick}
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              {studentPortal.financialCard.payNowButton}
+            </Button>
+          )}
       </div>
     </Card>
   );

@@ -41,7 +41,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { SettingsModal } from "@/components/layout/SettingsModal";
 import { Footer } from "@/components/layout/Footer";
 import { layout, common } from "@/content";
 
@@ -50,7 +49,7 @@ interface AdminLayoutProps {
 }
 
 const navigation = [
-  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/admin", icon: LayoutDashboard, exact: true },
   { name: "Visão Geral", href: "/admin/overview", icon: ClipboardList },
   { name: "Alunos", href: "/admin/students", icon: Users },
   { name: "Aulas", href: "/admin/classes", icon: BookOpen },
@@ -58,6 +57,7 @@ const navigation = [
   { name: "Financeiro", href: "/admin/financial", icon: CreditCard },
   { name: "Professores", href: "/admin/teachers", icon: Users },
   { name: "Usuários", href: "/admin/users", icon: Link2 },
+  { name: layout.settings.title, href: "/admin/settings", icon: Settings },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
@@ -66,7 +66,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -185,7 +184,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <nav className="flex-1 py-4 overflow-y-auto">
           <div className={cn("space-y-1", sidebarCollapsed ? "px-2" : "px-3")}>
             {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
+              const isActive = (item as { exact?: boolean }).exact
+                ? location.pathname === item.href
+                : location.pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.name}
@@ -378,7 +379,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="gap-2"
-                  onClick={() => setSettingsOpen(true)}
+                  onClick={() => navigate("/admin/settings")}
                 >
                   <Settings className="h-4 w-4" />
                   {layout.topbar.settings}
@@ -411,7 +412,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* Footer - sempre no bottom */}
         <Footer />
       </div>
-      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }

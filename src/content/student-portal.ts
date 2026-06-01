@@ -23,7 +23,8 @@ export const studentPortal = {
     subtitle: "Seus pagamentos e cobranças",
     financialStatusLabel: "Situação financeira",
     financialOk: "Em dia",
-    financialPending: (count: number) => `${count} pendência${count !== 1 ? "s" : ""}`,
+    financialPending: (count: number) =>
+      `${count} pendência${count !== 1 ? "s" : ""}`,
     financialOkDescription: "Nenhuma cobrança pendente",
     historyTitle: "Histórico de Pagamentos",
     noCharges: "Nenhuma cobrança registrada ainda",
@@ -105,9 +106,6 @@ export const studentPortal = {
     pixKeyLabel: "Chave PIX",
     copyKeyButton: "Copiar chave",
     keyCopied: "Chave copiada!",
-    uploadProofTitle: "Enviar comprovante",
-    uploadProofButton: "Enviar comprovante",
-    uploadProofHint: "Envie o comprovante de pagamento para confirmação.",
     backButton: "Voltar",
     loadError: "Erro ao carregar dados. Tente novamente.",
   },
@@ -141,17 +139,19 @@ export const studentPortal = {
     overdueLabel: "Vencido",
     pendingLabel: "Pendente",
     validatingLabel: "Validando",
+    abonadoLabel: "Abonado",
+    extornadoLabel: "Extornado",
+    canceladoLabel: "Cancelado",
     dueDateLabel: "Vencimento",
     paidAtLabel: "Pago em",
     overdueMessage: "Pagamento em atraso",
-    validatingMessage: "Comprovante enviado. Aguardando confirmação do professor.",
   },
 
   pixPayment: {
     title: "Pagar com PIX",
-    description: "Use a chave abaixo no app do seu banco. Após pagar, envie o comprovante ao professor para que o status seja atualizado.",
+    description:
+      "Use a chave abaixo no app do seu banco para realizar o pagamento.",
     keyLabel: "Chave PIX (copia e cola)",
-    note: "O pagamento não é confirmado automaticamente. Após realizar o PIX, envie o comprovante ao seu professor para que ele confirme na plataforma.",
     toasts: {
       copied: "Chave PIX copiada!",
       copyError: "Erro ao copiar chave PIX",

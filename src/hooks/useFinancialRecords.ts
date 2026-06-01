@@ -15,7 +15,6 @@ import {
 import { toast } from "sonner";
 import { sanitizeErrorMessage } from "@/lib/security/errorHandler";
 import { logger } from "@/lib/logger";
-import { useOptimisticMutation } from "@/hooks/useOptimisticMutation";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/utils/rateLimit";
 import { financial as financialContent } from "@/content";
 import { QK } from "./queryKeys";
@@ -129,9 +128,7 @@ async function fetchFinancialRecords(
       students!inner ( name, teacher_id ),
       class_logs ( id, class_date, attendance, grade, feedback, title ),
       confirmed_by:profiles!financial_records_confirmed_by_profiles_fkey ( full_name, deleted_at ),
-      financial_record_class_logs ( class_logs ( id, class_date, title ) ),
-      payment_proof_status, payment_proof_url, payment_proof_filename,
-      payment_proof_uploaded_at, payment_proof_rejection_reason`,
+      financial_record_class_logs ( class_logs ( id, class_date, title ) )`,
       { count: "exact" }
     )
     .order(orderCol, { ascending });
@@ -344,147 +341,10 @@ export function useCreateFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
-      toast.success(financialContent.view.toasts.success);
+      toast.success(financialContent.formDialog.toasts.success);
     },
     onError: (error) => {
       logger.error(error, { context: "useCreateFinancialRecord" });
-      toast.error(sanitizeErrorMessage(error));
-    },
-  });
-}
-
-export function useMarkAsPaid() {
-  const idempotencyKeyRef = { current: crypto.randomUUID() };
-
-  return useOptimisticMutation<FinancialRecord, string>({
-    mutationFn: async (id: string) => {
-      const idempotencyKey = idempotencyKeyRef.current;
-      try {
-        const { data, error } = await supabase.rpc("mark_as_paid_idempotent", {
-          p_record_id: id,
-          p_payment_method: null,
-          p_idempotency_key: idempotencyKey,
-        });
-
-        if (error) throw error;
-
-        const { data: record, error: fetchError } = await supabase
-          .from("financial_records")
-          .select()
-          .eq("id", id)
-          .single();
-
-        if (fetchError) throw fetchError;
-
-        return record;
-      } finally {
-        idempotencyKeyRef.current = crypto.randomUUID();
-      }
-    },
-    queryKey: [QK.FINANCIAL_RECORDS],
-    optimisticUpdate: (
-      oldData: { list: FinancialRecordWithRelations[]; count: number },
-      id: string
-    ) => {
-      const now = new Date().toISOString();
-      return {
-        ...oldData,
-        list: oldData.list.map((record) =>
-          record.id === id
-            ? { ...record, status: "pago" as const, paid_at: now }
-            : record
-        ),
-      };
-    },
-    successMessage: "Pagamento registrado com sucesso!",
-    errorMessage: "Erro ao registrar pagamento",
-    onError: (error) => {
-      logger.error(error, { context: "useMarkAsPaid" });
-    },
-  });
-}
-
-export function useConfirmPayment() {
-  const queryClient = useQueryClient();
-  const idempotencyKeyRef = { current: crypto.randomUUID() };
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const idempotencyKey = idempotencyKeyRef.current;
-      try {
-        const { data, error } = await supabase.rpc(
-          "confirm_payment_idempotent",
-          {
-            p_record_id: id,
-            p_idempotency_key: idempotencyKey,
-          }
-        );
-
-        if (error) throw error;
-
-        if (data && !data.success) {
-          throw new Error(data.error || "Erro ao confirmar pagamento");
-        }
-
-        return data;
-      } finally {
-        idempotencyKeyRef.current = crypto.randomUUID();
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
-      queryClient.invalidateQueries({
-        queryKey: [QK.FINANCIAL_RECORDS_BY_STUDENT_IDS],
-      });
-      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_SUMMARY] });
-      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
-      toast.success(financialContent.confirmPaymentDialog.toasts.success);
-    },
-    onError: (error) => {
-      logger.error(error, { context: "useConfirmPayment" });
-      toast.error(sanitizeErrorMessage(error));
-    },
-  });
-}
-
-export function useUndoFinancialPayment() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const idempotencyKey = crypto.randomUUID();
-
-      const { data, error } = await supabase.rpc("undo_payment_idempotent", {
-        p_record_id: id,
-        p_idempotency_key: idempotencyKey,
-      });
-
-      if (error) throw error;
-
-      if (data && !data.success) {
-        throw new Error(data.error || "Erro ao desfazer pagamento");
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
-      queryClient.invalidateQueries({
-        queryKey: [QK.FINANCIAL_RECORDS_BY_STUDENT_IDS],
-      });
-      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_SUMMARY] });
-      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
-      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
-      toast.success(financialContent.undoDialog.toasts.success);
-    },
-    onError: (error) => {
-      logger.error(error, { context: "useUndoFinancialPayment" });
       toast.error(sanitizeErrorMessage(error));
     },
   });
@@ -505,7 +365,7 @@ export function useUpdateFinancialRecord() {
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
       queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
-      toast.success(financialContent.view.toasts.successEdit);
+      toast.success(financialContent.formDialog.toasts.successEdit);
     },
     onError: (error) => {
       logger.error(error, { context: "useUpdateFinancialRecord" });
@@ -516,8 +376,19 @@ export function useUpdateFinancialRecord() {
 
 export function useUpdateFinancialStatus() {
   const queryClient = useQueryClient();
+  const mutationInFlight = useRef(false);
   return useMutation({
-    mutationFn: updateFinancialStatusFn,
+    mutationFn: async (
+      variables: Parameters<typeof updateFinancialStatusFn>[0]
+    ) => {
+      if (mutationInFlight.current) throw new Error("Operação em andamento");
+      mutationInFlight.current = true;
+      try {
+        return await updateFinancialStatusFn(variables);
+      } finally {
+        mutationInFlight.current = false;
+      }
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
       queryClient.invalidateQueries({
@@ -537,6 +408,75 @@ export function useUpdateFinancialStatus() {
     },
     onError: (error) => {
       logger.error(error, { context: "useUpdateFinancialStatus" });
+      toast.error(sanitizeErrorMessage(error));
+    },
+  });
+}
+
+export function useRefundAbacatePayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      financialRecordId,
+      reason,
+    }: {
+      financialRecordId: string;
+      reason?: string;
+    }) => {
+      const { data, error } = await supabase.functions.invoke(
+        "refund-abacate-payment",
+        { body: { financial_record_id: financialRecordId, reason } }
+      );
+      if (error) throw error;
+      return data as { refundPublicId: string };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
+      queryClient.invalidateQueries({
+        queryKey: [QK.FINANCIAL_RECORDS_BY_STUDENT_IDS],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_SUMMARY] });
+      queryClient.invalidateQueries({ queryKey: [QK.CLASS_LOGS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENTS_PAGINATED] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_DETAILS] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_BALANCE] });
+      queryClient.invalidateQueries({ queryKey: [QK.STUDENT_STATEMENT] });
+      toast.success(financialContent.refundDialog.toasts.successAbacate);
+    },
+    onError: (error) => {
+      logger.error(error, { context: "useRefundAbacatePayment" });
+      toast.error(sanitizeErrorMessage(error));
+    },
+  });
+}
+
+export function useCreateAbacatePayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      financialRecordId,
+      cpf,
+      cellphone,
+    }: {
+      financialRecordId: string;
+      cpf: string;
+      cellphone?: string;
+    }) => {
+      const { data, error } = await supabase.functions.invoke(
+        "create-abacate-payment",
+        { body: { financial_record_id: financialRecordId, cpf, cellphone } }
+      );
+      if (error) throw error;
+      return data as { brCode: string; expiresAt: string };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QK.STUDENT_FINANCIAL_RECORDS],
+      });
+      queryClient.invalidateQueries({ queryKey: [QK.FINANCIAL_RECORDS] });
+    },
+    onError: (error) => {
+      logger.error(error, { context: "useCreateAbacatePayment" });
       toast.error(sanitizeErrorMessage(error));
     },
   });

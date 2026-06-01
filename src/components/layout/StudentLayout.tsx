@@ -1,9 +1,16 @@
 ﻿import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, BookOpen, CreditCard, LogOut, Loader2, Settings, FileText } from "lucide-react";
+import {
+  Home,
+  BookOpen,
+  CreditCard,
+  LogOut,
+  Loader2,
+  Settings,
+  FileText,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { SettingsModal } from "@/components/layout/SettingsModal";
 import { InstallPWABanner } from "@/components/pwa/InstallPWABanner";
 import { layout, common } from "@/content";
 
@@ -12,15 +19,15 @@ interface StudentLayoutProps {
 }
 
 const navigation = [
-  { name: "Início", href: "/student", icon: Home },
+  { name: "Início", href: "/student", icon: Home, exact: true },
   { name: "Histórico", href: "/student/history", icon: BookOpen },
   { name: "Atividades", href: "/student/activities", icon: FileText },
   { name: "Financeiro", href: "/student/financial", icon: CreditCard },
+  { name: layout.settings.title, href: "/student/settings", icon: Settings },
 ];
 
 export function StudentLayout({ children }: StudentLayoutProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
 
@@ -44,22 +51,21 @@ export function StudentLayout({ children }: StudentLayoutProps) {
         <div className="flex h-14 items-center justify-between px-4">
           <Link to="/student" className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xs">{layout.logo.initial}</span>
+              <span className="text-primary-foreground font-bold text-xs">
+                {layout.logo.initial}
+              </span>
             </div>
             <span className="text-sm font-semibold">{common.app.name}</span>
           </Link>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setSettingsOpen(true)}
-              aria-label={layout.accessibility.settingsAriaLabel}
-              className="text-muted-foreground hover:text-foreground p-2"
-            >
-              <Settings className="h-5 w-5" />
-            </button>
-            <button
               onClick={handleLogout}
               disabled={isLoggingOut}
-              aria-label={isLoggingOut ? layout.sidebar.loggingOut : layout.accessibility.logoutAriaLabel}
+              aria-label={
+                isLoggingOut
+                  ? layout.sidebar.loggingOut
+                  : layout.accessibility.logoutAriaLabel
+              }
               className="text-muted-foreground hover:text-foreground p-2 disabled:opacity-50"
             >
               {isLoggingOut ? (
@@ -73,19 +79,23 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       </header>
 
       {/* Page content */}
-      <main id="main-content" className="pt-6 pb-6 px-4 animate-fade-in">{children}</main>
+      <main id="main-content" className="pt-6 pb-6 px-4 animate-fade-in">
+        {children}
+      </main>
 
       {/* PWA Install Banner */}
       <InstallPWABanner />
 
       {/* Bottom navigation */}
-      <nav 
+      <nav
         className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
         aria-label={layout.accessibility.mainNavAriaLabel}
       >
         <div className="flex items-center justify-around py-2">
           {navigation.map((item) => {
-            const isActive = location.pathname === item.href;
+            const isActive = (item as { exact?: boolean }).exact
+              ? location.pathname === item.href
+              : location.pathname.startsWith(item.href);
             return (
               <Link
                 key={item.name}
@@ -99,15 +109,16 @@ export function StudentLayout({ children }: StudentLayoutProps) {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <item.icon className={cn("h-5 w-5", isActive && "text-primary")} aria-hidden="true" />
+                <item.icon
+                  className={cn("h-5 w-5", isActive && "text-primary")}
+                  aria-hidden="true"
+                />
                 {item.name}
               </Link>
             );
           })}
         </div>
       </nav>
-
-      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }

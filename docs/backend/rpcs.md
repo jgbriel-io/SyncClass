@@ -89,6 +89,8 @@ const { data, error } = await supabase.rpc("create_class_package", {
 
 ### mark_as_paid_idempotent
 
+> **Nota Sprint 30:** Com a integração AbacatePay, pagamentos são confirmados automaticamente via webhook (`abacate-webhook` Edge Function → `UPDATE status='pago'`). Esta RPC continua existindo no banco mas não é mais o caminho primário para cobranças `payment_provider='abacate_pay'`.
+
 **Responsabilidade:** Marcar cobrança como paga (idempotente).
 
 **Arquivo:** `supabase/migrations/06_idempotency.sql`
@@ -144,6 +146,8 @@ confirm_payment_idempotent(
 3. Retorna `{ success: true }`
 
 ### undo_payment_idempotent
+
+> **Nota Sprint 30:** O botão "Desfazer" foi removido da UI (`FinancialUndoDialog` deletado, `useUndoFinancialPayment` removido). Para cobranças AbacatePay, o reembolso usa a Edge Function `refund-abacate-payment` (não esta RPC). Esta RPC permanece no banco para compatibilidade mas não tem chamador na UI atual.
 
 **Responsabilidade:** Desfazer pagamento (voltar para pendente).
 
@@ -509,7 +513,42 @@ user_update_own_email(p_email TEXT) RETURNS void
 
 ---
 
+### encrypt_sensitive_data / decrypt_sensitive_data
+
+**Responsabilidade:** Criptografar e descriptografar dados sensíveis em repouso usando `pgcrypto`. Usados para armazenar a API key AbacatePay do professor com segurança.
+
+**Arquivo:** `supabase/migrations/10_security_improvements.sql` + `61_grant_encrypt_functions_authenticated.sql`
+
+**Assinatura:**
+
+```sql
+encrypt_sensitive_data(data_input TEXT) RETURNS TEXT
+decrypt_sensitive_data(encrypted_input TEXT) RETURNS TEXT
+```
+
+**Segurança:** `SECURITY DEFINER`. Grant para `authenticated` (migration 61). A chave de criptografia é derivada do `SUPABASE_DB_PASSWORD` (nunca exposta ao frontend).
+
+**Uso:**
+
+```ts
+// Criptografar ao salvar
+const { data: encrypted } = await supabase.rpc("encrypt_sensitive_data", {
+  data_input: apiKey,
+});
+
+// Descriptografar (apenas em Edge Functions com SERVICE_ROLE_KEY)
+const { data: decrypted } = await serviceClient.rpc("decrypt_sensitive_data", {
+  encrypted_input: teacher.abacate_pay_api_key,
+});
+```
+
+**Contexto:** API key nunca chega ao frontend em texto claro. Descriptografia ocorre apenas dentro de Edge Functions com `serviceClient`.
+
+---
+
 ### submit_payment_proof
+
+> **Nota Sprint 30:** O fluxo de upload de comprovante foi removido da UI com a integração AbacatePay (`usePaymentProof` deletado, `FinancialPaymentHistoryDialog` simplificado). Esta RPC permanece no banco mas não tem chamador na UI atual.
 
 **Responsabilidade:** Registra comprovante de pagamento enviado pelo aluno e transiciona a cobrança para `status = 'validando'`.
 
@@ -534,6 +573,8 @@ submit_payment_proof(
 ---
 
 ### review_payment_proof
+
+> **Nota Sprint 30:** Aprovação de comprovante removida da UI com a integração AbacatePay. Esta RPC permanece no banco mas não tem chamador na UI atual.
 
 **Responsabilidade:** Professor ou admin aprova/rejeita comprovante de pagamento.
 

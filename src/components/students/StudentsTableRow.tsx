@@ -252,7 +252,7 @@ export function StudentsTableRow({
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onResetPassword(student)}>
                   <KeyRound className="h-4 w-4 mr-2" aria-hidden="true" />
-                  {studentsContent.resetPasswordDialog.title}
+                  {common.actions.resetPassword}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className={

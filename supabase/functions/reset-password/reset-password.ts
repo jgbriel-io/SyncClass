@@ -21,6 +21,7 @@ serve(async (req) => {
   interface RequestBody {
     userId?: string;
     studentId?: string;
+    teacherId?: string;
     password?: string;
     currentPassword?: string;
     newPassword?: string;
@@ -138,7 +139,7 @@ serve(async (req) => {
 
   let targetUserId: string | null = null;
 
-  const { userId, studentId } = body;
+  const { userId, studentId, teacherId } = body;
 
   if (studentId && typeof studentId === "string") {
     const { data: student, error: studentError } = await supabaseAuthed
@@ -163,6 +164,24 @@ serve(async (req) => {
 
     targetUserId = studentProfile.user_id;
 
+  } else if (teacherId && typeof teacherId === "string") {
+    if (callerRole !== "admin") {
+      return jsonResponse({ error: "Acesso negado. Apenas administradores podem redefinir senha de professores." }, 403);
+    }
+
+    const { data: teacherProfile, error: teacherProfileError } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id")
+      .eq("teacher_id", teacherId)
+      .eq("role", "teacher")
+      .maybeSingle();
+
+    if (teacherProfileError || !teacherProfile?.user_id) {
+      return jsonResponse({ error: "Este professor não possui conta de acesso vinculada." }, 404);
+    }
+
+    targetUserId = teacherProfile.user_id;
+
   } else if (userId && typeof userId === "string") {
     if (callerRole !== "admin") {
       return jsonResponse({ error: "Acesso negado. Apenas administradores podem redefinir senha por userId." }, 403);
@@ -170,7 +189,7 @@ serve(async (req) => {
     targetUserId = userId;
 
   } else {
-    return jsonResponse({ error: "Informe studentId, userId, ou currentPassword + newPassword." }, 400);
+    return jsonResponse({ error: "Informe studentId, teacherId, userId, ou currentPassword + newPassword." }, 400);
   }
 
   const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(

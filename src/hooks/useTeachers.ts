@@ -15,7 +15,10 @@ import {
 import { toast } from "sonner";
 import { sanitizeErrorMessage, logError } from "@/lib/security/errorHandler";
 import { pickAnonSegment } from "@/lib/utils/anonymize";
-import { teachers as teachersContent } from "@/content";
+import {
+  teachers as teachersContent,
+  layout as layoutContent,
+} from "@/content";
 import { QK } from "./queryKeys";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -303,53 +306,86 @@ export function useTeacherUserId(teacherId: string | undefined) {
   });
 }
 
-export function useTeacherPixKey(teacherId: string | undefined) {
+export function useTeacherAbacatePayConfig(teacherId: string | undefined) {
   return useQuery({
-    queryKey: [QK.TEACHER_PIX_KEY, teacherId],
+    queryKey: [QK.TEACHER_ABACATE_PAY_CONFIG, teacherId],
     queryFn: async () => {
       if (!teacherId) return null;
       const { data, error } = await supabase
         .from("teachers")
-        .select("pix_key")
+        .select("abacate_pay_api_key, abacate_pay_webhook_secret")
         .eq("id", teacherId)
         .maybeSingle();
       if (error) throw error;
-      return data?.pix_key ?? null;
+      if (!data) return null;
+
+      let apiKey: string | null = null;
+      if (data.abacate_pay_api_key) {
+        const { data: decrypted, error: decryptError } = await supabase.rpc(
+          "decrypt_sensitive_data",
+          { encrypted_input: data.abacate_pay_api_key }
+        );
+        if (decryptError) {
+          logError(decryptError as Error, {
+            context: "decrypt_abacate_pay_api_key",
+          });
+        } else {
+          apiKey = decrypted;
+        }
+      }
+
+      return {
+        abacate_pay_api_key: apiKey,
+        abacate_pay_webhook_secret: data.abacate_pay_webhook_secret,
+      };
     },
     enabled: !!teacherId,
   });
 }
 
-export function useUpdatePixKey() {
+export function useUpdateTeacherAbacatePayConfig() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
       teacherId,
-      pixKey,
+      apiKey,
+      existingWebhookSecret,
     }: {
       teacherId: string;
-      pixKey: string | null;
+      apiKey: string | null;
+      existingWebhookSecret?: string | null;
     }) => {
-      const { data, error } = await supabase
+      let encryptedKey: string | null = null;
+      if (apiKey) {
+        const { data: encrypted, error: encryptError } = await supabase.rpc(
+          "encrypt_sensitive_data",
+          { data_input: apiKey }
+        );
+        if (encryptError) throw encryptError;
+        encryptedKey = encrypted;
+      }
+
+      // sempre rotaciona — secret antigo fica inválido ao trocar a API key
+      const webhookSecret = crypto.randomUUID();
+      const { error } = await supabase
         .from("teachers")
-        .update({ pix_key: pixKey })
-        .eq("id", teacherId)
-        .select()
-        .single();
+        .update({
+          abacate_pay_api_key: encryptedKey,
+          abacate_pay_webhook_secret: apiKey ? webhookSecret : null,
+        })
+        .eq("id", teacherId);
       if (error) throw error;
-      return data;
+      return { webhookSecret: apiKey ? webhookSecret : null };
     },
     onSuccess: (_, { teacherId }) => {
       queryClient.invalidateQueries({
-        queryKey: [QK.TEACHER_PIX_KEY, teacherId],
+        queryKey: [QK.TEACHER_ABACATE_PAY_CONFIG, teacherId],
       });
-      queryClient.invalidateQueries({ queryKey: [QK.TEACHERS] });
-      toast.success(teachersContent.toasts.pixUpdated);
+      toast.success(layoutContent.settings.payments.toasts.success);
     },
     onError: (error: unknown) => {
-      const userMessage = sanitizeErrorMessage(error);
-      toast.error(userMessage);
-      logError(error as Error, { context: "update_pix_key" });
+      toast.error(sanitizeErrorMessage(error));
+      logError(error as Error, { context: "update_abacate_pay_config" });
     },
   });
 }

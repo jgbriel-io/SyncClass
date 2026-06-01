@@ -46,10 +46,12 @@ export const layout = {
 
   settings: {
     title: "Configurações",
+    backLabel: "Voltar",
     tabs: {
       profile: "Perfil",
       password: "Senha",
       preferences: "Preferências",
+      payments: "Pagamentos",
     },
     profile: {
       avatarLabel: "Foto de perfil",
@@ -58,10 +60,6 @@ export const layout = {
       removeButton: "Remover foto",
       nameLabel: "Nome",
       emailLabel: "Email",
-      pixKeyLabel: "Chave PIX",
-      pixKeyPlaceholder: "CPF, email, telefone ou chave aleatória",
-      pixKeyHint:
-        "Esta chave será exibida para seus alunos na tela de pagamento.",
       emailConfirmHint:
         "Você receberá um email de confirmação no novo endereço.",
       editButton: "Editar",
@@ -100,6 +98,35 @@ export const layout = {
       submitting: "Alterando...",
       showPassword: "Mostrar senha",
       hidePassword: "Ocultar senha",
+    },
+    payments: {
+      title: "Integração AbacatePay",
+      subtitle:
+        "Configure sua conta AbacatePay para que seus alunos possam pagar via PIX automático diretamente para você.",
+      apiKeyLabel: "API Key da AbacatePay",
+      apiKeyPlaceholder: "Cole sua API key aqui",
+      apiKeyHint:
+        "Acesse app.abacatepay.com → Configurações → API Keys para gerar sua chave.",
+      showKey: "Mostrar",
+      hideKey: "Ocultar",
+      editButton: "Configurar",
+      saveButton: "Salvar",
+      cancelButton: "Cancelar",
+      saving: "Salvando...",
+      webhookTitle: "URL do Webhook",
+      webhookHint:
+        "Copie esta URL e cadastre no painel da AbacatePay em Configurações → Webhooks.",
+      webhookNotConfigured:
+        "Salve sua API key primeiro para gerar a URL do webhook.",
+      copyButton: "Copiar URL",
+      copied: "Copiado!",
+      notConfigured: "Integração não configurada",
+      configured: "Integração configurada",
+      removeButton: "Remover integração",
+      toasts: {
+        success: "Integração AbacatePay salva com sucesso!",
+        copySuccess: "URL copiada!",
+      },
     },
     preferences: {
       comingSoon: "Opções de tema, idioma e notificações em breve.",

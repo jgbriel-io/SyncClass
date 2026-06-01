@@ -49,10 +49,8 @@ export const financial = {
     grade: "Nota:",
     packageLabel: "(Pacote)",
     classDatePrefix: "Aula - ",
-    undoing: "Desfazendo...",
-    undo: "Desfazer",
+    requestRefund: "Reembolso",
     finalized: "Finalizado",
-    confirm: "Confirmar",
     edit: "Editar",
     delete: "Excluir",
     viewHistory: "Ver histórico de pagamento",
@@ -102,36 +100,29 @@ export const financial = {
     },
   },
 
-  confirmPaymentDialog: {
-    title: "Confirmar pagamento",
-    titleEarly: "Atenção: confirmar pagamento antecipado",
-    descriptionEarly:
-      "Esta cobrança está vinculada a uma aula que ainda não foi concluída.",
+  refundDialog: {
+    title: "Solicitar reembolso",
     description: (studentName: string, amount: string) =>
-      `Deseja marcar como pago a cobrança de ${studentName} no valor de ${amount}?`,
-    descriptionEarlyFull: (studentName: string, amount: string) =>
-      `O pagamento já foi realizado? Ao confirmar, a cobrança de ${studentName} no valor de ${amount} será marcada como paga.`,
-    confirmButton: "Confirmar Pagamento",
-    processing: "Registrando...",
-    cancel: "Cancelar",
-    toasts: {
-      success: "Pagamento confirmado com sucesso!",
-      error: "Erro ao confirmar pagamento.",
-    },
-  },
-
-  undoDialog: {
-    title: "Desfazer cobrança",
-    description: (studentName: string, amount: string) =>
-      `Deseja desfazer o pagamento da cobrança de ${studentName} no valor de ${amount}?`,
+      `Confirma o reembolso da cobrança de ${studentName} no valor de ${amount}?`,
+    warning:
+      "PIX é irreversível — o valor já foi recebido. Combine a devolução diretamente com o aluno (ex.: PIX avulso) antes de confirmar.",
     warningLinked:
-      "Esta cobrança está vinculada a uma aula já concluída/confirmada. Deseja desfazer mesmo assim?",
-    confirmButton: "Desfazer cobrança",
-    processing: "Desfazendo...",
+      "Este pagamento está vinculado a uma aula já confirmada. O reembolso não desfaz o registro da aula.",
+    warningAbacate:
+      "O reembolso será processado automaticamente via AbacatePay PIX. O valor será debitado do seu saldo.",
+    manualInstructions:
+      "Este pagamento foi registrado manualmente. Combine a devolução diretamente com o aluno e confirme abaixo.",
+    confirmButton: "Confirmar reembolso",
+    confirmButtonAbacate: "Reembolsar via PIX",
+    processing: "Confirmando...",
+    processingAbacate: "Processando reembolso...",
     cancel: "Cancelar",
+    reasonLabel: "Motivo do reembolso (opcional)",
+    reasonPlaceholder: "Ex: aula cancelada, cobrado a mais...",
     toasts: {
-      success: "Pagamento desfeito com sucesso!",
-      error: "Erro ao desfazer pagamento.",
+      success: "Reembolso registrado com sucesso!",
+      successAbacate: "Reembolso PIX processado com sucesso!",
+      error: "Erro ao registrar reembolso.",
     },
   },
 
@@ -212,6 +203,41 @@ export const financial = {
     chargeCreationHint:
       "As cobranças são criadas ao registrar aulas. Registre uma aula na aba Aulas para gerar cobranças.",
     filterEmptyMessage: "Ajuste os filtros acima ou limpe a busca",
+  },
+
+  checkout: {
+    loading: "Carregando...",
+    notFound: "Cobrança não encontrada.",
+    loadError: "Erro ao carregar a cobrança.",
+    backButton: "Voltar ao Financeiro",
+    pageTitle: "Checkout",
+    pageSubtitle: "Realize o pagamento via PIX abaixo",
+    amountLabel: "Valor a pagar",
+    manualPayment:
+      "Este pagamento não suporta geração automática de PIX. Entre em contato com seu professor para combinar a forma de pagamento.",
+  },
+
+  pixPaymentDialog: {
+    title: "Pagar com PIX",
+    cpfDescription: "Informe seu CPF para gerar o QR Code PIX da cobrança.",
+    cpfLabel: "CPF",
+    cpfPlaceholder: "000.000.000-00",
+    cpfError: "CPF deve ter 11 dígitos",
+    generateButton: "Gerar QR Code PIX",
+    generating: "Gerando QR Code...",
+    pixCopyLabel: "PIX Copia e Cola",
+    copied: "Copiado!",
+    copyButton: "Copiar",
+    expiresAt: (date: string) => `Válido até ${date}`,
+    waitingPayment: "Aguardando confirmação do pagamento...",
+    paidTitle: "Pagamento confirmado!",
+    paidDescription: "Seu pagamento foi processado com sucesso.",
+    close: "Fechar",
+    regenerate: "Gerar novo QR Code",
+    expiredNotice: "Este QR Code expirou.",
+    toasts: {
+      generateError: "Erro ao gerar QR Code PIX. Tente novamente.",
+    },
   },
 
   validation: {

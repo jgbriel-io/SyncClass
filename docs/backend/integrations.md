@@ -180,52 +180,81 @@ const idempotencyKeyRef = useRef(idempotencyKey); // sobrevive a re-renders
 
 ## Fluxo de Pagamento
 
-**Sem gateway de pagamento.** Pagamentos são registrados manualmente pelo professor ou confirmados via upload de comprovante pelo aluno.
+**Gateway:** AbacatePay (PIX automático via QR Code + webhook). Integrado desde a Sprint 30.
 
-**Estados:**
+### Estados
 
 ```
-pendente → pago (via mark_as_paid ou confirm_payment)
-pendente → cancelado (via soft delete)
-pago → pendente (via undo_payment)
+pendente → pago        (webhook billing.paid / pixQrCode.paid)
+pago     → extornado   (refund-abacate-payment + webhook checkout.refunded)
+pendente → abonado     (professor registra falta não cobrada)
+pago     → extornado   (professor registra falta após pagamento já realizado)
+pendente → cancelado   (via soft delete da cobrança)
 ```
 
-**Fluxo completo:**
+### Fluxo de pagamento (AbacatePay)
 
 ```
 1. Professor cria cobrança
    → financial_records (status='pendente')
 
-2. Aluno faz upload de comprovante
-   → payment_proof_url (Storage)
-   → payment_proof_status='pending'
+2. Aluno acessa /student/checkout/:recordId
+   → create-abacate-payment Edge Function
+       → AbacatePay POST /v1/pixQrCode/create (API key do professor)
+       → Salva brCode + external_payment_id + pix_expires_at em financial_records
+   → Aluno escaneia QR Code ou copia código PIX
 
-3. Professor aprova
-   → confirm_payment_idempotent()
-   → status='pago'
-   → payment_proof_status='approved'
-   → confirmed_by_user_id=auth.uid()
-   → paid_at=NOW()
+3. AbacatePay confirma pagamento
+   → POST /functions/v1/abacate-webhook?webhookSecret=<secret>
+       → Idempotência: webhook_processing_log (UNIQUE event_id)
+       → event='billing.paid' → UPDATE status='pago', paid_at=NOW()
 
-   OU
-
-   Professor rejeita
-   → payment_proof_status='rejected'
-   → payment_proof_rejection_reason='...'
-
-4. Aluno pode reenviar comprovante após rejeição
-   → payment_proof_url (novo arquivo)
-   → payment_proof_status='pending' (reset)
+4. Frontend detecta mudança via realtime subscription (useCheckoutPaymentStatus)
+   → Tela de "Pagamento confirmado!" exibida ao aluno
 ```
 
-**Métodos de pagamento:**
+### Fluxo de reembolso
 
-- `pix` — QR Code gerado pelo frontend (não integrado com API)
-- `dinheiro` — registro manual
-- `transferencia` — registro manual
-- `cartao` — registro manual
+```
+Professor clica "Reembolso" em cobrança paga
 
-**Idempotência:** Todas as operações financeiras usam `idempotency_key` para prevenir duplicação.
+[Caminho AbacatePay — payment_provider='abacate_pay']
+  → refund-abacate-payment Edge Function
+      → POST /v2/transparents/refund { id: external_payment_id }
+      → UPDATE status='extornado'
+  → webhook checkout.refunded (belt-and-suspenders) → mesmo UPDATE
+
+[Caminho manual — payment_provider=null ou 'manual']
+  → Professor confirma devolução fora da plataforma
+  → UPDATE status='extornado' via useUpdateFinancialStatus
+```
+
+### Multi-tenant
+
+Cada professor usa sua própria API key AbacatePay. Receitas vão diretamente para a conta AbacatePay do professor, não para uma conta central.
+
+```
+financial_records.external_payment_id → pix_char_... (ID único na AbacatePay)
+teachers.abacate_pay_api_key          → criptografada via pgcrypto
+teachers.abacate_pay_webhook_secret   → UUID único por professor
+```
+
+### Idempotência de QR Code
+
+```ts
+// Edge Function: cache do QR Code
+if (record.pix_code && record.pix_expires_at) {
+  if (new Date(record.pix_expires_at) > new Date()) {
+    return json({ brCode: record.pix_code, expiresAt: record.pix_expires_at });
+  }
+}
+// Só chama AbacatePay se o QR expirou ou não existe
+```
+
+### Métodos de pagamento registrados
+
+- `abacate_pay` — PIX automático via AbacatePay (fluxo padrão)
+- `manual` / `null` — legado; cobranças criadas antes da Sprint 30
 
 ## Gestão de Agenda
 

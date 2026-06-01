@@ -1,15 +1,14 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Upload, Trash2, Wallet, Download } from "lucide-react";
+import { Loader2, Upload, Trash2, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getAvatarLetter } from "@/lib/utils/patterns";
 import { AVATAR_MAX_SIZE_BYTES, AVATAR_MAX_PX } from "@/lib/utils/avatarUpload";
 import { useUploadAvatar, useUpdateMyProfile } from "@/hooks/useUsers";
-import { useTeacherPixKey, useUpdatePixKey } from "@/hooks/useTeachers";
 import {
   useUpdateProfileName,
   useUpdateProfileEmail,
@@ -41,29 +40,17 @@ export function SettingsPerfilTab({
   const updateAvatar = useUpdateMyProfile();
   const updateProfileName = useUpdateProfileName();
   const updateProfileEmail = useUpdateProfileEmail();
-  const updatePixKey = useUpdatePixKey();
-
   const [editingName, setEditingName] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [newName, setNewName] = useState(displayName);
   const [newEmail, setNewEmail] = useState(email);
   const [isExporting, setIsExporting] = useState(false);
 
-  const { data: pixKeyData } = useTeacherPixKey(teacherId ?? undefined);
-  const [pixKey, setPixKey] = useState("");
-  const [editingPixKey, setEditingPixKey] = useState(false);
-
-  // Sync pixKey from query
-  useEffect(() => {
-    if (pixKeyData) setPixKey(pixKeyData);
-  }, [pixKeyData]);
-
   const isPending =
     uploadAvatar.isPending ||
     updateAvatar.isPending ||
     updateProfileName.isPending ||
-    updateProfileEmail.isPending ||
-    updatePixKey.isPending;
+    updateProfileEmail.isPending;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -90,14 +77,6 @@ export function SettingsPerfilTab({
     updateProfileEmail.mutate(
       { email: normalized },
       { onSuccess: () => setEditingEmail(false) }
-    );
-  };
-
-  const handleUpdatePixKey = () => {
-    if (!teacherId) return;
-    updatePixKey.mutate(
-      { teacherId, pixKey: pixKey.trim() || null },
-      { onSuccess: () => setEditingPixKey(false) }
     );
   };
 
@@ -300,58 +279,6 @@ export function SettingsPerfilTab({
             ))}
         </div>
       </div>
-
-      {/* PIX */}
-      {isTeacher && (
-        <div className="space-y-2">
-          <Label htmlFor="settings-pix-key" className="flex items-center gap-2">
-            <Wallet className="h-4 w-4" />
-            {s.pixKeyLabel}
-          </Label>
-          <div className="flex gap-2">
-            <Input
-              id="settings-pix-key"
-              value={pixKey}
-              onChange={(e) => setPixKey(e.target.value)}
-              readOnly={!editingPixKey}
-              placeholder={s.pixKeyPlaceholder}
-              className={editingPixKey ? "" : "bg-muted/50"}
-            />
-            {editingPixKey ? (
-              <>
-                <Button
-                  size="sm"
-                  onClick={handleUpdatePixKey}
-                  disabled={isPending}
-                >
-                  {updatePixKey.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    s.saveButton
-                  )}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setEditingPixKey(false)}
-                  disabled={isPending}
-                >
-                  {s.cancelButton}
-                </Button>
-              </>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setEditingPixKey(true)}
-              >
-                {s.editButton}
-              </Button>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">{s.pixKeyHint}</p>
-        </div>
-      )}
 
       {/* Exportar dados (LGPD) */}
       <div className="space-y-2 border-t pt-4">
