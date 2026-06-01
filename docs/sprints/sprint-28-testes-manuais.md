@@ -296,77 +296,63 @@ Sprint concluída quando todos os 116 itens testados, com bugs críticos (bloque
 
 ## Validação de Toasts (Sprint 29 — refactor centralização)
 
-Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), validar que cada ação abaixo exibe o toast correto. Marcar ✅ quando confirmado na UI.
+Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), validar que cada ação exibe o toast correto na UI.
 
 ### Alunos
 
-| Ação                     | Toast esperado                                | Status |
-| ------------------------ | --------------------------------------------- | ------ |
-| Criar aluno              | "Aluno cadastrado com sucesso!"               | ⏳     |
-| Editar aluno             | "Aluno atualizado com sucesso!"               | ⏳     |
-| Arquivar aluno           | "Aluno arquivado e dados anonimizados (LGPD)" | ⏳     |
-| Hard delete aluno        | "Aluno excluído definitivamente."             | ⏳     |
-| Restaurar aluno          | "Aluno restaurado com sucesso!"               | ⏳     |
-| Alterar dia de pagamento | "Dia de pagamento atualizado com sucesso!"    | ⏳     |
+- [ ] Criar aluno → "Aluno cadastrado com sucesso!"
+- [ ] Editar aluno → "Aluno atualizado com sucesso!"
+- [ ] Arquivar aluno → "Aluno arquivado e dados anonimizados (LGPD)"
+- [ ] Hard delete aluno → "Aluno excluído definitivamente."
+- [ ] Restaurar aluno → "Aluno restaurado com sucesso!"
+- [ ] Alterar dia de pagamento → "Dia de pagamento atualizado com sucesso!"
 
 ### Professores
 
-| Ação                  | Toast esperado                        | Status |
-| --------------------- | ------------------------------------- | ------ |
-| Criar professor       | "Professor cadastrado com sucesso!"   | ⏳     |
-| Editar professor      | "Professor atualizado com sucesso!"   | ⏳     |
-| Arquivar professor    | "Professor arquivado com sucesso!"    | ⏳     |
-| Editar chave PIX      | "Chave PIX atualizada com sucesso!"   | ⏳     |
-| Hard delete professor | "Professor excluído definitivamente." | ⏳     |
+- [ ] Criar professor → "Professor cadastrado com sucesso!"
+- [ ] Editar professor → "Professor atualizado com sucesso!"
+- [ ] Arquivar professor → "Professor arquivado com sucesso!"
+- [ ] Editar chave PIX → "Chave PIX atualizada com sucesso!"
+- [ ] Hard delete professor → "Professor excluído definitivamente."
 
 ### Aulas
 
-| Ação                        | Toast esperado                             | Status |
-| --------------------------- | ------------------------------------------ | ------ |
-| Registrar aula sem cobrança | "Aula registrada com sucesso!"             | ⏳     |
-| Registrar aula com cobrança | "Aula e cobrança registradas com sucesso!" | ⏳     |
-| Editar aula                 | "Aula atualizada com sucesso!"             | ⏳     |
-| Deletar aula                | "Registro removido com sucesso!"           | ⏳     |
+- [ ] Registrar aula sem cobrança → "Aula registrada com sucesso!"
+- [ ] Registrar aula com cobrança → "Aula e cobrança registradas com sucesso!"
+- [ ] Editar aula → "Aula atualizada com sucesso!"
+- [ ] Deletar aula → "Registro removido com sucesso!"
 
 ### Financeiro
 
-| Ação                | Toast esperado                      | Status |
-| ------------------- | ----------------------------------- | ------ |
-| Criar cobrança      | "Cobrança criada com sucesso!"      | ⏳     |
-| Confirmar pagamento | "Pagamento confirmado com sucesso!" | ⏳     |
-| Desfazer pagamento  | "Pagamento desfeito com sucesso!"   | ⏳     |
-| Editar cobrança     | "Cobrança atualizada com sucesso!"  | ⏳     |
-| Excluir cobrança    | "Cobrança excluída com sucesso!"    | ⏳     |
+- [ ] Criar cobrança → "Cobrança criada com sucesso!"
+- [ ] Confirmar pagamento → "Pagamento confirmado com sucesso!"
+- [ ] Desfazer pagamento → "Pagamento desfeito com sucesso!"
+- [ ] Editar cobrança → "Cobrança atualizada com sucesso!"
+- [ ] Excluir cobrança → "Cobrança excluída com sucesso!"
 
 ### Atividades
 
-| Ação              | Toast esperado                      | Status |
-| ----------------- | ----------------------------------- | ------ |
-| Enviar atividade  | "Atividade enviada com sucesso!"    | ⏳     |
-| Editar atividade  | "Atividade atualizada com sucesso!" | ⏳     |
-| Enviar correção   | "Correção enviada com sucesso!"     | ⏳     |
-| Excluir atividade | "Atividade excluída com sucesso!"   | ⏳     |
+- [ ] Enviar atividade → "Atividade enviada com sucesso!"
+- [ ] Editar atividade → "Atividade atualizada com sucesso!"
+- [ ] Enviar correção → "Correção enviada com sucesso!"
+- [ ] Excluir atividade → "Atividade excluída com sucesso!"
 
 ### Perfil / Usuários
 
-| Ação                          | Toast esperado                                                             | Status |
-| ----------------------------- | -------------------------------------------------------------------------- | ------ |
-| Alterar foto de perfil        | "Foto de perfil atualizada."                                               | ⏳     |
-| Alterar nome (settings)       | "Nome atualizado com sucesso!"                                             | ⏳     |
-| Alterar email (settings)      | "Email atualizado com sucesso!"                                            | ⏳     |
-| Admin alterar role de usuário | "Usuário atualizado com sucesso!"                                          | ⏳     |
-| Admin convidar professor      | "Professor e conta de acesso criados com sucesso!"                         | ⏳     |
-| Admin reset senha de usuário  | "Senha redefinida com sucesso. O usuário precisará fazer login novamente." | ⏳     |
-| Vincular usuário a aluno      | "Usuário vinculado ao aluno com sucesso."                                  | ⏳     |
-| Desvincular usuário           | "Vínculo entre usuário e aluno removido."                                  | ⏳     |
+- [ ] Alterar foto de perfil → "Foto de perfil atualizada."
+- [ ] Alterar nome (settings) → "Nome atualizado com sucesso!"
+- [ ] Alterar email (settings) → "Email atualizado com sucesso!"
+- [ ] Admin alterar role de usuário → "Usuário atualizado com sucesso!"
+- [ ] Admin convidar professor → "Professor e conta de acesso criados com sucesso!"
+- [ ] Admin reset senha de usuário → "Senha redefinida com sucesso. O usuário precisará fazer login novamente."
+- [ ] Vincular usuário a aluno → "Usuário vinculado ao aluno com sucesso."
+- [ ] Desvincular usuário → "Vínculo entre usuário e aluno removido."
 
 ### Comprovante de Pagamento
 
-| Ação                          | Toast esperado                                             | Status |
-| ----------------------------- | ---------------------------------------------------------- | ------ |
-| Aluno envia comprovante       | "Comprovante enviado! Aguarde a confirmação do professor." | ⏳     |
-| Professor aprova comprovante  | "Pagamento confirmado com sucesso!"                        | ⏳     |
-| Professor rejeita comprovante | "Comprovante rejeitado."                                   | ⏳     |
+- [ ] Aluno envia comprovante → "Comprovante enviado! Aguarde a confirmação do professor."
+- [ ] Professor aprova comprovante → "Pagamento confirmado com sucesso!"
+- [ ] Professor rejeita comprovante → "Comprovante rejeitado."
 
 ---
 
