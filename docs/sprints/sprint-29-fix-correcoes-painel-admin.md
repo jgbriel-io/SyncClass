@@ -595,6 +595,30 @@ for (let i = 0; i <= hex.length - 8; i++) {
 
 ---
 
+---
+
+## Refactor — Centralização de strings de toast em `src/content/`
+
+**Contexto:** Auditoria de toasts revelou 12 hooks com strings hardcoded e `useProfiles.ts` usando `use-toast` do shadcn em vez do `sonner` (padrão do projeto). Strings duplicadas entre hooks e `src/content/` criavam fonte dupla de verdade.
+
+**Mudanças:**
+
+- `useProfiles.ts` — migrado de `import { toast } from "@/hooks/use-toast"` → `import { toast } from "sonner"`. Chamadas `toast({ title, description, variant })` convertidas para `toast.success/error()`.
+- `useActivities.ts` — usa `activitiesContent.{sendDialog,editDialog,correctionDialog,deleteDialog}.toasts.success`
+- `useFinancialRecords.ts` — usa `financialContent.{view,confirmPaymentDialog,undoDialog,deleteDialog}.toasts.{success,successEdit}`
+- `useClassLogs.ts` — usa `classesContent.logFormDialog.toasts.{success,successWithPayment,successEdit,successDelete}` (2 novas strings adicionadas)
+- `useStudents.ts` — usa `studentsContent.toasts.*` (nova seção adicionada: `created`, `updated`, `archived`, `deleted`, `restored`, `payDayUpdated`)
+- `useTeachers.ts` — usa `teachersContent.toasts.*` (nova seção adicionada: `created`, `updated`, `archived`, `pixUpdated`, `deleted`)
+- `useUserProfileMutations.ts` — usa `layout.settings.profile.toasts.*` + `usersContent.form.toasts.successEdit` (`avatarSuccess` adicionado ao layout)
+- `useUserAuthMutations.ts` — usa `usersContent.{form,resetPasswordDialog}.toasts.*` (`successForUser` adicionado)
+- `useUserInviteMutations.ts` — usa `usersContent.form.toasts.successTeacherInvite` (adicionado)
+
+**Content files alterados:** `students.ts`, `teachers.ts`, `classes.ts`, `financial.ts`, `layout.ts`, `users.ts`
+
+**Regra estabelecida:** Todo `toast.success/error` em hooks deve referenciar `src/content/`. Nunca hardcode string de toast em hook.
+
+---
+
 ## Bugs Pendentes
 
 Nenhum.
