@@ -407,38 +407,6 @@ export function FinancialFormDialog({
           />
         </div>
 
-        {/* Payment Method */}
-        <div className="space-y-2">
-          <Label htmlFor="payment_method">
-            {financial.formDialog.paymentMethodLabel}
-          </Label>
-          <Select
-            value={watch("payment_method") || undefined}
-            onValueChange={(value) => setValue("payment_method", value)}
-          >
-            <SelectTrigger>
-              <SelectValue
-                placeholder={financial.formDialog.paymentMethodPlaceholder}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pix">{financial.formDialog.pix}</SelectItem>
-              <SelectItem value="cartao">
-                {financial.formDialog.card}
-              </SelectItem>
-              <SelectItem value="dinheiro">
-                {financial.formDialog.cash}
-              </SelectItem>
-              <SelectItem value="transferencia">
-                {financial.formDialog.transfer}
-              </SelectItem>
-              <SelectItem value="outro">
-                {financial.formDialog.other}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* Actions */}
         <div className="flex justify-end gap-4 pt-4">
           <Button

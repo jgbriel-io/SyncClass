@@ -118,12 +118,12 @@ exports[`ActivitiesTableRow - Snapshot > should render activity row - pending 1`
           style="width: 110px; min-width: 110px;"
         >
           <span
-            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border bg-muted text-muted-foreground border-border justify-center whitespace-nowrap"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border bg-destructive-muted text-destructive border-destructive/20 justify-center whitespace-nowrap"
           >
             <span
-              class="w-1.5 h-1.5 rounded-full bg-muted-foreground"
+              class="w-1.5 h-1.5 rounded-full bg-destructive"
             />
-            pendente
+            Atrasada
           </span>
         </td>
         <td

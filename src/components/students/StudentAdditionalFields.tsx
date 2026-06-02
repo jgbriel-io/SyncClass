@@ -42,7 +42,7 @@ export function StudentAdditionalFields({
         <Input
           id="hourly_rate_valor"
           type="text"
-          placeholder={common.placeholders.gradeHint}
+          placeholder={studentsContent.formDialog.hourlyRatePlaceholder}
           {...register("hourly_rate")}
           disabled={isLoading}
         />

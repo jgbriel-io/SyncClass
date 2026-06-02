@@ -142,8 +142,7 @@ export function ActivitiesView({
   const periodActivities = useMemo(() => {
     const { from, to } = getDateRangeForPeriod(statPeriod);
     return activities.filter((a) => {
-      // Activities without due_date are always included (unscheduled)
-      if (!a.due_date) return true;
+      if (!a.due_date) return false;
       const d = a.due_date.slice(0, 10);
       return d >= from && d <= to;
     });

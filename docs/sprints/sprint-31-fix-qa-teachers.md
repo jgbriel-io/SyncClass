@@ -199,9 +199,269 @@ Sprint 28 (QA manual) identificou falhas no fluxo de redefinição de senha da a
 - `src/components/financial/FinancialSummaryCards.tsx` — refatorado: recebe `summary: FinancialSummary | undefined` em vez de `records[]`
 - `src/components/financial/FinancialView.tsx` — `useState<PeriodFilter>`, `dateRange` derivado do período, `PeriodFilter` no header
 
-**Pendente de execução em produção:**
+**Migrations aplicadas em produção:**
 
-- Migration 64 (`64_class_logs_summary_period_filter.sql`) — aplicar via Supabase Dashboard → SQL Editor antes de usar filtro de período em Aulas.
+- Migration 64 (`64_class_logs_summary_period_filter.sql`) ✅ aplicada
+- Migration 70 (`70_fix_activity_tenant_isolation_null_role.sql`) ✅ aplicada
+- Migration 71 (`71_fix_class_logs_summary_orphan_logs.sql`) ✅ aplicada
+- Migration 72 (`72_fix_log_performance_search_path.sql`) ✅ aplicada
+
+---
+
+---
+
+## Bugs Identificados em Code Review (pós-sprint)
+
+Code review do branch `feat/sprint-31-fixes-period-filter` identificou 5 bugs adicionais, todos corrigidos antes do merge.
+
+---
+
+### BUG-031-009 — `validate_activity_tenant_isolation` aceita INSERT de usuário sem perfil
+
+**Severidade:** 🔴 Crítica (segurança — bypass de isolamento multi-tenant)
+**Arquivo:** `supabase/migrations/69_fix_activity_tenant_isolation_teacher_id.sql`
+**Root cause:** Quando `auth.uid()` não tem linha correspondente em `profiles` (race condition no signup hook, falha parcial de cadastro), `SELECT INTO v_user_role` retorna `NULL`. Ambos os `IF v_user_role = 'admin'` e `IF v_user_role = 'teacher'` são falsos, e a função executa `RETURN NEW` sem qualquer verificação — o usuário pode inserir atividades com qualquer `student_id` de qualquer tenant.
+**Correção:** `IF v_user_role IS NULL THEN RAISE EXCEPTION 'Perfil de usuário não encontrado'; END IF;` adicionado antes dos checks de role. Também adicionado `SET search_path = public` que estava ausente na versão anterior.
+**Arquivos:**
+
+- `supabase/migrations/70_fix_activity_tenant_isolation_null_role.sql` — `RAISE EXCEPTION` para role NULL + `SET search_path`
+
+---
+
+### BUG-031-010 — `get_class_logs_summary` infla totais do admin com class_logs órfãos
+
+**Severidade:** 🟠 Alta (dados incorretos na visão admin)
+**Arquivo:** `supabase/migrations/64_class_logs_summary_period_filter.sql`
+**Root cause:** A função usava `LEFT JOIN students s ON s.id = cl.student_id`. Quando `p_teacher_id IS NULL` (visão admin), a condição `(p_teacher_id IS NULL OR s.teacher_id = p_teacher_id)` é sempre `true` — incluindo linhas onde `s.id IS NULL` (class_logs cujo student foi hard-deleted). Esses logs órfãos eram contabilizados em `totalClasses`, `totalPresent`, etc.
+**Correção:** `LEFT JOIN` → `INNER JOIN`. Logs sem student correspondente são automaticamente excluídos.
+**Arquivos:**
+
+- `supabase/migrations/71_fix_class_logs_summary_orphan_logs.sql` — INNER JOIN substitui LEFT JOIN
+
+---
+
+### BUG-031-011 — Atividades sem `due_date` inflavam stat cards de período
+
+**Severidade:** 🟡 Média (métricas de período incorretas)
+**Arquivo:** `src/components/activities/ActivitiesView.tsx`
+**Root cause:** `periodActivities` filtrava por `statPeriod` com `if (!a.due_date) return true` — atividades sem prazo sempre passavam o filtro, independente do período selecionado. Uma atividade criada há 6 meses sem prazo aparecia nos cards de "este mês".
+**Correção:** `return true` → `return false`. Atividades sem `due_date` não têm posição temporal e são excluídas dos stat cards de período.
+**Arquivos:**
+
+- `src/components/activities/ActivitiesView.tsx:146` — `!due_date → return false`
+
+---
+
+### BUG-031-012 — `log_performance` stub sem `SET search_path` (SECURITY DEFINER)
+
+**Severidade:** 🟡 Média (vetor de segurança — search_path hijacking)
+**Arquivo:** `supabase/migrations/66_create_log_performance_stub.sql`
+**Root cause:** Função criada com `SECURITY DEFINER` mas sem `SET search_path = public`. Um usuário com permissão de criar schemas poderia criar uma função `log_performance` em outro schema e, em sessões com `search_path` não fixo, redirecionar a chamada para sua versão rodando com os privilégios do owner original.
+**Correção:** `SET search_path = public` adicionado.
+**Arquivos:**
+
+- `supabase/migrations/72_fix_log_performance_search_path.sql` — SET search_path adicionado
+
+---
+
+### BUG-031-013 — `payment_method: null` gravado em `financial_records` de pacotes
+
+**Severidade:** 🟢 Baixa (inconsistência de dados)
+**Arquivo:** `src/hooks/usePackageClassesForm.ts`
+**Root cause:** O campo `payment_method` foi removido da UI do formulário de pacote (AbacatePay PIX é o único método), mas o valor `null` era passado diretamente para o RPC `create_class_package`. A coluna não tem constraint `NOT NULL`, então o INSERT ocorria silenciosamente com `payment_method = NULL`, quebrando relatórios que agrupam por método de pagamento.
+**Correção:** `payment_method: null` → `payment_method: "pix"` (valor fixo, já que PIX via AbacatePay é o único método suportado).
+**Arquivos:**
+
+- `src/hooks/usePackageClassesForm.ts:167` — `payment_method: "pix"`
+
+---
+
+---
+
+## Bugs Corrigidos — Identificados durante desenvolvimento do branch
+
+Bugs encontrados e corrigidos durante o desenvolvimento, identificados via commit history. Não fazem parte do escopo original da sprint nem do code review pós-sprint.
+
+---
+
+### BUG-031-014 — Hard delete bloqueado por registros já anonimizados (`is_deleted=true`)
+
+**Rotas:** `/admin/students`, `/admin/teachers`
+**Sintoma:** Tentar hard delete de aluno/professor após soft delete falhava silenciosamente — a edge function `admin-delete-user` encontrava o registro `is_deleted=true` e retornava erro de "não encontrado".
+**Root cause:** Guard queries na edge function não filtravam `is_deleted=false`. Após soft delete (que seta `is_deleted=true`), o guard encontrava o registro anonimizado e abortava.
+**Severidade:** 🔴 Crítica (hard delete inutilizável após soft delete)
+**Correção:** `.eq("is_deleted", false)` adicionado nas guard queries da edge function. `profileError` agora lança exceção em vez de toast.warning + continuar — evita chamar a edge function com state de profile inconsistente.
+**Arquivos:**
+
+- `supabase/functions/admin-delete-user/admin-delete-user.ts` — `.eq("is_deleted", false)` nas guard queries
+- `src/hooks/useStudents.ts` — `profileError` throws em vez de toast.warning
+- `src/hooks/useTeachers.ts` — idem
+
+---
+
+### BUG-031-015 — Filtro de período na overview calculado client-side
+
+**Rota:** `/admin/overview`
+**Sintoma:** Filtro de período (`createdAfter`) era calculado no frontend e passado como parâmetro. Com datasets grandes, a query trazia todos os registros e filtrava depois — sem aproveitar o índice do banco.
+**Root cause:** `useStudentsWithStatsPaginated` recebia `createdAfter` como string ISO e aplicava `.gte()` client-side após fetch completo.
+**Severidade:** 🟡 Média (performance — full table scan em datasets grandes)
+**Correção:** Filtro movido para dentro do hook — derivado do `period` recebido, aplicado via `.gte('created_at', ...)` antes do fetch.
+**Arquivos:**
+
+- `src/components/overview/OverviewView.tsx` — passa `period` em vez de `createdAfter` calculado
+- `src/hooks/useStudentDetails.ts` — `getDateRangeForPeriod` interno, `.gte()` server-side
+
+---
+
+### BUG-031-016 — Alunos anonimizados apareciam na overview
+
+**Rota:** `/admin/overview`
+**Sintoma:** Alunos com `is_deleted=true` (hard-deleted, dados anonimizados) eram listados na tabela de overview.
+**Root cause:** `useStudentsWithStatsPaginated` não filtrava `is_deleted`.
+**Severidade:** 🟠 Alta (PII — nomes anonimizados visíveis na UI)
+**Correção:** `.eq('is_deleted', false)` adicionado na query.
+**Arquivos:**
+
+- `src/hooks/useStudentDetails.ts` — `.eq('is_deleted', false)`
+
+---
+
+### BUG-031-017 — Busca na overview client-side; sem filtro de status
+
+**Rota:** `/admin/overview`
+**Sintoma:** Campo de busca filtrava o array já retornado pela query — com 1000 alunos, trazia todos e descartava 990 no frontend. Sem filtro de status (ativo/inativo).
+**Root cause:** Filtro de busca aplicado no `useMemo` sobre o resultado completo da query.
+**Severidade:** 🟡 Média (performance + feature ausente)
+**Correção:** Busca movida server-side via `.ilike('name', '%...%')`; filtro de status adicionado via `Select` em `OverviewFilters`.
+**Arquivos:**
+
+- `src/hooks/useStudentDetails.ts` — `.ilike()` server-side + parâmetro `status`
+- `src/components/filters/OverviewFilters.tsx` — campo status adicionado
+- `src/components/filters/filterDefaults.ts` — `status: "all"` em `defaultOverviewFilters`
+- `src/content/filters.ts` — labels `all`/`active`/`inactive`
+
+---
+
+### BUG-031-018 — Campos não limpos ao fechar `SendActivityDialog`
+
+**Rota:** `/teacher` e `/admin` → aba Atividades
+**Sintoma:** Ao fechar e reabrir o dialog de enviar atividade, `student_id`, `title` e `description` mantinham os valores da sessão anterior.
+**Root cause:** `reset()` do react-hook-form era chamado sem passar os valores default explícitos — campos controlados não eram zerados.
+**Severidade:** 🟡 Média (UX — dados residuais no formulário)
+**Correção:** `reset({ student_id: "", title: "", description: "" })` adicionado no handler `onOpenChange`.
+**Arquivos:**
+
+- `src/components/activities/SendActivityDialog.tsx` — `reset()` com defaultValues explícitos
+
+---
+
+### BUG-031-019 — Status `pendente` exibido como texto raw lowercase
+
+**Rota:** Tabela de atividades
+**Sintoma:** Atividades com status `pendente` sem prazo exibiam "pendente" minúsculo na badge de status. Atividades pendentes com prazo vencido exibiam "pendente" em vez de "Atrasada".
+**Root cause:** `getActivityDisplayStatus` não tratava o caso `status === 'pendente'` — caia no fallback que retornava o valor raw.
+**Severidade:** 🟢 Baixa (UX — label incorreto)
+**Correção:** Case `'pendente'` adicionado: sem prazo → `"Pendente"`, com prazo vencido → `"Atrasada"`.
+**Arquivos:**
+
+- `src/hooks/useActivities.ts` — case `pendente` em `getActivityDisplayStatus`
+- `src/components/activities/__snapshots__/ActivitiesTableRow.test.tsx.snap` — snapshot atualizado
+
+---
+
+### BUG-031-020 — Máscara BR aplicada a telefone de alunos estrangeiros
+
+**Rota:** `/teacher` e `/admin` → formulário de aluno
+**Sintoma:** Alunos com `nationality !== 'BR'` tinham o número de telefone formatado com máscara `(XX) XXXXX-XXXX` no `defaultValues` e no `reset()` — corrompendo números internacionais no formulário.
+**Root cause:** `StudentFormDialog` aplicava `phoneMask()` incondicionalmente ao popular o formulário.
+**Severidade:** 🟡 Média (dado corrompido ao editar aluno estrangeiro)
+**Correção:** `phoneMask()` aplicado condicionalmente apenas quando `nationality === 'BR'`.
+**Arquivos:**
+
+- `src/components/students/StudentFormDialog.tsx` — guard `nationality === 'BR'` antes de `phoneMask()`
+
+---
+
+### BUG-031-021 — Trigger `prevent_student_hourly_rate_manipulation` crashava em todo update
+
+**Rota:** Qualquer edição de aluno com `hourly_rate`
+**Sintoma:** Todo update de `hourly_rate` falhava com erro de função inexistente. Adicionalmente, o guard comparava `OLD.teacher_id` com `auth.uid()` diretamente — UUIDs de tabelas diferentes.
+**Root causes:**
+
+1. Trigger referenciava tabela `user_roles` que foi dropada em migração anterior.
+2. `OLD.teacher_id` (FK para `teachers.id`) comparado com `auth.uid()` (FK para `auth.users.id`) — sempre `false`, bloqueando edições legítimas.
+   **Severidade:** 🔴 Crítica (edição de `hourly_rate` completamente quebrada)
+   **Correção:** Migration 67 substituiu `user_roles` por `profiles.role`. Migration 68 corrigiu a comparação via `v_profile_teacher_id` (lookup em `profiles WHERE user_id = auth.uid()`). `StudentFormDialog` passou a usar `toFixed(2)` para exibir "100,00" em vez de "100".
+   **Arquivos:**
+
+- `supabase/migrations/67_fix_prevent_hourly_rate_trigger_user_roles.sql`
+- `supabase/migrations/68_fix_hourly_rate_trigger_teacher_id_comparison.sql`
+- `src/components/students/StudentFormDialog.tsx` — `toFixed(2)` no `defaultValues` de `hourly_rate`
+
+---
+
+### BUG-031-022 — Tenant isolation de atividades comparava `students.teacher_id` com `auth.uid()`
+
+**Contexto:** Trigger `validate_activity_tenant_isolation` (base do BUG-031-009)
+**Sintoma:** Professores não conseguiam criar atividades — trigger sempre bloqueava com "Você não pode criar atividades para alunos de outros professores".
+**Root cause:** `students.teacher_id` é FK para `teachers.id`, não para `auth.users.id`. Comparar com `auth.uid()` retornava sempre `false`.
+**Severidade:** 🔴 Crítica (criação de atividades completamente quebrada para professores)
+**Correção:** Lookup em `profiles WHERE user_id = auth.uid()` para obter `v_profile_teacher_id`, depois comparar `students.teacher_id = v_profile_teacher_id`.
+**Arquivos:**
+
+- `supabase/migrations/69_fix_activity_tenant_isolation_teacher_id.sql`
+
+---
+
+### BUG-031-023 — `payment_method` exibido como valor raw do banco na tabela financeira
+
+**Rota:** `/teacher` e `/admin` → aba Financeiro
+**Sintoma:** Coluna "Método" exibia `pix`, `credit_card`, `bank_transfer` em vez de "PIX", "Cartão de Crédito", "Transferência". Registros do AbacatePay exibiam coluna vazia (campo `payment_provider` não mapeado).
+**Root cause:** `FinancialTableRow` renderizava `record.payment_method` diretamente sem label mapping. Caso `payment_provider === 'abacate_pay'` não tinha tratamento.
+**Severidade:** 🟢 Baixa (UX — labels ilegíveis)
+**Correção:** Map `payment_method → label` adicionado. Case `abacate_pay` → "Pix - AbacatePay".
+**Arquivos:**
+
+- `src/components/financial/FinancialTableRow.tsx` — map de labels + case AbacatePay
+
+---
+
+### BUG-031-024 — Título de aulas individuais de pacote em preto+bold na tabela
+
+**Rota:** `/teacher` e `/admin` → aba Aulas
+**Sintoma:** Aulas individuais dentro de um pacote exibiam o título do pacote em preto+negrito, identicamente ao título de aulas avulsas — impossível distinguir visualmente.
+**Root cause:** `ClassesTableRow` não diferenciava o estilo visual entre aula avulsa e aula de pacote.
+**Severidade:** 🟢 Baixa (UX — distinção visual ausente)
+**Correção:** Título de aula de pacote renderizado em cinza sem negrito.
+**Arquivos:**
+
+- `src/components/classes/ClassesTableRow.tsx` — estilo condicional por tipo de aula
+
+---
+
+### BUG-031-025 — Nome do aluno duplicado na descrição do registro financeiro de pacote
+
+**Rota:** Criação de pacote de aulas
+**Sintoma:** Registro financeiro gerado pelo pacote tinha descrição `"João Silva — Pacote mensal - 4 aula(s) - Junho 2026"` — nome do aluno redundante (já aparece na coluna Aluno da tabela).
+**Root cause:** `usePackageClassesForm` concatenava o nome do aluno na descrição.
+**Severidade:** 🟢 Baixa (UX — descrição verbosa e redundante)
+**Correção:** Nome do aluno removido da descrição.
+**Arquivos:**
+
+- `src/hooks/usePackageClassesForm.ts` — descrição simplificada para `"Pacote mensal - N aula(s) - Mês Ano"`
+
+---
+
+### BUG-031-026 — `setPaymentMethod` residual chamado no `resetForm` de `PackageClassesDialog`
+
+**Rota:** Dialog de criação de pacote de aulas
+**Sintoma:** Console warning ao fechar o dialog — `setPaymentMethod` não era mais um estado existente (removido junto com o seletor de método de pagamento).
+**Root cause:** Chamada `setPaymentMethod(null)` esquecida no `resetForm` após remoção do estado.
+**Severidade:** 🟢 Baixa (código morto — runtime warning)
+**Correção:** Chamada residual removida.
+**Arquivos:**
+
+- `src/components/classes/PackageClassesDialog.tsx` — `setPaymentMethod(null)` removido de `resetForm`
 
 ---
 
@@ -228,8 +488,21 @@ Sprint 28 (QA manual) identificou falhas no fluxo de redefinição de senha da a
 - [x] Alunos — filtro de período altera card "Novos" e label dinâmico
 - [x] Financeiro — filtro de período altera cards de resumo (RPC server-side)
 - [x] Atividades — cards exibem estado atual de todas as atividades (sem filtro de período)
-- [ ] Aulas — filtro de período altera cards de resumo _(pendente: aplicar migration 64 em produção)_
-- [x] `npm run type-check` — zero erros (pós refactor)
+- [x] Aulas — filtro de período altera cards de resumo (migration 64 aplicada)
+- [x] Atividades sem due_date excluídas dos stat cards de período (BUG-031-011)
+- [x] INSERT de atividade sem perfil → RAISE EXCEPTION (BUG-031-009)
+- [x] Totais admin de aulas não incluem logs órfãos (BUG-031-010)
+- [x] Pacote de aulas grava payment_method = "pix" (BUG-031-013)
+- [x] Hard delete após soft delete funciona sem bloqueio por `is_deleted=true` (BUG-031-014)
+- [x] Overview — alunos anonimizados ocultos (BUG-031-016)
+- [x] Overview — busca server-side + filtro de status funcionando (BUG-031-017)
+- [x] SendActivityDialog — campos limpos ao reabrir (BUG-031-018)
+- [x] Status "Pendente"/"Atrasada" exibido corretamente (BUG-031-019)
+- [x] Aluno estrangeiro — telefone sem máscara BR no formulário (BUG-031-020)
+- [x] `hourly_rate` editável sem crash de trigger (BUG-031-021)
+- [x] Professores conseguem criar atividades (BUG-031-022)
+- [x] Método de pagamento com label legível na tabela financeira (BUG-031-023)
+- [x] `npm run type-check` — zero erros (pós code review fixes)
 - [x] `npm run test` — 287 testes passando
 
 ## References

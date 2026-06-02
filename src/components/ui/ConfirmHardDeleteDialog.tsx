@@ -76,11 +76,12 @@ export function ConfirmHardDeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         {checkboxLabel && (
-          <div className="flex items-center gap-2 py-1">
+          <div className="flex items-start gap-2 py-1">
             <Checkbox
               id="hard-delete-confirm"
               checked={checked}
               onCheckedChange={(v) => setChecked(!!v)}
+              className="mt-0.5"
             />
             <Label
               htmlFor="hard-delete-confirm"

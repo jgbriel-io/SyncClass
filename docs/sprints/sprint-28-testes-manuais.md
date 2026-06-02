@@ -111,10 +111,10 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Overview (`/admin/overview`)
 
-- [ ] Tabela de todos os alunos da plataforma carrega (não agrupada por professor — visão global)
-- [ ] Colunas: Nome, Professor, Status, Total Aulas, Aulas Mês, Valor Mês, Saldo
-- [ ] Métricas por aluno corretas (aulas e valores batem com o que está no financeiro/aulas)
-- [ ] Busca e filtros de status funcionam
+- [x] Tabela de todos os alunos da plataforma carrega (não agrupada por professor — visão global)
+- [x] Colunas: Nome, Professor, Status, Total Aulas, Aulas Mês, Valor Mês, Saldo
+- [x] Métricas por aluno corretas (aulas e valores batem com o que está no financeiro/aulas)
+- [x] Busca e filtros de status funcionam
 
 ---
 
@@ -128,7 +128,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Card de previsão de faturamento mensal exibe valor correto
 - [x] Lista de aniversariantes do mês exibe alunos com aniversário no mês atual
 - [x] Lista de próximos vencimentos exibe cobranças com vencimento próximo
-- [ ] Seção "Aulas de Hoje" exibe aulas agendadas para o dia atual
+- [x] Seção "Aulas de Hoje" exibe aulas agendadas para o dia atual
 - [x] Contador de avaliações pendentes exibe aulas passadas sem attendance preenchido
 - [x] Gráfico de crescimento de alunos renderiza com dados
 - [x] Filtro do gráfico (3 / 6 / 12 meses) muda os dados exibidos
@@ -156,26 +156,27 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 - [x] Lista aulas do professor
 - [x] Criar aula simples (data, hora, duração, aluno, presença) → aparece
-- [ ] Criar pacote de aulas (cria múltiplas aulas + 1 cobrança vinculada)
-- [ ] Editar aula (data, nota, feedback, duração)
-- [ ] Registrar falta (presença = false)
-- [ ] Deletar aula
-- [ ] Filtro por aluno e período funcionam
+- [x] Criar pacote de aulas (cria múltiplas aulas + 1 cobrança vinculada)
+- [x] Editar aula (data, nota, feedback, duração)
+- [x] Registrar falta (presença = false)
+- [x] Registrar presença (presença = true)
+- [x] Deletar aula
+- [x] Filtro por aluno e período funcionam
 
 ### Financial (`/teacher/financial`)
 
-- [ ] Lista cobranças apenas dos alunos do professor
-- [ ] Criar cobrança individual → aparece na lista
-- [ ] Criar cobrança de pacote (vincula N aulas) → aparece corretamente
-- [ ] Editar cobrança pendente
+- [x] Lista cobranças apenas dos alunos do professor
+- [x] Criar cobrança individual → aparece na lista
+- [x] Criar cobrança de pacote (vincula N aulas) → aparece corretamente
+- [x] Editar cobrança pendente
 - [ ] Cancelar cobrança
 - [ ] Abonar cobrança
-- [ ] Timeline de transações exibe histórico
-- [ ] Cobrança `pago` com `payment_provider='abacate_pay'` → botão "Reembolso" visível
+- [x] Timeline de transações exibe histórico
+- [x] Cobrança `pago` com `payment_provider='abacate_pay'` → botão "Reembolso" visível
 - [ ] Botão "Reembolso" (AbacatePay) → dialog exibe campo motivo + botão "Reembolsar via PIX"
 - [ ] Confirmar reembolso AbacatePay → toast "Reembolso PIX processado com sucesso!", status → `extornado`
-- [ ] Cobrança `pago` sem `payment_provider` (manual/legado) → dialog exibe instrução manual + botão "Confirmar reembolso"
-- [ ] Confirmar reembolso manual → toast "Reembolso registrado com sucesso!", status → `extornado`
+- [x] Cobrança `pago` sem `payment_provider` (manual/legado) → dialog exibe instrução manual + botão "Confirmar reembolso"
+- [x] Confirmar reembolso manual → toast "Reembolso registrado com sucesso!", status → `extornado`
 - [ ] Cobrança com aula vinculada (`attendance != null`) → aviso destrutivo extra exibido no dialog de reembolso
 
 ### Settings — Pagamentos (`/settings` ou `/teacher/settings`)
@@ -185,23 +186,24 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [ ] Salvar API key válida → badge muda para "Configurado", webhook URL exibida
 - [ ] Webhook URL copiada com botão → toast de confirmação
 - [ ] Clicar "Editar" novamente → campo começa vazio (não mostra ciphertext)
-- [ ] Remover integração → badge volta para "Não configurado", webhook URL some
+- [x] Remover integração → badge volta para "Não configurado", webhook URL some
 - [ ] Professor sem API key → aluno vê mensagem amigável no checkout (não crash)
 
 ### Activities (`/teacher/activities`)
 
-- [ ] Lista atividades do professor
-- [ ] Criar atividade (título, prazo, aluno) → aparece
-- [ ] Editar atividade
-- [ ] Deletar atividade
+- [x] Lista atividades do professor
+- [x] Criar atividade (título, prazo, aluno) → aparece
+- [x] Editar atividade
+- [x] Deletar atividade
 - [ ] Ver submissão do aluno (arquivo)
 - [ ] Corrigir atividade (nota + feedback + arquivo de correção) → aluno vê correção
 
 ### Overview (`/teacher/overview`)
 
-- [ ] Tabela dos próprios alunos com métricas carrega (Visão Geral dos Alunos — não é desempenho do professor)
-- [ ] Colunas: Nome, Status, Total Aulas, Aulas Mês, Valor Mês, Saldo
-- [ ] Valores batem com o que está em `/teacher/financial` e `/teacher/classes`
+- [x] Tabela dos próprios alunos com métricas carrega (Visão Geral dos Alunos)
+- [x] Colunas: Nome, Status, Total Aulas, Aulas Mês, Valor Mês, Saldo
+- [x] Valores batem com o que está em `/teacher/financial` e `/teacher/classes`
+- [x] Busca e filtros de status funcionam
 
 ---
 

@@ -43,6 +43,24 @@ const statusLabels: Record<string, string> = {
   cancelado: financial.tableRow.statusCanceled,
 };
 
+const paymentMethodLabels: Record<string, string> = {
+  pix: "PIX",
+  cartao: "Cartão",
+  dinheiro: "Dinheiro",
+  transferencia: "Transferência",
+  outro: "Outro",
+};
+
+function getPaymentMethodLabel(
+  payment_provider: string | null | undefined,
+  payment_method: string | null | undefined
+): string {
+  if (payment_provider === "abacate_pay") return "Pix - AbacatePay";
+  if (payment_method)
+    return paymentMethodLabels[payment_method] ?? payment_method;
+  return "—";
+}
+
 interface FinancialTableRowProps {
   record: FinancialRecordWithRelations & { actualStatus: string };
   showTeacherColumn: boolean;
@@ -184,9 +202,15 @@ export function FinancialTableRow({
       >
         <p
           className="text-xs text-muted-foreground truncate"
-          title={record.payment_method || "—"}
+          title={getPaymentMethodLabel(
+            record.payment_provider,
+            record.payment_method
+          )}
         >
-          {record.payment_method || "—"}
+          {getPaymentMethodLabel(
+            record.payment_provider,
+            record.payment_method
+          )}
         </p>
       </td>
 

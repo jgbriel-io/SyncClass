@@ -91,15 +91,17 @@ export function StudentFormDialog({
       state: student?.state || "",
       city: student?.city || "",
       phone: student?.phone
-        ? isMasked(student.phone)
+        ? student.country && student.country !== "Brasil"
           ? student.phone
-          : student.phone.includes("(")
+          : isMasked(student.phone)
             ? student.phone
-            : maskPhone(student.phone)
+            : student.phone.includes("(")
+              ? student.phone
+              : maskPhone(student.phone)
         : "",
       email: student?.email || "",
       hourly_rate: student?.hourly_rate
-        ? String(student.hourly_rate).replace(".", ",")
+        ? Number(student.hourly_rate).toFixed(2).replace(".", ",")
         : "",
       pay_day: student?.pay_day ? String(student.pay_day) : "",
       origin: student?.origin || undefined,
@@ -138,11 +140,13 @@ export function StudentFormDialog({
 
     if (student) {
       const formattedPhone = student.phone
-        ? isMasked(student.phone)
+        ? student.country && student.country !== "Brasil"
           ? student.phone
-          : student.phone.includes("(")
+          : isMasked(student.phone)
             ? student.phone
-            : maskPhone(student.phone)
+            : student.phone.includes("(")
+              ? student.phone
+              : maskPhone(student.phone)
         : "";
       reset({
         name: student.name,
@@ -152,7 +156,7 @@ export function StudentFormDialog({
         phone: formattedPhone,
         email: student.email || "",
         hourly_rate: student.hourly_rate
-          ? String(student.hourly_rate).replace(".", ",")
+          ? Number(student.hourly_rate).toFixed(2).replace(".", ",")
           : "",
         pay_day: student.pay_day ? String(student.pay_day) : "",
         origin: student.origin || undefined,

@@ -277,6 +277,9 @@ export interface StudentWithStats extends Student {
 export interface UseStudentsWithStatsPaginatedOptions {
   pageSize?: number;
   teacherId?: string | null;
+  search?: string;
+  status?: "all" | "ativo" | "inativo";
+  createdAfter?: string | null;
 }
 
 export interface UseStudentsWithStatsPaginatedResult {
@@ -297,9 +300,20 @@ export function useStudentsWithStatsPaginated(
   const [page, setPage] = useState(0);
   const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
   const teacherId = options?.teacherId;
+  const search = options?.search?.trim() ?? "";
+  const status = options?.status ?? "all";
+  const createdAfter = options?.createdAfter ?? null;
 
   const query = useQuery({
-    queryKey: [QK.STUDENTS_WITH_STATS_PAGINATED, page, pageSize, teacherId],
+    queryKey: [
+      QK.STUDENTS_WITH_STATS_PAGINATED,
+      page,
+      pageSize,
+      teacherId,
+      search,
+      status,
+      createdAfter,
+    ],
     queryFn: async () => {
       const from = page * pageSize;
       const to = from + pageSize - 1;
@@ -308,11 +322,18 @@ export function useStudentsWithStatsPaginated(
       if (teacherId) {
         q = q.eq("teacher_id", teacherId);
       }
+      q = q.eq("is_deleted", false);
+      if (search) {
+        q = q.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+      }
+      if (status !== "all") {
+        q = q.eq("status", status);
+      }
+      if (createdAfter) {
+        q = q.gte("created_at", createdAfter);
+      }
 
-      q = q
-        .eq("status", "ativo")
-        .order("name", { ascending: true })
-        .range(from, to);
+      q = q.order("name", { ascending: true }).range(from, to);
 
       const { data: students, error: studentsError, count } = await q;
 

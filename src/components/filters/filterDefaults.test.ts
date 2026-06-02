@@ -55,6 +55,7 @@ describe("filterDefaults", () => {
     it("should have correct default values", () => {
       expect(defaultOverviewFilters).toEqual({
         search: "",
+        status: "all",
         period: "all",
         teacherId: "all",
         studentId: "all",

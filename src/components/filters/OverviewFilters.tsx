@@ -19,8 +19,11 @@ import {
 export type OverviewPeriodFilter = "all" | "7" | "30" | "90";
 export type OverviewSortBy = "name_asc" | "name_desc" | "recent" | "oldest";
 
+export type OverviewStatusFilter = "all" | "ativo" | "inativo";
+
 export interface OverviewFiltersState {
   search: string;
+  status: OverviewStatusFilter;
   period: OverviewPeriodFilter;
   teacherId: string;
   studentId: string;
@@ -57,6 +60,8 @@ export function OverviewFilters({
   const [isOpen, setIsOpen] = useState(false);
 
   const hasActiveFilters =
+    filters.search !== "" ||
+    filters.status !== "all" ||
     filters.period !== "all" ||
     (showTeacherFilter && filters.teacherId !== "all") ||
     filters.studentId !== "all" ||
@@ -84,6 +89,32 @@ export function OverviewFilters({
 
         {/* Filtros Básicos + Botões */}
         <div className="grid grid-cols-2 gap-2 tablet:flex tablet:flex-row tablet:flex-wrap tablet:items-end">
+          {/* Status */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">
+              {filtersContent.labels.status}
+            </span>
+            <Select
+              value={filters.status}
+              onValueChange={(v) =>
+                onChange({ ...filters, status: v as OverviewStatusFilter })
+              }
+            >
+              <SelectTrigger className="w-full tablet:w-[150px] pl-3 text-left">
+                <SelectValue placeholder={common.placeholders.select} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{filtersContent.labels.all}</SelectItem>
+                <SelectItem value="ativo">
+                  {filtersContent.labels.active}
+                </SelectItem>
+                <SelectItem value="inativo">
+                  {filtersContent.labels.inactive}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Período */}
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">
