@@ -37,6 +37,7 @@ export const defaultFinancialFilters: FinancialFiltersState = {
 
 export const defaultOverviewFilters: OverviewFiltersState = {
   search: "",
+  status: "all",
   period: "all",
   teacherId: "all",
   studentId: "all",

@@ -277,6 +277,8 @@ export interface StudentWithStats extends Student {
 export interface UseStudentsWithStatsPaginatedOptions {
   pageSize?: number;
   teacherId?: string | null;
+  search?: string;
+  status?: "all" | "ativo" | "inativo";
 }
 
 export interface UseStudentsWithStatsPaginatedResult {
@@ -297,9 +299,18 @@ export function useStudentsWithStatsPaginated(
   const [page, setPage] = useState(0);
   const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
   const teacherId = options?.teacherId;
+  const search = options?.search?.trim() ?? "";
+  const status = options?.status ?? "ativo";
 
   const query = useQuery({
-    queryKey: [QK.STUDENTS_WITH_STATS_PAGINATED, page, pageSize, teacherId],
+    queryKey: [
+      QK.STUDENTS_WITH_STATS_PAGINATED,
+      page,
+      pageSize,
+      teacherId,
+      search,
+      status,
+    ],
     queryFn: async () => {
       const from = page * pageSize;
       const to = from + pageSize - 1;
@@ -308,11 +319,14 @@ export function useStudentsWithStatsPaginated(
       if (teacherId) {
         q = q.eq("teacher_id", teacherId);
       }
+      if (search) {
+        q = q.ilike("name", `%${search}%`);
+      }
+      if (status !== "all") {
+        q = q.eq("status", status);
+      }
 
-      q = q
-        .eq("status", "ativo")
-        .order("name", { ascending: true })
-        .range(from, to);
+      q = q.order("name", { ascending: true }).range(from, to);
 
       const { data: students, error: studentsError, count } = await q;
 

@@ -68,6 +68,8 @@ export function OverviewView({
   } = useStudentsWithStatsPaginated({
     pageSize: PAGE_SIZE,
     teacherId: autoTeacherId,
+    search: filters.search,
+    status: filters.status,
   });
 
   const { data: teachers = [] } = useTeachers();
@@ -84,15 +86,6 @@ export function OverviewView({
     let result = students.filter((student) => {
       if (filters.studentId !== "all" && student.id !== filters.studentId)
         return false;
-
-      const searchLower = filters.search.toLowerCase().trim();
-      const searchDigits = searchLower.replace(/\D/g, "");
-      const matchesSearch =
-        !searchLower ||
-        (student.name || "").toLowerCase().includes(searchLower) ||
-        (student.email || "").toLowerCase().includes(searchLower) ||
-        (student.phone || "").replace(/\D/g, "").includes(searchDigits);
-      if (!matchesSearch) return false;
 
       if (
         showTeacherFilter &&

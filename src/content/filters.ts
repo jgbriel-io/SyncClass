@@ -7,6 +7,9 @@ export const filters = {
     sort: "Ordenar",
     privilege: "Privilégio",
     specialization: "Especialidade",
+    all: "Todos",
+    active: "Ativo",
+    inactive: "Inativo",
   },
 
   // Placeholders
