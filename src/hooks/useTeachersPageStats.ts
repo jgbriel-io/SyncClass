@@ -1,10 +1,15 @@
 import { useMemo } from "react";
-import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Teacher } from "@/hooks/useTeachers";
 import { Student } from "@/hooks/useStudents";
 import { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import { TeachersFiltersState } from "@/components/filters/TeachersFilters";
+import {
+  type PeriodFilter,
+  getDateRangeForPeriod,
+} from "@/lib/utils/periodFilter";
+
+type TeacherWithSpec = Teacher & { specialization?: string | null };
 
 export function useTeachersPageStats(
   allTeachers: Teacher[],
@@ -12,7 +17,8 @@ export function useTeachersPageStats(
   allClassLogs: ClassLogWithStudent[],
   allFinancialRecords: FinancialRecordWithRelations[],
   teachers: Teacher[],
-  filters: TeachersFiltersState
+  filters: TeachersFiltersState,
+  period: PeriodFilter = "month"
 ) {
   const studentCountByTeacher = useMemo(() => {
     const map = new Map<string, number>();
@@ -49,13 +55,14 @@ export function useTeachersPageStats(
   const specializations = useMemo(() => {
     const set = new Set<string>();
     allTeachers.forEach((t) => {
-      const s = (t as Teacher & { specialization?: string | null })
-        .specialization;
+      const s = (t as TeacherWithSpec).specialization;
       if (s?.trim()) set.add(s.trim());
     });
     return Array.from(set).sort();
   }, [allTeachers]);
 
+  // Tech debt: filters only current page (server-paginated `teachers`, not `allTeachers`)
+  // Full-dataset client filtering would require passing allTeachers here instead
   const filteredTeachers = useMemo(() => {
     let result = teachers.filter((teacher) => {
       const searchLower = filters.search.toLowerCase().trim();
@@ -92,21 +99,20 @@ export function useTeachersPageStats(
   }, [teachers, filters]);
 
   const teachersStats = useMemo(() => {
-    const now = new Date();
-    const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
-    const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+    const { from, to } = getDateRangeForPeriod(period);
     return {
       total: allTeachers.length,
       ativos: allTeachers.filter((t) => (t.status ?? "ativo") === "ativo")
         .length,
       inativos: allTeachers.filter((t) => t.status === "inativo").length,
+      // novos: global platform stat (allTeachers), not scoped to current page filters
       novos: allTeachers.filter((t) => {
         if (!t.created_at) return false;
         const d = String(t.created_at).split("T")[0];
-        return d >= monthStart && d <= monthEnd;
+        return d >= from && d <= to;
       }).length,
     };
-  }, [allTeachers]);
+  }, [allTeachers, period]);
 
   return {
     studentCountByTeacher,
