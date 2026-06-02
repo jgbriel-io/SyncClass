@@ -155,7 +155,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 ### Classes (`/teacher/classes`)
 
 - [x] Lista aulas do professor
-- [ ] Criar aula simples (data, hora, duração, aluno, presença) → aparece
+- [x] Criar aula simples (data, hora, duração, aluno, presença) → aparece
 - [ ] Criar pacote de aulas (cria múltiplas aulas + 1 cobrança vinculada)
 - [ ] Editar aula (data, nota, feedback, duração)
 - [ ] Registrar falta (presença = false)
