@@ -300,7 +300,7 @@ export function useStudentsWithStatsPaginated(
   const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
   const teacherId = options?.teacherId;
   const search = options?.search?.trim() ?? "";
-  const status = options?.status ?? "ativo";
+  const status = options?.status ?? "all";
 
   const query = useQuery({
     queryKey: [
@@ -320,7 +320,7 @@ export function useStudentsWithStatsPaginated(
         q = q.eq("teacher_id", teacherId);
       }
       if (search) {
-        q = q.ilike("name", `%${search}%`);
+        q = q.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
       }
       if (status !== "all") {
         q = q.eq("status", status);

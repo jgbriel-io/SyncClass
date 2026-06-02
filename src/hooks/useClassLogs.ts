@@ -223,7 +223,7 @@ function enrichWithPackageFinancial(
     const links = (log as Record<string, unknown>)
       .financial_record_class_logs as PackageLink[] | null;
     const frId = links?.[0]?.financial_record_id;
-    if (frId) {
+    if (frId && log.class_date) {
       const existing = packageDates.get(frId) ?? [];
       packageDates.set(frId, [...existing, log.class_date]);
     }
