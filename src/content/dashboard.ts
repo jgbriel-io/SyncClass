@@ -10,7 +10,8 @@ export const dashboard = {
     quickActionsTitle: "Ações Rápidas",
     quickActions: {
       registerStudent: "Cadastrar Aluno",
-      registerClass: "Registrar Aula",
+      registerClass: "Nova Aula",
+      createPackage: "Novo Pacote",
       viewCharges: "Visualizar cobranças",
       overview: "Visão Geral",
       registerTeacher: "Cadastrar professor",

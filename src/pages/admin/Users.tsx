@@ -32,6 +32,8 @@ import { TABLE_MIN_W as USER_TABLE_MIN_W } from "@/components/users/UsersTableRo
 import { UserDetailSheet } from "@/components/admin/UserDetailSheet";
 import { UsersTableHeader } from "@/components/users/UsersTableHeader";
 import { UsersStatsCards } from "@/components/users/UsersStatsCards";
+import { PeriodFilter as PeriodFilterWidget } from "@/components/ui/period-filter";
+import { type PeriodFilter } from "@/lib/utils/periodFilter";
 import { common } from "@/content";
 import { useUsersFilter } from "@/hooks/useUsersFilter";
 import {
@@ -44,6 +46,7 @@ export default function UsersPage() {
     ...defaultUsersFilters,
     status: "active",
   });
+  const [period, setPeriod] = useState<PeriodFilter>("month");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -91,7 +94,7 @@ export default function UsersPage() {
   } = useUsersPaginated({ pageSize: 10, filters });
   const { data: students = [] } = useStudents();
   const { data: teachers = [] } = useTeachers();
-  const { data: usersStats } = useUsersStats();
+  const { data: usersStats } = useUsersStats(period);
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -231,15 +234,18 @@ export default function UsersPage() {
             Gerencie usuários e privilégios
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setSelectedUser(null);
-            setIsFormOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Usuário
-        </Button>
+        <div className="flex items-center gap-2">
+          <PeriodFilterWidget value={period} onChange={setPeriod} />
+          <Button
+            onClick={() => {
+              setSelectedUser(null);
+              setIsFormOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Usuário
+          </Button>
+        </div>
       </div>
 
       {/* Cards informativos */}
@@ -248,7 +254,8 @@ export default function UsersPage() {
           total={usersStats.total}
           active={usersStats.active}
           inactive={usersStats.inactive}
-          newThisMonth={usersStats.newThisMonth}
+          novos={usersStats.novos}
+          period={period}
         />
       )}
 

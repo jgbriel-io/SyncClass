@@ -7,6 +7,9 @@ export const teachers = {
     statActive: "Ativos",
     statInactive: "Inativos",
     statGrowth: "Crescimento",
+    statNew: "Novos este mês",
+    statNewSemester: "Novos este semestre",
+    statNewYear: "Novos este ano",
   },
 
   table: {

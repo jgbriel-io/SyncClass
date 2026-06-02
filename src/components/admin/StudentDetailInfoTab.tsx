@@ -20,10 +20,27 @@ interface StudentDetailInfoTabProps {
 
 export function StudentDetailInfoTab({ student }: StudentDetailInfoTabProps) {
   const hourlyRate = student.hourly_rate;
-  const classesPerWeek = student.classes_per_week;
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+
+  // Calcular aulas/semana com base nas últimas 8 semanas de class_logs reais
+  const classesPerWeekCalc = (() => {
+    const logs = student.classLogs ?? [];
+    if (logs.length === 0) return null;
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() - 56); // 8 semanas
+    const recent = logs.filter((l) => new Date(l.class_date) >= cutoff);
+    if (recent.length === 0) return null;
+    // Span real: do mais antigo ao mais recente dentro da janela
+    const dates = recent.map((l) => new Date(l.class_date).getTime());
+    const spanDays = Math.max(
+      1,
+      (Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24)
+    );
+    const spanWeeks = Math.max(1, spanDays / 7);
+    return Math.round(recent.length / spanWeeks);
+  })();
 
   const monthlyFromCharges =
     student.financialRecords?.reduce((sum, r) => {
@@ -36,8 +53,8 @@ export function StudentDetailInfoTab({ student }: StudentDetailInfoTabProps) {
   const monthlyTotal =
     monthlyFromCharges > 0
       ? monthlyFromCharges
-      : hourlyRate != null && classesPerWeek != null
-        ? hourlyRate * classesPerWeek * 4
+      : hourlyRate != null && classesPerWeekCalc != null
+        ? hourlyRate * classesPerWeekCalc * 4
         : null;
 
   return (
@@ -146,7 +163,8 @@ export function StudentDetailInfoTab({ student }: StudentDetailInfoTabProps) {
               },
               {
                 label: common.labels.classesPerWeek,
-                value: classesPerWeek != null ? String(classesPerWeek) : "—",
+                value:
+                  classesPerWeekCalc != null ? String(classesPerWeekCalc) : "—",
               },
               {
                 label: common.labels.monthlyTotal,

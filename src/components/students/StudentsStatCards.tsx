@@ -1,5 +1,6 @@
 import { Users, UserCheck, UserX, TrendingUp } from "lucide-react";
 import { students as studentsContent } from "@/content";
+import { type PeriodFilter } from "@/lib/utils/periodFilter";
 
 interface StudentsStats {
   totalStudents: number;
@@ -10,9 +11,19 @@ interface StudentsStats {
 
 interface StudentsStatCardsProps {
   stats: StudentsStats;
+  period?: PeriodFilter;
 }
 
-export function StudentsStatCards({ stats }: StudentsStatCardsProps) {
+function newStudentsLabel(period: PeriodFilter): string {
+  if (period === "semester") return studentsContent.view.statNewSemester;
+  if (period === "year") return studentsContent.view.statNewYear;
+  return studentsContent.view.statNew;
+}
+
+export function StudentsStatCards({
+  stats,
+  period = "month",
+}: StudentsStatCardsProps) {
   const cards = [
     {
       label: studentsContent.view.statTotal,
@@ -36,7 +47,7 @@ export function StudentsStatCards({ stats }: StudentsStatCardsProps) {
       bg: "bg-muted",
     },
     {
-      label: studentsContent.view.statNew,
+      label: newStudentsLabel(period),
       value: stats.newStudentsThisMonth,
       icon: TrendingUp,
       color: "text-primary",

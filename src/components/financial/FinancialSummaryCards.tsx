@@ -1,35 +1,22 @@
 import { DollarSign } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { financial as financialContent } from "@/content";
-import type { FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
-import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 
-interface FinancialSummaryCardsProps {
-  records: FinancialRecordWithRelations[];
+interface FinancialSummary {
+  totalPaid: number;
+  totalPending: number;
+  totalOverdue: number;
+  totalReceivable: number;
 }
 
-export function FinancialSummaryCards({ records }: FinancialSummaryCardsProps) {
-  const recordsWithActualStatus = records.map((record) => ({
-    ...record,
-    actualStatus: getFinancialActualStatus(record),
-  }));
+interface FinancialSummaryCardsProps {
+  summary: FinancialSummary | undefined;
+}
 
-  const actualSummary = {
-    totalPending: 0,
-    totalPaid: 0,
-    totalOverdue: 0,
-  };
-
-  recordsWithActualStatus.forEach((record) => {
-    const amount = Number(record.amount) || 0;
-    if (record.actualStatus === "pago") {
-      actualSummary.totalPaid += amount;
-    } else if (record.actualStatus === "atrasado") {
-      actualSummary.totalOverdue += amount;
-    } else {
-      actualSummary.totalPending += amount;
-    }
-  });
+export function FinancialSummaryCards({ summary }: FinancialSummaryCardsProps) {
+  const totalPaid = summary?.totalPaid ?? 0;
+  const totalPending = summary?.totalPending ?? 0;
+  const totalOverdue = summary?.totalOverdue ?? 0;
 
   return (
     <div className="grid gap-4 grid-cols-2 laptop:grid-cols-4">
@@ -40,7 +27,7 @@ export function FinancialSummaryCards({ records }: FinancialSummaryCardsProps) {
               {financialContent.view.totalReceived}
             </p>
             <p className="text-xl tablet:text-2xl font-bold tracking-tight text-success">
-              {formatCurrency(actualSummary.totalPaid)}
+              {formatCurrency(totalPaid)}
             </p>
           </div>
           <div className="h-8 w-8 tablet:h-11 tablet:w-11 rounded-lg tablet:rounded-xl flex items-center justify-center shrink-0 bg-success/10">
@@ -55,9 +42,7 @@ export function FinancialSummaryCards({ records }: FinancialSummaryCardsProps) {
               {financialContent.view.totalToReceive}
             </p>
             <p className="text-xl tablet:text-2xl font-bold tracking-tight">
-              {formatCurrency(
-                actualSummary.totalPending + actualSummary.totalOverdue
-              )}
+              {formatCurrency(totalPending + totalOverdue)}
             </p>
           </div>
           <div className="h-8 w-8 tablet:h-11 tablet:w-11 rounded-lg tablet:rounded-xl flex items-center justify-center shrink-0 bg-warning/10">
@@ -72,7 +57,7 @@ export function FinancialSummaryCards({ records }: FinancialSummaryCardsProps) {
               {financialContent.view.pendingLabel}
             </p>
             <p className="text-xl tablet:text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
-              {formatCurrency(actualSummary.totalPending)}
+              {formatCurrency(totalPending)}
             </p>
           </div>
           <div className="h-8 w-8 tablet:h-11 tablet:w-11 rounded-lg tablet:rounded-xl flex items-center justify-center shrink-0 bg-blue-500/10">
@@ -87,7 +72,7 @@ export function FinancialSummaryCards({ records }: FinancialSummaryCardsProps) {
               {financialContent.view.overdueLabel}
             </p>
             <p className="text-xl tablet:text-2xl font-bold tracking-tight text-destructive">
-              {formatCurrency(actualSummary.totalOverdue)}
+              {formatCurrency(totalOverdue)}
             </p>
           </div>
           <div className="h-8 w-8 tablet:h-11 tablet:w-11 rounded-lg tablet:rounded-xl flex items-center justify-center shrink-0 bg-destructive/10">

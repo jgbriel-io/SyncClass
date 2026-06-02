@@ -2,8 +2,8 @@ export const classes = {
   view: {
     title: "Aulas",
     subtitle: "Registro de aulas e acompanhamento",
-    newButton: "Registrar Aula",
-    packageButton: "Cadastrar pacote",
+    newButton: "Nova Aula",
+    packageButton: "Novo Pacote",
     statTotal: "Total",
     statAttended: "Realizadas",
     statPending: "Pendentes",
@@ -60,7 +60,7 @@ export const classes = {
   },
 
   logFormDialog: {
-    titleNew: "Registrar aula",
+    titleNew: "Nova Aula",
     titleEdit: "Editar aula",
     studentLabel: "Aluno *",
     studentPlaceholder: "Selecione um aluno",
@@ -240,7 +240,7 @@ export const classes = {
   emptyState: {
     title: "Nenhuma aula encontrada",
     description: "Registre a primeira aula para começar.",
-    actionLabel: "Registrar aula",
+    actionLabel: "Nova Aula",
   },
 
   validation: {

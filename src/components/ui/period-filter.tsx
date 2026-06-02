@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { type PeriodFilter } from "@/lib/utils/periodFilter";
 import { dashboard } from "@/content";
 
-interface DashboardPeriodFilterProps {
+interface PeriodFilterProps {
   value: PeriodFilter;
   onChange: (value: PeriodFilter) => void;
 }
@@ -13,10 +13,7 @@ const OPTIONS: { value: PeriodFilter; label: string }[] = [
   { value: "year", label: dashboard.periodFilter.year },
 ];
 
-export function DashboardPeriodFilter({
-  value,
-  onChange,
-}: DashboardPeriodFilterProps) {
+export function PeriodFilter({ value, onChange }: PeriodFilterProps) {
   return (
     <div className="flex items-center rounded-md border bg-background p-0.5 gap-0.5">
       {OPTIONS.map((opt) => (

@@ -20,6 +20,10 @@ import {
 } from "@/lib/utils/classTime";
 import { classes as classesContent } from "@/content";
 import { QK } from "./queryKeys";
+import {
+  type PeriodFilter,
+  getDateRangeForPeriod as getPeriodDateRange,
+} from "@/lib/utils/periodFilter";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -343,9 +347,15 @@ async function fetchAvailableClassLogsForStudent(studentId: string) {
   return classLogs?.filter((log) => !usedClassLogIds.has(log.id)) || [];
 }
 
-async function fetchClassLogsSummary(teacherId?: string | null) {
+async function fetchClassLogsSummary(
+  teacherId?: string | null,
+  dateFrom?: string,
+  dateTo?: string
+) {
   const { data, error } = await supabase.rpc("get_class_logs_summary", {
     p_teacher_id: teacherId ?? null,
+    p_date_from: dateFrom ?? null,
+    p_date_to: dateTo ?? null,
   });
   if (error) throw error;
   const row = data as {
@@ -513,10 +523,19 @@ export function useAvailableClassLogsForStudent(
   });
 }
 
-export function useClassLogsSummary(teacherId?: string | null) {
+export function useClassLogsSummary(
+  teacherId?: string | null,
+  period?: PeriodFilter
+) {
   return useQuery({
-    queryKey: [QK.CLASS_LOGS_SUMMARY, teacherId],
-    queryFn: () => fetchClassLogsSummary(teacherId),
+    queryKey: [QK.CLASS_LOGS_SUMMARY, teacherId, period],
+    queryFn: () => {
+      if (period) {
+        const { from, to } = getPeriodDateRange(period);
+        return fetchClassLogsSummary(teacherId, from, to);
+      }
+      return fetchClassLogsSummary(teacherId);
+    },
   });
 }
 
@@ -578,6 +597,7 @@ export function useCreateClassLogWithFinancial() {
             description,
             payment_method: financialData.payment_method || null,
             status: "pendente",
+            record_type: "avulsa",
           });
 
         if (financialError) {

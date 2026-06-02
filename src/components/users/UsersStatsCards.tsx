@@ -1,18 +1,28 @@
 import { StatCard } from "@/components/ui/stat-card";
 import { UserCheck, UserX, TrendingUp, Users } from "lucide-react";
+import { users as usersContent } from "@/content";
+import { type PeriodFilter } from "@/lib/utils/periodFilter";
 
 interface Props {
   total: number;
   active: number;
   inactive: number;
-  newThisMonth: number;
+  novos: number;
+  period?: PeriodFilter;
 }
+
+const NOVOS_LABEL: Record<PeriodFilter, string> = {
+  month: usersContent.view.statNew,
+  semester: usersContent.view.statNewSemester,
+  year: usersContent.view.statNewYear,
+};
 
 export function UsersStatsCards({
   total,
   active,
   inactive,
-  newThisMonth,
+  novos,
+  period = "month",
 }: Props) {
   return (
     <div className="grid gap-4 grid-cols-2 laptop:grid-cols-4">
@@ -35,8 +45,8 @@ export function UsersStatsCards({
         variant="muted"
       />
       <StatCard
-        title="Novos este mês"
-        value={newThisMonth}
+        title={NOVOS_LABEL[period]}
+        value={novos}
         icon={TrendingUp}
         variant="primaryHighlight"
       />

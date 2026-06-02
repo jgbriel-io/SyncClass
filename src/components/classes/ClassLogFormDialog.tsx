@@ -239,7 +239,6 @@ export function ClassLogFormDialog({
             amount,
             due_date: brDateToIso(data.financial_due_date),
             description: data.financial_description?.trim() || undefined,
-            payment_method: data.financial_payment_method || null,
           },
         });
         return;

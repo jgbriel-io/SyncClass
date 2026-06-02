@@ -13,6 +13,7 @@ import {
   Link2,
   Zap,
   BookOpen,
+  Package,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,7 @@ import { DashboardGrowthChart } from "./DashboardGrowthChart";
 import type { TodayClassesData } from "@/hooks/useTodayClasses";
 import type { ForecastedBilling } from "@/hooks/useForecastedBilling";
 import { dashboard } from "@/content";
-import { DashboardPeriodFilter } from "./DashboardPeriodFilter";
+import { PeriodFilter as PeriodFilterWidget } from "@/components/ui/period-filter";
 import { type PeriodFilter } from "@/lib/utils/periodFilter";
 
 import type {
@@ -151,7 +152,7 @@ export function DashboardView({
           </p>
         </div>
         {onPeriodFilterChange && (
-          <DashboardPeriodFilter
+          <PeriodFilterWidget
             value={periodFilter}
             onChange={onPeriodFilterChange}
           />
@@ -224,6 +225,17 @@ export function DashboardView({
                 </div>
                 <p className="text-sm">
                   {dashboard.view.quickActions.registerClass}
+                </p>
+              </Link>
+              <Link
+                to={`${basePath}/classes?action=create-package`}
+                className="flex items-center gap-2 text-sm font-medium hover:scale-105 transition-transform"
+              >
+                <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+                  <Package className="h-4 w-4 text-success" />
+                </div>
+                <p className="text-sm">
+                  {dashboard.view.quickActions.createPackage}
                 </p>
               </Link>
               <Link

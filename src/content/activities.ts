@@ -9,6 +9,7 @@ export const activities = {
     statOverdue: "Vencidas",
     statDelivered: "Entregues",
     statCorrected: "Corrigidas",
+    statPeriodSuffix: (label: string) => `${label} (período)`,
     toasts: {
       fileOpenError: "Não foi possível abrir o arquivo.",
       downloadPreparing: "Preparando download...",

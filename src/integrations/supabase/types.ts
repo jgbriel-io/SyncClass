@@ -384,6 +384,7 @@ export type Database = {
           payment_provider: string | null;
           pix_code: string | null;
           pix_expires_at: string | null;
+          record_type: string;
           status: string;
           student_id: string;
           updated_at: string | null;
@@ -407,6 +408,7 @@ export type Database = {
           payment_provider?: string | null;
           pix_code?: string | null;
           pix_expires_at?: string | null;
+          record_type?: string;
           status?: string;
           student_id: string;
           updated_at?: string | null;
@@ -430,6 +432,7 @@ export type Database = {
           payment_provider?: string | null;
           pix_code?: string | null;
           pix_expires_at?: string | null;
+          record_type?: string;
           status?: string;
           student_id?: string;
           updated_at?: string | null;

@@ -8,6 +8,11 @@ import { FinancialSummaryCards } from "@/components/financial/FinancialSummaryCa
 import { useStudents } from "@/hooks/useStudents";
 import { Search } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
+import { PeriodFilter as PeriodFilterWidget } from "@/components/ui/period-filter";
+import {
+  type PeriodFilter,
+  getDateRangeForPeriod,
+} from "@/lib/utils/periodFilter";
 import {
   FinancialFilters,
   type FinancialFiltersState,
@@ -75,6 +80,8 @@ export function FinancialView({
     useState<FinancialRecordWithRelations | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
   const isFirstScrollRef = useRef(true);
+  const [period, setPeriod] = useState<PeriodFilter>("month");
+  const dateRange = getDateRangeForPeriod(period);
   const { data: forecastedBilling } = useForecastedBilling(autoTeacherId);
 
   const {
@@ -95,7 +102,7 @@ export function FinancialView({
       sortBy: filters.sortBy,
     },
   });
-  const { data: summary } = useFinancialSummary(autoTeacherId);
+  const { data: summary } = useFinancialSummary(autoTeacherId, dateRange);
 
   useEffect(() => {
     if (isFirstScrollRef.current) {
@@ -197,10 +204,11 @@ export function FinancialView({
             {subtitle}
           </p>
         </div>
+        <PeriodFilterWidget value={period} onChange={setPeriod} />
       </div>
 
       <FinancialForecastCard forecastedBilling={forecastedBilling} />
-      <FinancialSummaryCards records={recordsWithActualStatus} />
+      <FinancialSummaryCards summary={summary} />
 
       <FinancialFilters
         filters={filters}

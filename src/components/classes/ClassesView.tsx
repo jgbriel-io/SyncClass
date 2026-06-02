@@ -38,6 +38,8 @@ import {
 } from "@/hooks/useClassLogs";
 import { isClassEvaluationBlocked } from "@/lib/utils/classTime";
 import { StatCard } from "@/components/ui/stat-card";
+import { PeriodFilter as PeriodFilterWidget } from "@/components/ui/period-filter";
+import { type PeriodFilter } from "@/lib/utils/periodFilter";
 import { classes as classesContent } from "@/content";
 
 interface ClassesViewProps {
@@ -75,9 +77,19 @@ export function ClassesView({
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    if (searchParams.get("action") === "create") {
+    const action = searchParams.get("action");
+    if (action === "create") {
       setSelectedLog(null);
       setIsFormOpen(true);
+      setSearchParams(
+        (prev) => {
+          prev.delete("action");
+          return prev;
+        },
+        { replace: true }
+      );
+    } else if (action === "create-package") {
+      setPackageDialogOpen(true);
       setSearchParams(
         (prev) => {
           prev.delete("action");
@@ -100,6 +112,7 @@ export function ClassesView({
   const [logForDetailSheet, setLogForDetailSheet] =
     useState<ClassLogWithStudent | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
+  const [period, setPeriod] = useState<PeriodFilter>("month");
 
   const effectiveTeacherId =
     autoTeacherId ??
@@ -149,7 +162,8 @@ export function ClassesView({
   }, [page]);
 
   const { data: summary } = useClassLogsSummary(
-    effectiveTeacherId ?? undefined
+    effectiveTeacherId ?? undefined,
+    period
   );
   const createLog = useCreateClassLog();
   const createLogWithFinancial = useCreateClassLogWithFinancial();
@@ -270,26 +284,29 @@ export function ClassesView({
             {subtitle}
           </p>
         </div>
-        {!isAdmin && (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setPackageDialogOpen(true)}
-            >
-              <Package className="h-4 w-4 mr-2" />
-              {classesContent.view.packageButton}
-            </Button>
-            <Button
-              onClick={() => {
-                setSelectedLog(null);
-                setIsFormOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {classesContent.view.newButton}
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <PeriodFilterWidget value={period} onChange={setPeriod} />
+          {!isAdmin && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setPackageDialogOpen(true)}
+              >
+                <Package className="h-4 w-4 mr-2" />
+                {classesContent.view.packageButton}
+              </Button>
+              <Button
+                onClick={() => {
+                  setSelectedLog(null);
+                  setIsFormOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {classesContent.view.newButton}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 grid-cols-2 laptop:grid-cols-4">

@@ -70,8 +70,7 @@ export function FinancialTableRow({
     onDelete &&
     record.actualStatus !== "pago" &&
     !["abonado", "extornado", "cancelado"].includes(record.actualStatus) &&
-    (!record.class_log_id ||
-      (record.package_classes && record.package_classes.length > 0));
+    record.record_type !== "avulsa";
 
   return (
     <tr className="group hover:bg-muted/30 transition-colors">
@@ -126,7 +125,9 @@ export function FinancialTableRow({
               </span>
             )}
           </div>
-        ) : record.package_classes && record.package_classes.length > 0 ? (
+        ) : record.record_type === "pacote" &&
+          record.package_classes &&
+          record.package_classes.length > 0 ? (
           <div className="flex flex-col text-xs text-muted-foreground">
             <span
               className="truncate"

@@ -171,12 +171,14 @@ export function ClassLogStudentSection({
               id="class_date"
               variant="outline"
               className={cn(
-                "w-full justify-start text-left font-normal h-10",
+                "w-full justify-start text-left font-normal h-10 overflow-hidden",
                 !classDate && "text-muted-foreground"
               )}
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {classDate || classesContent.logFormDialog.datePlaceholder}
+              <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+              <span className="truncate">
+                {classDate || classesContent.logFormDialog.datePlaceholder}
+              </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">

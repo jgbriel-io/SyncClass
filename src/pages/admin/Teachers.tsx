@@ -24,10 +24,7 @@ import {
   Teacher,
   TeacherInsert,
 } from "@/hooks/useTeachers";
-import {
-  useCreateAuthUserForTeacher,
-  useInviteTeacher,
-} from "@/hooks/useUsers";
+import { useInviteTeacher } from "@/hooks/useUsers";
 import { useStudents } from "@/hooks/useStudents";
 import { useClassLogs, ClassLogWithStudent } from "@/hooks/useClassLogs";
 import {
@@ -42,12 +39,15 @@ import { TABLE_MIN_W as TEACH_TABLE_MIN_W } from "@/components/teachers/Teachers
 import { TeachersTableHeader } from "@/components/teachers/TeachersTableHeader";
 import { TeachersStatsCards } from "@/components/teachers/TeachersStatsCards";
 import { TeacherDetailSheet } from "@/components/admin/TeacherDetailSheet";
+import { PeriodFilter as PeriodFilterWidget } from "@/components/ui/period-filter";
+import { type PeriodFilter } from "@/lib/utils/periodFilter";
 
 export default function TeachersPage() {
   const [filters, setFilters] = useState<TeachersFiltersState>({
     ...defaultTeachersFilters,
     status: "ativo",
   });
+  const [period, setPeriod] = useState<PeriodFilter>("month");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -106,8 +106,6 @@ export default function TeachersPage() {
   const createTeacher = useCreateTeacher();
   const inviteTeacher = useInviteTeacher();
   const updateTeacher = useUpdateTeacher();
-  const _createTeacherUser = useCreateAuthUserForTeacher();
-
   const { data: allClassLogs = [] } = useClassLogs();
   const { data: allFinancialRecords = [] } = useFinancialRecords();
 
@@ -128,7 +126,8 @@ export default function TeachersPage() {
     allClassLogs as ClassLogWithStudent[],
     allFinancialRecords as FinancialRecordWithRelations[],
     teachers,
-    filters
+    filters,
+    period
   );
 
   const handleCreateOrUpdate = (data: TeacherInsert) => {
@@ -193,14 +192,17 @@ export default function TeachersPage() {
               Gerencie os professores do sistema
             </p>
           </div>
-          <Button
-            onClick={() => {
-              setSelectedTeacher(null);
-              setIsFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" /> Novo Professor
-          </Button>
+          <div className="flex items-center gap-2">
+            <PeriodFilterWidget value={period} onChange={setPeriod} />
+            <Button
+              onClick={() => {
+                setSelectedTeacher(null);
+                setIsFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" /> Novo Professor
+            </Button>
+          </div>
         </div>
 
         {/* Cards informativos */}
@@ -209,6 +211,7 @@ export default function TeachersPage() {
           ativos={teachersStats.ativos}
           inativos={teachersStats.inativos}
           novos={teachersStats.novos}
+          period={period}
         />
 
         {/* Filtros */}

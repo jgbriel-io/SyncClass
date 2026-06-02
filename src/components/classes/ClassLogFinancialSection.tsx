@@ -10,13 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -151,13 +144,15 @@ export function ClassLogFinancialSection({
                       id="financial_due_date"
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal h-10",
+                        "w-full justify-start text-left font-normal h-10 overflow-hidden",
                         !financialDueDate && "text-muted-foreground"
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {financialDueDate ||
-                        classesContent.logFinancialSection.selectDate}
+                      <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                      <span className="truncate">
+                        {financialDueDate ||
+                          classesContent.logFinancialSection.selectDate}
+                      </span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -204,43 +199,6 @@ export function ClassLogFinancialSection({
                 {classesContent.logFinancialSection.descriptionHint}
               </p>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="financial_payment_method">
-                {classesContent.logFinancialSection.paymentMethodLabel}
-              </Label>
-              <Select
-                onValueChange={(value) =>
-                  setValue("financial_payment_method", value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      classesContent.logFinancialSection
-                        .paymentMethodPlaceholder
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pix">
-                    {classesContent.logFinancialSection.pix}
-                  </SelectItem>
-                  <SelectItem value="cartao">
-                    {classesContent.logFinancialSection.card}
-                  </SelectItem>
-                  <SelectItem value="dinheiro">
-                    {classesContent.logFinancialSection.cash}
-                  </SelectItem>
-                  <SelectItem value="transferencia">
-                    {classesContent.logFinancialSection.transfer}
-                  </SelectItem>
-                  <SelectItem value="outro">
-                    {classesContent.logFinancialSection.other}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         )}
       </div>
@@ -279,13 +237,15 @@ export function ClassLogFinancialSection({
                   id="financial_due_date_edit"
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal h-10",
+                    "w-full justify-start text-left font-normal h-10 overflow-hidden",
                     !financialDueDate && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {financialDueDate ||
-                    classesContent.logFinancialSection.selectDate}
+                  <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                  <span className="truncate">
+                    {financialDueDate ||
+                      classesContent.logFinancialSection.selectDate}
+                  </span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">

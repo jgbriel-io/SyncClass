@@ -35,6 +35,11 @@ import { EmptyActivitiesState } from "@/components/ui/contextual-empty-states";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
 import { ActivitiesTableSkeleton } from "@/components/ui/table-skeleton";
 import { StatCard } from "@/components/ui/stat-card";
+import { PeriodFilter as PeriodFilterWidget } from "@/components/ui/period-filter";
+import {
+  type PeriodFilter,
+  getDateRangeForPeriod,
+} from "@/lib/utils/periodFilter";
 import {
   tableThLarge,
   tableThMedium,
@@ -96,6 +101,9 @@ export function ActivitiesView({
   const [openSheetInCorrectionMode, setOpenSheetInCorrectionMode] =
     useState(false);
   const [page, setPage] = useState(0);
+  // statPeriod: controls stat cards (month/semester/year)
+  // filters.period: controls table list filter (week/month/3months) — separate axis
+  const [statPeriod, setStatPeriod] = useState<PeriodFilter>("month");
   const listTopRef = useRef<HTMLDivElement>(null);
 
   const { data: students = [] } = useStudents();
@@ -131,15 +139,25 @@ export function ActivitiesView({
 
   const { viewFile, downloadFile } = useActivityFileActions();
 
-  const totalActivities = activities.length;
-  const countEmAndamento = activities.filter(
+  const periodActivities = useMemo(() => {
+    const { from, to } = getDateRangeForPeriod(statPeriod);
+    return activities.filter((a) => {
+      // Activities without due_date are always included (unscheduled)
+      if (!a.due_date) return true;
+      const d = a.due_date.slice(0, 10);
+      return d >= from && d <= to;
+    });
+  }, [activities, statPeriod]);
+
+  const totalActivities = periodActivities.length;
+  const countEmAndamento = periodActivities.filter(
     (a) => a.status === "enviada" && !isOverdue(a)
   ).length;
-  const countVencida = activities.filter((a) => isOverdue(a)).length;
-  const countEntregue = activities.filter(
+  const countVencida = periodActivities.filter((a) => isOverdue(a)).length;
+  const countEntregue = periodActivities.filter(
     (a) => a.status === "entregue"
   ).length;
-  const countCorrigida = activities.filter(
+  const countCorrigida = periodActivities.filter(
     (a) => a.status === "corrigida"
   ).length;
 
@@ -221,12 +239,15 @@ export function ActivitiesView({
           </h1>
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </div>
-        {!isAdmin && (
-          <Button onClick={() => setSendDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            {activitiesContent.view.newButton}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <PeriodFilterWidget value={statPeriod} onChange={setStatPeriod} />
+          {!isAdmin && (
+            <Button onClick={() => setSendDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              {activitiesContent.view.newButton}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 grid-cols-2 laptop:grid-cols-5">
