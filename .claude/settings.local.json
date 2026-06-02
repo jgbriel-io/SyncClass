@@ -69,7 +69,9 @@
       "mcp__supabase__get_logs",
       "Bash(xargs grep -l \"SettingsModal\")",
       "mcp__plugin_context-mode_context-mode__ctx_upgrade",
-      "Bash(\"C:/Program Files/nodejs/node.exe\" \"C:/Users/jgabriel/.claude/plugins/cache/context-mode/context-mode/1.0.135/cli.bundle.mjs\" upgrade --platform claude-code)"
+      "Bash(\"C:/Program Files/nodejs/node.exe\" \"C:/Users/jgabriel/.claude/plugins/cache/context-mode/context-mode/1.0.135/cli.bundle.mjs\" upgrade --platform claude-code)",
+      "Bash(gh repo *)",
+      "Bash(gh api *)"
     ]
   },
   "enableAllProjectMcpServers": true,
