@@ -2,7 +2,10 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
 import { QK } from "./queryKeys";
 import React from "react";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import {
+  type PeriodFilter,
+  getDateRangeForPeriod,
+} from "@/lib/utils/periodFilter";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, Enums } from "@/integrations/supabase/types";
 
@@ -10,35 +13,33 @@ export interface UsersStats {
   total: number;
   active: number;
   inactive: number;
-  newThisMonth: number;
+  novos: number;
 }
 
-export function useUsersStats() {
+export function useUsersStats(period: PeriodFilter = "month") {
   return useQuery({
-    queryKey: [QK.USERS_STATS],
+    queryKey: [QK.USERS_STATS, period],
     queryFn: async (): Promise<UsersStats> => {
       const { data, error } = await supabase
         .from("profiles")
         .select("active, created_at")
-        .is("deleted_at", null); // Only count non-deleted profiles
+        .is("deleted_at", null);
 
       if (error) throw error;
 
       const rows = data ?? [];
-      const now = new Date();
-      const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
-      const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+      const { from, to } = getDateRangeForPeriod(period);
 
       const total = rows.length;
       const active = rows.filter((r) => r.active === true).length;
       const inactive = rows.filter((r) => r.active === false).length;
-      const newThisMonth = rows.filter((r) => {
+      const novos = rows.filter((r) => {
         if (!r.created_at) return false;
-        const createdDate = String(r.created_at).split("T")[0];
-        return createdDate >= monthStart && createdDate <= monthEnd;
+        const d = String(r.created_at).split("T")[0];
+        return d >= from && d <= to;
       }).length;
 
-      return { total, active, inactive, newThisMonth };
+      return { total, active, inactive, novos };
     },
   });
 }

@@ -7,6 +7,9 @@ export const users = {
     statActive: "Ativos",
     statInactive: "Inativos",
     statAdmins: "Admins",
+    statNew: "Novos este mês",
+    statNewSemester: "Novos este semestre",
+    statNewYear: "Novos este ano",
   },
 
   table: {
