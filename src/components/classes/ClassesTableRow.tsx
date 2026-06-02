@@ -191,13 +191,20 @@ export function ClassesTableRow({
       >
         {log.financial_record_via_package ? (
           <div className="flex flex-col text-xs text-muted-foreground">
-            <span
-              className="truncate"
-              title={`${classesContent.tableRow.packageMonthly} - ${log.package_count ?? 1} ${classesContent.tableRow.packageClasses}`}
-            >
-              {classesContent.tableRow.packageMonthly} -{" "}
-              {log.package_count ?? 1} {classesContent.tableRow.packageClasses}
-            </span>
+            {log.title?.trim() ? (
+              <span className="truncate" title={log.title.trim()}>
+                {log.title.trim()}
+              </span>
+            ) : (
+              <span
+                className="truncate"
+                title={`${classesContent.tableRow.packageMonthly} - ${log.package_count ?? 1} ${classesContent.tableRow.packageClasses}`}
+              >
+                {classesContent.tableRow.packageMonthly} -{" "}
+                {log.package_count ?? 1}{" "}
+                {classesContent.tableRow.packageClasses}
+              </span>
+            )}
             {log.package_date_range && (
               <span className="mt-0.5 truncate">
                 {format(
