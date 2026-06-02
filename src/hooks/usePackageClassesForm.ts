@@ -163,7 +163,7 @@ export const usePackageClassesForm = ({
           due_date: dueBr
             ? brDateToIso(dueBr)
             : new Date().toISOString().slice(0, 10),
-          description: `Pacote mensal - ${studentName} - ${slots.length} aula(s) - ${monthYear}`,
+          description: `Pacote mensal - ${slots.length} aula(s) - ${monthYear}`,
           payment_method: null,
         };
       }
