@@ -1,4 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from "react";
+import { PeriodFilter as PeriodFilterWidget } from "@/components/ui/period-filter";
+import { type PeriodFilter } from "@/lib/utils/periodFilter";
 import { useSearchParams } from "react-router-dom";
 import {
   StudentsFilters,
@@ -115,6 +117,7 @@ export function StudentsListView({
 
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
+  const [period, setPeriod] = useState<PeriodFilter>("month");
 
   const listTopRef = useRef<HTMLDivElement>(null);
 
@@ -142,7 +145,7 @@ export function StudentsListView({
     setPage(0);
   }, [initialSearch, setPage]);
 
-  const { data: studentsStats } = useStudentsStats(autoTeacherId);
+  const { data: studentsStats } = useStudentsStats(autoTeacherId, period);
 
   useEffect(() => {
     listTopRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -212,21 +215,26 @@ export function StudentsListView({
           </h1>
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </div>
-        {filters.status !== "anonimizados" && (
-          <Button
-            onClick={() => {
-              setSelectedStudent(null);
-              setIsFormOpen(true);
-              onNewStudentClick?.();
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {studentsContent.view.newButton}
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          <PeriodFilterWidget value={period} onChange={setPeriod} />
+          {filters.status !== "anonimizados" && (
+            <Button
+              onClick={() => {
+                setSelectedStudent(null);
+                setIsFormOpen(true);
+                onNewStudentClick?.();
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {studentsContent.view.newButton}
+            </Button>
+          )}
+        </div>
       </div>
 
-      {studentsStats && <StudentsStatCards stats={studentsStats} />}
+      {studentsStats && (
+        <StudentsStatCards stats={studentsStats} period={period} />
+      )}
 
       <StudentsFilters
         filters={filters}

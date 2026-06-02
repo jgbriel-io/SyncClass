@@ -7,6 +7,8 @@ export const students = {
     statActive: "Ativos",
     statInactive: "Inativos",
     statNew: "Novos este mês",
+    statNewSemester: "Novos este semestre",
+    statNewYear: "Novos este ano",
   },
 
   formDialog: {

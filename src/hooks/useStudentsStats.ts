@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QK } from "./queryKeys";
-import { startOfMonth, endOfMonth, format } from "date-fns";
+import {
+  type PeriodFilter,
+  getDateRangeForPeriod,
+} from "@/lib/utils/periodFilter";
 
 export interface StudentsStats {
   totalStudents: number;
@@ -10,18 +13,14 @@ export interface StudentsStats {
   newStudentsThisMonth: number;
 }
 
-/**
- * Hook para obter estatísticas gerais de alunos.
- *
- * @param teacherId - Se informado, filtra apenas alunos desse professor.
- */
-export function useStudentsStats(teacherId?: string | null) {
+export function useStudentsStats(
+  teacherId?: string | null,
+  period: PeriodFilter = "month"
+) {
   return useQuery({
-    queryKey: [QK.STUDENTS_STATS, teacherId],
+    queryKey: [QK.STUDENTS_STATS, teacherId, period],
     queryFn: async (): Promise<StudentsStats> => {
-      const now = new Date();
-      const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
-      const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+      const { from, to } = getDateRangeForPeriod(period);
 
       let query = supabase
         .from("students")
@@ -47,8 +46,8 @@ export function useStudentsStats(teacherId?: string | null) {
       ).length;
       const newStudentsThisMonth = students.filter((s) => {
         if (!s.created_at) return false;
-        const createdDate = s.created_at.split("T")[0]; // YYYY-MM-DD
-        return createdDate >= monthStart && createdDate <= monthEnd;
+        const createdDate = s.created_at.split("T")[0];
+        return createdDate >= from && createdDate <= to;
       }).length;
 
       return {

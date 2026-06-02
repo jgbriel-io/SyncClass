@@ -27,7 +27,7 @@ import { DashboardGrowthChart } from "./DashboardGrowthChart";
 import type { TodayClassesData } from "@/hooks/useTodayClasses";
 import type { ForecastedBilling } from "@/hooks/useForecastedBilling";
 import { dashboard } from "@/content";
-import { DashboardPeriodFilter } from "./DashboardPeriodFilter";
+import { PeriodFilter as PeriodFilterWidget } from "@/components/ui/period-filter";
 import { type PeriodFilter } from "@/lib/utils/periodFilter";
 
 import type {
@@ -152,7 +152,7 @@ export function DashboardView({
           </p>
         </div>
         {onPeriodFilterChange && (
-          <DashboardPeriodFilter
+          <PeriodFilterWidget
             value={periodFilter}
             onChange={onPeriodFilterChange}
           />
