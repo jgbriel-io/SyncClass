@@ -75,7 +75,6 @@ export function PackageClassesDialog({
     setSelectedTeacherId(teacherId ?? "");
     setSlots([{ ...emptySlot }]);
     setSemCobranca(false);
-    setPaymentMethod("");
     setScheduleMode("fixed");
     setFixedMonth(0);
     setFixedYear(2026);
