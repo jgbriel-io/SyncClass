@@ -2,7 +2,7 @@
 
 **Período:** 01/06/2026
 **Status:** ✅ Concluída
-**Tipo:** Fix
+**Tipo:** Fix + Feature
 **Prioridade:** 🔴 Alta
 
 ## Problem Statement
@@ -160,10 +160,48 @@ Sprint 28 (QA manual) identificou falhas no fluxo de redefinição de senha da a
 - `src/hooks/useForecastedBilling` — aceita `dateRange?`
 - `src/hooks/useDashboardStats` — aceita `period?`
 - `src/hooks/useTeacherDashboardStats` — aceita `period?`
-- `src/components/dashboard/DashboardPeriodFilter.tsx` — botões Mês/Semestre/Ano
+- `src/components/dashboard/DashboardPeriodFilter.tsx` — botões Mês/Semestre/Ano _(posteriormente movido para `src/components/ui/period-filter.tsx`)_
 - `src/components/dashboard/DashboardView.tsx` — props `periodFilter`/`onPeriodFilterChange`; helper `byPeriod()` elimina ternários repetidos
 - `src/components/dashboard/DashboardFinancialCards.tsx` — `FORECAST_LABELS` record; recebe `periodFilter`
 - `src/pages/admin/Dashboard.tsx` e `src/pages/teacher/TeacherHome.tsx` — `useState<PeriodFilter>("month")` + conectado a todos os hooks
+
+---
+
+## Nova Feature — Filtro de Período nas Páginas de Alunos, Aulas e Financeiro
+
+**Contexto:** Após o filtro de período no Dashboard, o mesmo padrão foi estendido para as páginas de domínio. Cards de estatísticas de Alunos, Aulas e Financeiro passaram a respeitar o período selecionado. Atividades foram excluídas do filtro por período — os cards exibem estado atual de todas as atividades (filtragem por `created_at` escondia atividades antigas ainda pendentes, tornando os counts incorretos).
+
+**Decisões de design:**
+
+- **Financeiro:** filtro afeta apenas os cards de resumo (Recebido, A Receber, Pendente, Atrasado) — a tabela mantém filtros manuais independentes.
+- **Atividades:** sem filtro de período nos cards — semanticamente errado filtrar status por data de criação.
+- **`DashboardPeriodFilter`** movido de `src/components/dashboard/` para `src/components/ui/period-filter.tsx` como primitivo genérico reutilizável.
+
+**Bug corrigido durante implementação:**
+
+- `FinancialSummaryCards` computava totais a partir do array `records` paginado (apenas 10 registros/página), resultando em totais incorretos. Refatorado para receber `summary` do hook `useFinancialSummary` (RPC server-side, dataset completo).
+
+**Bug de naming corrigido durante code review:**
+
+- `useClassLogs.ts` importava `getDateRangeForPeriod` do `periodFilter.ts` usando o mesmo nome de função local já existente no arquivo (assinatura diferente: `"week"|"month"|"3months"`). Import renomeado para `getPeriodDateRange` para evitar shadowing.
+
+**Arquivos alterados:**
+
+- `src/components/ui/period-filter.tsx` — componente `PeriodFilter` genérico (movido + renomeado de `DashboardPeriodFilter`)
+- `src/components/dashboard/DashboardView.tsx` — import atualizado para novo caminho
+- `src/content/students.ts` — `statNewSemester` e `statNewYear` adicionados
+- `src/hooks/useStudentsStats.ts` — aceita `period: PeriodFilter`, `getDateRangeForPeriod` internamente, `period` no `queryKey`
+- `src/components/students/StudentsStatCards.tsx` — aceita `period` prop, label dinâmico "Novos este mês/semestre/ano"
+- `src/components/students/StudentsListView.tsx` — `useState<PeriodFilter>`, `PeriodFilter` no header
+- `supabase/migrations/64_class_logs_summary_period_filter.sql` — `get_class_logs_summary` ganha `p_date_from DATE DEFAULT NULL` e `p_date_to DATE DEFAULT NULL` (retrocompatível — nulls = sem filtro)
+- `src/hooks/useClassLogs.ts` — `useClassLogsSummary` aceita `period?`; import aliasado como `getPeriodDateRange`
+- `src/components/classes/ClassesView.tsx` — `useState<PeriodFilter>`, `PeriodFilter` no header, `period` para `useClassLogsSummary`
+- `src/components/financial/FinancialSummaryCards.tsx` — refatorado: recebe `summary: FinancialSummary | undefined` em vez de `records[]`
+- `src/components/financial/FinancialView.tsx` — `useState<PeriodFilter>`, `dateRange` derivado do período, `PeriodFilter` no header
+
+**Pendente de execução em produção:**
+
+- Migration 64 (`64_class_logs_summary_period_filter.sql`) — aplicar via Supabase Dashboard → SQL Editor antes de usar filtro de período em Aulas.
 
 ---
 
@@ -187,6 +225,12 @@ Sprint 28 (QA manual) identificou falhas no fluxo de redefinição de senha da a
 - [x] `formatDateTime` → UTC-3 consistente local e CI
 - [x] Dashboard filtro Mês/Semestre/Ano → todos os cards atualizam
 - [x] Semestre H1 termina em 30/06 (não 01/07)
+- [x] Alunos — filtro de período altera card "Novos" e label dinâmico
+- [x] Financeiro — filtro de período altera cards de resumo (RPC server-side)
+- [x] Atividades — cards exibem estado atual de todas as atividades (sem filtro de período)
+- [ ] Aulas — filtro de período altera cards de resumo _(pendente: aplicar migration 64 em produção)_
+- [x] `npm run type-check` — zero erros (pós refactor)
+- [x] `npm run test` — 287 testes passando
 
 ## References
 
