@@ -479,11 +479,7 @@ export function useHardDeleteTeacher() {
           })
           .eq("user_id", linkedProfile.user_id);
 
-        if (profileError) {
-          toast.warning(
-            "Professor removido. O perfil de usuário não pôde ser marcado como deletado."
-          );
-        }
+        if (profileError) throw profileError;
 
         const { data, error: fnError } = await supabase.functions.invoke(
           "admin-delete-user",

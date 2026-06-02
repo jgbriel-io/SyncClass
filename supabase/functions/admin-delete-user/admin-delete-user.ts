@@ -96,6 +96,7 @@ serve(async (req) => {
         .from("students")
         .select("id")
         .eq("id", profile.student_id)
+        .eq("is_deleted", false)
         .maybeSingle();
       studentStillExists = !!s;
     }
@@ -104,6 +105,7 @@ serve(async (req) => {
         .from("teachers")
         .select("id")
         .eq("id", profile.teacher_id)
+        .eq("is_deleted", false)
         .maybeSingle();
       teacherStillExists = !!t;
     }

@@ -540,11 +540,7 @@ export function useHardDeleteStudent() {
           })
           .eq("user_id", linkedProfile.user_id);
 
-        if (profileError) {
-          toast.warning(
-            studentsContent.deleteDialog.toasts.warnProfileNotDeleted
-          );
-        }
+        if (profileError) throw profileError;
 
         const { data, error: fnError } = await supabase.functions.invoke(
           "admin-delete-user",
