@@ -91,11 +91,13 @@ export function StudentFormDialog({
       state: student?.state || "",
       city: student?.city || "",
       phone: student?.phone
-        ? isMasked(student.phone)
+        ? student.country && student.country !== "Brasil"
           ? student.phone
-          : student.phone.includes("(")
+          : isMasked(student.phone)
             ? student.phone
-            : maskPhone(student.phone)
+            : student.phone.includes("(")
+              ? student.phone
+              : maskPhone(student.phone)
         : "",
       email: student?.email || "",
       hourly_rate: student?.hourly_rate
@@ -138,11 +140,13 @@ export function StudentFormDialog({
 
     if (student) {
       const formattedPhone = student.phone
-        ? isMasked(student.phone)
+        ? student.country && student.country !== "Brasil"
           ? student.phone
-          : student.phone.includes("(")
+          : isMasked(student.phone)
             ? student.phone
-            : maskPhone(student.phone)
+            : student.phone.includes("(")
+              ? student.phone
+              : maskPhone(student.phone)
         : "";
       reset({
         name: student.name,
