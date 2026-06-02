@@ -319,6 +319,7 @@ export function useStudentsWithStatsPaginated(
       if (teacherId) {
         q = q.eq("teacher_id", teacherId);
       }
+      q = q.eq("is_deleted", false);
       if (search) {
         q = q.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
       }
