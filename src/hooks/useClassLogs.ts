@@ -91,6 +91,10 @@ export interface ClassLogWithStudent extends ClassLog {
   }>;
   /** true quando a cobrança foi vinculada via pacote (financial_record_class_logs) */
   financial_record_via_package?: boolean;
+  /** total de aulas no pacote (calculado client-side, limitado à página atual) */
+  package_count?: number;
+  /** primeira e última data do pacote (calculado client-side, limitado à página atual) */
+  package_date_range?: { first: string; last: string };
 }
 
 export interface ClassLogWithFinancialData {
@@ -205,25 +209,45 @@ const CLASS_LOG_SELECT = `
   )
 `;
 
+type PackageLink = {
+  financial_record_id: string;
+  financial_records: ClassLogWithStudent["financial_records"][number] | null;
+};
+
 function enrichWithPackageFinancial(
   list: ClassLogWithStudent[]
 ): ClassLogWithStudent[] {
+  // Pre-scan: build map financial_record_id → sorted class_dates[]
+  const packageDates = new Map<string, string[]>();
+  for (const log of list) {
+    const links = (log as Record<string, unknown>)
+      .financial_record_class_logs as PackageLink[] | null;
+    const frId = links?.[0]?.financial_record_id;
+    if (frId) {
+      const existing = packageDates.get(frId) ?? [];
+      packageDates.set(frId, [...existing, log.class_date]);
+    }
+  }
+
   return list.map((log) => {
     if (log.financial_records && log.financial_records.length > 0) return log;
     const packageLinks = (log as Record<string, unknown>)
-      .financial_record_class_logs as Array<{
-      financial_record_id: string;
-      financial_records:
-        | ClassLogWithStudent["financial_records"][number]
-        | null;
-    }> | null;
+      .financial_record_class_logs as PackageLink[] | null;
     if (!packageLinks?.length) return log;
+    const frId = packageLinks[0]?.financial_record_id;
     const fr = packageLinks[0]?.financial_records;
     if (fr) {
+      const dates = frId ? (packageDates.get(frId) ?? []) : [];
+      const sorted = [...dates].sort();
       return {
         ...log,
         financial_records: [fr],
         financial_record_via_package: true,
+        package_count: dates.length || undefined,
+        package_date_range:
+          sorted.length > 0
+            ? { first: sorted[0], last: sorted[sorted.length - 1] }
+            : undefined,
       };
     }
     return log;

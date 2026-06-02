@@ -189,7 +189,42 @@ export function ClassesTableRow({
         className={CELL_BASE}
         style={{ width: COL.INFORMACOES, minWidth: COL.INFORMACOES }}
       >
-        {showTeacherColumn ? (
+        {log.financial_record_via_package ? (
+          <div className="flex flex-col text-xs text-muted-foreground">
+            <span
+              className="truncate"
+              title={`${classesContent.tableRow.packageMonthly} - ${log.package_count ?? 1} ${classesContent.tableRow.packageClasses}`}
+            >
+              {classesContent.tableRow.packageMonthly} -{" "}
+              {log.package_count ?? 1} {classesContent.tableRow.packageClasses}
+            </span>
+            {log.package_date_range && (
+              <span className="mt-0.5 truncate">
+                {format(
+                  new Date(log.package_date_range.first + "T00:00:00"),
+                  "dd/MM/yyyy",
+                  { locale: ptBR }
+                )}
+                {log.package_date_range.first !==
+                  log.package_date_range.last && (
+                  <>
+                    {" a "}
+                    {format(
+                      new Date(log.package_date_range.last + "T00:00:00"),
+                      "dd/MM/yyyy",
+                      { locale: ptBR }
+                    )}
+                  </>
+                )}
+              </span>
+            )}
+            {showTeacherColumn && (
+              <span className="mt-0.5 truncate" title={teacherName}>
+                {teacherName}
+              </span>
+            )}
+          </div>
+        ) : showTeacherColumn ? (
           <div className="flex flex-col gap-0.5">
             <span
               className="text-xs font-medium text-foreground whitespace-normal line-clamp-2"

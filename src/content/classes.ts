@@ -42,6 +42,8 @@ export const classes = {
     viewDetails: "Ver detalhes",
     noTeacher: "Sem professor",
     editedAt: "Editado em",
+    packageMonthly: "Pacote mensal",
+    packageClasses: "aula(s)",
   },
 
   cardView: {
