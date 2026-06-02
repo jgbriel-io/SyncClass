@@ -200,7 +200,7 @@ const CLASS_LOG_SELECT = `
   financial_record_class_logs (
     financial_record_id,
     financial_records (
-      id, status, amount, due_date
+      id, status, amount, due_date, description
     )
   )
 `;

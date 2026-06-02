@@ -78,14 +78,14 @@ function getClassLogDisplayTitle(log: {
   title?: string | null;
   class_date?: string;
   financial_record_via_package?: boolean;
+  financial_records?: Array<{ description?: string | null }> | null;
 }): string {
   const rawTitle = log.title?.trim();
-  const isPackage = log.financial_record_via_package;
+  if (rawTitle) return rawTitle;
 
-  if (rawTitle) {
-    return isPackage
-      ? `${rawTitle} (${classesContent.packageDialog.title})`
-      : rawTitle;
+  if (log.financial_record_via_package) {
+    const packageDescription = log.financial_records?.[0]?.description?.trim();
+    if (packageDescription) return packageDescription;
   }
 
   const d = log.class_date
@@ -93,12 +93,7 @@ function getClassLogDisplayTitle(log: {
         locale: ptBR,
       })
     : "";
-  const fallbackTitle = d
-    ? `${classesContent.view.title} - ${d}`
-    : classesContent.view.title;
-  return isPackage
-    ? `${fallbackTitle} (${classesContent.packageDialog.title})`
-    : fallbackTitle;
+  return d ? `${classesContent.view.title} - ${d}` : classesContent.view.title;
 }
 
 interface ClassesTableRowProps {
