@@ -46,7 +46,12 @@ export const useStudentFormSubmit = ({
 
     if (selectedStudent) {
       updateStudent.mutate(
-        { id: selectedStudent.id, ...dataWithTeacher },
+        {
+          id: selectedStudent.id,
+          ...dataWithTeacher,
+          _currentPhone: selectedStudent.phone ?? null,
+          _currentPayDay: selectedStudent.pay_day ?? null,
+        },
         { onSuccess }
       );
     } else {

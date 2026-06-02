@@ -196,15 +196,23 @@ export function useCreateStudent() {
   });
 }
 
-async function validateStudentPhone(id: string, phone: string): Promise<void> {
+async function validateStudentPhone(
+  id: string,
+  phone: string,
+  currentPhone?: string | null
+): Promise<void> {
   const { validatePhonePlatform } =
     await import("@/hooks/validatePhonePlatformService");
-  const { data: currentStudent } = await supabase
-    .from("students")
-    .select("phone")
-    .eq("id", id)
-    .single();
-  if (phone !== currentStudent?.phone) {
+  let existingPhone: string | null | undefined = currentPhone;
+  if (existingPhone === undefined) {
+    const { data } = await supabase
+      .from("students")
+      .select("phone")
+      .eq("id", id)
+      .single();
+    existingPhone = data?.phone;
+  }
+  if (phone !== existingPhone) {
     const err = await validatePhonePlatform(supabase, { phone });
     if (err) throw new Error(err);
   }
@@ -267,21 +275,30 @@ export function useUpdateStudent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: StudentUpdate & { id: string }) => {
+    mutationFn: async ({
+      id,
+      _currentPhone,
+      _currentPayDay,
+      ...updates
+    }: StudentUpdate & {
+      id: string;
+      _currentPhone?: string | null;
+      _currentPayDay?: number | null;
+    }) => {
       const safeUpdates = sanitizeStudentUpdateForEdit(
         updates as Record<string, unknown>
       ) as StudentUpdate;
 
       if (safeUpdates.phone) {
-        await validateStudentPhone(id, safeUpdates.phone);
+        await validateStudentPhone(id, safeUpdates.phone, _currentPhone);
       }
 
       const payDayChanged =
         "pay_day" in updates && updates.pay_day !== undefined;
-      let oldPayDay: number | null = null;
+      let oldPayDay: number | null = _currentPayDay ?? null;
       const newPayDay: number | null = updates.pay_day ?? null;
 
-      if (payDayChanged) {
+      if (payDayChanged && _currentPayDay === undefined) {
         const { data: currentStudent } = await supabase
           .from("students")
           .select("pay_day")
