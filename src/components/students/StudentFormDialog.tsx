@@ -99,7 +99,7 @@ export function StudentFormDialog({
         : "",
       email: student?.email || "",
       hourly_rate: student?.hourly_rate
-        ? String(student.hourly_rate).replace(".", ",")
+        ? Number(student.hourly_rate).toFixed(2).replace(".", ",")
         : "",
       pay_day: student?.pay_day ? String(student.pay_day) : "",
       origin: student?.origin || undefined,
@@ -152,7 +152,7 @@ export function StudentFormDialog({
         phone: formattedPhone,
         email: student.email || "",
         hourly_rate: student.hourly_rate
-          ? String(student.hourly_rate).replace(".", ",")
+          ? Number(student.hourly_rate).toFixed(2).replace(".", ",")
           : "",
         pay_day: student.pay_day ? String(student.pay_day) : "",
         origin: student.origin || undefined,
