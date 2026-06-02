@@ -82,7 +82,15 @@ export function getActivityDisplayStatus(activity: ActivityForDisplay): {
       return { label: "Vencida", variant: "destructive" };
     return { label: "Aguardando", variant: "warning" };
   }
-  return { label: activity.status, variant: "default" };
+  if (activity.status === "pendente") {
+    if (dueTime > 0 && dueTime < now)
+      return { label: "Atrasada", variant: "destructive" };
+    return { label: "Pendente", variant: "default" };
+  }
+  const label = activity.status
+    ? activity.status.charAt(0).toUpperCase() + activity.status.slice(1)
+    : "—";
+  return { label, variant: "default" };
 }
 
 // ---------------------------------------------------------------------------
