@@ -56,6 +56,14 @@ export function OverviewView({
   const [sheetOpen, setSheetOpen] = useState(false);
   const listTopRef = useRef<HTMLDivElement>(null);
 
+  const createdAfter = useMemo(() => {
+    if (filters.period === "all") return null;
+    const days = parseInt(filters.period, 10);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    return cutoff.toISOString();
+  }, [filters.period]);
+
   const {
     data: students = [],
     isLoading,
@@ -70,6 +78,7 @@ export function OverviewView({
     teacherId: autoTeacherId,
     search: filters.search,
     status: filters.status,
+    createdAfter,
   });
 
   const { data: teachers = [] } = useTeachers();
@@ -94,13 +103,6 @@ export function OverviewView({
       )
         return false;
 
-      if (filters.period !== "all") {
-        const created = new Date(student.created_at || 0);
-        const days = parseInt(filters.period, 10);
-        const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - days);
-        if (created < cutoff) return false;
-      }
       return true;
     });
 

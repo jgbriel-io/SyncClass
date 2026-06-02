@@ -279,6 +279,7 @@ export interface UseStudentsWithStatsPaginatedOptions {
   teacherId?: string | null;
   search?: string;
   status?: "all" | "ativo" | "inativo";
+  createdAfter?: string | null;
 }
 
 export interface UseStudentsWithStatsPaginatedResult {
@@ -301,6 +302,7 @@ export function useStudentsWithStatsPaginated(
   const teacherId = options?.teacherId;
   const search = options?.search?.trim() ?? "";
   const status = options?.status ?? "all";
+  const createdAfter = options?.createdAfter ?? null;
 
   const query = useQuery({
     queryKey: [
@@ -310,6 +312,7 @@ export function useStudentsWithStatsPaginated(
       teacherId,
       search,
       status,
+      createdAfter,
     ],
     queryFn: async () => {
       const from = page * pageSize;
@@ -325,6 +328,9 @@ export function useStudentsWithStatsPaginated(
       }
       if (status !== "all") {
         q = q.eq("status", status);
+      }
+      if (createdAfter) {
+        q = q.gte("created_at", createdAfter);
       }
 
       q = q.order("name", { ascending: true }).range(from, to);
