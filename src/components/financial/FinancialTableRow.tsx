@@ -184,9 +184,15 @@ export function FinancialTableRow({
       >
         <p
           className="text-xs text-muted-foreground truncate"
-          title={record.payment_method || "—"}
+          title={
+            record.payment_provider === "abacate_pay"
+              ? "Pix - AbacatePay"
+              : (record.payment_method ?? "—")
+          }
         >
-          {record.payment_method || "—"}
+          {record.payment_provider === "abacate_pay"
+            ? "Pix - AbacatePay"
+            : (record.payment_method ?? "—")}
         </p>
       </td>
 
