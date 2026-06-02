@@ -1,32 +1,20 @@
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { REGEX_PATTERNS } from "@/lib/utils/patterns";
 import {
   brDateToIso,
   buildTimestamptzFromDateAndTime as buildTimestamptz,
 } from "@/lib/utils/classFormHelpers";
-import { classes as classesContent, common } from "@/content";
+import { classes as classesContent } from "@/content";
 import type { Slot } from "./PackageSlotList";
 
 interface PackageFinancialSectionProps {
   slots: Slot[];
   hourlyRate: number | null;
-  paymentMethod: string;
-  onPaymentMethodChange: (method: string) => void;
 }
 
 export function PackageFinancialSection({
   slots,
   hourlyRate,
-  paymentMethod,
-  onPaymentMethodChange,
 }: PackageFinancialSectionProps) {
   const rate = hourlyRate ?? 0;
 
@@ -66,31 +54,6 @@ export function PackageFinancialSection({
           {classesContent.logFinancialSection.noHourlyRate}
         </p>
       )}
-      <div className="space-y-1.5">
-        <Label>{classesContent.logFinancialSection.paymentMethodLabel} *</Label>
-        <Select value={paymentMethod} onValueChange={onPaymentMethodChange}>
-          <SelectTrigger>
-            <SelectValue placeholder={common.placeholders.select} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pix">
-              {classesContent.logFinancialSection.pix}
-            </SelectItem>
-            <SelectItem value="cartao">
-              {classesContent.logFinancialSection.card}
-            </SelectItem>
-            <SelectItem value="dinheiro">
-              {classesContent.logFinancialSection.cash}
-            </SelectItem>
-            <SelectItem value="transferencia">
-              {classesContent.logFinancialSection.transfer}
-            </SelectItem>
-            <SelectItem value="outro">
-              {classesContent.logFinancialSection.other}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
     </div>
   );
 }

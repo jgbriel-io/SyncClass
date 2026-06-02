@@ -45,7 +45,6 @@ export function PackageClassesDialog({
   const [selectedTeacherId, setSelectedTeacherId] = useState(teacherId || "");
   const [teacherError, setTeacherError] = useState<string | null>(null);
   const [semCobranca, setSemCobranca] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>("fixed");
   const [fixedMonth, setFixedMonth] = useState<number>(0);
   const [fixedYear, setFixedYear] = useState<number>(2026);
@@ -65,7 +64,6 @@ export function PackageClassesDialog({
     selectedTeacherId,
     selectedStudent: selectedStudent ?? null,
     semCobranca,
-    paymentMethod,
     enableTeacherSelection: enableTeacherSelection ?? false,
     teacherId,
     onSuccess,
@@ -200,8 +198,6 @@ export function PackageClassesDialog({
           <PackageFinancialSection
             slots={slots}
             hourlyRate={selectedStudent.hourly_rate ?? null}
-            paymentMethod={paymentMethod}
-            onPaymentMethodChange={setPaymentMethod}
           />
         )}
 

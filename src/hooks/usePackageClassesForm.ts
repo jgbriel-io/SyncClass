@@ -57,7 +57,6 @@ interface UsePackageClassesFormOptions {
   selectedTeacherId: string | null;
   selectedStudent: Student | null;
   semCobranca: boolean;
-  paymentMethod: string;
   enableTeacherSelection: boolean;
   teacherId?: string;
   onSuccess?: () => void;
@@ -70,7 +69,6 @@ export const usePackageClassesForm = ({
   selectedTeacherId,
   selectedStudent,
   semCobranca,
-  paymentMethod,
   enableTeacherSelection,
   teacherId,
   onSuccess,
@@ -160,17 +158,13 @@ export const usePackageClassesForm = ({
           : "";
         const [, m, y] = firstDate?.split("/") ?? [];
         const monthYear = m && y ? `${getMonthName(Number(m))} ${y}` : "";
-        if (!paymentMethod?.trim()) {
-          toast.error(classesContent.packageDialog.toasts.selectPaymentMethod);
-          return;
-        }
         packageFinancial = {
           amount: totalAmount,
           due_date: dueBr
             ? brDateToIso(dueBr)
             : new Date().toISOString().slice(0, 10),
           description: `Pacote mensal - ${studentName} - ${slots.length} aula(s) - ${monthYear}`,
-          payment_method: paymentMethod.trim(),
+          payment_method: null,
         };
       }
     }
