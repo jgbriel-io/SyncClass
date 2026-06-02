@@ -102,7 +102,13 @@ export function SendActivityDialog({
   useEffect(() => {
     if (!open) {
       reset({
+        student_id: "",
+        teacher_id: "",
+        title: "",
+        description: "",
         fileSource: "new",
+        file: undefined,
+        existingFileUrl: undefined,
         due_date: format(
           new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           "dd/MM/yyyy",
