@@ -1,7 +1,8 @@
 > **Última Atualização:** 21/05/2026
 
-**Resumo:** Este capítulo detalha os 35 requisitos funcionais (30
-implementados), 36 requisitos não funcionais (100% implementados), 59 regras de
+**Resumo:** Este capítulo detalha os 35 requisitos funcionais (31
+implementados, incluindo RF34 — AbacatePay integrado na Sprint 30),
+36 requisitos não funcionais (100% implementados), 59 regras de
 negócio, casos de uso principais e matriz de rastreabilidade.
 Documenta-se o escopo completo do MVP e requisitos futuros planejados.
 

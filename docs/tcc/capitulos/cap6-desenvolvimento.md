@@ -204,17 +204,17 @@ toast.success(students.formDialog.toasts.success);
 
 ## 6.5 Números do Projeto
 
-| **Métrica**              | **Valor**                     |
-| ------------------------ | ----------------------------- |
-| Total de arquivos (src)  | ~358                          |
-| Linhas de código (src)   | ~55.000                       |
-| Componentes React        | ~184                          |
-| Hooks customizados       | 45 arquivos em `src/hooks/`   |
-| Arquivos de content      | 18 (strings UI centralizadas) |
-| Migrations SQL           | 70                            |
-| Edge Functions           | 9                             |
-| Commits (repo atual)     | 60+                           |
-| Tempo de desenvolvimento | ~4 meses (jan–mai 2026)       |
+| **Métrica**               | **Valor**                     |
+| ------------------------- | ----------------------------- |
+| Arquivos TypeScript (src) | 359                           |
+| Linhas de código (src)    | ~55.000                       |
+| Componentes React         | 181                           |
+| Hooks customizados        | 34                            |
+| Arquivos de content       | 18 (strings UI centralizadas) |
+| Migrations SQL            | 70                            |
+| Edge Functions            | 9                             |
+| Commits (repo atual)      | 147                           |
+| Tempo de desenvolvimento  | ~4,5 meses (jan–jun 2026)     |
 
 **Evolução do Projeto:**
 

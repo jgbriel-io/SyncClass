@@ -32,12 +32,12 @@ Todos os objetivos específicos foram atingidos.
 
 **H1:** É possível desenvolver o SyncClass,
 uma plataforma SaaS funcional e segura,
-com um único desenvolvedor em aproximadamente 4 meses
+com um único desenvolvedor em aproximadamente 4,5 meses
 utilizando ferramentas modernas e IA.
 
 A hipótese H1 foi confirmada.
 O projeto foi desenvolvido por um único desenvolvedor
-em aproximadamente 4 meses (janeiro a maio de 2026),
+em aproximadamente 4,5 meses (janeiro a junho de 2026),
 com 147 commits, 359 arquivos TypeScript e ~55.000 linhas de código.
 O período inclui:
 
@@ -95,8 +95,8 @@ As seguintes limitações foram identificadas:
   Não foram realizados testes de performance com volume real de dados.
 - **Acessibilidade:**
   Implementação básica (WCAG A) não foi auditada formalmente.
-- **Deploy automatizado:**
-  O deploy final para VPS ainda é manual.
+- **Testes de integração:**
+  Não foram implementados testes de integração automatizados que cubram o ciclo completo frontend → RPC → banco. A validação de integração foi realizada via QA manual (Sprint 28).
 
 ## 10.4 Trabalhos Futuros
 
@@ -106,14 +106,13 @@ A Tabela 10.2 apresenta melhorias planejadas para evolução da plataforma.
 
 | Melhoria                                | Justificativa                            |
 | --------------------------------------- | ---------------------------------------- |
-| Deploy automatizado (CD)                | Reduzir fricção de releases              |
+| Testes de integração automatizados      | Cobrir ciclo frontend → RPC → banco      |
 | Testes de carga                         | Validar RNF06 (< 2s) com dados reais     |
 | Auditoria WCAG AA                       | Acessibilidade completa                  |
 | App mobile nativo                       | Melhor experiência para alunos           |
 | Integração com Google Calendar          | Sincronização de agenda                  |
 | Relatórios exportáveis (PDF)            | Necessidade identificada por professores |
 | Sistema de notificações                 | Email, push, in-app                      |
-| Gateway de pagamento real               | Stripe/Mercado Pago                      |
 | Multi-tenancy com planos (Freemium/Pro) | Viabilidade comercial do SaaS            |
 
 ## 10.5 Considerações Finais

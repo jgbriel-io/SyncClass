@@ -52,7 +52,15 @@ entre MVP e incrementos.
 
 O cronograma foi reconstruído a partir do histórico git
 (branch `homolog-old`, 185 commits, 19 de janeiro a 18 de fevereiro de 2026)
-e inferência do período posterior.
+e de artefatos retroativos para o período posterior.
+
+**Nota de rastreabilidade:** Em março de 2026, o repositório foi reestruturado
+para um novo repositório (`sync-class-platform`), resultando na perda de
+aproximadamente 33 commits do período de fevereiro a março.
+O cronograma das fases posteriores foi reconstruído a partir das migrations SQL
+(que preservam sequência e data implícita), dos documentos de sprint
+e dos timestamps dos commits do repositório atual.
+A precisão do cronograma a partir de março é estimada, não exata.
 
 A Tabela 8.2 apresenta as fases do desenvolvimento,
 com período, duração e entregas principais.

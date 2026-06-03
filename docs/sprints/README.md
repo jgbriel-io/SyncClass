@@ -53,15 +53,14 @@ Sprints documentam desenvolvimento incremental do SyncClass. Cada sprint = conju
 | Sprint 25 | 25 mai 2026        | DB: Database Structural Analysis                         | ✅ Implementada | [sprint-25](./sprint-25-database-analysis.md)                       |
 | Sprint 26 | 25 mai 2026        | Security: Full Security Audit                            | ✅ Implementada | [sprint-26](./sprint-26-security-audit.md)                          |
 | Sprint 27 | 25 mai 2026        | Security: Supabase Advisors + npm audit                  | ✅ Implementada | [sprint-27](./sprint-27-supabase-advisors.md)                       |
-| Sprint 28 | 26 mai 2026        | QA: Testes Manuais — 116 itens, 20 rotas                 | 🔴 Pendente     | [sprint-28](./sprint-28-testes-manuais.md)                          |
+| Sprint 28 | 26 mai 2026        | QA: Testes Manuais — 116 itens, 20 rotas                 | ✅ Concluída    | [sprint-28](./sprint-28-testes-manuais.md)                          |
 | Sprint 29 | 31 mai 2026        | Fix: Correções do painel admin e propagação entre visões | ✅ Implementada | [sprint-29](./sprint-29-fix-correcoes-painel-admin.md)              |
 | Sprint 30 | 01 jun 2026        | Feature: AbacatePay Integration (PIX Automático)         | ✅ Implementada | [sprint-30](./sprint-30-abacatepay-integration.md)                  |
 | Sprint 31 | 01 jun 2026        | Fix: Correções encontradas durante QA — teachers         | ✅ Implementada | [sprint-31](./sprint-31-fix-qa-teachers.md)                         |
 
 **Resumo:**
 
-- **Implementadas:** 30 sprints (1–27, 29–31) — desenvolvimento ativo
-- **Em andamento:** Sprint 28 (QA manual)
+- **Implementadas:** 31 sprints (1–31) — desenvolvimento concluído
 - **Total:** 31 sprints documentadas
 
 ---

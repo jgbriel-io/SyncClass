@@ -97,7 +97,7 @@ e a estrutura de pastas foi reorganizada.
 Escrever testes E2E antes dessa estabilização
 resultaria em retrabalho significativo.
 
-Terceiro, o prazo de desenvolvimento (aproximadamente 3 meses, um desenvolvedor)
+Terceiro, o prazo de desenvolvimento (aproximadamente 4,5 meses, um desenvolvedor)
 não comportava a infraestrutura de CI/CD adicional necessária
 para testes E2E confiáveis.
 
@@ -105,20 +105,25 @@ Os fluxos críticos foram validados por testes manuais estruturados (Seção 7.4
 
 ## 7.4 Testes Manuais
 
-Além dos testes automatizados, foram realizadas sessões de teste manual
-para validação de fluxos críticos que envolvem múltiplos módulos
-e interações complexas com o backend.
+A Sprint 28 executou uma campanha de testes manuais estruturada,
+cobrindo as 20 rotas da aplicação com 5 perfis de acesso:
+1 administrador, 2 professores (para testar isolamento de dados)
+e 2 alunos vinculados a professores distintos.
 
-Os fluxos testados manualmente incluem:
+A campanha totalizou 104 itens verificados como aprovados.
+Os itens com comportamento incorreto identificados durante a Sprint 28
+foram corrigidos nas Sprints 29 a 31 (ver `docs/sprints/sprint-28-testes-manuais.md`).
 
-- Fluxo completo de onboarding: convite de usuário,
-  primeiro acesso, troca obrigatória de senha.
-- Pagamento via PIX: geração de QR Code,
-  upload de comprovante, aprovação pelo professor.
-- Entrega de atividade: aluno entrega arquivo,
-  professor visualiza e corrige.
-- Responsividade em dispositivos móveis reais:
-  iPhone 12, Samsung Galaxy S21, iPad Air.
+Os fluxos validados incluem:
+
+- Auth e proteção de rotas: login por role, redirecionamentos,
+  acesso sem autenticação.
+- Isolamento de dados: professor A não visualiza dados do professor B;
+  aluno acessa apenas seus próprios dados.
+- Fluxo financeiro completo: geração de cobrança, pagamento PIX via AbacatePay,
+  upload de comprovante, aprovação e rejeição.
+- Módulo de atividades: criação, entrega pelo aluno, correção pelo professor.
+- Responsividade mobile: iPhone 12, Samsung Galaxy S21, iPad Air.
 
 ## 7.5 Avaliação ISO 25010
 

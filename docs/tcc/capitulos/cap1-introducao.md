@@ -72,7 +72,7 @@ suporte a múltiplos níveis de acesso (_roles_).
 ## 1.5 Hipóteses
 
 - **H1:** É possível desenvolver o SyncClass com um único desenvolvedor em
-  aproximadamente 3 meses utilizando ferramentas modernas e assistência de IA.
+  aproximadamente 4,5 meses utilizando ferramentas modernas e assistência de IA.
   A plataforma deve ser funcional e segura.
 
 - **H2:** O uso de _Backend as a Service_ (Supabase) reduz significativamente o
