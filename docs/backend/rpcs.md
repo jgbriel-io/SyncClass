@@ -8,7 +8,8 @@ Operações complexas no banco via RPCs, triggers automáticos e views otimizada
 - [RPCs principais](#rpcs-principais)
 - [Triggers ativos](#triggers-ativos)
 - [Views](#views)
-- [Materialized Views](#materialized-views)
+- [Materialized Views](#materialized-views) _(removidas — ver nota)_
+- [RPCs adicionais](#rpcs-adicionais)
 - [Ver também](#ver-também)
 
 ## Quando usar
@@ -349,61 +350,9 @@ const { data } = await supabase.from("activities_active").select("*");
 
 ## Materialized Views
 
-**Diferença:** Views normais são queries executadas em tempo real. Materialized views armazenam resultado (snapshot) — mais rápidas mas precisam de refresh manual.
+> **Removidas.** As materialized views `activities_dashboard` e `financial_dashboard` foram criadas na migration 15 e **dropadas na migration 44** (`44_drop_unused_materialized_views.sql`) — nunca foram consultadas pelo frontend. Não existem no banco atual.
 
-### activities_dashboard
-
-**Responsabilidade:** Estatísticas de atividades (total, pendentes, entregues, corrigidas).
-
-**Arquivo:** `supabase/migrations/11_activities.sql`
-
-**Colunas:**
-
-- `teacher_id`
-- `total_activities`
-- `pending_activities`
-- `delivered_activities`
-- `corrected_activities`
-
-**Refresh:**
-
-```sql
-REFRESH MATERIALIZED VIEW activities_dashboard;
-```
-
-**Uso:**
-
-```ts
-const { data } = await supabase.from("activities_dashboard").select("*");
-```
-
-### financial_dashboard
-
-**Responsabilidade:** Estatísticas financeiras (total, pago, pendente, atrasado).
-
-**Arquivo:** `supabase/migrations/09_views.sql`
-
-**Colunas:**
-
-- `teacher_id`
-- `total_amount`
-- `paid_amount`
-- `pending_amount`
-- `overdue_amount`
-
-**Refresh:**
-
-```sql
-REFRESH MATERIALIZED VIEW financial_dashboard;
-```
-
-**Uso:**
-
-```ts
-const { data } = await supabase.from("financial_dashboard").select("*");
-```
-
-**Nota:** Refresh deve ser feito periodicamente (cron job ou trigger).
+## RPCs adicionais
 
 ### admin_update_auth_display_name
 

@@ -53,15 +53,14 @@ Sprints documentam desenvolvimento incremental do SyncClass. Cada sprint = conju
 | Sprint 25 | 25 mai 2026        | DB: Database Structural Analysis                         | ✅ Implementada | [sprint-25](./sprint-25-database-analysis.md)                       |
 | Sprint 26 | 25 mai 2026        | Security: Full Security Audit                            | ✅ Implementada | [sprint-26](./sprint-26-security-audit.md)                          |
 | Sprint 27 | 25 mai 2026        | Security: Supabase Advisors + npm audit                  | ✅ Implementada | [sprint-27](./sprint-27-supabase-advisors.md)                       |
-| Sprint 28 | 26 mai 2026        | QA: Testes Manuais — 116 itens, 20 rotas                 | 🔴 Pendente     | [sprint-28](./sprint-28-testes-manuais.md)                          |
+| Sprint 28 | 26 mai 2026        | QA: Testes Manuais — 116 itens, 20 rotas                 | ✅ Concluída    | [sprint-28](./sprint-28-testes-manuais.md)                          |
 | Sprint 29 | 31 mai 2026        | Fix: Correções do painel admin e propagação entre visões | ✅ Implementada | [sprint-29](./sprint-29-fix-correcoes-painel-admin.md)              |
 | Sprint 30 | 01 jun 2026        | Feature: AbacatePay Integration (PIX Automático)         | ✅ Implementada | [sprint-30](./sprint-30-abacatepay-integration.md)                  |
 | Sprint 31 | 01 jun 2026        | Fix: Correções encontradas durante QA — teachers         | ✅ Implementada | [sprint-31](./sprint-31-fix-qa-teachers.md)                         |
 
 **Resumo:**
 
-- **Implementadas:** 30 sprints (1–27, 29–31) — desenvolvimento ativo
-- **Em andamento:** Sprint 28 (QA manual)
+- **Implementadas:** 31 sprints (1–31) — desenvolvimento concluído
 - **Total:** 31 sprints documentadas
 
 ---
@@ -76,13 +75,17 @@ Features principais do produto. CRUD, auth, financeiro, atividades, segurança.
 
 Melhorias de código. Separação de responsabilidades, remoção de duplicação, centralização de strings, organização de docs.
 
-### Fix (Sprint 11)
+### Fix (Sprints 11, 22, 23, 29, 31)
 
-Correções críticas. Timezone, error boundary.
+Correções críticas. Timezone, error boundary, code review frontend/backend, painel admin, QA teachers.
 
-### Security + Compliance (Sprints 19–20)
+### Security + Compliance (Sprints 19–20, 24–27)
 
-LGPD anonymization, rate limiting server-side, exportação de dados, dashboard de monitoramento.
+LGPD anonymization, rate limiting server-side, exportação de dados, dashboard de monitoramento, RLS audit, DB analysis, security audit, Supabase advisors.
+
+### Feature (Sprint 30)
+
+Integração AbacatePay — pagamento PIX automático, webhook, reembolso.
 
 ---
 
@@ -101,11 +104,11 @@ Features planejadas mas fora do escopo do TCC. Documentadas para extensão futur
 
 ## Validação de Hipóteses do TCC
 
-| Hipótese                                    | Sprints Relacionadas | Evidência                                                                         | Status      |
-| ------------------------------------------- | -------------------- | --------------------------------------------------------------------------------- | ----------- |
-| **H1:** SaaS solo em ~3 meses com IA        | 01–19 (todas)        | 276 commits, 46.400 linhas, 391 arquivos, 1 desenvolvedor                         | ✅ Validada |
-| **H2:** Supabase reduz ≥60% esforço backend | 01, 02, 07           | 23 migrations SQL vs ~80 endpoints REST estimados; RLS elimina middleware de auth | ✅ Validada |
-| **H3:** Unificação reduz tarefas manuais    | 04, 05, 12–15        | Portal unificado (aluno + professor); i18n prep centraliza 170+ strings           | ✅ Validada |
+| Hipótese                                    | Sprints Relacionadas | Evidência                                                                                                 | Status      |
+| ------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------- | ----------- |
+| **H1:** SaaS solo em ~3 meses com IA        | 01–19 (todas)        | 276 commits, 46.400 linhas, 391 arquivos, 1 desenvolvedor                                                 | ✅ Validada |
+| **H2:** Supabase reduz ≥60% esforço backend | 01, 02, 07           | 70 migrations SQL (sprint 07 tinha 23); RLS elimina middleware de auth; sem servidor de aplicação próprio | ✅ Validada |
+| **H3:** Unificação reduz tarefas manuais    | 04, 05, 12–15        | Portal unificado (aluno + professor); i18n prep centraliza 170+ strings                                   | ✅ Validada |
 
 ### Detalhamento por Hipótese
 
