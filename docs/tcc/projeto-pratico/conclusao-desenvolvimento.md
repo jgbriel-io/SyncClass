@@ -26,7 +26,7 @@ CI/CD              → GitHub Actions → Cloudflare Pages
 
 | Métrica                    | Valor                              |
 | -------------------------- | ---------------------------------- |
-| Commits                    | 60                                 |
+| Commits                    | 147                                |
 | Arquivos TypeScript        | 359                                |
 | Linhas de código (src)     | ~50.467                            |
 | Migrations SQL             | 70                                 |

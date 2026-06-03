@@ -27,7 +27,7 @@ A organização do código **segue** o seguinte diretório:
 
 ```text
 src/
-├── components/        # 126 componentes React
+├── components/        # 181 componentes React
 │   ├── ui/            # shadcn/ui + componentes base customizados
 │   ├── students/      # Domínio: alunos
 │   ├── classes/       # Domínio: aulas
@@ -37,7 +37,7 @@ src/
 │   ├── layout/        # Shells por role (AdminShell, TeacherShell, StudentShell)
 │   ├── filters/       # Filtros por módulo
 │   └── auth/          # AuthRedirect, ProtectedRoute, ChangePasswordDialog
-├── hooks/             # 23 hooks (TanStack Query + mutations)
+├── hooks/             # 34 hooks (TanStack Query + mutations)
 ├── pages/             # Páginas por role (admin/, teacher/, student/)
 ├── contexts/          # AuthContext
 ├── integrations/
@@ -152,10 +152,10 @@ Até o estágio atual, o projeto **apresenta** as seguintes métricas de impleme
 
 | **Métrica**              | **Valor** |
 | :----------------------- | :-------- |
-| Total de arquivos        | 391       |
-| Linhas de código         | ~46.400   |
-| Componentes React        | 126       |
-| Hooks customizados       | 23        |
+| Arquivos TypeScript      | 359       |
+| Linhas de código         | ~50.467   |
+| Componentes React        | 181       |
+| Hooks customizados       | 34        |
 | Migrations SQL           | 70        |
 | Commits realizados       | ~218      |
 | Tempo de desenvolvimento | ~3 meses  |

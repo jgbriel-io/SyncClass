@@ -112,12 +112,12 @@ A Tabela 8.3 apresenta métricas quantitativas do projeto.
 
 | Métrica                     | Valor       |
 | --------------------------- | ----------- |
-| Commits (repo atual)        | ~60         |
+| Commits (repo atual)        | ~147        |
 | Arquivos no projeto (src)   | 359         |
 | Linhas de código            | ~50.467     |
 | Migrations SQL              | 70          |
 | Arquivos de teste unitários | 28 (Vitest) |
-| Hooks customizados          | 45          |
+| Hooks customizados          | 34          |
 | Arquivos de content (UI)    | 18          |
 | Desenvolvedores             | 1           |
 
