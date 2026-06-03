@@ -13,7 +13,7 @@
 ```
 npm run lint       → 0 erros, 0 warnings
 npm run type-check → limpo
-npm run test       → 287/287 testes passando (28 suites)
+npm run test       → 304/304 testes passando (28 suites)
 npm run build      → sucesso (Vite 5.4)
 CI/CD              → GitHub Actions → Cloudflare Pages
 ```
@@ -31,7 +31,7 @@ CI/CD              → GitHub Actions → Cloudflare Pages
 | Linhas de código (src)     | ~50.467                            |
 | Migrations SQL             | 70                                 |
 | Suites de teste            | 28                                 |
-| Testes automatizados       | 287                                |
+| Testes automatizados       | 304                                |
 | Sprints implementadas      | 31                                 |
 | Edge Functions             | 9                                  |
 | Período de desenvolvimento | 19 jan – 01 jun 2026 (~19 semanas) |
@@ -172,7 +172,7 @@ A infraestrutura atual suporta as seguintes extensões sem mudança de arquitetu
 | ------------------------ | -------------------------------------------- |
 | Zero erros de lint       | ✅ `0 errors, 0 warnings`                    |
 | Zero erros de tipo       | ✅ `tsc --noEmit` limpo                      |
-| Cobertura de testes      | ✅ 287 testes, 28 suites                     |
+| Cobertura de testes      | ✅ 304 testes, 28 suites                     |
 | Sem `any` explícito      | ✅ `strict: true` + ESLint                   |
 | Strings UI centralizadas | ✅ `src/content/` — zero hardcode            |
 | RLS em todas as tabelas  | ✅ 70 migrations auditadas                   |
@@ -196,7 +196,7 @@ Após encerramento do desenvolvimento, realizada varredura de lixo no repositór
 | `.agents/` (desrastreado do git)     | Skills do Claude Code, não código do projeto |
 | `.kiroignore`                        | Config do Kiro IDE                           |
 
-Build continua passando após limpeza: 287/287 testes, lint e type-check limpos.
+Build continua passando após limpeza: 304/304 testes, lint e type-check limpos.
 
 ---
 

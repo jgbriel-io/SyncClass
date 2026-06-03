@@ -39,7 +39,7 @@ Plataforma SaaS para professores autônomos de inglês. Substitui planilhas e co
 | Arquivos TypeScript        | 359                                |
 | Linhas de código (src)     | ~50.467                            |
 | Migrations SQL             | 70                                 |
-| Testes automatizados       | 287 (28 suites)                    |
+| Testes automatizados       | 304 (28 suites)                    |
 | Strings UI centralizadas   | 860+                               |
 
 ---
@@ -64,7 +64,7 @@ Plataforma SaaS para professores autônomos de inglês. Substitui planilhas e co
 | -------------------- | -------------------------------------------- |
 | Lint                 | ✅ 0 erros, 0 warnings                       |
 | Type-check           | ✅ `tsc --noEmit` limpo                      |
-| Testes automatizados | ✅ 287/287 passando (28 suites)              |
+| Testes automatizados | ✅ 304/304 passando (28 suites)              |
 | Build de produção    | ✅ Vite 5.4, sem erros                       |
 | CI/CD                | ✅ lint → type-check → test → build → deploy |
 | TypeScript strict    | ✅ sem `any` explícito                       |

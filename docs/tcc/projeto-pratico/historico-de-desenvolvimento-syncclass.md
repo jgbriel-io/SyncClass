@@ -191,7 +191,7 @@ tags:
 | **Sprints Implementadas**        | 31             |
 | **Migrations de Banco**          | 70             |
 | **Bugs de Auditoria Corrigidos** | 36             |
-| **Testes Automatizados**         | 287            |
+| **Testes Automatizados**         | 304            |
 | **Políticas de Segurança (RLS)** | 40+            |
 | **Arquivos de Documentação**     | 50+            |
 | **Strings UI Centralizadas**     | 900+           |

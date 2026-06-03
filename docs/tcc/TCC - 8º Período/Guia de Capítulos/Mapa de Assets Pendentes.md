@@ -70,7 +70,7 @@ npm run test:e2e:report # Relatório Visual (Playwright)
 
 ### Cap. 7 — Qualidade e Validação
 
-- [ ] 🖼️ **Output Vitest:** Captura do terminal com "Passed" em todos os 287 testes.
+- [ ] 🖼️ **Output Vitest:** Captura do terminal com "Passed" em todos os 304 testes.
 - [ ] 🖼️ **Relatório Playwright:** Dashboard de execução dos testes E2E.
 
 ### Cap. 8 — Gestão do Projeto

@@ -130,7 +130,7 @@ npm run dev          # dev server (localhost:5173)
 npm run lint         # ESLint
 npm run type-check   # TypeScript
 npm run check        # lint + type-check
-npm run test         # Vitest (287 testes)
+npm run test         # Vitest (304 testes)
 npm run build        # build produção
 ```
 
@@ -171,13 +171,13 @@ docs/
 ### Métricas
 
 - **Commits:** 60
-- **Sprints:** 27 implementadas
-- **Migrations:** 43
-- **Arquivos TypeScript:** 357
+- **Sprints:** 31 implementadas
+- **Migrations:** 70
+- **Arquivos TypeScript:** 359
 - **Linhas de código (src):** ~50.467
 - **Strings UI:** 860+ centralizadas
-- **Testes:** 287 (26 suites)
-- **RLS Policies:** 43+
+- **Testes:** 304 (28 suites)
+- **RLS Policies:** 70+
 
 ## Convenções
 

@@ -80,7 +80,7 @@ A Inteligência Artificial (Claude/Anthropic via Kiro IDE e CLI) **é utilizada*
 | Arquivos TypeScript  | 359                    |
 | Linhas de código     | ~50.467                |
 | Migrations SQL       | 70                     |
-| Testes implementados | 287 (28 suites Vitest) |
+| Testes implementados | 304 (28 suites Vitest) |
 
 ### 8.4.2 Ganhos de Aceleração
 

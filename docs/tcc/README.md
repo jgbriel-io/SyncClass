@@ -49,11 +49,11 @@ Unificar gestão de alunos, aulas e cobranças em uma plataforma reduz tarefas m
 | **Período de Desenvolvimento** | 19 jan – 26 mai 2026 (~18 semanas) |
 | **Sprints Implementadas**      | 31                                 |
 | **Commits**                    | 60+                                |
-| **Arquivos TypeScript**        | ~367                               |
+| **Arquivos TypeScript**        | 359                                |
 | **Linhas de Código (src)**     | ~50.467                            |
 | **Migrations de Banco**        | 70                                 |
-| **Suites de Teste**            | 26                                 |
-| **Testes Automatizados**       | 287+                               |
+| **Suites de Teste**            | 28                                 |
+| **Testes Automatizados**       | 304+                               |
 | **Strings UI Centralizadas**   | 860+                               |
 | **RLS Policies**               | 43+                                |
 
