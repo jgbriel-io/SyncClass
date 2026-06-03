@@ -63,7 +63,7 @@ React SPA (Vite) foi escolhido por:
 ## 5.3 Modelo de Dados
 
 > 🖼️ **Figura:** DER completo — gerar no [dbdiagram.io](https://dbdiagram.io)
-> a partir do schema em `docs/banco/schema.md`
+> a partir do schema em `docs/database/schema.md`
 
 ### 5.3.1 Tabelas
 
@@ -134,14 +134,17 @@ _roles_.
 Operações que exigem `service_role` são executadas em Edge Functions Deno, fora
 do alcance do cliente:
 
-| **Função**            | **Motivo de ser server-side**                            |
-| --------------------- | -------------------------------------------------------- |
-| `invite-user`         | Cria usuário no auth com service_role + rollback atômico |
-| `reset-password`      | Altera senha de outro usuário                            |
-| `admin-delete-user`   | Deleta usuário do auth                                   |
-| `export-user-data`    | Exporta dados pessoais via service_role (LGPD)           |
-| `cleanup-storage`     | Acessa todos os buckets sem restrição                    |
-| `cleanup-old-records` | Deleta registros de qualquer usuário                     |
+| **Função**               | **Motivo de ser server-side**                             |
+| ------------------------ | --------------------------------------------------------- |
+| `invite-user`            | Cria usuário no auth com service_role + rollback atômico  |
+| `reset-password`         | Altera senha de outro usuário                             |
+| `admin-delete-user`      | Deleta usuário do auth                                    |
+| `export-user-data`       | Exporta dados pessoais via service_role (LGPD)            |
+| `cleanup-storage`        | Acessa todos os buckets sem restrição                     |
+| `cleanup-old-records`    | Deleta registros de qualquer usuário                      |
+| `create-abacate-payment` | Gera QR Code PIX via AbacatePay (Sprint 30)               |
+| `refund-abacate-payment` | Estorna pagamento via AbacatePay (Sprint 30)              |
+| `abacate-webhook`        | Processa notificações de pagamento AbacatePay (Sprint 30) |
 
 ---
 
@@ -165,6 +168,6 @@ do alcance do cliente:
 - **RLS:** Ver [docs/database/rls.md](../database/rls.md) para todas as 40+
   políticas implementadas
 - **Backend:** Ver [docs/backend/edge-functions.md](../backend/edge-functions.md)
-  para detalhes das 5 Edge Functions
+  para detalhes das 9 Edge Functions
 - **Implementação:** Ver [Cap. 6 — Desenvolvimento](./cap6-desenvolvimento.md)
   para tecnologias e stack técnico

@@ -65,8 +65,8 @@ Histórico de migrations, sequência de aplicação e dependências.
 
 **Conteúdo:**
 
-- 21 migrations aplicadas (structure, logic, rpcs, rls, fixes)
-- Dependências críticas (04 depende de 02, 21 corrige bugs de 04 e 10)
+- 70 migrations aplicadas (structure, logic, rpcs, rls, fixes, sprints 18–31)
+- Dependências críticas (04 depende de 02, 21 corrige bugs de 04 e 10, 44 dropa materialized views não usadas)
 - Como aplicar (`npx supabase db push`)
 - Como criar nova migration
 

@@ -47,19 +47,24 @@ O escopo do projeto **está dividido** entre o núcleo funcional essencial (MVP)
 
 As atividades **estão distribuídas** conforme o progresso real capturado no histórico de desenvolvimento:
 
-| **Fase**               | **Período** | **Entregas Principais**                                   |
-| :--------------------- | :---------- | :-------------------------------------------------------- |
-| **Fundação**           | Jan/2026    | Schema inicial, CRUD pagamentos, API de localização.      |
-| **Auth & Usuários**    | Jan/2026    | Auth por role, profiles e integração com shadcn/ui.       |
-| **Qualidade & Infra**  | Jan/2026    | Setup de CI/CD, design tokens, PWA e skeletons.           |
-| **Features Avançadas** | Fev/2026    | Dashboard, histórico do aluno e sistema de busca.         |
-| **Estabilização & UX** | Fev/2026    | Mobile-first, atividades, pacotes de aulas e testes.      |
-| **Segurança**          | Fev/2026    | Idempotência, gestão de faltas e cascade delete.          |
-| **Auditorias**         | Mar/2026    | Migrations de segurança (17), auditorias e docs técnicos. |
-| **Reestruturação**     | Mar/2026    | Novo repositório e otimização de steering files.          |
-| **Consolidação**       | Abr/2026    | Restore codebase, migrations finais e organização do TCC. |
+| **Fase**               | **Período** | **Entregas Principais**                                    |
+| :--------------------- | :---------- | :--------------------------------------------------------- |
+| **Fundação**           | Jan/2026    | Schema inicial, CRUD pagamentos, API de localização.       |
+| **Auth & Usuários**    | Jan/2026    | Auth por role, profiles e integração com shadcn/ui.        |
+| **Qualidade & Infra**  | Jan/2026    | Setup de CI/CD, design tokens, PWA e skeletons.            |
+| **Features Avançadas** | Fev/2026    | Dashboard, histórico do aluno e sistema de busca.          |
+| **Estabilização & UX** | Fev/2026    | Mobile-first, atividades, pacotes de aulas e testes.       |
+| **Segurança**          | Fev/2026    | Idempotência, gestão de faltas e cascade delete.           |
+| **Auditorias**         | Mar/2026    | Migrations de segurança (17), auditorias e docs técnicos.  |
+| **Reestruturação**     | Mar/2026    | Novo repositório e otimização de steering files.           |
+| **Consolidação**       | Abr/2026    | Restore codebase, migrations finais e organização do TCC.  |
+| **Refatoração**        | Mai/2026    | Centralização de strings UI, docs técnicos, design tokens. |
+| **Segurança & LGPD**   | Mai/2026    | Rate limiting, anonimização LGPD, audit OWASP Top 10.      |
+| **Code Review & RLS**  | Mai/2026    | Auditorias Sprint 21–27: frontend, backend, RLS, DB.       |
+| **QA Manual**          | Mai/2026    | Sprint 28 — 116 itens, 20 rotas, 5 roles. Concluído.       |
+| **Fixes + AbacatePay** | Jun/2026    | Sprints 29–31: bugs pós-QA + integração PIX AbacatePay.    |
 
-**Duração:** Desenvolvimento ativo em curso há aproximadamente 3 meses.
+**Duração:** ~19 semanas de desenvolvimento ativo (jan–jun 2026). 31 sprints concluídas.
 
 🖼️ **Figura:** Gráfico de Gantt do cronograma de desenvolvimento
 
@@ -69,13 +74,13 @@ A Inteligência Artificial (Claude/Anthropic via Kiro IDE e CLI) **é utilizada*
 
 ### 8.4.1 Evidências Quantitativas de Progresso
 
-| **Métrica**          | **Valor**             |
-| :------------------- | :-------------------- |
-| Commits realizados   | ~218                  |
-| Arquivos gerenciados | 391                   |
-| Linhas de código     | ~46.400               |
-| Migrations SQL       | 23                    |
-| Testes implementados | 161 (unitários + E2E) |
+| **Métrica**          | **Valor**              |
+| :------------------- | :--------------------- |
+| Commits realizados   | ~218                   |
+| Arquivos TypeScript  | 359                    |
+| Linhas de código     | ~50.467                |
+| Migrations SQL       | 70                     |
+| Testes implementados | 287 (28 suites Vitest) |
 
 ### 8.4.2 Ganhos de Aceleração
 
@@ -91,14 +96,14 @@ A IA **funciona** como um par de programação 24h, permitindo que um único des
 
 O controle de riscos **ocorre** de forma proativa durante o desenvolvimento:
 
-| **ID**  | **Risco**                | **Impacto** | **Mitigação**                         | **Situação**           |
-| :------ | :----------------------- | :---------- | :------------------------------------ | :--------------------- |
-| **R01** | Integridade do Histórico | Alto        | Branches de backup redundantes.       | ⚠️ Ocorrido/Controlado |
-| **R02** | Vulnerabilidades RLS     | Crítico     | Auditorias constantes e migrations.   | ✅ Mitigado            |
-| **R03** | Performance de Dados     | Alto        | Índices, views e paginação.           | ✅ Mitigado            |
-| **R04** | Conformidade LGPD        | Crítico     | Soft delete e anonimização nativa.    | ✅ Implementado        |
-| **R07** | Bugs de Timezone         | Médio       | Documentação e correção planejada.    | ⚠️ Pendente            |
-| **R08** | PII no Sentry            | Alto        | Ajuste planejado em `sendDefaultPii`. | ⚠️ Pendente            |
+| **ID**  | **Risco**                | **Impacto** | **Mitigação**                           | **Situação**           |
+| :------ | :----------------------- | :---------- | :-------------------------------------- | :--------------------- |
+| **R01** | Integridade do Histórico | Alto        | Branches de backup redundantes.         | ⚠️ Ocorrido/Controlado |
+| **R02** | Vulnerabilidades RLS     | Crítico     | Auditorias constantes e migrations.     | ✅ Mitigado            |
+| **R03** | Performance de Dados     | Alto        | Índices, views e paginação.             | ✅ Mitigado            |
+| **R04** | Conformidade LGPD        | Crítico     | Soft delete e anonimização nativa.      | ✅ Implementado        |
+| **R07** | Bugs de Timezone         | Médio       | Corrigido na Sprint 11.                 | ✅ Resolvido           |
+| **R08** | PII no Sentry            | Alto        | Sentry removido do projeto (Sprint 18). | ✅ Resolvido           |
 
 ## 8.6 Ferramentas de Gestão
 

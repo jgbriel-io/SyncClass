@@ -70,17 +70,17 @@ npm run test:e2e:report # Relatório Visual (Playwright)
 
 ### Cap. 7 — Qualidade e Validação
 
-- [ ] 🖼️ **Output Vitest:** Captura do terminal com "Passed" em todos os 161 testes.
+- [ ] 🖼️ **Output Vitest:** Captura do terminal com "Passed" em todos os 287 testes.
 - [ ] 🖼️ **Relatório Playwright:** Dashboard de execução dos testes E2E.
 
 ### Cap. 8 — Gestão do Projeto
 
-- [ ] 🖼️ **Gráfico de Gantt Retroativo:** Cronograma visual das 9 sprints.
+- [ ] 🖼️ **Gráfico de Gantt Retroativo:** Cronograma visual das 31 sprints.
 - [ ] 🖼️ **Matriz de Riscos:** Tabela visual (Probabilidade x Impacto).
 
 ### Cap. 9 — Infraestrutura e Deploy
 
-- [ ] 🖼️ **Diagrama de Infraestrutura:** (VPS Host ↔ Docker Container ↔ Supabase Cloud).
+- [ ] 🖼️ **Diagrama de Infraestrutura:** (Cloudflare Pages ↔ GitHub Actions ↔ Supabase Cloud).
 - [ ] 🖼️ **Workflow CI/CD:** Fluxograma das etapas do GitHub Actions.
 
 ---

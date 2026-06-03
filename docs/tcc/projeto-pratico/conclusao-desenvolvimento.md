@@ -13,7 +13,7 @@
 ```
 npm run lint       → 0 erros, 0 warnings
 npm run type-check → limpo
-npm run test       → 287/287 testes passando (26 suites)
+npm run test       → 287/287 testes passando (28 suites)
 npm run build      → sucesso (Vite 5.4)
 CI/CD              → GitHub Actions → Cloudflare Pages
 ```
@@ -27,12 +27,12 @@ CI/CD              → GitHub Actions → Cloudflare Pages
 | Métrica                    | Valor                              |
 | -------------------------- | ---------------------------------- |
 | Commits                    | 60                                 |
-| Arquivos TypeScript        | 357                                |
+| Arquivos TypeScript        | 359                                |
 | Linhas de código (src)     | ~50.467                            |
-| Migrations SQL             | 61                                 |
-| Suites de teste            | 26                                 |
+| Migrations SQL             | 70                                 |
+| Suites de teste            | 28                                 |
 | Testes automatizados       | 287                                |
-| Sprints implementadas      | 30                                 |
+| Sprints implementadas      | 31                                 |
 | Edge Functions             | 9                                  |
 | Período de desenvolvimento | 19 jan – 01 jun 2026 (~19 semanas) |
 
@@ -91,16 +91,17 @@ MVP funcional entregue em ~30 dias úteis (19/jan → 18/fev).
 
 ### Fase 5 — QA Manual (Sprint 28)
 
-| Sprint    | Período | Foco                                          | Items       |
-| --------- | ------- | --------------------------------------------- | ----------- |
-| Sprint 28 | 26 mai  | Testes manuais — 20 rotas, 116 itens, 5 roles | 🔴 Pendente |
+| Sprint    | Período | Foco                                          | Items        |
+| --------- | ------- | --------------------------------------------- | ------------ |
+| Sprint 28 | 26 mai  | Testes manuais — 20 rotas, 116 itens, 5 roles | ✅ Concluído |
 
-### Fase 6 — Fixes & Feature Pós-QA (Sprints 29–30)
+### Fase 6 — Fixes & Feature Pós-QA (Sprints 29–31)
 
 | Sprint    | Período | Foco                                                        | Items |
 | --------- | ------- | ----------------------------------------------------------- | ----- |
 | Sprint 29 | 31 mai  | Fix: 19 bugs críticos do painel admin + propagação de dados | ✅    |
 | Sprint 30 | 01 jun  | Feature: Integração AbacatePay — PIX automático + reembolso | ✅    |
+| Sprint 31 | 03 jun  | Fix: Period filter server-side + code-review fixes          | ✅    |
 
 ---
 
@@ -123,8 +124,8 @@ Mantidas como sprints `NAO-IMPLEMENTADA` por decisão de escopo, não por limita
 
 | Hipótese                                                           | Evidência                                                                                                                                                                                                              | Status      |
 | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **H1** SaaS funcional solo em ~3 meses com IA como aceleradora     | 60 commits, 357 arquivos, ~50k linhas, 1 desenvolvedor, 18 semanas                                                                                                                                                     | ✅ Validada |
-| **H2** Supabase reduz ≥60% do esforço backend vs stack tradicional | 61 migrations SQL gerenciam auth, RLS, RPCs, triggers, Edge Functions — equivalente a ~80+ endpoints REST + middleware de auth em stack tradicional; integração AbacatePay em 3 Edge Functions (sem servidor dedicado) | ✅ Validada |
+| **H1** SaaS funcional solo em ~3 meses com IA como aceleradora     | 60 commits, 359 arquivos, ~50k linhas, 1 desenvolvedor, 18 semanas                                                                                                                                                     | ✅ Validada |
+| **H2** Supabase reduz ≥60% do esforço backend vs stack tradicional | 70 migrations SQL gerenciam auth, RLS, RPCs, triggers, Edge Functions — equivalente a ~80+ endpoints REST + middleware de auth em stack tradicional; integração AbacatePay em 3 Edge Functions (sem servidor dedicado) | ✅ Validada |
 | **H3** Plataforma unificada reduz tarefas manuais do professor     | Portal único: alunos, aulas, cobranças, atividades, relatórios                                                                                                                                                         | ✅ Validada |
 
 ---
@@ -171,10 +172,10 @@ A infraestrutura atual suporta as seguintes extensões sem mudança de arquitetu
 | ------------------------ | -------------------------------------------- |
 | Zero erros de lint       | ✅ `0 errors, 0 warnings`                    |
 | Zero erros de tipo       | ✅ `tsc --noEmit` limpo                      |
-| Cobertura de testes      | ✅ 287 testes, 26 suites                     |
+| Cobertura de testes      | ✅ 287 testes, 28 suites                     |
 | Sem `any` explícito      | ✅ `strict: true` + ESLint                   |
 | Strings UI centralizadas | ✅ `src/content/` — zero hardcode            |
-| RLS em todas as tabelas  | ✅ 43 migrations auditadas                   |
+| RLS em todas as tabelas  | ✅ 70 migrations auditadas                   |
 | CI/CD funcional          | ✅ lint → type-check → test → build → deploy |
 | Componentes ≤400 linhas  | ✅ CR-002 aplicado (5 componentes divididos) |
 | Security headers         | ✅ CSP, X-Frame-Options via `_headers`       |
@@ -207,5 +208,4 @@ O produto cobre o ciclo completo de gestão de professores autônomos de inglês
 
 **Pendências restantes:**
 
-- Sprint 28 — QA manual (116 itens em 20 rotas)
 - Capítulos 2–10 do TCC — rascunhos existem em `docs/tcc/capitulos/`, precisam de revisão ABNT e versão Word final

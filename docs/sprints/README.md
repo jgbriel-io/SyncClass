@@ -76,13 +76,17 @@ Features principais do produto. CRUD, auth, financeiro, atividades, segurança.
 
 Melhorias de código. Separação de responsabilidades, remoção de duplicação, centralização de strings, organização de docs.
 
-### Fix (Sprint 11)
+### Fix (Sprints 11, 22, 23, 29, 31)
 
-Correções críticas. Timezone, error boundary.
+Correções críticas. Timezone, error boundary, code review frontend/backend, painel admin, QA teachers.
 
-### Security + Compliance (Sprints 19–20)
+### Security + Compliance (Sprints 19–20, 24–27)
 
-LGPD anonymization, rate limiting server-side, exportação de dados, dashboard de monitoramento.
+LGPD anonymization, rate limiting server-side, exportação de dados, dashboard de monitoramento, RLS audit, DB analysis, security audit, Supabase advisors.
+
+### Feature (Sprint 30)
+
+Integração AbacatePay — pagamento PIX automático, webhook, reembolso.
 
 ---
 
@@ -101,11 +105,11 @@ Features planejadas mas fora do escopo do TCC. Documentadas para extensão futur
 
 ## Validação de Hipóteses do TCC
 
-| Hipótese                                    | Sprints Relacionadas | Evidência                                                                         | Status      |
-| ------------------------------------------- | -------------------- | --------------------------------------------------------------------------------- | ----------- |
-| **H1:** SaaS solo em ~3 meses com IA        | 01–19 (todas)        | 276 commits, 46.400 linhas, 391 arquivos, 1 desenvolvedor                         | ✅ Validada |
-| **H2:** Supabase reduz ≥60% esforço backend | 01, 02, 07           | 23 migrations SQL vs ~80 endpoints REST estimados; RLS elimina middleware de auth | ✅ Validada |
-| **H3:** Unificação reduz tarefas manuais    | 04, 05, 12–15        | Portal unificado (aluno + professor); i18n prep centraliza 170+ strings           | ✅ Validada |
+| Hipótese                                    | Sprints Relacionadas | Evidência                                                                                                 | Status      |
+| ------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------- | ----------- |
+| **H1:** SaaS solo em ~3 meses com IA        | 01–19 (todas)        | 276 commits, 46.400 linhas, 391 arquivos, 1 desenvolvedor                                                 | ✅ Validada |
+| **H2:** Supabase reduz ≥60% esforço backend | 01, 02, 07           | 70 migrations SQL (sprint 07 tinha 23); RLS elimina middleware de auth; sem servidor de aplicação próprio | ✅ Validada |
+| **H3:** Unificação reduz tarefas manuais    | 04, 05, 12–15        | Portal unificado (aluno + professor); i18n prep centraliza 170+ strings                                   | ✅ Validada |
 
 ### Detalhamento por Hipótese
 

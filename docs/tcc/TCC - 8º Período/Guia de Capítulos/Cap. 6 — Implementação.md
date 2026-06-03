@@ -48,8 +48,8 @@ src/
     ├── validation/    # schemas Zod
     └── security/      # errorHandler
 supabase/
-├── migrations/        # 23 migrations SQL
-└── functions/         # 5 Edge Functions (Deno/TypeScript)
+├── migrations/        # 70 migrations SQL
+└── functions/         # 9 Edge Functions (Deno/TypeScript)
 ```
 
 🖼️ **Figura:** Estrutura de pastas formatada
@@ -156,7 +156,7 @@ Até o estágio atual, o projeto **apresenta** as seguintes métricas de impleme
 | Linhas de código         | ~46.400   |
 | Componentes React        | 126       |
 | Hooks customizados       | 23        |
-| Migrations SQL           | 23        |
+| Migrations SQL           | 70        |
 | Commits realizados       | ~218      |
 | Tempo de desenvolvimento | ~3 meses  |
 

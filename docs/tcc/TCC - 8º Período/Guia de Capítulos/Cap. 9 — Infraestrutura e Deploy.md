@@ -17,7 +17,7 @@ tags:
 
 A infraestrutura do projeto **está dividida** em duas frentes independentes que se comunicam via SDK:
 
-- **Frontend:** A aplicação React compilada **é servida** via Nginx dentro de um container Docker.
+- **Frontend:** A aplicação React compilada **é servida** via Cloudflare Pages (CDN global, sem servidor dedicado).
 - **Backend (BaaS):** O Supabase **gerencia** o PostgreSQL, autenticação, armazenamento e as funções de borda (Edge Functions).
 
 Esta arquitetura elimina a necessidade de um servidor de aplicação tradicional, permitindo que o frontend consuma os serviços de backend diretamente com segurança.
@@ -28,26 +28,25 @@ O sistema **opera** sob a seguinte matriz de ambientes:
 
 | **Ambiente**    | **Branch**    | **URL / Acesso** | **Instância de Banco** |
 | :-------------- | :------------ | :--------------- | :--------------------- |
-| Desenvolvimento | `dev` / local | `localhost:8080` | Supabase (Cloud)       |
-| Homologação     | `homolog`     | —                | Supabase (Cloud)       |
-| Produção        | `main`        | VPS Própria      | Supabase (Cloud)       |
+| Desenvolvimento | `dev` / local | `localhost:5173` | Supabase (Cloud)       |
+| Produção        | `main`        | Cloudflare Pages | Supabase (Cloud)       |
 
 🖼️ **Figura:** Diagrama de infraestrutura
 
-## 9.3 Frontend — Dockerização
+## 9.3 Frontend — Cloudflare Pages
 
-### 9.3.1 Estratégia de Build (Multi-stage)
+### 9.3.1 Estratégia de Build e Deploy
 
-Para otimizar o deploy, o **Dockerfile adota** o modelo multi-stage:
+O deploy do frontend **ocorre** via Cloudflare Pages integrado ao GitHub Actions:
 
-1.  **Estágio de Build (builder):** Utiliza Node 18 Alpine para instalar dependências e gerar o bundle estático via `npm run build`.
-2.  **Estágio de Runtime:** Utiliza uma imagem leve do Nginx para servir os arquivos gerados na porta 80.
+1.  **Build:** GitHub Actions executa `npm run build` (Vite 5.4) gerando o bundle estático em `dist/`.
+2.  **Deploy:** O bundle é publicado no Cloudflare Pages (CDN global) automaticamente após cada push em `main`.
 
 **Benefícios observados:**
 
-- Redução drástica da imagem final (~20MB contra ~300MB da imagem com Node).
-- Maior segurança, pois o ambiente de execução não possui ferramentas de desenvolvimento.
-- Alta performance no serviço de arquivos estáticos.
+- Zero custo de infraestrutura (plano gratuito Cloudflare Pages).
+- CDN global com latência baixa sem configuração adicional.
+- Deploy atômico com rollback imediato caso o build falhe.
 
 ### 9.3.2 Variáveis de Ambiente
 
@@ -65,7 +64,7 @@ O gerenciamento de segredos **ocorre** via variáveis injetadas pelo Vite em tem
 
 O backend **sustenta-se** nos seguintes serviços gerenciados:
 
-- **PostgreSQL:** Banco de dados relacional (gerenciado via 23 migrations ativas).
+- **PostgreSQL:** Banco de dados relacional (gerenciado via 70 migrations ativas).
 - **Supabase Auth:** Autenticação baseada em JWT e controle de sessões.
 - **Supabase Storage:** Armazenamento de arquivos (atividades, comprovantes e avatares).
 - **PostgREST:** Camada que expõe o banco como uma API REST de forma automática.
@@ -74,11 +73,17 @@ O backend **sustenta-se** nos seguintes serviços gerenciados:
 
 Para operações sensíveis que exigem privilégios administrativos, as seguintes funções **estão implementadas**:
 
-| **Função**        | **Gatilho** | **Responsabilidade**                                 |
-| :---------------- | :---------- | :--------------------------------------------------- |
-| `invite-user`     | HTTP POST   | Cadastro atômico de usuários com tratamento de erro. |
-| `reset-password`  | HTTP POST   | Redefinição de credenciais via _service_role_.       |
-| `cleanup-storage` | Agendado    | Rotina de limpeza de arquivos órfãos no Storage.     |
+| **Função**               | **Gatilho** | **Responsabilidade**                                 |
+| :----------------------- | :---------- | :--------------------------------------------------- |
+| `invite-user`            | HTTP POST   | Cadastro atômico de usuários com tratamento de erro. |
+| `reset-password`         | HTTP POST   | Redefinição de credenciais via _service_role_.       |
+| `admin-delete-user`      | HTTP POST   | Remoção de usuários do Auth de forma controlada.     |
+| `cleanup-storage`        | Agendado    | Rotina de limpeza de arquivos órfãos no Storage.     |
+| `cleanup-old-records`    | Agendado    | Manutenção de registros antigos.                     |
+| `export-user-data`       | HTTP POST   | Exportação LGPD de dados pessoais do usuário.        |
+| `create-abacate-payment` | HTTP POST   | Criação de cobrança PIX via AbacatePay.              |
+| `refund-abacate-payment` | HTTP POST   | Estorno de pagamento PIX via AbacatePay.             |
+| `abacate-webhook`        | HTTP POST   | Recepção de eventos de pagamento do AbacatePay.      |
 
 ## 9.5 CI/CD — Automação via GitHub Actions
 
@@ -107,19 +112,19 @@ O sistema **protege** os dados através de múltiplas camadas:
 - **Transporte:** Uso obrigatório de HTTPS com certificados SSL.
 - **Autorização:** Aplicação rigorosa de Row Level Security (RLS) no banco.
 - **Defesa:** Rate limiting implementado via função SQL (`check_rate_limit`) para mitigar ataques de força bruta.
-- **Monitoramento:** Integração com Sentry para captura de erros em tempo real.
+- **Monitoramento:** Logger interno (`src/lib/logger.ts`) para captura de erros em desenvolvimento.
 
 ## 9.7 Fluxo de Deploy Atual
 
-Atualmente, o deploy **segue** o seguinte fluxo:
+O deploy **segue** o seguinte fluxo automatizado:
 
-1.  O desenvolvedor realiza o `git push`.
-2.  O GitHub Actions **valida** a qualidade do código.
-3.  Após o sucesso, o deploy na VPS **é realizado** manualmente via acesso SSH, executando `docker compose pull` e `up`.
+1.  O desenvolvedor realiza o `git push` para `main`.
+2.  O GitHub Actions **executa** lint → type-check → test → build.
+3.  Após sucesso, o bundle estático **é publicado automaticamente** no Cloudflare Pages.
 
 ---
 
 ## Assets Necessários
 
-- [ ] 🖼️ **Figura:** Diagrama de infraestrutura (VPS + Docker + Supabase).
+- [ ] 🖼️ **Figura:** Diagrama de infraestrutura (Cloudflare Pages + GitHub Actions + Supabase).
 - [ ] 🖼️ **Figura:** Diagrama do pipeline CI/CD (GitHub Actions).

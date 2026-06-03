@@ -3,7 +3,7 @@
 **Resumo:** Este capítulo detalha a stack tecnológica, estrutura de pastas,
 padrões de código (separação de responsabilidades, design tokens,
 centralização de strings e query keys), os 6 módulos implementados e métricas
-do projeto (~50.467 linhas, ~184 componentes, 43 migrations).
+do projeto (~50.467 linhas, ~184 componentes, 70 migrations).
 
 ## 6.1 Stack Tecnológica
 
@@ -31,10 +31,10 @@ src/
 │   ├── filters/       # Filtros por módulo
 │   ├── dashboard/     # Cards e gráficos do dashboard
 │   └── auth/          # AuthRedirect, ProtectedRoute, ChangePasswordDialog
-├── hooks/             # 45 hooks customizados (planos, sem subpastas)
+├── hooks/             # 38 hooks customizados + 7 arquivos de teste (planos, sem subpastas)
 ├── pages/             # Páginas por role (admin/, teacher/, student/)
 ├── contexts/          # AuthContext
-├── content/           # 17 arquivos de strings UI centralizadas (Sprint 12-15)
+├── content/           # 18 arquivos de strings UI centralizadas (Sprint 12-15)
 │   ├── common.ts      # Textos compartilhados (actions, errors, status)
 │   ├── students.ts    # Módulo de alunos
 │   ├── financial.ts   # Módulo financeiro
@@ -49,8 +49,8 @@ src/
     ├── validation/    # schemas Zod
     └── security/      # errorHandler
 supabase/
-├── migrations/        # 43 migrations SQL
-└── functions/         # 6 Edge Functions (Deno/TypeScript)
+├── migrations/        # 70 migrations SQL
+└── functions/         # 9 Edge Functions (Deno/TypeScript)
 ```
 
 > 🖼️ **Figura:** Estrutura de pastas formatada
@@ -210,10 +210,10 @@ toast.success(students.formDialog.toasts.success);
 | Linhas de código (src)   | ~50.467                       |
 | Componentes React        | ~184                          |
 | Hooks customizados       | 45 arquivos em `src/hooks/`   |
-| Arquivos de content      | 17 (strings UI centralizadas) |
-| Migrations SQL           | 43                            |
-| Edge Functions           | 6                             |
-| Commits (repo atual)     | 54                            |
+| Arquivos de content      | 18 (strings UI centralizadas) |
+| Migrations SQL           | 70                            |
+| Edge Functions           | 9                             |
+| Commits (repo atual)     | 60+                           |
 | Tempo de desenvolvimento | ~4 meses (jan–mai 2026)       |
 
 **Evolução do Projeto:**
@@ -250,6 +250,6 @@ toast.success(students.formDialog.toasts.success);
 - **Backend:** Ver [docs/backend/overview.md](../backend/overview.md) para Edge
   Functions e RPCs
 - **Database:** Ver [docs/database/migrations.md](../database/migrations.md) para
-  histórico de 43 migrations
+  histórico de 70 migrations
 - **Sprints:** Ver [docs/sprints/README.md](../sprints/README.md) para evolução
-  do projeto (27 sprints)
+  do projeto (31 sprints)

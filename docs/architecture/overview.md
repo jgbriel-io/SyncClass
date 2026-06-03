@@ -154,10 +154,10 @@ Erros comuns, diagnóstico e soluções.
 | **Linhas de código (src/)** | ~50.467              | `cloc src/`                                      |
 | **Arquivos (src/)**         | ~358                 | `find src/ -type f`                              |
 | **Componentes React**       | ~184                 | `find src/components/ -name "*.tsx"`             |
-| **Hooks customizados**      | 45                   | `find src/hooks/ -name "*.ts"`                   |
-| **Páginas**                 | 24                   | `find src/pages/ -name "*.tsx"`                  |
-| **Migrations SQL**          | 43                   | `supabase/migrations/`                           |
-| **Edge Functions**          | 6                    | `supabase/functions/`                            |
+| **Hooks customizados**      | 45                   | `find src/hooks/ -name "*.ts" -o -name "*.tsx"`  |
+| **Páginas**                 | 27                   | `find src/pages/ -name "*.tsx"`                  |
+| **Migrations SQL**          | 70                   | `supabase/migrations/`                           |
+| **Edge Functions**          | 9                    | `supabase/functions/`                            |
 | **RLS Policies**            | 40+                  | `supabase/migrations/04_rls_and_permissions.sql` |
 | **Design tokens**           | 129 testes           | `src/lib/design-tokens/`                         |
 | **Strings centralizadas**   | 860+                 | `src/content/`                                   |

@@ -124,7 +124,7 @@ CREATE POLICY "teacher_own_students" ON students
   ));
 ```
 
-**Estado Atual:** Mais de 40 políticas implementadas cobrindo todas as tabelas para os 3 perfis (_roles_).
+**Estado Atual:** 70 migrations auditadas com políticas cobrindo todas as tabelas para os 3 perfis (_roles_).
 
 ## 5.5 Rotas da Aplicação
 
@@ -143,13 +143,17 @@ A estrutura de navegação **está dividida** por níveis de acesso:
 
 Operações que exigem privilégios de sistema (`service_role`) **são executadas** via Edge Functions (Deno), garantindo isolamento total do cliente:
 
-| Função                | Motivo do processamento Server-side                         |
-| :-------------------- | :---------------------------------------------------------- |
-| `invite-user`         | Cria usuário no Auth com rollback atômico em caso de falha. |
-| `reset-password`      | Permite a alteração segura de senha de outros usuários.     |
-| `admin-delete-user`   | Remove usuários do Auth de forma controlada.                |
-| `cleanup-storage`     | Realiza a limpeza de buckets sem as restrições do cliente.  |
-| `cleanup-old-records` | Rotina de manutenção de registros antigos.                  |
+| Função                   | Motivo do processamento Server-side                         |
+| :----------------------- | :---------------------------------------------------------- |
+| `invite-user`            | Cria usuário no Auth com rollback atômico em caso de falha. |
+| `reset-password`         | Permite a alteração segura de senha de outros usuários.     |
+| `admin-delete-user`      | Remove usuários do Auth de forma controlada.                |
+| `cleanup-storage`        | Realiza a limpeza de buckets sem as restrições do cliente.  |
+| `cleanup-old-records`    | Rotina de manutenção de registros antigos.                  |
+| `export-user-data`       | Exportação LGPD de dados pessoais do usuário.               |
+| `create-abacate-payment` | Criação de cobrança PIX via AbacatePay.                     |
+| `refund-abacate-payment` | Estorno de pagamento PIX via AbacatePay.                    |
+| `abacate-webhook`        | Recepção de eventos de pagamento do AbacatePay.             |
 
 ---
 

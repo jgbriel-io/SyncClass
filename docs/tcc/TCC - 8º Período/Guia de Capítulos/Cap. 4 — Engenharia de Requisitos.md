@@ -65,7 +65,7 @@ As restrições técnicas que **norteiam** o desenvolvimento são:
 | RNF07 | PWA instalável (offline-ready)                        | Usabilidade     | Baixa      |
 | RNF08 | Interface responsiva (mobile-first)                   | Usabilidade     | Alta       |
 | RNF09 | Logs de auditoria para todas as operações críticas    | Rastreabilidade | Média      |
-| RNF10 | Monitoramento de erros em produção (Sentry)           | Observabilidade | Média      |
+| RNF10 | Monitoramento de erros em produção (`logger.ts`)      | Observabilidade | Média      |
 
 ## 4.4 Casos de Uso
 

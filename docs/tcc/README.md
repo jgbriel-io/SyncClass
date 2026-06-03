@@ -29,7 +29,7 @@ Trabalho de Conclusão de Curso — Engenharia de Software, FEPI, 8º Período.
 - [Assets Pendentes](./projeto-escrito/assets-pendentes.md) — Checklist de figuras e tabelas a criar
 - [Guia de Normatização](./projeto-escrito/guia-de-normatizacao-e-estrutura-final.md) — Normas FEPI/ABNT 2026
 - [Conclusão do Desenvolvimento](./projeto-pratico/conclusao-desenvolvimento.md) — Status final do código
-- [Histórico de Desenvolvimento](./projeto-pratico/historico-de-desenvolvimento-syncclass.md) — 27 sprints implementadas
+- [Histórico de Desenvolvimento](./projeto-pratico/historico-de-desenvolvimento-syncclass.md) — 31 sprints documentadas
 
 ## Hipóteses do TCC
 
@@ -47,13 +47,13 @@ Unificar gestão de alunos, aulas e cobranças em uma plataforma reduz tarefas m
 | Métrica                        | Valor                              |
 | ------------------------------ | ---------------------------------- |
 | **Período de Desenvolvimento** | 19 jan – 26 mai 2026 (~18 semanas) |
-| **Sprints Implementadas**      | 27                                 |
-| **Commits**                    | 60                                 |
-| **Arquivos TypeScript**        | 357                                |
+| **Sprints Implementadas**      | 31                                 |
+| **Commits**                    | 60+                                |
+| **Arquivos TypeScript**        | ~367                               |
 | **Linhas de Código (src)**     | ~50.467                            |
-| **Migrations de Banco**        | 43                                 |
+| **Migrations de Banco**        | 70                                 |
 | **Suites de Teste**            | 26                                 |
-| **Testes Automatizados**       | 287                                |
+| **Testes Automatizados**       | 287+                               |
 | **Strings UI Centralizadas**   | 860+                               |
 | **RLS Policies**               | 43+                                |
 
@@ -68,10 +68,10 @@ sync-class-platform/
 │   ├── content/                 # 860+ strings UI centralizadas
 │   └── lib/                     # Utils, design tokens, validação
 ├── supabase/
-│   ├── migrations/              # 43 SQL migrations
-│   └── functions/               # Edge Functions (Deno/TS)
+│   ├── migrations/              # 70 SQL migrations
+│   └── functions/               # Edge Functions (Deno/TS) — 9 funções
 └── docs/
-    ├── sprints/                 # 27 sprints implementadas + 5 NAO-IMPLEMENTADA
+    ├── sprints/                 # 31 sprints documentadas + 4 NAO-IMPLEMENTADA
     └── tcc/
         ├── capitulos/           # cap1–cap10 (rascunhos)
         ├── projeto-escrito/     # Normas, assets pendentes, referências

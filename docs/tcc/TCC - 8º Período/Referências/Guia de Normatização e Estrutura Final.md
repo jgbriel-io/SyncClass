@@ -43,9 +43,9 @@ A estrutura completa do **SyncClass** deve ser organizada da seguinte forma:
 | **4**  | **Engenharia de Requisitos** | Requisitos Funcionais (RF), Não-Funcionais (RNF) e UML. |
 | **5**  | **Arquitetura e Modelagem**  | DER, Segurança RLS e Diagramas de Fluxo.                |
 | **6**  | **Implementação Técnica**    | Stack (React/Vite/Supabase), Pastas e Módulos.          |
-| **7**  | **Qualidade e Testes**       | Vitest, Playwright e Validação ISO 25010.               |
+| **7**  | **Qualidade e Testes**       | Vitest (28 suites) e Validação ISO 25010.               |
 | **8**  | **Gestão do Projeto**        | Histórico de Sprints, Gantt e Produtividade com IA.     |
-| **9**  | **Infraestrutura e Deploy**  | Docker, CI/CD (GitHub Actions) e Cloud.                 |
+| **9**  | **Infraestrutura e Deploy**  | Cloudflare Pages, CI/CD (GitHub Actions) e Supabase.    |
 | **10** | **Conclusão**                | Validação das Hipóteses e Trabalhos Futuros.            |
 
 ---

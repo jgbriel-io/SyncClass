@@ -35,9 +35,10 @@ tags:
 | **Sprint 15**      | 21 Abr 2026    | Refactor: Final String Audit                        |
 | **Sprint 16**      | 21 Mai 2026    | Refactor: Docs Architecture Organization            |
 | **Sprint 17–27**   | 21–25 Mai 2026 | Refatoração, Segurança, Compliance, QA              |
-| **Sprint 28**      | 26 Mai 2026    | QA: Testes Manuais (em andamento)                   |
+| **Sprint 28**      | 26 Mai 2026    | QA: Testes Manuais — 116 itens, 20 rotas            |
 | **Sprint 29**      | 31 Mai 2026    | Fix: Correções críticas do painel admin (19 bugs)   |
 | **Sprint 30**      | 01 Jun 2026    | **Feature: Integração AbacatePay (PIX automático)** |
+| **Sprint 31**      | 03 Jun 2026    | Fix: Period filter server-side + code-review fixes  |
 
 ---
 
@@ -187,8 +188,8 @@ tags:
 | Métrica                          | Valor Estimado |
 | :------------------------------- | :------------- |
 | **Total de Commits**             | ~218           |
-| **Sprints Implementadas**        | 27             |
-| **Migrations de Banco**          | 43             |
+| **Sprints Implementadas**        | 31             |
+| **Migrations de Banco**          | 70             |
 | **Bugs de Auditoria Corrigidos** | 36             |
 | **Testes Automatizados**         | 287            |
 | **Políticas de Segurança (RLS)** | 40+            |
@@ -199,6 +200,6 @@ tags:
 
 ## Assets Necessários
 
-- [ ] 🖼️ **Figura:** Diagrama de evolução das Migrations (01 a 43).
+- [ ] 🖼️ **Figura:** Diagrama de evolução das Migrations (01 a 70).
 - [ ] 🖼️ **Figura:** Print do log de execução do GitHub Actions.
 - [ ] 🖼️ **Figura:** Tabela comparativa de bugs identificados vs. corrigidos.

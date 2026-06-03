@@ -1,7 +1,7 @@
 # 7. Qualidade e Testes
 
 Este capítulo apresenta a estratégia de testes adotada no projeto,
-os 26 arquivos de teste unitários implementados com Vitest,
+os 28 arquivos de teste unitários implementados com Vitest,
 a justificativa para ausência de testes E2E automatizados,
 os testes manuais realizados em fluxos críticos
 e a avaliação do sistema segundo o modelo de qualidade ISO 25010.
@@ -20,7 +20,7 @@ após a estabilização da arquitetura de componentes (Seção 10.4).
       /──────\
      /Manual  \     ← 4 fluxos críticos validados
     /────────────\
-   / Unitários   \  ← 26 arquivos Vitest
+   / Unitários   \  ← 28 arquivos Vitest
   /────────────────\
 ```
 
@@ -30,10 +30,10 @@ após a estabilização da arquitetura de componentes (Seção 10.4).
 
 A ferramenta utilizada para testes unitários foi Vitest,
 integrada com Testing Library e jsdom para simulação de ambiente DOM.
-Foram implementados 26 arquivos de teste cobrindo hooks,
+Foram implementados 28 arquivos de teste cobrindo hooks,
 componentes, utilitários e design tokens.
 
-A Tabela 7.1 apresenta os 18 arquivos de teste principais,
+A Tabela 7.1 apresenta os 20 arquivos de teste principais,
 organizados por categoria funcional.
 
 **Tabela 7.1 — Arquivos de teste unitários principais**
@@ -58,6 +58,8 @@ organizados por categoria funcional.
 | `modal-sizes.test.ts`            | Design tokens de modais                      |
 | `table-columns.test.ts`          | Design tokens de colunas de tabela           |
 | `button.test.tsx`                | Componente Button                            |
+| `useTeachersPageStats.test.tsx`  | Stats paginadas de professores               |
+| `periodFilter.test.ts`           | Filtro de período (mês/semestre/ano)         |
 
 Após as sprints de refatoração de componentes (sprints 10 a 12),
 foram adicionados 8 arquivos de teste para componentes extraídos,

@@ -19,7 +19,7 @@ status de atingimento e evidências.
 
 | Objetivo Específico                 | Status      | Evidência                              |
 | ----------------------------------- | ----------- | -------------------------------------- |
-| Modelar e implementar banco com RLS | ✅ Atingido | 43 migrations, 40+ policies RLS        |
+| Modelar e implementar banco com RLS | ✅ Atingido | 70 migrations, 40+ policies RLS        |
 | Interface responsiva para 3 perfis  | ✅ Atingido | AdminShell, TeacherShell, StudentShell |
 | Módulo financeiro com comprovantes  | ✅ Atingido | RF06–RF10 implementados                |
 | Módulo de atividades com arquivos   | ✅ Atingido | RF11–RF13 implementados                |
@@ -38,7 +38,7 @@ utilizando ferramentas modernas e IA.
 A hipótese H1 foi confirmada.
 O projeto foi desenvolvido por um único desenvolvedor
 em aproximadamente 4 meses (janeiro a maio de 2026),
-com 54 commits, ~358 arquivos e ~50.467 linhas de código.
+com 60+ commits, ~367 arquivos e ~50.467 linhas de código.
 O período inclui:
 
 - Janeiro a fevereiro (Sprints 1 a 7):
@@ -46,7 +46,7 @@ O período inclui:
 - Março a abril (Sprints 8 a 11):
   Refatorações arquiteturais (separação hooks, split arquivos,
   query builders, timezone fix)
-- Maio (Sprints 12 a 27):
+- Maio–Junho (Sprints 12 a 31):
   Centralização de strings, segurança, qualidade e auditoria final
 
 **H2:** O uso de BaaS (Supabase) reduz significativamente
@@ -150,6 +150,6 @@ o julgamento humano ainda define o que vale a pena executar.
 - **Qualidade:** Ver [Cap. 7 — Qualidade e Testes](./cap7-qualidade.md)
   para justificativa de ausência de E2E
 - **Sprints:** Ver [docs/sprints/README.md](../sprints/README.md)
-  para histórico completo de 27 sprints implementadas
+  para histórico completo de 31 sprints documentadas
 - **Trabalhos Futuros:** Ver sprints não implementadas em [docs/sprints/](../sprints/)
   (notificações, PDF, calendar, pagamento, gamificação)

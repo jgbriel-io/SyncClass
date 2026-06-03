@@ -1,6 +1,6 @@
 # Hooks e Services
 
-TanStack Query, mutations e services. 45 hooks customizados.
+TanStack Query, mutations e services. 38 hooks customizados (45 arquivos totais em `src/hooks/`, incluindo 7 de teste).
 
 ## Índice
 
@@ -299,99 +299,9 @@ export const useCreateStudent = () => {
 
 **Localização:** `src/hooks/*Service.ts`
 
-**Conceito:** Lógica de negócio complexa que não cabe em hook simples.
+**Conceito:** Lógica auxiliar extraída de hooks para facilitar reuso.
 
-### classLogsService
-
-**Responsabilidade:** Operações complexas de aulas (pacotes, attendance).
-
-**Arquivo:** `src/hooks/classLogsService.ts`
-
-**Funções:**
-
-- `createClassPackage(teacherId, studentId, classes, financial)` — Cria pacote de aulas + cobrança
-- `markAttendance(classId, attendance)` — Marca presença/falta
-- `calculateClassStats(classes)` — Calcula stats (total, presentes, faltas)
-
-**Exemplo:**
-
-```tsx
-import { createClassPackage } from "@/hooks/classLogsService";
-
-const handleCreatePackage = async () => {
-  await createClassPackage(teacherId, studentId, classes, financial);
-  toast.success("Pacote criado!");
-};
-```
-
-### financialRecordsService
-
-**Responsabilidade:** Operações financeiras (pagamento, estorno).
-
-**Arquivo:** `src/hooks/financialRecordsService.ts`
-
-**Funções:**
-
-- `markAsPaid(recordId, paymentDate, proofUrl)` — Marca como pago (idempotente)
-- `confirmPayment(recordId)` — Confirma pagamento (admin)
-- `undoPayment(recordId)` — Estorna pagamento
-- `calculateBalance(records)` — Calcula saldo
-
-**Exemplo:**
-
-```tsx
-import { markAsPaid } from "@/hooks/financialRecordsService";
-
-const handlePayment = async () => {
-  await markAsPaid(recordId, new Date(), proofUrl);
-  toast.success("Pagamento registrado!");
-};
-```
-
-### activitiesService
-
-**Responsabilidade:** Operações de atividades (entrega, correção).
-
-**Arquivo:** `src/hooks/activitiesService.ts`
-
-**Funções:**
-
-- `deliverActivity(activityId, fileUrl, notes)` — Entrega atividade (aluno)
-- `correctActivity(activityId, grade, feedback)` — Corrige atividade (professor)
-- `calculateActivityStats(activities)` — Calcula stats (entregues, corrigidas, pendentes)
-
-**Exemplo:**
-
-```tsx
-import { deliverActivity } from "@/hooks/activitiesService";
-
-const handleDeliver = async () => {
-  await deliverActivity(activityId, fileUrl, notes);
-  toast.success("Atividade entregue!");
-};
-```
-
-### teachersService
-
-**Responsabilidade:** Operações de professores (PIX, stats).
-
-**Arquivo:** `src/hooks/teachersService.ts`
-
-**Funções:**
-
-- `updatePixKey(teacherId, pixKey)` — Atualiza chave PIX
-- `calculateTeacherStats(teacherId)` — Calcula stats (alunos, aulas, faturamento)
-
-**Exemplo:**
-
-```tsx
-import { updatePixKey } from "@/hooks/teachersService";
-
-const handleUpdatePix = async () => {
-  await updatePixKey(teacherId, pixKey);
-  toast.success("Chave PIX atualizada!");
-};
-```
+> **Nota:** `classLogsService`, `financialRecordsService`, `activitiesService` e `teachersService` foram planejados mas nunca criados. A lógica desses domínios está consolidada diretamente nos hooks `use*.ts` correspondentes. Os únicos `*Service.ts` reais são `inviteUserService.ts` e `validatePhonePlatformService.ts`.
 
 ### inviteUserService
 

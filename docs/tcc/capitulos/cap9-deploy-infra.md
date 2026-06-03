@@ -61,7 +61,7 @@ A Tabela 9.2 apresenta os serviços do Supabase utilizados no projeto.
 
 | Serviço          | Uso                                            |
 | ---------------- | ---------------------------------------------- |
-| PostgreSQL       | Banco de dados principal (43 migrations)       |
+| PostgreSQL       | Banco de dados principal (70 migrations)       |
 | Supabase Auth    | Autenticação JWT, gestão de usuários           |
 | Supabase Storage | Arquivos de atividades, avatares, comprovantes |
 | Edge Functions   | Operações server-side com service_role         |
@@ -69,18 +69,22 @@ A Tabela 9.2 apresenta os serviços do Supabase utilizados no projeto.
 
 ### 9.3.2 Edge Functions (Deno/TypeScript)
 
-A Tabela 9.3 apresenta as 5 Edge Functions implementadas,
+A Tabela 9.3 apresenta as 9 Edge Functions implementadas,
 com trigger e descrição.
 
 **Tabela 9.3 — Edge Functions implementadas**
 
-| Função                | Trigger   | Descrição                              |
-| --------------------- | --------- | -------------------------------------- |
-| `invite-user`         | HTTP POST | Cria usuário atomicamente com rollback |
-| `reset-password`      | HTTP POST | Reset de senha via service_role        |
-| `admin-delete-user`   | HTTP POST | Exclusão com invalidação de sessões    |
-| `cleanup-storage`     | Agendado  | Remove arquivos órfãos no Storage      |
-| `cleanup-old-records` | Agendado  | Remove idempotency_keys e logs antigos |
+| Função                   | Trigger   | Descrição                                     |
+| ------------------------ | --------- | --------------------------------------------- |
+| `invite-user`            | HTTP POST | Cria usuário atomicamente com rollback        |
+| `reset-password`         | HTTP POST | Reset de senha via service_role               |
+| `admin-delete-user`      | HTTP POST | Exclusão com invalidação de sessões           |
+| `export-user-data`       | HTTP POST | Exportação de dados pessoais (LGPD)           |
+| `cleanup-storage`        | Agendado  | Remove arquivos órfãos no Storage             |
+| `cleanup-old-records`    | Agendado  | Remove idempotency_keys e logs antigos        |
+| `create-abacate-payment` | HTTP POST | Gera QR Code PIX via AbacatePay (Sprint 30)   |
+| `refund-abacate-payment` | HTTP POST | Estorna pagamento via AbacatePay (Sprint 30)  |
+| `abacate-webhook`        | HTTP POST | Processa notificações de pagamento AbacatePay |
 
 ## 9.4 CI/CD — GitHub Actions
 
@@ -156,9 +160,9 @@ em cada camada da aplicação.
 ## Referências cruzadas
 
 - **Backend:** Ver [docs/backend/edge-functions.md](../backend/edge-functions.md)
-  para detalhes das 5 Edge Functions
+  para detalhes das 9 Edge Functions
 - **Database:** Ver [docs/database/migrations.md](../database/migrations.md)
-  para histórico de 43 migrations
+  para histórico de 70 migrations
 - **Security:** Ver [docs/security/overview.md](../security/overview.md)
   para RLS, rate limiting e auditoria
 - **Arquitetura:** Ver [docs/architecture/overview.md](../architecture/overview.md)

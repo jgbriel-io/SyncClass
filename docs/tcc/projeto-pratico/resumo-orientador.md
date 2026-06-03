@@ -35,11 +35,11 @@ Plataforma SaaS para professores autônomos de inglês. Substitui planilhas e co
 | Métrica                    | Valor                              |
 | -------------------------- | ---------------------------------- |
 | Período de desenvolvimento | 19 jan – 26 mai 2026 (~18 semanas) |
-| Sprints implementadas      | 27                                 |
-| Arquivos TypeScript        | 357                                |
+| Sprints implementadas      | 31                                 |
+| Arquivos TypeScript        | 359                                |
 | Linhas de código (src)     | ~50.467                            |
-| Migrations SQL             | 43                                 |
-| Testes automatizados       | 287 (26 suites)                    |
+| Migrations SQL             | 70                                 |
+| Testes automatizados       | 287 (28 suites)                    |
 | Strings UI centralizadas   | 860+                               |
 
 ---
@@ -64,12 +64,12 @@ Plataforma SaaS para professores autônomos de inglês. Substitui planilhas e co
 | -------------------- | -------------------------------------------- |
 | Lint                 | ✅ 0 erros, 0 warnings                       |
 | Type-check           | ✅ `tsc --noEmit` limpo                      |
-| Testes automatizados | ✅ 287/287 passando (26 suites)              |
+| Testes automatizados | ✅ 287/287 passando (28 suites)              |
 | Build de produção    | ✅ Vite 5.4, sem erros                       |
 | CI/CD                | ✅ lint → type-check → test → build → deploy |
 | TypeScript strict    | ✅ sem `any` explícito                       |
 | Strings UI           | ✅ 100% centralizadas em `src/content/`      |
-| RLS                  | ✅ 43 migrations auditadas (Sprint 24)       |
+| RLS                  | ✅ 70 migrations auditadas (Sprint 24)       |
 | LGPD                 | ✅ anonimização + exportação + rate limiting |
 | OWASP Top 10         | ✅ auditado (Sprint 26)                      |
 
@@ -77,13 +77,14 @@ Plataforma SaaS para professores autônomos de inglês. Substitui planilhas e co
 
 ## Fases de Desenvolvimento
 
-| Fase | Sprints | Período      | Foco                                       |
-| ---- | ------- | ------------ | ------------------------------------------ |
-| 1    | 1–7     | jan–fev 2026 | MVP funcional (~30 dias úteis)             |
-| 2    | 8–17    | mar–mai 2026 | Refatoração, strings, docs                 |
-| 3    | 18–20   | mai 2026     | Segurança, LGPD, rate limiting             |
-| 4    | 21–27   | mai 2026     | Code review, RLS audit, security audit     |
-| 5    | 28      | 26 mai 2026  | QA manual — 116 itens, 20 rotas (pendente) |
+| Fase | Sprints | Período      | Foco                                    |
+| ---- | ------- | ------------ | --------------------------------------- |
+| 1    | 1–7     | jan–fev 2026 | MVP funcional (~30 dias úteis)          |
+| 2    | 8–17    | mar–mai 2026 | Refatoração, strings, docs              |
+| 3    | 18–20   | mai 2026     | Segurança, LGPD, rate limiting          |
+| 4    | 21–27   | mai 2026     | Code review, RLS audit, security audit  |
+| 5    | 28      | mai 2026     | QA manual — 116 itens, 20 rotas         |
+| 6    | 29–31   | jun 2026     | Correção de bugs pós-QA, fixes críticos |
 
 ---
 
@@ -91,8 +92,8 @@ Plataforma SaaS para professores autônomos de inglês. Substitui planilhas e co
 
 | Hipótese                                            | Evidência                                                                                          | Status      |
 | --------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------- |
-| **H1** — SaaS funcional solo em ~3 meses com IA     | 357 arquivos, ~50k linhas, 1 desenvolvedor, 18 semanas                                             | ✅ Validada |
-| **H2** — Supabase reduz ≥60% do esforço backend     | 43 migrations gerenciam auth, RLS, RPCs e triggers — equivalente a ~80 endpoints REST + middleware | ✅ Validada |
+| **H1** — SaaS funcional solo em ~3 meses com IA     | 359 arquivos, ~50k linhas, 1 desenvolvedor, 18 semanas                                             | ✅ Validada |
+| **H2** — Supabase reduz ≥60% do esforço backend     | 70 migrations gerenciam auth, RLS, RPCs e triggers — equivalente a ~80 endpoints REST + middleware | ✅ Validada |
 | **H3** — Plataforma unificada reduz tarefas manuais | Portal único cobre todo o ciclo operacional: alunos, aulas, cobranças, atividades                  | ✅ Validada |
 
 ---
@@ -101,8 +102,8 @@ Plataforma SaaS para professores autônomos de inglês. Substitui planilhas e co
 
 | Item                                | Status                                    |
 | ----------------------------------- | ----------------------------------------- |
-| Sprint 28 — QA manual (116 itens)   | 🔴 Em execução                            |
-| Resolução de bugs críticos do QA    | 🔴 Aguarda QA                             |
+| Sprint 28 — QA manual (116 itens)   | ✅ Concluído                              |
+| Resolução de bugs críticos do QA    | ✅ Resolvidos (Sprints 29–31)             |
 | Capítulos 2–10 — versão Word ABNT   | 🟠 Rascunhos prontos, formatação pendente |
 | Assets visuais (DER, prints, Gantt) | 🟠 Pendente                               |
 

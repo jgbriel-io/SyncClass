@@ -19,7 +19,7 @@ O projeto **alcança** o propósito de desenvolver uma plataforma SaaS web funci
 
 | **Objetivo Específico**             | **Status** | **Evidência de Entrega**                                     |
 | :---------------------------------- | :--------: | :----------------------------------------------------------- |
-| Modelar e implementar banco com RLS |     ✅     | 23 migrations ativas e 40+ políticas de segurança.           |
+| Modelar e implementar banco com RLS |     ✅     | 70 migrations ativas auditadas, RLS em todas as tabelas.     |
 | Interface responsiva para 3 perfis  |     ✅     | Implementação de AdminShell, TeacherShell e StudentShell.    |
 | Módulo financeiro com comprovantes  |     ✅     | RF06 a RF10 implementados e validados.                       |
 | Módulo de atividades com arquivos   |     ✅     | RF11 a RF13 operacionais.                                    |
@@ -31,7 +31,7 @@ O projeto **alcança** o propósito de desenvolver uma plataforma SaaS web funci
 As hipóteses levantadas no início do trabalho **foram testadas** ao longo do desenvolvimento:
 
 - **H1: Viabilidade Solo-Dev com IA:** É possível desenvolver um SaaS funcional e seguro sozinho em ~3 meses.
-  - **Resultado:** **Confirmada.** O projeto **está operacional** após 3 meses de desenvolvimento ativo, contando com aproximadamente 46.400 linhas de código e 391 arquivos.
+  - **Resultado:** **Confirmada.** O projeto **está operacional** após 3 meses de desenvolvimento ativo, contando com aproximadamente 50.467 linhas de código e 359 arquivos TypeScript.
 - **H2: Eficiência do BaaS (Supabase):** O uso de BaaS reduz significativamente o tempo de backend.
   - **Resultado:** **Confirmada.** A plataforma **delega** autenticação, API e infraestrutura ao Supabase, resultando em uma economia estimada de 60% a 70% no esforço de backend.
 - **H3: Aumento de Produtividade via IA:** A IA aumenta a produtividade em pelo menos 3x.
@@ -44,7 +44,7 @@ Durante o processo de construção, **observam-se** as seguintes restrições:
 - **Rastreabilidade:** Perda parcial do histórico Git durante a reestruturação do repositório.
 - **Performance:** Ausência de testes de carga com volume massivo de dados (stress test).
 - **Acessibilidade:** Implementação baseada em WCAG A, carecendo de uma auditoria formal.
-- **Automação:** O fluxo de deploy final para a VPS ainda **permanece** manual.
+- **Testes E2E:** Não implementados — validação de fluxos realizada via QA manual (Sprint 28).
 - **Código:** Identificação de componentes e hooks com alta complexidade ciclomática (arquivos extensos).
 
 ## 10.4 Trabalhos Futuros

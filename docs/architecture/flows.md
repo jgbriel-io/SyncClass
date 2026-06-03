@@ -133,31 +133,32 @@ Pages (admin/teacher/student)                          │
 
 ## Rotas e proteção
 
-| Rota                                    | Proteção | Role    | Arquivo                                   |
-| --------------------------------------- | -------- | ------- | ----------------------------------------- |
-| `/login`                                | Pública  | —       | `src/pages/Login.tsx`                     |
-| `/esqueci-senha`                        | Pública  | —       | `src/pages/ForgotPassword.tsx`            |
-| `/redefinir-senha`                      | Pública  | —       | `src/pages/ResetPassword.tsx`             |
-| `/policies`                             | Pública  | —       | `src/pages/Policies.tsx`                  |
-| `/admin`                                | Privada  | admin   | `src/pages/admin/AdminHome.tsx`           |
-| `/admin/students`                       | Privada  | admin   | `src/pages/admin/AdminStudents.tsx`       |
-| `/admin/teachers`                       | Privada  | admin   | `src/pages/admin/AdminTeachers.tsx`       |
-| `/admin/financial`                      | Privada  | admin   | `src/pages/admin/AdminFinancial.tsx`      |
-| `/admin/classes`                        | Privada  | admin   | `src/pages/admin/AdminClasses.tsx`        |
-| `/admin/activities`                     | Privada  | admin   | `src/pages/admin/AdminActivities.tsx`     |
-| `/admin/users`                          | Privada  | admin   | `src/pages/admin/AdminUsers.tsx`          |
-| `/admin/overview`                       | Privada  | admin   | `src/pages/admin/AdminOverview.tsx`       |
-| `/teacher`                              | Privada  | teacher | `src/pages/teacher/TeacherHome.tsx`       |
-| `/teacher/students`                     | Privada  | teacher | `src/pages/teacher/TeacherStudents.tsx`   |
-| `/teacher/financial`                    | Privada  | teacher | `src/pages/teacher/TeacherFinancial.tsx`  |
-| `/teacher/classes`                      | Privada  | teacher | `src/pages/teacher/TeacherClasses.tsx`    |
-| `/teacher/activities`                   | Privada  | teacher | `src/pages/teacher/TeacherActivities.tsx` |
-| `/teacher/overview`                     | Privada  | teacher | `src/pages/teacher/TeacherOverview.tsx`   |
-| `/student`                              | Privada  | student | `src/pages/student/StudentHome.tsx`       |
-| `/student/financial`                    | Privada  | student | `src/pages/student/StudentFinancial.tsx`  |
-| `/student/activities`                   | Privada  | student | `src/pages/student/StudentActivities.tsx` |
-| `/student/history`                      | Privada  | student | `src/pages/student/StudentHistory.tsx`    |
-| `/student/financial/checkout/:recordId` | Privada  | student | `src/pages/student/StudentCheckout.tsx`   |
+| Rota                                    | Proteção | Role    | Arquivo                                      |
+| --------------------------------------- | -------- | ------- | -------------------------------------------- |
+| `/login`                                | Pública  | —       | `src/pages/Login.tsx`                        |
+| `/esqueci-senha`                        | Pública  | —       | `src/pages/ForgotPassword.tsx`               |
+| `/redefinir-senha`                      | Pública  | —       | `src/pages/ResetPassword.tsx`                |
+| `/policies`                             | Pública  | —       | `src/pages/Policies.tsx`                     |
+| `/admin`                                | Privada  | admin   | `src/pages/admin/Dashboard.tsx`              |
+| `/admin/students`                       | Privada  | admin   | `src/pages/admin/Students.tsx`               |
+| `/admin/teachers`                       | Privada  | admin   | `src/pages/admin/Teachers.tsx`               |
+| `/admin/financial`                      | Privada  | admin   | `src/pages/admin/Financial.tsx`              |
+| `/admin/classes`                        | Privada  | admin   | `src/pages/admin/Classes.tsx`                |
+| `/admin/activities`                     | Privada  | admin   | `src/pages/admin/Activities.tsx`             |
+| `/admin/users`                          | Privada  | admin   | `src/pages/admin/Users.tsx`                  |
+| `/admin/overview`                       | Privada  | admin   | `src/pages/admin/Overview.tsx`               |
+| `/admin/rate-limit`                     | Privada  | admin   | `src/pages/admin/RateLimitDashboardPage.tsx` |
+| `/teacher`                              | Privada  | teacher | `src/pages/teacher/TeacherHome.tsx`          |
+| `/teacher/students`                     | Privada  | teacher | `src/pages/teacher/TeacherStudents.tsx`      |
+| `/teacher/financial`                    | Privada  | teacher | `src/pages/teacher/TeacherFinancial.tsx`     |
+| `/teacher/classes`                      | Privada  | teacher | `src/pages/teacher/TeacherClasses.tsx`       |
+| `/teacher/activities`                   | Privada  | teacher | `src/pages/teacher/TeacherActivities.tsx`    |
+| `/teacher/overview`                     | Privada  | teacher | `src/pages/teacher/TeacherOverview.tsx`      |
+| `/student`                              | Privada  | student | `src/pages/student/StudentHome.tsx`          |
+| `/student/financial`                    | Privada  | student | `src/pages/student/StudentFinancial.tsx`     |
+| `/student/activities`                   | Privada  | student | `src/pages/student/StudentActivities.tsx`    |
+| `/student/history`                      | Privada  | student | `src/pages/student/StudentHistory.tsx`       |
+| `/student/financial/checkout/:recordId` | Privada  | student | `src/pages/student/StudentCheckout.tsx`      |
 
 **Proteção implementada em:** `src/components/auth/ProtectedRoute.tsx:12`
 

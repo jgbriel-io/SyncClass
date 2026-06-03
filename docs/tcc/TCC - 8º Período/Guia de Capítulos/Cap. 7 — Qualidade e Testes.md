@@ -19,11 +19,11 @@ O controle de qualidade **está estruturado** em uma pirâmide de testes:
 
 ```text
          /\
-        /E2E\         ← 6 suites Playwright
+        /E2E\         ← (não implementado — fora do escopo)
        /──────\
-      /Integr. \      ← (coberto via E2E)
+      /Integr. \      ← (coberto via unitários)
      /────────────\
-    / Unitários   \   ← 18 arquivos Vitest
+    / Unitários   \   ← 28 arquivos Vitest
    /────────────────\
 ```
 
@@ -54,22 +54,14 @@ A validação de lógica isolada **ocorre** via Vitest + Testing Library:
 | `table-columns.test.ts`          | Design tokens de colunas                      |
 | `button.test.tsx`                | Componente base Button                        |
 
-**Total:** 18 arquivos de testes automatizados.
+**Total:** 28 arquivos de testes automatizados.
 
 🖼️ **Figura:** Output do Vitest com resultados
 
 ## 7.3 Testes E2E (Ponta-a-Ponta)
 
-Para validar os fluxos críticos de negócio, **estão em execução** as seguintes suites Playwright:
-
-| **Suite**                  | **Cenários Cobertos**                          |
-| :------------------------- | :--------------------------------------------- |
-| `complete-students`        | Ciclo completo de vida do aluno e filtros      |
-| `complete-financial`       | Geração de cobrança, upload e aprovação        |
-| `complete-all-features`    | Smoke test de login, navegação e CRUDs base    |
-| `complete-edge-cases`      | Validações de campos, duplicatas e limites     |
-| `security-audit-sprint1`   | Validação de RLS (isolamento de dados)         |
-| `security-audit-sprint3-4` | Proteção contra XSS, IDOR e permissões de role |
+> [!WARNING] Fora do Escopo
+> Testes E2E com Playwright **não foram implementados** — decisão de escopo para o TCC. A validação de fluxos de negócio foi realizada via QA manual (Sprint 28, 116 itens em 20 rotas).
 
 ## 7.4 Processos de Teste Manual
 
@@ -83,16 +75,16 @@ A validação de interface e usabilidade **é realizada** em sessões manuais:
 
 A qualidade do produto **é monitorada** com base nas seguintes métricas:
 
-| **Característica**  | **Avaliação** | **Evidência**                                     |
-| :------------------ | :------------ | :------------------------------------------------ |
-| Adequação funcional | ✅ Alta       | 20 Requisitos Funcionais implementados            |
-| Eficiência          | ✅ Alta       | Paginação, índices compostos e materialized views |
-| Compatibilidade     | ✅ Alta       | PWA responsivo e cross-browser                    |
-| Usabilidade         | ✅ Alta       | Mobile-first, design tokens e skeletons           |
-| Confiabilidade      | ✅ Alta       | Idempotência e registros de auditoria             |
-| Segurança           | ✅ Alta       | RLS, Auth JWT e sanitização de dados              |
-| Manutenibilidade    | 🟡 Média      | Refatoração de arquivos grandes em curso          |
-| Portabilidade       | ✅ Alta       | Uso de Docker e variáveis de ambiente             |
+| **Característica**  | **Avaliação** | **Evidência**                                             |
+| :------------------ | :------------ | :-------------------------------------------------------- |
+| Adequação funcional | ✅ Alta       | 20 Requisitos Funcionais implementados                    |
+| Eficiência          | ✅ Alta       | Paginação, índices compostos e materialized views         |
+| Compatibilidade     | ✅ Alta       | PWA responsivo e cross-browser                            |
+| Usabilidade         | ✅ Alta       | Mobile-first, design tokens e skeletons                   |
+| Confiabilidade      | ✅ Alta       | Idempotência e registros de auditoria                     |
+| Segurança           | ✅ Alta       | RLS, Auth JWT e sanitização de dados                      |
+| Manutenibilidade    | 🟡 Média      | Refatoração de arquivos grandes em curso                  |
+| Portabilidade       | ✅ Alta       | Deploy Cloudflare Pages via CI/CD e variáveis de ambiente |
 
 🖼️ **Figura:** Tabela ISO 25010 formatada para impressão
 
