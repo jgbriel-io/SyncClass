@@ -61,13 +61,13 @@ Documenta-se o escopo completo do MVP e requisitos futuros planejados.
 
 ### 4.2.3 Requisitos Futuros (Não Implementados)
 
-| **ID** | **Requisito**                                   | **Módulo**   | **Prioridade** | **Status**            |
-| ------ | ----------------------------------------------- | ------------ | -------------- | --------------------- |
-| RF31   | Sistema de notificações (email, push, in-app)   | Notificações | Média          | Planejado (Sprint 14) |
-| RF32   | Exportação de relatórios em PDF                 | Relatórios   | Média          | Planejado (Sprint 15) |
-| RF33   | Integração com Google Calendar                  | Integrações  | Baixa          | Planejado (Sprint 16) |
-| RF34   | Gateway de pagamento real (Stripe/Mercado Pago) | Financeiro   | Média          | Planejado (Sprint 17) |
-| RF35   | Sistema de gamificação (badges, conquistas)     | Gamificação  | Baixa          | Planejado (Sprint 18) |
+| **ID** | **Requisito**                                 | **Módulo**   | **Prioridade** | **Status**                  |
+| ------ | --------------------------------------------- | ------------ | -------------- | --------------------------- |
+| RF31   | Sistema de notificações (email, push, in-app) | Notificações | Média          | Planejado (Sprint 14)       |
+| RF32   | Exportação de relatórios em PDF               | Relatórios   | Média          | Planejado (Sprint 15)       |
+| RF33   | Integração com Google Calendar                | Integrações  | Baixa          | Planejado (Sprint 16)       |
+| RF34   | Gateway de pagamento real (AbacatePay — PIX)  | Financeiro   | Média          | ✅ Implementado (Sprint 30) |
+| RF35   | Sistema de gamificação (badges, conquistas)   | Gamificação  | Baixa          | Planejado (Sprint 18)       |
 
 > 🖼️ **Figura:** Tabela RF formatada para impressão
 
@@ -399,8 +399,8 @@ validações no frontend e lógica em RPCs.
 
 - **Principais (RF01-RF20):** 20 requisitos → 100% implementados
 - **Adicionais (RF21-RF30):** 10 requisitos → 100% implementados
-- **Futuros (RF31-RF35):** 5 requisitos → 0% implementados
-- **Total:** 35 requisitos (30 implementados, 5 planejados)
+- **Futuros (RF31-RF35):** 5 requisitos → RF34 implementado via AbacatePay (Sprint 30)
+- **Total:** 35 requisitos (31 implementados, 4 planejados)
 
 ### Requisitos Não Funcionais
 

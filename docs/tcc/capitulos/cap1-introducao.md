@@ -113,4 +113,4 @@ suporte a múltiplos níveis de acesso (_roles_).
 - **Git:** Ver [docs/git/overview.md](../git/overview.md) para workflow e
   convenções de commit
 - **Sprints:** Ver [docs/sprints/README.md](../sprints/README.md) para histórico
-  completo de desenvolvimento (27 sprints implementadas)
+  completo de desenvolvimento (31 sprints implementadas)

@@ -105,7 +105,7 @@ projeto, não apenas para geração de código.
 - **Git Conventions:** Ver [docs/git/conventions.md](../git/conventions.md) para
   padrão de commits semânticos
 - **Sprints:** Ver [docs/sprints/README.md](../sprints/README.md) para histórico
-  completo de 27 sprints implementadas
+  completo de 31 sprints implementadas
 - **Gestão:** Ver [Cap. 8 — Gestão do Projeto](./cap8-gestao.md) para métricas
   de produtividade com IA
 - **Arquitetura:** Ver [docs/architecture/overview.md](../architecture/overview.md)

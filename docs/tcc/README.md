@@ -55,7 +55,7 @@ Unificar gestão de alunos, aulas e cobranças em uma plataforma reduz tarefas m
 | **Suites de Teste**            | 28                                 |
 | **Testes Automatizados**       | 304+                               |
 | **Strings UI Centralizadas**   | 860+                               |
-| **RLS Policies**               | 43+                                |
+| **RLS Policies**               | 70+                                |
 
 ## Estrutura do Projeto
 

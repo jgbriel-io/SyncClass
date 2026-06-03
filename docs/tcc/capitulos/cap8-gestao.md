@@ -72,9 +72,11 @@ com período, duração e entregas principais.
 | Refatorações Arquiteturais | 11 mar–21 abr 2026 | ~40 dias | Separação hooks, split arquivos, query builders, timezone fix   |
 | Centralização de Strings   | 21 abr–20 mai 2026 | ~30 dias | Estrutura content, substituição strings, auditoria final        |
 | Qualidade Final & TCC      | 21–26 mai 2026     | 6 dias   | Segurança OWASP, RLS audit, Supabase advisors, conclusão        |
+| QA Manual                  | 26 mai 2026        | 1 dia    | Sprint 28 — 116 itens, 20 rotas, 5 roles. Concluído.            |
+| Fixes + AbacatePay         | 31 mai–03 jun 2026 | 4 dias   | Sprints 29–31: bugs pós-QA + integração PIX AbacatePay          |
 
-O desenvolvimento ativo totalizou aproximadamente 4 meses
-(janeiro a maio de 2026).
+O desenvolvimento ativo totalizou aproximadamente 4,5 meses
+(janeiro a junho de 2026).
 
 As refatorações arquiteturais (março a maio) incluíram:
 
@@ -110,13 +112,13 @@ A Tabela 8.3 apresenta métricas quantitativas do projeto.
 
 | Métrica                     | Valor       |
 | --------------------------- | ----------- |
-| Commits (repo atual)        | 54          |
-| Arquivos no projeto (src)   | ~358        |
+| Commits (repo atual)        | ~60         |
+| Arquivos no projeto (src)   | 359         |
 | Linhas de código            | ~50.467     |
-| Migrations SQL              | 43          |
-| Arquivos de teste unitários | 26 (Vitest) |
+| Migrations SQL              | 70          |
+| Arquivos de teste unitários | 28 (Vitest) |
 | Hooks customizados          | 45          |
-| Arquivos de content (UI)    | 17          |
+| Arquivos de content (UI)    | 18          |
 | Desenvolvedores             | 1           |
 
 ### 8.4.2 O que a IA Acelerou
@@ -213,7 +215,7 @@ para gestão do projeto.
 ## Referências cruzadas
 
 - **Sprints:** Ver [docs/sprints/README.md](../sprints/README.md)
-  para histórico completo de 27 sprints implementadas
+  para histórico completo de 31 sprints implementadas
 - **Git:** Ver [docs/git/overview.md](../git/overview.md)
   para workflow e convenções de commit
 - **Metodologia:** Ver [Cap. 3 — Metodologia](./cap3-metodologia.md)
