@@ -153,7 +153,7 @@ Até o estágio atual, o projeto **apresenta** as seguintes métricas de impleme
 | **Métrica**              | **Valor** |
 | :----------------------- | :-------- |
 | Arquivos TypeScript      | 359       |
-| Linhas de código         | ~50.467   |
+| Linhas de código         | ~55.000   |
 | Componentes React        | 181       |
 | Hooks customizados       | 34        |
 | Migrations SQL           | 70        |

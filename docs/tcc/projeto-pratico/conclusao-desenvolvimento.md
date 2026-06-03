@@ -28,7 +28,7 @@ CI/CD              → GitHub Actions → Cloudflare Pages
 | -------------------------- | ---------------------------------- |
 | Commits                    | 147                                |
 | Arquivos TypeScript        | 359                                |
-| Linhas de código (src)     | ~50.467                            |
+| Linhas de código (src)     | ~55.000                            |
 | Migrations SQL             | 70                                 |
 | Suites de teste            | 28                                 |
 | Testes automatizados       | 304                                |

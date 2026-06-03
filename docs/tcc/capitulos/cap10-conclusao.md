@@ -38,7 +38,7 @@ utilizando ferramentas modernas e IA.
 A hipótese H1 foi confirmada.
 O projeto foi desenvolvido por um único desenvolvedor
 em aproximadamente 4 meses (janeiro a maio de 2026),
-com 60+ commits, ~367 arquivos e ~50.467 linhas de código.
+com 147 commits, 359 arquivos TypeScript e ~55.000 linhas de código.
 O período inclui:
 
 - Janeiro a fevereiro (Sprints 1 a 7):

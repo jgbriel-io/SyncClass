@@ -174,7 +174,7 @@ docs/
 - **Sprints:** 31 implementadas
 - **Migrations:** 70
 - **Arquivos TypeScript:** 359
-- **Linhas de código (src):** ~50.467
+- **Linhas de código (src):** ~55.000
 - **Strings UI:** 860+ centralizadas
 - **Testes:** 304 (28 suites)
 - **RLS Policies:** 70+

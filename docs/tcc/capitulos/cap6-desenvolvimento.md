@@ -3,7 +3,7 @@
 **Resumo:** Este capítulo detalha a stack tecnológica, estrutura de pastas,
 padrões de código (separação de responsabilidades, design tokens,
 centralização de strings e query keys), os 6 módulos implementados e métricas
-do projeto (~50.467 linhas, ~184 componentes, 70 migrations).
+do projeto (~55.000 linhas, 181 componentes, 70 migrations).
 
 ## 6.1 Stack Tecnológica
 
@@ -207,7 +207,7 @@ toast.success(students.formDialog.toasts.success);
 | **Métrica**              | **Valor**                     |
 | ------------------------ | ----------------------------- |
 | Total de arquivos (src)  | ~358                          |
-| Linhas de código (src)   | ~50.467                       |
+| Linhas de código (src)   | ~55.000                       |
 | Componentes React        | ~184                          |
 | Hooks customizados       | 45 arquivos em `src/hooks/`   |
 | Arquivos de content      | 18 (strings UI centralizadas) |

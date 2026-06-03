@@ -37,7 +37,7 @@ Plataforma SaaS para professores autônomos de inglês. Substitui planilhas e co
 | Período de desenvolvimento | 19 jan – 26 mai 2026 (~18 semanas) |
 | Sprints implementadas      | 31                                 |
 | Arquivos TypeScript        | 359                                |
-| Linhas de código (src)     | ~50.467                            |
+| Linhas de código (src)     | ~55.000                            |
 | Migrations SQL             | 70                                 |
 | Testes automatizados       | 304 (28 suites)                    |
 | Strings UI centralizadas   | 860+                               |

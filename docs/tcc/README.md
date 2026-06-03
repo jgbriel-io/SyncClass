@@ -50,7 +50,7 @@ Unificar gestão de alunos, aulas e cobranças em uma plataforma reduz tarefas m
 | **Sprints Implementadas**      | 31                                 |
 | **Commits**                    | 60+                                |
 | **Arquivos TypeScript**        | 359                                |
-| **Linhas de Código (src)**     | ~50.467                            |
+| **Linhas de Código (src)**     | ~55.000                            |
 | **Migrations de Banco**        | 70                                 |
 | **Suites de Teste**            | 28                                 |
 | **Testes Automatizados**       | 304+                               |
