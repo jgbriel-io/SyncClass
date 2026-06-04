@@ -9,7 +9,7 @@ Sprints documentam desenvolvimento incremental do SyncClass. Cada sprint = conju
 **Características:**
 
 - Documentação retroativa (escrita após implementação)
-- Validada contra commits reais (97.8% evidência — ver `docs/archive/gestao-projeto/validacao-sprints-1-15.md`)
+- Validada contra commits reais (97.8% evidência — ver `docs/tcc-8-periodo/gestao-projeto/validacao-sprints.md`)
 - Estrutura padronizada (Problem → Requirements → Tasks → Results)
 - Foco em decisões técnicas e lições aprendidas
 
@@ -53,7 +53,7 @@ Sprints documentam desenvolvimento incremental do SyncClass. Cada sprint = conju
 | Sprint 25 | 25 mai 2026        | DB: Database Structural Analysis                         | ✅ Implementada | [sprint-25](./sprint-25-database-analysis.md)                       |
 | Sprint 26 | 25 mai 2026        | Security: Full Security Audit                            | ✅ Implementada | [sprint-26](./sprint-26-security-audit.md)                          |
 | Sprint 27 | 25 mai 2026        | Security: Supabase Advisors + npm audit                  | ✅ Implementada | [sprint-27](./sprint-27-supabase-advisors.md)                       |
-| Sprint 28 | 26 mai 2026        | QA: Testes Manuais — 116 itens, 20 rotas                 | ✅ Concluída    | [sprint-28](./sprint-28-testes-manuais.md)                          |
+| Sprint 28 | 26 mai 2026        | QA: Testes Manuais — 214 itens, 20 rotas                 | 🟡 Em andamento | [sprint-28](./sprint-28-testes-manuais.md)                          |
 | Sprint 29 | 31 mai 2026        | Fix: Correções do painel admin e propagação entre visões | ✅ Implementada | [sprint-29](./sprint-29-fix-correcoes-painel-admin.md)              |
 | Sprint 30 | 01 jun 2026        | Feature: AbacatePay Integration (PIX Automático)         | ✅ Implementada | [sprint-30](./sprint-30-abacatepay-integration.md)                  |
 | Sprint 31 | 01 jun 2026        | Fix: Correções encontradas durante QA — teachers         | ✅ Implementada | [sprint-31](./sprint-31-fix-qa-teachers.md)                         |
@@ -106,7 +106,7 @@ Features planejadas mas fora do escopo do TCC. Documentadas para extensão futur
 
 | Hipótese                                    | Sprints Relacionadas | Evidência                                                                                                 | Status      |
 | ------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------- | ----------- |
-| **H1:** SaaS solo em ~3 meses com IA        | 01–19 (todas)        | 276 commits, 46.400 linhas, 391 arquivos, 1 desenvolvedor                                                 | ✅ Validada |
+| **H1:** SaaS solo com IA em prazo acadêmico | 01–31 (todas)        | 152 commits, 31 sprints, 4,5 meses, 1 desenvolvedor                                                       | ✅ Validada |
 | **H2:** Supabase reduz ≥60% esforço backend | 01, 02, 07           | 70 migrations SQL (sprint 07 tinha 23); RLS elimina middleware de auth; sem servidor de aplicação próprio | ✅ Validada |
 | **H3:** Unificação reduz tarefas manuais    | 04, 05, 12–15        | Portal unificado (aluno + professor); i18n prep centraliza 170+ strings                                   | ✅ Validada |
 
@@ -117,7 +117,7 @@ Features planejadas mas fora do escopo do TCC. Documentadas para extensão futur
 - Sprints 01–07: MVP completo em ~30 dias (19/jan–18/fev)
 - Sprints 08–11: Refactoring + fixes em ~2 meses (mar–abr)
 - Sprints 12–15: Centralização de strings em 1 dia (20/mai)
-- Assistência de IA (Claude/Kiro) em 100% das sprints
+- Assistência de IA (Claude, Anthropic) em 100% das sprints
 
 **H2 — Supabase como BaaS:**
 
@@ -135,6 +135,6 @@ Features planejadas mas fora do escopo do TCC. Documentadas para extensão futur
 
 ## Referências
 
-- **Validação:** `docs/archive/gestao-projeto/validacao-sprints-1-15.md` — prova que sprints batem com commits reais
-- **Histórico:** `docs/archive/gestao-projeto/historico-desenvolvimento.md` — análise de 165 commits
+- **Validação:** `docs/tcc-8-periodo/gestao-projeto/validacao-sprints.md` — prova que sprints batem com commits reais
+- **Histórico:** `docs/tcc-8-periodo/gestao-projeto/historico-desenvolvimento.md`
 - **Banco de dados:** `docs/database/analise-banco.md` — tabelas, views, functions ativas

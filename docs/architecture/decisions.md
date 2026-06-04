@@ -38,7 +38,7 @@ ADRs (Architecture Decision Records) documentando escolhas técnicas, trade-offs
 
 ### Contexto
 
-Projeto de TCC com prazo de ~3 meses para MVP completo. Necessário backend com autenticação, banco de dados, storage e real-time. Desenvolvedor solo sem experiência prévia em backend.
+Projeto de TCC com prazo de 4,5 meses para MVP completo. Necessário backend com autenticação, banco de dados, storage e real-time. Desenvolvedor solo sem experiência prévia em backend.
 
 **Hipótese H2 do TCC:** Supabase reduz ≥60% do esforço de backend comparado a implementação tradicional (Node.js + Express + PostgreSQL + Auth próprio).
 
