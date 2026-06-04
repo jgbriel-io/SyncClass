@@ -36,8 +36,8 @@ Plataforma SaaS para professores autônomos de inglês. Substitui planilhas e co
 | -------------------------- | ---------------------------------- |
 | Período de desenvolvimento | 19 jan – 03 jun 2026 (~19 semanas) |
 | Sprints implementadas      | 31                                 |
-| Arquivos TypeScript        | 359                                |
-| Linhas de código (src)     | ~55.000                            |
+| Arquivos TypeScript        | 305 (excl. testes e .d.ts)         |
+| Linhas de código (src)     | ~50.000 (excl. tipos gerados)      |
 | Migrations SQL             | 70                                 |
 | Testes automatizados       | 304 (28 suites)                    |
 | Strings UI centralizadas   | 860+                               |
@@ -92,7 +92,7 @@ Plataforma SaaS para professores autônomos de inglês. Substitui planilhas e co
 
 | Hipótese                                            | Evidência                                                                                          | Status      |
 | --------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------- |
-| **H1** — SaaS funcional solo em ~3 meses com IA     | 359 arquivos, ~55k linhas, 1 desenvolvedor, ~19 semanas                                            | ✅ Validada |
+| **H1** — SaaS funcional solo com IA em 4,5 meses    | 152 commits, 305 arquivos TS, ~50k linhas, 1 desenvolvedor, 4,5 meses                              | ✅ Validada |
 | **H2** — Supabase reduz ≥60% do esforço backend     | 70 migrations gerenciam auth, RLS, RPCs e triggers — equivalente a ~80 endpoints REST + middleware | ✅ Validada |
 | **H3** — Plataforma unificada reduz tarefas manuais | Portal único cobre todo o ciclo operacional: alunos, aulas, cobranças, atividades                  | ✅ Validada |
 

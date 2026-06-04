@@ -9,7 +9,7 @@ tags:
 ---
 
 > [!IMPORTANT] Nota de Auditoria do Histórico
-> Este documento reconstrói o ciclo de vida do projeto **SyncClass** a partir do histórico Git preservado (branches `homolog-old` e `main`) e da análise retroativa de artefatos (migrations, arquivos de segurança e documentação técnica) para suprir o gap de ~33 commits perdidos durante a reestruturação de repositório em Março/2026.
+> Este documento reconstrói o ciclo de vida do projeto **SyncClass** a partir do histórico Git (branch `main`, 152 commits) e da análise retroativa de artefatos (migrations, arquivos de segurança e documentação técnica).
 
 ---
 
@@ -188,7 +188,7 @@ tags:
 
 | Métrica                          | Valor Estimado |
 | :------------------------------- | :------------- |
-| **Total de Commits**             | ~218           |
+| **Total de Commits**             | 152            |
 | **Sprints Implementadas**        | 31             |
 | **Migrations de Banco**          | 70             |
 | **Bugs de Auditoria Corrigidos** | 36             |

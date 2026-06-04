@@ -15,7 +15,7 @@ Documentação histórica e referência técnica do SyncClass. Complementa o TCC
 
 **Quando NÃO usar:**
 
-- Leitura do TCC → use `docs/tcc-8-periodo/projeto-escrito/capitulos/`
+- Leitura do TCC → use `docs/tcc-8-periodo/projeto-escrito/capitulos-guia/`
 - Entender arquitetura atual → use `docs/architecture/overview.md`
 - Consultar sprints → use `docs/sprints/`
 
@@ -29,8 +29,8 @@ docs/tcc-8-periodo/gestao-projeto/
 ├── requisitos-funcionais.md         ← RF01-RF35 (31 implementados + 4 futuros)
 ├── requisitos-nao-funcionais.md     ← RNF01-RNF36 (36 implementados)
 ├── regras-de-negocio.md             ← 62 regras completas com fontes
-├── historico-desenvolvimento.md     ← 165 commits originais (jan-fev 2026)
-└── validacao-sprints-1-15.md        ← Validação 100% sprints 1-27 (28/31 em andamento)
+├── historico-desenvolvimento.md     ← Histórico de desenvolvimento (jan-jun 2026)
+└── validacao-sprints.md        ← Validação 100% sprints 1-27 (28/31 em andamento)
 ```
 
 ---
@@ -95,18 +95,18 @@ docs/tcc-8-periodo/gestao-projeto/
 
 **Status:** ✅ Atualizado (Jun/2026)
 
-Análise dos 165 commits originais da branch `old-homolog` (jan-fev 2026):
+Análise do histórico de desenvolvimento (jan-jun 2026):
 
 - Evolução em 4 fases (Fundação → Consolidação → Features → Qualidade)
 - Estatísticas por tipo de commit
-- Comparação old-homolog vs branch atual (~218 commits, Sprint 31)
+- 152 commits (branch main) + documentação de sprints 1-31
 - Lições aprendidas
 
 **Útil para:** Cap8 (Gestão de Projeto)
 
 ---
 
-### validacao-sprints-1-15.md
+### validacao-sprints.md
 
 **Status:** ✅ Atualizado (Jun/2026) — cobre sprints 1-31
 
@@ -128,14 +128,14 @@ Análise dos 165 commits originais da branch `old-homolog` (jan-fev 2026):
 | `requisitos-funcionais.md`     | Cap4 §4.2    | Evidências completas (arquivos, migrations, testes) vs resumo acadêmico |
 | `requisitos-nao-funcionais.md` | Cap4 §4.3    | Implementação detalhada vs resumo acadêmico                             |
 | `regras-de-negocio.md`         | Cap4 §4.4    | 62 regras com fontes vs 59 regras resumidas                             |
-| `historico-desenvolvimento.md` | Cap8         | Análise completa de 165 commits vs resumo de gestão                     |
-| `validacao-sprints-1-15.md`    | Cap8         | Validação detalhada com critérios vs resumo de metodologia              |
+| `historico-desenvolvimento.md` | Cap8         | Histórico de desenvolvimento (jan-jun 2026) vs resumo de gestão         |
+| `validacao-sprints.md`         | Cap8         | Validação detalhada com critérios vs resumo de metodologia              |
 
 ---
 
 ## Referências
 
-- **Capítulos TCC:** `docs/tcc-8-periodo/projeto-escrito/capitulos/`
+- **Capítulos TCC:** `docs/tcc-8-periodo/projeto-escrito/capitulos-guia/`
 - **Sprints:** `docs/sprints/` (Sprint 1-31)
 - **Código:** `src/`, `supabase/`
 - **Arquitetura:** `docs/architecture/overview.md`

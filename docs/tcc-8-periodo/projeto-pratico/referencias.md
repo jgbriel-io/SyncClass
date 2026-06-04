@@ -28,7 +28,7 @@
 
 ## Cap. 4 — Requisitos
 
-> **Nota:** Documentação completa em `docs/tcc-8-periodo/projeto-escrito/capitulos/cap4-requisitos.md`
+> **Nota:** Documentação completa em `docs/tcc-8-periodo/projeto-escrito/capitulos-guia/cap4-requisitos.md`
 
 ### Resumo Quantitativo
 
@@ -165,7 +165,7 @@
 
 ### Regras de Negócio
 
-> **Nota:** Documentação completa em `docs/tcc/archive/regras-de-negocio/regras-de-negocio.md` (59 regras)
+> **Nota:** Documentação completa em `docs/tcc-8-periodo/gestao-projeto/regras-de-negocio.md`
 
 **Resumo por Categoria:**
 
@@ -240,7 +240,7 @@
 
 ```
 src/
-├── components/        # ~184 componentes
+├── components/        # 181 componentes
 │   ├── ui/            # shadcn/ui + componentes base customizados
 │   ├── students/      # Componentes do domínio alunos
 │   ├── classes/       # Componentes do domínio aulas

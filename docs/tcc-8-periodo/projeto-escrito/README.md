@@ -22,17 +22,19 @@ docs/tcc-8-periodo/projeto-escrito/
 │   ├── cap8-gestao.md
 │   ├── cap9-deploy-infra.md
 │   └── cap10-conclusao.md
-├── capitulo-final/                            ← Prosa ABNT revisada (caps prontos)
-│   ├── capitulo1-final.md
-│   └── capitulo2-final.md
+├── capitulos-final/                            ← Prosa ABNT revisada (caps entregáveis)
+│   ├── capitulo1-final.md                     ← reescrita pendente (blockers cap1)
+│   ├── capitulo2-final.md                     ← reescrita pendente
+│   └── capitulo3-final.md                     ← rascunho de referência (reescrever)
 ├── listas/                                    ← Elementos pré-textuais
 │   ├── lista-de-figuras.md
 │   ├── lista-de-quadros.md
 │   └── lista-de-siglas.md
 ├── assets-pendentes.md                        ← Checklist de figuras/prints a capturar
+├── decisoes-transversais.md                   ← Valores canônicos (prazo, commits, RF, H1-H3)
+├── decisoes-escrita.md                        ← Blockers resolvidos por capítulo
 ├── guia-de-normatizacao-e-estrutura-final.md  ← Regras ABNT/FEPI para Word
-├── referencias-bibliograficas.md              ← Staging Obsidian (rascunho de referências)
-├── referencias-final.md                       ← Referências em ABNT — fonte canônica
+├── referencias-bibliograficas.md              ← 28 referências em ABNT — fonte canônica
 └── revisao-orientador.md                      ← Feedback do orientador (03/06/2026)
 ```
 
@@ -40,20 +42,37 @@ docs/tcc-8-periodo/projeto-escrito/
 
 ## Status dos Capítulos
 
-| Cap | Título                   | Rascunho                 | Final ABNT              |
-| --- | ------------------------ | ------------------------ | ----------------------- |
-| 1   | Introdução               | ✅ com `## Planejamento` | ✅ `capitulo1-final.md` |
-| 2   | Referencial Teórico      | ✅ com `## Planejamento` | ✅ `capitulo2-final.md` |
-| 3   | Metodologia              | ✅ com `## Planejamento` | ⏳ pendente             |
-| 4   | Engenharia de Requisitos | ✅ com `## Planejamento` | ⏳ pendente             |
-| 5   | Arquitetura e Modelagem  | ✅ com `## Planejamento` | ⏳ pendente             |
-| 6   | Implementação            | ✅ com `## Planejamento` | ⏳ pendente             |
-| 7   | Qualidade e Testes       | ✅ com `## Planejamento` | ⏳ pendente             |
-| 8   | Gestão do Projeto        | ✅ com `## Planejamento` | ⏳ pendente             |
-| 9   | Deploy e Infraestrutura  | ✅ com `## Planejamento` | ⏳ pendente             |
-| 10  | Conclusão                | ✅ com `## Planejamento` | ⏳ pendente             |
+| Cap | Título                   | Rascunho | Final ABNT                           | Observação                                             |
+| --- | ------------------------ | -------- | ------------------------------------ | ------------------------------------------------------ |
+| 1   | Introdução               | ✅       | 🔁 reescrever (`capitulo1-final.md`) | 7 blockers críticos — ver `revisao-orientador.md`      |
+| 2   | Referencial Teórico      | ✅       | 🔁 reescrever (`capitulo2-final.md`) | Reescrita manual                                       |
+| 3   | Metodologia              | ✅       | 🔁 reescrever (`capitulo3-final.md`) | Rascunho de referência gerado — reescrever manualmente |
+| 4   | Engenharia de Requisitos | ✅       | ⏳ pendente                          | —                                                      |
+| 5   | Arquitetura e Modelagem  | ✅       | ⏳ pendente                          | Assets: DER + diagrama arq. pendentes                  |
+| 6   | Implementação            | ✅       | ⏳ pendente                          | Assets: prints das telas pendentes                     |
+| 7   | Qualidade e Testes       | ✅       | ⏳ pendente                          | Assets: output de testes pendente                      |
+| 8   | Gestão do Projeto        | ✅       | ⏳ pendente                          | Assets: Gantt pendente                                 |
+| 9   | Deploy e Infraestrutura  | ✅       | ⏳ pendente                          | —                                                      |
+| 10  | Conclusão                | ✅       | ⏳ pendente                          | Último — depende de todos os outros                    |
+
+**Legenda:** ✅ pronto · ⏳ a fazer · 🔁 reescrever versão existente
 
 Todos os rascunhos têm seção `## Planejamento` no topo (estrutura, citações planejadas, pendências).
+
+### Valores canônicos (usar em todos os capítulos)
+
+| Grandeza             | Valor canônico                                   |
+| -------------------- | ------------------------------------------------ |
+| Prazo real           | 4,5 meses (19 jan – 03 jun 2026)                 |
+| Commits              | 152                                              |
+| Migrations           | 70                                               |
+| RF implementados     | 31                                               |
+| RF trabalhos futuros | 4                                                |
+| Testes automatizados | 304                                              |
+| H2 limiar            | ≥60% de redução de esforço backend               |
+| Metodologia          | modelo iterativo incremental com ciclos semanais |
+
+Ver `capitulos-final/decisoes-transversais.md` para justificativas.
 
 ---
 
@@ -70,14 +89,10 @@ Contém: problemas transversais, críticos por capítulo, importantes, perguntas
 
 Checklist de todos os elementos visuais necessários por capítulo (prints, diagramas, Gantt, DER, output de testes). Prioridades: DER (cap5), prints das telas (cap6), Gantt (cap8).
 
-### `referencias-final.md`
-
-27 referências em formato ABNT — fonte canônica para o Word. Atualizado Jun/2026.
-Inclui: Fowler (MonolithFirst), TanStack, Thiollent, Tripp, Vercel/shadcn, Wohlin.
-
 ### `referencias-bibliograficas.md`
 
-Staging em formato Obsidian. Contém guia de aplicação por capítulo. Usar apenas para consulta — `referencias-final.md` é a fonte para o Word.
+28 referências em formato ABNT — fonte canônica para o Word. Atualizado Jun/2026.
+Inclui: Fowler (MonolithFirst), TanStack, Thiollent, Tripp, Vercel/shadcn, Wohlin, Cohn.
 
 ### `guia-de-normatizacao-e-estrutura-final.md`
 
@@ -96,12 +111,24 @@ Regras ABNT/FEPI: margens, fontes, espaçamento, voz acadêmica, estrutura dos 1
 ## Fluxo de Trabalho
 
 ```
-capitulos/cap*.md          ← rascunho + iteração com orientador
+capitulos/cap*.md                     ← rascunho + iteração com orientador
        ↓  (tcc-rascunho skill)
-capitulo-final/cap*-final.md  ← prosa ABNT, voz impessoal
+capitulos-final/cap*-final.md          ← prosa ABNT, voz impessoal
        ↓  (copiar para Word)
-Arquivo .docx final        ← formatação Word + listas + referências
+Arquivo .docx final                   ← formatação Word + listas + referências
 ```
+
+### Ordem de escrita recomendada (caps 3–10)
+
+1. **Step 0:** criar `capitulos-final/decisoes-transversais.md` (valores canônicos)
+2. Cap 3 → Cap 8 (compartilham blocker metodologia/prazo)
+3. Cap 4 → Cap 5 (requisitos antes de modelagem)
+4. Cap 6 → Cap 7 (implementação antes de qualidade)
+5. Cap 9 (deploy — independente)
+6. **Cap 10 por último** (depende de todos)
+7. Caps 1 e 2: reescrita manual separada
+
+> Caps 1 e 2 têm versão existente em `capitulos-final/` mas precisam de reescrita completa. Fora do escopo da escrita assistida — tratar manualmente após caps 3–10 concluídos.
 
 ---
 

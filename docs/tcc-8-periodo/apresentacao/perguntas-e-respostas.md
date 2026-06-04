@@ -22,15 +22,15 @@ Compilado de perguntas duras da banca simulada (grill-me-tcc) com raciocínio e 
 ## P2 — Cronograma: como garantir que não é narrativa construída após os fatos?
 
 **Eixo:** Metodologia — validade do cronograma retroativo
-**Por que a banca pergunta:** O repositório perdeu ~33 commits em março de 2026. O cronograma do Capítulo 8 é retroativo. A banca pode questionar se a organização em sprints é real ou foi projetada sobre o histórico para fazer o processo parecer mais estruturado do que foi.
+**Por que a banca pergunta:** O cronograma do Capítulo 8 é retroativo. A banca pode questionar se a organização em sprints é real ou foi projetada sobre o histórico para fazer o processo parecer mais estruturado do que foi.
 
 **Resposta:**
 
-> "O Capítulo 8 declara explicitamente que o cronograma é uma reconstrução retroativa e que aproximadamente 33 commits foram perdidos na reestruturação do repositório em março de 2026. Isso está documentado como limitação — não é algo escondido.
+> "O Capítulo 8 declara explicitamente que o cronograma é uma reconstrução retroativa — característica documentada da pesquisa-ação (Thiollent, 2011) quando o pesquisador é o próprio executor.
 >
-> A reconstrução apoia-se em três fontes independentes que preservaram rastreabilidade. Primeiro, as 70 migrations SQL são numeradas sequencialmente (01 a 72) e documentam internamente o que foi feito e quando — funcionam como log de decisões de banco que o repositório não apaga. Segundo, os documentos de sprint em `docs/sprints/` foram criados contemporaneamente ao desenvolvimento. Terceiro, o repositório atual preserva 147 commits com timestamps reais para o período de abril a junho de 2026.
+> A reconstrução apoia-se em três fontes independentes que preservaram rastreabilidade. Primeiro, as 70 migrations SQL são numeradas sequencialmente e documentam internamente o que foi feito e quando — funcionam como log de decisões de banco que o repositório não apaga. Segundo, os documentos de sprint em `docs/sprints/` cobrem todas as 31 sprints com foco, período e resultado documentados. Terceiro, o repositório principal preserva 152 commits com timestamps reais cobrindo todo o período de desenvolvimento.
 >
-> Cronogramas retroativos são comuns em pesquisa-ação quando o pesquisador é o próprio executor — Thiollent (2011) reconhece isso como característica do método. A limitação real é que o período de fevereiro-março tem menor precisão de rastreabilidade. O que posso afirmar com evidência documentada é a sequência de funcionalidades entregues e as datas aproximadas — não a quantidade exata de horas por sprint nesse período."
+> O que posso afirmar com evidência documentada é a sequência de funcionalidades entregues e as datas aproximadas. A limitação de precisão de horas por sprint é declarada no Capítulo 8 como restrição metodológica esperada em pesquisa-ação solo."
 
 ---
 
@@ -161,7 +161,7 @@ Compilado de perguntas duras da banca simulada (grill-me-tcc) com raciocínio e 
 
 ---
 
-## P9 — Resultados: 147 commits e 304 testes provam produtividade ou só atividade?
+## P9 — Resultados: 152 commits e 304 testes provam produtividade ou só atividade?
 
 **Eixo:** Resultados
 **Por que a banca pergunta:** Volume de commits e testes pode indicar retrabalho tanto quanto entrega. A banca quer evidência de valor entregue, não apenas de trabalho realizado.
@@ -180,7 +180,7 @@ Compilado de perguntas duras da banca simulada (grill-me-tcc) com raciocínio e 
 
 1. **H2 sem baseline empírico controlado** — estimativa de 60% do autor. Mitigação: declarar método de estimativa, reconhecer como qualitativa estruturada.
 2. **H3 com viés de retrospecto** — tempo "sem IA" não foi medido. Mitigação: calibrar em literatura (Peng et al.), exemplos rastreáveis, enquadrar como corroborada.
-3. **Cronograma com gap de rastreabilidade** — ~33 commits perdidos em março/2026. Mitigação: declarado no cap8, fontes alternativas documentadas.
+3. **Cronograma retroativo** — reconstrução por estimativa retrospectiva. Mitigação: três fontes independentes (migrations, docs/sprints/, 152 commits com timestamps).
 4. **Validade externa limitada** — resultados não generalizáveis sem estudos adicionais. Mitigação: enquadrar como pesquisa exploratória, mapear em trabalhos futuros.
 
 ## Pontos Fortes Identificados

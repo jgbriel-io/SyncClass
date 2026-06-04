@@ -2,7 +2,7 @@
 titulo: Guia de Normatização e Estrutura - Versão Final
 projeto: SyncClass - Plataforma SaaS
 status: ✅ Validado (Normas FEPI/ABNT 2026)
-ultima_atualizacao: 21/05/2026
+ultima_atualizacao: 03/06/2026
 tags:
   - tcc/normas
 ---
@@ -31,22 +31,20 @@ tags:
 
 ---
 
-## 📚 2. Estrutura Textual (Os 10 Capítulos)
+## 📚 2. Estrutura Textual (5 Capítulos + Cronograma)
 
-A estrutura completa do **SyncClass** deve ser organizada da seguinte forma:
+Estrutura definida pelo professor orientador (03/06/2026):
 
-| Cap.   | Título                      | Conteúdo Chave                                                        |
-| :----- | :-------------------------- | :-------------------------------------------------------------------- |
-| **1**  | **Introdução**              | Problema, Objetivos, Justificativa e Hipóteses.                       |
-| **2**  | **Referencial Teórico**     | SaaS, Cloud Computing, LGPD e IA no Desenvolvimento.                  |
-| **3**  | **Metodologia**             | Pesquisa-Ação, Kanban e Uso de IA.                                    |
-| **4**  | **Requisitos**              | Requisitos Funcionais (RF), Não-Funcionais (RNF) e Regras de Negócio. |
-| **5**  | **Modelagem**               | Decisões Arquiteturais, DER e Segurança RLS.                          |
-| **6**  | **Desenvolvimento**         | Stack (React/Vite/Supabase), Estrutura de Pastas e Módulos.           |
-| **7**  | **Qualidade e Testes**      | Vitest, Testes Manuais e Validação ISO 25010.                         |
-| **8**  | **Gestão do Projeto**       | Cronograma, Sprints e Impacto da IA na Produtividade.                 |
-| **9**  | **Deploy e Infraestrutura** | Cloudflare Pages, CI/CD (GitHub Actions) e Edge Functions.            |
-| **10** | **Conclusão**               | Validação das Hipóteses e Trabalhos Futuros.                          |
+| Cap.  | Título                       | Conteúdo Chave                                                                                                                                           |
+| :---- | :--------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1** | **Introdução**               | Contextualização, Problema, Justificativa, Objetivos e Hipóteses.                                                                                        |
+| **2** | **Referencial Teórico**      | Domínio, SaaS, Cloud, ISO 25010, LGPD, CI/CD e IA no Desenvolvimento.                                                                                    |
+| **3** | **Metodologia**              | Classificação da pesquisa, processo iterativo, protocolo de IA, requisitos, modelagem, desenvolvimento, qualidade, gestão e deploy (subtópicos 3.1–3.9). |
+| **4** | **Resultados e Discussão**   | Sistema entregue, métricas, resultados de qualidade e análise das hipóteses H1/H2/H3.                                                                    |
+| **5** | **Conclusão**                | Síntese, limitações, trabalhos futuros e considerações finais (ODS).                                                                                     |
+| **6** | **Cronograma de Atividades** | Fases do desenvolvimento, 31 iterações e Gantt retroativo.                                                                                               |
+
+Pós-textuais: **Referências** e **Apêndices A–E** (Forms exploratório, RF completos, RNF/Regras de Negócio, Casos de Uso, Matriz de Rastreabilidade).
 
 ---
 

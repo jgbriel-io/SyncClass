@@ -26,9 +26,9 @@ CI/CD              → GitHub Actions → Cloudflare Pages
 
 | Métrica                    | Valor                              |
 | -------------------------- | ---------------------------------- |
-| Commits                    | 147                                |
-| Arquivos TypeScript        | 359                                |
-| Linhas de código (src)     | ~55.000                            |
+| Commits                    | 152                                |
+| Arquivos TypeScript        | 305 (excl. testes e .d.ts)         |
+| Linhas de código (src)     | ~50.000 (excl. tipos gerados)      |
 | Migrations SQL             | 70                                 |
 | Suites de teste            | 28                                 |
 | Testes automatizados       | 304                                |
@@ -124,7 +124,7 @@ Mantidas como sprints `NAO-IMPLEMENTADA` por decisão de escopo, não por limita
 
 | Hipótese                                                           | Evidência                                                                                                                                                                                                              | Status      |
 | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **H1** SaaS funcional solo em ~3 meses com IA como aceleradora     | ~147 commits (main), 359 arquivos, ~55k linhas, 1 desenvolvedor, ~19 semanas                                                                                                                                           | ✅ Validada |
+| **H1** SaaS funcional solo com IA em prazo acadêmico (4,5 meses)   | 152 commits (main), 305 arquivos TS, ~50k linhas, 1 desenvolvedor, 4,5 meses                                                                                                                                           | ✅ Validada |
 | **H2** Supabase reduz ≥60% do esforço backend vs stack tradicional | 70 migrations SQL gerenciam auth, RLS, RPCs, triggers, Edge Functions — equivalente a ~80+ endpoints REST + middleware de auth em stack tradicional; integração AbacatePay em 3 Edge Functions (sem servidor dedicado) | ✅ Validada |
 | **H3** Plataforma unificada reduz tarefas manuais do professor     | Portal único: alunos, aulas, cobranças, atividades, relatórios                                                                                                                                                         | ✅ Validada |
 
@@ -187,14 +187,14 @@ A infraestrutura atual suporta as seguintes extensões sem mudança de arquitetu
 
 Após encerramento do desenvolvimento, realizada varredura de lixo no repositório:
 
-| Item removido                        | Motivo                                       |
-| ------------------------------------ | -------------------------------------------- |
-| `lovable-tagger` (dep + vite.config) | Ferramenta da plataforma Lovable.dev         |
-| `sharp` (dep)                        | Dependência órfã — zero uso no código        |
-| 11 componentes shadcn/ui sem uso     | Stubs gerados no scaffold, nunca usados      |
-| 11 deps associadas (Radix, vaul...)  | Removidas junto com os componentes           |
-| `.agents/` (desrastreado do git)     | Skills do Claude Code, não código do projeto |
-| `.kiroignore`                        | Config do Kiro IDE                           |
+| Item removido                        | Motivo                                                 |
+| ------------------------------------ | ------------------------------------------------------ |
+| `lovable-tagger` (dep + vite.config) | Ferramenta da plataforma Lovable.dev                   |
+| `sharp` (dep)                        | Dependência órfã — zero uso no código                  |
+| 11 componentes shadcn/ui sem uso     | Stubs gerados no scaffold, nunca usados                |
+| 11 deps associadas (Radix, vaul...)  | Removidas junto com os componentes                     |
+| `.agents/` (desrastreado do git)     | Skills do Claude Code, não código do projeto           |
+| `.kiroignore`                        | Config do agente Claude Code (não é código do projeto) |
 
 Build continua passando após limpeza: 304/304 testes, lint e type-check limpos.
 
@@ -208,4 +208,4 @@ O produto cobre o ciclo completo de gestão de professores autônomos de inglês
 
 **Pendências restantes:**
 
-- Capítulos 2–10 do TCC — rascunhos existem em `docs/tcc-8-periodo/projeto-escrito/capitulos/`, precisam de revisão ABNT e versão Word final
+- Capítulos 2–10 do TCC — rascunhos existem em `docs/tcc-8-periodo/projeto-escrito/capitulos-guia/`, precisam de revisão ABNT e versão Word final

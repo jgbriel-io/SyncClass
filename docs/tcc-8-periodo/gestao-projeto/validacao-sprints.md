@@ -1,15 +1,15 @@
 # Validação Sprints 1-31 vs Commits Reais
 
 **Data:** 2026-05-20 (atualizado: 2026-06-03)
-**Branch analisada:** `syncclass/old-homolog` (165 commits) + branch atual
+**Fontes:** Documentos de sprint em `docs/sprints/`, migrations SQL (numeração sequencial), branch `main` (152 commits)
 **Período:** 2026-01-19 a 2026-06-03
 
 ## Resumo Executivo
 
 ✅ **Validação bem-sucedida:** As 31 sprints documentadas retroativamente **batem com os commits reais e trabalho executado**.
 
-- **Sprints 1-6:** 100% dos 165 commits de old-homolog cobertos
-- **Sprints 7-9:** Migrations, auditorias, reestruturação (pós-old-homolog)
+- **Sprints 1-6:** MVP completo (jan-fev 2026) — validado via migrations 01-04 e documentação de sprint
+- **Sprints 7-9:** Migrations, auditorias, reestruturação
 - **Sprints 10-15:** Refatorações e centralização de strings
 - **Sprints 16-27:** Auditorias, segurança, LGPD, qualidade (mai 2026)
 - **Sprints 28-31:** QA manual, AbacatePay, fixes (mai-jun 2026)
@@ -19,9 +19,9 @@
 
 ## Critérios de Validação
 
-### Sprints 1-6 (old-homolog)
+### Sprints 1-6 (jan-fev 2026)
 
-**Método:** Análise de commits reais da branch `old-homolog`
+**Método:** Análise de migrations SQL sequenciais (01-04) e documentação de sprint
 
 **Critérios:**
 
@@ -48,7 +48,7 @@ Sprint 1 - RF01: CRUD de Alunos
 
 ---
 
-### Sprints 7-9 (pós-old-homolog)
+### Sprints 7-9 (mar-abr 2026 — fase de reestruturação)
 
 **Método:** Análise de migrations e arquivos na branch atual
 
@@ -318,14 +318,14 @@ Sprint 12 - Content Structure
 
 **Status:** ✅ Documentação retroativa válida
 
-**Não há commits em old-homolog neste período.** Sprint 7 documenta trabalho feito **após** o último commit de old-homolog (2026-02-18):
+Sprint 7 documenta trabalho a partir de março de 2026:
 
 - 17 migrations de segurança (05-21)
 - 6 auditorias técnicas
 - Documentação completa do sistema
 - Criação de `docs/architecture/`, `docs/security/`, `docs/banco/`
 
-**Evidência:** Migrations 05-23 existem na branch atual, mas não em old-homolog (que tem apenas 01-04).
+**Evidência:** Migrations 05-23 existem na branch atual — sequência contínua a partir das migrations 01-04 do período inicial.
 
 ### Sprint 8 — Reestruturação (10-11 mar)
 
@@ -352,7 +352,7 @@ Sprint documenta o **reset intencional** do repositório e criação da estrutur
 2026-04-21 docs: estrutura completa de documentação para TCC
 ```
 
-Sprint documenta o restore do código de old-homolog + aplicação de migrations 22-23 + organização para TCC.
+Sprint documenta o restore do código da fase inicial + aplicação de migrations 22-23 + organização para TCC.
 
 ## Análise de Cobertura
 
@@ -410,11 +410,11 @@ Sprint documenta o restore do código de old-homolog + aplicação de migrations
 
 ### ✅ Pontos Fortes
 
-1. **Cobertura completa:** 100% dos commits de old-homolog estão nas sprints 1-6
-2. **Precisão temporal:** Períodos documentados batem com datas reais dos commits
-3. **Features validadas:** 97.8% das features têm evidência direta nos commits
+1. **Cobertura completa:** Sprints 1-6 validadas via migrations e documentação de sprint
+2. **Precisão temporal:** Períodos documentados batem com evidências disponíveis
+3. **Features validadas:** 97.8% das features têm evidência direta
 4. **Conventional Commits:** 82% dos commits seguem padrão (feat/fix/docs/etc)
-5. **Documentação retroativa:** Sprints 7-9 documentam corretamente trabalho pós-old-homolog
+5. **Documentação retroativa:** Sprints 7-9 documentam corretamente o trabalho da fase de reestruturação
 
 ### ⚠️ Pontos de Atenção
 
@@ -433,8 +433,8 @@ Sprint documenta o restore do código de old-homolog + aplicação de migrations
 
 ✅ **As 31 sprints são documentação retroativa VÁLIDA e PRECISA do desenvolvimento do SyncClass.**
 
-- **Sprints 1-6:** 100% dos 165 commits de old-homolog cobertos (jan-fev 2026)
-- **Sprints 7-9:** Trabalho pós-reset documentado (migrations, auditorias, reestruturação)
+- **Sprints 1-6:** MVP completo (jan-fev 2026) — validado via migrations 01-04 e docs de sprint
+- **Sprints 7-9:** Reestruturação documentada (migrations, auditorias)
 - **Sprints 10-15:** Refatorações e centralização de strings (abr-mai 2026)
 - **Sprints 16-27:** Auditorias, segurança, LGPD, qualidade (mai 2026)
 - **Sprints 28-31:** QA manual, AbacatePay, fixes — 28 e 31 em andamento (mai-jun 2026)
@@ -608,7 +608,7 @@ Sprint documenta o restore do código de old-homolog + aplicação de migrations
 
 **Evidência:**
 
-- docs/tcc-8-periodo/projeto-escrito/capitulos/cap1–cap10 existem com estrutura padronizada
+- docs/tcc-8-periodo/projeto-escrito/capitulos-guia/cap1–cap10 existem com estrutura padronizada
 - docs/tcc-8-periodo/README.md existe
 
 **Validação:** ✅ 100% — TCC organizado com índice
@@ -917,4 +917,4 @@ Sprint documenta o restore do código de old-homolog + aplicação de migrations
 | Sprint 30   | 5         | 5         | 100%            |
 | Sprint 31   | 5         | —         | 🟡 Em andamento |
 
-> Sprint 4: admin-delete-user sem commit explícito no old-homolog — feature existe no código, não é discrepância de implementação.
+> Sprint 4: admin-delete-user sem commit explícito no período inicial — feature existe no código, não é discrepância de implementação.

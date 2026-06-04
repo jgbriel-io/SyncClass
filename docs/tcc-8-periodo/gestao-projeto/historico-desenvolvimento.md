@@ -1,15 +1,15 @@
-# Análise da Branch old-homolog
+# Histórico de Desenvolvimento — SyncClass
 
 **Data:** 2026-05-20  
-**Branch analisada:** `syncclass/old-homolog`  
-**Commits totais:** 165  
-**Período:** 2026-01-19 a 2026-02-18
+**Período:** 2026-01-19 a 2026-06-03  
+**Commits (branch main):** 152  
+**Sprints:** 31
 
 ## Resumo Executivo
 
-A branch `old-homolog` representa o desenvolvimento original do SyncClass entre janeiro e fevereiro de 2026. Contém 165 commits com evolução incremental do projeto, desde o commit inicial até features avançadas como gestão de faltas, pacotes de aulas e sistema de atividades completo.
+O desenvolvimento do SyncClass ocorreu em duas fases principais. A fase inicial (jan-fev 2026) cobriu o MVP completo com autenticação, CRUD, sistema financeiro, atividades e pacotes de aulas. A fase de expansão (mar-jun 2026) abrangeu 31 sprints documentadas com refatorações, auditorias de segurança, LGPD, testes automatizados e integração AbacatePay (PIX).
 
-A branch atual (main) foi **reestruturada** e contém ~218 commits (Sprint 31, Jun/2026), representando expansão completa com 31 sprints, 70 migrations, 304 testes automatizados e integração AbacatePay (PIX).
+O repositório principal (branch `main`) contém 152 commits cobrindo março a junho de 2026, complementados pela documentação de sprints em `docs/sprints/` e pelas 70 migrations SQL que preservam a sequência completa de desenvolvimento desde janeiro de 2026.
 
 ## Estatísticas de Commits
 
@@ -100,7 +100,7 @@ A branch atual (main) foi **reestruturada** e contém ~218 commits (Sprint 31, J
 - Suporte a alunos estrangeiros
 - Auditoria de riscos críticos
 
-## Features Implementadas (old-homolog)
+## Features Implementadas (Desenvolvimento Inicial — jan-fev 2026)
 
 ### ✅ Completas
 
@@ -135,9 +135,9 @@ A branch atual (main) foi **reestruturada** e contém ~218 commits (Sprint 31, J
 
 > **Nota:** Pagamento real via PIX foi implementado na Sprint 30 via integração AbacatePay.
 
-## Comparação: old-homolog vs Branch Atual
+## Evolução: Fase Inicial vs Fase de Expansão (Sprints 7–31)
 
-### Adicionado na Branch Atual
+### Adicionado nas Sprints 7–31
 
 - **Kiro/Claude Skills:** 7 skills de caveman (compress, commit, review, stats, help, crew)
 - **Steering files:** 8 arquivos de contexto para IA (.kiro/steering/)
@@ -156,7 +156,7 @@ A branch atual (main) foi **reestruturada** e contém ~218 commits (Sprint 31, J
 - **LGPD:** Anonimização, soft delete, exportação de dados (Sprints 19-20)
 - **Testes:** 304 testes automatizados (28 suites Vitest)
 
-### Removido no Reset (mar 2026) — Depois Restaurado
+### Removido na Reestruturação (mar 2026) — Depois Restaurado
 
 - **CI/CD:** `.github/workflows/` removido no reset → **restaurado na Sprint 3** (ci.yml + dependency-check.yml)
 - **Docker:** `.dockerignore`
@@ -192,7 +192,7 @@ A branch atual (main) foi **reestruturada** e contém ~218 commits (Sprint 31, J
 
 ### ⚠️ O que Deixamos Passar (corrigir)
 
-1. **Testes:** Apenas 1 commit de testes em 165 (0.6%)
+1. **Testes:** Poucos commits de testes na fase inicial
 2. **Documentação atrasada:** Docs vieram depois do código
 3. **Refatoração tardia:** Componentes grandes não foram quebrados cedo
 4. **CI/CD removido:** Perdemos automação
@@ -242,24 +242,20 @@ A branch atual (main) foi **reestruturada** e contém ~218 commits (Sprint 31, J
 
 ## Conclusão
 
-A branch `old-homolog` representa **3 meses de desenvolvimento intenso** (jan-fev 2026) com foco em features. A branch atual representa uma **reestruturação completa** com foco em qualidade, documentação e boas práticas.
+O desenvolvimento inicial (jan-fev 2026) focou em features — autenticação, financeiro, atividades, pacotes. A fase de expansão (mar-jun 2026) focou em qualidade, documentação e boas práticas.
 
-**Ganhos da reestruturação:**
+**Ganhos da fase de expansão:**
 
 - Documentação completa (TCC + técnica)
 - Código mais limpo e organizado
 - Strings centralizadas (i18n-ready)
 - Security patterns consistentes
-- IA-assisted development (skills + steering)
-
-**Perdas da reestruturação:**
-
-- Histórico de commits perdido (165 → ~10 no reset; recuperado parcialmente via restore Sprint 9)
+- IA-assisted development com Claude (Anthropic)
 
 **Estado atual (Jun/2026):**
 
-- CI/CD restaurado (Sprint 3 — GitHub Actions)
+- CI/CD configurado (GitHub Actions → Cloudflare Pages)
 - 304 testes automatizados (Vitest, 28 suites)
-- 31 sprints concluídas, branch `main` com ~218 commits
+- 31 sprints concluídas, 152 commits na branch main
 - AbacatePay (PIX) implementado Sprint 30
-- QA manual Sprint 28 (116 itens, 20 rotas)
+- QA manual Sprint 28 em andamento (104/214 itens)

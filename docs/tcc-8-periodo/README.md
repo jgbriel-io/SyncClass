@@ -10,7 +10,7 @@
 
 ## Hipóteses
 
-**H1 — Viabilidade Solo com IA:** É possível desenvolver SaaS funcional em ~3 meses com IA como aceleradora de produtividade.
+**H1 — Viabilidade Solo com IA:** É possível desenvolver SaaS funcional com IA como aceleradora de produtividade em prazo acadêmico (4,5 meses).
 
 **H2 — Eficiência do Supabase (BaaS):** Supabase reduz ≥60% do esforço de backend comparado a stack tradicional (Node.js + Express + PostgreSQL).
 
@@ -24,9 +24,9 @@
 | -------------------------- | ---------------------------------- |
 | Período de desenvolvimento | 19 jan – 03 jun 2026 (~19 semanas) |
 | Sprints implementadas      | 31                                 |
-| Commits (branch main)      | ~147                               |
-| Arquivos TypeScript        | 359                                |
-| Linhas de código (src)     | ~55.000                            |
+| Commits (branch main)      | 152                                |
+| Arquivos TypeScript        | 305 (excl. testes e .d.ts)         |
+| Linhas de código (src)     | ~50.000 (excl. tipos gerados)      |
 | Migrations SQL             | 70                                 |
 | Edge Functions             | 9                                  |
 | Testes automatizados       | 304 (28 suites)                    |
@@ -36,18 +36,18 @@
 
 ## Status dos Capítulos
 
-| Cap                                                      | Título                   | Rascunho | Final ABNT |
-| -------------------------------------------------------- | ------------------------ | -------- | ---------- |
-| [1](./projeto-escrito/capitulos/cap1-introducao.md)      | Introdução               | ✅       | ✅         |
-| [2](./projeto-escrito/capitulos/cap2-referencial.md)     | Referencial Teórico      | ✅       | ✅         |
-| [3](./projeto-escrito/capitulos/cap3-metodologia.md)     | Metodologia              | ✅       | ⏳         |
-| [4](./projeto-escrito/capitulos/cap4-requisitos.md)      | Engenharia de Requisitos | ✅       | ⏳         |
-| [5](./projeto-escrito/capitulos/cap5-modelagem.md)       | Arquitetura e Modelagem  | ✅       | ⏳         |
-| [6](./projeto-escrito/capitulos/cap6-desenvolvimento.md) | Implementação            | ✅       | ⏳         |
-| [7](./projeto-escrito/capitulos/cap7-qualidade.md)       | Qualidade e Testes       | ✅       | ⏳         |
-| [8](./projeto-escrito/capitulos/cap8-gestao.md)          | Gestão do Projeto        | ✅       | ⏳         |
-| [9](./projeto-escrito/capitulos/cap9-deploy-infra.md)    | Deploy e Infraestrutura  | ✅       | ⏳         |
-| [10](./projeto-escrito/capitulos/cap10-conclusao.md)     | Conclusão                | ✅       | ⏳         |
+| Cap                                                           | Título                   | Rascunho | Final ABNT |
+| ------------------------------------------------------------- | ------------------------ | -------- | ---------- |
+| [1](./projeto-escrito/capitulos-guia/cap1-introducao.md)      | Introdução               | ✅       | ✅         |
+| [2](./projeto-escrito/capitulos-guia/cap2-referencial.md)     | Referencial Teórico      | ✅       | ✅         |
+| [3](./projeto-escrito/capitulos-guia/cap3-metodologia.md)     | Metodologia              | ✅       | ⏳         |
+| [4](./projeto-escrito/capitulos-guia/cap4-requisitos.md)      | Engenharia de Requisitos | ✅       | ⏳         |
+| [5](./projeto-escrito/capitulos-guia/cap5-modelagem.md)       | Arquitetura e Modelagem  | ✅       | ⏳         |
+| [6](./projeto-escrito/capitulos-guia/cap6-desenvolvimento.md) | Implementação            | ✅       | ⏳         |
+| [7](./projeto-escrito/capitulos-guia/cap7-qualidade.md)       | Qualidade e Testes       | ✅       | ⏳         |
+| [8](./projeto-escrito/capitulos-guia/cap8-gestao.md)          | Gestão do Projeto        | ✅       | ⏳         |
+| [9](./projeto-escrito/capitulos-guia/cap9-deploy-infra.md)    | Deploy e Infraestrutura  | ✅       | ⏳         |
+| [10](./projeto-escrito/capitulos-guia/cap10-conclusao.md)     | Conclusão                | ✅       | ⏳         |
 
 **Legenda:** ✅ Concluído | ⏳ Pendente
 
@@ -65,15 +65,17 @@ docs/tcc-8-periodo/
 │   ├── requisitos-funcionais.md      (RF01-RF35)
 │   ├── requisitos-nao-funcionais.md  (RNF01-RNF36)
 │   ├── regras-de-negocio.md          (62 regras)
-│   ├── historico-desenvolvimento.md  (165 commits old-homolog)
-│   └── validacao-sprints-1-15.md     (validação sprints 1-31)
+│   ├── historico-desenvolvimento.md  (período jan–jun 2026)
+│   └── validacao-sprints.md          (validação sprints 1-31)
 ├── projeto-escrito/           ← Escrita do TCC
 │   ├── README.md
 │   ├── capitulos/             ← Rascunhos cap1–cap10
-│   ├── capitulo-final/        ← Prosa ABNT (cap1 e cap2 prontos)
+│   ├── capitulos-final/        ← Prosa ABNT (caps 1, 2, 3 prontos)
 │   ├── listas/                ← Siglas, figuras, quadros
 │   ├── assets-pendentes.md
-│   ├── referencias-final.md   ← 27 referências ABNT (canônica)
+│   ├── decisoes-transversais.md      ← Valores canônicos
+│   ├── decisoes-escrita.md           ← Blockers resolvidos por cap
+│   ├── referencias-bibliograficas.md ← 28 referências ABNT (canônica)
 │   ├── guia-de-normatizacao-e-estrutura-final.md
 │   └── revisao-orientador.md  ← Feedback 03/06/2026
 └── projeto-pratico/           ← Documentação do código/desenvolvimento
@@ -92,7 +94,7 @@ docs/tcc-8-periodo/
 
 - [Revisão do Orientador](./projeto-escrito/revisao-orientador.md) — bloqueadores e checklist
 - [Assets Pendentes](./projeto-escrito/assets-pendentes.md) — figuras, prints, diagramas
-- [Referências ABNT](./projeto-escrito/referencias-final.md) — 27 entradas prontas para o Word
+- [Referências ABNT](./projeto-escrito/referencias-bibliograficas.md) — 28 entradas prontas para o Word
 - [Guia ABNT/FEPI](./projeto-escrito/guia-de-normatizacao-e-estrutura-final.md) — formatação Word
 
 ### Projeto Prático
@@ -105,7 +107,7 @@ docs/tcc-8-periodo/
 
 - [Requisitos Funcionais](./gestao-projeto/requisitos-funcionais.md) — RF01-RF35
 - [Regras de Negócio](./gestao-projeto/regras-de-negocio.md) — 62 regras com fontes
-- [Validação Sprints 1–31](./gestao-projeto/validacao-sprints-1-15.md)
+- [Validação Sprints 1–31](./gestao-projeto/validacao-sprints.md)
 
 ### Documentação Técnica
 

@@ -986,7 +986,7 @@ Este documento detalha os **35 requisitos funcionais** do SyncClass. RF01-RF30 i
 
 ## Referências
 
-- **Cap4:** `docs/tcc-8-periodo/projeto-escrito/capitulos/cap4-requisitos.md` (seções 4.2.1-4.2.3)
+- **Cap4:** `docs/tcc-8-periodo/projeto-escrito/capitulos-guia/cap4-requisitos.md` (seções 4.2.1-4.2.3)
 - **Sprints:** `docs/sprints/sprint-01-*.md` até `sprint-31-*.md`
 - **Código:** `src/`, `supabase/migrations/`, `supabase/functions/`
 - **Testes:** `src/**/*.test.ts`

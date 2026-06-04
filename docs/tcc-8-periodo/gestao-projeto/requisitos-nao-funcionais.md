@@ -979,7 +979,7 @@ Este documento detalha **todos os 36 requisitos não funcionais** (RNF01-RNF36) 
 
 ## Referências
 
-- **Cap4:** `docs/tcc/cap4-requisitos.md` (seções 4.3.1 a 4.3.6)
+- **Cap4:** `docs/tcc-8-periodo/projeto-escrito/capitulos-guia/cap4-requisitos.md` (seções 4.3.1 a 4.3.6)
 - **Sprints:** `docs/sprints/sprint-01-*.md` até `sprint-09-*.md`
 - **Código:** `src/`, `supabase/migrations/`, `supabase/functions/`
 - **Testes:** `src/**/*.test.ts`, `src/lib/design-tokens/*.test.ts`

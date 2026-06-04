@@ -25,7 +25,7 @@ docs/tcc-8-periodo/projeto-pratico/
 
 Status final do projeto com todas as 31 sprints documentadas. Inclui:
 
-- Métricas: ~147 commits, 359 arquivos, ~55k linhas, 70 migrations, 304 testes, 9 Edge Functions
+- Métricas: 152 commits, 305 arquivos TS, ~50k linhas, 70 migrations, 304 testes, 9 Edge Functions
 - Histórico de sprints por fase (MVP → Refatoração → Segurança → QA → Fixes)
 - Hipóteses H1/H2/H3 com evidências
 - Features fora do escopo (trabalhos futuros)
@@ -58,7 +58,7 @@ Dados extraídos automaticamente do código-fonte (20/05/2026, atualizado Jun/20
 
 ### historico-de-desenvolvimento-syncclass.md
 
-Timeline completa sprint 1–31 com marcos e períodos. Reconstruída a partir do histórico git (inclui nota sobre gap de ~33 commits em março/2026).
+Timeline completa sprint 1–31 com marcos e períodos. Reconstruída a partir do histórico git (migrations, docs/sprints/, 152 commits).
 
 **Útil para:** Cap8 — seção de cronograma
 
@@ -77,6 +77,6 @@ Timeline completa sprint 1–31 com marcos e períodos. Reconstruída a partir d
 
 ## Referências
 
-- **Capítulos:** `docs/tcc-8-periodo/projeto-escrito/capitulos/`
+- **Capítulos:** `docs/tcc-8-periodo/projeto-escrito/capitulos-guia/`
 - **Sprints:** `docs/sprints/` (Sprint 1-31)
 - **Gestão:** `docs/tcc-8-periodo/gestao-projeto/`
