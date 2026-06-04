@@ -313,8 +313,8 @@ export const common = {
 
   // App-level strings
   app: {
-    name: "English School",
-    copyright: (year: number) => `English School © ${year}`,
+    name: "SyncClass",
+    copyright: (year: number) => `SyncClass © ${year}`,
     tagline:
       "Manage your classes, track progress, and handle payments all in one place.",
     lgpd: "Conforme LGPD",

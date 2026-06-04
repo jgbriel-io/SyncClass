@@ -3,7 +3,7 @@
 export const privacyPolicy = {
   title: "Política de Privacidade",
   intro:
-    "A English School Platform está comprometida com a proteção dos seus dados pessoais, em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).",
+    "A SyncClass está comprometida com a proteção dos seus dados pessoais, em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).",
   sections: [
     {
       heading: "Dados Coletados",
