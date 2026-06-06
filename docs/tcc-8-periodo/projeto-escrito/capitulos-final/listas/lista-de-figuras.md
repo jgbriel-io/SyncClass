@@ -9,7 +9,7 @@
 | Figura 4.2 | Fluxo financeiro: geração de cobrança e pagamento PIX | XX   |
 | Figura 4.3 | Portal do aluno (perfil aluno, mobile)                | XX   |
 | Figura 4.4 | Painel do professor                                   | XX   |
-| Figura 6.1 | Diagrama de Gantt do desenvolvimento                  | XX   |
 | Figura D.1 | Diagrama de Casos de Uso (UML) — Apêndice D           | XX   |
+| Figura F.1 | Diagrama de Gantt do desenvolvimento — Apêndice F     | XX   |
 
 > Todas as figuras estão pendentes de geração/captura (ver `pendencias-manuais/assets-pendentes.md`). Substituir "XX" pela página real na diagramação final.

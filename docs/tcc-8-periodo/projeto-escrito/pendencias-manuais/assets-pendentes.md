@@ -1,7 +1,7 @@
 # Assets Pendentes — TCC
 
 > Tudo que precisa ser criado/capturado/montado manualmente para completar a entrega.
-> Estrutura: 6 capítulos (1 Introdução, 2 Referencial, 3 Metodologia, 4 Resultados, 5 Conclusão, 6 Cronograma) + Referências + Apêndices A–E (fim do documento).
+> Estrutura: 5 capítulos (1 Introdução, 2 Referencial, 3 Metodologia, 4 Resultados, 5 Conclusão) + Referências + Apêndices A–F (fim do documento; F = Cronograma).
 
 ---
 
@@ -23,11 +23,11 @@
 - [ ] 🖼️ **Figura 4.2** — Fluxo financeiro: geração de cobrança e pagamento PIX — §4.1
 - [ ] 🖼️ **Figura 4.3** — Portal do aluno (perfil aluno, mobile) — §4.1
 - [ ] 🖼️ **Figura 4.4** — Painel do professor — §4.1
-- [ ] 🖼️ **Figura 6.1** — Gantt do desenvolvimento — §6.2
+- [ ] 🖼️ **Figura F.1** — Gantt do desenvolvimento — Apêndice F
   - Período: **março a junho de 2026** (~3 meses)
   - 5 fases: Fundação (mar) · Consolidação (mar–abr) · Expansão (abr–mai) · Qualidade e segurança (mai) · Estabilização (mai–jun)
   - **+ 1 faixa separada:** Redação do TCC (jun) — atividade acadêmica, distinta do desenvolvimento
-  - Dados: `capitulo6-final.md` Quadro 6.1
+  - Dados: `apendices-final.md` Quadro F.1
 
 ## Figuras pendentes (apêndices)
 
@@ -55,7 +55,7 @@
 | ---------- | ----------------------------------------- | ------------------ |
 | 🔴 Alta    | DER (Figura 3.2)                          | Cap. 3             |
 | 🔴 Alta    | Prints das telas (Figuras 4.1–4.4)        | Cap. 4             |
-| 🔴 Alta    | Gantt março–junho (Figura 6.1)            | Cap. 6             |
+| 🔴 Alta    | Gantt março–junho (Figura F.1)            | Apêndice F         |
 | 🔴 Alta    | Capa, folha de rosto, sumário             | Pré-textual (Word) |
 | 🟠 Média   | Diagrama de Casos de Uso UML (Figura D.1) | Apêndice D         |
 | 🟠 Média   | Fluxo de desenvolvimento (Figura 3.1)     | Cap. 3             |

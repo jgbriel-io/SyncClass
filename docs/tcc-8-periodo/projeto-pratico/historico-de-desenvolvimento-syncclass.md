@@ -1,6 +1,6 @@
 ---
 titulo: Histórico de Desenvolvimento e Commits
-projeto: SyncClass - Plataforma SaaS
+projeto: SyncClass
 status: ✅ Reconstruído / Auditoria Completa
 ultima_atualizacao: 21/05/2026
 tags:

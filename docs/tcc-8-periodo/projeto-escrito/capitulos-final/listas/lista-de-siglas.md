@@ -1,12 +1,12 @@
 # LISTA DE SIGLAS E ABREVIATURAS
 
-API — Application Programming Interface
+API Application Programming Interface
 
-BaaS — Backend as a Service
+BaaS Backend as a Service
 
 CDN — Content Delivery Network
 
-CEP — Código de Endereçamento Postal
+CEP —
 
 CI/CD — Integração Contínua e Entrega Contínua
 

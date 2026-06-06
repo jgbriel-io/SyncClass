@@ -1,6 +1,6 @@
 ---
 titulo: Guia de Normatização e Estrutura - Versão Final
-projeto: SyncClass - Plataforma SaaS
+projeto: SyncClass
 status: ✅ Validado (Normas FEPI/ABNT 2026)
 ultima_atualizacao: 03/06/2026
 tags:

@@ -58,17 +58,16 @@ Investigar a viabilidade e os ganhos de produtividade do desenvolvimento de um S
 
 ## 1.6 Estrutura do Trabalho
 
-O presente trabalho está organizado em seis capítulos, conforme descrito no Quadro 1.1, complementados pelas referências bibliográficas e por cinco apêndices (A a E), que reúnem o formulário de avaliação exploratória, a especificação completa de requisitos funcionais e não funcionais, as regras de negócio, os casos de uso e a matriz de rastreabilidade.
+O presente trabalho está organizado em cinco capítulos, conforme descrito no Quadro 1.1, complementados pelas referências bibliográficas e por seis apêndices (A a F), que reúnem o formulário de avaliação exploratória, a especificação completa de requisitos funcionais e não funcionais, as regras de negócio, os casos de uso, a matriz de rastreabilidade e o cronograma de desenvolvimento.
 
 **Quadro 1.1 — Estrutura do trabalho**
 
-| Capítulo | Título                   | Conteúdo                                                                                                                                        |
-| :------: | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
-|    1     | Introdução               | Contextualização, problema, justificativa, objetivos e hipóteses                                                                                |
-|    2     | Referencial Teórico      | Domínio de aplicação, SaaS, computação em nuvem, qualidade de software, LGPD e IA no desenvolvimento                                            |
-|    3     | Metodologia              | Classificação da pesquisa, processo iterativo, protocolo de medição, requisitos, modelagem, desenvolvimento, qualidade, gestão e infraestrutura |
-|    4     | Resultados e Discussão   | Sistema entregue, métricas do desenvolvimento e análise das hipóteses                                                                           |
-|    5     | Conclusão                | Síntese, limitações, trabalhos futuros e considerações finais                                                                                   |
-|    6     | Cronograma de Atividades | Fases do desenvolvimento e iterações executadas                                                                                                 |
+| Capítulo | Título                 | Conteúdo                                                                                                                                        |
+| :------: | :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+|    1     | Introdução             | Contextualização, problema, justificativa, objetivos e hipóteses                                                                                |
+|    2     | Referencial Teórico    | Domínio de aplicação, SaaS, computação em nuvem, qualidade de software, LGPD e IA no desenvolvimento                                            |
+|    3     | Metodologia            | Classificação da pesquisa, processo iterativo, protocolo de medição, requisitos, modelagem, desenvolvimento, qualidade, gestão e infraestrutura |
+|    4     | Resultados e Discussão | Sistema entregue, métricas do desenvolvimento e análise das hipóteses                                                                           |
+|    5     | Conclusão              | Síntese, limitações, trabalhos futuros e considerações finais                                                                                   |
 
 Fonte: O autor (2026).

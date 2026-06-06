@@ -1,11 +1,11 @@
 ---
 name: syncclass-tcc
-description: TCC SyncClass writing guide — FEPI/ABNT 2026 norms, impersonal voice, 10-chapter structure, academic vocabulary, code-to-text translation patterns. Use when writing, reviewing, or finalizing TCC chapters. For drafting process, use global skills tcc-fragmentos, tcc-rascunho, tcc-revisao-impessoal.
+description: TCC SyncClass writing guide — FEPI/ABNT 2026 norms, impersonal voice, 5-chapter structure (Introdução, Referencial, Metodologia, Resultados, Conclusão) + appendices A–F, academic vocabulary, code-to-text translation patterns. Use when writing, reviewing, or finalizing TCC chapters. For drafting process, use global skills tcc-fragmentos, tcc-rascunho, tcc-revisao-impessoal.
 ---
 
 # TCC Writing — SyncClass
 
-Escrita acadêmica para TCC SyncClass — 10 capítulos, normas FEPI/ABNT 2026.
+Escrita acadêmica para TCC SyncClass — 5 capítulos + apêndices A–F, normas FEPI/ABNT 2026.
 
 ## Normas Obrigatórias
 
@@ -32,17 +32,23 @@ Fonte: O autor (2026).              (tamanho 10, centralizado, ABAIXO)
 ```
 Toda figura/tabela deve ser mencionada **antes** de aparecer no texto.
 
-## Estrutura (5 Capítulos + Cronograma — definida pelo orientador 03/06/2026)
+## Estrutura (5 Capítulos + Apêndices A–F)
+
+O cronograma deixou de ser capítulo e virou Apêndice F (NBR 14724: textuais = Introdução, Desenvolvimento, Conclusão; a Conclusão fecha o texto).
 
 | Cap. | Título | Status |
 |------|--------|--------|
 | 1 | Introdução | ✅ Final escrito |
 | 2 | Referencial Teórico | ✅ Final escrito |
-| 3 | Metodologia (absorve ex-caps 4-9 como subtópicos 3.4-3.9) | 🟠 Guia pronto; final a reescrever |
-| 4 | Resultados e Discussão | 🟠 Guia pronto |
-| 5 | Conclusão (com trabalhos futuros) | 🟠 Guia pronto |
-| 6 | Cronograma de Atividades | 🟠 Guia pronto (Gantt pendente) |
-| — | Apêndices A–E (Forms, RF, RNF/RN, UCs, matriz) | 🟠 Guia pronto |
+| 3 | Metodologia | ✅ Final escrito |
+| 4 | Resultados e Discussão | ✅ Final escrito |
+| 5 | Conclusão (com trabalhos futuros) | ✅ Final escrito |
+| — | Apêndice A — Formulário de avaliação (instrumento proposto) | ✅ |
+| — | Apêndice B — Requisitos funcionais | ✅ |
+| — | Apêndice C — Requisitos não funcionais + regras de negócio | ✅ |
+| — | Apêndice D — Casos de uso | ✅ |
+| — | Apêndice E — Matriz de rastreabilidade | ✅ |
+| — | Apêndice F — Cronograma de desenvolvimento (fases + Gantt) | ✅ texto; Gantt pendente |
 
 **Regras de estilo (além da voz impessoal):** terceira pessoa; sem travessão como pontuação em prosa; sem jargão de IA; "iteração" no lugar de "Sprint".
 
