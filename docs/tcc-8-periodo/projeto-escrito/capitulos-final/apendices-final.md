@@ -61,9 +61,9 @@ MVP e registrados como trabalhos futuros (RF27 e RF32 a RF37).
 
 ### B.1 Requisitos Funcionais Implementados
 
-Os 30 requisitos funcionais implementados (20 principais e 10 adicionais, com lacuna no RF27, transferido para os trabalhos futuros) constam da Tabela B.1.
+Os 30 requisitos funcionais implementados (20 principais e 10 adicionais, com lacuna no RF27, transferido para os trabalhos futuros) constam da Quadro B.1.
 
-**Tabela B.1 — Requisitos funcionais implementados (RF01 a RF31, exceto RF27)**
+**Quadro B.1 — Requisitos funcionais implementados (RF01 a RF31, exceto RF27)**
 
 | ID   | Requisito                                                                   | Módulo      | Prioridade | Iteração |
 | ---- | --------------------------------------------------------------------------- | ----------- | ---------- | -------- |
@@ -106,7 +106,7 @@ Os 30 requisitos funcionais implementados (20 principais e 10 adicionais, com la
 
 Os requisitos a seguir foram identificados durante a elicitação e a análise comparativa, porém não integram o escopo do MVP. Permanecem registrados para orientar a evolução futura da plataforma.
 
-**Tabela B.2 — Requisitos funcionais planejados (RF27 e RF32 a RF37)**
+**Quadro B.2 — Requisitos funcionais planejados (RF27 e RF32 a RF37)**
 
 | ID   | Requisito                                                           | Módulo       | Prioridade | Justificativa                                                                      |
 | ---- | ------------------------------------------------------------------- | ------------ | ---------- | ---------------------------------------------------------------------------------- |
@@ -122,13 +122,15 @@ Os requisitos a seguir foram identificados durante a elicitação e a análise c
 
 ## APÊNDICE C — Requisitos Não Funcionais e Regras de Negócio
 
+Este apêndice reúne os requisitos não funcionais e as regras de negócio do SyncClass, seguidos dos _trade-offs_ assumidos no projeto.
+
 ### C.1 Requisitos Não Funcionais
 
 Os requisitos não funcionais definem critérios de qualidade, restrições técnicas
 e atributos de desempenho do sistema. Os trinta e seis requisitos não funcionais
 documentados foram implementados ao longo das iterações.
 
-**Tabela C.1 — Requisitos não funcionais (RNF01 a RNF36)**
+**Quadro C.1 — Requisitos não funcionais (RNF01 a RNF36)**
 
 | ID    | Requisito                                                   | Categoria       | Prioridade | Iteração |
 | ----- | ----------------------------------------------------------- | --------------- | ---------- | -------- |
@@ -177,7 +179,7 @@ As regras de negócio definem as políticas, restrições e validações que gov
 o comportamento do sistema. Cada regra é implementada por um mecanismo concreto:
 constraint no banco de dados, RLS policy, trigger ou validação no frontend.
 
-**Tabela C.2 — Regras de negócio (RN-001 a RN-059)**
+**Quadro C.2 — Regras de negócio (RN-001 a RN-059)**
 
 | ID     | Domínio     | Regra                                                     | Mecanismo de implementação                        |
 | ------ | ----------- | --------------------------------------------------------- | ------------------------------------------------- |
@@ -260,6 +262,8 @@ conhecidas.
 
 ## APÊNDICE D — Casos de Uso
 
+Este apêndice apresenta os casos de uso do SyncClass: os atores do sistema, os casos de uso detalhados e a relação dos demais casos organizados por ator.
+
 ### D.1 Atores
 
 - **Administrador:** acesso total ao sistema.
@@ -267,6 +271,8 @@ conhecidas.
 - **Aluno:** acesso de leitura, com permissão de entrega de atividades e de pagamento.
 
 ### D.2 Casos de Uso Detalhados
+
+Os casos de uso a seguir descrevem as principais interações entre atores e sistema, com fluxo principal e fluxos alternativos.
 
 #### UC01 — Cadastrar Aluno
 
@@ -333,7 +339,7 @@ conhecidas.
 
 ### D.3 Demais Casos de Uso
 
-**Tabela D.1 — Demais casos de uso por ator (UC03 a UC26)**
+**Quadro D.1 — Demais casos de uso por ator (UC03 a UC26)**
 
 | ID   | Ator          | Caso de uso                                       |
 | ---- | ------------- | ------------------------------------------------- |
@@ -379,7 +385,7 @@ situação de teste. A cobertura abrange a totalidade dos requisitos funcionais
 implementados, resolvendo o gap de rastreabilidade identificado em revisões
 anteriores.
 
-**Tabela E.1 — Matriz de rastreabilidade dos requisitos funcionais implementados**
+**Quadro E.1 — Matriz de rastreabilidade dos requisitos funcionais implementados**
 
 | Requisito | Arquivo principal                         | Migration                                  | Iteração | Situação de teste |
 | --------- | ----------------------------------------- | ------------------------------------------ | -------- | ----------------- |

@@ -8,6 +8,25 @@ O ensino de inglês por professores autônomos constitui um segmento expressivo 
 
 Esse contexto caracteriza um problema prático e verificável: profissionais com agenda diversificada, múltiplos alunos e fluxo financeiro recorrente operam, na maioria dos casos, sem ferramentas especializadas de gestão. Planilhas eletrônicas, aplicativos de mensagens e controles manuais são os instrumentos mais comuns, gerando retrabalho e risco de perda de informação. Em entrevista conduzida na fase de levantamento de requisitos deste trabalho, um professor autônomo de inglês relatou dedicar mais de cinco horas semanais a tarefas administrativas (agendamento, controle de frequência e cobrança) em detrimento da atividade pedagógica.
 
+A fragmentação desses instrumentos genéricos torna-se evidente quando confrontada com as necessidades operacionais do professor autônomo. O Quadro 2.1 compara as soluções mais utilizadas pelo segmento com a proposta do SyncClass, considerando as funcionalidades centrais da gestão docente.
+
+**Quadro 2.1 — Comparativo entre soluções existentes e o SyncClass**
+
+| Critério             | Classroom | Moodle  | Planilha | Apps de Mensagem | SyncClass |
+| :------------------- | :-------: | :-----: | :------: | :--------------: | :-------: |
+| Gestão de alunos     |    Sim    |   Sim   | Parcial  |       Não        |    Sim    |
+| Controle financeiro  |    Não    |   Não   | Parcial  |       Não        |    Sim    |
+| Histórico de aulas   |    Não    | Parcial |  Manual  |       Não        |    Sim    |
+| Materiais didáticos  |    Sim    |   Sim   |   Não    |       Não        |    Sim    |
+| Portal do aluno      |    Sim    |   Sim   |   Não    |       Não        |    Sim    |
+| Pagamento integrado  |    Não    |   Não   |   Não    |       Não        |    Sim    |
+| Segurança/LGPD       |  Parcial  | Parcial |   Não    |       Não        |    Sim    |
+| Isolamento de contas |    Não    |   Sim   |   Não    |       Não        |    Sim    |
+
+Fonte: Elaborado pelo autor (2026).
+
+A comparação evidencia que nenhuma das alternativas disponíveis integra, em um único ambiente, a gestão pedagógica, o controle financeiro com pagamento e o isolamento de dados entre contas, lacuna que o SyncClass se propõe a preencher.
+
 O SyncClass foi concebido para eliminar essa fricção operacional, reunindo em uma única plataforma web o controle de alunos, aulas, frequência, atividades e cobranças. A constatação do problema antecedeu o desenvolvimento: o sistema originou-se de uma demanda real de um professor autônomo de inglês, cujos requisitos foram coletados por meio de entrevistas diretas antes do início da implementação. A existência de um problema de domínio concreto sustenta as hipóteses H2 e H3: a adoção de _Backend as a Service_ e de Inteligência Artificial como aceleradora só se justifica se o produto gerado for relevante e viável para o público-alvo.
 
 ## 2.2 Sistemas de Informação
@@ -34,9 +53,9 @@ Anderson (2010) descreve a evolução de sistemas de gestão de fluxo de trabalh
 
 ## 2.5 Qualidade de Software — ISO/IEC 25010
 
-A norma ISO/IEC 25010 define um modelo de qualidade de produto de software composto por oito características principais (ISO/IEC, 2011), apresentadas no Quadro 2.1.
+A norma ISO/IEC 25010 define um modelo de qualidade de produto de software composto por oito características principais (ISO/IEC, 2011), apresentadas no Quadro 2.2.
 
-**Quadro 2.1 — Características de qualidade da ISO/IEC 25010**
+**Quadro 2.2 — Características de qualidade da ISO/IEC 25010**
 
 | Característica           | Descrição                                             |
 | :----------------------- | :---------------------------------------------------- |
@@ -71,6 +90,8 @@ A engenharia de requisitos compreende não apenas a especificação, mas o proce
 
 ## 2.7 Arquitetura de Software
 
+A arquitetura de software define a organização estrutural do sistema e a distribuição de responsabilidades entre seus componentes. As subseções seguintes descrevem o estilo arquitetural adotado no SyncClass e o modelo de provisionamento de backend que o sustenta.
+
 ### 2.7.1 Arquitetura Monolítica Modular
 
 O SyncClass adota arquitetura monolítica modular no frontend, com separação de responsabilidades por camadas: componentes de interface, _hooks_ de lógica, serviços de acesso a dados e banco. Essa decisão segue a recomendação de Fowler (2015) de iniciar novos projetos com arquitetura monolítica, abordagem denominada _MonolithFirst_, e extrair microsserviços apenas quando os limites de domínio estiverem estabilizados e a escala justificar a complexidade operacional adicional. Para um projeto conduzido por um único desenvolvedor em prazo acadêmico, o monolito modular reduz a sobrecarga de infraestrutura e mantém o ciclo de desenvolvimento coeso.
@@ -79,13 +100,13 @@ O SyncClass adota arquitetura monolítica modular no frontend, com separação d
 
 _Backend as a Service_ (BaaS) é um modelo em que o provedor oferece infraestrutura de backend gerenciada (banco de dados, autenticação, armazenamento e funções _serverless_) consumida via SDK ou API, eliminando a necessidade de desenvolver e operar uma API REST tradicional (SUPABASE, 2024; MELL; GRANCE, 2011).
 
-O Supabase é um BaaS de código aberto que provê PostgreSQL gerenciado, autenticação baseada em JWT (_JSON Web Token_), armazenamento de arquivos, comunicação em tempo real via WebSocket e funções _serverless_ (Edge Functions). A escolha do Supabase como plataforma BaaS fundamenta diretamente a hipótese H2: serviços de backend que demandariam implementação manual em uma stack Node.js + Express + PostgreSQL (autenticação, API de dados, controle de acesso e armazenamento) foram provisionados pela plataforma. A quantificação dessa redução de esforço é apresentada na seção 3.5 e no Capítulo 4.
+O Supabase é um BaaS de código aberto que provê PostgreSQL gerenciado, autenticação baseada em JWT (_JSON Web Token_), armazenamento de arquivos, comunicação em tempo real via WebSocket e funções _serverless_ (Edge Functions). A escolha do Supabase como plataforma BaaS fundamenta diretamente a hipótese H2: serviços de backend que demandariam implementação manual em uma stack Node.js + Express + PostgreSQL (autenticação, API de dados, controle de acesso e armazenamento) foram provisionados pela plataforma. A quantificação dessa redução de esforço é apresentada na seção 3.5 e no Capítulo 4. Em contrapartida à aceleração que proporciona, o modelo BaaS implica maior dependência do provedor e menor controle sobre a camada de infraestrutura, condição registrada como _trade-off_ explícito do projeto no Apêndice C. A avaliação da hipótese H2 considera essa perda de autonomia técnica como contrapeso ao ganho de produtividade, de modo a evitar uma leitura unilateral dos benefícios da plataforma.
 
 ## 2.8 Banco de Dados Relacional
 
 O PostgreSQL é adotado como banco de dados nativo do Supabase: a escolha da plataforma BaaS determinou o banco, não o contrário. O PostgreSQL oferece suporte a tipos avançados (UUID, JSONB, TIMESTAMPTZ) e ao mecanismo de _Row Level Security_ (RLS), que restringe o acesso a linhas individuais de uma tabela com base na identidade do usuário autenticado (POSTGRESQL GLOBAL DEVELOPMENT GROUP, 2024).
 
-O RLS é o mecanismo central de isolamento _multi-tenant_ do SyncClass: cada professor acessa exclusivamente os dados associados ao seu identificador de usuário, com a restrição aplicada no nível do banco de dados, independentemente de filtros na camada de aplicação. A implementação detalhada das políticas RLS é apresentada na seção 3.5.
+O RLS é o mecanismo central de isolamento _multi-tenant_ do SyncClass: cada professor acessa exclusivamente os dados associados ao seu identificador de usuário, com a restrição aplicada no nível do banco de dados, independentemente de filtros na camada de aplicação. A implementação detalhada das políticas RLS é apresentada na seção 3.5. A aplicação da regra de acesso no próprio banco, e não na camada de aplicação, reduz a superfície de erro: ainda que uma consulta omita o filtro esperado, o banco impede o retorno de dados pertencentes a outro professor. Essa abordagem alinha-se ao princípio de defesa em profundidade e sustenta o requisito de isolamento de dados confrontado com as evidências no Capítulo 4.
 
 ## 2.9 Lei Geral de Proteção de Dados
 

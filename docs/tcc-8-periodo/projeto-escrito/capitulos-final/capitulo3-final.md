@@ -1,6 +1,6 @@
 # 3 METODOLOGIA
 
-O presente trabalho possui natureza dual: é, simultaneamente, o desenvolvimento de um produto de software e uma investigação sobre o processo que o produziu. Essa característica exige que a metodologia cubra dois planos: o método de construção do sistema e o método de verificação das hipóteses formuladas no Capítulo 1. Este capítulo apresenta ambos, descrevendo a classificação da pesquisa, o processo iterativo de desenvolvimento, o protocolo de medição do impacto da Inteligência Artificial e o percurso técnico do projeto: engenharia de requisitos, arquitetura e modelagem, desenvolvimento, qualidade, gestão e infraestrutura. As evidências e a análise das hipóteses são tratadas no Capítulo 4; o cronograma executado é apresentado no Capítulo 6.
+O presente trabalho possui natureza dual: é, simultaneamente, o desenvolvimento de um produto de software e uma investigação sobre o processo que o produziu. Essa característica exige que a metodologia cubra dois planos: o método de construção do sistema e o método de verificação das hipóteses formuladas no Capítulo 1. Este capítulo apresenta ambos, descrevendo a classificação da pesquisa, o processo iterativo de desenvolvimento, o protocolo de medição do impacto da Inteligência Artificial (IA) e o percurso técnico do projeto: engenharia de requisitos, arquitetura e modelagem, desenvolvimento, qualidade, gestão e infraestrutura. As evidências e a análise das hipóteses são tratadas no Capítulo 4; o cronograma executado é apresentado no Capítulo 6.
 
 ## 3.1 Classificação da Pesquisa
 
@@ -15,6 +15,8 @@ Quanto aos procedimentos, adota-se a pesquisa-ação, conforme conceituada por T
 No SyncClass, a pesquisa-ação manifestou-se de forma concreta ao longo das 31 iterações de desenvolvimento: cada iteração constituiu uma instância do ciclo reflexivo, com planejamento de escopo, ação de implementação, observação por meio de testes e registros de versionamento, e reflexão documentada no planejamento da iteração seguinte. A inserção do pesquisador como desenvolvedor não é uma limitação metodológica a ser mitigada, mas uma condição estrutural da pesquisa-ação, reconhecida e declarada como parte do delineamento.
 
 ## 3.2 Processo de Desenvolvimento
+
+O processo de desenvolvimento do SyncClass é descrito em duas dimensões complementares: o ciclo metodológico que estruturou cada iteração, apresentado na seção 3.2.1, e o fluxo de trabalho concreto, com os instrumentos de registro que tornaram o progresso rastreável, detalhado na seção 3.2.2.
 
 ### 3.2.1 Ciclo de Desenvolvimento e Pesquisa-Ação
 
@@ -41,7 +43,7 @@ Os _commits_ semânticos constituíram a unidade atômica de registro de progres
 
 Os _Pull Requests_ funcionaram como pontos de revisão e integração, estabelecendo fronteira formal entre o ambiente de desenvolvimento e o de homologação.
 
-A Figura 3.1 ilustra o fluxo completo de uma iteração de desenvolvimento.
+A Figura 3.1 ilustra o fluxo completo de uma iteração de desenvolvimento, desde o planejamento do escopo e a criação da _branch_ de funcionalidade até a integração via _Pull Request_ e o consequente ciclo de revisão, evidenciando a articulação entre as etapas metodológicas e os instrumentos de versionamento adotados.
 
 **Figura 3.1 – Fluxo de desenvolvimento iterativo do SyncClass**
 
@@ -51,14 +53,16 @@ Fonte: O autor (2026).
 
 ## 3.3 Uso de Inteligência Artificial
 
+O uso de Inteligência Artificial generativa constituiu elemento central da metodologia. As subseções a seguir apresentam as ferramentas empregadas, o protocolo de medição que sustenta a hipótese H3 e a delimitação explícita das tarefas que permaneceram sob responsabilidade humana.
+
 ### 3.3.1 Ferramentas Utilizadas
 
 O principal instrumento de IA empregado ao longo do desenvolvimento foi o assistente Claude (Anthropic), utilizado de forma interativa e sistemática para tarefas técnicas de natureza repetitiva e domínio bem delimitado.
 
-O assistente foi acionado nos seguintes contextos:
+A atuação do assistente concentrou-se em quatro categorias de tarefa, todas de domínio delimitado e caráter repetitivo, que correspondem ao escopo sobre o qual a hipótese H3 é avaliada:
 
 - **_Scaffolding_ inicial de módulos:** geração de estrutura de componentes React com TypeScript, incluindo tipos, propriedades e integração com _hooks_ de serviço;
-- **_Migrations_ SQL com RLS e _triggers_:** redação de _migrations_ para o Supabase, incluindo políticas de _Row Level Security_ e gatilhos de atualização automática de campos de controle;
+- **_Migrations_ SQL com RLS e _triggers_:** redação de _migrations_ para o Supabase, incluindo políticas de _Row Level Security_ (RLS) e gatilhos de atualização automática de campos de controle;
 - **Auditoria de segurança:** revisão sistemática das políticas RLS para verificar cobertura e ausência de vetores de acesso indevido;
 - **Refatorações pontuais:** extração de lógica duplicada, renomeação de identificadores e padronização de código.
 
@@ -76,7 +80,11 @@ A hipótese H3 afirma que o uso do assistente de IA acelerou em pelo menos três
 
 **Posicionamento em relação à literatura:** Peng et al. (2023), em estudo controlado com 95 desenvolvedores profissionais, identificaram ganho médio de 55,8% de produtividade em tarefas gerais de programação com o GitHub Copilot. O presente trabalho não replica esse delineamento experimental, mas utiliza o resultado como referência para calibrar as estimativas. A hipótese H3, ao afirmar ganho de pelo menos três vezes, refere-se a um subconjunto específico de tarefas (montagem inicial de módulos, geração de _migrations_ SQL e auditorias sistemáticas de segurança) nas quais a IA opera sobre domínios bem delimitados e repetitivos, onde se esperam ganhos superiores à média geral. Essa distinção de escopo é metodologicamente relevante e não configura contradição com Peng et al. (2023), cujo estudo mediu produtividade em tarefas heterogêneas de programação.
 
-**Exemplos rastreáveis:** a primeira iteração do projeto (montagem inicial, com configuração de autenticação, estrutura de pastas e primeiros componentes) foi concluída em aproximadamente dois dias; a estimativa retrospectiva indica que o mesmo escopo, sem assistência de IA, demandaria entre cinco e seis dias. A redação das quatro _migrations_ estruturais iniciais do banco (esquema completo, lógica de _views_, procedimentos e _triggers_, e políticas RLS com permissões) foi concluída em um dia; sem IA, a redação manual das políticas e gatilhos para as 11 tabelas demandaria de três a quatro dias. Essas quatro _migrations_ constituem a base estrutural inicial; o total evoluiu para 70 _migrations_ ao longo do projeto (Tabela 3.1), incorporando correções e evoluções incrementais. A vigésima quarta iteração (auditoria completa das políticas RLS ativas) foi concluída em uma sessão de trabalho; uma auditoria equivalente sem IA demandaria ao menos três dias. Observa-se que o ganho varia conforme a natureza da tarefa: na montagem inicial, que envolve decisões de estrutura, o fator situa-se entre duas vezes e meia e três vezes (dois dias ante cinco a seis), aproximando-se do limiar sem superá-lo de forma consistente; nas tarefas de redação de _migrations_ e auditoria, em que o domínio é mais delimitado e repetitivo, o fator supera esse limiar. Adota-se, por consequência, como critério de confirmação de H3 a verificação do limiar de três vezes por categoria de tarefa: a hipótese é confirmada para a geração de _migrations_ SQL e para a auditoria de segurança, em que o fator excede três vezes, e considerada apenas parcialmente atendida para a montagem inicial de módulos, cuja natureza decisória aproxima o ganho do limiar sem superá-lo de forma consistente. O Capítulo 4 detalha essa avaliação por categoria.
+**Exemplos rastreáveis:** a primeira iteração do projeto (montagem inicial, com configuração de autenticação, estrutura de pastas e primeiros componentes) foi concluída em aproximadamente dois dias; a estimativa retrospectiva indica que o mesmo escopo, sem assistência de IA, demandaria entre cinco e seis dias.
+
+A redação das quatro _migrations_ estruturais iniciais do banco (esquema completo, lógica de _views_, procedimentos e _triggers_, e políticas RLS com permissões) foi concluída em um dia; sem IA, a redação manual das políticas e gatilhos para as 11 tabelas demandaria de três a quatro dias. Essas quatro _migrations_ constituem a base estrutural inicial; o total evoluiu para 70 _migrations_ ao longo do projeto (Tabela 3.1), incorporando correções e evoluções incrementais. A vigésima quarta iteração (auditoria completa das políticas RLS ativas) foi concluída em uma sessão de trabalho; uma auditoria equivalente sem IA demandaria ao menos três dias.
+
+Observa-se que o ganho varia conforme a natureza da tarefa: na montagem inicial, que envolve decisões de estrutura, o fator situa-se entre duas vezes e meia e três vezes (dois dias ante cinco a seis), aproximando-se do limiar sem superá-lo de forma consistente; nas tarefas de redação de _migrations_ e auditoria, em que o domínio é mais delimitado e repetitivo, o fator supera esse limiar. Adota-se, por consequência, como critério de confirmação de H3 a verificação do limiar de três vezes por categoria de tarefa: a hipótese é confirmada para a geração de _migrations_ SQL e para a auditoria de segurança, em que o fator excede três vezes, e considerada apenas parcialmente atendida para a montagem inicial de módulos, cuja natureza decisória aproxima o ganho do limiar sem superá-lo de forma consistente. O Capítulo 4 detalha essa avaliação por categoria.
 
 **Limitação metodológica declarada:** as estimativas acima são retrospectivas, realizadas pelo próprio desenvolvedor, sem grupo de controle formal e sem registro prospectivo de tempo. Estão, portanto, sujeitas a viés de confirmação inerente ao executor. O Capítulo 4 retoma essa limitação na análise dos resultados de H3.
 
@@ -90,7 +98,7 @@ As seguintes atividades foram realizadas exclusivamente pelo pesquisador, sem ge
 
 - **Decisões de produto:** escopo do sistema, priorização de funcionalidades, definição de regras de negócio e modelagem do domínio (entidades, relacionamentos e semântica);
 - **Validação de fluxos reais:** todos os testes manuais, incluindo a campanha estruturada de qualidade iniciada na vigésima oitava iteração, com roteiro de 187 itens de verificação em 20 rotas e 5 perfis de acesso, foram executados pelo pesquisador;
-- **Decisões arquiteturais:** a escolha do Supabase como BaaS, a adoção de React com TypeScript, a estrutura de camadas e a política de RLS foram decisões do pesquisador; a IA implementou conforme as diretrizes definidas, sem defini-las;
+- **Decisões arquiteturais:** a escolha do Supabase como _Backend as a Service_ (BaaS), a adoção de React com TypeScript, a estrutura de camadas e a política de RLS foram decisões do pesquisador; a IA implementou conforme as diretrizes definidas, sem defini-las;
 - **Revisão e aprovação:** todo código gerado pela IA foi revisado, testado e aprovado pelo pesquisador antes de ser integrado; nenhum registro foi aceito sem validação humana explícita;
 - **Configuração de infraestrutura:** o provisionamento do ambiente Supabase, a configuração de domínio, as variáveis de ambiente e o pipeline de _deploy_ foram realizados diretamente pelo pesquisador.
 
@@ -98,11 +106,13 @@ Essa delimitação é relevante para H3: o ganho de produtividade mensurado refe
 
 ## 3.4 Engenharia de Requisitos
 
+A engenharia de requisitos do SyncClass partiu de uma demanda real e evoluiu ao longo das iterações. As subseções descrevem o público-alvo e o processo de elicitação, a síntese quantitativa dos requisitos levantados e os casos de uso que formalizam as interações do sistema.
+
 ### 3.4.1 Público-Alvo e Processo de Elicitação
 
 Os requisitos do SyncClass foram coletados por meio de entrevistas com um professor de inglês autônomo e de análise comparativa de ferramentas de gestão disponíveis no mercado. O projeto originou-se de uma demanda real desse profissional, o que permitiu a coleta de requisitos em contexto de uso genuíno e a validação empírica das funcionalidades durante o período de desenvolvimento. A avaliação formal de satisfação com usuários externos está mapeada como trabalho futuro.
 
-A plataforma atende a três perfis de usuários, descritos no Quadro 3.1.
+A plataforma atende a três perfis de usuário, cada qual com seu próprio conjunto de permissões e área de navegação, definidos a partir das responsabilidades distintas que cada papel exerce na operação do sistema, conforme descrito no Quadro 3.1.
 
 **Quadro 3.1 — Perfis de usuários do SyncClass**
 
@@ -163,7 +173,7 @@ Quanto à camada de apresentação, optou-se por React em arquitetura de página
 
 ### 3.5.2 Modelo de Dados
 
-O banco de dados é composto por 11 tabelas, descritas no Quadro 3.3. A Figura 3.2 apresenta o diagrama entidade-relacionamento correspondente.
+O banco de dados é composto por 11 tabelas, descritas no Quadro 3.3. A Figura 3.2 apresenta o diagrama entidade-relacionamento (DER) correspondente.
 
 **Figura 3.2 – Diagrama Entidade-Relacionamento do SyncClass**
 
@@ -195,7 +205,9 @@ As decisões de esquema priorizaram integridade e conformidade: tipos com fuso h
 
 O mecanismo central de segurança é o _Row Level Security_ do PostgreSQL, que garante que cada usuário autenticado acesse exclusivamente os dados autorizados para seu perfil, independentemente da consulta enviada pelo frontend. A política é avaliada pelo banco de dados, e não pela aplicação: ainda que o frontend enviasse uma consulta sem filtro, o PostgreSQL retornaria apenas as linhas para as quais a política é satisfeita para o usuário corrente.
 
-As políticas apoiam-se em funções auxiliares de perfil, das quais `is_admin()` é representativa:
+As políticas apoiam-se em funções auxiliares de perfil, das quais `is_admin()` é representativa, conforme a Figura 3.3.
+
+**Figura 3.3 – Definição da função is_admin() com SECURITY DEFINER**
 
 ```sql
 CREATE OR REPLACE FUNCTION is_admin()
@@ -211,6 +223,8 @@ AS $$
   );
 $$;
 ```
+
+Fonte: O autor (2026).
 
 A cláusula `SECURITY DEFINER SET search_path = public, pg_temp` é obrigatória: garante que a função execute com os privilégios do criador, e não do chamador, e previne ataques de substituição de esquema. Sem ela, um usuário com permissão de criar esquemas poderia redirecionar a função para uma versão maliciosa da tabela de perfis. A execução com privilégios do criador cumpre ainda uma segunda função: evita a recursão infinita que ocorreria caso a avaliação de uma política de RLS, ao consultar a tabela de perfis, disparasse novamente a mesma política. O sistema conta com aproximadamente 54 políticas ativas cobrindo as 11 tabelas para os três perfis, assegurando o isolamento de dados entre professores distintos.
 
@@ -312,3 +326,5 @@ O Quadro 3.5 relaciona as tecnologias empregadas no desenvolvimento do SyncClass
 Fonte: O autor (2026).
 
 As versões do PostgreSQL e do assistente de IA não constam do arquivo de dependências do projeto: o PostgreSQL é gerenciado pela infraestrutura do Supabase, e o assistente de IA foi utilizado de forma interativa, sem integração programática direta com o código.
+
+O gerenciamento do estado de servidor apoia-se na biblioteca TanStack Query (TANSTACK, 2024), responsável por cache, sincronização e revalidação das requisições à API. A camada de componentes de interface adota o sistema shadcn/ui (VERCEL, 2024), construído sobre os primitivos acessíveis do Radix UI, o que permite compor a interface a partir de blocos reutilizáveis sem dependência de uma biblioteca de componentes monolítica.

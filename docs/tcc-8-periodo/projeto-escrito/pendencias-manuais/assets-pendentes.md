@@ -26,7 +26,8 @@
 - [ ] 🖼️ **Figura 6.1** — Gantt do desenvolvimento — §6.2
   - Período: **março a junho de 2026** (~3 meses)
   - 5 fases: Fundação (mar) · Consolidação (mar–abr) · Expansão (abr–mai) · Qualidade e segurança (mai) · Estabilização (mai–jun)
-  - Dados: `capitulo6-final.md` Tabela 6.1
+  - **+ 1 faixa separada:** Redação do TCC (jun) — atividade acadêmica, distinta do desenvolvimento
+  - Dados: `capitulo6-final.md` Quadro 6.1
 
 ## Figuras pendentes (apêndices)
 

@@ -6,7 +6,7 @@ Enquanto o Capítulo 3 estabeleceu o modo como o esforço de desenvolvimento foi
 
 O SyncClass foi entregue como uma plataforma web de gestão para professores autônomos de inglês, organizada em módulos funcionais que cobrem o ciclo completo de operação do profissional. O sistema atende a três perfis de acesso (administrador, professor e aluno), cada qual com sua própria área de navegação e seu próprio conjunto de permissões, conforme o isolamento de dados detalhado na seção 3.5.
 
-Os módulos entregues compreendem:
+Os módulos entregues cobrem o ciclo operacional completo do professor autônomo, da captação e gestão de alunos ao acompanhamento financeiro e pedagógico, e organizam-se conforme descrito a seguir:
 
 - **Gestão de alunos:** cadastro, edição, listagem com filtros e paginação, e vínculo do aluno ao professor responsável.
 - **Gestão de aulas:** registro de aulas ministradas, controle de pacotes de horas e validação de sobreposição de horários.
@@ -29,7 +29,7 @@ Fonte: O autor (2026).
 
 Fonte: O autor (2026).
 
-**Figura 4.3 – Portal do aluno (perfil aluno)**
+**Figura 4.3 – Portal do aluno (perfil aluno, mobile)**
 
 [Figura pendente de inserção a partir de captura do sistema]
 
@@ -83,7 +83,7 @@ A garantia de qualidade do SyncClass apoiou-se em três frentes complementares: 
 
 Foram implementados 304 casos de teste automatizados, distribuídos em 28 arquivos, com a ferramenta Vitest em conjunto com a Testing Library. A cobertura abrange _hooks_ de dados, componentes de interface, utilitários de formatação e validação, e _design tokens_. Os testes contemplam operações de criação, leitura, atualização e remoção de alunos e professores, o registro de aulas com validação de sobreposição, mutações otimistas com reversão em caso de erro, a validação de formulários por esquemas Zod e o mapeamento de mensagens de erro do Supabase.
 
-Cabe registrar, como limite da estratégia, que não foram implementados testes de integração automatizados para os procedimentos remotos, as políticas RLS, os gatilhos de banco e as Edge Functions, tampouco testes de ponta a ponta. Essa lacuna é discutida na seção 4.7 e retomada como limitação no Capítulo 5.
+Cabe registrar, como limite da estratégia, que não foram implementados testes de integração automatizados para os procedimentos remotos, as políticas de _Row Level Security_ (RLS), os gatilhos de banco e as Edge Functions, tampouco testes de ponta a ponta. Essa lacuna é discutida na seção 4.7 e retomada como limitação no Capítulo 5.
 
 ### 4.3.2 Campanha de Testes Manuais
 
@@ -93,9 +93,9 @@ Os fluxos verificados até a data de redação incluem a autenticação e a prot
 
 ### 4.3.3 Avaliação Segundo a ISO/IEC 25010
 
-O sistema foi avaliado segundo o modelo de qualidade da ISO/IEC 25010 (2011). A avaliação priorizou quatro características, alinhadas às necessidades do domínio: a segurança (pela natureza multiperfil e pela conformidade com a LGPD), a confiabilidade (pelo módulo financeiro), a manutenibilidade (pela condição de desenvolvedor único) e a usabilidade (por se destinar a um professor sem suporte de tecnologia da informação). A Tabela 4.2 apresenta a avaliação das características priorizadas com suas respectivas evidências.
+O sistema foi avaliado segundo o modelo de qualidade da ISO/IEC 25010 (2011). A avaliação priorizou quatro características, alinhadas às necessidades do domínio: a segurança (pela natureza multiperfil e pela conformidade com a LGPD), a confiabilidade (pelo módulo financeiro), a manutenibilidade (pela condição de desenvolvedor único) e a usabilidade (por se destinar a um professor sem suporte de tecnologia da informação). A Quadro 4.1 apresenta a avaliação das características priorizadas com suas respectivas evidências.
 
-**Tabela 4.2 — Avaliação das características priorizadas (ISO/IEC 25010)**
+**Quadro 4.1 — Avaliação das características priorizadas (ISO/IEC 25010)**
 
 | Característica   | Avaliação | Evidência                                                                                     |
 | :--------------- | :-------- | :-------------------------------------------------------------------------------------------- |
@@ -110,7 +110,7 @@ A avaliação foi conduzida pelo próprio desenvolvedor, com base em lista de ve
 
 ## 4.4 Hipótese H1 — Viabilidade de Prazo
 
-A hipótese H1 postula que um sistema SaaS funcional para gestão de professores autônomos de inglês pode ser desenvolvido por um único desenvolvedor, com suporte de IA generativa, em prazo acadêmico. As evidências que a sustentam são objetivas e rastreáveis. O desenvolvimento abrangeu aproximadamente três meses documentados no histórico de versionamento (de março a junho de 2026), distribuídos em 31 iterações temáticas, com 152 _commits_ na _branch_ principal, 329 arquivos TypeScript e aproximadamente 50.000 linhas de código no diretório `src`.
+A hipótese H1 postula que um sistema _Software as a Service_ (SaaS) funcional para gestão de professores autônomos de inglês pode ser desenvolvido por um único desenvolvedor, com suporte de Inteligência Artificial (IA) generativa, em prazo acadêmico. As evidências que a sustentam são objetivas e rastreáveis. O desenvolvimento abrangeu aproximadamente três meses documentados no histórico de versionamento (de março a junho de 2026), distribuídos em 31 iterações temáticas, com 152 _commits_ na _branch_ principal, 329 arquivos TypeScript e aproximadamente 50.000 linhas de código no diretório `src`.
 
 A entrega não se limitou a um artefato funcional em ambiente controlado. O sistema encontra-se em operação em produção, com um professor autônomo de inglês e seus alunos utilizando ativamente a plataforma. Esse uso real reforça a confirmação da hipótese, pois evidencia que o produto atende às necessidades para as quais foi concebido em condições efetivas de uso.
 
@@ -131,13 +131,13 @@ Os serviços de backend dispensados de implementação manual pela adoção do S
 
 A estimativa de redução de pelo menos 60% é qualitativa e fundamenta-se na literatura de computação em nuvem e BaaS, que situa a autenticação, a autorização, a API de dados e o armazenamento entre os componentes de maior custo de implementação em _stacks_ convencionais (MELL; GRANCE, 2011). Esses são precisamente os componentes fornecidos como serviço gerenciado pela plataforma adotada.
 
-Conclui-se que a hipótese H2 é confirmada, com ressalva metodológica. A confirmação apoia-se na enumeração dos serviços de backend dispensados e em sua sustentação na literatura, e não em uma medição experimental. Cabe explicitar que o limiar de 60% foi arbitrado a priori, no enunciado da hipótese; a evidência qualitativa reunida (a supressão de seis serviços de backend que, em uma _stack_ tradicional, demandariam implementação e manutenção próprias) torna esse patamar plausível, mas não o quantifica com precisão. Não houve grupo de controle que implementasse a mesma aplicação em _stack_ tradicional, de modo que a redução é estimada em bases qualitativas. Essa ressalva está declarada no protocolo metodológico (seção 3.3) e é retomada na seção 4.7.
+Conclui-se que a hipótese H2 é confirmada, com ressalva metodológica. A confirmação apoia-se na enumeração dos serviços de backend dispensados e em sua sustentação na literatura, e não em uma medição experimental. Cabe explicitar que o limiar de 60% foi arbitrado _a priori_, no enunciado da hipótese; a evidência qualitativa reunida (a supressão de seis serviços de backend que, em uma _stack_ tradicional, demandariam implementação e manutenção próprias) torna esse patamar plausível, mas não o quantifica com precisão. Não houve grupo de controle que implementasse a mesma aplicação em _stack_ tradicional, de modo que a redução é estimada em bases qualitativas. Essa ressalva está declarada no protocolo metodológico (seção 3.3) e é retomada na seção 4.7.
 
 ## 4.6 Hipótese H3 — Aceleração por IA Generativa
 
-A hipótese H3 postula que o uso do assistente de IA Claude (Anthropic) acelerou em pelo menos três vezes o tempo de execução de tarefas específicas de _scaffolding_, geração de _migrations_ SQL e auditoria de segurança. A unidade de análise é o tempo de execução de tarefas delimitadas, e não a quantidade de linhas de código produzida. Apresentam-se três exemplos rastreáveis, aderentes ao enunciado, conforme a Tabela 4.3.
+A hipótese H3 postula que o uso do assistente de IA Claude (Anthropic) acelerou em pelo menos três vezes o tempo de execução de tarefas específicas de _scaffolding_, geração de _migrations_ SQL e auditoria de segurança. A unidade de análise é o tempo de execução de tarefas delimitadas, e não a quantidade de linhas de código produzida. Apresentam-se três exemplos rastreáveis, aderentes ao enunciado, conforme a Quadro 4.2.
 
-**Tabela 4.3 — Exemplos rastreáveis de aceleração por IA (H3)**
+**Quadro 4.2 — Exemplos rastreáveis de aceleração por IA (H3)**
 
 | Iteração        | Tarefa                                                                                       | Estimativa sem IA | Com IA                      |
 | :-------------- | :------------------------------------------------------------------------------------------- | :---------------- | :-------------------------- |
@@ -153,7 +153,7 @@ Em coerência com o critério de confirmação por categoria estabelecido na se�
 
 ## 4.7 Discussão
 
-Os resultados das três hipóteses, tomados em conjunto, sustentam a viabilidade de desenvolver um SaaS funcional, seguro e em uso real por um desenvolvedor único, em prazo acadêmico, quando se combinam uma plataforma de backend como serviço e o apoio de IA generativa. Esta seção confronta esses resultados com a literatura e delimita os seus limites de validade.
+Os resultados das três hipóteses, tomados em conjunto, sustentam a viabilidade de desenvolver um SaaS funcional e seguro, em uso real, por um desenvolvedor único, em prazo acadêmico, quando se combinam uma plataforma de backend como serviço e o apoio de IA generativa. Esta seção confronta esses resultados com a literatura e delimita os seus limites de validade.
 
 ### 4.7.1 Confronto com a Literatura
 

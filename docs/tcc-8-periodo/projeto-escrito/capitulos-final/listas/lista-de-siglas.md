@@ -1,12 +1,8 @@
 # LISTA DE SIGLAS E ABREVIATURAS
 
-ABNT — Associação Brasileira de Normas Técnicas
-
 API — Application Programming Interface
 
 BaaS — Backend as a Service
-
-BOLA — Broken Object Level Authorization
 
 CDN — Content Delivery Network
 
@@ -20,6 +16,8 @@ CPF — Cadastro de Pessoas Físicas
 
 CRUD — Create, Read, Update, Delete
 
+CSS — Cascading Style Sheets
+
 DER — Diagrama Entidade-Relacionamento
 
 HTTP — Hypertext Transfer Protocol
@@ -31,6 +29,8 @@ IA — Inteligência Artificial
 IBGE — Instituto Brasileiro de Geografia e Estatística
 
 ISO — International Organization for Standardization
+
+JSON — JavaScript Object Notation
 
 JWT — JSON Web Token
 
@@ -56,7 +56,11 @@ QR — Quick Response (Código QR)
 
 REST — Representational State Transfer
 
+RF — Requisito Funcional
+
 RLS — Row Level Security
+
+RNF — Requisito Não Funcional
 
 RPC — Remote Procedure Call
 
@@ -67,6 +71,8 @@ SDK — Software Development Kit
 SI — Sistema de Informação
 
 SQL — Structured Query Language
+
+UC — Caso de Uso (_Use Case_)
 
 UML — Unified Modeling Language
 

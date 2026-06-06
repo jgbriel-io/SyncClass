@@ -1,14 +1,14 @@
 # 6 CRONOGRAMA DE ATIVIDADES
 
-Este capítulo apresenta o cronograma de atividades do desenvolvimento do SyncClass, organizado em fases e iterações. O cronograma deriva das fontes primárias contemporâneas descritas na seção 3.8, o histórico de versionamento do projeto: os 152 _commits_ com marcação temporal na _branch_ principal e as 70 _migrations_ SQL numeradas. O desenvolvimento ativo concentrou-se no período de março a junho de 2026, totalizando aproximadamente três meses.
+Este capítulo apresenta o cronograma de atividades do trabalho, que abrange o desenvolvimento do SyncClass, organizado em fases e iterações, e a redação do documento acadêmico, conduzida na etapa final do projeto. O cronograma deriva das fontes primárias contemporâneas descritas na seção 3.8, o histórico de versionamento do projeto: os 152 _commits_ com marcação temporal na _branch_ principal e as 70 _migrations_ SQL numeradas. O desenvolvimento ativo concentrou-se no período de março a junho de 2026, totalizando aproximadamente três meses.
 
 A numeração das 31 iterações é temática, e não estritamente cronológica: cada iteração agrupa um conjunto coeso de entregas por afinidade de tema ou de módulo, de modo que iterações distintas podem ter ocorrido em paralelo ou em sobreposição parcial no calendário. Por essa razão, os períodos associados às fases e aos blocos de iteração são indicados em granularidade de mês, e não em datas exatas de início e término. Cada fase identifica o tema predominante de um conjunto de iterações, e não uma janela exclusiva de atividade no repositório; o registro de _commits_ concentrou-se nos meses finais do período, à medida que os incrementos de cada tema eram consolidados e publicados na _branch_ principal. O fluxo de trabalho seguiu o modelo iterativo incremental (PRESSMAN; MAXIM, 2016), orientado por _branches_ por funcionalidade ou fase, _Pull Requests_ como pontos de revisão e _commits_ semânticos como registro de progresso.
 
 ## 6.1 Fases do Desenvolvimento
 
-As 31 iterações agruparam-se em cinco fases, definidas pela natureza predominante das entregas de cada período. A Tabela 6.1 apresenta as fases, as iterações que as compõem, o período correspondente e as entregas principais.
+As 31 iterações agruparam-se em cinco fases, definidas pela natureza predominante das entregas de cada período. A Quadro 6.1 apresenta as fases, as iterações que as compõem, o período correspondente e as entregas principais.
 
-**Tabela 6.1 — Fases do desenvolvimento**
+**Quadro 6.1 — Fases do desenvolvimento**
 
 | Fase                  | Iterações | Período             | Entregas principais                                                                                                                                                                     |
 | :-------------------- | :-------- | :------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -32,7 +32,7 @@ A fase de Estabilização encerrou o ciclo de desenvolvimento ativo com a corre�
 
 ## 6.2 Diagrama de Gantt
 
-A Figura 6.1 apresenta o diagrama de Gantt do desenvolvimento, que distribui as cinco fases ao longo dos aproximadamente três meses (março a junho de 2026). As fases de Fundação e Consolidação concentram-se em março e abril; a Expansão ocupa o período de abril a maio; as fases de Qualidade e segurança e de Estabilização encerram o ciclo em maio e junho.
+A Figura 6.1 apresenta o diagrama de Gantt do desenvolvimento, que distribui as cinco fases ao longo dos aproximadamente três meses (março a junho de 2026). As fases de Fundação e Consolidação concentram-se em março e abril; a Expansão ocupa o período de abril a maio; as fases de Qualidade e segurança e de Estabilização encerram o ciclo em maio e junho. O diagrama inclui ainda a redação do trabalho acadêmico como atividade distinta do desenvolvimento, conduzida em paralelo às fases finais e concentrada no mês de junho de 2026, abrangendo a documentação dos resultados, a discussão das hipóteses e a revisão do texto para entrega.
 
 **Figura 6.1 – Diagrama de Gantt do desenvolvimento**
 
