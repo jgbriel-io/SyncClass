@@ -160,7 +160,7 @@ export function useStudentClassLogs() {
           .from("teachers_masked")
           .select("name")
           .eq("id", data[0].teacher_id)
-          .single();
+          .maybeSingle();
 
         if (teacherData) {
           teacherName = teacherData.name;

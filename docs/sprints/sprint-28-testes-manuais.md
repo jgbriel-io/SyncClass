@@ -59,8 +59,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Criar estudante → aparece na lista
 - [x] Editar aluno → dados atualizados (students.name, profiles.full_name, auth.users sincronizados)
 - [x] Hard delete → remove permanentemente (confirmação obrigatória)
-- [ ] Hard delete aluno sem aulas agendadas → modal exibe checkbox + botão bloqueado até marcar
-- [ ] Hard delete aluno COM aulas agendadas → mesmo modal com checkbox, force delete ao confirmar
+- [x] Hard delete aluno sem aulas agendadas → modal exibe checkbox + botão bloqueado até marcar
+- [x] Hard delete aluno COM aulas agendadas → mesmo modal com checkbox, force delete ao confirmar
 - [x] Admin não vê botões de ação nas linhas da tabela (read-only)
 
 ### Teachers (`/admin/teachers`)
@@ -71,8 +71,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Soft delete → professor some da lista ativa
 - [x] Restaurar professor arquivado → volta à lista
 - [x] Hard delete → remove permanentemente (confirmação obrigatória)
-- [ ] Hard delete professor sem aulas agendadas → modal exibe checkbox + botão bloqueado até marcar
-- [ ] Hard delete professor COM aulas agendadas → force delete ao confirmar checkbox
+- [x] Hard delete professor sem aulas agendadas → modal exibe checkbox + botão bloqueado até marcar
+- [x] Hard delete professor COM aulas agendadas → force delete ao confirmar checkbox
 - [x] Redefinir Senha
 
 ### Users (`/admin/users`)
@@ -85,7 +85,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Editar professor → dados atualizados em teachers e profiles
 - [x] Seletor de professor pré-preenchido ao reabrir formulário de edição de aluno
 - [x] Hard delete (usuário com vínculo student/teacher) → anonimiza domain record + remove auth
-- [ ] Hard delete usuário admin (sem vínculo) → modal com checkbox, profiles.full_name/email/avatar_url anonimizados
+- [x] Hard delete usuário admin (sem vínculo) → modal com checkbox, profiles.full_name/email/avatar_url anonimizados
 - [x] Deletar usuário → sessão invalidada (logout automático se logado)
 
 ### Financial (`/admin/financial`)
@@ -181,13 +181,13 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Settings — Pagamentos (`/settings` ou `/teacher/settings`)
 
-- [ ] Aba "Pagamentos" exibe badge "Não configurado" sem API key salva
-- [ ] Campo API key não pré-preenche com ciphertext ao clicar "Editar" (deve iniciar vazio)
-- [ ] Salvar API key válida → badge muda para "Configurado", webhook URL exibida
-- [ ] Webhook URL copiada com botão → toast de confirmação
-- [ ] Clicar "Editar" novamente → campo começa vazio (não mostra ciphertext)
+- [x] Aba "Pagamentos" exibe badge "Não configurado" sem API key salva
+- [x] Campo API key não pré-preenche com ciphertext ao clicar "Configurar" (deve iniciar vazio)
+- [x] Salvar API key válida → badge muda para "Configurado", webhook URL exibida
+- [x] Webhook URL copiada com botão → toast de confirmação
+- [x] Clicar "Editar" novamente → campo começa vazio (não mostra ciphertext)
 - [x] Remover integração → badge volta para "Não configurado", webhook URL some
-- [ ] Professor sem API key → aluno vê mensagem amigável no checkout (não crash)
+- [x] Professor sem API key → aluno vê mensagem amigável no checkout (não crash)
 
 ### Activities (`/teacher/activities`)
 
@@ -195,8 +195,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Criar atividade (título, prazo, aluno) → aparece
 - [x] Editar atividade
 - [x] Deletar atividade
-- [ ] Ver submissão do aluno (arquivo)
-- [ ] Corrigir atividade (nota + feedback + arquivo de correção) → aluno vê correção
+- [x] Ver submissão do aluno (arquivo)
+- [x] Corrigir atividade (nota + feedback + arquivo de correção) → aluno vê correção
 
 ### Overview (`/teacher/overview`)
 
@@ -221,7 +221,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Financial (`/student/financial`)
 
-- [ ] Lista cobranças do aluno logado (não vê cobranças de outros alunos)
+- [x] Lista cobranças do aluno logado (não vê cobranças de outros alunos)
 - [ ] Status de cada cobrança exibido corretamente (pendente / pago / atrasado / abonado / extornado / cancelado)
 - [ ] Cobrança `pendente` com `payment_provider='abacate_pay'` → botão "Pagar via PIX" leva para `/checkout/:id`
 
@@ -239,9 +239,9 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Activities (`/student/activities`)
 
-- [ ] Lista atividades atribuídas ao aluno
-- [ ] Submeter atividade (upload de arquivo) → status muda
-- [ ] Ver nota e correção após professor avaliar
+- [x] Lista atividades atribuídas ao aluno
+- [x] Submeter atividade (upload de arquivo) → status muda
+- [x] Ver nota e correção após professor avaliar
 
 ---
 
@@ -249,20 +249,20 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Isolamento de Dados (RLS)
 
-- [ ] Professor A não consegue ver alunos do Professor B (testar via URL direta)
-- [ ] Aluno A não consegue ver financeiro do Aluno B (`/student/financial/checkout/:idDoAlunoB`)
-- [ ] Teacher não acessa rotas `/admin/*` → redireciona ou 403
-- [ ] Teacher não acessa rotas `/student/*` → redireciona ou 403
-- [ ] Student não acessa rotas `/admin/*` → redireciona ou 403
-- [ ] Student não acessa rotas `/teacher/*` → redireciona ou 403
-- [ ] Admin acessa `/teacher/*` e `/student/*` — verificar se bloqueado ou permitido
+- [x] Professor A não consegue ver alunos do Professor B (testar via URL direta)
+- [x] Aluno A não consegue ver financeiro do Aluno B (`/student/financial/checkout/:idDoAlunoB`)
+- [x] Teacher não acessa rotas `/admin/*` → redireciona ou 403
+- [x] Teacher não acessa rotas `/student/*` → redireciona ou 403
+- [x] Student não acessa rotas `/admin/*` → redireciona ou 403
+- [x] Student não acessa rotas `/teacher/*` → redireciona ou 403
+- [x] Admin acessa `/teacher/*` e `/student/*` — verificar se bloqueado ou permitido
 
 ### Sessão e Auth
 
 - [ ] Logout → sessão encerrada, redirect para `/login`
 - [ ] Trocar senha in-app (ChangePasswordDialog, dentro da sessão) → nova senha funciona no próximo login
 - [ ] Trocar senha com senha atual errada → erro exibido
-- [ ] Sessão expirada → redirect automático para `/login`
+- [x] Sessão expirada → redirect automático para `/login`
 
 ### LGPD
 
@@ -273,8 +273,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 ### Upload de Arquivos
 
 - [ ] Foto de perfil — upload pelo próprio usuário via Settings → Perfil (professor em `/teacher`, aluno em `/student`; não é feito pelo professor na tela de gestão de alunos)
-- [ ] Arquivo de atividade — upload pelo aluno
-- [ ] Arquivo de correção — upload pelo professor
+- [x] Arquivo de atividade — upload pelo aluno
+- [x] Arquivo de correção — upload pelo professor
 
 ### Estados de UI
 
@@ -350,10 +350,10 @@ Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), 
 
 ### Atividades
 
-- [ ] Enviar atividade → "Atividade enviada com sucesso!"
-- [ ] Editar atividade → "Atividade atualizada com sucesso!"
-- [ ] Enviar correção → "Correção enviada com sucesso!"
-- [ ] Excluir atividade → "Atividade excluída com sucesso!"
+- [x] Enviar atividade → "Atividade enviada com sucesso!"
+- [x] Editar atividade → "Atividade atualizada com sucesso!"
+- [x] Enviar correção → "Correção enviada com sucesso!"
+- [x] Excluir atividade → "Atividade excluída com sucesso!"
 
 ### Perfil / Usuários
 

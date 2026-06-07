@@ -79,7 +79,7 @@ export function DeliverActivityDialog({
     if (!file) return;
 
     // Validar tipo e tamanho do arquivo
-    const validation = validateFile(file, "ACTIVITY_RESPONSE");
+    const validation = validateFile(file, "ACTIVITY_ALL");
     if (!validation.valid) {
       toast.error(validation.error);
       e.target.value = ""; // Limpar input
@@ -203,7 +203,7 @@ export function DeliverActivityDialog({
               <input
                 id="response_file"
                 type="file"
-                accept={FILE_TYPES.ACTIVITY_RESPONSE.accept}
+                accept={FILE_TYPES.ACTIVITY_ALL.accept}
                 onChange={handleFileChange}
                 className="hidden"
               />
