@@ -29,12 +29,13 @@ export function SettingsPagamentosTab({
   const [editing, setEditing] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
-  const [copiedWebhook, setCopiedWebhook] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
+  const [copiedSecret, setCopiedSecret] = useState(false);
 
   const isConfigured = !!config?.abacate_pay_api_key;
   const webhookSecret = config?.abacate_pay_webhook_secret;
-  const webhookUrl = webhookSecret
-    ? `${SUPABASE_PROJECT_URL}/functions/v1/abacate-webhook?webhookSecret=${webhookSecret}`
+  const webhookBaseUrl = webhookSecret
+    ? `${SUPABASE_PROJECT_URL}/functions/v1/abacate-webhook`
     : null;
 
   // Inicia input vazio ao editar — nunca pré-preenche com o ciphertext do banco
@@ -70,12 +71,20 @@ export function SettingsPagamentosTab({
     );
   };
 
-  const handleCopyWebhook = async () => {
-    if (!webhookUrl) return;
-    await navigator.clipboard.writeText(webhookUrl);
-    setCopiedWebhook(true);
+  const handleCopyUrl = async () => {
+    if (!webhookBaseUrl) return;
+    await navigator.clipboard.writeText(webhookBaseUrl);
+    setCopiedUrl(true);
     toast.success(s.toasts.copySuccess);
-    setTimeout(() => setCopiedWebhook(false), 2000);
+    setTimeout(() => setCopiedUrl(false), 2000);
+  };
+
+  const handleCopySecret = async () => {
+    if (!webhookSecret) return;
+    await navigator.clipboard.writeText(webhookSecret);
+    setCopiedSecret(true);
+    toast.success(s.toasts.copySuccess);
+    setTimeout(() => setCopiedSecret(false), 2000);
   };
 
   if (isLoading) {
@@ -87,7 +96,7 @@ export function SettingsPagamentosTab({
   }
 
   return (
-    <div className="space-y-5 pt-4">
+    <div className="space-y-5 py-4">
       {/* Status badge */}
       <div className="flex items-center justify-between">
         <div>
@@ -177,24 +186,54 @@ export function SettingsPagamentosTab({
         </p>
       </div>
 
-      {/* Webhook URL */}
-      <div className="space-y-2 border-t pt-4">
+      {/* Webhook */}
+      <div className="space-y-3 border-t pt-4">
         <Label>{s.webhookTitle}</Label>
-        {webhookUrl ? (
-          <div className="flex gap-2">
-            <Input
-              value={webhookUrl}
-              readOnly
-              className="bg-muted/50 font-mono text-xs"
-            />
-            <Button size="icon" variant="outline" onClick={handleCopyWebhook}>
-              {copiedWebhook ? (
-                <Check className="h-4 w-4 text-success" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+        {webhookBaseUrl && webhookSecret ? (
+          <>
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted-foreground font-medium">
+                {s.webhookUrlLabel}
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={webhookBaseUrl}
+                  readOnly
+                  className="bg-muted/50 font-mono text-xs"
+                />
+                <Button size="icon" variant="outline" onClick={handleCopyUrl}>
+                  {copiedUrl ? (
+                    <Check className="h-4 w-4 text-success" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted-foreground font-medium">
+                {s.webhookSecretLabel}
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={webhookSecret}
+                  readOnly
+                  className="bg-muted/50 font-mono text-xs"
+                />
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={handleCopySecret}
+                >
+                  {copiedSecret ? (
+                    <Check className="h-4 w-4 text-success" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </>
         ) : (
           <p className="text-sm text-muted-foreground">
             {s.webhookNotConfigured}

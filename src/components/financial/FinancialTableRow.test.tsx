@@ -27,7 +27,6 @@ describe("FinancialTableRow - Snapshot", () => {
     onViewHistory: vi.fn(),
     onEdit: vi.fn(),
     onRequestRefund: vi.fn(),
-    onDelete: vi.fn(),
   };
 
   it("should render financial row with centralized content - pending", () => {

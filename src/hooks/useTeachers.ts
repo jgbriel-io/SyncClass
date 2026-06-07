@@ -32,7 +32,7 @@ export type TeachersListFilters = {
   sortBy?: "name_asc" | "name_desc";
 };
 
-export type Teacher = Tables<"teachers">;
+export type Teacher = Tables<"teachers"> & { avatar_url?: string | null };
 export type TeacherInsert = TablesInsert<"teachers">;
 export type TeacherUpdate = TablesUpdate<"teachers">;
 type TeacherStatus = Enums<"teacher_status">;
@@ -44,11 +44,11 @@ type ProfileUpdate = TablesUpdate<"profiles">;
 
 // Excludes abacate_pay_api_key and abacate_pay_webhook_secret — fetched only in useTeacherAbacatePayConfig
 const TEACHER_LIST_FIELDS =
-  "id, name, email, phone, status, created_at, updated_at, address, hourly_rate, pix_key, country, is_deleted, anonymized_at" as const;
+  "id, name, email, phone, status, created_at, updated_at, address, hourly_rate, pix_key, country, is_deleted, anonymized_at, avatar_url" as const;
 
 async function fetchTeachers(): Promise<Teacher[]> {
   const { data, error } = await supabase
-    .from("teachers")
+    .from("teachers_masked")
     .select(TEACHER_LIST_FIELDS)
     .eq("is_deleted", false)
     .order("created_at", { ascending: false });
@@ -62,7 +62,7 @@ async function fetchTeachersPaginated(
   filters: TeachersListFilters | undefined
 ): Promise<{ list: Teacher[]; count: number }> {
   let q = supabase
-    .from("teachers")
+    .from("teachers_masked")
     .select(TEACHER_LIST_FIELDS, { count: "exact" })
     .eq("is_deleted", false);
   if (filters?.status && filters.status !== "all")

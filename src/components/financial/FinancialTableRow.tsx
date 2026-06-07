@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Eye, Trash2, Ban } from "lucide-react";
+import { MoreHorizontal, Pencil, Eye, Ban } from "lucide-react";
 import { FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import {
   CELL_BASE,
@@ -69,7 +69,6 @@ interface FinancialTableRowProps {
   onEdit: (record: FinancialRecordWithRelations) => void;
   onRequestRefund?: (record: FinancialRecordWithRelations) => void;
   onCancelCharge?: (record: FinancialRecordWithRelations) => void;
-  onDelete?: (record: FinancialRecordWithRelations) => void;
   isAdmin?: boolean;
 }
 
@@ -81,18 +80,11 @@ export function FinancialTableRow({
   onEdit,
   onRequestRefund,
   onCancelCharge,
-  onDelete,
   isAdmin = false,
 }: FinancialTableRowProps) {
   const lastUpdatedAt = record.updated_at || record.created_at;
 
   const TERMINAL_STATUSES = ["abonado", "extornado", "cancelado"];
-
-  const canDelete =
-    onDelete &&
-    record.actualStatus !== "pago" &&
-    !TERMINAL_STATUSES.includes(record.actualStatus) &&
-    record.record_type !== "avulsa";
 
   const canCancel =
     !isAdmin &&
@@ -317,15 +309,6 @@ export function FinancialTableRow({
                   >
                     <Ban className="h-4 w-4 mr-2" aria-hidden="true" />
                     {financial.tableRow.cancelCharge}
-                  </DropdownMenuItem>
-                )}
-                {canDelete && (
-                  <DropdownMenuItem
-                    onClick={() => onDelete(record)}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
-                    {financial.tableRow.delete}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>

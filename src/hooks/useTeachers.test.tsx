@@ -72,7 +72,7 @@ describe("useTeachers", () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(supabase.from).toHaveBeenCalledWith("teachers");
+      expect(supabase.from).toHaveBeenCalledWith("teachers_masked");
       // Data should be masked (CPF with last 4 digits visible)
       expect(result.current.data).toBeDefined();
     });

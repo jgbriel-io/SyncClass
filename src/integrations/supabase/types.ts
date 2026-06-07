@@ -1074,6 +1074,7 @@ export type Database = {
       students_masked: {
         Row: {
           anonymized_at: string | null;
+          avatar_url: string | null;
           birth_date: string | null;
           city: string | null;
           country: string | null;
@@ -1156,6 +1157,7 @@ export type Database = {
       students_with_stats: {
         Row: {
           anonymized_at: string | null;
+          avatar_url: string | null;
           birth_date: string | null;
           city: string | null;
           country: string | null;
@@ -1209,11 +1211,13 @@ export type Database = {
         Row: {
           address: string | null;
           anonymized_at: string | null;
+          avatar_url: string | null;
           country: string | null;
           created_at: string | null;
           email: string | null;
           hourly_rate: number | null;
           id: string | null;
+          is_deleted: boolean | null;
           name: string | null;
           phone: string | null;
           pix_key: string | null;

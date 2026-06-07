@@ -94,7 +94,7 @@ export function StudentsTableRow({
         style={STICKY_SHADOW}
       >
         <div className="flex items-center gap-4 overflow-hidden">
-          <AvatarCircle name={student.name} />
+          <AvatarCircle name={student.name} avatarUrl={student.avatar_url} />
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium truncate" title={student.name}>
               {student.name}

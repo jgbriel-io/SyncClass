@@ -20,7 +20,6 @@ import {
 import { defaultFinancialFilters } from "@/components/filters/filterDefaults";
 import { FinancialFormDialog } from "@/components/financial/FinancialFormDialog";
 import { FinancialRefundDialog } from "@/components/financial/FinancialRefundDialog";
-import { FinancialDeleteDialog } from "@/components/financial/FinancialDeleteDialog";
 import { FinancialPaymentHistoryDialog } from "@/components/financial/FinancialPaymentHistoryDialog";
 import {
   useFinancialRecords,
@@ -84,9 +83,6 @@ export function FinancialView({
   const [recordToRefund, setRecordToRefund] =
     useState<FinancialRecordWithRelations | null>(null);
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
-  const [recordToDelete, setRecordToDelete] =
-    useState<FinancialRecordWithRelations | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [recordToCancel, setRecordToCancel] =
     useState<FinancialRecordWithRelations | null>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -335,10 +331,6 @@ export function FinancialView({
                     setRecordToCancel(record);
                     setCancelDialogOpen(true);
                   }}
-                  onDelete={(record) => {
-                    setRecordToDelete(record);
-                    setDeleteDialogOpen(true);
-                  }}
                 />
               ))
             )}
@@ -391,19 +383,6 @@ export function FinancialView({
         onClose={() => {
           setRefundDialogOpen(false);
           setRecordToRefund(null);
-        }}
-      />
-
-      <FinancialDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={(open) => {
-          setDeleteDialogOpen(open);
-          if (!open) setRecordToDelete(null);
-        }}
-        record={recordToDelete}
-        onClose={() => {
-          setDeleteDialogOpen(false);
-          setRecordToDelete(null);
         }}
       />
 

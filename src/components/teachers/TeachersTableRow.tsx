@@ -1,4 +1,5 @@
 import { common } from "@/content";
+import { AvatarCircle } from "@/components/ui/avatar-circle";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
@@ -77,11 +78,7 @@ export function TeachersTableRow({
         style={STICKY_SHADOW}
       >
         <div className="flex items-center gap-4 overflow-hidden">
-          <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-medium text-accent-foreground">
-              {teacher.name.charAt(0)}
-            </span>
-          </div>
+          <AvatarCircle name={teacher.name} avatarUrl={teacher.avatar_url} />
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium truncate" title={teacher.name}>
               {teacher.name}

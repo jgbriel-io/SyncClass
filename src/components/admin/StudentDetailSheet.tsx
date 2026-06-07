@@ -37,6 +37,7 @@ export function StudentDetailSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={isLoading ? "" : student?.name || ""}
+      avatarUrl={student?.avatar_url ?? null}
       subtitle={
         isLoading ? (
           <Skeleton className="h-4 w-20" />
