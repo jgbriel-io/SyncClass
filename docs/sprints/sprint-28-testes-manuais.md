@@ -169,11 +169,11 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Criar cobrança individual → aparece na lista
 - [x] Criar cobrança de pacote (vincula N aulas) → aparece corretamente
 - [x] Editar cobrança pendente
-- [ ] Cancelar cobrança
-- [ ] Abonar cobrança
+- [x] Cancelar cobrança
+- [x] Abonar cobrança
 - [x] Timeline de transações exibe histórico
 - [x] Cobrança `pago` com `payment_provider='abacate_pay'` → botão "Reembolso" visível
-- [ ] Botão "Reembolso" (AbacatePay) → dialog exibe campo motivo + botão "Reembolsar via PIX"
+- [x] Botão "Reembolso" (AbacatePay) → dialog exibe campo motivo + botão "Reembolsar via PIX"
 - [ ] Confirmar reembolso AbacatePay → toast "Reembolso PIX processado com sucesso!", status → `extornado`
 - [x] Cobrança `pago` sem `payment_provider` (manual/legado) → dialog exibe instrução manual + botão "Confirmar reembolso"
 - [x] Confirmar reembolso manual → toast "Reembolso registrado com sucesso!", status → `extornado`
@@ -212,30 +212,30 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 ### Home (`/student`)
 
 - [x] Tela inicial carrega com informações do aluno
-- [ ] Responsivo em mobile (375px)
+- [x] Responsivo em mobile (375px)
 
 ### History (`/student/history`)
 
-- [ ] Histórico de aulas exibe corretamente (data, duração, nota, feedback)
-- [ ] Paginação funciona
+- [x] Histórico de aulas exibe corretamente (data, duração, nota, feedback)
+- [x] Paginação funciona
 
 ### Financial (`/student/financial`)
 
 - [x] Lista cobranças do aluno logado (não vê cobranças de outros alunos)
-- [ ] Status de cada cobrança exibido corretamente (pendente / pago / atrasado / abonado / extornado / cancelado)
-- [ ] Cobrança `pendente` com `payment_provider='abacate_pay'` → botão "Pagar via PIX" leva para `/checkout/:id`
+- [x] Status de cada cobrança exibido corretamente (pendente / pago / atrasado / abonado / extornado / cancelado)
+- [x] Cobrança `pendente` com `payment_provider='abacate_pay'` → botão "Pagar via PIX" leva para `/checkout/:id`
 
 ### Checkout (`/student/financial/checkout/:recordId`)
 
-- [ ] Carrega cobrança específica pelo ID
-- [ ] Cobrança AbacatePay: formulário de CPF exibido
-- [ ] Cobrança AbacatePay: informar CPF + clicar "Gerar QR Code" → QR Code PIX renderiza
-- [ ] Cobrança AbacatePay: segundo acesso com QR ainda válido → mesmo QR retornado (cache)
-- [ ] Cobrança AbacatePay: após pagamento real → tela "Pagamento confirmado!" exibida automaticamente (realtime)
-- [ ] Cobrança AbacatePay: QR expirado → formulário de CPF exibido novamente
-- [ ] Cobrança manual/legada (`payment_provider != 'abacate_pay'`) → mensagem informativa exibida, sem formulário CPF
-- [ ] Professor sem API key configurada → mensagem de erro amigável no checkout
-- [ ] ID de outro aluno → acesso bloqueado (RLS)
+- [x] Carrega cobrança específica pelo ID
+- [x] Cobrança AbacatePay: formulário de CPF exibido
+- [x] Cobrança AbacatePay: informar CPF + clicar "Gerar QR Code" → QR Code PIX renderiza
+- [x] Cobrança AbacatePay: segundo acesso com QR ainda válido → mesmo QR retornado (cache)
+- [x] Cobrança AbacatePay: após pagamento real → tela "Pagamento confirmado!" exibida automaticamente (realtime)
+- [x] Cobrança AbacatePay: QR expirado → formulário de CPF exibido novamente
+- [x] Cobrança manual/legada (`payment_provider != 'abacate_pay'`) → mensagem informativa exibida, sem formulário CPF
+- [x] Professor sem API key configurada → mensagem de erro amigável no checkout
+- [x] ID de outro aluno → acesso bloqueado (RLS)
 
 ### Activities (`/student/activities`)
 
@@ -259,7 +259,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Sessão e Auth
 
-- [ ] Logout → sessão encerrada, redirect para `/login`
+- [x] Logout → sessão encerrada, redirect para `/login`
 - [ ] Trocar senha in-app (ChangePasswordDialog, dentro da sessão) → nova senha funciona no próximo login
 - [ ] Trocar senha com senha atual errada → erro exibido
 - [x] Sessão expirada → redirect automático para `/login`
@@ -278,16 +278,16 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Estados de UI
 
-- [ ] Empty states exibidos em listas vazias (sem alunos, sem aulas, etc.)
-- [ ] Skeletons de loading visíveis durante carregamento
-- [ ] Toasts de sucesso e erro aparecem após operações
-- [ ] Dialogs de confirmação para ações destrutivas (delete)
+- [x] Empty states exibidos em listas vazias (sem alunos, sem aulas, etc.)
+- [x] Skeletons de loading visíveis durante carregamento
+- [x] Toasts de sucesso e erro aparecem após operações
+- [x] Dialogs de confirmação para ações destrutivas (delete)
 
 ### Responsividade
 
-- [ ] `/student/*` — mobile 375px (portal do aluno é mobile-first)
-- [ ] `/teacher/*` — tablet 768px
-- [ ] Tabelas com scroll horizontal em mobile
+- [x] `/student/*` — mobile 375px (portal do aluno é mobile-first)
+- [x] `/teacher/*` — tablet 768px
+- [x] Tabelas com scroll horizontal em mobile
 
 ### Integrações e Validações
 
@@ -300,15 +300,15 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Rotas Alias e Edge Cases
 
-- [ ] `/students` (alias de StudentShell) → carrega corretamente
-- [ ] `/teachers` (alias de TeacherShell) → carrega corretamente
-- [ ] Rota inexistente (ex: `/xyzabc`) → página 404 exibida
+- [x] `/students` (alias de StudentShell) → carrega corretamente
+- [x] `/teachers` (alias de TeacherShell) → carrega corretamente
+- [x] Rota inexistente (ex: `/xyzabc`) → página 404 exibida
 
 ### Volume de Dados
 
-- [ ] Lista com 20+ alunos → paginação funciona
-- [ ] Lista com 50+ aulas → paginação funciona, sem degradação visível
-- [ ] Financeiro com 30+ cobranças → filtros e paginação funcionam
+- [x] Lista com 20+ alunos → paginação funciona
+- [x] Lista com 50+ aulas → paginação funciona, sem degradação visível
+- [x] Financeiro com 30+ cobranças → filtros e paginação funcionam
 
 ---
 
@@ -350,10 +350,10 @@ Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), 
 
 ### Atividades
 
-- [x] Enviar atividade → "Atividade enviada com sucesso!"
-- [x] Editar atividade → "Atividade atualizada com sucesso!"
-- [x] Enviar correção → "Correção enviada com sucesso!"
-- [x] Excluir atividade → "Atividade excluída com sucesso!"
+- [ ] Enviar atividade → "Atividade enviada com sucesso!"
+- [ ] Editar atividade → "Atividade atualizada com sucesso!"
+- [ ] Enviar correção → "Correção enviada com sucesso!"
+- [ ] Excluir atividade → "Atividade excluída com sucesso!"
 
 ### Perfil / Usuários
 
