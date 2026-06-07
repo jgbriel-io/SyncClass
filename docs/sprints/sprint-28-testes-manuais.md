@@ -211,7 +211,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Home (`/student`)
 
-- [ ] Tela inicial carrega com informações do aluno
+- [x] Tela inicial carrega com informações do aluno
 - [ ] Responsivo em mobile (375px)
 
 ### History (`/student/history`)
