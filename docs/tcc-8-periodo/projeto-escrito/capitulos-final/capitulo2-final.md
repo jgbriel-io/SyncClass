@@ -86,7 +86,7 @@ Requisitos de software são descrições dos serviços que o sistema deve fornec
 - **Requisitos Funcionais (RF):** especificam o que o sistema deve fazer: funcionalidades, comportamentos e respostas a entradas;
 - **Requisitos Não Funcionais (RNF):** especificam restrições de qualidade, desempenho e segurança que governam o comportamento do sistema.
 
-A engenharia de requisitos compreende não apenas a especificação, mas o processo de elicitação, análise, validação e gerenciamento dos requisitos ao longo do ciclo de vida (SOMMERVILLE, 2011). No SyncClass, a elicitação foi realizada por meio de entrevistas com um professor autônomo de inglês, usuário real do sistema, e análise comparativa de ferramentas de gestão disponíveis no mercado. O processo é documentado na seção 3.4, e a especificação completa dos 30 requisitos funcionais implementados consta do Apêndice B.
+A engenharia de requisitos compreende não apenas a especificação, mas o processo de elicitação, análise, validação e gerenciamento dos requisitos ao longo do ciclo de vida (SOMMERVILLE, 2011). No SyncClass, a elicitação foi realizada por meio de entrevistas com um professor autônomo de inglês, usuário real do sistema, e análise comparativa de ferramentas de gestão disponíveis no mercado. O processo é documentado na seção 3.4, e a especificação completa dos 32 requisitos funcionais implementados consta do Apêndice B.
 
 ## 2.7 Arquitetura de Software
 

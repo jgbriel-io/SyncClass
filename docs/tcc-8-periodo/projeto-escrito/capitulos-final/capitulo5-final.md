@@ -26,7 +26,7 @@ As estimativas de ganho associadas às hipóteses H2 e H3 são retrospectivas e 
 
 Não foram implementados testes de integração automatizados que cubram o ciclo completo da aplicação ao banco de dados, incluindo a verificação de políticas RLS, procedimentos remotos, gatilhos e Edge Functions. Essa ausência constitui ressalva direta ao requisito não funcional de tempo de resposta inferior a dois segundos: o requisito foi declarado, porém não foi verificado empiricamente, uma vez que não foram realizados testes de carga com volume real de dados.
 
-No tocante à verificação manual, a campanha estruturada de testes, com roteiro de 187 itens, permanecia em execução à data de redação deste trabalho, de modo que parte do roteiro ainda não havia sido integralmente percorrida. Trata-se de limitação de natureza distinta da anterior, pois se refere à execução do processo de qualidade, e não à cobertura de testes automatizados.
+No tocante à verificação manual, a campanha estruturada de testes, com roteiro de 175 itens, permanecia em execução à data de redação deste trabalho, de modo que parte do roteiro ainda não havia sido integralmente percorrida. Trata-se de limitação de natureza distinta da anterior, pois se refere à execução do processo de qualidade, e não à cobertura de testes automatizados.
 
 O trabalho configura um caso único, conduzido por um desenvolvedor sobre um domínio específico, o que limita a validade externa dos resultados. As conclusões não devem ser generalizadas para equipes, outros domínios ou outras combinações de ferramentas sem investigação adicional.
 

@@ -5,6 +5,15 @@ Origem: atualizações pós-sprint 32 (remoção CEP, reembolso PIX, LGPD export
 
 ---
 
+## CAPÍTULO 2 — Referencial Teórico
+
+### Seção 2.6 (Engenharia de Requisitos)
+
+**Localizar:** `a especificação completa dos 30 requisitos funcionais implementados consta do Apêndice B`  
+**Substituir por:** `a especificação completa dos 32 requisitos funcionais implementados consta do Apêndice B`
+
+---
+
 ## CAPÍTULO 3 — Metodologia
 
 ### Seção 3.3 (Delimitação da Pesquisa) — roteiro QA
@@ -18,6 +27,20 @@ Origem: atualizações pós-sprint 32 (remoção CEP, reembolso PIX, LGPD export
 **Substituir por:**
 
 > 32 requisitos funcionais foram implementados ao longo das 31 iterações de desenvolvimento, incluindo a exportação de dados pessoais para conformidade com a LGPD (iteração 20) e o reembolso de pagamento PIX via AbacatePay (iteração 32). Outros 4 requisitos foram identificados como desejáveis, mas mantidos fora do escopo do produto mínimo viável e registrados como trabalhos futuros (RF32 a RF35): sistema de notificações, exportação de relatórios em PDF, integração com Google Calendar e gamificação.
+
+### Seção 3.7 (Qualidade e Testes) — contagens
+
+**Localizar:** `304 casos em 28 arquivos`  
+**Substituir por:** `301 casos em 28 arquivos`
+
+**Localizar:** `em roteiro de 187 itens de verificação organizados por módulo`  
+**Substituir por:** `em roteiro de 175 itens de verificação organizados por módulo`
+
+**Localizar:** `a adequação funcional (30 requisitos implementados)`  
+**Substituir por:** `a adequação funcional (32 requisitos implementados)`
+
+**Localizar:** `a cobertura de 304 testes automatizados`  
+**Substituir por:** `a cobertura de 301 testes automatizados`
 
 ### Seção 3.9 (Infraestrutura e Deploy) — Edge Functions
 
@@ -50,6 +73,15 @@ Origem: atualizações pós-sprint 32 (remoção CEP, reembolso PIX, LGPD export
 
 **Localizar:** `O roteiro de verificação totaliza 187 itens`  
 **Substituir por:** `O roteiro de verificação totaliza 175 itens`
+
+---
+
+## CAPÍTULO 5 — Conclusão
+
+### Seção 5.3 (Limitações do Trabalho)
+
+**Localizar:** `a campanha estruturada de testes, com roteiro de 187 itens`  
+**Substituir por:** `a campanha estruturada de testes, com roteiro de 175 itens`
 
 ---
 
