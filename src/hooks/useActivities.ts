@@ -65,7 +65,10 @@ export function getActivityDisplayStatus(activity: ActivityForDisplay): {
   label: string;
   variant: "success" | "warning" | "default" | "info" | "destructive";
 } {
-  const dueTime = activity.due_date ? new Date(activity.due_date).getTime() : 0;
+  // Append T12:00:00 so date-only strings are treated as local noon, not UTC midnight (avoids UTC-3 early-overdue bug)
+  const dueTime = activity.due_date
+    ? new Date(activity.due_date.slice(0, 10) + "T12:00:00").getTime()
+    : 0;
   const now = Date.now();
   const deliveredAt = activity.delivered_at;
 
