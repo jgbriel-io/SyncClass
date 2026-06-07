@@ -6,8 +6,6 @@ import {
   emailRequiredSchema,
   dateSchema,
   dateRequiredSchema,
-  cepSchema,
-  cepRequiredSchema,
   moneySchema,
   moneyRequiredSchema,
   nameSchema,
@@ -69,22 +67,6 @@ describe("Validation Schemas", () => {
       expect(dateSchema.safeParse("32/01/2024").success).toBe(false);
       expect(dateSchema.safeParse("31/02/2024").success).toBe(false);
       expect(dateSchema.safeParse("01-01-2024").success).toBe(false);
-    });
-  });
-
-  describe("cepSchema", () => {
-    it("deve aceitar CEP válido", () => {
-      expect(cepSchema.safeParse("12345-678").success).toBe(true);
-    });
-
-    it("deve aceitar vazio", () => {
-      expect(cepSchema.safeParse("").success).toBe(true);
-      expect(cepSchema.safeParse(undefined).success).toBe(true);
-    });
-
-    it("deve rejeitar CEP inválido", () => {
-      expect(cepSchema.safeParse("12345").success).toBe(false);
-      expect(cepSchema.safeParse("12345678").success).toBe(false);
     });
   });
 

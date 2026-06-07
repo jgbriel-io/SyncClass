@@ -74,29 +74,6 @@ export const dateRequiredSchema = z
   });
 
 /**
- * Schema para CEP (formato: 00000-000)
- * Aceita vazio ou CEP válido
- */
-const CEP_REGEX = /^\d{5}-\d{3}$/;
-
-export const cepSchema = z
-  .string()
-  .optional()
-  .refine((v) => !v || (v.length === 9 && CEP_REGEX.test(v)), {
-    message: validation.cepInvalid,
-  });
-
-/**
- * Schema para CEP obrigatório
- */
-export const cepRequiredSchema = z
-  .string()
-  .min(1, validation.cepRequired)
-  .refine((v) => v.length === 9 && CEP_REGEX.test(v), {
-    message: validation.cepInvalid,
-  });
-
-/**
  * Schema para valor monetário (formato: 0,00 ou 0.000,00)
  * Aceita vazio ou valor válido
  */
