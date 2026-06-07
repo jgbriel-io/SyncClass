@@ -75,18 +75,17 @@
 
 ### Requisitos Funcionais Adicionais (RF21-RF30)
 
-| ID   | Requisito                                               | Módulo     |
-| ---- | ------------------------------------------------------- | ---------- |
-| RF21 | Soft delete e restauração de alunos e professores       | Gestão     |
-| RF22 | Hard delete com validação de segurança (admin)          | Admin      |
-| RF23 | Gestão de faltas em aulas                               | Aulas      |
-| RF24 | Suporte a alunos estrangeiros (sem CPF obrigatório)     | Alunos     |
-| RF25 | Upload de foto de perfil                                | Usuários   |
-| RF26 | Histórico completo de aulas e pagamentos                | Aluno      |
-| RF27 | Integração com API de CEP para preenchimento automático | Alunos     |
-| RF28 | Timeline de transações financeiras                      | Financeiro |
-| RF29 | Invalidação de sessões ao desativar/deletar conta       | Auth       |
-| RF30 | Limpeza automática de dados antigos (LGPD)              | LGPD       |
+| ID   | Requisito                                           | Módulo     |
+| ---- | --------------------------------------------------- | ---------- |
+| RF21 | Soft delete e restauração de alunos e professores   | Gestão     |
+| RF22 | Hard delete com validação de segurança (admin)      | Admin      |
+| RF23 | Gestão de faltas em aulas                           | Aulas      |
+| RF24 | Suporte a alunos estrangeiros (sem CPF obrigatório) | Alunos     |
+| RF25 | Upload de foto de perfil                            | Usuários   |
+| RF26 | Histórico completo de aulas e pagamentos            | Aluno      |
+| RF28 | Timeline de transações financeiras                  | Financeiro |
+| RF29 | Invalidação de sessões ao desativar/deletar conta   | Auth       |
+| RF30 | Limpeza automática de dados antigos (LGPD)          | LGPD       |
 
 ### Requisitos Futuros (RF31-RF35)
 

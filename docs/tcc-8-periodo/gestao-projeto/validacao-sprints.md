@@ -159,7 +159,6 @@ Sprint 12 - Content Structure
 | CRUD pagamentos      | 6       | `fix: create payment`, `feat: edit payment`, `fix: new payment`   |
 | Regex valores/datas  | 10      | `feat: regex value amount`, `feat: regex date`, `fix: mask/regex` |
 | Página professores   | 2       | `feat: teatcher page`, `fix: teacher pages`                       |
-| API CEP (IBGE)       | 1       | `feat: ibge cep api`                                              |
 | Calculadora aulas    | 1       | `feat: value calculator`                                          |
 
 **Commits representativos:**
@@ -171,7 +170,6 @@ Sprint 12 - Content Structure
 2026-01-20 feat: big changes on frontend/backend
 2026-01-20 feat: teatcher page
 2026-01-21 feat: select teacher
-2026-01-23 feat: ibge cep api
 2026-01-23 feat: value calculator
 ```
 

@@ -727,33 +727,6 @@ Este documento detalha os **35 requisitos funcionais** do SyncClass. RF01-RF30 i
 
 ---
 
-### RF27: API de CEP
-
-**Descrição:** Integração com API de CEP para preenchimento automático
-
-**Módulo:** Alunos  
-**Prioridade:** Baixa  
-**Sprint:** 1
-
-**Implementação:**
-
-- Integração com API IBGE
-- Preenchimento automático: rua, bairro, cidade, estado
-- Fallback para input manual se API falhar
-- Cache de CEPs consultados (localStorage)
-- Debounce de 500ms
-
-**Arquivos:**
-
-- `src/hooks/useCepLookup.ts`
-- `src/components/students/AddressFields.tsx`
-
-**Migration:** Não requer (API externa)
-
-**Testes:** ⚠️ Manual (chamada de API)
-
----
-
 ### RF28: Timeline de Transações
 
 **Descrição:** Timeline de transações financeiras
@@ -899,20 +872,20 @@ Este documento detalha os **35 requisitos funcionais** do SyncClass. RF01-RF30 i
 
 ### Por Módulo
 
-| Módulo      | Requisitos | IDs                                              |
-| ----------- | ---------- | ------------------------------------------------ |
-| Alunos      | 5          | RF01, RF24, RF27, RF21 (parcial), RF26 (parcial) |
-| Professores | 1          | RF02                                             |
-| Aulas       | 4          | RF03, RF04, RF05, RF23                           |
-| Financeiro  | 6          | RF06, RF07, RF08, RF09, RF10, RF28               |
-| Atividades  | 3          | RF11, RF12, RF13                                 |
-| Dashboard   | 2          | RF14, RF15                                       |
-| Admin       | 2          | RF16, RF22                                       |
-| Auth        | 3          | RF17, RF18, RF29                                 |
-| Aluno       | 2          | RF19, RF26                                       |
-| LGPD        | 2          | RF20, RF30                                       |
-| Usuários    | 1          | RF25                                             |
-| Gestão      | 1          | RF21                                             |
+| Módulo      | Requisitos | IDs                                        |
+| ----------- | ---------- | ------------------------------------------ |
+| Alunos      | 4          | RF01, RF24, RF21 (parcial), RF26 (parcial) |
+| Professores | 1          | RF02                                       |
+| Aulas       | 4          | RF03, RF04, RF05, RF23                     |
+| Financeiro  | 6          | RF06, RF07, RF08, RF09, RF10, RF28         |
+| Atividades  | 3          | RF11, RF12, RF13                           |
+| Dashboard   | 2          | RF14, RF15                                 |
+| Admin       | 2          | RF16, RF22                                 |
+| Auth        | 3          | RF17, RF18, RF29                           |
+| Aluno       | 2          | RF19, RF26                                 |
+| LGPD        | 2          | RF20, RF30                                 |
+| Usuários    | 1          | RF25                                       |
+| Gestão      | 1          | RF21                                       |
 
 ### Por Prioridade
 
@@ -926,7 +899,7 @@ Este documento detalha os **35 requisitos funcionais** do SyncClass. RF01-RF30 i
 
 | Sprint    | Requisitos                                     |
 | --------- | ---------------------------------------------- |
-| Sprint 1  | RF01, RF03, RF05, RF06, RF07, RF27             |
+| Sprint 1  | RF01, RF03, RF05, RF06, RF07                   |
 | Sprint 2  | RF01, RF02, RF16                               |
 | Sprint 3  | RF17, RF19, RF21                               |
 | Sprint 4  | RF08, RF09, RF14, RF18, RF22, RF25, RF26, RF28 |
@@ -976,7 +949,6 @@ Este documento detalha os **35 requisitos funcionais** do SyncClass. RF01-RF30 i
 | RF24      | `format-phone.ts`                  | `05_cpf_removal.sql`                 | ✅               |
 | RF25      | `AvatarUpload.tsx`                 | `04_rls_and_permissions.sql`         | ⚠️ Manual        |
 | RF26      | `StudentHistory.tsx`               | —                                    | ✅               |
-| RF27      | `useCepLookup.ts`                  | —                                    | ⚠️ Manual        |
 | RF28      | `Timeline.tsx`                     | —                                    | ✅               |
 | RF29      | —                                  | `14_invalidate_sessions.sql`         | ⚠️ Via migration |
 | RF30      | `cleanup-*/index.ts`               | —                                    | ⚠️ Manual        |

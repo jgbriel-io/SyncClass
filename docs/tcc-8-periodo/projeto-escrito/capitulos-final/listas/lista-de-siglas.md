@@ -6,8 +6,6 @@ BaaS Backend as a Service
 
 CDN — Content Delivery Network
 
-CEP —
-
 CI/CD — Integração Contínua e Entrega Contínua
 
 CIEB — Centro de Inovação para a Educação Brasileira

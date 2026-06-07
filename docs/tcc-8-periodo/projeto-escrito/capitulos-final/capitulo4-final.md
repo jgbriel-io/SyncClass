@@ -62,8 +62,8 @@ O trabalho realizado pode ser dimensionado por um conjunto de métricas objetiva
 | _Migrations_ SQL                            | 70                                           |
 | Tabelas no banco                            | 11                                           |
 | Políticas RLS                               | ~54                                          |
-| Edge Functions                              | 7                                            |
-| Testes automatizados                        | 304 (em 28 arquivos)                         |
+| Edge Functions                              | 9                                            |
+| Testes automatizados                        | 301 (em 28 arquivos)                         |
 
 Fonte: O autor (2026).
 
@@ -81,13 +81,13 @@ A garantia de qualidade do SyncClass apoiou-se em três frentes complementares: 
 
 ### 4.3.1 Testes Automatizados
 
-Foram implementados 304 casos de teste automatizados, distribuídos em 28 arquivos, com a ferramenta Vitest em conjunto com a Testing Library. A cobertura abrange _hooks_ de dados, componentes de interface, utilitários de formatação e validação, e _design tokens_. Os testes contemplam operações de criação, leitura, atualização e remoção de alunos e professores, o registro de aulas com validação de sobreposição, mutações otimistas com reversão em caso de erro, a validação de formulários por esquemas Zod e o mapeamento de mensagens de erro do Supabase.
+Foram implementados 301 casos de teste automatizados, distribuídos em 28 arquivos, com a ferramenta Vitest em conjunto com a Testing Library. A cobertura abrange _hooks_ de dados, componentes de interface, utilitários de formatação e validação, e _design tokens_. Os testes contemplam operações de criação, leitura, atualização e remoção de alunos e professores, o registro de aulas com validação de sobreposição, mutações otimistas com reversão em caso de erro, a validação de formulários por esquemas Zod e o mapeamento de mensagens de erro do Supabase.
 
 Cabe registrar, como limite da estratégia, que não foram implementados testes de integração automatizados para os procedimentos remotos, as políticas de _Row Level Security_ (RLS), os gatilhos de banco e as Edge Functions, tampouco testes de ponta a ponta. Essa lacuna é discutida na seção 4.7 e retomada como limitação no Capítulo 5.
 
 ### 4.3.2 Campanha de Testes Manuais
 
-A partir da iteração 28, passou-se a conduzir uma campanha estruturada de testes manuais que percorre as 20 rotas da aplicação com 5 perfis de acesso: um administrador, dois professores (para verificar o isolamento de dados entre eles) e dois alunos vinculados a professores distintos. O roteiro de verificação totaliza 187 itens, organizados por módulo, abrangendo desde a autenticação e a proteção de rotas até os fluxos financeiros, o módulo de atividades e a validação de mensagens de retorno ao usuário. O roteiro foi ampliado ao longo das iterações 29 e 30, à medida que itens relativos a fluxos então introduzidos foram incorporados.
+A partir da iteração 28, passou-se a conduzir uma campanha estruturada de testes manuais que percorre as 20 rotas da aplicação com 5 perfis de acesso: um administrador, dois professores (para verificar o isolamento de dados entre eles) e dois alunos vinculados a professores distintos. O roteiro de verificação totaliza 175 itens, organizados por módulo, abrangendo desde a autenticação e a proteção de rotas até os fluxos financeiros, o módulo de atividades e a validação de mensagens de retorno ao usuário. O roteiro foi ampliado ao longo das iterações 29 e 30, à medida que itens relativos a fluxos então introduzidos foram incorporados.
 
 Os fluxos verificados até a data de redação incluem a autenticação e a proteção de rotas por perfil, o isolamento de dados entre professores e entre alunos, o fluxo financeiro completo (geração de cobrança, pagamento PIX, registro de comprovante, aprovação e rejeição), o módulo de atividades (criação, entrega e correção) e a responsividade em dispositivos móveis. Os itens que apresentaram comportamento incorreto foram corrigidos nas iterações subsequentes. A campanha permanece em execução: parte do roteiro ainda está sob verificação, condição declarada como limitação da estratégia de qualidade na seção 4.7 e retomada no Capítulo 5.
 
@@ -101,12 +101,12 @@ O sistema foi avaliado segundo o modelo de qualidade da ISO/IEC 25010 (2011). A 
 | :--------------- | :-------- | :-------------------------------------------------------------------------------------------- |
 | Segurança        | Alta      | Auditoria de RLS (iteração 24), JWT, limitação de taxa, sanitização e conformidade com a LGPD |
 | Confiabilidade   | Alta      | Idempotência no financeiro, _soft delete_ e registros de auditoria                            |
-| Manutenibilidade | Alta      | Componentes extensos refatorados (iterações 8 a 11); 304 testes automatizados                 |
+| Manutenibilidade | Alta      | Componentes extensos refatorados (iterações 8 a 11); 301 testes automatizados                 |
 | Usabilidade      | Alta      | Interface _mobile-first_, _design tokens_, estados vazios e de carregamento                   |
 
 Fonte: O autor (2026).
 
-A avaliação foi conduzida pelo próprio desenvolvedor, com base em lista de verificação interna rastreada por iteração, e está, portanto, sujeita a viés de confirmação. Essa condição é declarada explicitamente como limitação da avaliação e retomada na seção 4.7. A característica de manutenibilidade foi classificada como alta após a conclusão das refatorações das iterações 8 a 11, que fragmentaram componentes extensos e separaram os _hooks_ de serviço; a cobertura de 304 testes automatizados ampara essa classificação.
+A avaliação foi conduzida pelo próprio desenvolvedor, com base em lista de verificação interna rastreada por iteração, e está, portanto, sujeita a viés de confirmação. Essa condição é declarada explicitamente como limitação da avaliação e retomada na seção 4.7. A característica de manutenibilidade foi classificada como alta após a conclusão das refatorações das iterações 8 a 11, que fragmentaram componentes extensos e separaram os _hooks_ de serviço; a cobertura de 301 testes automatizados ampara essa classificação.
 
 ## 4.4 Hipótese H1 — Viabilidade de Prazo
 

@@ -174,10 +174,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Timeline de transações exibe histórico
 - [x] Cobrança `pago` com `payment_provider='abacate_pay'` → botão "Reembolso" visível
 - [x] Botão "Reembolso" (AbacatePay) → dialog exibe campo motivo + botão "Reembolsar via PIX"
-- [ ] Confirmar reembolso AbacatePay → toast "Reembolso PIX processado com sucesso!", status → `extornado`
-- [x] Cobrança `pago` sem `payment_provider` (manual/legado) → dialog exibe instrução manual + botão "Confirmar reembolso"
-- [x] Confirmar reembolso manual → toast "Reembolso registrado com sucesso!", status → `extornado`
-- [ ] Cobrança com aula vinculada (`attendance != null`) → aviso destrutivo extra exibido no dialog de reembolso
+- [x] Confirmar reembolso AbacatePay → toast "Reembolso PIX processado com sucesso!", status → `extornado`
+- [x] Cobrança com aula vinculada (`attendance != null`) → aviso destrutivo extra exibido no dialog de reembolso
 
 ### Settings — Pagamentos (`/settings` ou `/teacher/settings`)
 
@@ -233,7 +231,6 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Cobrança AbacatePay: segundo acesso com QR ainda válido → mesmo QR retornado (cache)
 - [x] Cobrança AbacatePay: após pagamento real → tela "Pagamento confirmado!" exibida automaticamente (realtime)
 - [x] Cobrança AbacatePay: QR expirado → formulário de CPF exibido novamente
-- [x] Cobrança manual/legada (`payment_provider != 'abacate_pay'`) → mensagem informativa exibida, sem formulário CPF
 - [x] Professor sem API key configurada → mensagem de erro amigável no checkout
 - [x] ID de outro aluno → acesso bloqueado (RLS)
 
@@ -272,7 +269,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Upload de Arquivos
 
-- [ ] Foto de perfil — upload pelo próprio usuário via Settings → Perfil (professor em `/teacher`, aluno em `/student`; não é feito pelo professor na tela de gestão de alunos)
+- [x] Foto de perfil — upload pelo próprio usuário via Settings → Perfil (professor em `/teacher`, aluno em `/student`; não é feito pelo professor na tela de gestão de alunos)
 - [x] Arquivo de atividade — upload pelo aluno
 - [x] Arquivo de correção — upload pelo professor
 
@@ -291,8 +288,6 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Integrações e Validações
 
-- [ ] **CEP API** — criar aluno, digitar CEP válido → endereço auto-preenchido
-- [ ] **CEP inválido** → campo sem preenchimento automático, sem crash
 - [ ] **Email whitelist** — convidar usuário com domínio bloqueado (ex: `@tempmail.com`) → erro exibido
 - [ ] **PIX key masking** — chave PIX do professor exibida mascarada (não em texto claro)
 - [ ] **Idempotência** — tentar criar cobrança duplicada → sistema não duplica
@@ -309,69 +304,6 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Lista com 20+ alunos → paginação funciona
 - [x] Lista com 50+ aulas → paginação funciona, sem degradação visível
 - [x] Financeiro com 30+ cobranças → filtros e paginação funcionam
-
----
-
-## 6. Validação de Toasts (Sprint 29 — refactor centralização)
-
-Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), validar que cada ação exibe o toast correto na UI.
-
-### Alunos
-
-- [ ] Criar aluno → "Aluno cadastrado com sucesso!"
-- [ ] Editar aluno → "Aluno atualizado com sucesso!"
-- [ ] Arquivar aluno → "Aluno arquivado e dados anonimizados (LGPD)"
-- [ ] Hard delete aluno → "Aluno excluído definitivamente."
-- [ ] Restaurar aluno → "Aluno restaurado com sucesso!"
-- [ ] Alterar dia de pagamento → "Dia de pagamento atualizado com sucesso!"
-
-### Professores
-
-- [ ] Criar professor → "Professor cadastrado com sucesso!"
-- [ ] Editar professor → "Professor atualizado com sucesso!"
-- [ ] Arquivar professor → "Professor arquivado com sucesso!"
-- [ ] Editar chave PIX → "Chave PIX atualizada com sucesso!"
-- [ ] Hard delete professor → "Professor excluído definitivamente."
-
-### Aulas
-
-- [ ] Registrar aula sem cobrança → "Aula registrada com sucesso!"
-- [ ] Registrar aula com cobrança → "Aula e cobrança registradas com sucesso!"
-- [ ] Editar aula → "Aula atualizada com sucesso!"
-- [ ] Deletar aula → "Registro removido com sucesso!"
-
-### Financeiro
-
-- [ ] Criar cobrança → "Cobrança criada com sucesso!"
-- [ ] Editar cobrança → "Cobrança atualizada com sucesso!"
-- [ ] Excluir cobrança → "Cobrança excluída com sucesso!"
-- [ ] Reembolso via AbacatePay → "Reembolso PIX processado com sucesso!"
-- [ ] Reembolso manual → "Reembolso registrado com sucesso!"
-
-### Atividades
-
-- [ ] Enviar atividade → "Atividade enviada com sucesso!"
-- [ ] Editar atividade → "Atividade atualizada com sucesso!"
-- [ ] Enviar correção → "Correção enviada com sucesso!"
-- [ ] Excluir atividade → "Atividade excluída com sucesso!"
-
-### Perfil / Usuários
-
-- [ ] Alterar foto de perfil → "Foto de perfil atualizada."
-- [ ] Alterar nome (settings) → "Nome atualizado com sucesso!"
-- [ ] Alterar email (settings) → "Email atualizado com sucesso!"
-- [ ] Admin alterar role de usuário → "Usuário atualizado com sucesso!"
-- [ ] Admin convidar professor → "Professor e conta de acesso criados com sucesso!"
-- [ ] Admin reset senha de usuário → "Senha redefinida com sucesso. O usuário precisará fazer login novamente."
-- [ ] Vincular usuário a aluno → "Usuário vinculado ao aluno com sucesso."
-- [ ] Desvincular usuário → "Vínculo entre usuário e aluno removido."
-
-### Pagamentos AbacatePay (Settings)
-
-- [ ] Salvar API key → "Configuração salva com sucesso!"
-- [ ] Copiar webhook URL → toast de confirmação de cópia
-
----
 
 ## Resumo de Itens
 

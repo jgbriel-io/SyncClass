@@ -46,7 +46,7 @@ Plataforma SaaS para professores autônomos de inglês. Substitui planilhas e co
 
 ## Funcionalidades Implementadas
 
-**Alunos:** CRUD completo, validação CPF/telefone, suporte a estrangeiros, upload de foto, soft delete + restauração, API de CEP com autopreenchimento.
+**Alunos:** CRUD completo, validação CPF/telefone, suporte a estrangeiros, upload de foto, soft delete + restauração.
 
 **Aulas:** registro individual e pacotes, controle de presença, notas e feedback, atualização em tempo real (Supabase Realtime).
 

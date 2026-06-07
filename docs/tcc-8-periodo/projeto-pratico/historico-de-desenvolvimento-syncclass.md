@@ -51,8 +51,6 @@ tags:
 
 - Organização das relações financeiras e vinculação de aulas/cobranças.
 - CRUD de pagamentos e regex para tratamento de valores e datas.
-- Integração com API IBGE para preenchimento automático de endereços.
-- **Commit de destaque:** `86475d8` - _feat: ibge cep api_.
 
 ### Sprint 2 — Autenticação & Usuários
 

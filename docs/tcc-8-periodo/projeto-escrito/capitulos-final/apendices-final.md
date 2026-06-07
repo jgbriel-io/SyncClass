@@ -55,15 +55,15 @@ Os apêndices reúnem o material detalhado de requisitos, modelagem e rastreabil
 Os requisitos funcionais descrevem as funcionalidades que o sistema oferece aos
 seus usuários. Trinta requisitos funcionais foram implementados ao longo
 das iterações de desenvolvimento, divididos em requisitos principais
-(RF01 a RF20) e requisitos adicionais (RF21 a RF31, à exceção do RF27). Sete
+(RF01 a RF20) e requisitos adicionais (RF21 a RF26, RF28 a RF31, RF36 e RF37). Quatro
 requisitos foram identificados como desejáveis, porém mantidos fora do escopo do
-MVP e registrados como trabalhos futuros (RF27 e RF32 a RF37).
+MVP e registrados como trabalhos futuros (RF32 a RF35).
 
 ### B.1 Requisitos Funcionais Implementados
 
-Os 30 requisitos funcionais implementados (20 principais e 10 adicionais, com lacuna no RF27, transferido para os trabalhos futuros) constam da Quadro B.1.
+Os 32 requisitos funcionais implementados constam da Quadro B.1.
 
-**Quadro B.1 — Requisitos funcionais implementados (RF01 a RF31, exceto RF27)**
+**Quadro B.1 — Requisitos funcionais implementados (RF01 a RF26, RF28 a RF31, RF36 e RF37)**
 
 | ID   | Requisito                                                                   | Módulo      | Prioridade | Iteração |
 | ---- | --------------------------------------------------------------------------- | ----------- | ---------- | -------- |
@@ -97,26 +97,29 @@ Os 30 requisitos funcionais implementados (20 principais e 10 adicionais, com la
 | RF29 | Invalidação de sessões ao desativar/deletar conta                           | Auth        | Alta       | 7        |
 | RF30 | Limpeza automática de dados antigos (LGPD)                                  | LGPD        | Média      | 9        |
 | RF31 | Gateway de pagamento real via PIX (AbacatePay)                              | Financeiro  | Média      | 30       |
+| RF36 | Exportação de dados pessoais (portabilidade LGPD)                           | LGPD        | Média      | 20       |
+| RF37 | Reembolso de pagamento PIX (AbacatePay)                                     | Financeiro  | Baixa      | 32       |
 
 > **Nota sobre RF18:** o requisito incluiu, em versão inicial, a troca obrigatória de senha no primeiro acesso, recurso posteriormente removido para simplificar o _onboarding_. Mantiveram-se o reset _self-service_ e o reset realizado pelo administrador.
 >
 > **Nota sobre RF31:** a integração com o gateway de pagamento real via PIX (AbacatePay) foi implementada na iteração 30, integrando o escopo entregue do MVP. Esse requisito não consta entre os trabalhos futuros.
+>
+> **Nota sobre RF36:** a exportação de dados pessoais foi implementada na iteração 20; a Edge Function correspondente foi implantada em produção na iteração 32.
+>
+> **Nota sobre RF37:** o reembolso de pagamento PIX via AbacatePay foi implementado na iteração 32, após a conclusão do escopo inicial do MVP.
 
 ### B.2 Requisitos Funcionais Planejados (Trabalhos Futuros)
 
 Os requisitos a seguir foram identificados durante a elicitação e a análise comparativa, porém não integram o escopo do MVP. Permanecem registrados para orientar a evolução futura da plataforma.
 
-**Quadro B.2 — Requisitos funcionais planejados (RF27 e RF32 a RF37)**
+**Quadro B.2 — Requisitos funcionais planejados (RF32 a RF35)**
 
-| ID   | Requisito                                                           | Módulo       | Prioridade | Justificativa                                                                      |
-| ---- | ------------------------------------------------------------------- | ------------ | ---------- | ---------------------------------------------------------------------------------- |
-| RF27 | Integração com API de CEP para preenchimento automático de endereço | Alunos       | Baixa      | Não implementada no MVP; o preenchimento de endereço permaneceu manual             |
-| RF32 | Sistema de notificações (email, push, in-app)                       | Notificações | Média      | Requer infraestrutura de mensageria não prevista                                   |
-| RF33 | Exportação de relatórios em PDF                                     | Relatórios   | Média      | Geração server-side fora do escopo do MVP                                          |
-| RF34 | Integração com Google Calendar                                      | Integrações  | Baixa      | Dependência de OAuth externo; baixa prioridade                                     |
-| RF35 | Sistema de gamificação (badges, conquistas)                         | Gamificação  | Baixa      | Escopo expansivo; planejado para versão futura                                     |
-| RF36 | Exportação de dados pessoais (portabilidade LGPD)                   | LGPD         | Média      | _Edge Function_ implementada, porém ainda não implantada em produção               |
-| RF37 | Reembolso de pagamento PIX (AbacatePay)                             | Financeiro   | Baixa      | Interface prevista no frontend; funcionalidade de reembolso ainda não implementada |
+| ID   | Requisito                                     | Módulo       | Prioridade | Justificativa                                    |
+| ---- | --------------------------------------------- | ------------ | ---------- | ------------------------------------------------ |
+| RF32 | Sistema de notificações (email, push, in-app) | Notificações | Média      | Requer infraestrutura de mensageria não prevista |
+| RF33 | Exportação de relatórios em PDF               | Relatórios   | Média      | Geração server-side fora do escopo do MVP        |
+| RF34 | Integração com Google Calendar                | Integrações  | Baixa      | Dependência de OAuth externo; baixa prioridade   |
+| RF35 | Sistema de gamificação (badges, conquistas)   | Gamificação  | Baixa      | Escopo expansivo; planejado para versão futura   |
 
 ---
 

@@ -12,8 +12,8 @@
 | Quadro 3.5 | Ferramentas e tecnologias empregadas                              | XX   |
 | Quadro 4.1 | Avaliação das características priorizadas (ISO/IEC 25010)         | XX   |
 | Quadro 4.2 | Exemplos rastreáveis de aceleração por IA (H3)                    | XX   |
-| Quadro B.1 | Requisitos funcionais implementados (RF01 a RF31, exceto RF27)    | XX   |
-| Quadro B.2 | Requisitos funcionais planejados (RF27 e RF32 a RF37)             | XX   |
+| Quadro B.1 | Requisitos funcionais implementados (RF01 a RF26 e RF28 a RF31)   | XX   |
+| Quadro B.2 | Requisitos funcionais planejados (RF32 a RF37)                    | XX   |
 | Quadro C.1 | Requisitos não funcionais (RNF01 a RNF36)                         | XX   |
 | Quadro C.2 | Regras de negócio (RN-001 a RN-059)                               | XX   |
 | Quadro D.1 | Demais casos de uso por ator (UC03 a UC26)                        | XX   |

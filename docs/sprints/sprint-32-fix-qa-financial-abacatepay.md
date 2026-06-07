@@ -17,14 +17,12 @@ Continuação da Sprint 28 (QA manual). Sprint 31 cobriu fluxos de teachers/admi
 
 ### 1. Teacher Financial (`/teacher/financial`)
 
-- [ ] Cancelar cobrança → status muda para `cancelado`, toast correto
-- [ ] Abonar cobrança → status muda para `abonado`, toast correto
-- [ ] Cobrança `pago` com `payment_provider='abacate_pay'` → botão "Reembolso" visível
-- [ ] Botão "Reembolso" (AbacatePay) → dialog exibe campo motivo + botão "Reembolsar via PIX"
-- [ ] Confirmar reembolso AbacatePay → toast "Reembolso PIX processado com sucesso!", status → `extornado`
-- [ ] Cobrança com aula vinculada (`attendance != null`) → aviso destrutivo extra exibido no dialog de reembolso
-- [ ] Cobrança `pago` sem `payment_provider` (manual/legado) → dialog exibe instrução manual + botão "Confirmar reembolso"
-- [ ] Confirmar reembolso manual → toast "Reembolso registrado com sucesso!", status → `extornado`
+- [x] Cancelar cobrança → status muda para `cancelado`, toast correto
+- [x] Abonar cobrança → status muda para `abonado`, toast correto
+- [x] Cobrança `pago` com `payment_provider='abacate_pay'` → botão "Reembolso" visível
+- [x] Botão "Reembolso" (AbacatePay) → dialog exibe campo motivo + botão "Reembolsar via PIX"
+- [x] Confirmar reembolso AbacatePay → toast "Reembolso PIX processado com sucesso!", status → `extornado`
+- [x] Cobrança com aula vinculada (`attendance != null`) → aviso destrutivo extra exibido no dialog de reembolso
 
 ### 2. Teacher Settings — Pagamentos (`/teacher/settings` ou `/settings`)
 
@@ -37,31 +35,29 @@ Continuação da Sprint 28 (QA manual). Sprint 31 cobriu fluxos de teachers/admi
 
 ### 3. Student Financial (`/student/financial`)
 
-- [ ] Lista cobranças do aluno logado (não vê cobranças de outros alunos)
-- [ ] Status de cada cobrança exibido corretamente (pendente / pago / atrasado / abonado / extornado / cancelado)
-- [ ] Cobrança `pendente` com `payment_provider='abacate_pay'` → botão "Pagar via PIX" leva para `/checkout/:id`
+- [x] Lista cobranças do aluno logado (não vê cobranças de outros alunos)
+- [x] Status de cada cobrança exibido corretamente (pendente / pago / atrasado / abonado / extornado / cancelado)
+- [x] Cobrança `pendente` com `payment_provider='abacate_pay'` → botão "Pagar via PIX" leva para `/checkout/:id`
 
 ### 4. Checkout (`/student/financial/checkout/:recordId`)
 
-- [ ] Carrega cobrança específica pelo ID
+- [x] Carrega cobrança específica pelo ID
 - [x] Cobrança AbacatePay: formulário de CPF exibido
 - [x] Cobrança AbacatePay: informar CPF + clicar "Gerar QR Code" → QR Code PIX renderiza
-- [ ] Cobrança AbacatePay: segundo acesso com QR ainda válido → mesmo QR retornado (cache)
+- [x] Cobrança AbacatePay: segundo acesso com QR ainda válido → mesmo QR retornado (cache)
 - [x] Cobrança AbacatePay: após pagamento real → tela "Pagamento confirmado!" exibida automaticamente (realtime)
-- [ ] Cobrança AbacatePay: QR expirado → formulário de CPF exibido novamente
-- [ ] Cobrança manual/legada (`payment_provider != 'abacate_pay'`) → mensagem informativa exibida, sem formulário CPF
-- [ ] Professor sem API key configurada → mensagem de erro amigável no checkout
-- [ ] ID de outro aluno → acesso bloqueado (RLS)
+- [x] Cobrança AbacatePay: QR expirado → formulário de CPF exibido novamente
+- [x] Professor sem API key configurada → mensagem de erro amigável no checkout
+- [x] ID de outro aluno → acesso bloqueado (RLS)
 
 ### 5. Toasts de Pagamento (Validação Sprint 29/30)
 
-- [ ] Cancelar cobrança → toast correto
-- [ ] Abonar cobrança → toast correto
+- [x] Cancelar cobrança → toast correto
+- [x] Abonar cobrança → toast correto
 - [x] Criar cobrança → "Cobrança criada com sucesso!"
-- [ ] Editar cobrança → "Cobrança atualizada com sucesso!"
+- [x] Editar cobrança → "Cobrança atualizada com sucesso!"
 - ~~Excluir cobrança → removido (ver BUG-032-009)~~
-- [ ] Reembolso via AbacatePay → "Reembolso PIX processado com sucesso!"
-- [ ] Reembolso manual → "Reembolso registrado com sucesso!"
+- [x] Reembolso via AbacatePay → "Reembolso PIX processado com sucesso!"
 - [x] Salvar API key → "Configuração salva com sucesso!"
 - [x] Copiar webhook URL → toast de confirmação de cópia
 
@@ -170,6 +166,29 @@ Todos os itens testados. Bugs críticos (🔴) corrigidos antes de marcar ✅. B
 - **Descrição:** Nav bottom com 5 links (`/student/...`) usava `justify-around` com `px-4` — na largura 375px o 5º ícone vazava para fora do container ou ficava cortado.
 - **Fix:** `src/components/layout/StudentLayout.tsx` — removido `justify-around` do container; cada link recebeu `flex-1 min-w-0 py-2 text-[10px]` (sem `px-4`); label "Configurações" abreviado para "Config." para evitar quebra de linha.
 - **Status:** ✅ Corrigido
+
+### [BUG-032-013] Padding inferior ausente nas abas Perfil, Senha e Preferências
+
+- **Rota:** `/settings/perfil`, `/settings/senha`, `/settings/preferencias`
+- **Severidade:** 🟢 Baixa (UX — conteúdo colado na borda inferior do card)
+- **Descrição:** As três abas usavam `pt-4` no div raiz, sem `pb-4`. A aba Pagamentos já tinha `py-4` correto. O card de configurações ficava sem espaço entre o último elemento e a borda inferior.
+- **Fix:** `SettingsPerfilTab.tsx`, `SettingsSenhaTab.tsx`, `SettingsPreferenciasTab.tsx` — `pt-4` → `py-4` no div raiz de cada componente.
+- **Status:** ✅ Corrigido
+
+### [IMP-032-002] Deploy da Edge Function `export-user-data` (RF36 — LGPD)
+
+- **Tipo:** Melhoria / Débito técnico
+- **Descrição:** A Edge Function `export-user-data` existia no repositório desde a iteração 20 (commit `feat(sprint-20): LGPD data export`) mas nunca havia sido implantada em produção. O botão de exportação de dados está presente em `/settings/perfil` para todos os usuários. A função exporta perfil, registros de aulas, financeiro e atividades como JSON (`Content-Disposition: attachment`), com rate limit de 3 requisições/hora via `check_rate_limit`.
+- **Fix:** Deploy via Supabase MCP — versão 1, `verify_jwt: true`.
+- **Status:** ✅ Implementado
+
+### [CHO-032-001] Remoção de código morto de validação de CEP
+
+- **Tipo:** Chore
+- **Descrição:** `cepSchema`, `cepRequiredSchema` e `CEP_REGEX` existiam em `src/lib/validation/schemas.ts` desde o scaffolding inicial, mas nunca foram conectados a nenhum formulário. O app coleta apenas país e estado, não endereço completo. Três testes associados também removidos (304 → 301 testes).
+- **Fix:** `src/lib/validation/schemas.ts`, `src/lib/validation/schemas.test.ts`, `src/content/validation.ts` — schemas, strings e testes removidos.
+- **Commit:** `chore: remove unused cepSchema and CEP validation strings`
+- **Status:** ✅ Removido
 
 ### [IMP-032-001] Paginação no histórico do aluno (`StudentHistory`)
 

@@ -59,15 +59,15 @@ O TCC adota estrutura de 5 capítulos + cronograma + apêndices:
 
 ## 3. Artefatos de Código
 
-| Grandeza                                                      | Valor   | Fonte                                        |
-| ------------------------------------------------------------- | ------- | -------------------------------------------- |
-| Arquivos TypeScript/TSX (excl. testes, .d.ts e tipos gerados) | **329** | `find src -name "*.tsx" -o -name "*.ts"`     |
-| Componentes React (\*.tsx excl. testes)                       | **181** | `find src/components -name "*.tsx"`          |
-| Hooks customizados (*.ts em src/hooks, incl. *Service.ts)     | **37**  | `find src/hooks -name "*.ts"`                |
-| Migrations SQL                                                | **70**  | `ls supabase/migrations/*.sql \| wc -l`      |
-| Requisitos Funcionais implementados                           | **30**  | RF01–RF31 exceto RF27 (CEP não implementado) |
-| RF planejados / trabalhos futuros                             | **7**   | RF27, RF32–RF37                              |
-| Testes automatizados                                          | **304** | `npm run test` — 2026-06-03                  |
+| Grandeza                                                      | Valor   | Fonte                                    |
+| ------------------------------------------------------------- | ------- | ---------------------------------------- |
+| Arquivos TypeScript/TSX (excl. testes, .d.ts e tipos gerados) | **329** | `find src -name "*.tsx" -o -name "*.ts"` |
+| Componentes React (\*.tsx excl. testes)                       | **181** | `find src/components -name "*.tsx"`      |
+| Hooks customizados (*.ts em src/hooks, incl. *Service.ts)     | **37**  | `find src/hooks -name "*.ts"`            |
+| Migrations SQL                                                | **70**  | `ls supabase/migrations/*.sql \| wc -l`  |
+| Requisitos Funcionais implementados                           | **32**  | RF01–RF26, RF28–RF31, RF36, RF37         |
+| RF planejados / trabalhos futuros                             | **4**   | RF32–RF35                                |
+| Testes automatizados                                          | **301** | `npm run test` — 2026-06-07              |
 
 | Linhas de código (src) | **~50.000** | `find src -name "*.ts" -o -name "*.tsx" \| grep -v "test\|\.d\.ts\|integrations/supabase/types" \| xargs wc -l` |
 
