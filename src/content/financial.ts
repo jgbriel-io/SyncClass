@@ -53,6 +53,7 @@ export const financial = {
     finalized: "Finalizado",
     edit: "Editar",
     delete: "Excluir",
+    cancelCharge: "Cancelar cobrança",
     viewHistory: "Ver histórico de pagamento",
     moreOptions: "Mais opções",
     chargeDone: "Cobrança finalizada",

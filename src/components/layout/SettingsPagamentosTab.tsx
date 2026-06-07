@@ -44,7 +44,11 @@ export function SettingsPagamentosTab({
 
   const handleSave = () => {
     updateConfig.mutate(
-      { teacherId, apiKey: apiKey.trim() || null },
+      {
+        teacherId,
+        apiKey: apiKey.trim() || null,
+        existingWebhookSecret: webhookSecret,
+      },
       { onSuccess: () => setEditing(false) }
     );
   };

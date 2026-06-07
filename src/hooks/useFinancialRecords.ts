@@ -234,7 +234,7 @@ async function updateFinancialStatusFn({
   status,
 }: {
   id: string;
-  status: "abonado" | "extornado";
+  status: "abonado" | "extornado" | "cancelado";
 }) {
   const { data, error } = await supabase
     .from("financial_records")
@@ -413,7 +413,9 @@ export function useUpdateFinancialStatus() {
       const message =
         variables.status === "abonado"
           ? "Falta abonada (não cobrada)"
-          : "Pagamento extornado";
+          : variables.status === "cancelado"
+            ? "Cobrança cancelada com sucesso."
+            : "Pagamento extornado";
       toast.success(message);
     },
     onError: (error) => {
