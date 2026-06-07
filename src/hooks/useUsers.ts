@@ -98,7 +98,10 @@ export function useUsers() {
           .order("created_at", { ascending: false })
           .limit(1000),
         supabase.from("students").select("*").limit(1000),
-        supabase.from("teachers").select("*").limit(1000),
+        supabase
+          .from("teachers")
+          .select("id, name, email, phone, status")
+          .limit(1000),
       ]);
 
       if (profilesError) throw profilesError;
@@ -234,7 +237,7 @@ export function useUsersPaginated(
       if (teacherIds.length > 0) {
         const { data: teachersData, error: teachersError } = await supabase
           .from("teachers")
-          .select("*")
+          .select("id, name, email, phone, status")
           .in("id", teacherIds)
           .eq("is_deleted", false);
 
