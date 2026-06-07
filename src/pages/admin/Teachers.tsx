@@ -15,7 +15,6 @@ import { TeacherPasswordDialog } from "@/components/teachers/TeacherPasswordDial
 import { TeacherStatusDialog } from "@/components/teachers/TeacherStatusDialog";
 import { TeacherResetPasswordDialog } from "@/components/teachers/TeacherResetPasswordDialog";
 import { TeacherHardDeleteDialog } from "@/components/teachers/TeacherHardDeleteDialog";
-import { common } from "@/content";
 import {
   useTeachers,
   useTeachersPaginated,
@@ -75,8 +74,8 @@ export default function TeachersPage() {
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [passwordDialogSource, setPasswordDialogSource] = useState<
-    "create" | "reset"
-  >("create");
+    "teacher-create" | "reset"
+  >("teacher-create");
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [teacherToResetPassword, setTeacherToResetPassword] =
     useState<Teacher | null>(null);
@@ -131,52 +130,28 @@ export default function TeachersPage() {
   );
 
   const handleCreateOrUpdate = (data: TeacherInsert) => {
-    const run = async () => {
-      const normalizedEmail = data.email?.trim().toLowerCase();
-
-      if (!selectedTeacher && normalizedEmail) {
-        const { supabase } = await import("@/integrations/supabase/client");
-        const { data: existingProfile, error: profileError } = await supabase
-          .from("profiles")
-          .select("id")
-          .ilike("email", normalizedEmail)
-          .maybeSingle();
-
-        if (profileError) {
-          toast.error(common.errors.validateEmail);
-          return;
-        }
-        if (existingProfile) {
-          toast.error(common.errors.duplicateEmail);
-          return;
-        }
-      }
-
-      if (selectedTeacher) {
-        updateTeacher.mutate(
-          { id: selectedTeacher.id, ...data },
-          {
-            onSuccess: () => {
-              setIsFormOpen(false);
-              setSelectedTeacher(null);
-            },
-          }
-        );
-      } else {
-        inviteTeacher.mutate(data, {
-          onSuccess: (result) => {
+    if (selectedTeacher) {
+      updateTeacher.mutate(
+        { id: selectedTeacher.id, ...data },
+        {
+          onSuccess: () => {
             setIsFormOpen(false);
-            if (result?.password) {
-              setGeneratedPassword(result.password);
-              setPasswordDialogSource("create");
-              setPasswordDialogOpen(true);
-            }
+            setSelectedTeacher(null);
           },
-        });
-      }
-    };
-
-    void run();
+        }
+      );
+    } else {
+      inviteTeacher.mutate(data, {
+        onSuccess: (result) => {
+          setIsFormOpen(false);
+          if (result?.password) {
+            setGeneratedPassword(result.password);
+            setPasswordDialogSource("teacher-create");
+            setPasswordDialogOpen(true);
+          }
+        },
+      });
+    }
   };
 
   return (
