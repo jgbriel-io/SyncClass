@@ -61,7 +61,11 @@ serve(async (req) => {
     console.error("webhook_processing_log insert error:", logError.message);
   }
 
-  if (body.event === "billing.paid" || body.event === "pixQrCode.paid") {
+  if (
+    body.event === "billing.paid" ||
+    body.event === "pixQrCode.paid" ||
+    body.event === "transparent.paid"
+  ) {
     const billingId: string | undefined =
       body.data?.pixQrCode?.id || body.data?.id;
 

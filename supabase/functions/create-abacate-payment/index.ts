@@ -116,20 +116,23 @@ serve(async (req) => {
       return json({ error: "Erro ao processar credenciais. Tente novamente." }, 500);
     }
 
-    const abacateRes = await fetch("https://api.abacatepay.com/v1/pixQrCode/create", {
+    const abacateRes = await fetch("https://api.abacatepay.com/v2/transparents/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${decryptedKey}`,
       },
       body: JSON.stringify({
-        amount: Math.round(Number(record.amount) * 100),
-        description: record.description || "Aula de inglês",
-        customer: {
-          name: profile.full_name || user.email,
-          email: user.email || profile.email,
-          taxId: cpfClean,
-          cellphone: cellphone ? cellphone.replace(/\D/g, "") : "",
+        method: "PIX",
+        data: {
+          amount: Math.round(Number(record.amount) * 100),
+          description: record.description || "Aula de inglês",
+          customer: {
+            name: profile.full_name || user.email,
+            email: user.email || profile.email,
+            taxId: cpfClean,
+            cellphone: cellphone ? cellphone.replace(/\D/g, "") : "",
+          },
         },
       }),
     });
