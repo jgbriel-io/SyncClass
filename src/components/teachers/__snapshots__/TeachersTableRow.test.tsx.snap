@@ -28,10 +28,10 @@ exports[`TeachersTableRow - Snapshot > should render teacher row - inactive 1`] 
             class="flex items-center gap-4 overflow-hidden"
           >
             <div
-              class="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0"
+              class="rounded-full bg-accent flex items-center justify-center flex-shrink-0 h-9 w-9 text-xs"
             >
               <span
-                class="text-xs font-medium text-accent-foreground"
+                class="font-medium text-accent-foreground"
               >
                 P
               </span>
@@ -223,10 +223,10 @@ exports[`TeachersTableRow - Snapshot > should render teacher row with centralize
             class="flex items-center gap-4 overflow-hidden"
           >
             <div
-              class="h-9 w-9 rounded-full bg-accent flex items-center justify-center flex-shrink-0"
+              class="rounded-full bg-accent flex items-center justify-center flex-shrink-0 h-9 w-9 text-xs"
             >
               <span
-                class="text-xs font-medium text-accent-foreground"
+                class="font-medium text-accent-foreground"
               >
                 P
               </span>

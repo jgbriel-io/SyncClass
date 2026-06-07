@@ -31,7 +31,7 @@ export function SettingsSenhaTab() {
   };
 
   return (
-    <div className="space-y-4 pt-4">
+    <div className="space-y-4 py-4">
       <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
         <p className="text-sm text-amber-800 dark:text-amber-200">
           {s.sessionWarning}

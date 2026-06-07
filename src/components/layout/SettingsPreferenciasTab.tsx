@@ -11,7 +11,7 @@ import {
 
 export function SettingsPreferenciasTab() {
   return (
-    <div className="space-y-4 pt-4">
+    <div className="space-y-4 py-4">
       <p className="text-sm text-muted-foreground">
         {layout.settings.preferences.comingSoon}
       </p>

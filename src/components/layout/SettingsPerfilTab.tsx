@@ -120,7 +120,7 @@ export function SettingsPerfilTab({
   };
 
   return (
-    <div className="space-y-4 pt-4">
+    <div className="space-y-4 py-4">
       {/* Avatar */}
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
         <Avatar className="h-20 w-20">
