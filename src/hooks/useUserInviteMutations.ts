@@ -5,6 +5,17 @@ import { toast } from "sonner";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { users as usersContent } from "@/content";
 import { generateRandomPassword, invokeInviteUser } from "./inviteUserService";
+import { supabase } from "@/integrations/supabase/client";
+
+function sendWelcomeEmail(email: string) {
+  supabase.auth
+    .resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/redefinir-senha`,
+    })
+    .catch(() => {
+      /* fire-and-forget — invite succeeded even if email fails */
+    });
+}
 
 type StudentInsert = TablesInsert<"students">;
 type TeacherInsert = TablesInsert<"teachers">;
@@ -25,6 +36,7 @@ export function useInviteStudent() {
         teacher_id: data.teacher_id ?? undefined,
         studentData: data as Partial<StudentInsert>,
       });
+      sendWelcomeEmail(email);
       return result;
     },
     onSuccess: () => {
@@ -51,6 +63,7 @@ export function useInviteTeacher() {
         role: "teacher",
         teacherData: data as Partial<TeacherInsert>,
       });
+      sendWelcomeEmail(email);
       return result;
     },
     onSuccess: () => {
