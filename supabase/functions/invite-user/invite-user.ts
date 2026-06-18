@@ -230,33 +230,45 @@ serve(async (req) => {
     if (err) return jsonResponse({ error: err }, 400);
   }
 
-  log("Creating auth user", { email: normalizedEmail, role });
+  log("Inviting auth user", { email: normalizedEmail, role });
 
-  const { data: authUser, error: createError } =
-    await supabaseAdmin.auth.admin.createUser({
-      email: normalizedEmail,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name, temporary_password: password },
+  const { data: inviteData, error: inviteError } =
+    await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail, {
+      data: { full_name },
     });
 
-  if (createError) {
-    const msg = createError.message ?? "";
+  if (inviteError) {
+    const msg = inviteError.message ?? "";
     const friendly =
       msg.toLowerCase().includes("already") ||
       msg.toLowerCase().includes("already been registered")
         ? "Email já cadastrado"
         : msg;
-    log("Auth createUser failed", { error: createError.message });
+    log("Auth inviteUserByEmail failed", { error: inviteError.message });
     return jsonResponse({ error: friendly }, 400);
   }
 
-  if (!authUser.user) {
-    log("Auth user null after create");
+  if (!inviteData.user) {
+    log("Auth user null after invite");
     return jsonResponse({ error: "Falha ao criar usuário" }, 500);
   }
 
-  const userId = authUser.user.id;
+  const userId = inviteData.user.id;
+
+  const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+    userId,
+    {
+      password,
+      email_confirm: true,
+      user_metadata: { full_name, temporary_password: password },
+    }
+  );
+
+  if (updateError) {
+    log("Auth updateUser failed, rolling back", { error: updateError.message });
+    await rollbackAuthUser(supabaseAdmin, userId);
+    return jsonResponse({ error: updateError.message }, 500);
+  }
 
   try {
     await waitForProfile(userId, supabaseAdmin);

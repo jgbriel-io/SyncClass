@@ -6,16 +6,6 @@ import { toast } from "sonner";
 import { common } from "@/content";
 import { invokeInviteUser } from "./inviteUserService";
 
-function sendWelcomeEmail(email: string) {
-  supabase.auth
-    .resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/redefinir-senha`,
-    })
-    .catch(() => {
-      /* fire-and-forget */
-    });
-}
-
 interface CreateAuthUserParams {
   studentId?: string;
   teacherId?: string;
@@ -90,7 +80,6 @@ export function useCreateAuthUserForStudent() {
         role: "student",
         studentId,
       });
-      sendWelcomeEmail(email.trim().toLowerCase());
       return {
         user: { id: result.userId } as { id: string },
         password: result.password,
@@ -126,7 +115,6 @@ export function useCreateAuthUserForTeacher() {
         role: "teacher",
         teacherId,
       });
-      sendWelcomeEmail(email.trim().toLowerCase());
       return {
         user: { id: result.userId } as { id: string },
         password: result.password,

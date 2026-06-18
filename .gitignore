@@ -177,8 +177,6 @@ desktop.ini
 integracao-abacate-referencia/
 
 # ============================================
-# TCC — build pandoc descartável e docx gerado
+# TCC — escrita acadêmica local, não versionada
 # ============================================
-docs/tcc-8-periodo/projeto-escrito/capitulos-final/_word/
-docs/tcc-8-periodo/projeto-escrito/capitulos-final/*.docx
-docs/tcc-8-periodo/projeto-escrito/capitulos-final/*.pdf
+docs/tcc-8-periodo/

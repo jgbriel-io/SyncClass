@@ -145,8 +145,8 @@ export const layout = {
     termsOfUse: "Termos de Uso",
     developedWith: "Desenvolvido com",
     by: "por",
-    developer: "Virtual Arrow",
-    developerUrl: "https://virtualarrow.com.br",
+    developer: "jgbriel.dev",
+    developerUrl: "https://jgbriel.dev",
     lgpd: "Conforme LGPD",
   },
 
