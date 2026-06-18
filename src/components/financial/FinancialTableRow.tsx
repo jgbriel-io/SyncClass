@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Eye, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Eye, Ban } from "lucide-react";
 import { FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import {
   CELL_BASE,
@@ -68,7 +68,7 @@ interface FinancialTableRowProps {
   onViewHistory: (record: FinancialRecordWithRelations) => void;
   onEdit: (record: FinancialRecordWithRelations) => void;
   onRequestRefund?: (record: FinancialRecordWithRelations) => void;
-  onDelete?: (record: FinancialRecordWithRelations) => void;
+  onCancelCharge?: (record: FinancialRecordWithRelations) => void;
   isAdmin?: boolean;
 }
 
@@ -79,16 +79,18 @@ export function FinancialTableRow({
   onViewHistory,
   onEdit,
   onRequestRefund,
-  onDelete,
+  onCancelCharge,
   isAdmin = false,
 }: FinancialTableRowProps) {
   const lastUpdatedAt = record.updated_at || record.created_at;
 
-  const canDelete =
-    onDelete &&
-    record.actualStatus !== "pago" &&
-    !["abonado", "extornado", "cancelado"].includes(record.actualStatus) &&
-    record.record_type !== "avulsa";
+  const TERMINAL_STATUSES = ["abonado", "extornado", "cancelado"];
+
+  const canCancel =
+    !isAdmin &&
+    onCancelCharge &&
+    !TERMINAL_STATUSES.includes(record.actualStatus) &&
+    record.actualStatus !== "pago";
 
   return (
     <tr className="group hover:bg-muted/30 transition-colors">
@@ -300,13 +302,13 @@ export function FinancialTableRow({
                   <Pencil className="h-4 w-4 mr-2" aria-hidden="true" />
                   {financial.tableRow.edit}
                 </DropdownMenuItem>
-                {canDelete && (
+                {canCancel && (
                   <DropdownMenuItem
-                    onClick={() => onDelete(record)}
+                    onClick={() => onCancelCharge(record)}
                     className="text-destructive focus:text-destructive"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
-                    {financial.tableRow.delete}
+                    <Ban className="h-4 w-4 mr-2" aria-hidden="true" />
+                    {financial.tableRow.cancelCharge}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>

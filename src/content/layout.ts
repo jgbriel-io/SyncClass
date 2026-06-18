@@ -85,19 +85,16 @@ export const layout = {
       },
     },
     password: {
-      sessionWarning:
-        "Ao alterar sua senha, sua sessão será encerrada e você precisará fazer login novamente com a nova senha.",
-      currentPasswordLabel: "Senha atual",
-      currentPasswordPlaceholder: "Digite sua senha atual",
-      newPasswordLabel: "Nova senha",
-      newPasswordPlaceholder: "Mínimo 6 caracteres",
-      confirmPasswordLabel: "Confirmar nova senha",
-      confirmPasswordPlaceholder: "Repita a nova senha",
-      passwordMismatch: "As senhas não coincidem.",
-      submitButton: "Alterar senha",
-      submitting: "Alterando...",
-      showPassword: "Mostrar senha",
-      hidePassword: "Ocultar senha",
+      description:
+        "Enviaremos um e-mail de redefinição para o endereço associado à sua conta. Você será redirecionado para criar uma nova senha.",
+      sendEmailButton: "Enviar e-mail de redefinição",
+      sending: "Enviando...",
+      sentMessage:
+        "E-mail enviado! Verifique sua caixa de entrada e siga as instruções para redefinir sua senha.",
+      toasts: {
+        success: "E-mail de redefinição enviado com sucesso.",
+        error: "Não foi possível enviar o e-mail. Tente novamente.",
+      },
     },
     payments: {
       title: "Integração AbacatePay",
@@ -113,12 +110,15 @@ export const layout = {
       saveButton: "Salvar",
       cancelButton: "Cancelar",
       saving: "Salvando...",
-      webhookTitle: "URL do Webhook",
+      webhookTitle: "Webhook",
+      webhookUrlLabel: "URL do Webhook",
+      webhookSecretLabel: "Secret do Webhook",
       webhookHint:
-        "Copie esta URL e cadastre no painel da AbacatePay em Configurações → Webhooks.",
+        "No painel AbacatePay (Configurações → Webhooks): cole a URL no campo URL e o Secret no campo Secret.",
       webhookNotConfigured:
-        "Salve sua API key primeiro para gerar a URL do webhook.",
-      copyButton: "Copiar URL",
+        "Salve sua API key primeiro para gerar os dados do webhook.",
+      copyUrlButton: "Copiar URL",
+      copySecretButton: "Copiar Secret",
       copied: "Copiado!",
       notConfigured: "Integração não configurada",
       configured: "Integração configurada",
@@ -145,8 +145,8 @@ export const layout = {
     termsOfUse: "Termos de Uso",
     developedWith: "Desenvolvido com",
     by: "por",
-    developer: "Virtual Arrow",
-    developerUrl: "https://virtualarrow.com.br",
+    developer: "jgbriel.dev",
+    developerUrl: "https://jgbriel.dev",
     lgpd: "Conforme LGPD",
   },
 

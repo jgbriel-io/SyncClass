@@ -59,7 +59,7 @@ export function useInviteTeacher() {
       queryClient.invalidateQueries({ queryKey: [QK.PROFILES] });
       queryClient.invalidateQueries({ queryKey: [QK.USERS_PAGINATED] });
       queryClient.invalidateQueries({ queryKey: [QK.TEACHERS_PAGINATED] });
-      toast.success(usersContent.form.toasts.successTeacherInvite);
+      toast.success(usersContent.formDialog.toasts.successTeacherInvite);
     },
     onError: (error: Error) => toast.error(sanitizeErrorMessage(error)),
   });

@@ -54,7 +54,7 @@ export function Footer() {
             </div>
             <span className="hidden tablet:inline">•</span>
             <div className="flex items-center gap-1.5">
-              <span>English School © {currentYear}</span>
+              <span>SyncClass © {currentYear}</span>
               <span>•</span>
               <span>{layout.footer.lgpd}</span>
             </div>

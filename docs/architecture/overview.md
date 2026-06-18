@@ -145,22 +145,22 @@ Erros comuns, diagnóstico e soluções.
 
 ## Métricas
 
-| Métrica                     | Valor                | Fonte                                            |
-| --------------------------- | -------------------- | ------------------------------------------------ |
-| **Bundle size (gzipped)**   | 287 KB               | `npm run build`                                  |
-| **Tempo de build**          | ~8s                  | `npm run build`                                  |
-| **Tempo de HMR**            | <100ms               | Vite DevTools                                    |
-| **Cobertura de testes**     | 26 arquivos de teste | `npm run test`                                   |
-| **Linhas de código (src/)** | ~50.467              | `cloc src/`                                      |
-| **Arquivos (src/)**         | ~358                 | `find src/ -type f`                              |
-| **Componentes React**       | ~184                 | `find src/components/ -name "*.tsx"`             |
-| **Hooks customizados**      | 45                   | `find src/hooks/ -name "*.ts"`                   |
-| **Páginas**                 | 24                   | `find src/pages/ -name "*.tsx"`                  |
-| **Migrations SQL**          | 43                   | `supabase/migrations/`                           |
-| **Edge Functions**          | 6                    | `supabase/functions/`                            |
-| **RLS Policies**            | 40+                  | `supabase/migrations/04_rls_and_permissions.sql` |
-| **Design tokens**           | 129 testes           | `src/lib/design-tokens/`                         |
-| **Strings centralizadas**   | 860+                 | `src/content/`                                   |
+| Métrica                     | Valor                | Fonte                                                         |
+| --------------------------- | -------------------- | ------------------------------------------------------------- |
+| **Bundle size (gzipped)**   | 287 KB               | `npm run build`                                               |
+| **Tempo de build**          | ~8s                  | `npm run build`                                               |
+| **Tempo de HMR**            | <100ms               | Vite DevTools                                                 |
+| **Cobertura de testes**     | 28 arquivos de teste | `npm run test`                                                |
+| **Linhas de código (src/)** | ~55.000              | `grep -r "" src/ --include="*.ts" --include="*.tsx" \| wc -l` |
+| **Arquivos (src/)**         | 359                  | `.ts` + `.tsx` em `src/`                                      |
+| **Componentes React**       | 181                  | `.tsx` em `src/components/` excluindo testes                  |
+| **Hooks customizados**      | 34                   | `use*.ts/tsx` em `src/hooks/` excluindo testes                |
+| **Páginas**                 | 27                   | `find src/pages/ -name "*.tsx"`                               |
+| **Migrations SQL**          | 70                   | `supabase/migrations/`                                        |
+| **Edge Functions**          | 9                    | `supabase/functions/`                                         |
+| **RLS Policies**            | 40+                  | `supabase/migrations/04_rls_and_permissions.sql`              |
+| **Design tokens**           | 129 testes           | `src/lib/design-tokens/`                                      |
+| **Strings centralizadas**   | 860+                 | `src/content/`                                                |
 
 ## Ver também
 
@@ -169,4 +169,4 @@ Erros comuns, diagnóstico e soluções.
 - [Frontend Overview](../frontend/overview.md) — Componentes, design tokens, UI patterns
 - [Backend Overview](../backend/overview.md) — Edge Functions, integrações, APIs
 - [Sprints](../sprints/README.md) — Histórico de desenvolvimento e decisões por sprint
-- [Validação de Sprints](../archive/gestao-projeto/validacao-sprints-1-15.md) — Evidências de implementação
+- [Validação de Sprints](../tcc-8-periodo/gestao-projeto/validacao-sprints.md) — Evidências de implementação

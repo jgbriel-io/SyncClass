@@ -16,7 +16,7 @@ interface PasswordDisplayDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   password: string;
-  source: "create" | "reset" | null;
+  source: "create" | "teacher-create" | "reset" | null;
   email?: string;
 }
 
@@ -75,9 +75,11 @@ export function PasswordDisplayDialog({
           <DialogTitle>
             {source === "reset"
               ? "Senha redefinida"
-              : source === "create"
-                ? "Aluno criado com sucesso!"
-                : usersContent.passwordDialog.title}
+              : source === "teacher-create"
+                ? "Professor criado com sucesso!"
+                : source === "create"
+                  ? "Aluno criado com sucesso!"
+                  : usersContent.passwordDialog.title}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">

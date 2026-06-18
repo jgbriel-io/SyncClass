@@ -507,7 +507,24 @@ export function useHardDeleteStudent() {
         .eq("student_id", id)
         .maybeSingle();
 
-      // 3) Anonymize student data (LGPD) — keeps row so class_logs/activities/financial_records remain linked
+      // 3) Anonymize profile first (LGPD — profile PII cleared before domain record)
+      if (linkedProfile?.user_id) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            deleted_at: new Date().toISOString(),
+            active: false,
+            student_id: null,
+            full_name: `Usuário ${pickAnonSegment(linkedProfile.user_id)}`,
+            email: null,
+            avatar_url: null,
+          })
+          .eq("user_id", linkedProfile.user_id);
+
+        if (profileError) throw profileError;
+      }
+
+      // 4) Anonymize student domain record (keeps row for class_logs/activities/financial_records linkage)
       const anonymizedName = `Aluno ${pickAnonSegment(id)}`;
       const { error: anonError } = await supabase
         .from("students")
@@ -526,22 +543,8 @@ export function useHardDeleteStudent() {
 
       if (anonError) throw anonError;
 
-      // 4) Soft delete profile + delete auth account
+      // 5) Delete auth account
       if (linkedProfile?.user_id) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            deleted_at: new Date().toISOString(),
-            active: false,
-            student_id: null,
-            full_name: `Usuário ${pickAnonSegment(linkedProfile.user_id)}`,
-            email: null,
-            avatar_url: null,
-          })
-          .eq("user_id", linkedProfile.user_id);
-
-        if (profileError) throw profileError;
-
         const { data, error: fnError } = await supabase.functions.invoke(
           "admin-delete-user",
           {

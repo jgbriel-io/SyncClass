@@ -6,6 +6,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AvatarCircle } from "@/components/ui/avatar-circle";
 import {
   SHEET_SIZE_MAP,
   type SheetSize,
@@ -18,6 +19,7 @@ interface BaseDetailSheetProps {
   subtitle?: ReactNode;
   children: ReactNode;
   size?: SheetSize;
+  avatarUrl?: string | null;
   /** Se true, não usa ScrollArea (útil quando o conteúdo já tem scroll próprio) */
   noScroll?: boolean;
 }
@@ -41,6 +43,7 @@ export function BaseDetailSheet({
   subtitle,
   children,
   size = "DEFAULT",
+  avatarUrl,
   noScroll = false,
 }: BaseDetailSheetProps) {
   return (
@@ -49,9 +52,18 @@ export function BaseDetailSheet({
         className={`w-full ${SHEET_SIZE_MAP[size]} p-0 flex flex-col overflow-hidden`}
       >
         <SheetHeader className="px-6 py-4 border-b">
-          <SheetTitle className="text-xl font-semibold text-left space-y-1">
-            <p className="font-semibold">{title}</p>
-            {subtitle && <div className="text-sm font-normal">{subtitle}</div>}
+          <SheetTitle className="text-xl font-semibold text-left">
+            <div className="flex items-center gap-3">
+              {avatarUrl !== undefined && (
+                <AvatarCircle name={title} avatarUrl={avatarUrl} size="LG" />
+              )}
+              <div className="space-y-1 min-w-0">
+                <p className="font-semibold truncate">{title}</p>
+                {subtitle && (
+                  <div className="text-sm font-normal">{subtitle}</div>
+                )}
+              </div>
+            </div>
           </SheetTitle>
         </SheetHeader>
 

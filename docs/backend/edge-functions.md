@@ -2,6 +2,27 @@
 
 Edge Functions Deno/TS para operações server-side. Rodam em runtime isolado com acesso a service role key.
 
+## Status de implantação
+
+**Em produção (deployadas e ativas) — 7:**
+
+| Função                   | Acionamento                     |
+| ------------------------ | ------------------------------- |
+| `invite-user`            | frontend (admin/professor)      |
+| `admin-delete-user`      | frontend (admin)                |
+| `reset-password`         | frontend (admin/professor/self) |
+| `cleanup-old-records`    | cron (sem chamada de UI)        |
+| `cleanup-storage`        | cron (sem chamada de UI)        |
+| `create-abacate-payment` | frontend (aluno)                |
+| `abacate-webhook`        | AbacatePay (externo)            |
+
+**Não implantadas (trabalhos futuros):**
+
+- `export-user-data` — código presente no repositório, porém **não implantado** em produção. O frontend já referencia a chamada. Corresponde ao RF36 (portabilidade LGPD), registrado como trabalho futuro.
+- `refund-abacate-payment` — **não implantada** e ausente do repositório versionado. O frontend referencia a chamada (`FinancialRefundDialog`). Corresponde ao RF37 (reembolso PIX), registrado como trabalho futuro.
+
+> `_shared/` não é uma Edge Function: é módulo de utilitários compartilhado, importado por várias funções, e não é implantado isoladamente.
+
 ## Índice
 
 - [Quando usar](#quando-usar)
@@ -47,18 +68,18 @@ supabase/functions/
 │   ├── index.ts
 │   └── reset-password.ts
 ├── export-user-data/
-│   └── index.ts
+│   └── index.ts              ← RF36: não implantado (trabalho futuro)
 ├── cleanup-old-records/
 │   └── index.ts
 ├── cleanup-storage/
 │   └── index.ts
 ├── create-abacate-payment/
 │   └── index.ts              ← geração de PIX QR Code via AbacatePay
-├── refund-abacate-payment/
-│   └── index.ts              ← reembolso automático via AbacatePay
 ├── abacate-webhook/
 │   └── index.ts              ← webhook handler (billing.paid, checkout.refunded)
-└── _shared/                  ← utilitários compartilhados
+└── _shared/                  ← utilitários compartilhados (não é função)
+
+# refund-abacate-payment: RF37, não implantado e fora do repositório (trabalho futuro)
 ```
 
 **Padrão:** Entry point `index.ts` importa implementação de arquivo separado (facilita testes).
@@ -179,6 +200,8 @@ const { data, error } = await supabase.functions.invoke("reset-password", {
 - Usuário reseta própria senha (self-service)
 
 ## export-user-data
+
+> ⚠️ **Trabalho futuro (RF36):** código no repositório, porém **não implantado** em produção.
 
 **Responsabilidade:** Exportação de todos os dados pessoais do usuário (conformidade LGPD).
 
@@ -314,6 +337,8 @@ const { data, error } = await supabase.functions.invoke(
 ---
 
 ## refund-abacate-payment
+
+> ⚠️ **Trabalho futuro (RF37):** **não implantada** em produção e ausente do repositório versionado. A descrição abaixo documenta o comportamento previsto.
 
 **Responsabilidade:** Processa reembolso automático via AbacatePay API para cobranças pagas com `payment_provider='abacate_pay'`.
 

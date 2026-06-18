@@ -20,17 +20,27 @@ import {
 import { defaultFinancialFilters } from "@/components/filters/filterDefaults";
 import { FinancialFormDialog } from "@/components/financial/FinancialFormDialog";
 import { FinancialRefundDialog } from "@/components/financial/FinancialRefundDialog";
-import { FinancialDeleteDialog } from "@/components/financial/FinancialDeleteDialog";
 import { FinancialPaymentHistoryDialog } from "@/components/financial/FinancialPaymentHistoryDialog";
 import {
   useFinancialRecords,
   useFinancialSummary,
   useCreateFinancialRecord,
   useUpdateFinancialRecord,
+  useUpdateFinancialStatus,
   FinancialRecordInsert,
   FinancialRecordWithRelations,
 } from "@/hooks/useFinancialRecords";
 import { FinancialTableSkeleton } from "@/components/ui/table-skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Table,
   TableBody,
@@ -73,9 +83,10 @@ export function FinancialView({
   const [recordToRefund, setRecordToRefund] =
     useState<FinancialRecordWithRelations | null>(null);
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
-  const [recordToDelete, setRecordToDelete] =
+  const [recordToCancel, setRecordToCancel] =
     useState<FinancialRecordWithRelations | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const cancelCharge = useUpdateFinancialStatus();
   const [historyRecord, setHistoryRecord] =
     useState<FinancialRecordWithRelations | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
@@ -316,9 +327,9 @@ export function FinancialView({
                     setRecordToRefund(record);
                     setRefundDialogOpen(true);
                   }}
-                  onDelete={(record) => {
-                    setRecordToDelete(record);
-                    setDeleteDialogOpen(true);
+                  onCancelCharge={(record) => {
+                    setRecordToCancel(record);
+                    setCancelDialogOpen(true);
                   }}
                 />
               ))
@@ -375,23 +386,54 @@ export function FinancialView({
         }}
       />
 
-      <FinancialDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={(open) => {
-          setDeleteDialogOpen(open);
-          if (!open) setRecordToDelete(null);
-        }}
-        record={recordToDelete}
-        onClose={() => {
-          setDeleteDialogOpen(false);
-          setRecordToDelete(null);
-        }}
-      />
-
       <FinancialPaymentHistoryDialog
         record={historyRecord}
         onClose={() => setHistoryRecord(null)}
       />
+      <AlertDialog
+        open={cancelDialogOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setCancelDialogOpen(false);
+            setRecordToCancel(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {financialContent.tableRow.cancelCharge}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {recordToCancel?.students?.name
+                ? `Cancelar cobrança de ${recordToCancel.students.name}? Esta ação não pode ser desfeita.`
+                : "Cancelar esta cobrança? Esta ação não pode ser desfeita."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelCharge.isPending}>
+              {financialContent.refundDialog.cancel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={cancelCharge.isPending}
+              onClick={() => {
+                if (!recordToCancel) return;
+                cancelCharge.mutate(
+                  { id: recordToCancel.id, status: "cancelado" },
+                  {
+                    onSuccess: () => {
+                      setCancelDialogOpen(false);
+                      setRecordToCancel(null);
+                    },
+                  }
+                );
+              }}
+            >
+              {financialContent.tableRow.cancelCharge}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

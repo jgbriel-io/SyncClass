@@ -1,6 +1,6 @@
 # Design Tokens
 
-Typography, spacing, icons e modalSizes. Sistema de tokens testado com 129 testes unitários.
+Typography, spacing, icons, modal sizes, avatar sizes e table columns. Sistema de tokens testado com 283+ testes unitários (6 módulos).
 
 ## Índice
 
@@ -9,6 +9,7 @@ Typography, spacing, icons e modalSizes. Sistema de tokens testado com 129 teste
 - [Spacing](#spacing)
 - [Icons](#icons)
 - [Modal Sizes](#modal-sizes)
+- [Módulos adicionais](#módulos-adicionais)
 - [Testes](#testes)
 - [Ver também](#ver-também)
 
@@ -31,17 +32,30 @@ Typography, spacing, icons e modalSizes. Sistema de tokens testado com 129 teste
 
 **Localização:** `src/lib/design-tokens/typography.ts`
 
-**Níveis (7):**
+**Variantes (18):**
 
-| Token   | Font Size       | Line Height | Font Weight    | Uso                |
-| ------- | --------------- | ----------- | -------------- | ------------------ |
-| `H1`    | 2.25rem (36px)  | 2.5rem      | 700 (bold)     | Títulos principais |
-| `H2`    | 1.875rem (30px) | 2.25rem     | 600 (semibold) | Subtítulos         |
-| `H3`    | 1.5rem (24px)   | 2rem        | 600 (semibold) | Seções             |
-| `H4`    | 1.25rem (20px)  | 1.75rem     | 600 (semibold) | Subseções          |
-| `Body`  | 1rem (16px)     | 1.5rem      | 400 (normal)   | Texto padrão       |
-| `Small` | 0.875rem (14px) | 1.25rem     | 400 (normal)   | Texto secundário   |
-| `Tiny`  | 0.75rem (12px)  | 1rem        | 400 (normal)   | Labels, captions   |
+| Token              | Tailwind classes                                                     | Uso                          |
+| ------------------ | -------------------------------------------------------------------- | ---------------------------- |
+| `DISPLAY`          | `text-4xl font-bold`                                                 | Hero, landing pages (36px)   |
+| `H1`               | `text-2xl font-semibold`                                             | Títulos de página (24px)     |
+| `H2`               | `text-xl font-semibold`                                              | Títulos de seção (20px)      |
+| `H3`               | `text-lg font-medium`                                                | Subtítulos, cards (18px)     |
+| `BODY`             | `text-sm`                                                            | Texto padrão (14px)          |
+| `BODY_MEDIUM`      | `text-sm font-medium`                                                | Texto com ênfase (14px)      |
+| `BODY_SEMIBOLD`    | `text-sm font-semibold`                                              | Texto destacado (14px)       |
+| `CAPTION`          | `text-xs`                                                            | Labels, legendas (12px)      |
+| `CAPTION_MEDIUM`   | `text-xs font-medium`                                                | Labels com ênfase (12px)     |
+| `CAPTION_SEMIBOLD` | `text-xs font-semibold`                                              | Labels destacados (12px)     |
+| `SMALL`            | `text-xs text-muted-foreground`                                      | Texto secundário (12px)      |
+| `SMALL_MEDIUM`     | `text-xs font-medium text-muted-foreground`                          | Secundário com ênfase        |
+| `MICRO`            | `text-[11px] leading-tight`                                          | Timestamps, metadados (11px) |
+| `MICRO_MUTED`      | `text-[11px] leading-tight text-muted-foreground`                    | Micro secundário (11px)      |
+| `TABLE_HEADER`     | `text-xs font-medium text-muted-foreground uppercase tracking-wider` | Headers de tabela            |
+| `LABEL`            | `text-sm font-medium`                                                | Labels de formulário         |
+| `HELPER`           | `text-xs text-muted-foreground`                                      | Texto de ajuda               |
+| `ERROR`            | `text-sm text-destructive`                                           | Mensagens de erro            |
+
+> **Atenção:** Não existem `H4` nem `Tiny` — use `H3` e `MICRO` respectivamente. Tokens usam UPPER_CASE.
 
 **Uso:**
 
@@ -50,19 +64,19 @@ import { typography } from '@/lib/design-tokens/typography';
 
 <h1 className={typography('H1')}>Título Principal</h1>
 <h2 className={typography('H2')}>Subtítulo</h2>
-<p className={typography('Body')}>Texto padrão</p>
-<span className={typography('Small')}>Texto secundário</span>
-<label className={typography('Tiny')}>Label</label>
+<p className={typography('BODY')}>Texto padrão</p>
+<span className={typography('SMALL')}>Texto secundário</span>
+<label className={typography('LABEL')}>Label</label>
 ```
 
 **Output:**
 
 ```tsx
 // typography('H1') retorna:
-"text-4xl leading-tight font-bold";
+"text-2xl font-semibold";
 
-// typography('Body') retorna:
-"text-base leading-normal font-normal";
+// typography('BODY') retorna:
+"text-sm";
 ```
 
 **Responsive:**
@@ -78,29 +92,28 @@ import { typography } from '@/lib/design-tokens/typography';
 
 **Localização:** `src/lib/design-tokens/spacing.ts`
 
-**Níveis (6):**
+**STACK — espaçamento vertical (4 níveis):**
 
-| Token      | Gap            | Uso                                      |
-| ---------- | -------------- | ---------------------------------------- |
-| `Tight`    | 0.5rem (8px)   | Elementos muito próximos (badges, chips) |
-| `Compact`  | 0.75rem (12px) | Elementos próximos (form fields)         |
-| `Default`  | 1rem (16px)    | Spacing padrão (cards, sections)         |
-| `Relaxed`  | 1.5rem (24px)  | Elementos espaçados (page sections)      |
-| `Loose`    | 2rem (32px)    | Elementos muito espaçados (page layout)  |
-| `Spacious` | 3rem (48px)    | Máximo espaçamento (hero sections)       |
+| Token     | Classe Tailwind | Uso                            |
+| --------- | --------------- | ------------------------------ |
+| `TIGHT`   | `space-y-2`     | Formulários, inputs (8px)      |
+| `DEFAULT` | `space-y-4`     | Seções padrão (16px)           |
+| `LOOSE`   | `space-y-6`     | Seções principais (24px)       |
+| `RELAXED` | `space-y-8`     | Páginas, grandes blocos (32px) |
+
+> **Atenção:** Não existem `Compact` nem `Spacious`. Tokens usam UPPER_CASE. O módulo também exporta `GAP` (flex/grid), `CONTAINER` (padding) e `PADDING_X/Y`.
 
 **Uso:**
 
 ```tsx
 import { stack } from '@/lib/design-tokens/spacing';
 
-<div className={stack('Default')}>
-  <Card />
+<div className={stack('DEFAULT')}>
   <Card />
   <Card />
 </div>
 
-<div className={stack('Tight')}>
+<div className={stack('TIGHT')}>
   <Badge />
   <Badge />
 </div>
@@ -109,11 +122,11 @@ import { stack } from '@/lib/design-tokens/spacing';
 **Output:**
 
 ```tsx
-// stack('Default') retorna:
-"flex flex-col gap-4";
+// stack('DEFAULT') retorna:
+"space-y-4";
 
-// stack('Tight') retorna:
-"flex flex-col gap-2";
+// stack('TIGHT') retorna:
+"space-y-2";
 ```
 
 **Horizontal:**
@@ -172,23 +185,36 @@ import { User, Mail, Calendar } from 'lucide-react';
 
 **Localização:** `src/lib/design-tokens/modal-sizes.ts`
 
-**Tamanhos (4):**
+**DIALOG_SIZES — modais centrais (3 tamanhos):**
 
-| Token | Max Width      | Uso                          |
-| ----- | -------------- | ---------------------------- |
-| `SM`  | 24rem (384px)  | Confirmações, alertas        |
-| `MD`  | 32rem (512px)  | Forms simples (3-5 campos)   |
-| `LG`  | 48rem (768px)  | Forms complexos (10+ campos) |
-| `XL`  | 64rem (1024px) | Wizards, multi-step forms    |
+| Token | Classe Tailwind | Pixels | Uso                       |
+| ----- | --------------- | ------ | ------------------------- |
+| `SM`  | `sm:max-w-md`   | 448px  | Confirmações, alerts      |
+| `MD`  | `sm:max-w-lg`   | 512px  | Forms simples (cadastros) |
+| `LG`  | `sm:max-w-2xl`  | 672px  | Forms complexos           |
+
+**SHEET_SIZES — modais laterais (4 tamanhos):**
+
+| Token     | Classe Tailwind | Pixels | Uso                 |
+| --------- | --------------- | ------ | ------------------- |
+| `DEFAULT` | `sm:max-w-lg`   | 512px  | Visualização padrão |
+| `LG`      | `sm:max-w-xl`   | 640px  | Mais informações    |
+| `XL`      | `sm:max-w-2xl`  | 672px  | Múltiplas tabs      |
+| `FULL`    | `sm:max-w-full` | 100%   | Largura total       |
+
+> **Atenção:** `XL` não existe em `DIALOG_SIZES` — existe apenas em `SHEET_SIZES`. Funções: `getDialogSizeClass(size)` e `getSheetSizeClass(size)`.
 
 **Uso:**
 
 ```tsx
-import { modalSizes } from "@/lib/design-tokens/modal-sizes";
+import {
+  getDialogSizeClass,
+  getSheetSizeClass,
+} from "@/lib/design-tokens/modal-sizes";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 <Dialog>
-  <DialogContent className={modalSizes("MD")}>
+  <DialogContent className={getDialogSizeClass("MD")}>
     <form>...</form>
   </DialogContent>
 </Dialog>;
@@ -197,26 +223,34 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 **Output:**
 
 ```tsx
-// modalSizes('MD') retorna:
-"max-w-md";
+// getDialogSizeClass('MD') retorna:
+"sm:max-w-lg";
 
-// modalSizes('LG') retorna:
-"max-w-3xl";
+// getDialogSizeClass('LG') retorna:
+"sm:max-w-2xl";
 ```
+
+## Módulos adicionais
+
+Dois módulos não documentados nas seções acima:
+
+- **`src/lib/design-tokens/avatar-sizes.ts`** — função `avatarSize(size)` para dimensionar avatares de usuário
+- **`src/lib/design-tokens/table-columns.ts`** — função `getColumnStyle()` e utilitários de largura de colunas de tabela
 
 ## Testes
 
 **Localização:** `src/lib/design-tokens/*.test.ts`
 
-**Cobertura:** 129 testes unitários (Vitest)
+**Cobertura:** 283+ expects (Vitest), 6 módulos
 
 **Categorias:**
 
-- Typography: 35 testes (7 tokens × 5 propriedades)
-- Spacing: 30 testes (6 tokens × 5 propriedades)
-- Icons: 25 testes (5 tokens × 5 propriedades)
-- Modal Sizes: 20 testes (4 tokens × 5 propriedades)
-- Integration: 19 testes (combinações)
+- Typography: 84 expects (`src/lib/design-tokens/typography.test.ts`)
+- Spacing: 83 expects (`src/lib/design-tokens/spacing.test.ts`)
+- Icons: 63 expects (`src/lib/design-tokens/icon-sizes.test.ts`)
+- Modal Sizes: 38 expects (`src/lib/design-tokens/modal-sizes.test.ts`)
+- Table Columns: 15 expects (`src/lib/design-tokens/table-columns.test.ts`)
+- Avatar Sizes: cobertura em `avatar-sizes.ts`
 
 **Exemplo:**
 

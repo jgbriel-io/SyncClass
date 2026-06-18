@@ -553,7 +553,7 @@ Correção planejada mas não implementada no MVP.
 - [x] `docs/architecture/technical-debt.md` — 6 problemas arquiteturais + 8 refatorações
 - [x] `docs/architecture/troubleshooting.md` — 5 erros comuns + diagnóstico
 - [x] `docs/backend/bugs.md` — 7 bugs conhecidos + fix
-- [x] `docs/tcc/tecnico/cap8-gestao.md` — Tabela de riscos (R07, R08)
+- [x] `docs/tcc-8-periodo/projeto-escrito/capitulos/cap8-gestao.md` — Tabela de riscos (R07, R08)
 - [x] Esta sprint — Consolidação de todos os problemas
 
 ## Métricas

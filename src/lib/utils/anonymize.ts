@@ -9,5 +9,5 @@ export function pickAnonSegment(id: string): string {
     const s = hex.slice(i, i + 8);
     if (/[a-f]/.test(s) && /[0-9]/.test(s)) return s;
   }
-  return hex.slice(0, 8);
+  return hex.slice(-8);
 }

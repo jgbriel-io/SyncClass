@@ -30,7 +30,7 @@ Estrutura, convenções, shadcn/ui e componentes de domínio.
 
 **Localização:** `src/components/ui/`
 
-**Componentes base (40+):**
+**Componentes base (55+):**
 
 - `button.tsx` — botões com variants (default, destructive, outline, ghost, link)
 - `input.tsx` — inputs de texto

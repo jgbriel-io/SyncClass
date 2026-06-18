@@ -32,7 +32,7 @@ export type TeachersListFilters = {
   sortBy?: "name_asc" | "name_desc";
 };
 
-export type Teacher = Tables<"teachers">;
+export type Teacher = Tables<"teachers"> & { avatar_url?: string | null };
 export type TeacherInsert = TablesInsert<"teachers">;
 export type TeacherUpdate = TablesUpdate<"teachers">;
 type TeacherStatus = Enums<"teacher_status">;
@@ -42,23 +42,18 @@ type ProfileUpdate = TablesUpdate<"profiles">;
 // Query functions
 // ---------------------------------------------------------------------------
 
-function maskCpf(teacher: Teacher): Teacher {
-  return {
-    ...teacher,
-    cpf: teacher.cpf
-      ? teacher.cpf.slice(0, -4).replace(/\d/g, "*") + teacher.cpf.slice(-4)
-      : null,
-  };
-}
+// Excludes abacate_pay_api_key and abacate_pay_webhook_secret — fetched only in useTeacherAbacatePayConfig
+const TEACHER_LIST_FIELDS =
+  "id, name, email, phone, status, created_at, updated_at, address, hourly_rate, pix_key, country, is_deleted, anonymized_at, avatar_url" as const;
 
 async function fetchTeachers(): Promise<Teacher[]> {
   const { data, error } = await supabase
-    .from("teachers")
-    .select("*")
+    .from("teachers_masked")
+    .select(TEACHER_LIST_FIELDS)
     .eq("is_deleted", false)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []).map(maskCpf) as Teacher[];
+  return (data ?? []) as Teacher[];
 }
 
 async function fetchTeachersPaginated(
@@ -67,8 +62,8 @@ async function fetchTeachersPaginated(
   filters: TeachersListFilters | undefined
 ): Promise<{ list: Teacher[]; count: number }> {
   let q = supabase
-    .from("teachers")
-    .select("*", { count: "exact" })
+    .from("teachers_masked")
+    .select(TEACHER_LIST_FIELDS, { count: "exact" })
     .eq("is_deleted", false);
   if (filters?.status && filters.status !== "all")
     q = q.eq("status", filters.status);
@@ -76,7 +71,7 @@ async function fetchTeachersPaginated(
   const from = page * pageSize;
   const { data, error, count } = await q.range(from, from + pageSize - 1);
   if (error) throw error;
-  return { list: (data ?? []).map(maskCpf) as Teacher[], count: count ?? 0 };
+  return { list: (data ?? []) as Teacher[], count: count ?? 0 };
 }
 
 // ---------------------------------------------------------------------------
@@ -365,17 +360,19 @@ export function useUpdateTeacherAbacatePayConfig() {
         encryptedKey = encrypted;
       }
 
-      // sempre rotaciona — secret antigo fica inválido ao trocar a API key
-      const webhookSecret = crypto.randomUUID();
+      // Preserve existing secret on key update; only generate new on first setup (existingWebhookSecret === null)
+      const webhookSecret = apiKey
+        ? (existingWebhookSecret ?? crypto.randomUUID())
+        : null;
       const { error } = await supabase
         .from("teachers")
         .update({
           abacate_pay_api_key: encryptedKey,
-          abacate_pay_webhook_secret: apiKey ? webhookSecret : null,
+          abacate_pay_webhook_secret: webhookSecret,
         })
         .eq("id", teacherId);
       if (error) throw error;
-      return { webhookSecret: apiKey ? webhookSecret : null };
+      return { webhookSecret };
     },
     onSuccess: (_, { teacherId }) => {
       queryClient.invalidateQueries({
@@ -451,6 +448,23 @@ export function useHardDeleteTeacher() {
         .eq("teacher_id", id)
         .maybeSingle();
 
+      // Anonymize profile first (LGPD — profile PII cleared before domain record)
+      if (linkedProfile?.user_id) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            deleted_at: new Date().toISOString(),
+            active: false,
+            teacher_id: null,
+            full_name: `Usuário ${pickAnonSegment(linkedProfile.user_id)}`,
+            email: null,
+            avatar_url: null,
+          })
+          .eq("user_id", linkedProfile.user_id);
+
+        if (profileError) throw profileError;
+      }
+
       const anonymizedName = `Professor ${pickAnonSegment(id)}`;
       const { error } = await supabase
         .from("teachers")
@@ -467,20 +481,6 @@ export function useHardDeleteTeacher() {
       if (error) throw error;
 
       if (linkedProfile?.user_id) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            deleted_at: new Date().toISOString(),
-            active: false,
-            teacher_id: null,
-            full_name: `Usuário ${pickAnonSegment(linkedProfile.user_id)}`,
-            email: null,
-            avatar_url: null,
-          })
-          .eq("user_id", linkedProfile.user_id);
-
-        if (profileError) throw profileError;
-
         const { data, error: fnError } = await supabase.functions.invoke(
           "admin-delete-user",
           {

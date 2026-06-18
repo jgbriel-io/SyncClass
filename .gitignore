@@ -156,12 +156,9 @@ desktop.ini
 .turbo
 
 # ============================================
-# KIRO — manter steering/settings, ignorar cache
+# KIRO IDE (config local, não versionar)
 # ============================================
-.kiro/cache/
-.kiro/logs/
-.kiro/skills/
-.kiro/settings/mcp.json
+.kiro/
 
 # ============================================
 # AGENT SKILLS (auto-gerado por npx skills add)

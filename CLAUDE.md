@@ -7,7 +7,7 @@ TCC — Engenharia de Software, FEPI, 8º período.
 
 - **H1:** SaaS funcional desenvolvido solo em ~3 meses com IA como aceleradora
 - **H2:** Supabase reduz ≥60% do esforço backend vs stack tradicional
-- **H3:** Plataforma unificada reduz tarefas manuais do professor
+- **H3:** IA generativa acelera ≥3× tarefas delimitadas (scaffolding, migrations SQL, auditoria de segurança)
 - **Roles:** `admin` (visão global) | `teacher` (próprios alunos/aulas/cobranças) | `student` (próprias infos)
 
 ## Stack

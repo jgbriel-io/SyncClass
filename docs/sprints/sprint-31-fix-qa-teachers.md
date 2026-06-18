@@ -474,7 +474,7 @@ Bugs encontrados e corrigidos durante o desenvolvimento, identificados via commi
 ## Testing & Validation
 
 - [x] `npm run type-check` — zero erros
-- [x] `npm run test` — 287 testes passando
+- [x] `npm run test` — 304 testes passando
 - [x] `/admin/teachers` → redefinir senha → modal com bloco de requisitos visível
 - [x] Redefinir senha via aba teachers → funciona (senha atualizada, modal de nova senha exibido)
 - [x] Modal idêntico ao de alunos em requisitos e validação
@@ -503,7 +503,7 @@ Bugs encontrados e corrigidos durante o desenvolvimento, identificados via commi
 - [x] Professores conseguem criar atividades (BUG-031-022)
 - [x] Método de pagamento com label legível na tabela financeira (BUG-031-023)
 - [x] `npm run type-check` — zero erros (pós code review fixes)
-- [x] `npm run test` — 287 testes passando
+- [x] `npm run test` — 304 testes passando
 
 ## References
 

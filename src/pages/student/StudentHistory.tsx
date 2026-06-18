@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StudentClassCard } from "@/components/student/StudentClassCard";
@@ -31,6 +31,13 @@ import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
 import { getClassStatusWithTime } from "@/lib/utils/classTime";
 import { studentPortal } from "@/content";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 function classLogToCardProps(record: {
   id: string;
@@ -68,12 +75,21 @@ function classLogToCardProps(record: {
   };
 }
 
+const PAGE_SIZE = 10;
+
 export default function StudentHistory() {
   const { data: classLogs = [], isLoading, error } = useStudentClassLogs();
   const stats = useStudentStats();
   const lastClass = useLastClass();
   const [statusFilter, setStatusFilter] = useState<string>("aberto");
   const [sortOrder, setSortOrder] = useState<string>("recente");
+  const [pageAulas, setPageAulas] = useState(1);
+  const [pagePresenca, setPagePresenca] = useState(1);
+  const [pageMedia, setPageMedia] = useState(1);
+
+  useEffect(() => {
+    setPageAulas(1);
+  }, [statusFilter, sortOrder]);
 
   const attendancePercentage = stats.attendanceRate.toFixed(0);
 
@@ -159,6 +175,63 @@ export default function StudentHistory() {
 
     return sorted;
   }, [classLogs, statusFilter, sortOrder]);
+
+  const totalPagesAulas = Math.ceil(filteredClassLogs.length / PAGE_SIZE);
+  const pagedAulas = filteredClassLogs.slice(
+    (pageAulas - 1) * PAGE_SIZE,
+    pageAulas * PAGE_SIZE
+  );
+
+  const totalPagesPresenca = Math.ceil(missedClasses.length / PAGE_SIZE);
+  const pagedPresenca = missedClasses.slice(
+    (pagePresenca - 1) * PAGE_SIZE,
+    pagePresenca * PAGE_SIZE
+  );
+
+  const totalPagesMedia = Math.ceil(classesWithGrade.length / PAGE_SIZE);
+  const pagedMedia = classesWithGrade.slice(
+    (pageMedia - 1) * PAGE_SIZE,
+    pageMedia * PAGE_SIZE
+  );
+
+  const renderPagination = (
+    currentPage: number,
+    totalPages: number,
+    setPage: (p: number) => void
+  ) =>
+    totalPages > 1 ? (
+      <Pagination className="mt-4">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => setPage(Math.max(1, currentPage - 1))}
+              aria-disabled={currentPage === 1}
+              className={
+                currentPage === 1
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer"
+              }
+            />
+          </PaginationItem>
+          <PaginationItem>
+            <span className="px-3 py-2 text-sm">
+              {currentPage} / {totalPages}
+            </span>
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
+              aria-disabled={currentPage === totalPages}
+              className={
+                currentPage === totalPages
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer"
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    ) : null;
 
   const renderClassCards = (records: typeof classLogs) =>
     records.length === 0 ? (
@@ -289,7 +362,8 @@ export default function StudentHistory() {
               <h2 className={typography("TABLE_HEADER")}>
                 {studentPortal.history.sectionTitle}
               </h2>
-              {renderClassCards(filteredClassLogs)}
+              {renderClassCards(pagedAulas)}
+              {renderPagination(pageAulas, totalPagesAulas, setPageAulas)}
             </div>
           </TabsContent>
 
@@ -328,7 +402,14 @@ export default function StudentHistory() {
                   </p>
                 </div>
               ) : (
-                renderClassCards(missedClasses)
+                <>
+                  {renderClassCards(pagedPresenca)}
+                  {renderPagination(
+                    pagePresenca,
+                    totalPagesPresenca,
+                    setPagePresenca
+                  )}
+                </>
               )}
             </div>
           </TabsContent>
@@ -376,7 +457,10 @@ export default function StudentHistory() {
                   </p>
                 </div>
               ) : (
-                renderClassCards(classesWithGrade)
+                <>
+                  {renderClassCards(pagedMedia)}
+                  {renderPagination(pageMedia, totalPagesMedia, setPageMedia)}
+                </>
               )}
             </div>
           </TabsContent>

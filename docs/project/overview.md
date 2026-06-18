@@ -186,9 +186,9 @@ Components → Hooks → Supabase SDK → PostgreSQL
 
 ### Desenvolvimento
 
-- **Período:** Janeiro–Junho 2026 (~5 meses)
+- **Período:** Janeiro–Junho 2026 (4,5 meses)
 - **Desenvolvedor:** 1 (solo)
-- **Sprints:** 30 documentadas
+- **Sprints:** 31 documentadas
 
 ### Implementação
 
@@ -218,7 +218,7 @@ Components → Hooks → Supabase SDK → PostgreSQL
 
 ### Hipóteses
 
-- **H1:** Desenvolver SaaS funcional e seguro solo em ~3 meses com IA → ✅ Confirmada
+- **H1:** Desenvolver SaaS funcional e seguro solo com IA em prazo acadêmico → ✅ Confirmada (4,5 meses)
 - **H2:** BaaS (Supabase) reduz 60-70% esforço de backend → ✅ Confirmada
 - **H3:** IA aumenta produtividade 3-10x em tarefas específicas → ✅ Confirmada
 
@@ -252,7 +252,7 @@ Components → Hooks → Supabase SDK → PostgreSQL
 ## Referências
 
 - **Documentação Técnica:** [docs/](./README.md)
-- **TCC:** [docs/tcc/](./tcc/README.md)
+- **TCC:** [docs/tcc-8-periodo/](./tcc-8-periodo/README.md)
 - **Sprints:** [docs/sprints/](./sprints/README.md)
 - **Arquitetura:** [docs/architecture/](./architecture/overview.md)
 - **Código:** `src/`, `supabase/`

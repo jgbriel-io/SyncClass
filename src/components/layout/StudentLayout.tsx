@@ -23,7 +23,7 @@ const navigation = [
   { name: "Histórico", href: "/student/history", icon: BookOpen },
   { name: "Atividades", href: "/student/activities", icon: FileText },
   { name: "Financeiro", href: "/student/financial", icon: CreditCard },
-  { name: layout.settings.title, href: "/student/settings", icon: Settings },
+  { name: "Config.", href: "/student/settings", icon: Settings },
 ];
 
 export function StudentLayout({ children }: StudentLayoutProps) {
@@ -91,7 +91,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
         className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
         aria-label={layout.accessibility.mainNavAriaLabel}
       >
-        <div className="flex items-center justify-around py-2">
+        <div className="flex items-center py-2">
           {navigation.map((item) => {
             const isActive = (item as { exact?: boolean }).exact
               ? location.pathname === item.href
@@ -103,7 +103,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
                 aria-label={item.name}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-4 py-2 text-xs font-medium transition-colors",
+                  "flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition-colors min-w-0",
                   isActive
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"

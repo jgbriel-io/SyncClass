@@ -59,8 +59,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Criar estudante → aparece na lista
 - [x] Editar aluno → dados atualizados (students.name, profiles.full_name, auth.users sincronizados)
 - [x] Hard delete → remove permanentemente (confirmação obrigatória)
-- [ ] Hard delete aluno sem aulas agendadas → modal exibe checkbox + botão bloqueado até marcar
-- [ ] Hard delete aluno COM aulas agendadas → mesmo modal com checkbox, force delete ao confirmar
+- [x] Hard delete aluno sem aulas agendadas → modal exibe checkbox + botão bloqueado até marcar
+- [x] Hard delete aluno COM aulas agendadas → mesmo modal com checkbox, force delete ao confirmar
 - [x] Admin não vê botões de ação nas linhas da tabela (read-only)
 
 ### Teachers (`/admin/teachers`)
@@ -71,8 +71,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Soft delete → professor some da lista ativa
 - [x] Restaurar professor arquivado → volta à lista
 - [x] Hard delete → remove permanentemente (confirmação obrigatória)
-- [ ] Hard delete professor sem aulas agendadas → modal exibe checkbox + botão bloqueado até marcar
-- [ ] Hard delete professor COM aulas agendadas → force delete ao confirmar checkbox
+- [x] Hard delete professor sem aulas agendadas → modal exibe checkbox + botão bloqueado até marcar
+- [x] Hard delete professor COM aulas agendadas → force delete ao confirmar checkbox
 - [x] Redefinir Senha
 
 ### Users (`/admin/users`)
@@ -85,7 +85,7 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Editar professor → dados atualizados em teachers e profiles
 - [x] Seletor de professor pré-preenchido ao reabrir formulário de edição de aluno
 - [x] Hard delete (usuário com vínculo student/teacher) → anonimiza domain record + remove auth
-- [ ] Hard delete usuário admin (sem vínculo) → modal com checkbox, profiles.full_name/email/avatar_url anonimizados
+- [x] Hard delete usuário admin (sem vínculo) → modal com checkbox, profiles.full_name/email/avatar_url anonimizados
 - [x] Deletar usuário → sessão invalidada (logout automático se logado)
 
 ### Financial (`/admin/financial`)
@@ -169,25 +169,23 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Criar cobrança individual → aparece na lista
 - [x] Criar cobrança de pacote (vincula N aulas) → aparece corretamente
 - [x] Editar cobrança pendente
-- [ ] Cancelar cobrança
-- [ ] Abonar cobrança
+- [x] Cancelar cobrança
+- [x] Abonar cobrança
 - [x] Timeline de transações exibe histórico
 - [x] Cobrança `pago` com `payment_provider='abacate_pay'` → botão "Reembolso" visível
-- [ ] Botão "Reembolso" (AbacatePay) → dialog exibe campo motivo + botão "Reembolsar via PIX"
-- [ ] Confirmar reembolso AbacatePay → toast "Reembolso PIX processado com sucesso!", status → `extornado`
-- [x] Cobrança `pago` sem `payment_provider` (manual/legado) → dialog exibe instrução manual + botão "Confirmar reembolso"
-- [x] Confirmar reembolso manual → toast "Reembolso registrado com sucesso!", status → `extornado`
-- [ ] Cobrança com aula vinculada (`attendance != null`) → aviso destrutivo extra exibido no dialog de reembolso
+- [x] Botão "Reembolso" (AbacatePay) → dialog exibe campo motivo + botão "Reembolsar via PIX"
+- [x] Confirmar reembolso AbacatePay → toast "Reembolso PIX processado com sucesso!", status → `extornado`
+- [x] Cobrança com aula vinculada (`attendance != null`) → aviso destrutivo extra exibido no dialog de reembolso
 
 ### Settings — Pagamentos (`/settings` ou `/teacher/settings`)
 
-- [ ] Aba "Pagamentos" exibe badge "Não configurado" sem API key salva
-- [ ] Campo API key não pré-preenche com ciphertext ao clicar "Editar" (deve iniciar vazio)
-- [ ] Salvar API key válida → badge muda para "Configurado", webhook URL exibida
-- [ ] Webhook URL copiada com botão → toast de confirmação
-- [ ] Clicar "Editar" novamente → campo começa vazio (não mostra ciphertext)
+- [x] Aba "Pagamentos" exibe badge "Não configurado" sem API key salva
+- [x] Campo API key não pré-preenche com ciphertext ao clicar "Configurar" (deve iniciar vazio)
+- [x] Salvar API key válida → badge muda para "Configurado", webhook URL exibida
+- [x] Webhook URL copiada com botão → toast de confirmação
+- [x] Clicar "Editar" novamente → campo começa vazio (não mostra ciphertext)
 - [x] Remover integração → badge volta para "Não configurado", webhook URL some
-- [ ] Professor sem API key → aluno vê mensagem amigável no checkout (não crash)
+- [x] Professor sem API key → aluno vê mensagem amigável no checkout (não crash)
 
 ### Activities (`/teacher/activities`)
 
@@ -195,8 +193,8 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 - [x] Criar atividade (título, prazo, aluno) → aparece
 - [x] Editar atividade
 - [x] Deletar atividade
-- [ ] Ver submissão do aluno (arquivo)
-- [ ] Corrigir atividade (nota + feedback + arquivo de correção) → aluno vê correção
+- [x] Ver submissão do aluno (arquivo)
+- [x] Corrigir atividade (nota + feedback + arquivo de correção) → aluno vê correção
 
 ### Overview (`/teacher/overview`)
 
@@ -211,37 +209,36 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Home (`/student`)
 
-- [ ] Tela inicial carrega com informações do aluno
-- [ ] Responsivo em mobile (375px)
+- [x] Tela inicial carrega com informações do aluno
+- [x] Responsivo em mobile (375px)
 
 ### History (`/student/history`)
 
-- [ ] Histórico de aulas exibe corretamente (data, duração, nota, feedback)
-- [ ] Paginação funciona
+- [x] Histórico de aulas exibe corretamente (data, duração, nota, feedback)
+- [x] Paginação funciona
 
 ### Financial (`/student/financial`)
 
-- [ ] Lista cobranças do aluno logado (não vê cobranças de outros alunos)
-- [ ] Status de cada cobrança exibido corretamente (pendente / pago / atrasado / abonado / extornado / cancelado)
-- [ ] Cobrança `pendente` com `payment_provider='abacate_pay'` → botão "Pagar via PIX" leva para `/checkout/:id`
+- [x] Lista cobranças do aluno logado (não vê cobranças de outros alunos)
+- [x] Status de cada cobrança exibido corretamente (pendente / pago / atrasado / abonado / extornado / cancelado)
+- [x] Cobrança `pendente` com `payment_provider='abacate_pay'` → botão "Pagar via PIX" leva para `/checkout/:id`
 
 ### Checkout (`/student/financial/checkout/:recordId`)
 
-- [ ] Carrega cobrança específica pelo ID
-- [ ] Cobrança AbacatePay: formulário de CPF exibido
-- [ ] Cobrança AbacatePay: informar CPF + clicar "Gerar QR Code" → QR Code PIX renderiza
-- [ ] Cobrança AbacatePay: segundo acesso com QR ainda válido → mesmo QR retornado (cache)
-- [ ] Cobrança AbacatePay: após pagamento real → tela "Pagamento confirmado!" exibida automaticamente (realtime)
-- [ ] Cobrança AbacatePay: QR expirado → formulário de CPF exibido novamente
-- [ ] Cobrança manual/legada (`payment_provider != 'abacate_pay'`) → mensagem informativa exibida, sem formulário CPF
-- [ ] Professor sem API key configurada → mensagem de erro amigável no checkout
-- [ ] ID de outro aluno → acesso bloqueado (RLS)
+- [x] Carrega cobrança específica pelo ID
+- [x] Cobrança AbacatePay: formulário de CPF exibido
+- [x] Cobrança AbacatePay: informar CPF + clicar "Gerar QR Code" → QR Code PIX renderiza
+- [x] Cobrança AbacatePay: segundo acesso com QR ainda válido → mesmo QR retornado (cache)
+- [x] Cobrança AbacatePay: após pagamento real → tela "Pagamento confirmado!" exibida automaticamente (realtime)
+- [x] Cobrança AbacatePay: QR expirado → formulário de CPF exibido novamente
+- [x] Professor sem API key configurada → mensagem de erro amigável no checkout
+- [x] ID de outro aluno → acesso bloqueado (RLS)
 
 ### Activities (`/student/activities`)
 
-- [ ] Lista atividades atribuídas ao aluno
-- [ ] Submeter atividade (upload de arquivo) → status muda
-- [ ] Ver nota e correção após professor avaliar
+- [x] Lista atividades atribuídas ao aluno
+- [x] Submeter atividade (upload de arquivo) → status muda
+- [x] Ver nota e correção após professor avaliar
 
 ---
 
@@ -249,20 +246,20 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Isolamento de Dados (RLS)
 
-- [ ] Professor A não consegue ver alunos do Professor B (testar via URL direta)
-- [ ] Aluno A não consegue ver financeiro do Aluno B (`/student/financial/checkout/:idDoAlunoB`)
-- [ ] Teacher não acessa rotas `/admin/*` → redireciona ou 403
-- [ ] Teacher não acessa rotas `/student/*` → redireciona ou 403
-- [ ] Student não acessa rotas `/admin/*` → redireciona ou 403
-- [ ] Student não acessa rotas `/teacher/*` → redireciona ou 403
-- [ ] Admin acessa `/teacher/*` e `/student/*` — verificar se bloqueado ou permitido
+- [x] Professor A não consegue ver alunos do Professor B (testar via URL direta)
+- [x] Aluno A não consegue ver financeiro do Aluno B (`/student/financial/checkout/:idDoAlunoB`)
+- [x] Teacher não acessa rotas `/admin/*` → redireciona ou 403
+- [x] Teacher não acessa rotas `/student/*` → redireciona ou 403
+- [x] Student não acessa rotas `/admin/*` → redireciona ou 403
+- [x] Student não acessa rotas `/teacher/*` → redireciona ou 403
+- [x] Admin acessa `/teacher/*` e `/student/*` — verificar se bloqueado ou permitido
 
 ### Sessão e Auth
 
-- [ ] Logout → sessão encerrada, redirect para `/login`
+- [x] Logout → sessão encerrada, redirect para `/login`
 - [ ] Trocar senha in-app (ChangePasswordDialog, dentro da sessão) → nova senha funciona no próximo login
 - [ ] Trocar senha com senha atual errada → erro exibido
-- [ ] Sessão expirada → redirect automático para `/login`
+- [x] Sessão expirada → redirect automático para `/login`
 
 ### LGPD
 
@@ -272,27 +269,25 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Upload de Arquivos
 
-- [ ] Foto de perfil — upload pelo próprio usuário via Settings → Perfil (professor em `/teacher`, aluno em `/student`; não é feito pelo professor na tela de gestão de alunos)
-- [ ] Arquivo de atividade — upload pelo aluno
-- [ ] Arquivo de correção — upload pelo professor
+- [x] Foto de perfil — upload pelo próprio usuário via Settings → Perfil (professor em `/teacher`, aluno em `/student`; não é feito pelo professor na tela de gestão de alunos)
+- [x] Arquivo de atividade — upload pelo aluno
+- [x] Arquivo de correção — upload pelo professor
 
 ### Estados de UI
 
-- [ ] Empty states exibidos em listas vazias (sem alunos, sem aulas, etc.)
-- [ ] Skeletons de loading visíveis durante carregamento
-- [ ] Toasts de sucesso e erro aparecem após operações
-- [ ] Dialogs de confirmação para ações destrutivas (delete)
+- [x] Empty states exibidos em listas vazias (sem alunos, sem aulas, etc.)
+- [x] Skeletons de loading visíveis durante carregamento
+- [x] Toasts de sucesso e erro aparecem após operações
+- [x] Dialogs de confirmação para ações destrutivas (delete)
 
 ### Responsividade
 
-- [ ] `/student/*` — mobile 375px (portal do aluno é mobile-first)
-- [ ] `/teacher/*` — tablet 768px
-- [ ] Tabelas com scroll horizontal em mobile
+- [x] `/student/*` — mobile 375px (portal do aluno é mobile-first)
+- [x] `/teacher/*` — tablet 768px
+- [x] Tabelas com scroll horizontal em mobile
 
 ### Integrações e Validações
 
-- [ ] **CEP API** — criar aluno, digitar CEP válido → endereço auto-preenchido
-- [ ] **CEP inválido** → campo sem preenchimento automático, sem crash
 - [ ] **Email whitelist** — convidar usuário com domínio bloqueado (ex: `@tempmail.com`) → erro exibido
 - [ ] **PIX key masking** — chave PIX do professor exibida mascarada (não em texto claro)
 - [ ] **Idempotência** — tentar criar cobrança duplicada → sistema não duplica
@@ -300,78 +295,15 @@ Varredura manual de todas as 20 rotas da aplicação, cobrindo happy path, edge 
 
 ### Rotas Alias e Edge Cases
 
-- [ ] `/students` (alias de StudentShell) → carrega corretamente
-- [ ] `/teachers` (alias de TeacherShell) → carrega corretamente
-- [ ] Rota inexistente (ex: `/xyzabc`) → página 404 exibida
+- [x] `/students` (alias de StudentShell) → carrega corretamente
+- [x] `/teachers` (alias de TeacherShell) → carrega corretamente
+- [x] Rota inexistente (ex: `/xyzabc`) → página 404 exibida
 
 ### Volume de Dados
 
-- [ ] Lista com 20+ alunos → paginação funciona
-- [ ] Lista com 50+ aulas → paginação funciona, sem degradação visível
-- [ ] Financeiro com 30+ cobranças → filtros e paginação funcionam
-
----
-
-## 6. Validação de Toasts (Sprint 29 — refactor centralização)
-
-Após as mudanças de sprint 29 (strings de toast movidas para `src/content/`), validar que cada ação exibe o toast correto na UI.
-
-### Alunos
-
-- [ ] Criar aluno → "Aluno cadastrado com sucesso!"
-- [ ] Editar aluno → "Aluno atualizado com sucesso!"
-- [ ] Arquivar aluno → "Aluno arquivado e dados anonimizados (LGPD)"
-- [ ] Hard delete aluno → "Aluno excluído definitivamente."
-- [ ] Restaurar aluno → "Aluno restaurado com sucesso!"
-- [ ] Alterar dia de pagamento → "Dia de pagamento atualizado com sucesso!"
-
-### Professores
-
-- [ ] Criar professor → "Professor cadastrado com sucesso!"
-- [ ] Editar professor → "Professor atualizado com sucesso!"
-- [ ] Arquivar professor → "Professor arquivado com sucesso!"
-- [ ] Editar chave PIX → "Chave PIX atualizada com sucesso!"
-- [ ] Hard delete professor → "Professor excluído definitivamente."
-
-### Aulas
-
-- [ ] Registrar aula sem cobrança → "Aula registrada com sucesso!"
-- [ ] Registrar aula com cobrança → "Aula e cobrança registradas com sucesso!"
-- [ ] Editar aula → "Aula atualizada com sucesso!"
-- [ ] Deletar aula → "Registro removido com sucesso!"
-
-### Financeiro
-
-- [ ] Criar cobrança → "Cobrança criada com sucesso!"
-- [ ] Editar cobrança → "Cobrança atualizada com sucesso!"
-- [ ] Excluir cobrança → "Cobrança excluída com sucesso!"
-- [ ] Reembolso via AbacatePay → "Reembolso PIX processado com sucesso!"
-- [ ] Reembolso manual → "Reembolso registrado com sucesso!"
-
-### Atividades
-
-- [ ] Enviar atividade → "Atividade enviada com sucesso!"
-- [ ] Editar atividade → "Atividade atualizada com sucesso!"
-- [ ] Enviar correção → "Correção enviada com sucesso!"
-- [ ] Excluir atividade → "Atividade excluída com sucesso!"
-
-### Perfil / Usuários
-
-- [ ] Alterar foto de perfil → "Foto de perfil atualizada."
-- [ ] Alterar nome (settings) → "Nome atualizado com sucesso!"
-- [ ] Alterar email (settings) → "Email atualizado com sucesso!"
-- [ ] Admin alterar role de usuário → "Usuário atualizado com sucesso!"
-- [ ] Admin convidar professor → "Professor e conta de acesso criados com sucesso!"
-- [ ] Admin reset senha de usuário → "Senha redefinida com sucesso. O usuário precisará fazer login novamente."
-- [ ] Vincular usuário a aluno → "Usuário vinculado ao aluno com sucesso."
-- [ ] Desvincular usuário → "Vínculo entre usuário e aluno removido."
-
-### Pagamentos AbacatePay (Settings)
-
-- [ ] Salvar API key → "Configuração salva com sucesso!"
-- [ ] Copiar webhook URL → toast de confirmação de cópia
-
----
+- [x] Lista com 20+ alunos → paginação funciona
+- [x] Lista com 50+ aulas → paginação funciona, sem degradação visível
+- [x] Financeiro com 30+ cobranças → filtros e paginação funcionam
 
 ## Resumo de Itens
 

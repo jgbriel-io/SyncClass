@@ -1,5 +1,5 @@
 /**
- * Design Tokens - Sistema de Design da English School Platform
+ * Design Tokens - Sistema de Design da SyncClass
  *
  * Centraliza todos os tokens de design para garantir consistência
  * visual e facilitar manutenção.

@@ -20,10 +20,6 @@ export const validation = {
   dateInvalid: "Data inválida (formato: dd/mm/aaaa)",
   dateFormat: "Formato deve ser dd/mm/aaaa",
 
-  // CEP
-  cepRequired: "CEP é obrigatório",
-  cepInvalid: "CEP inválido (formato: 00000-000)",
-
   // Valor monetário
   amountRequired: "Valor é obrigatório",
   amountInvalid: "Valor inválido (formato: 0,00)",

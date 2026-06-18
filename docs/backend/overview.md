@@ -44,9 +44,10 @@ URL: https://yxwtxewwszoovqrjrrfb.supabase.co
 **Client:**
 
 ```ts
-// src/integrations/supabase/client.ts
+// src/integrations/supabase/client.ts (gerado automaticamente)
+// Lê VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY via src/integrations/supabase/env.ts
 import { createClient } from "@supabase/supabase-js";
-const supabase = createClient(url, anonKey);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 ```
 
 ## Arquitetura
@@ -76,7 +77,7 @@ Supabase BaaS
 
 ### [Edge Functions](./edge-functions.md)
 
-6 functions Deno/TS para operações server-side.
+9 functions Deno/TS para operações server-side.
 
 **Conteúdo:**
 
@@ -86,6 +87,9 @@ Supabase BaaS
 - `export-user-data` — exportação de dados pessoais (LGPD)
 - `cleanup-old-records` — limpeza periódica de logs
 - `cleanup-storage` — limpeza de arquivos órfãos
+- `create-abacate-payment` — gera QR Code PIX via AbacatePay (Sprint 30)
+- `refund-abacate-payment` — estorna pagamento via AbacatePay (Sprint 30)
+- `abacate-webhook` — processa notificações de pagamento AbacatePay (Sprint 30)
 
 ### [RPCs, Triggers e Views](./rpcs.md)
 
@@ -95,8 +99,8 @@ Operações complexas no banco.
 
 - RPCs principais (create_class_package, mark_as_paid_idempotent, etc)
 - Triggers ativos (validate_financial_logic, set_updated_at, etc)
-- Views (students_with_stats, financial_dashboard, etc)
-- Materialized views (refresh manual)
+- Views (students_with_stats, students_active, class_logs_with_billing, etc)
+- RPCs adicionais (admin_update_auth_display_name, encrypt_sensitive_data, etc)
 
 ### [Integrações](./integrations.md)
 

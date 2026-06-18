@@ -1,6 +1,6 @@
 # Centralização de Strings
 
-900+ strings centralizadas em 17 arquivos. 100% de centralização (0% hardcoding).
+900+ strings centralizadas em 18 arquivos. 100% de centralização (0% hardcoding).
 
 ## Índice
 
@@ -30,7 +30,7 @@
 
 **Localização:** `src/content/`
 
-**Arquivos (17):**
+**Arquivos (18):**
 
 | Arquivo             | Strings | Conteúdo                                                                  |
 | ------------------- | ------- | ------------------------------------------------------------------------- |
@@ -51,6 +51,7 @@
 | `ui.ts`             | 25+     | UI genérica (empty states, loading, errors)                               |
 | `pwa.ts`            | 15+     | PWA (install prompt, offline)                                             |
 | `filters.ts`        | 20+     | Filtros (search, sort, status)                                            |
+| `policies.ts`       | 20+     | Textos da página de políticas de privacidade                              |
 
 **Total:** 900+ strings centralizadas
 
