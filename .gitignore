@@ -181,3 +181,6 @@ integracao-abacate-referencia/
 # ============================================
 docs/tcc/
 docs/tcc-8-periodo/
+
+# Vitest snapshots
+**/__snapshots__/
