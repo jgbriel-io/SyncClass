@@ -27,12 +27,12 @@ SyncClass unifica cadastro de alunos, registro de aulas, controle financeiro, en
 | Métrica                    | Valor                              |
 | -------------------------- | ---------------------------------- |
 | Período de desenvolvimento | 19 jan – 26 mai 2026 (~18 semanas) |
-| Sprints implementadas      | 27                                 |
-| Commits                    | 60                                 |
-| Arquivos TypeScript        | 357                                |
-| Linhas de código (src)     | ~50.467                            |
-| Migrations SQL             | 43                                 |
-| Testes automatizados       | 287 (26 suites)                    |
+| Sprints implementadas      | 32                                 |
+| Commits                    | 181                                |
+| Arquivos TypeScript        | 360                                |
+| Linhas de código (src)     | ~49.159                            |
+| Migrations SQL             | 78                                 |
+| Testes automatizados       | 301 (28 suites)                    |
 | Strings UI centralizadas   | 860+                               |
 
 ## Comandos
@@ -41,7 +41,7 @@ SyncClass unifica cadastro de alunos, registro de aulas, controle financeiro, en
 npm install
 npm run dev          # servidor de desenvolvimento
 npm run build        # build de produção
-npm run test         # 287 testes (vitest)
+npm run test         # 301 testes (vitest)
 npm run lint         # ESLint
 npm run type-check   # tsc --noEmit
 npm run check        # lint + type-check
@@ -52,7 +52,7 @@ npm run check        # lint + type-check
 ```
 npm run lint       → 0 erros, 0 warnings
 npm run type-check → limpo
-npm run test       → 287/287 passando (26 suites)
+npm run test       → 301/301 passando (28 suites)
 npm run build      → sucesso (Vite 5.4)
 ```
 
@@ -77,7 +77,8 @@ npm run build      → sucesso (Vite 5.4)
 
 - Cobranças individuais e por pacote
 - Upload de comprovante pelo aluno
-- QR Code PIX por cobrança
+- QR Code PIX via AbacatePay (geração automática + confirmação via webhook)
+- Portal de checkout do aluno (mobile-first)
 - Timeline de transações
 - Fluxo: pendente → aguardando confirmação → pago / cancelado / abonado
 
@@ -111,14 +112,13 @@ src/
 │   └── security/    # Auth utilities
 └── test/            # Utilitários de teste
 supabase/
-├── migrations/      # 43 SQL migrations com RLS
+├── migrations/      # 78 SQL migrations com RLS
 └── functions/       # Edge Functions (Deno/TS)
 ```
 
 ## Documentação
 
-- [`docs/tcc/`](./docs/tcc/) — 10 capítulos do TCC
-- [`docs/sprints/`](./docs/sprints/) — 27 sprints implementadas
+- [`docs/sprints/`](./docs/sprints/) — 32 sprints implementadas
 - [`docs/architecture/`](./docs/architecture/) — Arquitetura e decisões técnicas
 - [`docs/database/`](./docs/database/) — Schema, migrations e RLS
 
