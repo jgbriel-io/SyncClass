@@ -59,6 +59,7 @@ export default function StudentCheckout() {
   );
   const [copied, setCopied] = useState(false);
   const [paid, setPaid] = useState(false);
+  const [forceShowForm, setForceShowForm] = useState(false);
 
   const record = recordId ? records.find((r) => r.id === recordId) : null;
   const isPaid = record?.status === "pago" || paid;
@@ -66,11 +67,14 @@ export default function StudentCheckout() {
   const hasValidPix = isPixValid(record?.pix_code, record?.pix_expires_at);
 
   // Derive what to display: prefer locally generated, fall back to stored record
-  const brCode =
-    generatedBrCode ?? (hasValidPix ? (record?.pix_code ?? null) : null);
-  const expiresAt =
-    generatedExpiresAt ??
-    (hasValidPix ? (record?.pix_expires_at ?? null) : null);
+  // forceShowForm suppresses the fallback so the CPF form is shown after "regenerate"
+  const brCode = forceShowForm
+    ? generatedBrCode
+    : (generatedBrCode ?? (hasValidPix ? (record?.pix_code ?? null) : null));
+  const expiresAt = forceShowForm
+    ? generatedExpiresAt
+    : (generatedExpiresAt ??
+      (hasValidPix ? (record?.pix_expires_at ?? null) : null));
 
   // Realtime: detect payment confirmed by webhook (via hook)
   useCheckoutPaymentStatus(isPaid ? undefined : recordId, () => setPaid(true));
@@ -88,6 +92,7 @@ export default function StudentCheckout() {
         onSuccess: (data) => {
           setGeneratedBrCode(data.brCode);
           setGeneratedExpiresAt(data.expiresAt);
+          setForceShowForm(false);
         },
       }
     );
@@ -273,6 +278,7 @@ export default function StudentCheckout() {
                         setGeneratedBrCode(null);
                         setGeneratedExpiresAt(null);
                         setCpf("");
+                        setForceShowForm(true);
                       }}
                     >
                       {content.regenerate}

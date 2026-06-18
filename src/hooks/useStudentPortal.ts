@@ -379,4 +379,22 @@ export function useCheckoutPaymentStatus(
       supabase.removeChannel(channel);
     };
   }, [recordId]);
+
+  // Polling fallback: realtime can miss events in some network conditions
+  useEffect(() => {
+    if (!recordId) return;
+
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from("financial_records")
+        .select("status")
+        .eq("id", recordId)
+        .maybeSingle();
+      if (data?.status === "pago") {
+        onPaidRef.current();
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [recordId]);
 }

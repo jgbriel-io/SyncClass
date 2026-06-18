@@ -61,20 +61,30 @@ serve(async (req) => {
     console.error("webhook_processing_log insert error:", logError.message);
   }
 
+  console.log("abacate-webhook event:", body.event, "data keys:", Object.keys(body.data || {}));
+
   if (
     body.event === "billing.paid" ||
     body.event === "pixQrCode.paid" ||
-    body.event === "transparent.paid"
+    body.event === "transparent.paid" ||
+    body.event === "transparent.completed"
   ) {
     const billingId: string | undefined =
-      body.data?.pixQrCode?.id || body.data?.id;
+      body.data?.pixQrCode?.id ||
+      body.data?.transparent?.id ||
+      body.data?.billing?.id ||
+      body.data?.id;
+
+    console.log("billingId extracted:", billingId, "| data.id:", body.data?.id, "| data.pixQrCode?.id:", body.data?.pixQrCode?.id, "| data.transparent?.id:", body.data?.transparent?.id);
 
     if (billingId) {
-      const { data: record } = await supabase
+      const { data: record, error: recordLookupError } = await supabase
         .from("financial_records")
         .select("id, status")
         .eq("external_payment_id", billingId)
         .maybeSingle();
+
+      console.log("record lookup:", record?.id ?? "not found", "| lookupError:", recordLookupError?.message ?? "none");
 
       if (record && record.status !== "pago") {
         const { error: updateError } = await supabase
@@ -88,9 +98,17 @@ serve(async (req) => {
 
         if (updateError) {
           console.error("financial_records update error:", updateError.message);
+        } else {
+          console.log("financial_record updated to pago:", record.id);
         }
+      } else if (record?.status === "pago") {
+        console.log("record already pago:", record.id);
       }
+    } else {
+      console.error("billingId not found in payload. Full data:", JSON.stringify(body.data));
     }
+  } else {
+    console.log("unhandled event type, skipping:", body.event);
   }
 
   return new Response(JSON.stringify({ received: true }), {
