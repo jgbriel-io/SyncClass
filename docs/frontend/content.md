@@ -325,7 +325,7 @@ npm run validate:strings  # Script customizado (se existir)
 
 - [Frontend Overview](./overview.md) — Visão geral do frontend
 - [Components](./components.md) — Uso de content em componentes
-- [Sprint 12](../../sprints/sprint-12-refactor-content-structure-i18n-prep.md) — Criação da estrutura
-- [Sprint 13](../../sprints/sprint-13-refactor-centralize-ui-strings.md) — Expansão
-- [Sprint 14](../../sprints/sprint-14-refactor-remove-hardcoded-strings.md) — Migração
-- [Sprint 15](../../sprints/sprint-15-refactor-final-string-audit.md) — Auditoria final
+- [Sprint 12](../sprints/sprint-12-refactor-content-structure-i18n-prep.md) — Criação da estrutura
+- [Sprint 13](../sprints/sprint-13-refactor-centralize-ui-strings.md) — Expansão
+- [Sprint 14](../sprints/sprint-14-refactor-remove-hardcoded-strings.md) — Migração
+- [Sprint 15](../sprints/sprint-15-refactor-final-string-audit.md) — Auditoria final

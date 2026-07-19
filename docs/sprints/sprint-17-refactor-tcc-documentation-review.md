@@ -54,10 +54,7 @@ docs/tcc/
 ├── cap9-deploy-infra.md
 ├── cap10-conclusao.md
 ├── assets-pendentes.md
-├── tcc-referencia.md
-└── tcc-8-periodo/
-    ├── projeto-escrito/
-    └── projeto-pratico/
+└── tcc-referencia.md
 ```
 
 ### Convenções de TCC
@@ -85,10 +82,7 @@ docs/tcc/
 ├── cap9-deploy-infra.md         ← Revisado
 ├── cap10-conclusao.md           ← Revisado
 ├── referencias.md               ← Renomeado de tcc-referencia.md
-├── assets-pendentes.md          ← Mantido como checklist global
-└── tcc-8-periodo/
-    ├── projeto-escrito/
-    └── projeto-pratico/
+└── assets-pendentes.md          ← Mantido como checklist global
 ```
 
 ### Padrão de Capítulo
@@ -118,7 +112,6 @@ Conteúdo...
 
 ## Referências Cruzadas
 
-- [Cap 2 — Referencial Teórico](./cap2-referencial.md)
 - [Docs Técnicos — Architecture](../architecture/overview.md)
 ```
 
@@ -318,7 +311,6 @@ Conteúdo...
 
 ## Referências Cruzadas
 
-- [Cap X — Título](./capX-titulo.md) — Descrição
 - [Docs Técnicos — Architecture](../architecture/overview.md) — Descrição
 ```
 
@@ -332,7 +324,6 @@ docs/tcc/
 ## Files Modified
 
 - `docs/tcc/cap1-introducao.md` — resumo + refs cruzadas + data 21/05
-- `docs/tcc/cap2-referencial.md` — resumo + refs cruzadas + data 21/05
 - `docs/tcc/cap3-metodologia.md` — resumo + refs cruzadas + data 21/05
 - `docs/tcc/cap4-requisitos.md` — resumo + refs cruzadas + data 21/05
 - `docs/tcc/cap5-modelagem.md` — resumo + refs cruzadas + data 21/05
@@ -342,8 +333,7 @@ docs/tcc/
 - `docs/tcc/cap9-deploy-infra.md` — resumo + refs cruzadas + data 21/05
 - `docs/tcc/cap10-conclusao.md` — resumo + refs cruzadas + data 21/05
 - `docs/tcc/assets-pendentes.md` — refs corrigidas (database/schema.md, sprints/historico-completo.md)
-- `docs/tcc/tcc-8-periodo/projeto-escrito/referencias-bibliograficas.md` — TanStack Query + shadcn/ui adicionadas, datas 21/mai/2026
-- `docs/tcc/tcc-8-periodo/projeto-escrito/guia-de-normatizacao-e-estrutura-final.md` — nomes caps sincronizados, data 21/05
+- `docs/tcc/referencias.md` — referências bibliográficas atualizadas
 
 ## Files Renamed
 

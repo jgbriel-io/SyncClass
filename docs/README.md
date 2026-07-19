@@ -11,9 +11,6 @@ Plataforma SaaS para gestão de professores autônomos de inglês. Projeto de TC
 ```
 docs/                       ← projeto prático (documentação técnica do código)
   architecture/ backend/ database/ frontend/ git/ project/ security/ sprints/
-
-docs/tcc-8-periodo/         ← TCC acadêmico (faculdade FEPI)
-  gestao-projeto/ projeto-pratico/ projeto-escrito/ assets/ material-faculdade/
 ```
 
 ---
@@ -97,51 +94,18 @@ Desenvolvimento iterativo — 31 iterações documentadas.
 
 ---
 
-## Estrutura — TCC Acadêmico
-
-### [tcc-8-periodo/](./tcc-8-periodo/)
-
-Documentação acadêmica do TCC FEPI — 8º período.
-
-- [README.md](./tcc-8-periodo/README.md) — índice geral do TCC
-
-#### [tcc-8-periodo/projeto-escrito/](./tcc-8-periodo/projeto-escrito/)
-
-Texto final e decisões de escrita.
-
-- [capitulos-final/](./tcc-8-periodo/projeto-escrito/capitulos-final/) — capítulos 1–5 (`.md`), apêndices, referências, listas
-- [capitulos-guia/](./tcc-8-periodo/projeto-escrito/capitulos-guia/) — guias de escrita por capítulo
-- [decisoes/](./tcc-8-periodo/projeto-escrito/decisoes/) — `decisoes-transversais.md` (valores canônicos), `decisoes-escrita.md`
-- [revisoes/](./tcc-8-periodo/projeto-escrito/revisoes/) — parecer de banca simulado, revisão do orientador
-- [pendencias-manuais/](./tcc-8-periodo/projeto-escrito/pendencias-manuais/) — assets pendentes, guia Word, próximos passos
-
-#### [tcc-8-periodo/gestao-projeto/](./tcc-8-periodo/gestao-projeto/)
-
-Requisitos, regras de negócio, validação de sprints.
-
-#### [tcc-8-periodo/projeto-pratico/](./tcc-8-periodo/projeto-pratico/)
-
-Histórico de desenvolvimento, resumo executivo, métricas extraídas do código.
-
-#### [tcc-8-periodo/assets/](./tcc-8-periodo/assets/)
-
-Diagramas HTML interativos (H1/H2/H3, arquitetura, RLS, metodologia) + briefing de slides + guia de apresentação.
-
----
-
 ## Status
 
-| Domínio       | Arquivos       | Status |
-| ------------- | -------------- | ------ |
-| Project       | 1              | ✅     |
-| Architecture  | 6              | ✅     |
-| Backend       | 5              | ✅     |
-| Database      | 5              | ✅     |
-| Security      | 3              | ✅     |
-| Frontend      | 5              | ✅     |
-| Git           | 3              | ✅     |
-| Sprints       | 31             | ✅     |
-| TCC acadêmico | tcc-8-periodo/ | ✅     |
+| Domínio      | Arquivos | Status |
+| ------------ | -------- | ------ |
+| Project      | 1        | ✅     |
+| Architecture | 6        | ✅     |
+| Backend      | 5        | ✅     |
+| Database     | 5        | ✅     |
+| Security     | 3        | ✅     |
+| Frontend     | 5        | ✅     |
+| Git          | 3        | ✅     |
+| Sprints      | 31       | ✅     |
 
 ## Guia rápido
 
@@ -186,8 +150,7 @@ docs/
 ├── security/        # 3 arquivos
 ├── frontend/        # 5 arquivos
 ├── git/             # 3 arquivos
-├── sprints/         # 31 iterações
-└── tcc-8-periodo/   # TCC acadêmico (FEPI)
+└── sprints/         # 31 iterações
 ```
 
 ### Roles
@@ -224,5 +187,3 @@ docs/
 
 - [Visão executiva](./project/overview.md) — comece aqui
 - [Iterações](./sprints/README.md) — histórico de desenvolvimento
-- [Valores canônicos do TCC](./tcc-8-periodo/projeto-escrito/decisoes/decisoes-transversais.md)
-- [Assets de slides pendentes](./tcc-8-periodo/projeto-escrito/pendencias-manuais/assets-pendentes.md)

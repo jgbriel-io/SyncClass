@@ -1,6 +1,6 @@
 # Contexto do Projeto — SyncClass
 
-**Última Atualização:** 01/06/2026
+**Última Atualização:** 18/07/2026
 
 ## O que é
 
@@ -251,10 +251,9 @@ Components → Hooks → Supabase SDK → PostgreSQL
 
 ## Referências
 
-- **Documentação Técnica:** [docs/](./README.md)
-- **TCC:** [docs/tcc-8-periodo/](./tcc-8-periodo/README.md)
-- **Sprints:** [docs/sprints/](./sprints/README.md)
-- **Arquitetura:** [docs/architecture/](./architecture/overview.md)
+- **Documentação Técnica:** [docs/](../README.md)
+- **Sprints:** [docs/sprints/](../sprints/README.md)
+- **Arquitetura:** [docs/architecture/](../architecture/overview.md)
 - **Código:** `src/`, `supabase/`
 
 ## Contato

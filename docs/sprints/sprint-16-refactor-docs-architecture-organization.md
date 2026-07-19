@@ -387,9 +387,7 @@ docs/
     └── TEMPLATE.md
 
 tcc/
-└── tcc-8-periodo/
-    └── projeto-pratico/
-        └── historico-de-desenvolvimento-syncclass.md  ← Atualizado com Sprint 16
+└── (documentação acadêmica removida)
 ```
 
 **Total de arquivos criados:** 28 novos arquivos  
@@ -399,10 +397,9 @@ tcc/
 
 ## Files Modified
 
-- `docs/README.md` — atualizado com estrutura hierárquica completa (53 arquivos)
+- `docs/README.md` — atualizado com estrutura hierárquica completa
 - `docs/sprints/README.md` — atualizado com novos nomes de sprints
 - `docs/sprints/historico-completo.md` — atualizado com Sprint 16
-- `docs/tcc-8-periodo/projeto-pratico/historico-de-desenvolvimento-syncclass.md` — atualizado com Sprint 16
 - Todos os overviews padronizados (intro, índice, quando usar, ver também)
 
 ## Files Deleted

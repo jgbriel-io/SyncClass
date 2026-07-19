@@ -169,4 +169,3 @@ Erros comuns, diagnóstico e soluções.
 - [Frontend Overview](../frontend/overview.md) — Componentes, design tokens, UI patterns
 - [Backend Overview](../backend/overview.md) — Edge Functions, integrações, APIs
 - [Sprints](../sprints/README.md) — Histórico de desenvolvimento e decisões por sprint
-- [Validação de Sprints](../tcc-8-periodo/gestao-projeto/validacao-sprints.md) — Evidências de implementação

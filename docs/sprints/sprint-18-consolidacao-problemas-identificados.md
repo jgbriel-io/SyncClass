@@ -553,7 +553,6 @@ Correção planejada mas não implementada no MVP.
 - [x] `docs/architecture/technical-debt.md` — 6 problemas arquiteturais + 8 refatorações
 - [x] `docs/architecture/troubleshooting.md` — 5 erros comuns + diagnóstico
 - [x] `docs/backend/bugs.md` — 7 bugs conhecidos + fix
-- [x] `docs/tcc-8-periodo/projeto-escrito/capitulos/cap8-gestao.md` — Tabela de riscos (R07, R08)
 - [x] Esta sprint — Consolidação de todos os problemas
 
 ## Métricas
@@ -627,11 +626,9 @@ Correção planejada mas não implementada no MVP.
 
 ## Referências
 
-- [Code Review](../code-review.md) — Review completo da plataforma (88%)
 - [Architecture Technical Debt](../architecture/technical-debt.md) — 6 problemas arquiteturais + 8 refatorações
 - [Architecture Troubleshooting](../architecture/troubleshooting.md) — 5 erros comuns
 - [Backend Bugs](../backend/bugs.md) — 7 bugs conhecidos
-- [Cap. 8 — Gestão](../tcc/tecnico/cap8-gestao.md) — Tabela de riscos
 - [Sprint 16](./sprint-16-refactor-docs-architecture-organization.md) — Organização de docs
 - [Sprint 17](./sprint-17-refactor-tcc-documentation-review.md) — Revisão TCC
 - [Sprint 21 — Tech Debt Backlog](./sprint-21-tech-debt-backlog.md) — 7 itens movidos desta sprint

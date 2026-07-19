@@ -53,15 +53,15 @@ O cronograma deixou de ser capítulo e virou Apêndice F (NBR 14724: textuais = 
 **Regras de estilo (além da voz impessoal):** terceira pessoa; sem travessão como pontuação em prosa; sem jargão de IA; "iteração" no lugar de "Sprint".
 
 **Fluxo:**
-- Rascunhos (guia/base): `docs/tcc-8-periodo/projeto-escrito/capitulos-guia/cap{N}-*.md`
-- Versões finais (entrega): `docs/tcc-8-periodo/projeto-escrito/capitulos-final/capitulo{N}-final.md`
-- Estrutura canônica: `decisoes-transversais.md` §0
+- Rascunhos (guia/base): arquivo markdown do capítulo
+- Versões finais (entrega): capítulo revisado e finalizado
+- Estrutura canônica: ver `docs/architecture/overview.md`
 
 ## Traduzir Código Real → Texto Acadêmico
 
 Fontes verídicas do projeto (ler antes de afirmar):
-- `docs/tcc-8-periodo/projeto-escrito/decisoes-transversais.md` — valores canônicos (152 commits, 31 RF, 37 hooks, 70 migrations, ~3 meses março–junho 2026)
-- `docs/tcc-8-periodo/projeto-escrito/decisoes-escrita.md` — decisões por capítulo
+- `docs/architecture/overview.md` — valores canônicos e decisões (152 commits, 31 sprints, 37 hooks, 70 migrations)
+- `docs/sprints/` — decisões por iteração
 - `docs/architecture/overview.md` — diagramas, camadas
 - `docs/sprints/` — 31 sprints
 - `supabase/migrations/` — 70 migrations
@@ -104,7 +104,6 @@ Fontes verídicas do projeto (ler antes de afirmar):
 
 ## Referências Base
 
-Ver: `docs/tcc-8-periodo/projeto-escrito/referencias-bibliograficas.md`
 - Thiollent, M. (2011) — Pesquisa-Ação
 - Tripp, D. (2005) — Pesquisa-ação: introdução metodológica
 - Anderson, D. J. (2010) — Kanban (referência para fluxo contínuo)

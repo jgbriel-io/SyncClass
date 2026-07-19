@@ -9,7 +9,7 @@ Sprints documentam desenvolvimento incremental do SyncClass. Cada sprint = conju
 **Características:**
 
 - Documentação retroativa (escrita após implementação)
-- Validada contra commits reais (97.8% evidência — ver `docs/tcc-8-periodo/gestao-projeto/validacao-sprints.md`)
+- Validada contra commits reais (97.8% evidência)
 - Estrutura padronizada (Problem → Requirements → Tasks → Results)
 - Foco em decisões técnicas e lições aprendidas
 
@@ -97,7 +97,7 @@ Features planejadas mas fora do escopo do TCC. Documentadas para extensão futur
 | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Notificações em tempo real                                                                        | [sprint-notificacoes](./sprint-notificacoes-NAO-IMPLEMENTADA.md)     |
 | Exportação de relatórios em PDF                                                                   | [sprint-exportacao-pdf](./sprint-exportacao-pdf-NAO-IMPLEMENTADA.md) |
-| ~~Integração com pagamento real (Stripe/Pix API)~~ — **Implementado via AbacatePay na Sprint 30** | [sprint-pagamento-real](./sprint-pagamento-real-NAO-IMPLEMENTADA.md) |
+| ~~Integração com pagamento real (Stripe/Pix API)~~ — **Implementado via AbacatePay na Sprint 30** | ✅ Implementado                                                      |
 | Gamificação do portal do aluno                                                                    | [sprint-gamificacao](./sprint-gamificacao-NAO-IMPLEMENTADA.md)       |
 
 ---
@@ -135,6 +135,4 @@ Features planejadas mas fora do escopo do TCC. Documentadas para extensão futur
 
 ## Referências
 
-- **Validação:** `docs/tcc-8-periodo/gestao-projeto/validacao-sprints.md` — prova que sprints batem com commits reais
-- **Histórico:** `docs/tcc-8-periodo/gestao-projeto/historico-desenvolvimento.md`
 - **Banco de dados:** `docs/database/analise-banco.md` — tabelas, views, functions ativas
