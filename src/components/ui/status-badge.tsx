@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type StatusVariant = "success" | "warning" | "destructive" | "default";
+type StatusVariant = "success" | "warning" | "destructive" | "default" | "info";
 
 interface StatusBadgeProps {
   variant: StatusVariant;
@@ -13,15 +13,17 @@ const variantStyles: Record<StatusVariant, string> = {
   warning: "bg-warning-muted text-warning border-warning/20",
   destructive: "bg-destructive-muted text-destructive border-destructive/20",
   default: "bg-muted text-muted-foreground border-border",
+  info: "bg-accent text-accent-foreground border-accent",
 };
 
 // Status neutros (default) usam formato quadrado — só status que pedem atenção
-// (success/warning/destructive) usam pill, reservando o formato arredondado
+// (success/warning/destructive/info) usam pill, reservando o formato arredondado
 // para o que precisa se destacar visualmente.
 const shapeStyles: Record<StatusVariant, string> = {
   success: "rounded-full",
   warning: "rounded-full",
   destructive: "rounded-full",
+  info: "rounded-full",
   default: "rounded-md",
 };
 
@@ -47,7 +49,8 @@ export function StatusBadge({
           variant === "success" && "bg-success",
           variant === "warning" && "bg-warning",
           variant === "destructive" && "bg-destructive",
-          variant === "default" && "bg-muted-foreground"
+          variant === "default" && "bg-muted-foreground",
+          variant === "info" && "bg-accent-foreground"
         )}
       />
       {children}

@@ -27,7 +27,7 @@ import { COL } from "./FinancialTableRow.constants";
 
 const statusVariants: Record<
   string,
-  "success" | "warning" | "destructive" | "default" | "secondary"
+  "success" | "warning" | "destructive" | "default"
 > = {
   pago: "success",
   pendente: "warning",
