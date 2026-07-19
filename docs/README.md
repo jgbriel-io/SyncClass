@@ -1,6 +1,6 @@
 # Documentação — SyncClass
 
-Plataforma SaaS para gestão de professores autônomos de inglês. Projeto de TCC — Engenharia de Software, FEPI, 8º período.
+Plataforma SaaS para gestão de professores autônomos de inglês. Projeto de TCC — Sistemas de Informação, FEPI, 8º período.
 
 ## Visão Geral
 

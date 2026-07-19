@@ -213,7 +213,7 @@ Components → Hooks → Supabase SDK → PostgreSQL
 
 - **Autor:** João Gabriel Silva Caetano
 - **Orientador:** Adriano Malerba
-- **Instituição:** FEPI — Engenharia de Software, 8º Período
+- **Instituição:** FEPI — Sistemas de Informação, 8º Período
 - **Tipo:** Trabalho de Conclusão de Curso
 
 ### Hipóteses

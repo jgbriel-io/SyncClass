@@ -1,7 +1,7 @@
 # SyncClass
 
 Plataforma SaaS para gestão de professores autônomos de inglês.  
-Desenvolvida como TCC de Engenharia de Software — FEPI, 8º período (jan–mai 2026).
+Desenvolvida como TCC de Sistemas de Informação — FEPI, 8º período (jan–mai 2026).
 
 ## Sobre
 
