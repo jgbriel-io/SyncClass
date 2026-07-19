@@ -180,6 +180,3 @@ integracao-abacate-referencia/
 # TCC — escrita acadêmica local, não versionada
 # ============================================
 docs/tcc/
-
-# Vitest snapshots
-**/__snapshots__/

@@ -1,0 +1,330 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`FinancialTableRow - Snapshot > should render financial row - paid 1`] = `
+<div>
+  <table>
+    <tbody>
+      <tr
+        class="group hover:bg-muted/30 transition-colors"
+      >
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap tablet:sticky tablet:left-0 z-20 bg-card group-hover:bg-muted transition-colors w-[280px] min-w-[280px] max-w-[280px] desktop:w-[360px] desktop:min-w-[360px] desktop:max-w-[360px]"
+          style="box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);"
+        >
+          <div
+            class="flex items-center gap-4 overflow-hidden"
+          >
+            <div
+              class="rounded-full bg-accent flex items-center justify-center flex-shrink-0 h-9 w-9 text-xs"
+            >
+              <span
+                class="font-medium text-accent-foreground"
+              >
+                J
+              </span>
+            </div>
+            <div
+              class="flex-1 min-w-0"
+            >
+              <p
+                class="text-xs font-medium truncate"
+                title="João Silva"
+              >
+                João Silva
+              </p>
+              <p
+                class="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate"
+                title="Editado em 15/01/2024, 07:30"
+              >
+                Editado em 15/01/2024, 07:30
+              </p>
+            </div>
+          </div>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap hidden lg:table-cell"
+        >
+          <span
+            class="text-xs text-muted-foreground/70 truncate block"
+            title="Sem aula vinculada"
+          >
+            Sem aula vinculada
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 140px; min-width: 140px;"
+        >
+          <span
+            class="text-xs tabular-nums font-semibold"
+            title="R$ 500,00"
+          >
+            R$ 500,00
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap hidden lg:table-cell"
+        >
+          <p
+            class="text-xs text-muted-foreground truncate"
+            title="PIX"
+          >
+            PIX
+          </p>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap hidden md:table-cell tabular-nums"
+          style="width: 140px; min-width: 140px;"
+        >
+          <p
+            class="text-xs text-muted-foreground truncate"
+            title="15/02/2024"
+          >
+            15/02/2024
+          </p>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 140px; min-width: 140px;"
+        >
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border rounded-full bg-success-muted text-success border-success/20 justify-center"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-success"
+            />
+            Pago
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 110px; min-width: 110px;"
+        >
+          <div
+            class="flex items-center justify-end"
+          >
+            <button
+              class="inline-flex items-center justify-center gap-2 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md px-3 h-8 w-[7rem] shrink-0 whitespace-nowrap text-xs"
+              title="Reembolso"
+            >
+              Reembolso
+            </button>
+          </div>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 90px; min-width: 90px;"
+        >
+          <div
+            class="flex items-center gap-2"
+          >
+            <button
+              aria-label="Ver histórico de pagamento"
+              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+              title="Ver histórico de pagamento"
+            >
+              <svg
+                aria-hidden="true"
+                class="h-4 w-4"
+                fill="currentColor"
+                height="1em"
+                viewBox="0 0 256 256"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M247.31,124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57,61.26,162.88,48,128,48S61.43,61.26,36.34,86.35C17.51,105.18,9,124,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208s66.57-13.26,91.66-38.34c18.83-18.83,27.3-37.61,27.65-38.4A8,8,0,0,0,247.31,124.76ZM128,192c-30.78,0-57.67-11.19-79.93-33.25A133.47,133.47,0,0,1,25,128,133.33,133.33,0,0,1,48.07,97.25C70.33,75.19,97.22,64,128,64s57.67,11.19,79.93,33.25A133.46,133.46,0,0,1,231.05,128C223.84,141.46,192.43,192,128,192Zm0-112a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Z"
+                />
+              </svg>
+            </button>
+            <button
+              aria-expanded="false"
+              aria-haspopup="menu"
+              aria-label="Mais opções"
+              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+              data-state="closed"
+              id="radix-:r2:"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="h-4 w-4"
+                fill="currentColor"
+                height="1em"
+                viewBox="0 0 256 256"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128Zm56-12a12,12,0,1,0,12,12A12,12,0,0,0,196,116ZM60,116a12,12,0,1,0,12,12A12,12,0,0,0,60,116Z"
+                />
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;
+
+exports[`FinancialTableRow - Snapshot > should render financial row with centralized content - pending 1`] = `
+<div>
+  <table>
+    <tbody>
+      <tr
+        class="group hover:bg-muted/30 transition-colors"
+      >
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap tablet:sticky tablet:left-0 z-20 bg-card group-hover:bg-muted transition-colors w-[280px] min-w-[280px] max-w-[280px] desktop:w-[360px] desktop:min-w-[360px] desktop:max-w-[360px]"
+          style="box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);"
+        >
+          <div
+            class="flex items-center gap-4 overflow-hidden"
+          >
+            <div
+              class="rounded-full bg-accent flex items-center justify-center flex-shrink-0 h-9 w-9 text-xs"
+            >
+              <span
+                class="font-medium text-accent-foreground"
+              >
+                J
+              </span>
+            </div>
+            <div
+              class="flex-1 min-w-0"
+            >
+              <p
+                class="text-xs font-medium truncate"
+                title="João Silva"
+              >
+                João Silva
+              </p>
+              <p
+                class="text-xs mobile:text-[11px] tablet:text-[11px] laptop:text-[11px] text-muted-foreground mt-0.5 truncate"
+                title="Editado em 15/01/2024, 07:30"
+              >
+                Editado em 15/01/2024, 07:30
+              </p>
+            </div>
+          </div>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap hidden lg:table-cell"
+        >
+          <span
+            class="text-xs text-muted-foreground/70 truncate block"
+            title="Sem aula vinculada"
+          >
+            Sem aula vinculada
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 140px; min-width: 140px;"
+        >
+          <span
+            class="text-xs tabular-nums font-semibold"
+            title="R$ 500,00"
+          >
+            R$ 500,00
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap hidden lg:table-cell"
+        >
+          <p
+            class="text-xs text-muted-foreground truncate"
+            title="PIX"
+          >
+            PIX
+          </p>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap hidden md:table-cell tabular-nums"
+          style="width: 140px; min-width: 140px;"
+        >
+          <p
+            class="text-xs text-muted-foreground truncate"
+            title="15/02/2024"
+          >
+            15/02/2024
+          </p>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 140px; min-width: 140px;"
+        >
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border rounded-full bg-warning-muted text-warning border-warning/20 justify-center"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-warning"
+            />
+            Pendente
+          </span>
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 110px; min-width: 110px;"
+        >
+          <div
+            class="flex items-center justify-end"
+          />
+        </td>
+        <td
+          class="px-2 py-2 mobile:px-2 mobile:py-2 tablet:px-2 tablet:py-2 laptop:px-2 laptop:py-2 align-middle text-left text-xs whitespace-nowrap"
+          style="width: 90px; min-width: 90px;"
+        >
+          <div
+            class="flex items-center gap-2"
+          >
+            <button
+              aria-label="Ver histórico de pagamento"
+              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+              title="Ver histórico de pagamento"
+            >
+              <svg
+                aria-hidden="true"
+                class="h-4 w-4"
+                fill="currentColor"
+                height="1em"
+                viewBox="0 0 256 256"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M247.31,124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57,61.26,162.88,48,128,48S61.43,61.26,36.34,86.35C17.51,105.18,9,124,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208s66.57-13.26,91.66-38.34c18.83-18.83,27.3-37.61,27.65-38.4A8,8,0,0,0,247.31,124.76ZM128,192c-30.78,0-57.67-11.19-79.93-33.25A133.47,133.47,0,0,1,25,128,133.33,133.33,0,0,1,48.07,97.25C70.33,75.19,97.22,64,128,64s57.67,11.19,79.93,33.25A133.46,133.46,0,0,1,231.05,128C223.84,141.46,192.43,192,128,192Zm0-112a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Z"
+                />
+              </svg>
+            </button>
+            <button
+              aria-expanded="false"
+              aria-haspopup="menu"
+              aria-label="Mais opções"
+              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+              data-state="closed"
+              id="radix-:r0:"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="h-4 w-4"
+                fill="currentColor"
+                height="1em"
+                viewBox="0 0 256 256"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128Zm56-12a12,12,0,1,0,12,12A12,12,0,0,0,196,116ZM60,116a12,12,0,1,0,12,12A12,12,0,0,0,60,116Z"
+                />
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;
