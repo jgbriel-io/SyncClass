@@ -187,3 +187,11 @@ docs/
 
 - [Visão executiva](./project/overview.md) — comece aqui
 - [Iterações](./sprints/README.md) — histórico de desenvolvimento
+
+## Licença
+
+© 2026 João Gabriel. Todos os direitos reservados.
+
+Código disponibilizado publicamente para fins de avaliação acadêmica (TCC — FEPI)
+e portfólio profissional. Uso, cópia, modificação ou redistribuição não são
+permitidos sem autorização expressa do autor.
