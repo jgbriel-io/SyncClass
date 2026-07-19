@@ -116,9 +116,9 @@ backup*.sql
 export*.sql
 *-dump.sql
 
-supabase/functions/**/
-!supabase/functions/**/*.ts
-!supabase/functions/**/deno.json
+supabase/functions/*/*
+!supabase/functions/*/*.ts
+!supabase/functions/*/deno.json
 
 # ============================================
 # SCRIPTS (Temporary/One-off)
@@ -180,7 +180,6 @@ integracao-abacate-referencia/
 # TCC — escrita acadêmica local, não versionada
 # ============================================
 docs/tcc/
-docs/tcc-8-periodo/
 
 # Vitest snapshots
 **/__snapshots__/
