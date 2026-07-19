@@ -157,6 +157,6 @@ export const layout = {
   },
 
   logo: {
-    initial: "E",
+    initial: "S",
   },
 } as const;
