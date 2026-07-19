@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody } from "@/components/ui/table";
-import { Plus, User } from "lucide-react";
+import { Plus, User } from "@phosphor-icons/react";
 import { UserFormDialog } from "@/components/users/UserFormDialog";
 import { PasswordDisplayDialog } from "@/components/users/PasswordDisplayDialog";
 import { ResetPasswordDialog } from "@/components/users/ResetPasswordDialog";
@@ -283,7 +283,7 @@ export default function UsersPage() {
 
       {/* Table */}
       <div
-        className="rounded-lg border bg-card shadow-card overflow-hidden"
+        className="rounded-xl border bg-card shadow-card overflow-hidden"
         ref={listTopRef}
       >
         <div className="overflow-x-auto">

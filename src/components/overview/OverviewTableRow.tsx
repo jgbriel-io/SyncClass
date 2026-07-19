@@ -2,7 +2,11 @@ import { common, overview } from "@/content";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { formatPhoneDisplay } from "@/lib/utils/format-phone";
 import { Button } from "@/components/ui/button";
-import { Eye, TrendingUp, TrendingDown } from "lucide-react";
+import {
+  Eye,
+  TrendUp as TrendingUp,
+  TrendDown as TrendingDown,
+} from "@phosphor-icons/react";
 import {
   CELL_BASE,
   STICKY_CELL,

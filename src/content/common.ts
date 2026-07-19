@@ -317,11 +317,10 @@ export const common = {
     copyright: (year: number) => `SyncClass © ${year}`,
     tagline:
       "Manage your classes, track progress, and handle payments all in one place.",
-    lgpd: "Conforme LGPD",
-    developedBy: "Desenvolvido com",
-    by: "por",
+    developedBy: "Desenvolvido por",
     developer: "Virtual Arrow",
     developerUrl: "https://virtualarrow.com.br",
+    lgpd: "Conforme LGPD",
   },
 
   // Toast notifications

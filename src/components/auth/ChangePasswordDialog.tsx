@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  Eye,
+  EyeSlash as EyeOff,
+  CircleNotch as Loader2,
+} from "@phosphor-icons/react";
 import {
   Dialog,
   DialogContent,

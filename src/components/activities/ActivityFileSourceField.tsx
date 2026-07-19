@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, FolderOpen, FileText } from "lucide-react";
+import { Upload, FolderOpen, FileText } from "@phosphor-icons/react";
 import { FILE_TYPES, formatFileSize } from "@/lib/utils/fileValidation";
 import { activities as activitiesContent } from "@/content";
 

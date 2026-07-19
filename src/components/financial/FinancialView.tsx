@@ -6,7 +6,7 @@ import { useTeachers, Teacher } from "@/hooks/useTeachers";
 import { FinancialForecastCard } from "@/components/financial/FinancialForecastCard";
 import { FinancialSummaryCards } from "@/components/financial/FinancialSummaryCards";
 import { useStudents } from "@/hooks/useStudents";
-import { Search } from "lucide-react";
+import { MagnifyingGlass as Search } from "@phosphor-icons/react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { PeriodFilter as PeriodFilterWidget } from "@/components/ui/period-filter";
 import {
@@ -243,7 +243,7 @@ export function FinancialView({
       )}
 
       <div
-        className="rounded-lg border bg-card shadow-card overflow-hidden"
+        className="rounded-xl border bg-card shadow-card overflow-hidden"
         ref={listTopRef}
       >
         <Table style={{ minWidth: FIN_TABLE_MIN_W }}>

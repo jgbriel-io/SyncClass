@@ -2,15 +2,16 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  Home,
+  House as Home,
   BookOpen,
   CreditCard,
-  LogOut,
-  Loader2,
-  Settings,
+  SignOut as LogOut,
+  CircleNotch as Loader2,
+  Gear as Settings,
   FileText,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useActiveUserCheck } from "@/hooks/useActiveUserCheck";
 import { InstallPWABanner } from "@/components/pwa/InstallPWABanner";
 import { layout, common } from "@/content";
 
@@ -30,6 +31,9 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
+
+  // Verificar se usuário está ativo (logout automático se desativado)
+  useActiveUserCheck();
 
   const handleLogout = async () => {
     setIsLoggingOut(true);

@@ -1,6 +1,10 @@
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Clock, DollarSign, ChevronRight } from "lucide-react";
+import {
+  Clock,
+  CurrencyDollar as DollarSign,
+  CaretRight as ChevronRight,
+} from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import type { UpcomingPayment } from "./DashboardView";

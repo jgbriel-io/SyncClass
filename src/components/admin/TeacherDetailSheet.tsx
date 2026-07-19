@@ -9,14 +9,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import {
   User,
-  Mail,
+  Envelope as Mail,
   Phone,
   Calendar,
   CreditCard,
   BookOpen,
   Users,
-  TrendingUp,
-} from "lucide-react";
+  TrendUp as TrendingUp,
+} from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTeachers } from "@/hooks/useTeachers";

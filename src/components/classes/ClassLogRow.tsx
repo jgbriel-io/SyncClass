@@ -8,13 +8,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  MoreHorizontal,
+  DotsThree as MoreHorizontal,
   Pencil,
-  Trash2,
+  Trash as Trash2,
   Receipt,
   Check,
   Lock,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClassLogWithStudent } from "@/hooks/useClassLogs";

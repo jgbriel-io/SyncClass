@@ -3,7 +3,12 @@ import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -14,15 +19,15 @@ export default {
       },
     },
     extend: {
-      // 4 breakpoints de responsividade: mobile (até 425px), tablet 768px, laptop 1024px, desktop 1440px
+      // 4 breakpoints de responsividade: mobile (até 767px), tablet 768px, laptop 1024px, desktop 1440px
       screens: {
-        mobile: { max: "425px" },
+        mobile: { max: "767px" },
         tablet: "768px",
         laptop: "1024px",
         desktop: "1440px",
       },
       fontFamily: {
-        sans: ['Geist Sans', 'system-ui', 'sans-serif'],
+        sans: ["Geist Sans", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -87,10 +92,10 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        'sm': 'var(--shadow-sm)',
-        'md': 'var(--shadow-md)',
-        'lg': 'var(--shadow-lg)',
-        'card': 'var(--shadow-card)',
+        sm: "var(--shadow-sm)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
+        card: "var(--shadow-card)",
       },
       keyframes: {
         "accordion-down": {

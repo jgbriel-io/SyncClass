@@ -3,7 +3,14 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Copy, Check, Eye, EyeOff, ExternalLink } from "lucide-react";
+import {
+  CircleNotch as Loader2,
+  Copy,
+  Check,
+  Eye,
+  EyeSlash as EyeOff,
+  ArrowSquareOut as ExternalLink,
+} from "@phosphor-icons/react";
 import {
   useTeacherAbacatePayConfig,
   useUpdateTeacherAbacatePayConfig,

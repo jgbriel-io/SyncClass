@@ -14,15 +14,15 @@ import { useCreateAbacatePayment } from "@/hooks/useFinancialRecords";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import {
   ArrowLeft,
-  Loader2,
+  CircleNotch as Loader2,
   FileText,
   Calendar,
   Wallet,
   QrCode,
   Copy,
   Check,
-  CheckCircle2,
-} from "lucide-react";
+  CheckCircle as CheckCircle2,
+} from "@phosphor-icons/react";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";

@@ -1,6 +1,6 @@
 import { Navigate, useSearchParams } from "react-router-dom";
 import { ClassesView } from "@/components/classes/ClassesView";
-import { Loader2 } from "lucide-react";
+import { CircleNotch as Loader2 } from "@phosphor-icons/react";
 import { useTeacherId } from "@/hooks/useTeacherId";
 import type { ClassStatusFilter } from "@/components/filters/ClassesFilters";
 import { typography } from "@/lib/design-tokens/typography";

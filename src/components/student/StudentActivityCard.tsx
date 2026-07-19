@@ -6,15 +6,15 @@ import {
   Download,
   FileText,
   Check,
-  MessageSquare,
+  ChatCircle as MessageSquare,
   File,
   Eye,
-  ChevronDown,
-  ChevronUp,
+  CaretDown as ChevronDown,
+  CaretUp as ChevronUp,
   User,
   Calendar,
   Clock,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {

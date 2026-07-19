@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { classes as classesContent, common } from "@/content";
 

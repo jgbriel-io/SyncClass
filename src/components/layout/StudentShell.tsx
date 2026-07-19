@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { CircleNotch as Loader2 } from "@phosphor-icons/react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { StudentLayout } from "@/components/layout/StudentLayout";
 

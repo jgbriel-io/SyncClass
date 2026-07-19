@@ -3,14 +3,14 @@ import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { formatPhoneDisplay } from "@/lib/utils/format-phone";
 import {
   User,
-  Mail,
+  Envelope as Mail,
   Phone,
   Calendar,
-  TrendingUp,
+  TrendUp as TrendingUp,
   BookOpen,
   MapPin,
   CreditCard,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { common, students as studentsContent } from "@/content";
 import type { StudentDetails } from "@/hooks/useStudentDetails";
 
@@ -62,7 +62,7 @@ export function StudentDetailInfoTab({ student }: StudentDetailInfoTabProps) {
       <div className="p-6 space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-lg border bg-card p-4">
+          <div className="rounded-xl border bg-card p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <TrendingUp className="h-4 w-4" />
               {common.labels.frequency}
@@ -75,7 +75,7 @@ export function StudentDetailInfoTab({ student }: StudentDetailInfoTabProps) {
               {common.labels.classes}
             </p>
           </div>
-          <div className="rounded-lg border bg-card p-4">
+          <div className="rounded-xl border bg-card p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <BookOpen className="h-4 w-4" />
               {common.labels.average}
@@ -176,7 +176,7 @@ export function StudentDetailInfoTab({ student }: StudentDetailInfoTabProps) {
                 value: student.pay_day != null ? String(student.pay_day) : "—",
               },
             ].map(({ label, value }) => (
-              <div key={label} className="rounded-lg border bg-card p-3">
+              <div key={label} className="rounded-xl border bg-card p-3">
                 <p className="text-xs text-muted-foreground mb-1">{label}</p>
                 <p className="text-sm font-semibold">{value}</p>
               </div>

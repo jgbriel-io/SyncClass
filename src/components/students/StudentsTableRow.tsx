@@ -10,13 +10,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  MoreHorizontal,
+  DotsThree as MoreHorizontal,
   Pencil,
-  Trash2,
+  Trash as Trash2,
   Eye,
-  KeyRound,
+  Key as KeyRound,
   Check,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Student } from "@/hooks/useStudents";

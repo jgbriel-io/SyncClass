@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Shield, FileText, Lock, AlertCircle } from "lucide-react";
+import {
+  Shield,
+  FileText,
+  Lock,
+  WarningCircle as AlertCircle,
+} from "@phosphor-icons/react";
 import { Footer } from "@/components/layout/Footer";
 import { cn } from "@/lib/utils";
 import { PrivacyPolicySection } from "@/components/policies/PrivacyPolicySection";

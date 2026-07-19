@@ -10,7 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import {
+  WarningCircle as AlertCircle,
+  ArrowsClockwise as RefreshCw,
+} from "@phosphor-icons/react";
 import { common } from "@/content";
 
 /**

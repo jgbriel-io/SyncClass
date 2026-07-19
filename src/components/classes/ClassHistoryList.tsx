@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { StudentClassCard } from "@/components/student/StudentClassCard";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BookOpen } from "lucide-react";
+import { BookOpen } from "@phosphor-icons/react";
 import { classes as classesContent, common } from "@/content";
 
 interface ClassLog {
@@ -69,7 +69,7 @@ export function ClassHistoryList({
 
   if (classLogs.length === 0) {
     return (
-      <div className="rounded-lg border bg-card">
+      <div className="rounded-xl border bg-card">
         <EmptyState icon={BookOpen} message={emptyMessage} />
       </div>
     );

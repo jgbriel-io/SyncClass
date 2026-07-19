@@ -1,4 +1,4 @@
-import { DollarSign } from "lucide-react";
+import { CurrencyDollar as DollarSign } from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { financial as financialContent } from "@/content";
 

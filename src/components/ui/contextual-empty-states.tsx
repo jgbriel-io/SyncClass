@@ -8,7 +8,12 @@ import {
   EmptySearchIllustration,
   EmptyActivitiesIllustration,
 } from "@/components/ui/empty-state-illustrations";
-import { Plus, Search, Calendar, DollarSign } from "lucide-react";
+import {
+  Plus,
+  MagnifyingGlass,
+  Calendar,
+  CurrencyDollar as DollarSign,
+} from "@phosphor-icons/react";
 import { ui } from "@/content";
 
 /**

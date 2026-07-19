@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { FileText } from "@phosphor-icons/react";
 import { userRights } from "@/content/policies";
 
 export function UserRightsSection() {

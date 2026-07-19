@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyStudentsState } from "@/components/ui/contextual-empty-states";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Search } from "lucide-react";
+import { MagnifyingGlass as Search } from "@phosphor-icons/react";
 import { useStudentsWithStatsPaginated } from "@/hooks/useStudentDetails";
 import { useStudents } from "@/hooks/useStudents";
 import { TablePaginationBar } from "@/components/ui/table-pagination-bar";
@@ -163,7 +163,7 @@ export function OverviewView({
 
       {/* Table */}
       <div
-        className="rounded-lg border bg-card shadow-card overflow-hidden"
+        className="rounded-xl border bg-card shadow-card overflow-hidden"
         ref={listTopRef}
       >
         <div className="overflow-x-auto">

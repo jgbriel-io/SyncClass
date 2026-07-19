@@ -70,7 +70,7 @@ export const StudentStatementTab = memo(function StudentStatementTab({
   const content = (
     <div className={embedded ? "space-y-4" : "p-6 space-y-4"}>
       {/* Header informativo */}
-      <div className="rounded-lg border bg-card p-3 flex items-center justify-between gap-4">
+      <div className="rounded-xl border bg-card p-3 flex items-center justify-between gap-4">
         <p className="text-sm font-medium">
           {totalAmount != null
             ? studentPortal.statement.totalLabel

@@ -10,15 +10,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Calendar,
-  MoreHorizontal,
+  DotsThree as MoreHorizontal,
   Pencil,
-  Trash2,
+  Trash as Trash2,
   Receipt,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
+  CaretLeft as ChevronLeft,
+  CaretRight as ChevronRight,
   Eye,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { isClassEvaluationBlocked } from "@/lib/utils/classTime";
@@ -68,7 +68,7 @@ export function ClassesCardView({
       {filteredLogs.map((log, index) => (
         <div
           key={log.id}
-          className="relative rounded-lg border bg-card p-6 shadow-card animate-slide-up"
+          className="relative rounded-xl border bg-card p-6 shadow-card animate-slide-up"
           style={{ animationDelay: `${index * 50}ms` }}
         >
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -227,7 +227,7 @@ export function ClassesCardView({
       ))}
 
       {filteredLogs.length === 0 && (
-        <div className="rounded-lg border bg-card">
+        <div className="rounded-xl border bg-card">
           {logs.length === 0 ? (
             <EmptyClassesState
               onAction={onCreateNew}
@@ -244,7 +244,7 @@ export function ClassesCardView({
       )}
 
       {(totalCount > 0 || page > 0) && (
-        <div className="rounded-lg border bg-card px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 flex items-center justify-between gap-4 bg-muted/30">
+        <div className="rounded-xl border bg-card px-6 py-3 mobile:px-3 mobile:py-2 tablet:px-3 tablet:py-2 laptop:px-3 laptop:py-2 flex items-center justify-between gap-4 bg-muted/30">
           <p className="text-sm text-muted-foreground">
             {totalCount > 0
               ? `${page * 10 + 1}-${Math.min((page + 1) * 10, totalCount)} de ${totalCount}`

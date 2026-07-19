@@ -11,7 +11,7 @@ import { BaseDialog } from "@/components/ui/custom/BaseDialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { CircleNotch as Loader2 } from "@phosphor-icons/react";
 import { UserWithProfile } from "@/hooks/useUsers";
 import type { Enums } from "@/integrations/supabase/types";
 import {

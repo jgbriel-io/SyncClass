@@ -1,6 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Download, CheckCircle2 } from "lucide-react";
+import { Download, CheckCircle as CheckCircle2 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { pwa, layout } from "@/content";
 import {

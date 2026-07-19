@@ -1,6 +1,6 @@
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Calendar, ChevronRight } from "lucide-react";
+import { Calendar, CaretRight as ChevronRight } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -52,7 +52,7 @@ export function DashboardBirthdayList({
               className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center">
+                <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center">
                   <span className="text-xs font-medium">
                     {birthday.name.charAt(0)}
                   </span>

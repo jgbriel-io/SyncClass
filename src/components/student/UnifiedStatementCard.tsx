@@ -2,11 +2,11 @@ import { memo } from "react";
 import { format } from "date-fns";
 import ptBR from "date-fns/locale/pt-BR";
 import {
-  CheckCircle2,
+  CheckCircle as CheckCircle2,
   XCircle,
-  CalendarClock,
-  AlertCircle,
-} from "lucide-react";
+  CalendarCheck as CalendarClock,
+  WarningCircle as AlertCircle,
+} from "@phosphor-icons/react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import type { StudentStatementEntry } from "@/hooks/useStudentStatement";
@@ -98,7 +98,7 @@ export const UnifiedStatementCard = memo(function UnifiedStatementCard({
         )}
       </div>
 
-      <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
         {/* Topo: Data, Matéria/Aula, Badge Presença/Status */}
         <div className="p-3 flex flex-wrap items-start justify-between gap-2">
           <div className="flex flex-wrap items-start gap-2 min-w-0">

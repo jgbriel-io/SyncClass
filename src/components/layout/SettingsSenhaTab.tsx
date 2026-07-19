@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, CheckCircle2 } from "lucide-react";
+import {
+  CircleNotch as Loader2,
+  Envelope as Mail,
+  CheckCircle as CheckCircle2,
+} from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";

@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Upload, FileText, X } from "lucide-react";
+import {
+  CircleNotch as Loader2,
+  Upload,
+  FileText,
+  X,
+} from "@phosphor-icons/react";
 import { uploadActivityFile } from "@/hooks/useActivities";
 import { useAuth } from "@/contexts/AuthContext";
 import {

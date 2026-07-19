@@ -10,7 +10,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Eye, Ban } from "lucide-react";
+import {
+  DotsThree as MoreHorizontal,
+  Pencil,
+  Eye,
+  Prohibit as Ban,
+} from "@phosphor-icons/react";
 import { FinancialRecordWithRelations } from "@/hooks/useFinancialRecords";
 import {
   CELL_BASE,

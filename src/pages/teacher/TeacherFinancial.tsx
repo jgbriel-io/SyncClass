@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { FinancialView } from "@/components/financial/FinancialView";
-import { Loader2 } from "lucide-react";
+import { CircleNotch as Loader2 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useTeacherId } from "@/hooks/useTeacherId";
 import { typography } from "@/lib/design-tokens/typography";

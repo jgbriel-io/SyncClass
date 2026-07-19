@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { TrendingUp, Filter, Loader2 } from "lucide-react";
+import {
+  TrendUp as TrendingUp,
+  FunnelSimple as Filter,
+  CircleNotch as Loader2,
+} from "@phosphor-icons/react";
 import {
   Select,
   SelectContent,

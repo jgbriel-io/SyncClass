@@ -10,14 +10,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Calendar,
-  ChevronDown,
-  ChevronUp,
+  CaretDown as ChevronDown,
+  CaretUp as ChevronUp,
   Download,
   File,
   FileText,
-  Loader2,
-  MessageSquare,
-} from "lucide-react";
+  CircleNotch as Loader2,
+  ChatCircle as MessageSquare,
+} from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {

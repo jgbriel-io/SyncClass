@@ -12,7 +12,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthRedirect } from "@/components/auth/AuthRedirect";
 import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { Loader2 } from "lucide-react";
+import { CircleNotch as Loader2 } from "@phosphor-icons/react";
 import { checkStorageQuota, clearStorageExcept } from "@/lib/utils/storage";
 import { toast } from "sonner";
 

@@ -3,13 +3,13 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
 import {
   CheckCircle,
-  AlertCircle,
+  WarningCircle as AlertCircle,
   BookOpen,
   Calendar,
-  Loader2,
-  TrendingUp,
-  Award,
-} from "lucide-react";
+  CircleNotch as Loader2,
+  TrendUp as TrendingUp,
+  Medal as Award,
+} from "@phosphor-icons/react";
 import { formatDate } from "@/lib/utils/formatters";
 import {
   useStudentProfile,

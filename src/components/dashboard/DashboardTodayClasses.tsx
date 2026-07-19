@@ -1,6 +1,10 @@
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Calendar, Clock, ChevronRight } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  CaretRight as ChevronRight,
+} from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";

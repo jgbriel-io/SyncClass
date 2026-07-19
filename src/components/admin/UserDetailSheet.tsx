@@ -5,7 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { User, Mail, Calendar, Shield, Link2, FileText } from "lucide-react";
+import {
+  User,
+  Envelope as Mail,
+  Calendar,
+  Shield,
+  Link as Link2,
+  FileText,
+} from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useUsersPaginated } from "@/hooks/useUsers";

@@ -2,7 +2,11 @@
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap, Loader2, ArrowLeft } from "lucide-react";
+import {
+  GraduationCap,
+  CircleNotch as Loader2,
+  ArrowLeft,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack, gap } from "@/lib/design-tokens/spacing";

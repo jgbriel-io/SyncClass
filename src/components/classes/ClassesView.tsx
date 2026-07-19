@@ -1,14 +1,14 @@
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import {
-  Search,
+  MagnifyingGlass,
   Plus,
   BookOpen,
   UserCheck,
   Percent,
-  Award,
+  Medal as Award,
   Package,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {

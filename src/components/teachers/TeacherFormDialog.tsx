@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BaseDialog } from "@/components/ui/custom/BaseDialog";
-import { Loader2 } from "lucide-react";
+import { CircleNotch as Loader2 } from "@phosphor-icons/react";
 import { Teacher, TeacherInsert } from "@/hooks/useTeachers";
 import { REGEX_PATTERNS, maskPhone } from "@/lib/utils/patterns";
 import { emailSchema } from "@/lib/validation/email";

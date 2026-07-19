@@ -22,7 +22,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ChevronsUpDown } from "lucide-react";
+import { CaretUpDown as ChevronsUpDown } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { BR_STATES, type BrCityOption } from "@/lib/br-locations";
 import { COMMON_COUNTRIES } from "@/lib/countries";

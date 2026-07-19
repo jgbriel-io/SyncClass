@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type StatusVariant = "success" | "warning" | "destructive" | "default" | "info";
+type StatusVariant = "success" | "warning" | "destructive" | "default";
 
 interface StatusBadgeProps {
   variant: StatusVariant;
@@ -13,7 +13,16 @@ const variantStyles: Record<StatusVariant, string> = {
   warning: "bg-warning-muted text-warning border-warning/20",
   destructive: "bg-destructive-muted text-destructive border-destructive/20",
   default: "bg-muted text-muted-foreground border-border",
-  info: "bg-blue-50 text-blue-600 border-blue-200",
+};
+
+// Status neutros (default) usam formato quadrado — só status que pedem atenção
+// (success/warning/destructive) usam pill, reservando o formato arredondado
+// para o que precisa se destacar visualmente.
+const shapeStyles: Record<StatusVariant, string> = {
+  success: "rounded-full",
+  warning: "rounded-full",
+  destructive: "rounded-full",
+  default: "rounded-md",
 };
 
 export function StatusBadge({
@@ -24,7 +33,8 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border",
+        shapeStyles[variant],
         variantStyles[variant],
         // justify-center como padrão, mas permite override via className
         !className?.includes("justify-") && "justify-center",
@@ -37,8 +47,7 @@ export function StatusBadge({
           variant === "success" && "bg-success",
           variant === "warning" && "bg-warning",
           variant === "destructive" && "bg-destructive",
-          variant === "default" && "bg-muted-foreground",
-          variant === "info" && "bg-blue-500"
+          variant === "default" && "bg-muted-foreground"
         )}
       />
       {children}

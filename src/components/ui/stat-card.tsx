@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { ui } from "@/content";
-import { LucideIcon } from "lucide-react";
+import type { Icon as LucideIcon } from "@phosphor-icons/react";
 
 const iconVariantStyles = {
   default: {
@@ -57,7 +57,7 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-lg border bg-card p-3 tablet:p-6 shadow-card transition-shadow hover:shadow-md",
+        "relative overflow-hidden rounded-xl border bg-card p-3 tablet:p-6 shadow-card transition-shadow hover:shadow-md",
         className
       )}
     >

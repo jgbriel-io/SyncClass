@@ -1,4 +1,4 @@
-import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface MetricCardProps {

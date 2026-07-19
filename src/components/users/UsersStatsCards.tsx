@@ -1,5 +1,10 @@
 import { StatCard } from "@/components/ui/stat-card";
-import { UserCheck, UserX, TrendingUp, Users } from "lucide-react";
+import {
+  UserCheck,
+  UserMinus as UserX,
+  TrendUp as TrendingUp,
+  Users,
+} from "@phosphor-icons/react";
 import { users as usersContent } from "@/content";
 import { type PeriodFilter } from "@/lib/utils/periodFilter";
 

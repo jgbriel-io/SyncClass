@@ -1,20 +1,20 @@
 import { useState } from "react";
 import {
   Users,
-  AlertCircle,
-  TrendingUp,
+  WarningCircle as AlertCircle,
+  TrendUp as TrendingUp,
   GraduationCap,
-  Loader2,
+  CircleNotch as Loader2,
   Bell,
-  ChevronRight,
-  ChevronDown,
-  DollarSign,
+  CaretRight as ChevronRight,
+  CaretDown as ChevronDown,
+  CurrencyDollar as DollarSign,
   UserPlus,
-  Link2,
-  Zap,
+  Link as Link2,
+  Lightning as Zap,
   BookOpen,
   Package,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

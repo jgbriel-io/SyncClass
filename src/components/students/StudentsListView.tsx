@@ -11,7 +11,7 @@ import { defaultStudentsFilters } from "@/components/filters/filterDefaults";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyStudentsState } from "@/components/ui/contextual-empty-states";
 import { Button } from "@/components/ui/button";
-import { Search, Plus } from "lucide-react";
+import { MagnifyingGlass as Search, Plus } from "@phosphor-icons/react";
 import { StudentsStatCards } from "@/components/students/StudentsStatCards";
 import { StudentFormDialog } from "@/components/students/StudentFormDialog";
 import {
@@ -264,7 +264,7 @@ export function StudentsListView({
 
       {!error && (
         <div
-          className="rounded-lg border bg-card shadow-card overflow-hidden"
+          className="rounded-xl border bg-card shadow-card overflow-hidden"
           ref={listTopRef}
         >
           <div className="overflow-x-auto">

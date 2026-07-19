@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CaretLeft as ChevronLeft,
+  CaretRight as ChevronRight,
+} from "@phosphor-icons/react";
 import { common } from "@/content";
 
 interface TablePaginationBarProps {

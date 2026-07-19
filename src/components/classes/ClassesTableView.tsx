@@ -2,7 +2,11 @@ import { common } from "@/content";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyClassesState } from "@/components/ui/contextual-empty-states";
 import { Button } from "@/components/ui/button";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  MagnifyingGlass as Search,
+  CaretLeft as ChevronLeft,
+  CaretRight as ChevronRight,
+} from "@phosphor-icons/react";
 import { classes as classesContent } from "@/content";
 import { ClassesTableSkeleton } from "@/components/ui/table-skeleton";
 import {
@@ -64,7 +68,7 @@ export function ClassesTableView({
 }: ClassesTableViewProps) {
   return (
     <div
-      className="rounded-lg border bg-card shadow-card overflow-hidden"
+      className="rounded-xl border bg-card shadow-card overflow-hidden"
       ref={listTopRef}
     >
       <div className="overflow-x-auto">

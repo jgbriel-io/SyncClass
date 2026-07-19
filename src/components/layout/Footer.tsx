@@ -1,5 +1,5 @@
 ﻿import { Link, useLocation } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { Heart } from "@phosphor-icons/react";
 import { layout } from "@/content";
 
 export function Footer() {
@@ -41,8 +41,6 @@ export function Footer() {
           <div className="flex flex-col tablet:flex-row items-center gap-1 tablet:gap-1.5">
             <div className="flex items-center gap-1.5">
               <span>{layout.footer.developedWith}</span>
-              <Heart className="h-3 w-3 text-destructive fill-destructive" />
-              <span>{layout.footer.by}</span>
               <a
                 href={layout.footer.developerUrl}
                 target="_blank"

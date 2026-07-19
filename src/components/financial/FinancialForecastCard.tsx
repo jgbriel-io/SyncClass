@@ -1,4 +1,4 @@
-import { TrendingUp } from "lucide-react";
+import { TrendUp as TrendingUp } from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { financial as financialContent } from "@/content";
 

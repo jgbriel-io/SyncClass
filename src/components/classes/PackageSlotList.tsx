@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CalendarDays, List } from "lucide-react";
+import { CalendarBlank as CalendarDays, List } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { REGEX_PATTERNS } from "@/lib/utils/patterns";
 import { toast } from "sonner";

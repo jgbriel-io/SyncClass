@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, RefreshCw } from "lucide-react";
+import { Shield, ArrowsClockwise as RefreshCw } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -70,7 +70,7 @@ export default function RateLimitDashboardPage() {
         </div>
       </div>
 
-      <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+      <div className="rounded-xl border bg-card shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

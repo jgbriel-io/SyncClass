@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Search, Filter, X, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  MagnifyingGlass as Search,
+  FunnelSimple as Filter,
+  X,
+  CaretDown as ChevronDown,
+  CaretUp as ChevronUp,
+} from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { common, filters as filtersContent } from "@/content";

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Upload } from "lucide-react";
+import { CircleNotch as Loader2, Upload } from "@phosphor-icons/react";
 import { useStudents } from "@/hooks/useStudents";
 import {
   dueDateAndTimeToIso,

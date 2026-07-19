@@ -13,14 +13,14 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import {
-  Loader2,
+  CircleNotch as Loader2,
   BookOpen,
-  TrendingUp,
-  TrendingDown,
-  Award,
+  TrendUp as TrendingUp,
+  TrendDown as TrendingDown,
+  Medal as Award,
   Calendar as CalendarIcon,
   XCircle,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import {
   useStudentClassLogs,
   useStudentStats,
@@ -235,7 +235,7 @@ export default function StudentHistory() {
 
   const renderClassCards = (records: typeof classLogs) =>
     records.length === 0 ? (
-      <div className="rounded-lg border bg-card">
+      <div className="rounded-xl border bg-card">
         <EmptyState icon={BookOpen} message={studentPortal.history.noHistory} />
       </div>
     ) : (
@@ -396,7 +396,7 @@ export default function StudentHistory() {
                 {studentPortal.history.missedClassesTitle}
               </h2>
               {missedClasses.length === 0 ? (
-                <div className="rounded-lg border bg-card p-6 text-center">
+                <div className="rounded-xl border bg-card p-6 text-center">
                   <p className={typography("SMALL")}>
                     {studentPortal.history.noAbsences}
                   </p>
@@ -451,7 +451,7 @@ export default function StudentHistory() {
                 {studentPortal.history.gradesSectionTitle}
               </h2>
               {classesWithGrade.length === 0 ? (
-                <div className="rounded-lg border bg-card p-6 text-center">
+                <div className="rounded-xl border bg-card p-6 text-center">
                   <p className={typography("SMALL")}>
                     {studentPortal.history.noGrades}
                   </p>

@@ -143,8 +143,7 @@ export const layout = {
   footer: {
     privacyPolicy: "Políticas de Privacidade",
     termsOfUse: "Termos de Uso",
-    developedWith: "Desenvolvido com",
-    by: "por",
+    developedWith: "Desenvolvido por",
     developer: "jgbriel.dev",
     developerUrl: "https://jgbriel.dev",
     lgpd: "Conforme LGPD",

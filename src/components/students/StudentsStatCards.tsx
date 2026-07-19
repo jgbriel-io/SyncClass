@@ -1,4 +1,9 @@
-import { Users, UserCheck, UserX, TrendingUp } from "lucide-react";
+import {
+  Users,
+  UserCheck,
+  UserMinus as UserX,
+  TrendUp as TrendingUp,
+} from "@phosphor-icons/react";
 import { students as studentsContent } from "@/content";
 import { type PeriodFilter } from "@/lib/utils/periodFilter";
 

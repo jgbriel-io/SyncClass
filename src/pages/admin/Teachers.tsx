@@ -9,7 +9,7 @@ import { defaultTeachersFilters } from "@/components/filters/filterDefaults";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody } from "@/components/ui/table";
-import { Search, Plus } from "lucide-react";
+import { MagnifyingGlass as Search, Plus } from "@phosphor-icons/react";
 import { TeacherFormDialog } from "@/components/teachers/TeacherFormDialog";
 import { TeacherPasswordDialog } from "@/components/teachers/TeacherPasswordDialog";
 import { TeacherStatusDialog } from "@/components/teachers/TeacherStatusDialog";
@@ -219,7 +219,7 @@ export default function TeachersPage() {
         {/* Tabela */}
         {!error && (
           <div
-            className="rounded-lg border bg-card shadow-card overflow-hidden"
+            className="rounded-xl border bg-card shadow-card overflow-hidden"
             ref={listTopRef}
           >
             <div className="overflow-x-auto">

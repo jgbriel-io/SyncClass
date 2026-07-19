@@ -5,9 +5,9 @@ import {
   Calendar,
   FileText,
   CreditCard,
-  AlertCircle,
-  CheckCircle2,
-} from "lucide-react";
+  WarningCircle as AlertCircle,
+  CheckCircle as CheckCircle2,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { sanitizeText } from "@/lib/utils/sanitize";

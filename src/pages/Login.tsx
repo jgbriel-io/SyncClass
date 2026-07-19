@@ -3,7 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap, Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  GraduationCap,
+  Eye,
+  EyeSlash as EyeOff,
+  CircleNotch as Loader2,
+} from "@phosphor-icons/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { typography } from "@/lib/design-tokens/typography";

@@ -1,4 +1,4 @@
-import { GraduationCap } from "lucide-react";
+import { GraduationCap } from "@phosphor-icons/react";
 import { typography } from "@/lib/design-tokens/typography";
 import { stack } from "@/lib/design-tokens/spacing";
 import { iconSize } from "@/lib/design-tokens/icon-sizes";

@@ -6,16 +6,16 @@ import {
   Calendar,
   User,
   Clock,
-  CheckCircle2,
+  CheckCircle as CheckCircle2,
   XCircle,
   Star,
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-  MessageSquare,
-  DollarSign,
+  CaretRight as ChevronRight,
+  CaretDown as ChevronDown,
+  CaretUp as ChevronUp,
+  ChatCircle as MessageSquare,
+  CurrencyDollar as DollarSign,
   Timer,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDate, formatCurrency } from "@/lib/utils/formatters";

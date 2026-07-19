@@ -12,11 +12,11 @@ import { ActivityDeleteDialog } from "@/components/activities/ActivityDeleteDial
 import {
   Plus,
   Clock,
-  Search,
-  FileStack,
-  Inbox,
-  CheckCircle2,
-} from "lucide-react";
+  MagnifyingGlass,
+  Files as FileStack,
+  Tray as Inbox,
+  CheckCircle as CheckCircle2,
+} from "@phosphor-icons/react";
 import {
   useActivities,
   getActivityDisplayStatus,
@@ -294,7 +294,7 @@ export function ActivitiesView({
         primaryStatus="all"
       />
 
-      <div className="rounded-lg border bg-card shadow-card overflow-hidden">
+      <div className="rounded-xl border bg-card shadow-card overflow-hidden">
         <Table style={{ minWidth: ACT_TABLE_MIN_W }}>
           <TableHeader>
             <TableRow className="border-b bg-muted/50">

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { StudentsListView } from "@/components/students/StudentsListView";
-import { Loader2 } from "lucide-react";
+import { CircleNotch as Loader2 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useTeacherId } from "@/hooks/useTeacherId";

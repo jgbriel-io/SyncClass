@@ -3,7 +3,12 @@ import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StudentFinancialCard } from "@/components/student/StudentFinancialCard";
 import { StudentMetricCard } from "@/components/student/StudentMetricCard";
-import { CheckCircle, Loader2, DollarSign, Wallet } from "lucide-react";
+import {
+  CheckCircle,
+  CircleNotch as Loader2,
+  CurrencyDollar as DollarSign,
+  Wallet,
+} from "@phosphor-icons/react";
 import {
   useStudentFinancialRecords,
   useStudentStats,
@@ -75,7 +80,7 @@ export default function StudentFinancial() {
                 {studentPortal.financial.historyTitle}
               </h2>
               {records.length === 0 ? (
-                <div className="rounded-lg border bg-card">
+                <div className="rounded-xl border bg-card">
                   <EmptyState
                     icon={DollarSign}
                     message={studentPortal.financial.noCharges}

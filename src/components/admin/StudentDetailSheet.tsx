@@ -2,7 +2,7 @@ import { BaseDetailSheet } from "@/components/ui/custom/BaseDetailSheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, BookOpen, FileText, CreditCard } from "lucide-react";
+import { User, BookOpen, FileText, CreditCard } from "@phosphor-icons/react";
 import { useStudentDetails } from "@/hooks/useStudentDetails";
 import { useActivities } from "@/hooks/useActivities";
 import { StudentDetailInfoTab } from "@/components/admin/StudentDetailInfoTab";

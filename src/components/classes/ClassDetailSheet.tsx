@@ -9,7 +9,13 @@ import { getFinancialActualStatus } from "@/lib/utils/financialStatus";
 import { getClassStatusWithTime } from "@/lib/utils/classTime";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Receipt, Calendar, Clock, User, BookOpen } from "lucide-react";
+import {
+  Receipt,
+  Calendar,
+  Clock,
+  User,
+  BookOpen,
+} from "@phosphor-icons/react";
 import type { ClassLogWithStudent } from "@/hooks/useClassLogs";
 import { sanitizeText, escapeHtml } from "@/lib/utils/sanitize";
 import { classes as classesContent, common } from "@/content";

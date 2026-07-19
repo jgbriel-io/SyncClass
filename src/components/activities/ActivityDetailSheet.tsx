@@ -6,11 +6,11 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import {
   FileText,
   Download,
-  MessageSquare,
+  ChatCircle as MessageSquare,
   File,
-  Edit,
+  PencilSimple as Edit,
   Eye,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {

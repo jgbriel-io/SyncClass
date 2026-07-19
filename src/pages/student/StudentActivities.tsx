@@ -9,7 +9,7 @@ import {
 } from "@/hooks/useActivities";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyActivitiesStudentState } from "@/components/ui/contextual-empty-states";
-import { Loader2 } from "lucide-react";
+import { CircleNotch as Loader2 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { DeliverActivityDialog } from "@/components/activities/DeliverActivityDialog";
 import { StudentActivityCard } from "@/components/student/StudentActivityCard";
@@ -103,14 +103,14 @@ const StudentActivitiesPage = () => {
 
       {/* Loading */}
       {(profileLoading || isLoading) && (
-        <div className="rounded-lg border bg-card flex items-center justify-center py-12">
+        <div className="rounded-xl border bg-card flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       )}
 
       {/* Lista de Atividades */}
       {!profileLoading && !isLoading && activities.length === 0 && (
-        <div className="rounded-lg border bg-card">
+        <div className="rounded-xl border bg-card">
           <EmptyActivitiesStudentState />
         </div>
       )}

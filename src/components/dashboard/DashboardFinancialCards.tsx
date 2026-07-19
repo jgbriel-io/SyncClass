@@ -1,4 +1,7 @@
-import { DollarSign, TrendingUp } from "lucide-react";
+import {
+  CurrencyDollar as DollarSign,
+  TrendUp as TrendingUp,
+} from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/utils/formatters";
 import type { ForecastedBilling } from "@/hooks/useForecastedBilling";
 import type { FinancialSummary } from "./DashboardView";

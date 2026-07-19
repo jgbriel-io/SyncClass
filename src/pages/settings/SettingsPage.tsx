@@ -1,5 +1,11 @@
 import { Navigate, useLocation, Link } from "react-router-dom";
-import { User, Lock, Palette, CreditCard, ChevronLeft } from "lucide-react";
+import {
+  User,
+  Lock,
+  Palette,
+  CreditCard,
+  CaretLeft as ChevronLeft,
+} from "@phosphor-icons/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentUserProfile } from "@/hooks/useUsers";
 import { SettingsPerfilTab } from "@/components/layout/SettingsPerfilTab";

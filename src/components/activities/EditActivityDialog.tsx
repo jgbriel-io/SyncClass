@@ -10,7 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Upload, CalendarIcon, Pencil } from "lucide-react";
+import {
+  CircleNotch as Loader2,
+  Upload,
+  Calendar as CalendarIcon,
+  Pencil,
+} from "@phosphor-icons/react";
 import {
   Popover,
   PopoverContent,

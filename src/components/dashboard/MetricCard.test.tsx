@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
 import { MetricCard } from "./MetricCard";
-import { Users } from "lucide-react";
+import { Users } from "@phosphor-icons/react";
 import { dashboard } from "@/content";
 
 describe("MetricCard - Snapshot", () => {

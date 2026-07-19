@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Download, X } from "lucide-react";
+import { Download, X } from "@phosphor-icons/react";
 import {
   isPWAInstalled,
   isPWAInstallPromptAvailable,
