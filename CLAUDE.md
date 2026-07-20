@@ -1,7 +1,7 @@
 # SyncClass — Claude Code
 
 SaaS para gestão de professores autônomos de inglês.
-TCC — Engenharia de Software, FEPI, 8º período.
+TCC — Sistemas de Informação, FEPI, 8º período.
 
 ## Contexto do Projeto
 
