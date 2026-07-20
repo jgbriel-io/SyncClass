@@ -155,8 +155,4 @@ export const layout = {
     settingsAriaLabel: "Configurações",
     mainNavAriaLabel: "Navegação principal",
   },
-
-  logo: {
-    initial: "S",
-  },
 } as const;

@@ -54,11 +54,11 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center justify-between px-4">
           <Link to="/student" className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xs">
-                {layout.logo.initial}
-              </span>
-            </div>
+            <img
+              src="/logo.svg"
+              alt={common.app.name}
+              className="h-7 w-7 rounded-lg shrink-0"
+            />
             <span className="text-sm font-semibold">{common.app.name}</span>
           </Link>
           <div className="flex items-center gap-1">

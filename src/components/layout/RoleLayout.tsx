@@ -149,11 +149,11 @@ export function RoleLayout({ config, children }: RoleLayoutProps) {
           )}
         >
           <Link to={basePath} className="flex items-center gap-4">
-            <div className="h-9 w-9 rounded-xl bg-sidebar-primary flex items-center justify-center shadow-md">
-              <span className="text-sidebar-primary-foreground font-bold text-base">
-                {layout.logo.initial}
-              </span>
-            </div>
+            <img
+              src="/logo.svg"
+              alt={common.app.name}
+              className="h-9 w-9 rounded-xl shadow-md shrink-0"
+            />
             {!sidebarCollapsed && (
               <span className="text-base font-semibold text-sidebar-foreground tracking-tight">
                 {common.app.name}
