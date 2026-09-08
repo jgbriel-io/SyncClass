@@ -63,7 +63,7 @@ import { ui } from '@/content'
 Zod em `lib/validation/schemas.ts`. Nunca duplicar schemas.
 
 ### Comentários
-Zero comentários óbvios. Apenas WHY não-óbvio. Uma linha máximo. Em português.
+Zero comentário inline. Porquê/WHY vai pro commit body, nunca inline.
 
 ### TypeScript
 `strict: true`. Sem `any` explícito. Usar types gerados do Supabase.

@@ -150,7 +150,7 @@ useEffect(() => {
 - Seguir padrões existentes no projeto
 - Não introduzir novas bibliotecas sem justificativa explícita
 - Nunca criar arquivos `.md` sem solicitação explícita
-- Sem comentários que só repetem o código — comentar só o "porquê" não óbvio
+- Zero comentário inline — porquê vai pro commit body, nunca inline
 
 ## Skills
 
